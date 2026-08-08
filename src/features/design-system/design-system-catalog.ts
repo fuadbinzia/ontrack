@@ -292,7 +292,7 @@ export const DESIGN_CATALOG: readonly DesignCatalogElement[] = [
     id: 'headerBack',
     name: 'HeaderBackButton',
     group: 'Actions',
-    description: 'Compact back on the ScreenHeader eyebrow row.',
+    description: 'Compact back on the ScreenHeader eyebrow row (chevron + eyebrow share one hit target).',
     demo: 'components',
     usedBy: ['account', 'travel'],
   },

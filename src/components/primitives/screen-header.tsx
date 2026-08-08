@@ -1,4 +1,9 @@
-import type { ReactNode } from 'react';
+import {
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import type { AppIconName } from '@/design-system';
@@ -27,6 +32,8 @@ export interface ScreenHeaderProps {
   closeAppearance?: 'solid' | 'glass';
   style?: StyleProp<ViewStyle>;
 }
+
+type LeadingWithLabel = { label?: string };
 
 /** Shared page/sheet hierarchy. Feature themes can recolor it but cannot restyle its actions. */
 export function ScreenHeader({
@@ -99,14 +106,27 @@ export function ScreenHeader({
   );
 
   // Eyebrow band hosts leading/close so title + subtitle use the full sheet width.
+  // When leading is present (compact HeaderBackButton), fold eyebrow into its label so
+  // the whole overline row is the back hit target — not just the chevron.
   if (eyebrow) {
+    const leadingNode =
+      leading && isValidElement(leading)
+        ? cloneElement(leading as ReactElement<LeadingWithLabel>, {
+            label: (leading.props as LeadingWithLabel).label ?? eyebrow,
+          })
+        : leading;
+
     return (
       <View style={[styles.stack, { gap: spacing.xs }, style]}>
         <View style={[styles.eyebrowRow, { gap: spacing.xs }]}>
-          {leading ? <View style={styles.action}>{leading}</View> : null}
-          <AppText variant="overline" color="accent" fit style={styles.eyebrow}>
-            {eyebrow}
-          </AppText>
+          {leadingNode ? (
+            <View style={styles.eyebrowLeading}>{leadingNode}</View>
+          ) : (
+            <AppText variant="overline" color="accent" fit style={styles.eyebrow}>
+              {eyebrow}
+            </AppText>
+          )}
+          {trailingSlot ? <View style={styles.eyebrowSpacer} /> : null}
           {trailingSlot}
         </View>
         {decoratedTitle}
@@ -146,6 +166,16 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     flexShrink: 1,
+  },
+  /** Labeled compact back — size to content, stay flush left with the title. */
+  eyebrowLeading: {
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '100%',
+  },
+  eyebrowSpacer: {
+    flex: 1,
+    minWidth: 0,
   },
   copy: {
     flex: 1,

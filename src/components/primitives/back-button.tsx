@@ -1,13 +1,14 @@
 import { type Href, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { spacing } from '@/design-system';
+import { spacing as tokenSpacing } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 import { goBackOrReplace } from '@/utils/navigation';
 
+import { AppText } from './app-text';
 import { IconButton } from './button';
 import { Symbol } from './symbol';
 
@@ -44,6 +45,8 @@ export function HeaderBackButton({
   testID = AgentUiIds.chrome.headerBack,
   /** Match `ScreenHeader` eyebrow / overline chrome (hit target stays ≥44 via hitSlop). */
   compact = false,
+  /** Overline label beside the chevron — whole row is the back hit target. */
+  label,
 }: {
   accessibilityLabel?: string;
   fallback?: Href;
@@ -53,10 +56,11 @@ export function HeaderBackButton({
   onPress?: () => void;
   testID?: string;
   compact?: boolean;
+  label?: string;
 }) {
   const router = useRouter();
   const theme = useTheme();
-  const { typography, layout } = useResponsive();
+  const { typography, layout, spacing } = useResponsive();
 
   const handlePress = () => {
     try {
@@ -96,6 +100,7 @@ export function HeaderBackButton({
   // `Symbol` scales numeric sizes — pass the design-token base, not the already-scaled type size.
   const line = Math.round(typography.overline.lineHeight);
   const hitPad = Math.max(0, (layout.minTapTarget - line) / 2);
+  const labeled = Boolean(label);
 
   return (
     <Pressable
@@ -108,21 +113,42 @@ export function HeaderBackButton({
       onPress={handlePress}
       style={({ pressed }) => [
         styles.compact,
+        labeled ? styles.compactLabeled : null,
         {
-          width: Math.round(typography.overline.fontSize),
+          width: labeled ? undefined : Math.round(typography.overline.fontSize),
           height: line,
+          gap: labeled ? spacing.xs : undefined,
           opacity: pressed ? 0.7 : 1,
         },
       ]}>
       <Symbol name="back" size={11} color={theme.accentPrimary} />
+      {labeled ? (
+        <AppText variant="overline" color="accent" fit style={styles.compactLabel}>
+          {label}
+        </AppText>
+      ) : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { alignSelf: 'flex-start', marginBottom: spacing.sm },
+  container: { alignSelf: 'flex-start', marginBottom: tokenSpacing.sm },
   compact: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Hug left like the title — stretch + center was pushing the overline mid-row.
+  compactLabeled: {
+    flexDirection: 'row',
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '100%',
+    alignSelf: 'flex-start',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  compactLabel: {
+    flexShrink: 1,
+    minWidth: 0,
   },
 });

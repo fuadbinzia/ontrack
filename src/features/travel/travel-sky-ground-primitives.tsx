@@ -3,6 +3,37 @@ import { Circle, G, Path, Rect } from 'react-native-svg';
 
 import { SKY_VIEW_H } from '@/features/travel/travel-sky-plate';
 
+/**
+ * Snow / frost cap on a mountain peak — triangle from the apex partway
+ * down each face so the ridge reads as iced, not flat silhouette fill.
+ */
+export function PeakFrost({
+  ax,
+  ay,
+  lx,
+  ly,
+  rx,
+  ry,
+  fill,
+  depth = 0.34,
+}: {
+  ax: number;
+  ay: number;
+  lx: number;
+  ly: number;
+  rx: number;
+  ry: number;
+  fill: string;
+  /** 0…1 how far down each face the frost reaches. */
+  depth?: number;
+}) {
+  const x1 = ax + (lx - ax) * depth;
+  const y1 = ay + (ly - ay) * depth;
+  const x2 = ax + (rx - ax) * depth;
+  const y2 = ay + (ry - ay) * depth;
+  return <Path d={`M${x1} ${y1} L${ax} ${ay} L${x2} ${y2} Z`} fill={fill} />;
+}
+
 export function Fir({
   x,
   y,

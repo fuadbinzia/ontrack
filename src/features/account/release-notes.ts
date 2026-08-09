@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.19',
+    date: '2026-08-08',
+    notes: [
+      'Add frost caps on itinerary sky mountain peaks.',
+    ],
+  },
+  {
     version: '1.0.18',
     date: '2026-08-08',
     notes: [
@@ -151,6 +158,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.19',
+    date: '2026-08-08',
+    notes: [
+      'Add frost caps on itinerary sky mountain peaks.',
+      'Touched: features/travel.',
+    ],
+  },
   {
     version: '1.0.18',
     date: '2026-08-08',

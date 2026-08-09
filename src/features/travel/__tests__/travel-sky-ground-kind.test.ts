@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
 import { resolveTravelSkyGroundKind } from '@/features/travel/travel-sky-ground-kind';
 
 describe('resolveTravelSkyGroundKind', () => {
@@ -19,5 +22,25 @@ describe('resolveTravelSkyGroundKind', () => {
   it('uses latitude when the label is unknown', () => {
     expect(resolveTravelSkyGroundKind('Somewhere', 10)).toBe('tropical');
     expect(resolveTravelSkyGroundKind('Somewhere', 64)).toBe('nordic');
+  });
+});
+
+describe('travel sky ground frost', () => {
+  it('puts PeakFrost snow caps on mountain ridges', () => {
+    const primitives = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-sky-ground-primitives.tsx'),
+      'utf8',
+    );
+    const kinds = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-sky-ground-kinds.tsx'),
+      'utf8',
+    );
+    expect(primitives).toContain('export function PeakFrost');
+    expect(kinds).toContain('PeakFrost');
+    expect(kinds).toContain('frost:');
+    expect(kinds).toContain('GroundFarMountains');
+    expect(kinds).toContain('frost={p.frost}');
+    expect(kinds).toContain('alpine-frost-');
+    expect(kinds).toContain('nordic-frost-');
   });
 });

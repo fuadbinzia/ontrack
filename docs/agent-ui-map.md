@@ -827,8 +827,8 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 | ID | Control |
 |----|---------|
 | `ontrack.developer.back` | Back to profile |
-| `ontrack.developer.section.appUpdates` | Expand/collapse App Updates (open by default) |
-| `ontrack.developer.section.navigate` | Expand/collapse Navigate (open by default) |
+| `ontrack.developer.section.appUpdates` | Expand/collapse App Updates (collapsed by default) |
+| `ontrack.developer.section.navigate` | Expand/collapse Navigate (collapsed by default) |
 | `ontrack.developer.section.insights` | Expand/collapse Product insights (closed by default) |
 | `ontrack.developer.section.runtime` | Expand/collapse Runtime (closed by default) |
 | `ontrack.developer.section.diagnostics` | Expand/collapse Diagnostics (closed by default) |

@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.24',
+    date: '2026-08-09',
+    notes: [
+      'Collapse all Developer Tools sections by default.',
+    ],
+  },
+  {
     version: '1.0.23',
     date: '2026-08-09',
     notes: [
@@ -186,6 +193,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.24',
+    date: '2026-08-09',
+    notes: [
+      'Collapse all Developer Tools sections by default.',
+      'Touched: features/account.',
+    ],
+  },
   {
     version: '1.0.23',
     date: '2026-08-09',

@@ -195,7 +195,6 @@ export function DeveloperReleaseNotesPanel() {
   return (
     <CollapsibleSection
       title="App Updates"
-      defaultExpanded
       testID={AgentUiIds.developer.section.appUpdates}
       onExpandedChange={(expanded) => {
         if (expanded) setDayIndex(0);

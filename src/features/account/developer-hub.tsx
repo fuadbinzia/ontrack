@@ -180,7 +180,6 @@ export function DeveloperHub() {
 
         <CollapsibleSection
           title="Navigate"
-          defaultExpanded
           testID={AgentUiIds.developer.section.navigate}>
           <SettingsGroup>
             <SettingsToggleRow

@@ -3,7 +3,6 @@ import {
   compactSharedItineraryPayload,
   isItineraryItemOwnedBy,
   mergeOwnedItineraryItemWithRemote,
-  normalizeSharedWithUserIds,
   normalizeTravelItemShareMode,
   pickNewerItineraryItem,
   preserveOwnedItinerarySecrets,
@@ -70,11 +69,6 @@ export function parseRemoteItineraryItem(
       row.share_mode ??
       (payload as TravelItineraryItem).shareMode,
   );
-  const sharedWithUserIds = normalizeSharedWithUserIds(
-    row.sharedWithUserIds ??
-      row.shared_with_user_ids ??
-      (payload as TravelItineraryItem).sharedWithUserIds,
-  );
   const sharedUpdatedAt =
     asNonEmptyString(row.updatedAt) ??
     asNonEmptyString(row.updated_at) ??
@@ -84,9 +78,6 @@ export function parseRemoteItineraryItem(
     ...base,
     ...(ownerUserId ? { ownerUserId } : {}),
     shareMode,
-    ...(shareMode === 'selected' && sharedWithUserIds?.length
-      ? { sharedWithUserIds }
-      : {}),
     ...(sharedUpdatedAt ? { sharedUpdatedAt } : {}),
   };
 }
@@ -133,8 +124,8 @@ export function itemsForPublish(
       return {
         itemId: owned.id,
         shareMode: normalizeTravelItemShareMode(owned.shareMode),
-        sharedWithUserIds:
-          owned.shareMode === 'selected' ? (owned.sharedWithUserIds ?? []) : [],
+        // Column retained for older clients; per-person share mode is gone.
+        sharedWithUserIds: [],
         updatedAt: owned.sharedUpdatedAt ?? now,
         payload: compact,
       };

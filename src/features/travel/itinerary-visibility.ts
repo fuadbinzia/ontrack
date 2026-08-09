@@ -9,63 +9,29 @@ import type {
 } from '@/features/travel/types';
 import { asString } from '@/utils/parse';
 
+/** Collaborative trips share every stop with the roster — no per-item gate. */
 export const TRAVEL_ITEM_SHARE_MODES: readonly TravelItemShareMode[] = [
-  'private',
   'trip',
-  'selected',
 ] as const;
 
 export function isTravelItemShareMode(value: unknown): value is TravelItemShareMode {
-  return (
-    value === 'private' || value === 'trip' || value === 'selected'
-  );
+  return value === 'trip';
 }
 
 export function normalizeTravelItemShareMode(
-  value: unknown,
+  _value: unknown,
 ): TravelItemShareMode {
-  return isTravelItemShareMode(value) ? value : 'private';
+  // Legacy private / selected modes collapse to trip-wide visibility.
+  return 'trip';
 }
 
-export function normalizeSharedWithUserIds(value: unknown): string[] | undefined {
-  if (!Array.isArray(value)) return undefined;
-  const ids = Array.from(
-    new Set(
-      value.flatMap((entry) => {
-        const id = typeof entry === 'string' ? entry.trim() : '';
-        return id ? [id] : [];
-      }),
-    ),
-  );
-  return ids.length ? ids : undefined;
-}
-
-export function travelItemShareModeLabel(mode: TravelItemShareMode): string {
-  if (mode === 'trip') return 'Everyone on trip';
-  if (mode === 'selected') return 'Choose people';
-  return 'Only me';
-}
-
-export function travelItemShareModeHint(mode: TravelItemShareMode): string {
-  if (mode === 'trip') return 'All co-travelers can see this stop.';
-  if (mode === 'selected') return 'Only the people you pick can see it.';
-  return 'Hidden from everyone else on this trip.';
-}
-
-/** Compact cue on timeline cards for ownership / share state. */
+/** Compact cue on timeline cards for peer-owned stops. */
 export function itineraryShareCueLabel(
-  item: Pick<
-    TravelItineraryItem,
-    'ownerUserId' | 'shareMode'
-  >,
+  item: Pick<TravelItineraryItem, 'ownerUserId' | 'shareMode'>,
   localUserId: string | undefined,
 ): string | undefined {
-  const ownsItem = isItineraryItemOwnedBy(item, localUserId);
-  const mode = normalizeTravelItemShareMode(item.shareMode);
-  if (ownsItem && mode === 'private') return 'Only you';
-  if (ownsItem && mode === 'trip') return 'Shared with trip';
-  if (ownsItem && mode === 'selected') return 'Shared with selected';
-  if (!ownsItem && item.ownerUserId) return 'From co-traveler';
+  if (isItineraryItemOwnedBy(item, localUserId)) return undefined;
+  if (item.ownerUserId) return 'From co-traveler';
   return undefined;
 }
 
@@ -93,26 +59,17 @@ export function isItineraryItemOwnedBy(
 }
 
 export function canViewerSeeItineraryItem(
-  item: Pick<
-    TravelItineraryItem,
-    'ownerUserId' | 'shareMode' | 'sharedWithUserIds'
-  >,
-  viewerUserId: string | undefined,
+  _item: Pick<TravelItineraryItem, 'ownerUserId' | 'shareMode'>,
+  _viewerUserId: string | undefined,
 ): boolean {
-  if (isItineraryItemOwnedBy(item, viewerUserId)) return true;
-  const mode = normalizeTravelItemShareMode(item.shareMode);
-  if (mode === 'private') return false;
-  if (mode === 'trip') return true;
-  const viewer = viewerUserId?.trim();
-  if (!viewer) return false;
-  return (item.sharedWithUserIds ?? []).includes(viewer);
+  return true;
 }
 
 export function visibleItineraryForViewer(
   items: TravelItineraryItem[],
-  viewerUserId: string | undefined,
+  _viewerUserId: string | undefined,
 ): TravelItineraryItem[] {
-  return items.filter((item) => canViewerSeeItineraryItem(item, viewerUserId));
+  return items;
 }
 
 function stripFlightSecrets(
@@ -166,12 +123,6 @@ function stripStaySecrets(
 export function compactSharedItineraryPayload(
   item: TravelItineraryItem,
 ): TravelItineraryItem {
-  const shareMode = normalizeTravelItemShareMode(item.shareMode);
-  const sharedWithUserIds =
-    shareMode === 'selected'
-      ? normalizeSharedWithUserIds(item.sharedWithUserIds)
-      : undefined;
-
   return {
     id: item.id,
     kind: item.kind,
@@ -182,8 +133,7 @@ export function compactSharedItineraryPayload(
     details: asString(item.details),
     // bookingUrl / photoUris omitted from shared payload
     ownerUserId: item.ownerUserId,
-    shareMode,
-    ...(sharedWithUserIds ? { sharedWithUserIds } : {}),
+    shareMode: 'trip',
     sharedUpdatedAt: item.sharedUpdatedAt,
     flight: item.kind === 'flight' ? stripFlightSecrets(item.flight) : undefined,
     transport: item.kind === 'transport' ? item.transport : undefined,
@@ -240,17 +190,14 @@ export function preserveOwnedItinerarySecrets(
   };
 }
 
-/** Merge remote shared fields into a local owned item without dropping secrets. */
+/** Merge remote share metadata into a local owned item without dropping secrets. */
 export function mergeOwnedItineraryItemWithRemote(
   local: TravelItineraryItem,
   remote: TravelItineraryItem,
 ): TravelItineraryItem {
   return {
     ...local,
-    shareMode: normalizeTravelItemShareMode(remote.shareMode ?? local.shareMode),
-    sharedWithUserIds:
-      normalizeSharedWithUserIds(remote.sharedWithUserIds) ??
-      local.sharedWithUserIds,
+    shareMode: 'trip',
     sharedUpdatedAt: remote.sharedUpdatedAt ?? local.sharedUpdatedAt,
     ownerUserId: remote.ownerUserId ?? local.ownerUserId,
   };
@@ -290,7 +237,7 @@ export function markInviteSnapshotItinerary(
   }));
 }
 
-/** Stamp owner + private default on local items missing collaboration fields. */
+/** Stamp owner + trip-wide share on local items missing collaboration fields. */
 export function stampOwnedItineraryDefaults(
   plan: TravelPlan,
   localUserId: string | undefined,
@@ -300,7 +247,7 @@ export function stampOwnedItineraryDefaults(
       ...plan,
       itinerary: plan.itinerary.map((item) => ({
         ...item,
-        shareMode: normalizeTravelItemShareMode(item.shareMode),
+        shareMode: 'trip' as const,
       })),
     };
   }
@@ -310,41 +257,29 @@ export function stampOwnedItineraryDefaults(
       if (item.ownerUserId && item.ownerUserId !== localUserId) {
         return {
           ...item,
-          shareMode: normalizeTravelItemShareMode(item.shareMode),
+          shareMode: 'trip' as const,
         };
       }
       return {
         ...item,
         ownerUserId: item.ownerUserId?.trim() || localUserId,
-        shareMode: normalizeTravelItemShareMode(item.shareMode),
+        shareMode: 'trip' as const,
       };
     }),
   };
 }
 
-/** Touch LWW timestamp when share settings or owned content change. */
+/** Touch LWW timestamp when ownership / share metadata changes. */
 export function touchItineraryItemShare(
   item: TravelItineraryItem,
-  patch: Partial<
-    Pick<
-      TravelItineraryItem,
-      'shareMode' | 'sharedWithUserIds' | 'ownerUserId'
-    >
-  >,
+  patch: Partial<Pick<TravelItineraryItem, 'shareMode' | 'ownerUserId'>>,
   ownerUserId: string | undefined,
 ): TravelItineraryItem {
-  const shareMode = normalizeTravelItemShareMode(
-    patch.shareMode ?? item.shareMode,
-  );
   return {
     ...item,
     ...patch,
     ownerUserId: patch.ownerUserId ?? item.ownerUserId ?? ownerUserId,
-    shareMode,
-    sharedWithUserIds:
-      shareMode === 'selected'
-        ? patch.sharedWithUserIds ?? item.sharedWithUserIds
-        : undefined,
+    shareMode: 'trip',
     sharedUpdatedAt: new Date().toISOString(),
   };
 }

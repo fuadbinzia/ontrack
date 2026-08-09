@@ -45,7 +45,6 @@ type TravelTimelineNodeStructuredProps = {
   planStartDate: string;
   planEndDate: string;
   toolbarActionSize: number;
-  canShare: boolean;
   dense: boolean;
   onGlass: boolean;
   onEditedFlightDetailsChange: (value: FlightDetailsDraft) => void;
@@ -72,7 +71,6 @@ type TravelTimelineNodeStructuredProps = {
   onBeginItemEdit?: () => void;
   onOpenNotes: () => void;
   onAddPhotos: () => void;
-  onShare?: () => void;
   onOpenBooking: () => void;
   onRemove: () => void;
 };
@@ -105,7 +103,6 @@ export function TravelTimelineNodeStructured({
   planStartDate,
   planEndDate,
   toolbarActionSize,
-  canShare,
   dense,
   onGlass,
   onEditedFlightDetailsChange,
@@ -129,7 +126,6 @@ export function TravelTimelineNodeStructured({
   onBeginItemEdit,
   onOpenNotes,
   onAddPhotos,
-  onShare,
   onOpenBooking,
   onRemove,
 }: TravelTimelineNodeStructuredProps) {
@@ -255,12 +251,10 @@ export function TravelTimelineNodeStructured({
           allowStructuredEditing={allowStructuredEditing}
           showStructuredDetails={showStructuredDetails}
           isMoment={isMoment}
-          canShare={canShare}
           align={dense ? 'left' : 'center'}
           onGlass={onGlass}
           onOpenNotes={onOpenNotes}
           onAddPhotos={onAddPhotos}
-          onShare={onShare}
           onBeginFlightEdit={onBeginFlightEdit}
           onBeginRentalEdit={onBeginRentalEdit}
           onBeginStayEdit={onBeginStayEdit}

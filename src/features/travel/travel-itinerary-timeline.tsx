@@ -96,7 +96,6 @@ export function TravelItineraryTimeline({
   onRemovePhoto,
   onRemove,
   onSaveNotes,
-  onShare,
 }: {
   plan: TravelPlan;
   items: TravelItineraryItem[];
@@ -158,7 +157,6 @@ export function TravelItineraryTimeline({
     itemId: string,
     notes: NonNullable<TravelItineraryItem['notes']>,
   ) => void;
-  onShare?: (item: TravelItineraryItem) => void;
 }) {
   const theme = useTheme();
   const { s, spacing: rs, typography } = useResponsive();
@@ -577,9 +575,6 @@ export function TravelItineraryTimeline({
                                     onRemove={() => onRemove(item)}
                                     onSaveNotes={(notes) =>
                                       onSaveNotes(item.id, notes)
-                                    }
-                                    onShare={
-                                      onShare ? () => onShare(item) : undefined
                                     }
                                   />
                                 </View>

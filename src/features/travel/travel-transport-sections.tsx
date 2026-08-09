@@ -94,7 +94,6 @@ type TransportHandlers = {
     itemId: string,
     notes: NonNullable<TravelItineraryItem['notes']>,
   ) => void;
-  onShare?: (item: TravelItineraryItem) => void;
 };
 
 type EmptyAction = {
@@ -220,9 +219,6 @@ function TransportItemList({
           onRemovePhoto={(uri) => handlers.onRemovePhoto(item.id, uri)}
           onRemove={() => handlers.onRemove(item)}
           onSaveNotes={(notes) => handlers.onSaveNotes(item.id, notes)}
-          onShare={
-            handlers.onShare ? () => handlers.onShare?.(item) : undefined
-          }
         />
       ))}
     </View>

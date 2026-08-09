@@ -243,38 +243,6 @@ export const AGENT_UI_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],
-  'travel-demo-share-flight': [
-    { op: 'dismiss', prefix: 'ontrack.travel.' },
-    { op: 'seed', to: 'travel-demo' },
-    { op: 'goto', to: `travel/${AGENT_UI_DEMO_TRIP_ID}` },
-    {
-      op: 'wait',
-      id: 'ontrack.travel.planDetail.section.timeline',
-      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
-    },
-    {
-      op: 'tap',
-      id: `ontrack.travel.timelineItem.${AGENT_UI_DEMO_FLIGHT_ID}.default`,
-    },
-    {
-      op: 'wait',
-      id: `ontrack.travel.timelineItem.${AGENT_UI_DEMO_FLIGHT_ID}.share`,
-      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
-    },
-    {
-      op: 'scroll',
-      id: `ontrack.travel.timelineItem.${AGENT_UI_DEMO_FLIGHT_ID}.share`,
-    },
-    {
-      op: 'tap',
-      id: `ontrack.travel.timelineItem.${AGENT_UI_DEMO_FLIGHT_ID}.share`,
-    },
-    {
-      op: 'wait',
-      id: 'ontrack.travel.itineraryShare.sheet',
-      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
-    },
-  ],
   'open-new-trip': [
     { op: 'dismiss', prefix: 'ontrack.travel.' },
     { op: 'goto', to: 'travel' },

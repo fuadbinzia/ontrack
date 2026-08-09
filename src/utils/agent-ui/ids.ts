@@ -991,17 +991,6 @@ export const AgentUiIds = {
         `ontrack.travel.timelineItem.${itemId}.edit`,
       openAddress: (itemId: string) =>
         `ontrack.travel.timelineItem.${itemId}.openAddress`,
-      share: (itemId: string) =>
-        `ontrack.travel.timelineItem.${itemId}.share`,
-    },
-    itineraryShare: {
-      sheet: 'ontrack.travel.itineraryShare.sheet',
-      close: 'ontrack.travel.itineraryShare.close',
-      save: 'ontrack.travel.itineraryShare.save',
-      mode: (mode: 'private' | 'trip' | 'selected') =>
-        `ontrack.travel.itineraryShare.mode.${mode}`,
-      person: (userId: string) =>
-        `ontrack.travel.itineraryShare.person.${userId}`,
     },
     flightSearch: {
       back: 'ontrack.travel.flightSearch.back',

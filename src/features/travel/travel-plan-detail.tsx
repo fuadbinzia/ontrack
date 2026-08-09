@@ -14,7 +14,7 @@ import {
 } from '@/features/travel/expenses/expense-form';
 import {
     stampOwnedItineraryDefaults,
-    touchItineraryItemShare, visibleItineraryForViewer
+    visibleItineraryForViewer,
 } from '@/features/travel/itinerary-visibility';
 import { useTravelAtmosphere } from '@/features/travel/travel-atmosphere';
 import {
@@ -212,7 +212,6 @@ function TravelPlanDetailLoaded({
   const accountEmail = user?.email?.trim().toLowerCase() || undefined;
   const localUserId = user?.id;
   const itinerary = Array.isArray(plan.itinerary) ? plan.itinerary : [];
-  const [sharingItemId, setSharingItemId] = useState<string | undefined>();
 
   // Warm trip-tool routes after the itinerary settles (staggered, max 3).
   useEffect(() => {
@@ -382,13 +381,6 @@ function TravelPlanDetailLoaded({
       ),
     [itinerary, localUserId],
   );
-  const sharingItem = useMemo(
-    () =>
-      sharingItemId
-        ? itinerary.find((item) => item.id === sharingItemId)
-        : undefined,
-    [itinerary, sharingItemId],
-  );
   const timelineDays = useMemo(
     () => timelineDaysFromItems(sortedItinerary),
     [sortedItinerary],
@@ -490,7 +482,6 @@ function TravelPlanDetailLoaded({
     updatePlan,
     setExpenseDraft,
     setOpenExpenseSheet,
-    onShare: (item: TravelItineraryItem) => setSharingItemId(item.id),
     onBeginItemEdit: (item: TravelItineraryItem) =>
       form.beginEditingItem(item, openTimelineSection),
   });
@@ -545,32 +536,6 @@ function TravelPlanDetailLoaded({
         addItem={addItem}
         goToItinerarySafely={goToItinerarySafely}
         openImportedExpenseReview={expenseImport.openImportedExpenseReview}
-        sharingItem={sharingItem}
-        localUserId={localUserId}
-        onCloseShare={() => setSharingItemId(undefined)}
-        onSaveShare={(draft) => {
-          if (!sharingItem) return;
-          const latest =
-            useTravel.getState().plans.find((entry) => entry.id === planId) ??
-            plan;
-          updatePlan({
-            ...latest,
-            itinerary: latest.itinerary.map((item) =>
-              item.id === sharingItem.id
-                ? touchItineraryItemShare(
-                    item,
-                    {
-                      shareMode: draft.shareMode,
-                      sharedWithUserIds: draft.sharedWithUserIds,
-                    },
-                    localUserId,
-                  )
-                : item,
-            ),
-            updatedAt: new Date().toISOString(),
-          });
-          setSharingItemId(undefined);
-        }}
       />
     </View>
   );

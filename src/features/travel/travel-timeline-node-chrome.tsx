@@ -149,12 +149,10 @@ export function TimelineItemToolbar({
   allowStructuredEditing,
   showStructuredDetails,
   isMoment,
-  canShare = false,
   align = 'center',
   onGlass = false,
   onOpenNotes,
   onAddPhotos,
-  onShare,
   onBeginFlightEdit,
   onBeginRentalEdit,
   onBeginStayEdit,
@@ -168,14 +166,12 @@ export function TimelineItemToolbar({
   allowStructuredEditing: boolean;
   showStructuredDetails: boolean;
   isMoment: boolean;
-  canShare?: boolean;
   /** Dense timeline stacks actions under the title — left-align with that column. */
   align?: 'center' | 'left';
   /** Mist / black-glass parents — frost wells + light glyphs. */
   onGlass?: boolean;
   onOpenNotes: () => void;
   onAddPhotos: () => void;
-  onShare?: () => void;
   onBeginFlightEdit: () => void;
   onBeginRentalEdit: () => void;
   onBeginStayEdit: () => void;
@@ -226,15 +222,6 @@ export function TimelineItemToolbar({
           accessibilityLabel="Add Photos"
           onPress={onAddPhotos}
         />
-        {canShare && onShare ? (
-          <IconButton
-            {...shared}
-            icon="share"
-            accessibilityLabel="Share stop"
-            testID={AgentUiIds.travel.timelineItem.share(item.id)}
-            onPress={onShare}
-          />
-        ) : null}
         {canEdit('flight') ? (
           <IconButton
             {...shared}

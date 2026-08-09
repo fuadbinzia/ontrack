@@ -10,10 +10,6 @@ import {
     type TravelImportResult,
 } from '@/features/travel/travel-import-result-modal';
 import { TravelItineraryAddSheet } from '@/features/travel/travel-itinerary-add-sheet';
-import {
-  TravelItineraryShareSheet,
-  type TravelItineraryShareDraft,
-} from '@/features/travel/travel-itinerary-share-sheet';
 import { TravelRemoveConfirmModal } from '@/features/travel/travel-remove-confirm-modal';
 import { TravelTimelineAddModal } from '@/features/travel/travel-timeline-add-modal';
 import { TravelTripDatesSheet } from '@/features/travel/travel-trip-dates-sheet';
@@ -58,10 +54,6 @@ type TravelPlanDetailOverlaysProps = {
     sourcePlan: TravelPlan,
     draft: ExpenseFormState,
   ) => void;
-  sharingItem?: TravelItineraryItem;
-  localUserId?: string;
-  onCloseShare: () => void;
-  onSaveShare: (draft: TravelItineraryShareDraft) => void;
 };
 
 export function TravelPlanDetailOverlays({
@@ -89,10 +81,6 @@ export function TravelPlanDetailOverlays({
   addItem,
   goToItinerarySafely,
   openImportedExpenseReview,
-  sharingItem,
-  localUserId,
-  onCloseShare,
-  onSaveShare,
 }: TravelPlanDetailOverlaysProps) {
   return (
     <>
@@ -266,14 +254,6 @@ export function TravelPlanDetailOverlays({
       <BookingOpenSheet
         target={devBookingOpen}
         onClose={() => setDevBookingOpen(null)}
-      />
-      <TravelItineraryShareSheet
-        visible={Boolean(sharingItem)}
-        plan={plan}
-        item={sharingItem}
-        localUserId={localUserId}
-        onClose={onCloseShare}
-        onSave={onSaveShare}
       />
     </>
   );

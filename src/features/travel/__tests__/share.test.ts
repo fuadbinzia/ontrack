@@ -72,7 +72,6 @@ describe('travel invites', () => {
         {
           ...plan.itinerary[0],
           bookingUrl: undefined,
-          shareMode: 'private',
           flight: {
             airline: 'Air Canada',
             flightNumber: 'AC 421',
@@ -142,14 +141,16 @@ describe('travel invites', () => {
     expect(decoded?.itinerary[0]?.transport?.fare).toBeUndefined();
   });
 
-  it('omits private itinerary stops from invite bootstrap payloads', () => {
+  it('includes all itinerary stops in invite bootstrap payloads', () => {
     const encoded = encodeTravelInvite({
       ...plan,
       itinerary: [
         {
           ...plan.itinerary[0]!,
-          id: 'private-flight',
-          shareMode: 'private',
+          id: 'moment-1',
+          kind: 'moment',
+          title: 'Sunset',
+          shareMode: 'trip',
         },
         {
           ...plan.itinerary[0]!,
@@ -159,7 +160,10 @@ describe('travel invites', () => {
       ],
     });
     const decoded = decodeTravelInvite(encoded);
-    expect(decoded?.itinerary.map((item) => item.id)).toEqual(['shared-flight']);
+    expect(decoded?.itinerary.map((item) => item.id)).toEqual([
+      'moment-1',
+      'shared-flight',
+    ]);
   });
 
   it('creates a genuinely short hosted link from an invite code', () => {

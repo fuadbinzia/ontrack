@@ -147,8 +147,8 @@ export interface TravelStayDetails {
   currency?: string;
 }
 
-/** Who can see an itinerary stop on a collaborative trip. Default is private. */
-export type TravelItemShareMode = 'private' | 'trip' | 'selected';
+/** Collaborative trips share every stop with the roster. */
+export type TravelItemShareMode = 'trip';
 
 export interface TravelItineraryItem {
   id: string;
@@ -168,10 +168,8 @@ export interface TravelItineraryItem {
    * are treated as owned by the current signed-in user (or local-only).
    */
   ownerUserId?: string;
-  /** Visibility for co-travelers. Defaults to `private` until explicitly shared. */
+  /** Always trip-wide for co-travelers (legacy private/selected normalize to trip). */
   shareMode?: TravelItemShareMode;
-  /** When `shareMode` is `selected`, auth user ids who may see this stop. */
-  sharedWithUserIds?: string[];
   /** Per-item LWW timestamp for live itinerary collaboration. */
   sharedUpdatedAt?: string;
   flight?: TravelFlightDetails;

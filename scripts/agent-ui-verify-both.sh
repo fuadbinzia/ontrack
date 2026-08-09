@@ -116,16 +116,23 @@ run_android() {
   # Mid-boot adb "device" previously raced into verify and failed with route=?.
   # shellcheck source=lib/android-emulator.sh
   source "${ROOT}/scripts/lib/android-emulator.sh"
-  # Pool dual-verify: sticky android-headed.keep must not force Galaxy adopt
-  # (kills warm Agent_* → multi-minute cold path after iOS already passed).
-  # Honor Galaxy only when ONTRACK_ANDROID_KEEP_HEADED=1 is explicit.
+  # Pool dual-verify: sticky android-headed.keep alone must not force Galaxy
+  # adopt when the GUI is closed (kills warm Agent_* → multi-minute cold path).
+  # A *live* headed Galaxy always wins — never emu-kill the user window
+  # ("Saving state…"). Explicit ONTRACK_ANDROID_KEEP_HEADED=1 also forces Galaxy.
   if [[ -n "${AGENT_UI_SLOT:-}" || "${AGENT_UI_POOL_MODE:-0}" == "1" ]]; then
     if [[ "${ONTRACK_ANDROID_KEEP_HEADED:-}" != "1" ]]; then
-      export ONTRACK_ANDROID_KEEP_HEADED=0
-      echo "verify-both: pool Android stays on Agent AVD (sticky headed keep ignored; ONTRACK_ANDROID_KEEP_HEADED=1 forces Galaxy)" >&2
+      live_headed="$(android_emu_live_headed_galaxy_name 2>/dev/null || true)"
+      if [[ -n "$live_headed" ]]; then
+        export ONTRACK_ANDROID_KEEP_HEADED=1
+        echo "verify-both: live headed ${live_headed} — adopting (not killing user window)" >&2
+      else
+        export ONTRACK_ANDROID_KEEP_HEADED=0
+        echo "verify-both: pool Android stays on Agent AVD (sticky headed keep ignored; ONTRACK_ANDROID_KEEP_HEADED=1 forces Galaxy)" >&2
+      fi
     fi
   fi
-  # Headed Galaxy keep (explicit): remount to Galaxy + kill agents BEFORE ensure.
+  # Headed Galaxy keep / live GUI: remount to Galaxy + kill agents BEFORE ensure.
   # 16GB hosts thrash for minutes if Agent_* runs beside the 8GB GUI.
   android_emu_adopt_android_for_headed_host || true
   echo "verify-both: ensuring Android emulator is up and ready (${ONTRACK_ANDROID_AVD:-preferred})…" >&2

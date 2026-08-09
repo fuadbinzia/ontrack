@@ -59,6 +59,7 @@ Related chats (2026-08-07 → 2026-08-08):
 | H12 | Headed Pro polluted after agent verify | Auto `agent_ui_headed_viewer_handoff` | `AGENT_UI_SKIP_HEADED_HANDOFF=1` for agent-only opens | escape / bench default |
 | H13 | Dual verify always feels 2× long | Sequential iOS→Android paid `sum(wall)` | Parallel `run_ios`/`run_android` (daemon `platform:slot`); `AGENT_UI_VERIFY_SERIAL=1` escape | shipped |
 | H14 | “adopting Galaxy” then “handoff skipped” after every verify | Stale `.cursor/android-headed.keep` after Galaxy closed / pool-killed; handoff adopted then refused cold-boot | `want_keep_headed` only while GUI headed (GC stale keep); handoff ready-check before adopt | shipped |
+| H15 | Headed Galaxy “Saving state…” / turns off alone | Pool `verify-both` forced `KEEP_HEADED=0` → `shutdown_others` `emu kill` on live GUI while Agent_* ran | Never kill `android_emu_avd_is_headed`; live GUI → adopt (`KEEP=1`); sticky-only keep ignored when GUI closed | shipped |
 
 ---
 

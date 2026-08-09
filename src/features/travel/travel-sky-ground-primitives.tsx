@@ -1,11 +1,19 @@
 /** SVG building blocks for itinerary sky ground bands. */
-import { Circle, G, Path, Rect } from 'react-native-svg';
+import {
+  Circle,
+  Defs,
+  G,
+  LinearGradient,
+  Path,
+  Rect,
+  Stop,
+} from 'react-native-svg';
 
 import { SKY_VIEW_H } from '@/features/travel/travel-sky-plate';
 
 /**
- * Snow / frost cap on a mountain peak — triangle from the apex partway
- * down each face so the ridge reads as iced, not flat silhouette fill.
+ * Snow / frost cap on a mountain peak — bright at the tip, fading into the
+ * ridge through a soft melt-line (not a hard triangle cookie-cutter).
  */
 export function PeakFrost({
   ax,
@@ -15,7 +23,8 @@ export function PeakFrost({
   rx,
   ry,
   fill,
-  depth = 0.34,
+  id,
+  depth = 0.38,
 }: {
   ax: number;
   ay: number;
@@ -24,14 +33,60 @@ export function PeakFrost({
   rx: number;
   ry: number;
   fill: string;
+  /** Unique SVG paint-server id (gradients share one document). */
+  id: string;
   /** 0…1 how far down each face the frost reaches. */
   depth?: number;
 }) {
-  const x1 = ax + (lx - ax) * depth;
-  const y1 = ay + (ly - ay) * depth;
-  const x2 = ax + (rx - ax) * depth;
-  const y2 = ay + (ry - ay) * depth;
-  return <Path d={`M${x1} ${y1} L${ax} ${ay} L${x2} ${y2} Z`} fill={fill} />;
+  // Slight asymmetry so caps don’t look stamped.
+  const depthL = depth * 0.88;
+  const depthR = depth * 1.08;
+  const x1 = ax + (lx - ax) * depthL;
+  const y1 = ay + (ly - ay) * depthL;
+  const x2 = ax + (rx - ax) * depthR;
+  const y2 = ay + (ry - ay) * depthR;
+  const midX = (x1 + x2) * 0.5 + (x2 - x1) * 0.06;
+  const faceDrop = Math.max(y1, y2) - ay;
+  // Soft scalloped snowline — dips below the chord like real melt.
+  const midY = Math.max(y1, y2) + faceDrop * 0.14;
+  const tipY = ay + faceDrop * 0.08;
+  const gradId = `peakFrost-${id}`;
+
+  return (
+    <G>
+      <Defs>
+        <LinearGradient
+          id={gradId}
+          x1={ax}
+          y1={ay}
+          x2={midX}
+          y2={midY}
+          gradientUnits="userSpaceOnUse">
+          <Stop offset="0%" stopColor={fill} stopOpacity={0.92} />
+          <Stop offset="38%" stopColor={fill} stopOpacity={0.55} />
+          <Stop offset="72%" stopColor={fill} stopOpacity={0.18} />
+          <Stop offset="100%" stopColor={fill} stopOpacity={0} />
+        </LinearGradient>
+      </Defs>
+      {/* Soft melt body */}
+      <Path
+        d={`M${ax} ${ay}
+           L${x2} ${y2}
+           Q${midX} ${midY} ${x1} ${y1}
+           Z`}
+        fill={`url(#${gradId})`}
+      />
+      {/* Brighter tip fleck — reads as packed snow catching sky */}
+      <Path
+        d={`M${ax} ${ay}
+           L${ax + (x2 - ax) * 0.28} ${ay + (y2 - ay) * 0.28}
+           Q${ax} ${tipY + faceDrop * 0.1} ${ax + (x1 - ax) * 0.28} ${ay + (y1 - ay) * 0.28}
+           Z`}
+        fill={fill}
+        opacity={0.45}
+      />
+    </G>
+  );
 }
 
 export function Fir({

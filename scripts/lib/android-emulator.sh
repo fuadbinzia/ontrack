@@ -360,10 +360,34 @@ android_emu_clear_headed_keep() {
   rm -f "$(android_emu_headed_keep_file)" 2>/dev/null || true
 }
 
+# Print the name of a live headed (GUI) Galaxy / preferred AVD, else fail.
+# Used so pool verify-both never issues emu kill → "Saving state…" on the
+# user's window while Agent_* work is happening in another chat.
+android_emu_live_headed_galaxy_name() {
+  local keep preferred candidate
+  keep="$(android_emu_headed_keep_name 2>/dev/null || true)"
+  preferred="$(android_emu_preferred_name 2>/dev/null || true)"
+  for candidate in "$keep" "$preferred" "Galaxy_S26"; do
+    [[ -n "$candidate" ]] || continue
+    if android_emu_avd_is_headed "$candidate"; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
 android_emu_want_keep_headed() {
   case "${ONTRACK_ANDROID_KEEP_HEADED:-}" in
-    0|false|FALSE|no|NO) return 1 ;;
     1|true|TRUE|yes|YES) return 0 ;;
+    0|false|FALSE|no|NO)
+      # Pool verify-both sets KEEP=0 to ignore *stale* sticky keep files — but a
+      # live headed GUI must still win (never "Saving state…" the user window).
+      if android_emu_live_headed_galaxy_name >/dev/null 2>&1; then
+        return 0
+      fi
+      return 1
+      ;;
   esac
   # Sticky file from android:ensure:window — only while the GUI AVD is actually
   # headed. Stale keeps (Galaxy closed / pool killed it) used to force every
@@ -708,12 +732,13 @@ android_emu_set_clipboard() {
 }
 
 # Shut down peer emulators so adb + the android agent-ui bridge stay unambiguous.
-# - Pool mode (no headed keep): kill non-agent AVDs (Galaxy/IdeaHome) so their
-#   JS bridge cannot spoof route probes; leave other onTrack_Agent_* up.
-# - Headed Galaxy / sticky android-headed.keep / --window: NEVER run agents
-#   beside the 8GB GUI on 16GB hosts — kill every onTrack_Agent_* and adopt
-#   Galaxy for Android work (see android_emu_adopt_android_for_headed_host).
-#   Never kill the headed Galaxy itself (looks like "Saving state…" / random off).
+# - Pool mode (no live headed GUI): kill non-agent AVDs (headless Galaxy/IdeaHome)
+#   so their JS bridge cannot spoof route probes; leave other onTrack_Agent_* up.
+# - Live headed Galaxy / sticky keep / --window: NEVER run agents beside the 8GB
+#   GUI on 16GB hosts — kill every onTrack_Agent_* and adopt Galaxy for Android
+#   work (see android_emu_adopt_android_for_headed_host). Never kill a live
+#   headed GUI (looks like "Saving state…" / random off) — not even when pool
+#   sets ONTRACK_ANDROID_KEEP_HEADED=0.
 android_emu_shutdown_others() {
   local keep_serial="${1:-}" adb_bin serial avd
   local kill_agents=0 preferred keep_headed=0 headed_name=""
@@ -754,13 +779,15 @@ android_emu_shutdown_others() {
         continue
       fi
     fi
-    # Leave headed Galaxy only while keep is active. Explicit
-    # ONTRACK_ANDROID_KEEP_HEADED=0 (pool verify-both) must free RAM/GPU for
-    # Agent_* — leftover GUI + Agent thrash a 16GB host for minutes.
-    if (( keep_headed )) && {
-      android_emu_avd_is_headed "$avd" \
-        || [[ "$avd" == "Galaxy_S26" || "$avd" == "$headed_name" ]]
-    }; then
+    # Never kill a live headed GUI — that shows "Saving state…" and looks like
+    # the emulator "turns off on its own" while another chat runs verify-both.
+    # Pool KEEP_HEADED=0 may free *headless* Galaxy leftovers for Agent_*, but
+    # a visible window always wins (adopt Galaxy + kill agents instead).
+    if android_emu_avd_is_headed "$avd"; then
+      echo "Leaving headed emulator up (live GUI): ${serial} (${avd})" >&2
+      continue
+    fi
+    if (( keep_headed )) && [[ "$avd" == "Galaxy_S26" || "$avd" == "$headed_name" ]]; then
       echo "Leaving headed emulator up (user window): ${serial} (${avd})" >&2
       continue
     fi

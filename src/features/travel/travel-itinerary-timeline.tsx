@@ -91,6 +91,7 @@ export function TravelItineraryTimeline({
   onSaveStayDetails,
   onCancelStayEdit,
   onBeginStayEdit,
+  onBeginItemEdit,
   onAddPhotos,
   onRemovePhoto,
   onRemove,
@@ -149,6 +150,7 @@ export function TravelItineraryTimeline({
     itemId: string,
     stay: TravelItineraryItem['stay'],
   ) => void;
+  onBeginItemEdit?: (item: TravelItineraryItem) => void;
   onAddPhotos: (itemId: string) => void;
   onRemovePhoto: (itemId: string, uri: string) => void;
   onRemove: (item: TravelItineraryItem) => void;
@@ -562,6 +564,11 @@ export function TravelItineraryTimeline({
                                     onCancelStayEdit={onCancelStayEdit}
                                     onBeginStayEdit={() =>
                                       onBeginStayEdit(item.id, item.stay)
+                                    }
+                                    onBeginItemEdit={
+                                      onBeginItemEdit
+                                        ? () => onBeginItemEdit(item)
+                                        : undefined
                                     }
                                     onAddPhotos={() => onAddPhotos(item.id)}
                                     onRemovePhoto={(uri) =>

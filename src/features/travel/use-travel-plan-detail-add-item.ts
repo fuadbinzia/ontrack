@@ -93,6 +93,7 @@ export function useTravelPlanDetailAddItem({
       }),
     );
     form.setImportedStayFileName(undefined);
+    form.setEditingItemId(undefined);
     form.setIsAddingItem(false);
     stopAddItem();
   };
@@ -391,7 +392,11 @@ export function useTravelPlanDetailAddItem({
       return;
     }
 
-    const itemId = newId('trip-item');
+    const editingItemId = form.editingItemId;
+    const editingSimpleStop =
+      Boolean(editingItemId) &&
+      (form.kind === 'moment' || form.kind === 'activity');
+    const itemId = editingSimpleStop ? editingItemId! : newId('trip-item');
     const now = new Date().toISOString();
     const flightConfirmationUris =
       validatedFlightDetails.value?.confirmationUris?.length
@@ -428,6 +433,43 @@ export function useTravelPlanDetailAddItem({
         return;
       }
       const beforeItems = Array.isArray(before.itinerary) ? before.itinerary : [];
+      if (editingSimpleStop) {
+        const existing = beforeItems.find((entry) => entry.id === itemId);
+        if (!existing || (existing.kind !== 'moment' && existing.kind !== 'activity')) {
+          return addItemError('This stop can no longer be edited.');
+        }
+        const persistedPhotos = form.photoUris.length
+          ? await persistTravelMomentPhotos(form.photoUris, itemId)
+          : undefined;
+        const latest =
+          useTravel.getState().plans.find((entry) => entry.id === planId) ?? before;
+        const latestItems = Array.isArray(latest.itinerary)
+          ? latest.itinerary
+          : beforeItems;
+        const nextPlan = {
+          ...latest,
+          itinerary: latestItems.map((entry) =>
+            entry.id === itemId
+              ? {
+                  ...entry,
+                  kind: form.kind,
+                  title: incomingItem.title,
+                  date: incomingItem.date,
+                  startMinutes: incomingItem.startMinutes,
+                  durationMinutes: incomingItem.durationMinutes,
+                  details: incomingItem.details,
+                  bookingUrl: incomingItem.bookingUrl,
+                  photoUris: persistedPhotos,
+                  sharedUpdatedAt: now,
+                }
+              : entry,
+          ),
+          updatedAt: now,
+        };
+        updatePlan(nextPlan);
+        clearCompletedForm(true);
+        return;
+      }
       if (beforeItems.some((existing) => isDuplicateItineraryItem(existing, incomingItem))) {
         const merged = mergeDuplicateItemConfirmationUris(before, incomingItem);
         if (merged) updatePlan(merged);

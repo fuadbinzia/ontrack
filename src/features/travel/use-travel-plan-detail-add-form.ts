@@ -23,7 +23,11 @@ import {
   emptyTransportDetailsDraft,
   type TransportDetailsDraft,
 } from '@/features/travel/transport-details';
-import type { TravelItemKind, TravelPlan } from '@/features/travel/types';
+import type {
+  TravelItemKind,
+  TravelItineraryItem,
+  TravelPlan,
+} from '@/features/travel/types';
 
 type UseTravelPlanDetailAddFormOptions = {
   plan: TravelPlan;
@@ -31,6 +35,14 @@ type UseTravelPlanDetailAddFormOptions = {
   initialOpenAddPicker?: boolean;
   accountEmail?: string;
 };
+
+/** Same-day end minute for activity edit (clamped before midnight). */
+export function activityEndMinutesFromItem(item: TravelItineraryItem): number {
+  return Math.min(
+    item.startMinutes + Math.max(1, item.durationMinutes),
+    24 * 60 - 1,
+  );
+}
 
 export function useTravelPlanDetailAddForm({
   plan,
@@ -107,6 +119,8 @@ export function useTravelPlanDetailAddForm({
   const [error, setError] = useState<string>();
   const [isAddingItem, setIsAddingItem] = useState(Boolean(initialAddKind));
   const [isChoosingAddKind, setIsChoosingAddKind] = useState(initialOpenAddPicker);
+  /** When set, the add sheet saves over this itinerary item (moment/activity). */
+  const [editingItemId, setEditingItemId] = useState<string>();
   const appliedFlightImportFixture = useRef(false);
 
   const resetAddForm = useCallback(() => {
@@ -137,6 +151,7 @@ export function useTravelPlanDetailAddForm({
     setImportedStayFileName(undefined);
     setStayDetailsError(undefined);
     setError(undefined);
+    setEditingItemId(undefined);
   }, [defaultStayDetails, defaultTransportDetails, plan.endDate, plan.startDate]);
 
   const prepareAddKind = useCallback(
@@ -174,6 +189,32 @@ export function useTravelPlanDetailAddForm({
       setIsAddingItem(true);
     },
     [prepareAddKind],
+  );
+
+  const beginEditingItem = useCallback(
+    (item: TravelItineraryItem, onOpenTimeline?: () => void) => {
+      if (item.kind !== 'moment' && item.kind !== 'activity') return;
+      resetAddForm();
+      setEditingItemId(item.id);
+      setKind(item.kind);
+      setTitle(item.title);
+      setDate(item.date);
+      setStartMinutes(item.startMinutes);
+      setEndDate(item.date);
+      setEndMinutes(
+        item.kind === 'activity'
+          ? activityEndMinutesFromItem(item)
+          : Math.min(item.startMinutes + 60, 24 * 60 - 1),
+      );
+      setDuration(String(Math.max(1, item.durationMinutes)));
+      setDetails(item.details ?? '');
+      setBookingUrl(item.bookingUrl ?? '');
+      setPhotoUris(item.photoUris ?? []);
+      setIsChoosingAddKind(false);
+      onOpenTimeline?.();
+      setIsAddingItem(true);
+    },
+    [resetAddForm],
   );
 
   const cancelAddToTimeline = useCallback(
@@ -279,11 +320,14 @@ export function useTravelPlanDetailAddForm({
     setIsAddingItem,
     isChoosingAddKind,
     setIsChoosingAddKind,
+    editingItemId,
+    setEditingItemId,
     appliedFlightImportFixture,
     defaultStayDetails,
     resetAddForm,
     prepareAddKind,
     chooseAddKind,
+    beginEditingItem,
     cancelAddToTimeline,
     handleFlightTripTypeChange,
   };

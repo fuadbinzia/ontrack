@@ -773,6 +773,7 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 | `ontrack.travel.confirmation.importAction.rental` | Import rental details from a confirmation          |
 | `ontrack.travel.confirmation.importAction.stay`   | Import stay details from a confirmation            |
 | `ontrack.travel.timelineItem.<itemId>.editFlight` | Edit a flight itinerary leg                        |
+| `ontrack.travel.timelineItem.<itemId>.edit` | Edit a moment/activity from the itinerary timeline toolbar |
 | `ontrack.travel.timelineItem.<itemId>.openAddress` | Stay address → in-app maps chooser (Apple / Google / Copy) |
 | `ontrack.travel.addPhotos.confirmRemovePhoto`     | Confirm photo removal                              |
 | `ontrack.travel.importResult.close`               | Close an import result and return to the itinerary |

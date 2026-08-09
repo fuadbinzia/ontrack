@@ -25,6 +25,7 @@ type ItemHandlersOptions = {
   setExpenseDraft: (draft: ExpenseFormState | undefined) => void;
   setOpenExpenseSheet: (open: boolean) => void;
   onShare?: (item: TravelItineraryItem) => void;
+  onBeginItemEdit?: (item: TravelItineraryItem) => void;
 };
 
 export function buildTravelPlanDetailItemHandlers({
@@ -40,6 +41,7 @@ export function buildTravelPlanDetailItemHandlers({
   setExpenseDraft,
   setOpenExpenseSheet,
   onShare,
+  onBeginItemEdit,
 }: ItemHandlersOptions) {
   return {
     plan,
@@ -138,6 +140,7 @@ export function buildTravelPlanDetailItemHandlers({
     onRemove: itemMedia.confirmRemoveItem,
     onSaveNotes: itemMedia.saveItemNotes,
     onShare,
+    onBeginItemEdit,
   };
 }
 

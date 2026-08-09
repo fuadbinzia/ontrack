@@ -69,6 +69,7 @@ type TravelTimelineNodeStructuredProps = {
   ) => void;
   onBeginTransportEdit: () => void;
   onCancelTransportEdit: () => void;
+  onBeginItemEdit?: () => void;
   onOpenNotes: () => void;
   onAddPhotos: () => void;
   onShare?: () => void;
@@ -125,6 +126,7 @@ export function TravelTimelineNodeStructured({
   onSaveTransportDetails,
   onBeginTransportEdit,
   onCancelTransportEdit,
+  onBeginItemEdit,
   onOpenNotes,
   onAddPhotos,
   onShare,
@@ -263,6 +265,7 @@ export function TravelTimelineNodeStructured({
           onBeginRentalEdit={onBeginRentalEdit}
           onBeginStayEdit={onBeginStayEdit}
           onBeginTransportEdit={onBeginTransportEdit}
+          onBeginItemEdit={onBeginItemEdit}
           onOpenBooking={onOpenBooking}
           onRemove={onRemove}
         />

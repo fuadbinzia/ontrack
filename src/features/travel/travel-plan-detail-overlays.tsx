@@ -173,6 +173,7 @@ export function TravelPlanDetailOverlays({
       <TravelItineraryAddSheet
         visible={form.isAddingItem}
         kind={form.kind}
+        editing={Boolean(form.editingItemId)}
         title={form.title}
         date={form.date}
         startMinutes={form.startMinutes}

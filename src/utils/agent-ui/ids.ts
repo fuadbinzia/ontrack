@@ -986,6 +986,9 @@ export const AgentUiIds = {
         `ontrack.travel.timelineItem.${itemId}.${phase}`,
       editFlight: (itemId: string) =>
         `ontrack.travel.timelineItem.${itemId}.editFlight`,
+      /** Edit a moment or activity from the itinerary timeline toolbar. */
+      edit: (itemId: string) =>
+        `ontrack.travel.timelineItem.${itemId}.edit`,
       openAddress: (itemId: string) =>
         `ontrack.travel.timelineItem.${itemId}.openAddress`,
       share: (itemId: string) =>

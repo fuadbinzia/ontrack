@@ -31,7 +31,17 @@ import { BlurView } from 'expo-blur';
 
 type FormProps = Omit<ComponentProps<typeof TravelItineraryForm>, 'kind' | 'hideSubmit'>;
 
-function sheetSubtitle(kind: TravelItemKind): string {
+function sheetSubtitle(kind: TravelItemKind, editing: boolean): string {
+  if (editing) {
+    switch (kind) {
+      case 'moment':
+        return 'Update this moment on your timeline';
+      case 'activity':
+        return 'Update this activity on your timeline';
+      default:
+        return 'Update details on your timeline';
+    }
+  }
   switch (kind) {
     case 'stay':
       return 'Add your stay details to keep everything organized';
@@ -57,12 +67,15 @@ function sheetSubtitle(kind: TravelItemKind): string {
 export function TravelItineraryAddSheet({
   visible,
   kind,
+  editing = false,
   onClose,
   onAdd,
   ...formProps
 }: {
   visible: boolean;
   kind: TravelItemKind;
+  /** Prefill + save over an existing moment/activity. */
+  editing?: boolean;
   onClose: () => void;
 } & FormProps) {
   const theme = useTheme();
@@ -75,9 +88,22 @@ export function TravelItineraryAddSheet({
   const dark = theme.name === 'dark';
   const kindLabel =
     ITEM_KINDS.find((entry) => entry.value === kind)?.label ?? 'Item';
-  const title =
-    kind === 'moment' ? 'Add Moment' : kind === 'flight' ? 'Add Flights' : `Add ${kindLabel}`;
-  const submitLabel = kind === 'moment' ? 'Add Moment' : 'Add to Timeline';
+  const title = editing
+    ? kind === 'moment'
+      ? 'Edit Moment'
+      : kind === 'activity'
+        ? 'Edit Activity'
+        : `Edit ${kindLabel}`
+    : kind === 'moment'
+      ? 'Add Moment'
+      : kind === 'flight'
+        ? 'Add Flights'
+        : `Add ${kindLabel}`;
+  const submitLabel = editing
+    ? 'Save Changes'
+    : kind === 'moment'
+      ? 'Add Moment'
+      : 'Add to Timeline';
   // In-tree overlay sits under the tab dock — clear it (IME covers the dock).
   const tabBarHeight =
     measuredTabBarHeight > 0
@@ -204,8 +230,10 @@ export function TravelItineraryAddSheet({
             <TravelSheetHeader
               eyebrow="Itinerary"
               title={title}
-              subtitle={sheetSubtitle(kind)}
-              closeAccessibilityLabel="Close add to timeline"
+              subtitle={sheetSubtitle(kind, editing)}
+              closeAccessibilityLabel={
+                editing ? 'Close edit stop' : 'Close add to timeline'
+              }
               closeTestID={AgentUiIds.travel.itineraryAdd.close}
               onClose={onClose}
             />
@@ -237,7 +265,9 @@ export function TravelItineraryAddSheet({
                   label={submitLabel}
                   onPress={onAdd}
                   testID={AgentUiIds.travel.itineraryAdd.submit}
-                  icon={kind === 'moment' ? 'photo' : 'calendar-add'}
+                  icon={
+                    editing ? 'check' : kind === 'moment' ? 'photo' : 'calendar-add'
+                  }
                 />
               </View>
             </ScrollView>

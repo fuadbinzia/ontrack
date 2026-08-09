@@ -7,12 +7,12 @@ import {
   AppText,
   Card,
   EmptyState,
-  HeaderBackButton,
   IconButton,
   ScreenHeader,
   SectionHeader,
 } from '@/components/primitives';
 import { NutritionStat } from '@/features/food/components';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import { FoodScreen } from '@/features/food/food-screen';
 import { ScheduledMealRow } from '@/features/food/scheduled-meal-row';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -76,7 +76,7 @@ export default function FoodTrackerScreen() {
       <ScreenHeader
         eyebrow="Food"
         title="Meal Tracker"
-        leading={<HeaderBackButton compact />}
+        leading={<FoodHeaderBackButton />}
       />
 
       <Card padded={false}>

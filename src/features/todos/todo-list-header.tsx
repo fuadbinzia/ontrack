@@ -6,7 +6,7 @@ import {
   AppText,
   ErrorMessage,
   GlassPlate,
-  IconButton,
+  HeaderBackButton,
   ProgressRing,
   Symbol,
 } from '@/components/primitives';
@@ -90,21 +90,17 @@ export function TodoListHeader({
                 style={styles.listHeader}
               >
                 <View style={styles.heading}>
-                  <IconButton
-                    icon="chevron-left"
-                    size={40}
-                    background="transparent"
-                    accessibilityLabel="Back to checklists"
-                    testID={AgentUiIds.checklists.detail.back}
-                    onPress={() => {
-                      if (router.canGoBack()) router.back();
-                      else router.replace('/(tabs)/to-do' as never);
-                    }}
-                  />
                   <View style={styles.headingCopy}>
-                    <AppText variant="overline" color="accent">
-                      {dateLabel}
-                    </AppText>
+                    <HeaderBackButton
+                      compact
+                      label={dateLabel}
+                      accessibilityLabel="Back to checklists"
+                      testID={AgentUiIds.checklists.detail.back}
+                      onPress={() => {
+                        if (router.canGoBack()) router.back();
+                        else router.replace('/(tabs)/to-do' as never);
+                      }}
+                    />
                     <AppText
                       style={[
                         styles.title,
@@ -497,7 +493,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: spacing.sm,
   },

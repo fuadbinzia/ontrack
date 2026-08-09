@@ -6,7 +6,6 @@ import {
   Card,
   EmptyState,
   GlassIconWell,
-  HeaderBackButton,
   ScreenHeader,
   SectionHeader,
   StatusBadge,
@@ -19,6 +18,7 @@ import {
   ingredientSafetyStatusForLevel,
   ingredientSafetyTone,
 } from '@/features/food/components';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import { FoodScreen } from '@/features/food/food-screen';
 import {
   findIngredientKnowledge,
@@ -53,8 +53,7 @@ export default function FoodIngredientDetailScreen() {
           eyebrow="Food"
           title="Ingredient Info"
           leading={
-            <HeaderBackButton
-              compact
+            <FoodHeaderBackButton
               testID={AgentUiIds.food.ingredients.detail.back}
             />
           }
@@ -92,8 +91,7 @@ export default function FoodIngredientDetailScreen() {
         eyebrow="Food"
         title={knowledge.name}
         leading={
-          <HeaderBackButton
-            compact
+          <FoodHeaderBackButton
             testID={AgentUiIds.food.ingredients.detail.back}
           />
         }

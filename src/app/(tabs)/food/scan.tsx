@@ -8,13 +8,13 @@ import {
   FoodImage,
   GlassIconWell,
   GlassPrimaryAction,
-  HeaderBackButton,
   LoadingBlock,
   ScreenHeader,
   Symbol,
 } from '@/components/primitives';
 import { radii } from '@/design-system';
 import { buildFoodFixtureScanResult } from '@/features/food/fixtures';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import { FoodScreen } from '@/features/food/food-screen';
 import { ScanResultSheet } from '@/features/food/scan-result-sheet';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -104,7 +104,7 @@ export default function FoodScanScreen() {
       <ScreenHeader
         eyebrow="Food"
         title="Scan Ingredient"
-        leading={<HeaderBackButton compact />}
+        leading={<FoodHeaderBackButton />}
       />
 
       {/* Viewfinder frame — the capture launcher for the system camera. */}

@@ -464,7 +464,7 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.checklists.newListKind.<kind>`   | Select checklist or grocery-list mode |
 | `ontrack.checklists.createList`           | Create list                           |
 | `ontrack.checklists.list.<listId>`        | Open list card                        |
-| `ontrack.checklists.detail.back`          | Back to lists                         |
+| `ontrack.checklists.detail.back`          | Back to lists (chevron + eyebrow)     |
 | `ontrack.checklists.detail.newTask`       | New task field                        |
 | `ontrack.checklists.detail.addTask`       | Add task                              |
 | `ontrack.checklists.detail.sort`          | Sort menu                             |
@@ -478,6 +478,7 @@ Demo fixture: `list-agent-ui-demo-checklist` / `task-agent-ui-demo-plan` via `./
 
 | testID                                         | Control                          |
 | ---------------------------------------------- | -------------------------------- |
+| `ontrack.grocery.detail.back`                  | Back to lists (chevron + eyebrow) |
 | `ontrack.grocery.detail.addRecipe`             | Add Recipe                       |
 | `ontrack.grocery.detail.settings`              | List settings                    |
 | `ontrack.grocery.detail.share`                 | Share list                       |

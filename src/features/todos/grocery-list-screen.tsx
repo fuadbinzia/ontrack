@@ -14,6 +14,7 @@ import {
     Card,
     ErrorMessage,
     GlassPlate,
+    HeaderBackButton,
     IconButton,
     ProgressRing,
     Screen,
@@ -431,20 +432,17 @@ export function GroceryListScreen({ listId }: { listId: string }) {
         ListHeaderComponent={
           <View style={styles.header}>
             <View style={styles.heading}>
-              <IconButton
-                icon="chevron-left"
-                size={40}
-                background="transparent"
-                accessibilityLabel="Back to checklists"
-                onPress={() => {
-                  if (router.canGoBack()) router.back();
-                  else router.replace('/(tabs)/to-do' as never);
-                }}
-              />
               <View style={styles.headingCopy}>
-                <AppText variant="overline" color="accent">
-                  Grocery list
-                </AppText>
+                <HeaderBackButton
+                  compact
+                  label="Grocery list"
+                  accessibilityLabel="Back to checklists"
+                  testID={AgentUiIds.grocery.back}
+                  onPress={() => {
+                    if (router.canGoBack()) router.back();
+                    else router.replace('/(tabs)/to-do' as never);
+                  }}
+                />
                 <AppText
                   style={[
                     styles.title,

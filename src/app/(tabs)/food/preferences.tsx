@@ -4,7 +4,6 @@ import { View } from 'react-native';
 
 import {
   AppText,
-  HeaderBackButton,
   ScreenHeader,
   SectionHeader,
   SettingsActionRow,
@@ -12,6 +11,7 @@ import {
   SettingsToggleRow,
 } from '@/components/primitives';
 import { AllergyEditorSheet } from '@/features/food/allergy-editor-sheet';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import { FoodScreen } from '@/features/food/food-screen';
 import {
   AllergyRow,
@@ -51,7 +51,7 @@ export default function FoodPreferencesScreen() {
         eyebrow="Food"
         title="Diet & Preferences"
         subtitle="Personalizes suggestions and every safety check"
-        leading={<HeaderBackButton compact />}
+        leading={<FoodHeaderBackButton />}
       />
 
       <AgentTestId

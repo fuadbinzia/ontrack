@@ -16,7 +16,11 @@ import {
     itinerarySheetChrome,
     type SheetIconTone,
 } from '@/features/travel/travel-itinerary-sheet-chrome';
-import { travelItineraryInk } from '@/features/travel/travel-surface';
+import {
+    useTravelItineraryInk,
+    useTravelItineraryMistProps,
+    useTravelItineraryOnGlass,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId } from '@/utils/agent-ui';
@@ -45,7 +49,9 @@ export function TravelSheetAction({
   const theme = useTheme();
   const chrome = itinerarySheetChrome(theme);
   const iconTone = chrome.icons[tone];
-  const labelInk = travelItineraryInk(theme);
+  const labelInk = useTravelItineraryInk();
+  const mistProps = useTravelItineraryMistProps();
+  const onGlass = useTravelItineraryOnGlass();
   const { s, spacing } = useResponsive();
   // Dense glass chips — keep ≥44pt hit via Pressable, trim visual chrome.
   const iconBox = Math.max(22, s(24));
@@ -75,7 +81,7 @@ export function TravelSheetAction({
           { opacity: pressed ? 0.82 : 1 },
         ]}>
         <TravelHomeGlass
-          mist
+          {...mistProps}
           style={[
             styles.actionGlass,
             {
@@ -99,10 +105,9 @@ export function TravelSheetAction({
                       height: badgeSize,
                       borderRadius: badgeSize / 2,
                       backgroundColor: 'rgba(12,16,24,0.55)',
-                      borderColor:
-                        theme.name === 'dark'
-                          ? glassMaterials.border.mist
-                          : glassMaterials.border.mistLight,
+                      borderColor: onGlass
+                        ? glassMaterials.border.mist
+                        : glassMaterials.border.mistLight,
                     },
                   ]}>
                   <Symbol name={badgeIcon} size={8} color={iconTone.fg} />

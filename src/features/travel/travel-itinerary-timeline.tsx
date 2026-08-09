@@ -12,7 +12,6 @@ import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import type { TravelRangeScheduleDraft } from '@/features/travel/travel-range-schedule';
 import {
     TRAVEL_EDITORIAL_ACCENT,
-    travelItineraryInk,
 } from '@/features/travel/travel-surface';
 import {
     dayNumberFor,
@@ -39,6 +38,11 @@ import type {
     TravelItineraryItem,
     TravelPlan,
 } from '@/features/travel/types';
+import {
+    useTravelItineraryInk,
+    useTravelItineraryMistProps,
+    useTravelItineraryOnGlass,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
@@ -156,6 +160,10 @@ export function TravelItineraryTimeline({
 }) {
   const theme = useTheme();
   const { s, spacing: rs, typography } = useResponsive();
+  const mistProps = useTravelItineraryMistProps();
+  const onGlass = useTravelItineraryOnGlass();
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
   const [now, setNow] = useState(() => new Date());
   const days = useMemo(
     () => groupTimelineEntriesByDate(expandTimelineEntries(items)),
@@ -199,13 +207,12 @@ export function TravelItineraryTimeline({
   }, []);
 
   if (days.length === 0) {
-    const emptyIconBg =
-      theme.name === 'dark'
-        ? 'rgba(255,255,255,0.12)'
-        : 'rgba(17, 74, 110, 0.08)';
+    const emptyIconBg = onGlass
+      ? 'rgba(255,255,255,0.12)'
+      : 'rgba(17, 74, 110, 0.08)';
     return (
       <TravelHomeGlass
-        mist
+        {...mistProps}
         style={[
           styles.emptyCard,
           {
@@ -228,14 +235,14 @@ export function TravelItineraryTimeline({
           <Symbol
             name="flight"
             size="lg"
-            color={travelItineraryInk(theme)}
+            color={primaryInk}
           />
         </View>
         <AppText
           variant="subheading"
           style={[
             travelEditorialTextStyle,
-            { color: travelItineraryInk(theme) },
+            { color: primaryInk },
           ]}>
           Your Journey Starts Here
         </AppText>
@@ -243,7 +250,7 @@ export function TravelItineraryTimeline({
           variant="body"
           style={[
             travelEditorialTextStyle,
-            { color: travelItineraryInk(theme, 'secondary') },
+            { color: secondaryInk },
           ]}>
           Add flights, stays, activities, or moments with photos and notes —
           they show up here day by day. Tap + above to begin.
@@ -393,7 +400,7 @@ export function TravelItineraryTimeline({
                           />
                         ) : null}
                         <TravelHomeGlass
-                          mist
+                          {...mistProps}
                           style={[
                             styles.eventStack,
                             {
@@ -449,7 +456,7 @@ export function TravelItineraryTimeline({
                                       fit
                                       style={[
                                         styles.nowInStackLabel,
-                                        { color: travelItineraryInk(theme) },
+                                        { color: primaryInk },
                                       ]}>
                                       Now
                                     </AppText>

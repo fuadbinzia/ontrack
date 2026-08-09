@@ -151,7 +151,7 @@ function RootNavigator({ hydrated }: { hydrated: boolean }) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ScreenAtmosphere />
-        <LoadingBlock label="Loading onTrack…" surface="glass" />
+        <LoadingBlock label="Loading onTrack…" />
       </View>
     );
   }

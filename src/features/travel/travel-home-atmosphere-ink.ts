@@ -158,13 +158,13 @@ export function travelHomeAtmosphereHeaderScrimColors(
     if (luma !== undefined && luma < 0.1) return null;
     const need =
       luma === undefined
-        ? 0.82
-        : Math.min(1, Math.max(0.55, (luma - 0.1) / 0.55));
-    // Top-weighted: darkest at status bar / title, still present through
+        ? 0.48
+        : Math.min(1, Math.max(0.28, (luma - 0.1) / 0.55));
+    // Top-weighted: softest at status bar / title, still present through
     // the location caption, then soft-clear before Your Trips.
-    const top = 0.58 + need * 0.3;
-    const mid = 0.34 + need * 0.24;
-    const low = 0.14 + need * 0.14;
+    const top = 0.26 + need * 0.22;
+    const mid = 0.12 + need * 0.16;
+    const low = 0.04 + need * 0.09;
     return [
       `rgba(0,0,0,${top.toFixed(2)})`,
       `rgba(0,0,0,${mid.toFixed(2)})`,

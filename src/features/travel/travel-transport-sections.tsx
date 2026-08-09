@@ -14,7 +14,6 @@ import { TravelSheetPrimaryAction } from '@/features/travel/travel-list-actions'
 import type { TravelRangeScheduleDraft } from '@/features/travel/travel-range-schedule';
 import {
   travelAccent,
-  travelItineraryInk,
 } from '@/features/travel/travel-surface';
 import { TravelTimelineNode } from '@/features/travel/travel-timeline-node';
 import type {
@@ -23,6 +22,11 @@ import type {
   TravelPlan,
   TravelTransportDetails,
 } from '@/features/travel/types';
+import {
+  useTravelItineraryInk,
+  useTravelItineraryMistProps,
+  useTravelItineraryOnGlass,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -108,11 +112,12 @@ function TransportEmptyState({
   actionTestID,
   onAction,
 }: EmptyAction) {
-  const theme = useTheme();
   const { spacing: rs, s } = useResponsive();
+  const mistProps = useTravelItineraryMistProps();
+  const secondaryInk = useTravelItineraryInk('secondary');
   return (
     <TravelHomeGlass
-      mist
+      {...mistProps}
       style={[
         styles.empty,
         {
@@ -127,7 +132,7 @@ function TransportEmptyState({
         align="center"
         style={[
           styles.emptyMessage,
-          { color: travelItineraryInk(theme, 'secondary') },
+          { color: secondaryInk },
         ]}>
         {message}
       </AppText>
@@ -254,14 +259,15 @@ export function TravelTransportSections({
 }) {
   const { spacing: rs } = useResponsive();
   const theme = useTheme();
+  const darkGlass = useTravelItineraryOnGlass();
   const flights = items.filter((item) => item.kind === 'flight');
   const ground = items.filter((item) => item.kind === 'transport');
   const stays = items.filter((item) => item.kind === 'stay');
   const rentals = items.filter((item) => item.kind === 'rental');
-  const flightAccent = kindAccent('flight', theme);
-  const groundAccent = kindAccent('transport', theme);
-  const stayAccent = kindAccent('stay', theme);
-  const rentalAccent = kindAccent('rental', theme);
+  const flightAccent = kindAccent('flight', theme, { darkGlass });
+  const groundAccent = kindAccent('transport', theme, { darkGlass });
+  const stayAccent = kindAccent('stay', theme, { darkGlass });
+  const rentalAccent = kindAccent('rental', theme, { darkGlass });
 
   return (
     <TravelCollapsibleSection

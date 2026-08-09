@@ -41,8 +41,8 @@ describe('travel section header typography', () => {
   });
 
   it('uses theme-aware ink on white (light) / dark-glass (dark) card panels', () => {
-    expect(source).toContain('travelItineraryShellProps(theme)');
-    expect(source).toContain('travelItineraryInk(theme)');
+    expect(source).toContain('useTravelItineraryShellProps');
+    expect(source).toContain('useTravelItineraryInk');
     expect(source).toContain('travelAccent(theme)');
     expect(source).not.toContain('TRAVEL_EDITORIAL_ACCENT');
     expect(source).not.toContain('inverted=');
@@ -63,7 +63,7 @@ describe('itinerary page glass chrome', () => {
         join(process.cwd(), `src/features/travel/${file}`),
         'utf8',
       );
-      expect(src).toContain('travelItineraryShellProps');
+      expect(src).toContain('useTravelItineraryShellProps');
       expect(src).not.toContain('travelItineraryShellFillStyle');
       expect(src).not.toContain('inverted=');
     }
@@ -78,13 +78,14 @@ describe('itinerary page glass chrome', () => {
         'utf8',
       );
       // Nested board/timeline chips use translucent mist (not airy milk).
-      expect(src).toContain('mist');
+      expect(src).toContain('useTravelItineraryMistProps');
     }
     const surface = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-surface.tsx'),
       'utf8',
     );
-    expect(surface).toContain('airy: true, intensity: 48');
+    expect(surface).toContain('airy: true');
+    expect(surface).toContain("intensity: theme.name === 'dark' ? 40 : 48");
     expect(surface).not.toMatch(/:\s*\{\s*clear:\s*true\s*\}/);
     const board = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-timeline-node.tsx'),
@@ -100,6 +101,8 @@ describe('itinerary page glass chrome', () => {
     // Sky wash is local to the body — no dead sheetBase context.
     expect(body).toContain('travelPlanSkyPageWashStyle');
     expect(body).toContain('washTop');
+    expect(body).toContain('TravelArtworkTintProvider');
+    expect(body).toContain('resolveTravelArtworkTintHex');
     expect(body).not.toContain('TravelItinerarySheetBaseProvider');
     const notes = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-trip-notes-card.tsx'),
@@ -131,9 +134,9 @@ describe('transport board section header', () => {
   it('keeps nested kind headers theme-aware (kind accents on white, light ink on dark)', () => {
     expect(source).toContain('title="FLIGHTS"');
     expect(source).toContain('nested');
-    expect(collapsible).toContain("theme.name === 'dark'");
-    expect(collapsible).toContain('travelItineraryInk(theme)');
-    expect(collapsible).toContain('travelItineraryShellProps(theme)');
+    expect(collapsible).toContain('useTravelItineraryOnGlass');
+    expect(collapsible).toContain('useTravelItineraryInk');
+    expect(collapsible).toContain('useTravelItineraryShellProps');
   });
 });
 
@@ -156,8 +159,9 @@ describe('timeline progress + dense rows on glass', () => {
       'utf8',
     );
     expect(node).toContain(
-      "const onGlass = (isCompactBoardCard || dense) && theme.name === 'dark'",
+      'const onGlass = (isCompactBoardCard || dense) && darkGlass',
     );
+    expect(node).toContain('useTravelItineraryOnGlass');
     expect(node).toContain('onGlass={onGlass}');
   });
 

@@ -95,25 +95,46 @@ export function travelSafeAreaStyle(
 /**
  * Itinerary plan-detail shells: frosted airy glass in both themes.
  * Sky atmosphere shows through — do not paint opaque paper fills over these.
+ * Optional `tintColor` matches the trip header artwork.
  */
-export function travelItineraryShellProps(theme: Theme): {
+export function travelItineraryShellProps(
+  theme: Theme,
+  tintColor?: string,
+): {
   clear?: boolean;
   airy?: boolean;
   intensity?: number;
+  tintColor?: string;
 } {
-  return theme.name === 'dark'
-    ? { airy: true, intensity: 40 }
-    : { airy: true, intensity: 48 };
+  return {
+    airy: true,
+    intensity: theme.name === 'dark' ? 40 : 48,
+    ...(tintColor ? { tintColor } : {}),
+  };
+}
+
+/** Nested board / timeline mist chips — optional artwork tint. */
+export function travelItineraryMistProps(tintColor?: string): {
+  mist: true;
+  tintColor?: string;
+} {
+  return {
+    mist: true,
+    ...(tintColor ? { tintColor } : {}),
+  };
 }
 
 /** Primary / secondary / tertiary ink on itinerary glass or white shells. */
 export function travelItineraryInk(
   theme: Theme,
   role: 'primary' | 'secondary' | 'tertiary' = 'primary',
+  /** When artwork glass is dark, force light ink even in light theme. */
+  options?: { darkGlass?: boolean },
 ): string {
-  if (theme.name === 'dark') {
-    if (role === 'secondary') return 'rgba(255,255,255,0.72)';
-    if (role === 'tertiary') return 'rgba(255,255,255,0.55)';
+  const darkGlass = theme.name === 'dark' || Boolean(options?.darkGlass);
+  if (darkGlass) {
+    if (role === 'secondary') return 'rgba(255,255,255,0.82)';
+    if (role === 'tertiary') return 'rgba(255,255,255,0.68)';
     return '#FFFFFF';
   }
   if (role === 'secondary') return theme.textSecondary;

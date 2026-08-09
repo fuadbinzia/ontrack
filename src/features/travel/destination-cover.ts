@@ -24,7 +24,8 @@ import { fetchWithTimeout } from '@/services/http/fetch-with-timeout';
 const COVER_FETCH_TIMEOUT_MS = 8_000;
 /** Brief negative cache so timeouts/offline blips can retry without hammering. */
 const COVER_MISS_TTL_MS = 60_000;
-const HERO_RECENT_STORAGE_KEY = '@ontrack/travel-destination-hero-recent-v1';
+/** Bump when cover provider/filters change so stale people plates leave rotation. */
+const HERO_RECENT_STORAGE_KEY = '@ontrack/travel-destination-hero-recent-v3';
 const HERO_RECENT_LIMIT = 36;
 type CoverCacheEntry =
   | { kind: 'hit'; uri: string }
@@ -41,6 +42,7 @@ export {
     DESTINATION_COVER_MAX,
     DESTINATION_COVER_POOL_MAX,
     destinationPhotoSuggestsPeople,
+    destinationPhotoSuggestsText,
     enlargeWikimediaThumb,
     hasDestinationLandmarkIntent,
     isAllowedDestinationCoverImageUrl,
@@ -434,7 +436,7 @@ export async function fetchPlaceCoverUris(
   );
   if (!places.length) return [];
 
-  const key = `place-pool-v5|${capped}|${places.join('|').toLowerCase()}`;
+  const key = `place-pool-v6|${capped}|${places.join('|').toLowerCase()}`;
   const cached = heroCache.get(key);
   if (cached?.kind === 'hit') {
     return orderHeroUrisForClient(cached.uris).map(toClientDisplayCoverUri);
@@ -496,7 +498,7 @@ export async function fetchDestinationCoverUri(
 async function resolveDestinationHeroPool(
   places: string[],
 ): Promise<string[]> {
-  const key = `hero-pool-v12|${places.join('|').toLowerCase()}`;
+  const key = `hero-pool-v13|${places.join('|').toLowerCase()}`;
   const cached = heroCache.get(key);
   if (cached?.kind === 'hit') return cached.uris;
   if (cached?.kind === 'miss') {

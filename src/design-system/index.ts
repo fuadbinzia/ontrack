@@ -5,11 +5,13 @@ export {
 } from './font-presets';
 export {
     colorWithAlpha,
+    glassDynamicTintMaterials,
     glassFieldBackground,
     glassFieldBorder,
     glassMaterials,
     glassMistPillShellStyle,
     glassMistWashStyle,
+    relativeLuminanceFromColor,
 } from './glass';
 export {
     appIcons,

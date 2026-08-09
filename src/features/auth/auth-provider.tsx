@@ -459,6 +459,9 @@ export function AuthSessionProvider({
             await dropLocalAccountState();
             useAuthAccess.getState().startAuthUpgrade();
           }
+          // Profile shows the button used for this session — not the first signup
+          // provider still stuck on app_metadata.provider after identity linking.
+          useAuthAccess.getState().setActiveSignInProvider(provider);
           await initializeAccount(nextSession);
         } else {
           // Provider returned no session without throwing — stay on the gate.

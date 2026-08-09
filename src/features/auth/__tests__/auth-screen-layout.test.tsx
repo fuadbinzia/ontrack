@@ -54,7 +54,7 @@ describe('AuthScreen layout stability', () => {
 
     expect(screen.getByText('Opening Apple…')).toBeTruthy();
     expect(screen.getByTestId(AgentUiIds.auth.apple)).toBeTruthy();
-    expect(screen.getByTestId(AgentUiIds.auth.guest)).toBeTruthy();
+    expect(screen.queryByTestId(AgentUiIds.auth.guest)).toBeNull();
     expect(screen.getByTestId(AgentUiIds.auth.section.providers)).toBeTruthy();
   });
 
@@ -71,18 +71,24 @@ describe('AuthScreen layout stability', () => {
     expect(screen.getByTestId(AgentUiIds.auth.apple)).toBeTruthy();
   });
 
-  it('keeps Continue as Guest on the Profile upgrade gate', () => {
+  it('omits Continue as Guest on sign-in and upgrade gates', () => {
+    const { unmount } = render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <AuthScreen variant="welcome" />
+      </SafeAreaProvider>,
+    );
+
+    expect(screen.queryByTestId(AgentUiIds.auth.guest)).toBeNull();
+    expect(screen.queryByText('Continue as Guest')).toBeNull();
+    expect(screen.getByTestId(AgentUiIds.auth.privacy)).toBeTruthy();
+    unmount();
+
     render(
       <SafeAreaProvider initialMetrics={METRICS}>
         <AuthScreen variant="upgrade" />
       </SafeAreaProvider>,
     );
-
-    expect(screen.getByTestId(AgentUiIds.auth.guest)).toBeTruthy();
-    expect(
-      screen.getByText(
-        "Try out onTrack, your edits will transfer over when you're ready to create an account",
-      ),
-    ).toBeTruthy();
+    expect(screen.queryByTestId(AgentUiIds.auth.guest)).toBeNull();
+    expect(screen.getByTestId(AgentUiIds.auth.terms)).toBeTruthy();
   });
 });

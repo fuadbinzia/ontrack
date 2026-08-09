@@ -118,18 +118,19 @@ describe('glass plate contract', () => {
 
   it('keeps app launch Loading onTrack shell on glass atmosphere', () => {
     const layout = read('src/app/_layout.tsx');
-    const loading = read('src/components/primitives/loading-block.tsx');
+    const bootLoader = read('src/features/auth/app-boot-loader.tsx');
     const boot = layout.match(
       /if \(!hydrated \|\| phase === 'loading'\) \{([\s\S]*?)\n  \}/,
     )?.[1];
     expect(boot).toBeTruthy();
     expect(boot).toContain('ScreenAtmosphere');
-    expect(boot).toContain('Loading onTrack');
-    expect(boot).toContain('LoadingBlock');
+    expect(boot).toContain('AppBootLoader');
     expect(boot).not.toContain('backgroundPrimary');
     expect(boot).not.toContain('surface="glass"');
-    expect(loading).not.toContain('GlassPlate');
-    expect(loading).toContain('LoadingSpinner');
+    expect(bootLoader).toContain('Loading onTrack');
+    expect(bootLoader).toContain('GlassPlate');
+    expect(bootLoader).toContain('mist');
+    expect(bootLoader).toContain('allowsLoopMotion');
   });
 
   it('keeps Home location sheet and Add Event assistant on glass atmosphere', () => {

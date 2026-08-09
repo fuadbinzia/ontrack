@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.23',
+    date: '2026-08-09',
+    notes: [
+      'Polish auth boot loader, constellation clearance, active SSO provider label, and post-sign-out welcome shell.',
+    ],
+  },
+  {
     version: '1.0.22',
     date: '2026-08-09',
     notes: [
@@ -179,6 +186,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.23',
+    date: '2026-08-09',
+    notes: [
+      'Polish auth boot loader, constellation clearance, active SSO provider label, and post-sign-out welcome shell.',
+      'Touched: app routes, features/account, features/auth.',
+    ],
+  },
   {
     version: '1.0.22',
     date: '2026-08-09',

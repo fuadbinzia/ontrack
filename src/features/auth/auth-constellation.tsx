@@ -25,6 +25,13 @@ import { useLiveFxReady, usePerformanceTier } from '@/hooks/use-performance-tier
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 
+import {
+  AUTH_COPY_BASE_HEIGHT,
+  AUTH_COPY_TOP,
+  AUTH_COPY_WIDTH,
+  AUTH_ORBIT_NODES,
+  authCopyMaxHeightFrac,
+} from './auth-constellation-layout';
 import { settleAuthCanvasExtent } from './auth-canvas-extent';
 
 /** Matches `styles.hero` in `auth-screen.tsx` so the bleed stays symmetric. */
@@ -33,51 +40,6 @@ export const HERO_MAX_WIDTH = 620;
 /** Whole-group sway, in degrees, at the extremes of the drift cycle. */
 const SWAY_DEG = 2.4;
 const SWAY_MS = 7600;
-
-type OrbitNode = {
-  /** Key into `TAB_META` so labels/icons track the real tab bar. */
-  tab: string;
-  /** Centre of the icon well as a fraction of canvas width / height. */
-  x: number;
-  y: number;
-  /** Thinned out on compact phones where the arc gets crowded. */
-  dropWhenCompact?: boolean;
-};
-
-/**
- * A top sweep, a right column, and a low sweep around the planet. The copy
- * block owns `COPY_TOP … COPY_TOP + copy height`, so the top row stays above
- * it and the low sweep stays below it — see the clearance note on `COPY_TOP`.
- */
-const NODES: readonly OrbitNode[] = [
-  { tab: 'social', x: 0.34, y: 0.085 },
-  { tab: 'calendar', x: 0.545, y: 0.062 },
-  { tab: 'travel', x: 0.755, y: 0.068 },
-  { tab: 'workouts', x: 0.865, y: 0.25 },
-  { tab: 'food', x: 0.878, y: 0.435 },
-  { tab: 'health', x: 0.855, y: 0.625, dropWhenCompact: true },
-  // Keep the low sweep above the well+label footprint so the provider card
-  // never bisects a node when the hero slot compresses.
-  { tab: 'games', x: 0.245, y: 0.78, dropWhenCompact: true },
-  { tab: 'to-do', x: 0.415, y: 0.805 },
-  { tab: 'vision-board', x: 0.595, y: 0.808 },
-  { tab: 'vehicles', x: 0.775, y: 0.78 },
-];
-
-/**
- * Copy block geometry, in canvas fractions. The headline + rule + intro run
- * ~0.55H tall, so the low sweep starts below `COPY_TOP + 0.55` plus half a
- * well. Move one, re-check the other.
- */
-const COPY_TOP = 0.2;
-const COPY_WIDTH = 0.58;
-
-/**
- * Canvas height where full-size copy still clears the low sweep
- * (`COPY_TOP + ~0.55H`). Shorter boxes scale the copy down instead of running
- * the intro into the Games / Checklists labels.
- */
-const COPY_BASE_HEIGHT = 390;
 
 const CopyScaleContext = createContext(1);
 
@@ -260,9 +222,16 @@ export function AuthConstellation({
     const next = event.nativeEvent.layout.height;
     setMeasuredHeight((prev) => settleAuthCanvasExtent(prev, next));
   }, []);
-  const copyScale = Math.min(1, Math.max(0.62, height / COPY_BASE_HEIGHT));
   const well = Math.min(48, Math.max(30, height * 0.115));
   const slot = well * 1.95;
+  const copyMaxHeight = height * authCopyMaxHeightFrac(well / height);
+  // Take the tighter of canvas height vs. the clear band under the intro so a
+  // compressed upgrade hero cannot run "your devices" into Games.
+  const copyScale = Math.min(
+    1,
+    Math.max(0.62, height / AUTH_COPY_BASE_HEIGHT),
+    Math.max(0.62, copyMaxHeight / (AUTH_COPY_BASE_HEIGHT * 0.55)),
+  );
 
   const sway = useSharedValue(0);
   useEffect(() => {
@@ -301,7 +270,7 @@ export function AuthConstellation({
 
   const nodes = useMemo(
     () =>
-      NODES.filter(
+      AUTH_ORBIT_NODES.filter(
         (node) => !(node.dropWhenCompact && widthClass === 'compact'),
       ).map((node) => ({
         ...node,
@@ -368,8 +337,9 @@ export function AuthConstellation({
           styles.copy,
           {
             left: bleed,
-            top: height * COPY_TOP,
-            width: width * COPY_WIDTH,
+            top: height * AUTH_COPY_TOP,
+            width: width * AUTH_COPY_WIDTH,
+            maxHeight: copyMaxHeight,
             gap: spacing.sm * copyScale,
           },
         ]}>

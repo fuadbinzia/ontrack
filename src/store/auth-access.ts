@@ -4,16 +4,21 @@ import { persist } from 'zustand/middleware';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import { isSafeAuthReturnTo } from '@/utils/auth-return-to';
 
+export type ActiveSignInProvider = 'apple' | 'google';
+
 interface AuthAccessState {
   guestEnabled: boolean;
   guestDataDirty: boolean;
   authUpgradePending: boolean;
   pendingAuthReturnTo?: string;
+  /** SSO button used for the live session (Profile account card). */
+  activeSignInProvider?: ActiveSignInProvider;
   enterGuest: (dirty?: boolean) => void;
   markGuestDataDirty: () => void;
   startAuthUpgrade: () => void;
   setAuthReturnTo: (path?: string) => void;
   takeAuthReturnTo: () => string | undefined;
+  setActiveSignInProvider: (provider?: ActiveSignInProvider) => void;
   finishAuthentication: () => void;
   cancelAuthUpgrade: () => void;
   resetAccess: () => void;
@@ -31,6 +36,7 @@ export const useAuthAccess = create<AuthAccessState>()(
           guestDataDirty: dirty,
           authUpgradePending: false,
           pendingAuthReturnTo: undefined,
+          activeSignInProvider: undefined,
         }),
       markGuestDataDirty: () =>
         set((state) => (state.guestEnabled ? { guestDataDirty: true } : state)),
@@ -44,6 +50,7 @@ export const useAuthAccess = create<AuthAccessState>()(
         set({ pendingAuthReturnTo: undefined });
         return path;
       },
+      setActiveSignInProvider: (provider) => set({ activeSignInProvider: provider }),
       finishAuthentication: () =>
         set({
           guestEnabled: false,
@@ -58,6 +65,7 @@ export const useAuthAccess = create<AuthAccessState>()(
           guestDataDirty: false,
           authUpgradePending: false,
           pendingAuthReturnTo: undefined,
+          activeSignInProvider: undefined,
         }),
     }),
     {
@@ -68,12 +76,14 @@ export const useAuthAccess = create<AuthAccessState>()(
         guestDataDirty,
         authUpgradePending,
         pendingAuthReturnTo,
+        activeSignInProvider,
       }) =>
         ({
           guestEnabled,
           guestDataDirty,
           authUpgradePending,
           pendingAuthReturnTo,
+          activeSignInProvider,
         }) as AuthAccessState,
     },
   ),

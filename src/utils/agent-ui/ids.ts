@@ -542,6 +542,8 @@ export const AgentUiIds = {
     resetData: 'ontrack.profile.resetData',
     signOut: 'ontrack.profile.signOut',
     createOrSignIn: 'ontrack.profile.createOrSignIn',
+    /** Active SSO method under the account email (`Apple` or `Google`). */
+    accountProviders: 'ontrack.profile.accountProviders',
     deleteAccount: 'ontrack.profile.deleteAccount',
     privacy: 'ontrack.profile.privacy',
     terms: 'ontrack.profile.terms',

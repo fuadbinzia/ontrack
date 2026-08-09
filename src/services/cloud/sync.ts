@@ -964,6 +964,9 @@ export function stopCloudSync() {
 }
 
 export async function clearLocalAccountData() {
+  // First-run completion is device chrome, not account graph: wiping it on
+  // sign-out forced the name/goal welcome canvas even when force-preview is off.
+  const hadOnboarded = usePreferences.getState().hasOnboarded;
   pendingRemote = undefined;
   stopCloudSync();
   await resetLocalDomains();
@@ -974,6 +977,9 @@ export async function clearLocalAccountData() {
     lastSyncedAt: undefined,
     message: undefined,
   });
+  if (hadOnboarded) {
+    usePreferences.setState({ hasOnboarded: true });
+  }
 }
 
 /** Backward-compatible cleanup for callers mounted by older navigation shells. */

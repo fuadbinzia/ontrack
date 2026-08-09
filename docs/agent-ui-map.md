@@ -625,6 +625,7 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.legal.document`                            | Privacy / Terms document body       |
 | `ontrack.profile.tmdb`                              | TMDB attribution link (footer)      |
 | `ontrack.profile.signOut`                           | Sign Out (signed-in)                |
+| `ontrack.profile.accountProviders`                  | Active SSO line (Apple or Google)   |
 | `ontrack.profile.createOrSignIn`                    | Create or Sign In (guest)           |
 | `ontrack.profile.deleteAccount`                     | Delete Account (signed-in)          |
 | `ontrack.profile.resetData`                         | Reset All Data                      |
@@ -643,7 +644,7 @@ dock); legacy `/(tabs)/profile/account` redirects there.
 | `ontrack.onboarding.goal`             | Primary goal field                         |
 | `ontrack.onboarding.getStarted`       | Get Started (guest + complete onboarding)  |
 | `ontrack.onboarding.skip`             | I want to try the app out first (defaults + guest + complete) |
-| `ontrack.auth.guest`                  | Same control as Skip (launch-gate alias)   |
+| `ontrack.auth.guest`                  | First-run try-first / Skip alias (not on SSO `/welcome` shell) |
 | `ontrack.onboarding.signIn`           | Reveal Apple / Google on welcome           |
 | `ontrack.auth.section.providers`      | Apple / Google (welcome expand + Profile upgrade) |
 | `ontrack.auth.apple`                  | Continue with Apple                        |

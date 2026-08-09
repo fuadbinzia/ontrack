@@ -41,6 +41,12 @@ describe('current-device sign-out invariants', () => {
     expect(cleanup).not.toContain('MediaLibrary');
   });
 
+  it('preserves device first-run completion across local account wipe', () => {
+    const cleanup = sync.slice(sync.indexOf('export async function clearLocalAccountData'));
+    expect(cleanup).toContain('hadOnboarded');
+    expect(cleanup).toContain('hasOnboarded: true');
+  });
+
   it('preserves device-only preference fields when applying remote account state', () => {
     expect(sync).toContain("domain.name !== 'preferences'");
     expect(sync).toContain('homeLocation / avatar');

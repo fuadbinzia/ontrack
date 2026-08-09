@@ -136,8 +136,14 @@ describe('travel header sky décor', () => {
     expect(night).not.toContain('Animated.createAnimatedComponent');
     expect(day).not.toContain('Animated.createAnimatedComponent');
     expect(night).toContain('starSeedUnit');
-    // Keep flash amplitude readable — do not regress to ~0.78 rest floor.
-    expect(night).not.toContain('0.78 + flash');
+    // Keep flash amplitude readable — do not regress to high rest floor
+    // or the over-amped halo bloom pass.
+    expect(night).not.toContain('0.78 + flash * peak');
+    expect(night).not.toContain('baseOpacity * (0.78');
+    expect(night).not.toContain('haloStyle');
+    expect(night).not.toContain('haloSize');
+    expect(night).toContain('duration: 5800');
+    expect(night).toContain('const rest = 0.28');
     expect(night).toContain('staticDimStars');
     expect(night).not.toContain('r * (0.92');
     expect(day).toContain('MotionLayer');

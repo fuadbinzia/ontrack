@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.21',
+    date: '2026-08-08',
+    notes: [
+      'Tune itinerary star glisten for clearer but restrained sparkle.',
+    ],
+  },
+  {
     version: '1.0.20',
     date: '2026-08-08',
     notes: [
@@ -165,6 +172,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.21',
+    date: '2026-08-08',
+    notes: [
+      'Tune itinerary star glisten for clearer but restrained sparkle.',
+      'Touched: features/travel.',
+    ],
+  },
   {
     version: '1.0.20',
     date: '2026-08-08',

@@ -36,7 +36,8 @@ function groundPalette(night: boolean): GroundPalette {
       near: 'rgba(3, 6, 12, 0.96)',
       window: 'rgba(255, 214, 140, 0.55)',
       road: 'rgba(18, 24, 34, 0.95)',
-      frost: 'rgba(214, 228, 255, 0.62)',
+      // Opaque base — PeakFrost gradient owns the fade into the ridge.
+      frost: '#D6E4FF',
     };
   }
   return {
@@ -45,7 +46,7 @@ function groundPalette(night: boolean): GroundPalette {
     near: 'rgba(42, 58, 74, 0.68)',
     window: 'rgba(255, 240, 200, 0.35)',
     road: 'rgba(55, 68, 82, 0.55)',
-    frost: 'rgba(245, 250, 255, 0.78)',
+    frost: '#F3F8FF',
   };
 }
 
@@ -99,6 +100,7 @@ function GroundFarMountains({
         return (
           <PeakFrost
             key={`frost-${ax}`}
+            id={`far-${ax}`}
             ax={ax}
             ay={ay}
             lx={lx}
@@ -106,7 +108,7 @@ function GroundFarMountains({
             rx={rx}
             ry={ry}
             fill={frost}
-            depth={0.3}
+            depth={0.34}
           />
         );
       })}
@@ -151,6 +153,7 @@ function NordicGround({ p, night }: { p: GroundPalette; night: boolean }) {
         return (
           <PeakFrost
             key={`nordic-frost-${ax}`}
+            id={`nordic-${ax}`}
             ax={ax}
             ay={ay}
             lx={lx}
@@ -158,7 +161,7 @@ function NordicGround({ p, night }: { p: GroundPalette; night: boolean }) {
             rx={rx}
             ry={ry}
             fill={p.frost}
-            depth={0.36}
+            depth={0.4}
           />
         );
       })}
@@ -364,6 +367,7 @@ function AlpineGround({ p }: { p: GroundPalette }) {
         return (
           <PeakFrost
             key={`alpine-frost-${ax}`}
+            id={`alpine-${ax}`}
             ax={ax}
             ay={ay}
             lx={lx}
@@ -371,7 +375,7 @@ function AlpineGround({ p }: { p: GroundPalette }) {
             rx={rx}
             ry={ry}
             fill={p.frost}
-            depth={0.4}
+            depth={0.44}
           />
         );
       })}

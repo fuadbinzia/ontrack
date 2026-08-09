@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.20',
+    date: '2026-08-08',
+    notes: [
+      'Blend itinerary mountain frost into soft melt gradients; keep live headed Galaxy safe during pool verify.',
+    ],
+  },
+  {
     version: '1.0.19',
     date: '2026-08-08',
     notes: [
@@ -158,6 +165,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.20',
+    date: '2026-08-08',
+    notes: [
+      'Blend itinerary mountain frost into soft melt gradients; keep live headed Galaxy safe during pool verify.',
+      'Touched: features/travel.',
+    ],
+  },
   {
     version: '1.0.19',
     date: '2026-08-08',

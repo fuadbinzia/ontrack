@@ -36,6 +36,11 @@ describe('travel sky ground frost', () => {
       'utf8',
     );
     expect(primitives).toContain('export function PeakFrost');
+    expect(primitives).toContain('LinearGradient');
+    expect(primitives).toContain('stopOpacity');
+    expect(primitives).toContain('gradientUnits="userSpaceOnUse"');
+    // Soft melt-line (quadratic), not a hard cookie-cutter triangle.
+    expect(primitives).toContain('Q${midX} ${midY}');
     expect(kinds).toContain('PeakFrost');
     expect(kinds).toContain('frost:');
     expect(kinds).toContain('GroundFarMountains');

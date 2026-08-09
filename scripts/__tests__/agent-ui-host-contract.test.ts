@@ -217,9 +217,12 @@ describe('agent-ui host scripts contract', () => {
     expect(verifyBoth).toContain('agent_ui_headed_viewer_handoff');
     // Dual-run children must not mid-handoff Galaxy (looks hung after iOS ok).
     expect(verifyBoth).toContain('AGENT_UI_SKIP_HEADED_HANDOFF=1');
-    // Pool asserts ignore sticky android-headed.keep unless KEEP=1 explicit.
+    // Pool ignores sticky keep when GUI closed; live headed Galaxy adopts.
     expect(verifyBoth).toContain('sticky headed keep ignored');
     expect(verifyBoth).toContain('ONTRACK_ANDROID_KEEP_HEADED=0');
+    expect(verifyBoth).toContain('live headed');
+    expect(verifyBoth).toContain('not killing user window');
+    expect(verifyBoth).toContain('android_emu_live_headed_galaxy_name');
     expect(host).toContain('agent_ui_headed_ios_handoff');
     expect(host).toContain('headed viewer handoff');
     expect(host).toContain('AGENT_UI_SKIP_HEADED_HANDOFF');
@@ -279,7 +282,8 @@ describe('agent-ui host scripts contract', () => {
     expect(emu).toContain('Shutting down agent emulator (headed');
     expect(emu).toContain('headed ${headed_name} keep needs RAM/GPU');
     expect(emu).toContain('Leaving headed emulator up (user window)');
-    expect(emu).toContain('ONTRACK_ANDROID_KEEP_HEADED=0 (pool verify-both)');
+    expect(emu).toContain('Leaving headed emulator up (live GUI)');
+    expect(emu).toContain('android_emu_live_headed_galaxy_name');
     expect(emu).toContain('android-headed.keep');
     expect(emu).toContain('clearing stale headed keep');
     expect(emu).toContain('not running headed');
@@ -287,6 +291,7 @@ describe('agent-ui host scripts contract', () => {
     expect(emu).toContain('adopting headed');
     expect(emu).toContain('cannot run agent beside GUI');
     expect(emu).toContain('NEVER run agents');
+    expect(emu).toContain('Never kill a live headed GUI');
 
     // Galaxy must not spoof android bridge status for an Agent AVD.
     expect(host).toContain('agent_ui_app_process_running || return 1');

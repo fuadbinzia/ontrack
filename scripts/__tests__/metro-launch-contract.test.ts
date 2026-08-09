@@ -311,14 +311,17 @@ describe('metro launch command contract', () => {
     expect(emu).toContain('Shutting down agent emulator (headed');
     expect(emu).toContain('headed ${headed_name} keep needs RAM/GPU');
     expect(emu).toContain('Leaving headed emulator up (user window)');
+    expect(emu).toContain('Leaving headed emulator up (live GUI)');
+    expect(emu).toContain('android_emu_live_headed_galaxy_name');
     expect(emu).toContain('android_emu_mark_headed_keep');
     expect(emu).toContain('ONTRACK_ANDROID_KEEP_HEADED');
     expect(emu).toContain('clearing stale headed keep');
-    // Headed keep: adopt Galaxy and kill agents — 16GB cannot run both.
+    // Headed keep / live GUI: adopt Galaxy and kill agents — 16GB cannot run both.
     expect(emu).toContain('android_emu_adopt_android_for_headed_host');
     expect(emu).toContain('adopting headed');
     expect(emu).toContain('cannot run agent beside GUI');
     expect(emu).toContain('NEVER run agents');
+    expect(emu).toContain('Never kill a live headed GUI');
     // Must detach like Metro — nohup alone dies with Cursor agent shells.
     expect(emu).toContain('start_new_session=True');
     expect(emu).toContain('Emulator detached (new session)');

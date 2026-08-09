@@ -69,7 +69,7 @@ export function resolveTravelFriendsHostPerson({
 }): TravelFriendsHostPerson {
   const isSelfHost = Boolean(selfUserId && hostFromRoster?.userId === selfUserId);
   // Prefer the signed-in profile name for yourself — roster/JWT helpers can
-  // fall back to a generic label like "You" / "Traveler".
+  // fall back to a generic label like "You" / "Guest".
   // Never claim host on a member copy before roster confirms — that duplicated
   // a friend into the host slot after rename.
   if (isSelfHost || (isSoleHost && !memberPlan && !hostFromRoster)) {

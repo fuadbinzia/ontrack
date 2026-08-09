@@ -77,7 +77,7 @@ export function CloudAccountCard() {
               </View>
             </View>
             <AppText variant="caption" color="secondary" numberOfLines={2}>
-              Sign in to back up plans and continue on other devices.
+              Local name and plans stay on this device. Sign in to back up and continue elsewhere.
             </AppText>
           </View>
           <Button

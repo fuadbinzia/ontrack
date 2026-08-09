@@ -33,4 +33,10 @@ describe('resolveSelfDisplayName', () => {
       }),
     ).toBe('alex.rivera');
   });
+
+  it('defaults to Guest when nothing else is available', () => {
+    expect(resolveSelfDisplayName({ preferencesName: '', user: null })).toBe(
+      'Guest',
+    );
+  });
 });

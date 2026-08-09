@@ -50,6 +50,8 @@ source "$ROOT/scripts/lib/metro-watcher.sh"
 source "$ROOT/scripts/lib/ios-simulator.sh"
 # shellcheck source=lib/android-emulator.sh
 source "$ROOT/scripts/lib/android-emulator.sh"
+# shellcheck source=lib/agent-ui-dev-client.sh
+source "$ROOT/scripts/lib/agent-ui-dev-client.sh"
 
 BUNDLE_ID="${BUNDLE_ID:-com.imtihoss.ontracknow}"
 METRO_PORT="${METRO_PORT:-8081}"
@@ -284,6 +286,16 @@ app_installed() {
     return $?
   fi
   ios_simctl_timed get_app_container "$(ios_sim_target)" "$BUNDLE_ID" data >/dev/null 2>&1
+}
+
+# True when the JS process is actually up (install ≠ running).
+app_process_running() {
+  if [[ "$PACKAGER_TARGET" == "android" ]]; then
+    android_emu_adb shell pidof -s "$BUNDLE_ID" >/dev/null 2>&1
+    return $?
+  fi
+  ios_simctl_timed spawn "$(ios_sim_target)" launchctl list 2>/dev/null \
+    | grep -E "^[0-9]+[[:space:]]+.*UIKitApplication:${BUNDLE_ID}" >/dev/null
 }
 
 probe_connected() {
@@ -712,8 +724,10 @@ packager_pool_clone_app_if_needed() {
   app_installed
 }
 
+# iOS Documents pin only (Android slot = host port — H17).
 packager_write_slot_pin() {
   [[ -n "${AGENT_UI_SLOT:-}" ]] || return 0
+  case "${AGENT_UI_PLATFORM:-$PACKAGER_TARGET}" in android) return 0 ;; esac
   AGENT_UI_ROOT="$ROOT" \
   AGENT_UI_PLATFORM="${AGENT_UI_PLATFORM:-$PACKAGER_TARGET}" \
   AGENT_UI_SLOT="${AGENT_UI_SLOT}" \
@@ -725,11 +739,11 @@ packager_write_slot_pin() {
     python3 "$ROOT/scripts/lib/agent_ui_bridge.py" write-slot-pin >/dev/null 2>&1 || true
 }
 
+
 reconnect_dev_client() {
   local host="$1"
-  local encoded
-  encoded="$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "http://${host}:${METRO_PORT}")"
-  local url="exp+ontrack://expo-development-client/?url=${encoded}"
+  local url
+  url="$(agent_ui_dev_client_metro_url "$host")"
 
   if [[ "$PACKAGER_TARGET" == "android" ]]; then
     if ! ensure_preferred_android_emulator; then
@@ -744,9 +758,7 @@ reconnect_dev_client() {
       print_packager_diagnostics "$host"
       exit 1
     fi
-    # Belt-and-suspenders: reverse can drop after adb reconnect / emu restart.
-    # Without it, 127.0.0.1 Metro URLs never leave the guest and DevLauncher hangs.
-    if ! android_emu_ensure_adb_reverse; then
+    if ! android_emu_prepare_metro_dev_client loud; then
       print_packager_diagnostics "$host"
       exit 1
     fi
@@ -754,7 +766,6 @@ reconnect_dev_client() {
       >/dev/null 2>&1 || true
     echo "Reconnecting Android dev client → http://${host}:${METRO_PORT}"
     android_emu_adb shell am start -a android.intent.action.VIEW -d "$url" >/dev/null 2>&1 || true
-    packager_write_slot_pin
   else
     if ! ensure_preferred_ios_simulator; then
       print_packager_diagnostics "$host"
@@ -769,14 +780,12 @@ reconnect_dev_client() {
       exit 1
     fi
 
-    # Soft foreground; avoid terminate/relaunch unless launch is required.
     local ios_target ios_udid
     ios_target="$(ios_sim_target)"
     ios_udid="${ONTRACK_IOS_SIMULATOR_UDID:-}"
     if [[ -z "$ios_udid" || "$ios_udid" == "booted" ]]; then
       ios_udid="$(ios_sim_preferred_booted_udid || ios_sim_resolve_udid || true)"
     fi
-    # Pre-approve so SpringBoard does not show "Open in \"onTrack\"?".
     if [[ -n "$ios_udid" ]]; then
       ios_sim_approve_url_schemes "$ios_udid" >/dev/null || true
     else
@@ -788,44 +797,66 @@ reconnect_dev_client() {
     packager_write_slot_pin
   fi
 
-  # Cold starts (after terminate, e.g. the Fast Refresh heal) take 20s+.
-  # Android first paint after reconnect is slower — give more headroom.
-  # Pool agent AVDs need a full JS bundle only when the app process is missing.
+  # Cold starts need 20s+; pool Android cold-bundle needs more.
   local extra=30
   if [[ "$PACKAGER_TARGET" == "android" ]]; then
-    extra=45
     if [[ "${AGENT_UI_POOL_MODE:-0}" == "1" ]] \
       || [[ "${ONTRACK_ANDROID_AVD:-}" =~ ^onTrack_Agent_[0-9]+$ ]]; then
       if android_emu_adb shell pidof "$BUNDLE_ID" >/dev/null 2>&1; then
-        # Warm reuse: app already running — don't sit on the cold 90s budget.
         extra=45
       else
         extra=90
       fi
+    else
+      extra=45
     fi
   fi
   local deadline=$((SECONDS + WAIT_SECS + extra))
   local alert_ticks=0
+  # Android: never VIEW a loading app (onNewIntent → FabricUIManager corpse). H17.
   local refire_every=8
+  local refire_grace_deadline=$((SECONDS + 25))
+  # H21: after H19 cold boot the first simctl launch often no-ops. Re-launch
+  # while the process is dead; abort early if it never starts (host launches).
+  local process_seen=0
+  local process_deadline=$((SECONDS + 12))
   if [[ "$PACKAGER_TARGET" == "android" ]]; then
-    refire_every=4
+    refire_every=16
   fi
   while (( SECONDS < deadline )); do
     if probe_connected; then
       echo "Dev client connected (agent-ui dump ok)."
       return 0
     fi
-    # Re-fire the Metro URL periodically — DevLauncher sometimes drops the first.
+    if app_process_running; then
+      process_seen=1
+    elif (( process_seen == 0 && SECONDS >= process_deadline )); then
+      echo "error: app process never started after launch — aborting reconnect wait (caller will launch)" >&2
+      print_packager_diagnostics "$host"
+      exit 1
+    fi
     if (( alert_ticks > 0 && alert_ticks % refire_every == 0 )); then
       if [[ "$PACKAGER_TARGET" == "android" ]]; then
-        # Keep reverse alive — emu restart / peer kills can drop it.
         android_emu_ensure_adb_reverse >/dev/null 2>&1 || true
-        android_emu_adb shell am start -a android.intent.action.VIEW -d "$url" \
-          >/dev/null 2>&1 || true
+        if ! android_emu_adb shell pidof "$BUNDLE_ID" >/dev/null 2>&1; then
+          android_emu_adb shell monkey -p "$BUNDLE_ID" -c android.intent.category.LAUNCHER 1 \
+            >/dev/null 2>&1 || true
+          android_emu_adb shell am start -a android.intent.action.VIEW -d "$url" \
+            >/dev/null 2>&1 || true
+        elif (( SECONDS >= refire_grace_deadline )) \
+          && android_emu_force_stop_if_wedged; then
+          android_emu_adb shell am start -a android.intent.action.VIEW -d "$url" \
+            >/dev/null 2>&1 || true
+          refire_grace_deadline=$((SECONDS + 25))
+        fi
       else
+        # Mirror Android: dead process after cold boot → launch, then Metro URL.
+        if ! app_process_running; then
+          ios_simctl_timed 12 launch "$(ios_sim_target)" "$BUNDLE_ID" >/dev/null 2>&1 || true
+        fi
         ios_simctl_timed 12 openurl "$(ios_sim_target)" "$url" >/dev/null 2>&1 || true
+        packager_write_slot_pin
       fi
-      packager_write_slot_pin
     fi
     # While waiting, auto-accept an "Open in …?" sheet if approval missed this boot.
     if [[ "$PACKAGER_TARGET" != "android" ]] && (( alert_ticks % 3 == 0 )); then
@@ -915,18 +946,24 @@ else
     exit 0
   fi
 
-  echo "Checking app install on $(ios_sim_preferred_name)…"
+  # Install check is cheap; only log when missing (H21 — "already installed"
+  # spam made cold boots look like they were reinstalling every turn).
   if ! app_installed; then
-    echo "App missing — cloning onto pool simulator…"
+    echo "App missing on $(ios_sim_preferred_name) — cloning onto pool simulator…"
     if packager_pool_clone_app_if_needed; then
       echo "Installed ${BUNDLE_ID} onto pool simulator $(ios_sim_preferred_name) via clone."
     else
       echo "note: app not installed on $(ios_sim_preferred_name) — Metro is healthy"
       exit 0
     fi
-  else
-    echo "App already installed on $(ios_sim_preferred_name)."
   fi
+fi
+
+# H21: cold-boot heal from ensure_app_up only needs the device up. The host
+# launches next — burning a full reconnect timeout here just doubles the wait.
+if [[ "${AGENT_UI_PACKAGER_SKIP_RECONNECT:-0}" == "1" ]]; then
+  echo "Device ready (skip reconnect — caller will launch if needed)."
+  exit 0
 fi
 
 if [[ "$METRO_RELAUNCHED" == "1" ]]; then
@@ -938,9 +975,28 @@ if [[ "$METRO_RELAUNCHED" == "1" ]]; then
 fi
 
 if probe_connected; then
-  echo "App already connected to packager (no reconnect)."
+  # H20: bridge alive ≠ fresh JS. Warm Android often keeps answering on a stale
+  # bundle after src edits; wait for the on-disk HMR beacon (watcher may have
+  # just bumped it) and soft-reconnect when Fast Refresh missed the device.
+  if [[ "${AGENT_UI_SKIP_JS_FRESH:-0}" != "1" ]]; then
+    echo "App connected — ensuring JS matches Metro HMR beacon…"
+    if ! AGENT_UI_SKIP_LEASE=1 AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
+      AGENT_UI_PLATFORM="${AGENT_UI_PLATFORM:-${PACKAGER_TARGET}}" \
+      ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
+      ONTRACK_IOS_SIMULATOR_UDID="${ONTRACK_IOS_SIMULATOR_UDID:-}" \
+      python3 "${ROOT}/scripts/lib/agent_ui_bridge.py" ensure-js-fresh --no-bump; then
+      echo "HMR beacon still stale — forcing dev client reconnect…"
+      reconnect_dev_client "$HOST"
+      exit 0
+    fi
+  fi
+  echo "App already connected to packager (JS fresh)."
   exit 0
 fi
 
-echo "App not responding to agent-ui dump — reconnecting…"
+if app_process_running; then
+  echo "App running but agent-ui dump quiet — reconnecting…"
+else
+  echo "App not running — launching + connecting to Metro…"
+fi
 reconnect_dev_client "$HOST"

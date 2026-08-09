@@ -12,7 +12,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-    EmptyState,
     Screen,
     appPrompt,
     useSafeAreaChrome,
@@ -36,12 +35,10 @@ import {
     TravelHomeBackground,
     travelHomeAtmosphereHeight,
 } from '@/features/travel/travel-home-background';
+import { TravelHomeEmpty } from '@/features/travel/travel-home-empty';
 import { TravelHomeHeader } from '@/features/travel/travel-home-header';
 import { filterTravelPlansByQuery } from '@/features/travel/travel-home-plan-search';
-import {
-    travelHomeFontFamily,
-    travelHomeTokens,
-} from '@/features/travel/travel-home-tokens';
+import { travelHomeTokens } from '@/features/travel/travel-home-tokens';
 import {
     TravelHomeYourTrips,
     isTravelHomeTripSearchActive,
@@ -61,7 +58,6 @@ import {
     orderTravelPlansForLauncher,
     useTravel,
 } from '@/store/travel';
-import { AgentUiIds } from '@/utils/agent-ui';
 import { toDateKey } from '@/utils/date';
 import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 import { newId } from '@/utils/id';
@@ -106,7 +102,8 @@ function TravelScreenContent() {
     [preferencesName, user],
   );
   const today = toDateKey(new Date());
-  const [showForm, setShowForm] = useState(plans.length === 0);
+  // Welcome empty first — do not auto-open New Trip over the invitation.
+  const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [mode, setMode] = useState<TravelPlanMode>('flight');
   const [destination, setDestination] = useState('');
@@ -491,7 +488,10 @@ function TravelScreenContent() {
     tripDestinations: atmosphereDestinations,
   });
 
-  const atmosphereHeight = travelHomeAtmosphereHeight(windowHeight, insets.top);
+  const hasNoTrips = launcherPlans.length === 0;
+  const atmosphereHeight = travelHomeAtmosphereHeight(windowHeight, insets.top, {
+    empty: hasNoTrips,
+  });
   // Dark theme keeps white header ink; match the header’s effective tone.
   const atmosphereHeaderInk =
     theme.name === 'dark' ? 'light' : atmosphereImage.headerInk;
@@ -570,7 +570,7 @@ function TravelScreenContent() {
 
   return (
     <View style={styles.fill}>
-      <TravelHomeBackground enabled />
+      <TravelHomeBackground enabled empty={hasNoTrips} />
       <Screen
         scrollRef={scrollRef}
         style={styles.transparentScreen}
@@ -588,7 +588,9 @@ function TravelScreenContent() {
           onPressAway={tripSearchActive ? collapseTripSearch : undefined}
         />
 
-        {launcherPlans.length > 0 ? (
+        {hasNoTrips ? (
+          <TravelHomeEmpty onAddTrip={openCreateTrip} />
+        ) : (
           <TravelHomeYourTrips
             plans={visibleLauncherPlans}
             searchQuery={tripSearchQuery}
@@ -605,17 +607,6 @@ function TravelScreenContent() {
             }}
             onViewTravelers={openFriends}
             onLayoutY={rememberTripOffset}
-          />
-        ) : (
-          <EmptyState
-            icon="flight"
-            title="Your next adventure starts here."
-            message="Add a trip to organize your itinerary, stays, activities, friends, and memories."
-            actionLabel="Add Your First Trip"
-            actionTestID={AgentUiIds.travel.list.emptyCreate}
-            onAction={openCreateTrip}
-            titleStyle={{ fontFamily: travelHomeFontFamily }}
-            messageStyle={{ fontFamily: travelHomeFontFamily }}
           />
         )}
 

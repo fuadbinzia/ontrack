@@ -3,12 +3,15 @@ import { useWindowDimensions } from 'react-native';
 
 import { resolveActiveFontFamilies } from '@/design-system/font-presets';
 import {
+  contentGutter,
   MAX_SCALE,
   MIN_SCALE,
   moderateScale,
   scaleSize,
   scaleTypographyToken,
+  widthClass,
   windowScale,
+  type PhoneWidthClass,
 } from '@/design-system/responsive';
 import { iconSizes as baseIconSizes, layout as baseLayout, spacing as baseSpacing } from '@/design-system/spacing';
 import { typography as baseTypography } from '@/design-system/typography';
@@ -43,6 +46,10 @@ export interface ResponsiveTokens {
   s: (size: number) => number;
   /** Moderate (dampened) scale for padding/gaps. */
   ms: (size: number, factor?: number) => number;
+  /** Phone size bucket (compact ≤359, regular 360–479, large ≥480). */
+  widthClass: PhoneWidthClass;
+  /** Screen-edge content gutter for the width class, moderate-scaled. */
+  gutter: number;
   typography: TypographyScale;
   spacing: SpacingScale;
   layout: LayoutScale;
@@ -96,6 +103,8 @@ export function useResponsive(): ResponsiveTokens {
       fontScale,
       s,
       ms,
+      widthClass: widthClass(layoutWidth),
+      gutter: ms(contentGutter(layoutWidth)),
       typography,
       spacing: scaleRecord(baseSpacing, ms) as SpacingScale,
       layout: {

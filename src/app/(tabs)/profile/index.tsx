@@ -1,6 +1,5 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -44,6 +43,7 @@ import { useVisionBoard } from '@/store/vision-board';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
+import { openHttpsUrl } from '@/utils/safe-url';
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -106,7 +106,7 @@ export default function ProfileSettingsScreen() {
     onPress: openAvatar,
   });
   const openTmdb = () => {
-    void WebBrowser.openBrowserAsync('https://www.themoviedb.org');
+    void openHttpsUrl('https://www.themoviedb.org');
   };
   const tmdbAgent = useAgentUiTarget(AgentUiIds.profile.tmdb, {
     label: 'Open The Movie Database',
@@ -180,12 +180,25 @@ export default function ProfileSettingsScreen() {
         style={[styles.hero, { gap: rs.sm }]}>
         <ProfileAvatar displayName={displayName} size={avatarSize} isSelf />
         <View style={[styles.heroCopy, { gap: rs.xxs, minWidth: 0, flexShrink: 1 }]}>
-          <AppText variant="title" fit numberOfLines={1}>
-            {displayName}
-          </AppText>
-          <AppText variant="caption" color="secondary" numberOfLines={1} fit>
-            {goal || 'Living intentionally'}
-          </AppText>
+          <AgentTestId testID={AgentUiIds.profile.displayName} label={displayName}>
+            <AppText variant="title" fit numberOfLines={1}>
+              {displayName}
+            </AppText>
+          </AgentTestId>
+          {/* Guests keep a local name; caption must not look like a cloud account. */}
+          {isGuest ? (
+            <AgentTestId
+              testID={AgentUiIds.profile.guestStatus}
+              label="Create an account to save your progress">
+              <AppText variant="caption" color="secondary" numberOfLines={1} fit>
+                Create an account to save your progress
+              </AppText>
+            </AgentTestId>
+          ) : (
+            <AppText variant="caption" color="secondary" numberOfLines={1} fit>
+              {goal || 'Living intentionally'}
+            </AppText>
+          )}
         </View>
       </Pressable>
 

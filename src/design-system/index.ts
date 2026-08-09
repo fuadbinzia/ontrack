@@ -24,7 +24,7 @@ export {
 export { durations, easings, motion, springs } from './motion';
 export { borders, radii } from './radii';
 export {
-    BASE_WIDTH, MAX_SCALE, MIN_SCALE, moderateScale, scaleSize, scaleTypographyToken, windowScale
+    BASE_WIDTH, contentGutter, MAX_SCALE, MIN_SCALE, moderateScale, scaleSize, scaleTypographyToken, widthClass, windowScale, type PhoneWidthClass
 } from './responsive';
 export { shadows } from './shadows';
 export { iconSizes, layout, spacing } from './spacing';
@@ -51,7 +51,7 @@ export {
     type ThemeTokenOverrides
 } from './theme-overrides';
 export {
-    categoryColors, darkPlantTheme, darkTheme, darkTravelTheme, darkVehicleTheme, hexWithAlpha, lightPlantTheme, lightTheme, lightTravelTheme, lightVehicleTheme, resolveBaseTheme, timeOfDayGradient,
+    categoryColors, darkFoodTheme, darkPlantTheme, darkTheme, darkTravelTheme, darkVehicleTheme, hexWithAlpha, lightFoodTheme, lightPlantTheme, lightTheme, lightTravelTheme, lightVehicleTheme, resolveBaseTheme, timeOfDayGradient,
     timeOfDaySafeAreaBackground, type CategoryColors, type Theme,
     type ThemeAppearance,
     type ThemeFeatureScope

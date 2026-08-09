@@ -21,6 +21,18 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 DEFAULT_HTTP_PORT = int(os.environ.get("AGENT_UI_HTTP_PORT", "8191"))
+
+
+def _slot_port_count() -> int:
+    """Match AGENT_UI_POOL_HARD_MAX (exported by agent-ui-pool.sh). Default 2."""
+    raw = (os.environ.get("AGENT_UI_POOL_HARD_MAX") or "2").strip()
+    try:
+        n = int(raw)
+    except ValueError:
+        return 2
+    return max(1, min(n, 8))
+
+
 SOCK_NAME = "agent-ui.sock"
 PID_NAME = "agent-ui-daemon.pid"
 LOG_NAME = "agent-ui-daemon.log"
@@ -70,6 +82,23 @@ def normalize_slot(raw: Any) -> str | None:
     if n < 1 or n > 32:
         return None
     return str(n)
+
+
+def command_index_for_device(
+    queue: list[dict[str, Any]], device: str | None
+) -> int | None:
+    """Index of the first command this device may run, or None.
+
+    A pool slot and the user's headed simulator share one daemon, so a command
+    addressed to a named device waits for that device instead of being consumed
+    by whoever polls first. Unaddressed commands stay first-come (legacy hosts).
+    """
+    want = (device or "").strip()
+    for index, cmd in enumerate(queue):
+        addressed = str(cmd.get("iosDeviceName") or "").strip()
+        if not addressed or not want or addressed == want:
+            return index
+    return None
 
 
 def queue_key(platform: str, slot: str | None = None) -> str:
@@ -145,14 +174,16 @@ class BridgeState:
         wait_ms: int,
         platform: str | None = None,
         slot: str | None = None,
+        device: str | None = None,
     ) -> dict[str, Any] | None:
         key = queue_key(platform, slot)
         deadline = time.time() + max(0, wait_ms) / 1000.0
         with self.command_cv:
             while True:
                 queue = self.pending_by_platform.get(key) or []
-                if queue:
-                    cmd = queue.pop(0)
+                index = command_index_for_device(queue, device)
+                if index is not None:
+                    cmd = queue.pop(index)
                     if not queue:
                         self.pending_by_platform.pop(key, None)
                     return cmd
@@ -234,6 +265,17 @@ class Handler(BaseHTTPRequestHandler):
         # Keep daemon stdout quiet; optional file log is enough.
         return
 
+    def slot_from_port(self) -> str | None:
+        """Slot implied by the listening port (DEFAULT_HTTP_PORT + N → slot N)."""
+        try:
+            port = int(self.server.server_address[1])
+        except (AttributeError, IndexError, TypeError, ValueError):
+            return None
+        offset = port - DEFAULT_HTTP_PORT
+        if offset <= 0:
+            return None
+        return normalize_slot(offset)
+
     def _read_json(self) -> Any:
         length = int(self.headers.get("Content-Length") or "0")
         raw = self.rfile.read(length) if length else b"{}"
@@ -264,7 +306,12 @@ class Handler(BaseHTTPRequestHandler):
             wait_ms = int((qs.get("waitMs") or ["5000"])[0])
             platform = (qs.get("platform") or [None])[0]
             slot = (qs.get("slot") or [None])[0]
-            cmd = STATE.take_command(wait_ms, platform=platform, slot=slot)
+            device = (qs.get("device") or [None])[0]
+            if normalize_slot(slot) is None:
+                slot = self.slot_from_port() or slot  # H17
+            cmd = STATE.take_command(
+                wait_ms, platform=platform, slot=slot, device=device
+            )
             if cmd is None:
                 self._send(204)
                 return
@@ -440,23 +487,41 @@ def serve(http_port: int = DEFAULT_HTTP_PORT) -> None:
     unix_thread = threading.Thread(target=serve_unix, args=(sock_path, stop), daemon=True)
     unix_thread.start()
 
-    # Bind all interfaces so physical devices can reach the host via LAN IP:8191.
-    httpd = ThreadingHTTPServer(("0.0.0.0", http_port), Handler)
-    httpd.daemon_threads = True
-    httpd.allow_reuse_address = True
+    # 0.0.0.0 required: adb reverse's host-side connect is not from loopback.
+    servers: list[ThreadingHTTPServer] = []
+    for port in [http_port] + [
+        http_port + n for n in range(1, _slot_port_count() + 1)
+    ]:
+        try:
+            server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
+        except OSError:
+            if port == http_port:
+                raise
+            continue
+        server.daemon_threads = True
+        server.allow_reuse_address = True
+        servers.append(server)
 
     with log_path.open("a", encoding="utf-8") as log:
-        log.write(f"listening http://0.0.0.0:{http_port} sock={sock_path}\n")
+        ports = ",".join(str(s.server_address[1]) for s in servers)
+        log.write(f"listening http://0.0.0.0:{{{ports}}} sock={sock_path}\n")
 
-    http_thread = threading.Thread(target=httpd.serve_forever, kwargs={"poll_interval": 0.2}, daemon=True)
-    http_thread.start()
+    http_threads = [
+        threading.Thread(
+            target=s.serve_forever, kwargs={"poll_interval": 0.2}, daemon=True
+        )
+        for s in servers
+    ]
+    for thread in http_threads:
+        thread.start()
     try:
         while not stop.is_set():
             time.sleep(0.2)
     finally:
         stop.set()
-        httpd.shutdown()
-        httpd.server_close()
+        for server in servers:
+            server.shutdown()
+            server.server_close()
         pid_path.unlink(missing_ok=True)
         if sock_path.exists():
             sock_path.unlink(missing_ok=True)

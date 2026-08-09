@@ -1,6 +1,7 @@
 import { File, Paths } from 'expo-file-system';
 import { Dimensions, PixelRatio, Platform } from 'react-native';
 
+import { METRO_HMR_BEACON } from '../dev/metro-hmr-beacon';
 import { getAgentUiActiveNonce, postAgentUiStatus } from './http-bridge';
 import { listAgentUiTargets, type AgentUiEntry } from './registry';
 import { getAgentUiRoute } from './route';
@@ -66,6 +67,11 @@ export type AgentUiStatusPayload = {
   results?: AgentUiStatusResult[];
   /** Host/daemon correlation id for the active command. */
   nonce?: number;
+  /**
+   * Dev Metro HMR beacon from `metro-hmr-beacon.ts`. Hosts compare this to the
+   * on-disk nonce to detect a warm bridge still running a stale JS bundle (H20).
+   */
+  hmrBeacon?: string;
 };
 
 function writeJson(filename: string, payload: unknown): void {
@@ -104,6 +110,9 @@ export async function writeAgentUiStatus(
     ...payload,
     screen: payload.screen ?? agentUiScreenMetrics(),
     ...(nonce !== undefined ? { nonce } : {}),
+    ...(typeof __DEV__ !== 'undefined' && __DEV__
+      ? { hmrBeacon: METRO_HMR_BEACON }
+      : {}),
   };
   // Await HTTP status so the host sees completion before the app accepts the
   // next /next command. Fire-and-forget raced on Android (every-other timeout).

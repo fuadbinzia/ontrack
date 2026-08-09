@@ -84,6 +84,8 @@ Deep links / file ops:
 - `ontrack:///agent/ui?op=hit&x=<points>&y=<points>`
 - `ontrack:///agent/ui?op=overlay&to=on|off|toggle`
 - File ops: `wait`, `seed`, `flow`, `batch` via `./scripts/agent-ui-*.sh`
+- `login` is **daemon-body only** (never a deep link, so credentials cannot land in
+  `simctl openurl` / adb logs): `./scripts/agent-ui.sh login [--guest|--status]`
 
 (Use three slashes after `ontrack:` so the path is `/agent/ui`.)
 
@@ -122,6 +124,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.tabs.visionBoard`                                | Vision Board     | addon                                                                                                 |
 | `ontrack.tabs.games`                                      | Games            | addon                                                                                                 |
 | `ontrack.tabs.vehicles`                                   | Vehicles         | addon                                                                                                 |
+| `ontrack.tabs.food`                                       | Food             | addon                                                                                                 |
 | `ontrack.tabs.carousel.prev`                              | Previous tabs    | Left rail arrow — nudge bottom nav carousel                                                         |
 | `ontrack.tabs.carousel.next`                              | Next tabs        | Right rail arrow — nudge bottom nav carousel                                                        |
 | `ontrack.tabs.dock`                                       | Bottom nav       | Layout anchor — page-matching bottom nav fill (not tappable)                                          |
@@ -142,6 +145,186 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.vehicles.new.nickname` / `.year` / `.make` / `.model` / `.vin` / `.odometer` | New vehicle | Create form fields |
 | `ontrack.vehicles.new.save` / `.cancel`                   | New vehicle      | Save / Cancel                                                                                         |
 
+## Food tab (`/(tabs)/food`)
+
+### Food Home (`/(tabs)/food`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.home.section.suggestions`           | Home suggestions layout anchor (not tappable; `food-demo` waits here) |
+| `ontrack.food.home.search`                        | Search affordance → Recipes with search focus                        |
+| `ontrack.food.home.hero.<recipeId>`               | Suggestion hero carousel page → recipe detail                        |
+| `ontrack.food.home.suggestions.askAi`             | Empty-suggestions CTA → AI ideas                                     |
+| `ontrack.food.home.quick.<action>`                | Quick action tile (`scan`, `askAi`, `recipes`, `track`, `plan`, `community`) |
+| `ontrack.food.home.preferences`                   | Header shortcut → Diet & Preferences                                 |
+| `ontrack.food.home.section.today`                 | Today's meals layout anchor (not tappable)                           |
+| `ontrack.food.home.today.<activityId>`            | Today meal row → existing food detail                                |
+| `ontrack.food.home.today.add`                     | Add meal → existing activity form (Food category)                    |
+| `ontrack.food.home.section.pantry`                | Pantry "use soon" layout anchor (not tappable)                       |
+| `ontrack.food.home.pantry.scan`                   | Empty-pantry CTA → scanner                                           |
+| `ontrack.food.home.leftover`                      | Leftover Rescue card → AI ideas                                      |
+| `ontrack.food.home.section.nutrition`             | Nutrition snapshot layout anchor (not tappable)                      |
+| `ontrack.food.home.section.community`             | Friends activity layout anchor (not tappable)                        |
+
+### Recipes (`/(tabs)/food/recipes`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.recipes.search`                     | Recipe search field                                                  |
+| `ontrack.food.recipes.filter.<filterId>`          | Filter chip (`all`, `quick`, `healthy`, `halal`, `kosher`, `vegetarian`, `vegan`, `high-protein`, `saved`) |
+| `ontrack.food.recipes.featured`                   | Featured recipe hero → recipe detail                                 |
+| `ontrack.food.recipes.category.<key>`             | Cuisine category chip (slugged cuisine)                              |
+| `ontrack.food.recipes.section.list`               | Recipe list/grid layout anchor (not tappable)                        |
+| `ontrack.food.recipes.card.<recipeId>`            | Open recipe (`RecipeCard`, list + grid)                              |
+| `ontrack.food.recipes.card.<recipeId>.favorite`   | Toggle recipe favorite heart                                         |
+| `ontrack.food.recipes.empty.action`               | Empty-state action (ask AI / clear filters)                          |
+
+### Recipe detail (`/(tabs)/food/recipes/<id>`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.recipeDetail.back`                  | Back over the hero image                                             |
+| `ontrack.food.recipeDetail.favorite`              | Save (favorite) toggle                                               |
+| `ontrack.food.recipeDetail.share`                 | Open Share Recipe sheet (community post or system share)             |
+| `ontrack.food.recipeDetail.share.external`        | Share sheet alt action → system share (title/link only)              |
+| `ontrack.food.recipeDetail.section.<name>`        | Content segment (`overview`, `ingredients`, `steps`, `nutrition`)    |
+| `ontrack.food.recipeDetail.addToPlan`             | Open Add to Meal Plan sheet                                          |
+| `ontrack.food.recipeDetail.startCooking`          | Open step-by-step cooking sheet                                      |
+| `ontrack.food.recipeDetail.plan.day.<YYYY-MM-DD>` | Plan sheet day chip                                                  |
+| `ontrack.food.recipeDetail.plan.mealType.<type>`  | Plan sheet meal-type segment                                         |
+| `ontrack.food.recipeDetail.plan.servings.minus` / `.plus` | Plan sheet servings stepper                                  |
+| `ontrack.food.recipeDetail.cook.prev`             | Cooking sheet: back one step (advance/finish = `sheet.cooking.done`) |
+
+### Meal tracker (`/(tabs)/food/tracker`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.tracker.prevDay` / `.nextDay`       | Step the tracked day                                                 |
+| `ontrack.food.tracker.today`                      | Jump back to today (shown only when off today)                       |
+| `ontrack.food.tracker.section.meals`              | Meals region anchor — renders on empty days too (not tappable)       |
+| `ontrack.food.tracker.section.<mealSection>`      | Meal section anchor (`breakfast`, `lunch`, `dinner`, `snacks`; only when the day has meals; not tappable) |
+| `ontrack.food.tracker.add.<mealSection>`          | Per-section add-meal → existing activity form (Food category)        |
+| `ontrack.food.tracker.row.<activityId>`           | Scheduled meal row → existing food detail                            |
+| `ontrack.food.tracker.section.nutrition`          | Nutrition summary layout anchor (not tappable)                       |
+| `ontrack.food.tracker.empty.add`                  | Empty-day CTA → existing activity form (Food category)               |
+
+### Diet & Preferences (`/food/preferences`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.preferences.section.diet`           | Dietary-preference chip grid anchor (not tappable)                   |
+| `ontrack.food.preferences.diet.<preference>`      | Dietary preference toggle chip (`halal`, `vegan`, …)                 |
+| `ontrack.food.preferences.section.allergies`      | Allergy list anchor (not tappable)                                   |
+| `ontrack.food.preferences.allergy.add`            | Add allergy → Allergy Editor sheet                                   |
+| `ontrack.food.preferences.allergy.<id>`           | Allergy row → Allergy Editor sheet                                   |
+| `ontrack.food.preferences.allergy.name` / `.notes`| Allergy Editor fields                                                |
+| `ontrack.food.preferences.allergy.severity.<level>` | Editor severity segment (`mild`, `moderate`, `severe`)             |
+| `ontrack.food.preferences.allergy.remove`         | Editor remove (severe → destructive confirm)                         |
+| `ontrack.food.preferences.allergy.removeConfirm`  | Destructive confirm button for a severe allergy                      |
+| `ontrack.food.preferences.section.<section>`      | Editable list anchor (`intolerances`, `avoided`, `priorities`, `cuisineLikes`, `cuisineDislikes`) |
+| `ontrack.food.preferences.<section>.input` / `.add` | Editable list composer field + add                                 |
+| `ontrack.food.preferences.<section>.item.<slug>`  | Removable chip (tap removes the value)                               |
+| `ontrack.food.preferences.section.privacy`        | Privacy toggles anchor (not tappable)                                |
+| `ontrack.food.preferences.privacy.<key>`          | Privacy toggle (`shareAllergies`, `shareDietaryPreferences`, `shareMeals`; default off) |
+| `ontrack.food.preferences.clinical`               | Pointer row → memory-only clinical nutrition profile                 |
+
+### Plan & Shopping (`/food/plan`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.plan.section.week`                  | Week meal-plan panel anchor (not tappable)                           |
+| `ontrack.food.plan.day.<YYYY-MM-DD>.add`          | Per-day add → Plan a Meal sheet                                      |
+| `ontrack.food.plan.entry.<id>`                    | Plan entry row → recipe detail (when the entry has a recipe)         |
+| `ontrack.food.plan.entry.<id>.remove`             | Remove a plan entry                                                  |
+| `ontrack.food.plan.add.mealType.<type>`           | Plan sheet meal segment                                              |
+| `ontrack.food.plan.add.recipe.<recipeId>`         | Plan sheet saved-recipe chip                                         |
+| `ontrack.food.plan.add.customTitle`               | Plan sheet freeform title field                                      |
+| `ontrack.food.plan.add.servings.minus` / `.plus`  | Plan sheet servings stepper                                          |
+| `ontrack.food.plan.section.shopping`              | Shopping-list panel anchor (not tappable)                            |
+| `ontrack.food.plan.list.<listId>`                 | Grocery list picker chip (todos list id)                             |
+| `ontrack.food.plan.createList`                    | Empty-state CTA → create a todos grocery list                        |
+| `ontrack.food.plan.openList`                      | Open the full grocery list in Checklists                             |
+| `ontrack.food.plan.generate`                      | Generate from meal plan → `useTodos.addRecipe` per planned recipe    |
+| `ontrack.food.plan.addItem`                       | Add item → Grocery Item Editor sheet                                 |
+| `ontrack.food.plan.item.<canonicalKey>`           | Combined ingredient row toggle (`setTasksCompletion`)                |
+| `ontrack.food.plan.other.<taskId>`                | Standalone item checkbox toggle                                      |
+| `ontrack.food.plan.other.<taskId>.edit`           | Standalone item copy → Grocery Item Editor sheet                     |
+| `ontrack.food.plan.editor.name` / `.quantity` / `.unit` | Grocery Item Editor fields                                     |
+| `ontrack.food.plan.editor.delete`                 | Grocery Item Editor delete (`deleteTask`)                            |
+
+### Community (`/food/community`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.community.tab.<tab>`                | Feed tab (`forYou`, `following`)                                     |
+| `ontrack.food.community.section.feed`             | Feed anchor (not tappable)                                           |
+| `ontrack.food.community.compose`                  | Header + → Post Composer sheet                                       |
+| `ontrack.food.community.post.<id>`                | Post card anchor (not tappable)                                      |
+| `ontrack.food.community.post.<id>.like` / `.save` / `.share` | Post actions                                              |
+| `ontrack.food.community.post.<id>.options`        | Post options → Report Content sheet                                  |
+| `ontrack.food.community.post.<id>.recipe`         | View Recipe → recipe detail                                          |
+| `ontrack.food.community.follow.<authorId>`        | Suggested-creator follow toggle (Following empty state)              |
+| `ontrack.food.community.composer.caption`         | Composer caption field                                               |
+| `ontrack.food.community.composer.recipe.<recipeId>` | Composer attach-recipe chip                                        |
+| `ontrack.food.community.composer.section.privacy` | Composer privacy note anchor (not tappable)                          |
+| `ontrack.food.community.report.<key>`             | Report reason chip (`spam`, `unsafe`, `inappropriate`, `other`)      |
+| `ontrack.food.community.report.note`              | Report sheet optional details field                                  |
+
+### Shared food surfaces
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.ingredients.row.<key>`              | Ingredient safety row (key = canonical key / slugged name)           |
+| `ontrack.food.ingredients.country.<countryCode>`  | Country restriction row (lowercase ISO code)                         |
+| `ontrack.food.sheet.<name>.close`                 | Close any Food sheet (`FoodSheet` preset stamps automatically)       |
+| `ontrack.food.sheet.<name>.done`                  | Food sheet primary action (`doneLabel`/`onDone` or custom footer)    |
+
+Demo: flow `food-demo` seeds the food profile / pantry / recipes / meal plan
+(`src/features/food/fixtures.ts`) plus the meal activity, then lands here.
+
+### AI recipe ideas (`/food/ai-ideas`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.aiIdeas.input`                      | Multiline "what ingredients do you have" prompt                      |
+| `ontrack.food.aiIdeas.chip.<key>`                 | Pantry/recent ingredient toggle chip (canonical key)                 |
+| `ontrack.food.aiIdeas.mealType.<type>`            | Meal-type chip (`breakfast`, `lunch`, `dinner`, `snack`)             |
+| `ontrack.food.aiIdeas.time.<key>`                 | Time/complexity chip (`quick`, `standard`, `relaxed`)                |
+| `ontrack.food.aiIdeas.generate`                   | Generate ideas (disabled until any ingredient input)                 |
+| `ontrack.food.aiIdeas.section.exclusions`         | Visible active-exclusions line anchor (not tappable)                 |
+| `ontrack.food.aiIdeas.section.results`            | Results list layout anchor (not tappable)                            |
+| `ontrack.food.aiIdeas.result.<id>`                | Suggestion card layout anchor                                        |
+| `ontrack.food.aiIdeas.result.<id>.save`           | Save suggestion → `useRecipes.saveGeneratedRecipe`                   |
+| `ontrack.food.aiIdeas.retry`                      | Retry after an error                                                 |
+
+### Ingredient scanner (`/food/scan`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.scan.section.frame`                 | Viewfinder frame / photo preview anchor (not tappable)               |
+| `ontrack.food.scan.capture`                       | Take a label photo (system camera) / reset for another scan          |
+| `ontrack.food.scan.gallery`                       | Pick a label photo from the library                                  |
+| `ontrack.food.scan.section.result`                | Result sheet analysis anchor (not tappable)                          |
+| `ontrack.food.scan.section.review`                | Low-confidence correction step anchor (not tappable)                 |
+| `ontrack.food.scan.review.item.<index>`           | Editable detected-ingredient field                                   |
+| `ontrack.food.scan.review.remove.<index>`         | Remove a detected ingredient                                         |
+| `ontrack.food.scan.review.add`                    | Add a missed ingredient row                                          |
+| `ontrack.food.scan.retake`                        | Scan another label (result sheet footer alt action)                  |
+| `ontrack.food.scan.retry`                         | Retry analysis after an error (photo kept)                           |
+| `ontrack.food.scan.reopen`                        | Reopen the dismissed analysis sheet                                  |
+| `ontrack.food.sheet.scan.close` / `.done`         | Result/review sheet chrome (`FoodSheet` preset)                      |
+
+### Ingredient info (`/food/ingredients`, `/food/ingredients/<key>`)
+
+| testID                                            | Control                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| `ontrack.food.ingredients.search`                 | Knowledge search field (names, E-numbers, aliases)                   |
+| `ontrack.food.ingredients.section.list`           | Knowledge list layout anchor (not tappable)                          |
+| `ontrack.food.ingredients.row.<key>`              | Knowledge row → ingredient detail                                    |
+| `ontrack.food.ingredients.detail.back`            | Detail back button                                                   |
+| `ontrack.food.ingredients.detail.section`         | Detail body layout anchor (not tappable)                             |
+| `ontrack.food.ingredients.detail.source.<index>`  | Evidence source link (opens https source)                            |
+
 ## Food detail (`/detail/food/<id>`)
 
 | testID                              | Control                 |
@@ -155,7 +338,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.food.detail.edit`          | Edit meal manually      |
 | `ontrack.food.detail.close`         | Close                   |
 
-Demo: `activity-agent-ui-demo-meal` via `food-demo`.
+Demo: `activity-agent-ui-demo-meal` via `food-detail-demo`.
 
 ## Social
 
@@ -414,12 +597,14 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | testID                                              | Control                             |
 | --------------------------------------------------- | ----------------------------------- |
 | `ontrack.profile.avatar`                            | Customize avatar                    |
+| `ontrack.profile.displayName`                       | Hero display name (default Guest)   |
 | `ontrack.profile.avatar.close`                      | Avatar editor close                 |
 | `ontrack.profile.avatar.save`                       | Avatar editor save                  |
 | `ontrack.profile.avatar.mode.<initials\|icon\|photo>` | Avatar editor mode segment        |
 | `ontrack.profile.avatar.takePhoto`                  | Avatar editor take photo            |
 | `ontrack.profile.avatar.chooseLibrary`              | Avatar editor choose from library   |
 | `ontrack.profile.avatar.searchIcons`                | Avatar editor icon search           |
+| `ontrack.profile.guestStatus`                       | Hero caption while guest (local)    |
 | `ontrack.profile.section.account`                   | Account section anchor              |
 | `ontrack.profile.section.appearance`                | Appearance section anchor           |
 | `ontrack.profile.section.developer`                 | Developer section anchor            |
@@ -444,35 +629,60 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.deleteAccount`                     | Delete Account (signed-in)          |
 | `ontrack.profile.resetData`                         | Reset All Data                      |
 
-## Auth (`/welcome`, `/account`)
+## Welcome / first-run (`/welcome`)
 
-| testID                          | Control                           |
-| ------------------------------- | --------------------------------- |
-| `ontrack.auth.apple`            | Continue with Apple               |
-| `ontrack.auth.google`           | Continue with Google              |
-| `ontrack.auth.guest`            | Continue as Guest                 |
-| `ontrack.auth.dismissError`     | Dismiss sign-in error             |
-| `ontrack.auth.privacy`          | Privacy Policy link               |
-| `ontrack.auth.terms`            | Terms of Use link                 |
-| `ontrack.prompt.close`          | Prompt / alert dismiss (X)        |
-| `ontrack.prompt.action.<index>` | Prompt action by visible position |
+Single celestial first-run (constellation + name/goal + Get Started). Legacy
+`/onboarding` redirects here. Profile upgrade SSO is root `/account` (no tab
+dock); legacy `/(tabs)/profile/account` redirects there.
 
-## Onboarding (`/onboarding`)
+| testID                                | Control                                    |
+| ------------------------------------- | ------------------------------------------ |
+| `ontrack.auth.section.hero`           | Hero anchor (brand row + constellation)    |
+| `ontrack.auth.section.constellation`  | Orbit canvas + welcome copy                |
+| `ontrack.onboarding.name`             | Display name field                         |
+| `ontrack.onboarding.goal`             | Primary goal field                         |
+| `ontrack.onboarding.getStarted`       | Get Started (guest + complete onboarding)  |
+| `ontrack.onboarding.skip`             | I want to try the app out first (defaults + guest + complete) |
+| `ontrack.auth.guest`                  | Same control as Skip (launch-gate alias)   |
+| `ontrack.onboarding.signIn`           | Reveal Apple / Google on welcome           |
+| `ontrack.auth.section.providers`      | Apple / Google (welcome expand + Profile upgrade) |
+| `ontrack.auth.apple`                  | Continue with Apple                        |
+| `ontrack.auth.google`                 | Continue with Google                       |
+| `ontrack.auth.switchAccount`          | Use a different account (locked gate only) |
+| `ontrack.auth.dismissError`           | Dismiss sign-in error                      |
+| `ontrack.auth.privacy`                | Privacy Policy link (upgrade / locked)     |
+| `ontrack.auth.terms`                  | Terms of Use link (upgrade / locked)       |
+| `ontrack.auth.themeMode`              | Light/dark toggle (welcome)                |
+| `ontrack.auth.dataChoice.merge`       | Merge device into cloud (existing account) |
+| `ontrack.auth.dataChoice.discardDevice` | Use cloud only / discard device          |
+| `ontrack.auth.dataChoice.keepDevice`  | Keep guest data upload (new account)       |
+| `ontrack.auth.dataChoice.startFresh`  | Start fresh without guest data             |
+| `ontrack.auth.dataChoice.cancel`      | Cancel sign-in, keep guest                 |
+| `ontrack.prompt.close`                | Prompt / alert dismiss (X)                 |
+| `ontrack.prompt.action.<index>`       | Prompt action by visible position          |
 
-| testID                          | Control           |
-| ------------------------------- | ----------------- |
-| `ontrack.onboarding.getStarted` | Get started       |
-| `ontrack.onboarding.skip`       | Skip for now      |
+`ensurePastLaunchGates` auto-taps `ontrack.onboarding.skip` (or `auth.guest`)
+before **`seed` / `flow`** ops only — one tap enters guest and completes
+onboarding. `--route /welcome --exists …` without `--flow` asserts the first-run
+canvas (device must be signed out / not yet onboarded).
+
+Killing the app on a **physical device** re-arms the sign-in gate (`locked` phase →
+`/welcome` with re-authentication copy). Simulators and emulators are exempt
+(`Device.isDevice === false`), so agent flows never see it; to inspect the gate on a
+sim, tap `ontrack.developer.lockSession`.
 
 ## Travel Home (`/(tabs)/travel`, flow `travel-home`)
 
 Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (not `travel.home.*`). Assert with `travel.list.section.yourTrips` or colloquial `travel.home.section.yourTrips` (host rewrites `home` → `list`). JS: prefer `AgentUiIds.travel.home.*`. Utility actions (calendar, flights/stays, weather, currency, expenses, chat) live at the **top of plan detail** (`/travel/<id>`). Legacy `/travel/<id>/hub` redirects there.
+
+**Verify (H18):** empty guest has no Your Trips section — use `--route /travel --flow travel-home --exists travel.list.section.yourTrips` (optional `travel.newTrip.open`) for seeded cards, or `--flow travel-home-empty --exists travel.list.empty.create` for the zero-trip welcome. Bare goto alone is not a smoke. Bench: `docs/agent-ui-verify-benchmark.md`.
 
 | testID                                           | Control                                                   |
 | ------------------------------------------------ | --------------------------------------------------------- |
 | `ontrack.travel.chrome.flightPath`               | Layout anchor — flight-path flourish on itinerary hero only |
 | `ontrack.travel.chrome.skyDecor`                 | Layout anchor — weather sky + location ground (stars/moon, sun/clouds, town/trees) behind titles |
 | `ontrack.travel.list.section.yourTrips`          | Layout anchor — Your Trips section (`travel.home.section.yourTrips` alias) |
+| `ontrack.travel.list.section.empty`              | Layout anchor — zero-trip welcome                         |
 | `ontrack.travel.list.section.atmosphereLocation` | Layout anchor — atmosphere photo place caption            |
 | `ontrack.travel.list.search`                     | Your Trips search — chip expands; field when open         |
 | `ontrack.travel.list.searchMinimize`             | Collapse expanded trip search (leading search icon)       |
@@ -638,6 +848,8 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 | `ontrack.developer.releaseNotes.day.<YYYY-MM-DD>` | Card for the selected ship day |
 | `ontrack.developer.releaseNotes.version.<semver>` | Notes block for one version |
 | `ontrack.developer.devMode` | Toggle Dev Mode sandbox |
+| `ontrack.developer.staySignedIn` | Keep this device signed in across app kills |
+| `ontrack.developer.lockSession` | Show the sign-in gate without signing out |
 | `ontrack.developer.designSystem` | Open Design System |
 | `ontrack.developer.apiUsage` | Open Integrations |
 | `ontrack.developer.env` | Runtime env card |

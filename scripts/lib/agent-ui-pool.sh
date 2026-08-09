@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Dedicated agent device pool (up to AGENT_UI_POOL_MAX concurrent slots).
+# Dedicated agent device pool — AGENT_UI_POOL_HARD_MAX slots (2 per platform,
+# 4 devices total). Agents never touch the user's devices.
 #
 # Each slot owns:
 #   iOS:     "onTrack Agent N"  (simctl device, headless by default)
@@ -7,22 +8,40 @@
 #
 # Claim order: preferred pin → warm orphan (iOS Booted and/or Android
 # boot_completed, lock free) → cold free slot. Live lock holders are in-use;
-# lock-free warm devices are reusable (KEEP_IOS/KEEP_ANDROID=1 by default).
-# Idle warm devices GC after AGENT_UI_*_IDLE_SECS. If all slots are busy, wait
-# (AGENT_UI_LOCK_WAIT_SECS). Nested children inherit AGENT_UI_SLOT + LOCK_HELD.
+# lock-free warm devices are reclaimable only when KEEP_* left them up.
+#
+# After testing: safe shutdown by default (KEEP_IOS/KEEP_ANDROID=0). Android
+# saves default_boot before `emu kill` so the next agent reloads quickly.
+# Escape park-warm: AGENT_UI_KEEP_IOS=1 / KEEP_ANDROID=1 / KEEP_DEVICES=1.
+# Idle GC (AGENT_UI_*_IDLE_SECS) only applies when KEEP leaves a device warm.
+#
+# No free slot → do NOT queue and do NOT fall back to a user device: exit
+# AGENT_UI_NO_SLOT_EXIT (3) so the agent stops without UI verify.
+# AGENT_UI_LOCK_WAIT_SECS>0 opts back into waiting (debug only).
+# Nested children inherit AGENT_UI_SLOT + LOCK_HELD.
+#
+# Release is always safe + orphan-free: EXIT/INT/TERM/HUP release the lease;
+# agent_ui_pool_reap_orphans retires devices whose owner died or whose slot is
+# above the cap (never leave agent devices orphaned).
 #
 # Opt out: AGENT_UI_SKIP_LEASE=1 or AGENT_UI_USE_POOL=0 (legacy single device /
 # explicit ONTRACK_* pins without pool naming).
-# Escape kill-on-exit: AGENT_UI_KEEP_IOS=0 / AGENT_UI_KEEP_ANDROID=0.
 
-: "${AGENT_UI_POOL_MAX:=5}"
-: "${AGENT_UI_LOCK_WAIT_SECS:=300}"
+# Hard policy cap: 2 iOS sims + 2 Android AVDs. Not overridable — exported so
+# the daemon's per-slot listen ports (8191+N) stay in lockstep (H17).
+AGENT_UI_POOL_HARD_MAX=2
+export AGENT_UI_POOL_HARD_MAX
+# Distinct exit code so callers can report "skipped" instead of "UI broken".
+AGENT_UI_NO_SLOT_EXIT=3
+: "${AGENT_UI_POOL_MAX:=2}"
+: "${AGENT_UI_LOCK_WAIT_SECS:=0}"
 : "${AGENT_UI_USE_POOL:=1}"
-: "${AGENT_UI_KEEP_IOS:=1}"
-: "${AGENT_UI_KEEP_ANDROID:=1}"
+: "${AGENT_UI_KEEP_IOS:=0}"
+: "${AGENT_UI_KEEP_ANDROID:=0}"
 : "${AGENT_UI_IOS_IDLE_SECS:=1800}"
 : "${AGENT_UI_ANDROID_IDLE_SECS:=1800}"
 : "${BUNDLE_ID:=com.imtihoss.ontracknow}"
+
 
 # Resolve repo root without requiring agent-ui-host.sh (ensure-packager sources
 # this file alone when cloning onto a fresh pool slot).
@@ -44,12 +63,13 @@ agent_ui_pool_repo_root() {
   printf '%s\n' "$here"
 }
 
+# Slot count, clamped to the hard policy cap (2 per platform / 4 devices).
 agent_ui_pool_max() {
-  local n="${AGENT_UI_POOL_MAX:-5}"
-  if [[ "$n" =~ ^[1-9][0-9]*$ ]] && (( n <= 32 )); then
+  local n="${AGENT_UI_POOL_MAX:-${AGENT_UI_POOL_HARD_MAX}}"
+  if [[ "$n" =~ ^[1-9][0-9]*$ ]] && (( n <= AGENT_UI_POOL_HARD_MAX )); then
     printf '%s' "$n"
   else
-    printf '5'
+    printf '%s' "${AGENT_UI_POOL_HARD_MAX}"
   fi
 }
 
@@ -220,6 +240,7 @@ agent_ui_pool_apply_devices() {
   esac
   agent_ui_pool_bind_ios "$slot" || return 1
   agent_ui_pool_bind_android "$slot" || return 1
+  agent_ui_assert_agent_device_bound both || return 1
   # Keep agent windows off-screen if the user has Simulator.app open / reopens it.
   # shellcheck disable=SC1091
   source "$(agent_ui_pool_repo_root)/scripts/lib/ios-simulator.sh"
@@ -231,25 +252,53 @@ agent_ui_pool_slot_lockdir() {
   printf '%s/%s.lockdir' "$(agent_ui_pool_root)" "$1"
 }
 
-# Keep iOS agent sims warm across lease EXIT (default). KEEP_DEVICES=1 keeps
-# both platforms. KEEP_IOS=0 restores kill-on-exit for iOS.
+# Policy guard: a leased agent may only ever drive onTrack Agent N /
+# onTrack_Agent_N. The user's devices (onTrack iPhone 17 Pro, Galaxy_S26) are
+# off limits — for tests, for handoff, for "just looking". Any drift here means
+# a stale pin or an adopt path leaked back in, so fail loudly instead of typing
+# into the user's simulator.
+agent_ui_assert_agent_device_bound() {
+  local platform="${1:-both}" ios="${ONTRACK_IOS_SIMULATOR:-}" avd="${ONTRACK_ANDROID_AVD:-}"
+  # Only meaningful while this process holds a pool lease.
+  [[ "${AGENT_UI_POOL_MODE:-0}" == "1" || -n "${AGENT_UI_SLOT:-}" ]] || return 0
+  agent_ui_pool_want || return 0
+
+  if [[ "$platform" != "android" && -n "$ios" ]]; then
+    if [[ ! "$ios" =~ ^onTrack\ Agent\ [1-9][0-9]*$ ]]; then
+      echo "error: agent device policy — leased agent bound to non-agent iOS simulator '${ios}'." >&2
+      echo "error: agents run only on 'onTrack Agent N'. Clear ONTRACK_IOS_SIMULATOR / re-lease; never verify on the user's device." >&2
+      return 1
+    fi
+  fi
+  if [[ "$platform" != "ios" && -n "$avd" ]]; then
+    if [[ ! "$avd" =~ ^onTrack_Agent_[1-9][0-9]*$ ]]; then
+      echo "error: agent device policy — leased agent bound to non-agent Android AVD '${avd}'." >&2
+      echo "error: agents run only on 'onTrack_Agent_N'. Clear ONTRACK_ANDROID_AVD / re-lease; never verify on Galaxy_S26." >&2
+      return 1
+    fi
+  fi
+  return 0
+}
+
+# Park iOS agent sim warm across lease EXIT. Default is shutdown (KEEP_IOS=0).
+# KEEP_DEVICES=1 parks both platforms.
 agent_ui_pool_keep_ios() {
   case "${AGENT_UI_KEEP_DEVICES:-0}" in
     1|true|TRUE|yes|YES) return 0 ;;
   esac
-  case "${AGENT_UI_KEEP_IOS:-1}" in
+  case "${AGENT_UI_KEEP_IOS:-0}" in
     1|true|TRUE|yes|YES) return 0 ;;
     *) return 1 ;;
   esac
 }
 
-# Keep Android agent AVDs warm across lease EXIT (default). KEEP_DEVICES=1 keeps
-# both platforms. KEEP_ANDROID=0 restores kill-on-exit for Android.
+# Park Android agent AVD warm across lease EXIT. Default is shutdown (KEEP_ANDROID=0).
+# KEEP_DEVICES=1 parks both platforms.
 agent_ui_pool_keep_android() {
   case "${AGENT_UI_KEEP_DEVICES:-0}" in
     1|true|TRUE|yes|YES) return 0 ;;
   esac
-  case "${AGENT_UI_KEEP_ANDROID:-1}" in
+  case "${AGENT_UI_KEEP_ANDROID:-0}" in
     1|true|TRUE|yes|YES) return 0 ;;
     *) return 1 ;;
   esac
@@ -456,8 +505,92 @@ agent_ui_pool_gc_idle_android() {
 }
 
 agent_ui_pool_gc_idle_devices() {
+  agent_ui_pool_reap_orphans || true
   agent_ui_pool_gc_idle_ios || true
   agent_ui_pool_gc_idle_android || true
+}
+
+# Agent devices must never be orphaned. Two ways they leak:
+#   1. The owner was killed before its EXIT trap ran → device is up, lock free,
+#      and has no idle stamp, so the idle GC never sees it. Stamp it now.
+#   2. It belongs to a slot above the policy cap (legacy 5-slot pool) → nothing
+#      will ever claim it again. Shut it down and drop its slot files.
+# Shutdown is always graceful (simctl shutdown / adb emu kill + lock release) so
+# the next agent can reload the device quickly.
+agent_ui_pool_reap_orphans() {
+  local max slot scan_max root ios_name android_name lockdir
+  case "${AGENT_UI_POOL_BIND_DEVICES:-1}" in
+    0|false|FALSE|no|NO) return 0 ;;
+  esac
+  max="$(agent_ui_pool_max)"
+  scan_max="${AGENT_UI_POOL_SCAN_MAX:-8}"
+  if ! [[ "$scan_max" =~ ^[1-9][0-9]*$ ]] || (( scan_max > 32 )); then
+    scan_max=8
+  fi
+  root="$(agent_ui_pool_repo_root)"
+
+  for ((slot = 1; slot <= scan_max; slot++)); do
+    agent_ui_pool_slot_lock_free "$slot" || continue
+    lockdir="$(agent_ui_pool_slot_lockdir "$slot")"
+
+    if (( slot > max )); then
+      ios_name="$(agent_ui_pool_ios_name "$slot")"
+      android_name="$(agent_ui_pool_android_name "$slot")"
+      if agent_ui_pool_slot_ios_warm "$slot"; then
+        echo "agent-ui: retiring out-of-policy agent sim '${ios_name}' (cap ${max} slots)" >&2
+        # shellcheck disable=SC1091
+        source "${root}/scripts/lib/ios-simulator.sh"
+        ios_sim_shutdown_agent_named "$ios_name" || true
+      fi
+      if agent_ui_pool_slot_android_warm "$slot"; then
+        echo "agent-ui: retiring out-of-policy agent AVD '${android_name}' (cap ${max} slots)" >&2
+        # shellcheck disable=SC1091
+        source "${root}/scripts/lib/android-emulator.sh"
+        android_emu_shutdown_named "$android_name" || true
+      fi
+      rm -rf "$lockdir" 2>/dev/null || true
+      agent_ui_pool_clear_idle_stamps "$slot"
+      continue
+    fi
+
+    # Stale lockdir from a dead holder — clear it so the slot is claimable.
+    if [[ -d "$lockdir" ]]; then
+      echo "agent-ui: clearing orphaned slot ${slot} lock (holder gone)" >&2
+      rm -rf "$lockdir" 2>/dev/null || true
+    fi
+    # Untracked warm device → shut down (default) or idle-stamp when KEEP parks warm.
+    if agent_ui_pool_slot_ios_warm "$slot"; then
+      if agent_ui_pool_keep_ios; then
+        if [[ ! -f "$(agent_ui_pool_ios_idle_path "$slot")" ]]; then
+          echo "agent-ui: adopting orphaned warm iOS slot ${slot} into idle GC" >&2
+          agent_ui_pool_mark_ios_idle "$slot"
+        fi
+      else
+        ios_name="$(agent_ui_pool_ios_name "$slot")"
+        echo "agent-ui: shutting down orphaned iOS '${ios_name}' (slot ${slot})" >&2
+        # shellcheck disable=SC1091
+        source "${root}/scripts/lib/ios-simulator.sh"
+        ios_sim_shutdown_agent_named "$ios_name" || true
+        agent_ui_pool_clear_ios_idle "$slot"
+      fi
+    fi
+    if agent_ui_pool_slot_android_warm "$slot"; then
+      if agent_ui_pool_keep_android; then
+        if [[ ! -f "$(agent_ui_pool_android_idle_path "$slot")" ]]; then
+          echo "agent-ui: adopting orphaned warm Android slot ${slot} into idle GC" >&2
+          agent_ui_pool_mark_android_idle "$slot"
+        fi
+      else
+        android_name="$(agent_ui_pool_android_name "$slot")"
+        echo "agent-ui: shutting down orphaned Android '${android_name}' (slot ${slot})" >&2
+        # shellcheck disable=SC1091
+        source "${root}/scripts/lib/android-emulator.sh"
+        android_emu_shutdown_named "$android_name" || true
+        agent_ui_pool_clear_android_idle "$slot"
+      fi
+    fi
+  done
+  return 0
 }
 
 # True when this slot's iOS agent sim is Booted and/or its Android AVD is on adb.
@@ -537,8 +670,9 @@ agent_ui_pool_try_claim_slot() {
 }
 
 # Shut down this slot's devices when the lease ends.
-# Default: keep iOS + Android warm (KEEP_IOS/KEEP_ANDROID=1). Escape keep both
-# forever this turn: KEEP_DEVICES=1. Kill a platform: KEEP_IOS=0 / KEEP_ANDROID=0.
+# Default: safe shutdown both platforms (KEEP_IOS/KEEP_ANDROID=0) so the next
+# agent can reload quickly from snapshot / cold boot — never leave orphans.
+# Park warm this turn: KEEP_IOS=1 / KEEP_ANDROID=1 / KEEP_DEVICES=1.
 # Skipped when BIND_DEVICES=0 (unit tests).
 agent_ui_pool_shutdown_slot() {
   local slot="${1:-${AGENT_UI_SLOT:-}}" ios_name android_name keep_ios=0 keep_android=0
@@ -586,6 +720,16 @@ agent_ui_pool_shutdown_slot() {
   if (( keep_android == 0 )); then
     # shellcheck disable=SC1091
     source "$(agent_ui_pool_repo_root)/scripts/lib/android-emulator.sh"
+    # Safe shutdown: save default_boot first so the next agent gets a snapshot
+    # boot instead of a multi-minute cold start (agent AVDs run
+    # -no-snapshot-save so a kill can never corrupt saved state).
+    local android_serial
+    android_serial="$(
+      ONTRACK_ANDROID_AVD="$android_name" ONTRACK_ANDROID_SERIAL= android_emu_preferred_serial || true
+    )"
+    if [[ -n "$android_serial" ]]; then
+      android_emu_regenerate_default_snapshot "$android_serial" "$android_name" || true
+    fi
     android_emu_shutdown_named "$android_name" || true
     agent_ui_pool_clear_android_idle "$slot"
   else
@@ -633,7 +777,7 @@ agent_ui_ensure_lease() {
       AGENT_UI_LOCK_ACQUIRED=1
       AGENT_UI_LOCK_HELD=1
       export AGENT_UI_LOCK_ACQUIRED AGENT_UI_LOCK_HELD AGENT_UI_LOCK_DIR="$lockdir"
-      trap 'agent_ui_release_lease' EXIT
+      trap 'agent_ui_release_lease' EXIT INT TERM HUP
     fi
     # Re-export device pins for children that cleared env.
     if agent_ui_pool_want && [[ -n "${AGENT_UI_SLOT:-}" ]]; then
@@ -676,7 +820,9 @@ agent_ui_ensure_lease() {
     fi
   fi
 
-  while (( claimed == 0 && SECONDS < deadline )); do
+  # One sweep = warm orphan → cold free slot → lock-free orphan. Runs at least
+  # once even with wait_secs=0 (default: stop instead of queueing).
+  while :; do
     orphan=""
     warm=""
     # Prefer warm orphans (lock free + iOS Booted and/or Android up) over cold.
@@ -723,6 +869,9 @@ agent_ui_ensure_lease() {
     if (( claimed == 1 )); then
       break
     fi
+    if (( SECONDS >= deadline )); then
+      break
+    fi
     if (( SECONDS - last_msg >= 5 )); then
       echo "agent-ui: waiting for agent device slot (0/${max} free; waited $((SECONDS - (deadline - wait_secs)))s)" >&2
       last_msg=$SECONDS
@@ -731,8 +880,10 @@ agent_ui_ensure_lease() {
   done
 
   if (( claimed == 0 )); then
-    echo "error: all ${max} agent device slots are busy (pool: $(agent_ui_pool_root); waited ${wait_secs}s). Wait for another agent to finish, or AGENT_UI_SKIP_LEASE=1 as escape hatch." >&2
-    return 1
+    echo "agent-ui: no free agent device slot (0/${max} free) — stopping without UI verify." >&2
+    echo "agent-ui: another agent owns each slot; never fall back to a non-agent device (onTrack iPhone 17 Pro / Galaxy_S26). Report the skip and finish the turn." >&2
+    echo "agent-ui: pool $(agent_ui_pool_root) (waited ${wait_secs}s)" >&2
+    return "${AGENT_UI_NO_SLOT_EXIT}"
   fi
 
   printf '%s\n' "$$" >"${lockdir}/pid"
@@ -750,7 +901,7 @@ agent_ui_ensure_lease() {
   AGENT_UI_LOCK_HELD=1
   AGENT_UI_LOCK_ACQUIRED=1
   export AGENT_UI_SLOT AGENT_UI_LOCK_DIR AGENT_UI_LOCK_HELD AGENT_UI_LOCK_ACQUIRED
-  trap 'agent_ui_release_lease' EXIT
+  trap 'agent_ui_release_lease' EXIT INT TERM HUP
 
   agent_ui_pool_clear_idle_stamps "$slot"
 
@@ -758,6 +909,7 @@ agent_ui_ensure_lease() {
     agent_ui_release_lease
     return 1
   fi
+
 
   echo "agent-ui: acquired device slot ${slot}/${max}" >&2
   return 0
@@ -774,7 +926,7 @@ agent_ui_ensure_legacy_lease() {
       AGENT_UI_LOCK_ACQUIRED=1
       AGENT_UI_LOCK_HELD=1
       export AGENT_UI_LOCK_ACQUIRED AGENT_UI_LOCK_HELD AGENT_UI_LOCK_DIR="$lockdir"
-      trap 'agent_ui_release_lease' EXIT
+      trap 'agent_ui_release_lease' EXIT INT TERM HUP
     fi
     return 0
   fi
@@ -798,7 +950,7 @@ agent_ui_ensure_legacy_lease() {
       AGENT_UI_LOCK_HELD=1
       AGENT_UI_LOCK_ACQUIRED=1
       export AGENT_UI_LOCK_DIR AGENT_UI_LOCK_HELD AGENT_UI_LOCK_ACQUIRED
-      trap 'agent_ui_release_lease' EXIT
+      trap 'agent_ui_release_lease' EXIT INT TERM HUP
       echo "agent-ui: acquired simulator lease (legacy single lock)" >&2
       return 0
     fi
@@ -814,7 +966,7 @@ agent_ui_ensure_legacy_lease() {
       AGENT_UI_LOCK_HELD=1
       AGENT_UI_LOCK_ACQUIRED=1
       export AGENT_UI_LOCK_DIR AGENT_UI_LOCK_HELD AGENT_UI_LOCK_ACQUIRED
-      trap 'agent_ui_release_lease' EXIT
+      trap 'agent_ui_release_lease' EXIT INT TERM HUP
       return 0
     fi
     if (( SECONDS - last_msg >= 5 )); then
@@ -826,6 +978,6 @@ agent_ui_ensure_legacy_lease() {
     sleep 0.4
   done
 
-  echo "error: another agent holds the simulator lease (lock: ${lockdir}; waited ${wait_secs}s). Serialize UI verify across threads, or AGENT_UI_SKIP_LEASE=1 as escape hatch." >&2
-  return 1
+  echo "error: another agent holds the simulator lease (lock: ${lockdir}; waited ${wait_secs}s). Stop without UI verify — do not fall back to a non-agent device." >&2
+  return "${AGENT_UI_NO_SLOT_EXIT}"
 }

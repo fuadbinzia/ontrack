@@ -6,3 +6,6 @@ date_iso	elapsed_s	ios_exit	android_exit	slot	path	label	notes
 2026-08-08T18:38:03Z	11	0	0	1	warm	runner-self-record	exit=0; SKIP_HEADED_HANDOFF=1
 2026-08-08T19:39:12Z	10	0	0	1	warm	baseline-after-slow-complaint	exit=0; SKIP_HEADED_HANDOFF=1
 2026-08-08T19:40:04Z	9	0	0	1	warm	parallel-verify-both	exit=0; SKIP_HEADED_HANDOFF=1
+2026-08-09T16:04:00Z	21	0	0	1	warm	travel-home-smoke	H18; flow travel-home + yourTrips + newTrip.open; bare goto alone failed empty guest
+2026-08-09T16:10:00Z						h19-shutdown-default	KEEP_*=0 default; orphan shut down; login override env keys
+2026-08-09T18:15:00Z						h21-cold-reconnect	skip reconnect on cold boot; iOS relaunch; quieter install log

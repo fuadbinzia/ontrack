@@ -22,7 +22,8 @@ Paste both assert outputs. One verify-both per close-out — don’t grind retri
 
 - Prefer named `--flow` / seeds over hand-built `--goto` / `--wait` chains.
 - Pin `AGENT_UI_PLATFORM=android` for Android; clear before iOS (sticky pin breaks default). `verify-both` does this.
-- **Headless pool by default** — agents claim a dedicated slot (`onTrack Agent N` / `onTrack_Agent_N`, max 5; wait if full). Do not set `ONTRACK_IOS_SIMULATOR_WINDOW=1` or run `ensure-android-emulator.sh --window` / `android:ensure:window` unless the user explicitly asks for a headed Simulator/AVD.
+- **Headless agent devices only** — one dedicated slot per agent (`onTrack Agent N` / `onTrack_Agent_N`, **max 2 per platform**). No free slot → exit 3, report the skip, stop without testing; never wait and never fall back to the user's `onTrack iPhone 17 Pro` / `Galaxy_S26`. Launches over 30s are a defect to diagnose. Do not set `ONTRACK_IOS_SIMULATOR_WINDOW=1` or run `ensure-android-emulator.sh --window` / `android:ensure:window` unless the user explicitly asks for a headed Simulator/AVD.
+- **Own account per device** — `./scripts/agent-ui.sh login` signs the leased device into its `agent_N` account (dev-only, `account_flags.agent_test` required); `--guest` stays credential-free.
 - Reuse Metro when healthy; agents use `packager:ensure:start` — never `npm start` in agent shells. No prophylactic force-stop / `--force-reconnect`.
 - Assert/`--color` then **STOP** — no ritual handoff screenshot. Glyph orientation → source, not screenshots.
 - Leave devices on the changed surface (not splash/blank/error/unrelated tab).

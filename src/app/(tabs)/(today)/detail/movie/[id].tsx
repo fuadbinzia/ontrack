@@ -1,5 +1,4 @@
 import { Image } from 'expo-image';
-import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -9,6 +8,7 @@ import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
 import { useSchedule } from '@/store/schedule';
 import { formatDuration, formatMinutes } from '@/utils/date';
+import { openHttpsUrl } from '@/utils/safe-url';
 
 export default function MovieDetailScreen() {
   const router = useRouter();
@@ -37,7 +37,7 @@ export default function MovieDetailScreen() {
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={`Open ${movie.title} on The Movie Database`}
-          onPress={() => void Linking.openURL(tmdbUrl)}>
+          onPress={() => void openHttpsUrl(tmdbUrl)}>
           <Image source={movie.posterUrl} style={styles.poster} contentFit="cover" />
         </Pressable>
       ) : null}

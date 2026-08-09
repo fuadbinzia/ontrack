@@ -1,0 +1,71 @@
+import { StyleSheet, View } from 'react-native';
+
+import { GlassPlate } from '@/components/primitives';
+import { colorWithAlpha } from '@/design-system';
+import { useResponsive } from '@/hooks/use-responsive';
+import { useTheme } from '@/hooks/use-theme';
+
+/**
+ * onTrack lens mark — a glass disc holding a tilted orbit ring and the
+ * accent bead that rides it. Shares the constellation's visual language,
+ * so the wordmark reads as the same system in miniature.
+ */
+export function AuthBrandMark({ size }: { size?: number }) {
+  const theme = useTheme();
+  const { s } = useResponsive();
+  const box = size ?? Math.max(40, s(44));
+  const ring = box * 0.58;
+  const bead = Math.max(5, box * 0.17);
+
+  return (
+    <GlassPlate
+      mist
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        styles.disc,
+        {
+          width: box,
+          height: box,
+          borderRadius: box / 2,
+          borderColor: colorWithAlpha(theme.accentPrimary, 0.32),
+        },
+      ]}>
+      <View
+        style={[
+          styles.ring,
+          {
+            width: ring,
+            height: ring,
+            borderRadius: ring / 2,
+            borderColor: colorWithAlpha(theme.accentPrimary, 0.72),
+          },
+        ]}
+      />
+      <View
+        style={[
+          styles.bead,
+          {
+            width: bead,
+            height: bead,
+            borderRadius: bead / 2,
+            backgroundColor: theme.accentPrimary,
+            top: box * 0.18,
+            right: box * 0.2,
+          },
+        ]}
+      />
+    </GlassPlate>
+  );
+}
+
+const styles = StyleSheet.create({
+  disc: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  ring: { borderWidth: 1, transform: [{ rotate: '-24deg' }, { scaleY: 0.82 }] },
+  bead: { position: 'absolute' },
+});

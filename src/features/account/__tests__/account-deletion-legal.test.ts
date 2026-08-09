@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
-  ONTRACK_SUPPORT_EMAIL,
-  PRIVACY_POLICY_URL,
-  TERMS_OF_USE_URL,
+    ONTRACK_SUPPORT_EMAIL,
+    PRIVACY_POLICY_URL,
+    TERMS_OF_USE_URL,
 } from '@/constants/legal';
 
 describe('account deletion and legal release gates', () => {
@@ -13,10 +13,11 @@ describe('account deletion and legal release gates', () => {
     'utf8',
   );
   const account = readFileSync(join(process.cwd(), 'src/services/cloud/account.ts'), 'utf8');
-  const provider = readFileSync(
-    join(process.cwd(), 'src/features/auth/auth-provider.tsx'),
-    'utf8',
-  );
+  // Deletion lives in the colocated exit flows the provider delegates to.
+  const provider = [
+    readFileSync(join(process.cwd(), 'src/features/auth/auth-provider.tsx'), 'utf8'),
+    readFileSync(join(process.cwd(), 'src/features/auth/auth-account-exit.ts'), 'utf8'),
+  ].join('\n');
   const card = readFileSync(
     join(process.cwd(), 'src/features/account/cloud-account-card.tsx'),
     'utf8',

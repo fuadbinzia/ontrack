@@ -11,7 +11,7 @@ alwaysApply: false
 
 If a step is slow, unclear, or needs multiple retries — **stop and fix the hang-up**. Do not keep re-running verify/flows hoping it clears. Prefer simple causes (config, pins, Metro/daemon) before deep debug or bridge rewrites.
 
-**When the user complains about Simulator / emulator / verify hang / “takes forever”:** open [`docs/agent-ui-verify-benchmark.md`](../../docs/agent-ui-verify-benchmark.md) **before** grinding. Match the symptom to hang classes H1–H12, check recent TSV timings, then continue triage below. Append a run with `./scripts/agent-ui-benchmark-open.sh` when proving an open/close-out fix.
+**When the user complains about Simulator / emulator / verify hang / “takes forever”:** open [`docs/agent-ui-verify-benchmark.md`](../../docs/agent-ui-verify-benchmark.md) **before** grinding. Match the symptom to hang classes H1–H19, check recent TSV timings, then continue triage below. Append a run with `./scripts/agent-ui-benchmark-open.sh` when proving an open/close-out fix.
 
 ## Device timeout → diagnose + lasting fix
 
@@ -24,7 +24,7 @@ A device / bridge / boot / wait **timeout is not “try again”** — treat it 
    - `timed out waiting for agent-ui status` / `timed out after Ns` (daemon/bridge) → app not answering / wrong device / dead bridge
    - `timed out waiting after opening` / wait route|prefix|id → land/assert target never appeared
    - `reconnect timed out` → Metro / launcher / device not up
-   - `waiting for agent device slot` → pool full (usually wait, not a bug — only fix if slots are stuck leased)
+   - `no free agent device slot … stopping without UI verify` (exit 3) → both agent devices for that platform are leased. Not a bug: report the skip and finish the turn. Only investigate if the slots are stuck leased by dead owners (orphan reap should have cleared them).
 2. **Health snapshot** (cheap, once): Metro `:8081/status`, daemon `:8191/health`, sticky pins (`AGENT_UI_PLATFORM`, `AGENT_UI_SLOT`, `ONTRACK_*`), `route` width vs pin, iOS system sheet, Android `adb reverse`.
 3. **Recover only enough to continue** (unwedge / reboot that slot / clear sheet / ensure packager) — then **find why it timed out**.
 4. **Host/device quiet ≥ `AGENT_UI_DEVICE_RESPOND_SECS` (default 10)** → assume the sim/emu went down; `agent_ui_ensure_app_up` restarts it once (`agent_ui_restart_device`). Escape: `AGENT_UI_SKIP_DEVICE_RESTART=1`.
@@ -34,14 +34,14 @@ A device / bridge / boot / wait **timeout is not “try again”** — treat it 
 ## Agent-ui triage
 
 1. Sticky pins — `AGENT_UI_PLATFORM`, `AGENT_UI_DEVICE`, serials/sim overrides.
-2. Agent device pool wait (`waiting for agent device slot` / slots busy) — up to 5 dedicated headless devices; live lock holders are busy; lock-free warm iOS sims / Android AVDs are reused (`reclaiming warm slot`, `KEEP_IOS`/`KEEP_ANDROID=1` default); wait if full (`AGENT_UI_SKIP_LEASE=1` escape only).
+2. Agent device slot claim (`acquired device slot N/2`) — 2 dedicated headless devices per platform; live lock holders are busy; after verify lease EXIT shuts devices down safely by default (`KEEP_IOS`/`KEEP_ANDROID=0`; Android snapshot first). Park-warm only with `KEEP_*=1`. Orphans are reaped (never left up). None free → exit 3 and stop (no queueing).
 3. `route` with pin: iOS ~402×874, Android ~384×832. Width mismatch → fix env/device.
 4. Pin Android ops; unset/`ios` before iOS. Prefer `agent-ui-verify-both.sh` + named `--flow`.
 5. Android after reconnect often `route=/` — `verify` auto-lands (goto/`--flow`) + wait-route + one cold retry; `verify-both` sets `AGENT_UI_ANDROID_FORCE_LAND` when on `/`. `route=?` → emu/app not ready (`boot_completed`); do not treat allow_fail route timeouts as up.
-6. iOS covered by Apple Account / system sheet / “Open in onTrack?” / location / Expo developer-menu intro → scheme pre-approval (`ios_sim_approve_url_schemes` on boot) + `./scripts/agent-ui-ios-alerts.sh ensure` (Open-in → Open; location → **Allow While Using App**; dev menu → **Continue**; auto from `ensure_app_up` / reconnect). Do not grind verify under it.
+6. iOS covered by Apple Account / system sheet / “Open in onTrack?” / location / Expo developer-menu intro → scheme pre-approval (`ios_sim_approve_url_schemes` on boot) + `./scripts/agent-ui-ios-alerts.sh ensure` (Apple Account → **Not Now**; Open-in → Open; location → **Allow While Using App**; Expo intro → **Continue**; auto from `ensure_app_up` / reconnect). Do not grind verify under it. Never Escape when **Not Now** is on screen.
 7. Headless is the default — do **not** open Simulator.app / `ensure-android-emulator.sh --window` unless the user asked for headed. Assert/`--color` work without a GUI.
 8. Metro `:8081/status`, daemon `:8191/health`; Android `adb reverse` for 8081/8191.
 9. Do **not** force-stop / `--force-reconnect` for glyph/orientation checks — edit source, Fast Refresh, assert.
-10. Hang classes H1–H12 (piped `| head`/`| tail`, Galaxy adopt thrash, unpark/`simctl io`, mid-edit epilogue, …) → [`docs/agent-ui-verify-benchmark.md`](../../docs/agent-ui-verify-benchmark.md) + TSV; don’t restate fixes here.
+10. Hang classes H1–H19 (piped `| head`/`| tail`, Galaxy adopt thrash, unpark/`simctl io`, mid-edit epilogue, empty `/travel` assert H18, devices left warm H19, …) → [`docs/agent-ui-verify-benchmark.md`](../../docs/agent-ui-verify-benchmark.md) + TSV; don’t restate fixes here.
 
 Details: [`.cursor/skills/agent-ui/SKILL.md`](../skills/agent-ui/SKILL.md).

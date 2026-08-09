@@ -2,16 +2,16 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import {
-  emptyAvatarMeta,
-  normalizeAvatarMeta,
-  type ProfileAvatarMeta,
+    emptyAvatarMeta,
+    normalizeAvatarMeta,
+    type ProfileAvatarMeta,
 } from '@/features/account/profile-avatar-model';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import { useAuthAccess } from '@/store/auth-access';
 import {
-  dateDisplayFormatForLocale,
-  deviceLocale,
-  type DateDisplayFormat,
+    dateDisplayFormatForLocale,
+    deviceLocale,
+    type DateDisplayFormat,
 } from '@/utils/date';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -64,9 +64,13 @@ export const usePreferences = create<PreferencesState>()(
       completeOnboarding: ({ name, goal }) => {
         const dateLocale = deviceLocale();
         useAuthAccess.getState().markGuestDataDirty();
+        const trimmed = name.trim();
+        // Welcome empty/skip → Guest. Drop legacy "You" placeholder.
+        const nextName =
+          !trimmed || /^you$/i.test(trimmed) ? 'Guest' : trimmed;
         set({
           hasOnboarded: true,
-          name,
+          name: nextName,
           goal,
           dateLocale,
           dateDisplayFormat: dateDisplayFormatForLocale(dateLocale),
@@ -76,6 +80,7 @@ export const usePreferences = create<PreferencesState>()(
       setName: (name) => {
         useAuthAccess.getState().markGuestDataDirty();
         const trimmed = name.trim();
+        // Legacy "You" placeholder → empty so resolveSelfDisplayName falls back to Guest.
         set({ name: /^you$/i.test(trimmed) ? '' : trimmed });
       },
       setAvatar: (avatar) => {

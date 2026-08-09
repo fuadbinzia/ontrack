@@ -5,16 +5,15 @@ import { todayKey } from '@/utils/date';
 
 import { dismissAgentUiOverlays } from './dismiss-overlays';
 import {
-  formatAgentUiSeedDetail,
-  normalizeFixtureName,
-  restoreTravelPlansFromDocuments,
-  seedAgentUiFixture,
+    formatAgentUiSeedDetail,
+    normalizeFixtureName,
+    restoreTravelPlansFromDocuments,
+    seedAgentUiFixture,
 } from './fixtures';
-import { applyAgentUiSlotFromUnknown } from './slot';
 import {
-  AGENT_UI_ANDROID_WAIT_TIMEOUT_MS,
-  AGENT_UI_WAIT_TIMEOUT_MS,
-  resolveAgentUiFlow,
+    AGENT_UI_ANDROID_WAIT_TIMEOUT_MS,
+    AGENT_UI_WAIT_TIMEOUT_MS,
+    resolveAgentUiFlow,
 } from './flows';
 import { AgentUiIds } from './ids';
 import {
@@ -41,6 +40,7 @@ import {
     resolveAgentUiDestination,
 } from './route';
 import { scrollAgentUiTargetIntoView } from './scroll-into-view';
+import { applyAgentUiSlotFromUnknown } from './slot';
 
 function isWelcomeRoute(route: string): boolean {
   return route === '/welcome' || route.startsWith('/welcome?');
@@ -50,61 +50,46 @@ function isOnboardingRoute(route: string): boolean {
   return route === '/onboarding' || route.startsWith('/onboarding?');
 }
 
-/** Fresh pool clones land on /welcome — continue as guest before seed/flow. */
+/**
+ * Fresh pool clones land on /welcome (single first-run). Skip enters guest and
+ * completes onboarding in one tap. Legacy `/onboarding` redirects here.
+ */
 async function ensurePastWelcomeGate(): Promise<boolean> {
   const route = getAgentUiRoute() || '';
-  if (!isWelcomeRoute(route)) {
+  if (!isWelcomeRoute(route) && !isOnboardingRoute(route)) {
     return true;
   }
+  const skipId = AgentUiIds.onboarding.skip;
   const guestId = AgentUiIds.auth.guest;
   const deadline = Date.now() + (Platform.OS === 'android' ? 12000 : 8000);
   let tapped = false;
   while (Date.now() < deadline) {
     const current = getAgentUiRoute() || '';
-    if (current && !isWelcomeRoute(current)) {
+    if (current && !isWelcomeRoute(current) && !isOnboardingRoute(current)) {
       return true;
     }
-    if (!tapped && getAgentUiTarget(guestId)) {
-      if (!tapAgentUiTarget(guestId)) return false;
-      tapped = true;
+    if (!tapped) {
+      const id = getAgentUiTarget(skipId)
+        ? skipId
+        : getAgentUiTarget(guestId)
+          ? guestId
+          : undefined;
+      if (id) {
+        if (!tapAgentUiTarget(id)) return false;
+        tapped = true;
+      }
     }
     await sleep(50);
   }
   const finalRoute = getAgentUiRoute() || '';
-  return Boolean(finalRoute && !isWelcomeRoute(finalRoute));
+  return Boolean(
+    finalRoute && !isWelcomeRoute(finalRoute) && !isOnboardingRoute(finalRoute),
+  );
 }
 
-/**
- * Fresh Android agent AVDs often open /onboarding after guest continue.
- * Tap Skip so seed/flow can reach Travel (and other tabs).
- */
-async function ensurePastOnboardingGate(): Promise<boolean> {
-  const route = getAgentUiRoute() || '';
-  if (!isOnboardingRoute(route)) {
-    return true;
-  }
-  const skipId = AgentUiIds.onboarding.skip;
-  const deadline = Date.now() + (Platform.OS === 'android' ? 12000 : 8000);
-  let tapped = false;
-  while (Date.now() < deadline) {
-    const current = getAgentUiRoute() || '';
-    if (current && !isOnboardingRoute(current)) {
-      return true;
-    }
-    if (!tapped && getAgentUiTarget(skipId)) {
-      if (!tapAgentUiTarget(skipId)) return false;
-      tapped = true;
-    }
-    await sleep(50);
-  }
-  const finalRoute = getAgentUiRoute() || '';
-  return Boolean(finalRoute && !isOnboardingRoute(finalRoute));
-}
-
-/** Welcome guest + onboarding skip — required before seed/flow on cold devices. */
+/** Single first-run gate — required before seed/flow on cold devices. */
 async function ensurePastLaunchGates(): Promise<boolean> {
-  if (!(await ensurePastWelcomeGate())) return false;
-  return ensurePastOnboardingGate();
+  return ensurePastWelcomeGate();
 }
 
 export type AgentUiOp =
@@ -124,7 +109,8 @@ export type AgentUiOp =
   | 'hit'
   | 'overlay'
   | 'devmode'
-  | 'dismiss';
+  | 'dismiss'
+  | 'login';
 
 export type AgentUiRequest = {
   op?: string | string[];
@@ -150,6 +136,9 @@ export type AgentUiRequest = {
   refreshDump?: boolean | string | string[];
   /** Host/daemon correlation id (echoed on status). */
   nonce?: number | string | string[];
+  /** Agent account sign-in (`op=login`), daemon body only — never a deep link. */
+  email?: string | string[];
+  password?: string | string[];
   /** Host pin: ios | android (daemon routes per platform). */
   platform?: string | string[];
   /** Agent device pool slot (daemon routes per slot). */
@@ -184,6 +173,7 @@ const OPS = new Set<AgentUiOp>([
   'overlay',
   'devmode',
   'dismiss',
+  'login',
 ]);
 
 function parseOp(raw: string): AgentUiOp {
@@ -604,6 +594,27 @@ export async function handleAgentUiRequest(
       });
     }
     return true;
+  }
+
+  if (op === 'login') {
+    // Lazy require keeps unit tests free of the auth/supabase graph.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { runAgentUiLogin } = require('./agent-login') as typeof import('./agent-login');
+    const result = await runAgentUiLogin({
+      email: asSingle(request.email),
+      password: asSingle(request.password),
+    });
+    if (emitStatus) {
+      await writeAgentUiStatus({
+        op: 'login',
+        // Detail carries the account email only — never the password.
+        id: result.email,
+        ok: result.ok,
+        detail: result.detail,
+        route: getAgentUiRoute(),
+      });
+    }
+    return result.ok;
   }
 
   if (op === 'hit') {

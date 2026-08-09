@@ -1,4 +1,4 @@
-import * as WebBrowser from 'expo-web-browser';
+import { openInAppBrowser } from '@/utils/safe-url';
 
 export interface GoogleFlightComparison {
   origin: string;
@@ -41,5 +41,5 @@ export function googleFlightsSearchUrl(input: GoogleFlightComparison): string {
 }
 
 export async function compareOnGoogleFlights(input: GoogleFlightComparison): Promise<void> {
-  await WebBrowser.openBrowserAsync(googleFlightsSearchUrl(input));
+  await openInAppBrowser(googleFlightsSearchUrl(input));
 }

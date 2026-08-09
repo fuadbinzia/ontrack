@@ -28,6 +28,12 @@ export {
     fieldLeadingIconRowStyle
 } from './field-leading-icon';
 export { fieldTitleCase } from './field-title-case';
+export {
+    FOOD_IMAGE_OVERLAY_INK,
+    FOOD_IMAGE_OVERLAY_INK_SOFT,
+    FoodImage
+} from './food-image';
+export type { FoodImageProps } from './food-image';
 export { FormSection } from './form-section';
 export { GlassIconWell } from './glass-icon-well';
 export { GlassMetaChip } from './glass-meta-chip';

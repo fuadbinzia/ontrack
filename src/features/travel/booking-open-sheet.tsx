@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import * as WebBrowser from 'expo-web-browser';
 
 import type { StayBookingOpen } from '@/features/travel/booking-open';
+import { openInAppBrowser } from '@/utils/safe-url';
 
 type WebViewOpen = Extract<StayBookingOpen, { mode: 'webview' }>;
 
@@ -14,9 +14,7 @@ export function BookingOpenSheet({ target, onClose }: BookingOpenSheetProps) {
   useEffect(() => {
     if (!target) return;
     let mounted = true;
-    void WebBrowser.openBrowserAsync(target.url, {
-      presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-    }).finally(() => {
+    void openInAppBrowser(target.url).finally(() => {
       if (mounted) {
         onClose();
       }

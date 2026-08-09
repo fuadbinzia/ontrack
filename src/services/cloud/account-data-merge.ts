@@ -1,0 +1,119 @@
+/**
+ * Cloud-base merge of guest device payloads into account `app_state` domains.
+ * Cloud wins on id/key clash; device-only entities are appended.
+ */
+
+export type JsonObject = Record<string, unknown>;
+
+function isRecord(value: unknown): value is JsonObject {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function entityId(item: unknown): string | undefined {
+  if (!isRecord(item)) return undefined;
+  return typeof item.id === 'string' && item.id ? item.id : undefined;
+}
+
+/** Preserve cloud order; append device items whose ids are absent from cloud. */
+export function mergeEntityArrays(cloud: unknown, device: unknown): unknown[] {
+  const cloudList = Array.isArray(cloud) ? cloud : [];
+  const deviceList = Array.isArray(device) ? device : [];
+  const cloudIds = new Set<string>();
+  for (const item of cloudList) {
+    const id = entityId(item);
+    if (id) cloudIds.add(id);
+  }
+  const extras: unknown[] = [];
+  for (const item of deviceList) {
+    const id = entityId(item);
+    if (!id || cloudIds.has(id)) continue;
+    extras.push(item);
+    cloudIds.add(id);
+  }
+  return extras.length === 0 ? cloudList : [...cloudList, ...extras];
+}
+
+/** Cloud keys win; device-only keys are added. */
+export function mergeKeyedRecords(cloud: unknown, device: unknown): JsonObject {
+  const base = isRecord(cloud) ? { ...cloud } : {};
+  if (!isRecord(device)) return base;
+  for (const [key, value] of Object.entries(device)) {
+    if (!(key in base)) base[key] = value;
+  }
+  return base;
+}
+
+type SyncDomainName =
+  | 'addons'
+  | 'agents'
+  | 'preferences'
+  | 'schedule'
+  | 'plants'
+  | 'travel'
+  | 'todos'
+  | 'vision-board'
+  | 'vehicles';
+
+/**
+ * Merge one domain: `cloud` is the applied account payload (or current after
+ * applyRemote); `device` is the pre-apply guest snapshot.
+ */
+export function mergeDomainPayload(
+  domain: SyncDomainName,
+  cloud: JsonObject,
+  device: JsonObject,
+): JsonObject {
+  switch (domain) {
+    case 'preferences':
+    case 'addons':
+      // Cloud wins synced scalars entirely.
+      return cloud;
+    case 'agents':
+      return {
+        ...cloud,
+        installations: mergeKeyedRecords(cloud.installations, device.installations),
+        conversations: mergeKeyedRecords(cloud.conversations, device.conversations),
+        updatedAt: cloud.updatedAt ?? device.updatedAt,
+      };
+    case 'schedule':
+      return {
+        ...cloud,
+        activities: mergeEntityArrays(cloud.activities, device.activities),
+        meals: mergeEntityArrays(cloud.meals, device.meals),
+        workouts: mergeEntityArrays(cloud.workouts, device.workouts),
+        workSessions: mergeEntityArrays(cloud.workSessions, device.workSessions),
+        movies: mergeEntityArrays(cloud.movies, device.movies),
+        categories: mergeEntityArrays(cloud.categories, device.categories),
+      };
+    case 'plants':
+      return {
+        ...cloud,
+        plants: mergeEntityArrays(cloud.plants, device.plants),
+      };
+    case 'travel':
+      return {
+        ...cloud,
+        plans: mergeEntityArrays(cloud.plans, device.plans),
+      };
+    case 'todos':
+      return {
+        ...cloud,
+        lists: mergeEntityArrays(cloud.lists, device.lists),
+        tasks: mergeEntityArrays(cloud.tasks, device.tasks),
+        recipes: mergeEntityArrays(cloud.recipes, device.recipes),
+      };
+    case 'vision-board':
+      return {
+        ...cloud,
+        categories: mergeEntityArrays(cloud.categories, device.categories),
+        items: mergeEntityArrays(cloud.items, device.items),
+      };
+    case 'vehicles':
+      return {
+        ...cloud,
+        vehicles: mergeEntityArrays(cloud.vehicles, device.vehicles),
+      };
+    default:
+      return cloud;
+  }
+}

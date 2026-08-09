@@ -2,7 +2,7 @@ import type { Theme, ThemeFeatureScope } from './themes';
 
 export type ThemeScope = ThemeFeatureScope;
 
-export const THEME_SCOPES = ['default', 'travel', 'plants', 'vehicles'] as const satisfies readonly ThemeScope[];
+export const THEME_SCOPES = ['default', 'travel', 'plants', 'vehicles', 'food'] as const satisfies readonly ThemeScope[];
 
 /** Tokens editable from the Design System gallery. */
 export type EditableThemeToken =
@@ -41,6 +41,7 @@ export function emptyThemeOverrides(): ThemeOverridesByScope {
     travel: {},
     plants: {},
     vehicles: {},
+    food: {},
   };
 }
 
@@ -125,6 +126,7 @@ export const THEME_SCOPE_LABELS: Record<ThemeScope, string> = {
   travel: 'Travel',
   plants: 'Plants',
   vehicles: 'Vehicles',
+  food: 'Food',
 };
 
 export const THEME_TOKEN_LABELS: Record<EditableThemeToken, string> = {

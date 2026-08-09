@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { glassMaterials, radii } from '@/design-system';
+import { glassMaterials, radii, type AppIconName } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { useAgentUiTarget } from '@/utils/agent-ui';
@@ -9,22 +9,27 @@ import { haptics } from '@/utils/haptics';
 import { AppText } from './app-text';
 import { fieldTitleCase } from './field-title-case';
 import { GlassPlate } from './glass-plate';
+import { Symbol } from './symbol';
 
 export type ActionChipItem = {
   id: string;
   label: string;
+  icon?: AppIconName;
+  selected?: boolean;
   testID?: string;
   onPress: () => void;
 };
 
-/** Compact secondary action chip (demo seeds, quick tools) — frosted glass. */
+/** Compact secondary action / filter chip (frosted glass, icon optional). */
 export function ActionChip({
   label,
+  icon,
   onPress,
   testID,
   selected = false,
 }: {
   label: string;
+  icon?: AppIconName;
   onPress: () => void;
   testID?: string;
   selected?: boolean;
@@ -63,6 +68,7 @@ export function ActionChip({
           styles.chip,
           {
             minHeight: layout.minTapTarget,
+            gap: spacing.xs,
             paddingHorizontal: spacing.md,
             paddingVertical: spacing.sm,
             borderRadius: radii.pill,
@@ -73,6 +79,13 @@ export function ActionChip({
                 : glassMaterials.border.light,
           },
         ]}>
+        {icon ? (
+          <Symbol
+            name={icon}
+            size="sm"
+            color={selected ? theme.accentPrimary : theme.textSecondary}
+          />
+        ) : null}
         <AppText
           variant="callout"
           color={selected ? 'accent' : 'secondary'}
@@ -94,6 +107,8 @@ export function ActionChipRow({ items }: { items: readonly ActionChipItem[] }) {
         <ActionChip
           key={item.id}
           label={item.label}
+          icon={item.icon}
+          selected={item.selected}
           testID={item.testID}
           onPress={item.onPress}
         />
@@ -104,6 +119,7 @@ export function ActionChipRow({ items }: { items: readonly ActionChipItem[] }) {
 
 const styles = StyleSheet.create({
   chip: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     flexShrink: 1,

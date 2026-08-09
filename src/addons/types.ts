@@ -19,7 +19,7 @@ export interface AddonDefinition {
   name: string;
   description: string;
   categoryIds: readonly string[];
-  tabRoute?: 'workouts' | 'plants' | 'travel' | 'vision-board' | 'games' | 'vehicles' | 'health';
+  tabRoute?: 'workouts' | 'plants' | 'travel' | 'vision-board' | 'games' | 'vehicles' | 'health' | 'food';
 }
 
 export type AddonEnabledState = Record<AddonId, boolean>;

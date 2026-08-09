@@ -28,12 +28,17 @@
 # After an intentional device restart, allow more settle time for boot + JS mount.
 : "${AGENT_UI_DEVICE_POST_RESTART_WAIT_SECS:=30}"
 : "${AGENT_UI_ANDROID_POST_RESTART_WAIT_SECS:=45}"
-# Device pool lease — up to AGENT_UI_POOL_MAX concurrent dedicated agent devices.
-: "${AGENT_UI_LOCK_WAIT_SECS:=300}"
-: "${AGENT_UI_POOL_MAX:=5}"
+# Device pool lease — agent-only devices, 2 slots per platform (4 total).
+# No free slot → stop without UI verify (exit 3); 0 = do not queue.
+: "${AGENT_UI_LOCK_WAIT_SECS:=0}"
+: "${AGENT_UI_POOL_MAX:=2}"
+# A device that needs longer than this to launch is a defect to diagnose.
+: "${AGENT_UI_DEVICE_LAUNCH_BUDGET_SECS:=30}"
 
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/agent-ui-pool.sh"
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/agent-ui-dev-client.sh"
 
 # Abort when THIS entry script is piped through head/tail — those buffer until
 # exit so Cursor shows “Running…” with no progress for minutes.
@@ -351,10 +356,12 @@ agent_ui_open_dev_client_url() {
   ios_simctl_timed 12 openurl "$(ios_sim_target)" "$url" >/dev/null 2>&1 || true
 }
 
-# Tell the running app which pool slot to poll (daemon routes by slot).
+
+# iOS only: deep-link the pool slot. Android uses host-port routing (H17).
 agent_ui_pin_slot() {
   local slot="${1:-${AGENT_UI_SLOT:-}}"
   [[ -n "$slot" ]] || return 0
+  agent_ui_is_android && return 0
   local url="ontrack://agent/ui?op=route&slot=${slot}"
   agent_ui_open_dev_client_url "$url"
 }
@@ -370,6 +377,19 @@ agent_ui_bridge_answers() {
     # pool targets onTrack_Agent_N). Require the pinned AVD actually runs the app.
     agent_ui_android_lib
     agent_ui_pin_android_serial || return 1
+    agent_ui_app_process_running || return 1
+    # A live PID is not a live bridge: a dead JS runtime keeps the process up,
+    # so the route below can be answered by a leftover app on a peer AVD that
+    # adopted our slot while this device shows nothing (asserts fail route=?).
+    if ! android_emu_app_bridge_connected; then
+      return 1
+    fi
+  else
+    # Same hazard on iOS: the user's headed sim answers :8191 while the lease
+    # targets a Shutdown 'onTrack Agent N'. Host ops (screenshot / --color) are
+    # bound to the leased UDID, so a foreign answer means "up" here and
+    # "device not Booted" there. Require the leased sim to run the app.
+    agent_ui_ios_lib
     agent_ui_app_process_running || return 1
   fi
   route="$(
@@ -433,6 +453,7 @@ agent_ui_heal_packager() {
   if AGENT_UI_SKIP_HEAL=1 AGENT_UI_SKIP_APP_UP=1 AGENT_UI_PLATFORM="$(agent_ui_platform)" \
     AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-0}" \
     AGENT_UI_LOCK_ACQUIRED=0 \
+    AGENT_UI_PACKAGER_SKIP_RECONNECT="${AGENT_UI_PACKAGER_SKIP_RECONNECT:-0}" \
     bash "$ensure" "${ensure_flags[@]}"; then
     return 0
   fi
@@ -452,10 +473,10 @@ agent_ui_ensure_ios_system_alerts_clear() {
     python3 "$(agent_ui_repo_root)/scripts/lib/ios_system_alert.py" ensure
 }
 
-# Write pool slot pin so the JS bridge polls the matching daemon queue before
-# the first command (iOS Documents file / Android run-as files/).
+# iOS Documents pin so the bridge polls platform:slot. Android: no-op (H17).
 agent_ui_write_slot_pin() {
   [[ -n "${AGENT_UI_SLOT:-}" ]] || return 0
+  agent_ui_is_android && return 0
   AGENT_UI_ROOT="$(agent_ui_repo_root)" \
   AGENT_UI_PLATFORM="$(agent_ui_platform)" \
   AGENT_UI_SLOT="${AGENT_UI_SLOT}" \
@@ -467,22 +488,18 @@ agent_ui_write_slot_pin() {
     python3 "$(agent_ui_bridge_py)" write-slot-pin >/dev/null 2>&1 || true
 }
 
-# Soft reconnect: open Metro URL + pin slot (no force-stop). Safe when the
-# process is up but stuck on DevLauncher / pre-JS.
+# Soft reconnect Metro. Android: reverse + wedge heal + VIEW (H17). iOS: + pin.
 agent_ui_soft_reconnect_dev_client() {
-  local host="${PACKAGER_HOST:-127.0.0.1}" encoded url
-  case "$host" in
-    localhost|lan|LAN) host=127.0.0.1 ;;
-  esac
-  encoded="$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "http://${host}:${METRO_PORT:-8081}")"
-  url="exp+ontrack://expo-development-client/?url=${encoded}"
+  local url
+  url="$(agent_ui_dev_client_metro_url)"
   if agent_ui_is_android; then
     agent_ui_android_lib
-    android_emu_ensure_adb_reverse >/dev/null 2>&1 || true
+    android_emu_prepare_metro_dev_client || true
+    agent_ui_open_dev_client_url "$url"
+    return 0
   fi
   agent_ui_open_dev_client_url "$url"
   agent_ui_write_slot_pin
-  # Brief beat so Expo can hand off before the slot deep-link.
   sleep 0.8
   agent_ui_pin_slot "${AGENT_UI_SLOT:-}" || true
   return 0
@@ -511,7 +528,7 @@ agent_ui_pool_ensure_app_installed() {
   agent_ui_app_installed
 }
 
-# Wait until the bridge answers (or deadline). Pins slot file each loop.
+# Wait until the bridge answers (or deadline). iOS pin once up front.
 agent_ui_wait_for_bridge() {
   local deadline_secs="${1:-12}"
   local started=$SECONDS
@@ -535,7 +552,7 @@ agent_ui_wait_for_bridge() {
   return 1
 }
 
-# Bridge answered — pin pool slot, then clear iOS system sheets that cover the app.
+# Bridge answered — pin (iOS only) + clear covering system sheets.
 agent_ui_finish_app_up() {
   if [[ -n "${AGENT_UI_SLOT:-}" ]]; then
     agent_ui_write_slot_pin
@@ -579,6 +596,13 @@ agent_ui_finish_app_up() {
 agent_ui_ensure_app_up() {
   if [[ "${AGENT_UI_SKIP_APP_UP:-0}" == "1" ]]; then
     return 0
+  fi
+
+  # Agent-only devices: refuse to drive the user's simulator/emulator.
+  if agent_ui_is_android; then
+    agent_ui_assert_agent_device_bound android || return 1
+  else
+    agent_ui_assert_agent_device_bound ios || return 1
   fi
 
   # Android: emulator must be fully booted before any bridge/test work.
@@ -648,8 +672,12 @@ agent_ui_ensure_app_up() {
   fi
 
   if ! agent_ui_simulator_booted; then
-    echo "agent-ui: ${device_label} not booted — ensuring packager/app…" >&2
-    if agent_ui_heal_packager && agent_ui_bridge_answers; then
+    # H21: boot only — do not wait on ensure-packager's reconnect timeout.
+    # After H19 safe-shutdown the app process is dead; launch below is the
+    # real connect step. A failed reconnect used to burn 40–60s first.
+    echo "agent-ui: ${device_label} not booted — booting device…" >&2
+    if AGENT_UI_PACKAGER_SKIP_RECONNECT=1 agent_ui_heal_packager \
+      && agent_ui_bridge_answers; then
       agent_ui_finish_app_up
       return $?
     fi
@@ -878,7 +906,7 @@ agent_ui_send() {
 }
 
 agent_ui_send_op() {
-  # agent_ui_send_op dump|tap|scroll|exists|prefix|route|goto|reset|seed|flow|wait|batch|assert|hit|overlay|devmode …
+  # agent_ui_send_op dump|tap|scroll|exists|prefix|route|goto|reset|seed|flow|wait|batch|assert|hit|overlay|devmode|login …
   local op="$1"
   shift || true
   : "${WAIT_SECS:=${AGENT_UI_COLD_WAIT_SECS}}"
@@ -915,6 +943,10 @@ agent_ui_send_op() {
       ;;
     devmode)
       flags+=(--to "${1:-status}")
+      ;;
+    login)
+      # Password travels via ONTRACK_AGENT_ACCOUNT_PASSWORD_RESOLVED (never argv).
+      flags+=(--email "${1:-${ONTRACK_AGENT_ACCOUNT_EMAIL:-}}" --allow-fail)
       ;;
     hit)
       # agent_ui_send_op hit <x> <y>
@@ -975,232 +1007,11 @@ agent_ui_send_op() {
   python3 "$(agent_ui_bridge_py)" send "${flags[@]}"
 }
 
-# Parse --route / --flow / --open from a verify/once argv list (ignore asserts).
-agent_ui_parse_land_args() {
-  AGENT_UI_LAND_ROUTE=""
-  AGENT_UI_LAND_FLOW=""
-  AGENT_UI_LAND_OPEN=""
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --route)
-        AGENT_UI_LAND_ROUTE="${2:-}"
-        shift 2
-        ;;
-      --flow)
-        AGENT_UI_LAND_FLOW="${2:-}"
-        shift 2
-        ;;
-      --open)
-        AGENT_UI_LAND_OPEN="${2:-}"
-        shift 2
-        ;;
-      --color|--contains)
-        shift 3 || shift $#
-        ;;
-      --exists|--missing|--prefix|--tolerance|--screenshot|--goto|--seed|--tap|--wait|--wait-route|--wait-id|--wait-prefix|--assert-exists|--assert-missing|--assert-prefix|--assert-contains|--dismiss)
-        # Value optional for --screenshot; always consume at least the flag.
-        if [[ $# -ge 2 && "${2:-}" != --* ]]; then
-          shift 2
-        else
-          shift
-        fi
-        ;;
-      *)
-        shift
-        ;;
-    esac
-  done
-}
-
-# When Simulator.app is open: leave the user's preferred headed sim on the
-# verified surface with a fresh Metro bundle. Pool verify runs on Agent N —
-# without this, the open Pro window stays on stale JS.
-# Escape: AGENT_UI_SKIP_HEADED_HANDOFF=1
-agent_ui_headed_ios_handoff() {
-  local route="${1:-}" flow="${2:-}" open_alias="${3:-}"
-  local name udid root
-  [[ "${AGENT_UI_SKIP_HEADED_HANDOFF:-0}" == "1" ]] && return 0
-  agent_ui_ios_lib
-  ios_sim_app_running || return 0
-
-  # Lease pollutes ONTRACK_IOS_SIMULATOR / _UDID with Agent N — never hand off there.
-  name="$(ios_sim_viewer_name)"
-  udid="$(
-    ONTRACK_IOS_SIMULATOR="$name" ONTRACK_IOS_SIMULATOR_UDID= \
-      ios_sim_preferred_booted_udid
-  )"
-  if [[ -z "$udid" ]]; then
-    udid="$(
-      ONTRACK_IOS_SIMULATOR="$name" ONTRACK_IOS_SIMULATOR_UDID= \
-        ios_sim_resolve_udid 2>/dev/null || true
-    )"
-    [[ -n "$udid" ]] || return 0
-    xcrun simctl boot "$udid" >/dev/null 2>&1 || true
-  fi
-
-  echo "agent-ui: headed viewer handoff → ${name} (reload JS + land ${route:-surface})" >&2
-  defaults write com.apple.iphonesimulator CurrentDeviceUDID "$udid" >/dev/null 2>&1 || true
-  ios_sim_park_agent_windows || true
-  ios_sim_focus_window_named "$name" || true
-
-  root="$(agent_ui_repo_root)"
-  (
-    export AGENT_UI_SKIP_LEASE=1
-    export AGENT_UI_USE_POOL=0
-    export AGENT_UI_LOCK_HELD=1
-    export AGENT_UI_LOCK_ACQUIRED=0
-    unset AGENT_UI_SLOT AGENT_UI_LOCK_DIR AGENT_UI_POOL_MODE
-    unset ONTRACK_PACKAGER_TARGET AGENT_UI_DEVICE
-    export AGENT_UI_PLATFORM=ios
-    export ONTRACK_IOS_SIMULATOR="$name"
-    export ONTRACK_IOS_SIMULATOR_UDID="$udid"
-    # Simulator always hits loopback Metro (LAN host is for physical devices).
-    export PACKAGER_HOST=127.0.0.1
-
-    # Prefer soft reconnect. Hard terminate+relaunch races Expo Fabric
-    # (`ExpoFabricView … app context has been lost` / SIGTRAP) when BlurView
-    # glass plates remount mid-teardown — that was crash-looping the headed Pro.
-    agent_ui_soft_reconnect_dev_client || true
-    if ! agent_ui_wait_for_bridge 12; then
-      echo "agent-ui: headed handoff bridge quiet — one terminate+relaunch on ${name}" >&2
-      xcrun simctl terminate "$udid" "${BUNDLE_ID}" >/dev/null 2>&1 || true
-      sleep 0.5
-      xcrun simctl launch "$udid" "${BUNDLE_ID}" >/dev/null 2>&1 || true
-      agent_ui_soft_reconnect_dev_client || true
-      if ! agent_ui_wait_for_bridge 25; then
-        echo "agent-ui: headed handoff bridge quiet on ${name} — left after relaunch" >&2
-        exit 0
-      fi
-    fi
-
-    local land=()
-    # Never re-run --flow here (travel-demo etc.) — verify already seeded.
-    # Handoff only navigates the open viewer onto the asserted route.
-    if [[ -n "$route" ]]; then
-      land+=(--goto "$route" --wait-route "$route")
-    elif [[ -n "$open_alias" ]]; then
-      land+=(--open "$open_alias")
-    fi
-    _="$flow" # accepted from parse; ignored for land (see above)
-    if ((${#land[@]} == 0)); then
-      exit 0
-    fi
-    # Soft-fail: handoff must not fail the verify that already passed.
-    AGENT_UI_SKIP_LEASE=1 AGENT_UI_USE_POOL=0 \
-      "${root}/scripts/agent-ui.sh" once "${land[@]}" >/dev/null 2>&1 \
-      || echo "agent-ui: headed handoff land soft-failed on ${name}" >&2
-  )
-  ios_sim_focus_window_named "$name" || true
-  ios_sim_place_window_named "$name" right 2>/dev/null || true
-  return 0
-}
-
-# Headed Galaxy keep: leave the GUI AVD on the verified surface after close-out.
-agent_ui_headed_android_handoff() {
-  local route="${1:-}" flow="${2:-}" open_alias="${3:-}"
-  local root handoff_budget keep
-  [[ "${AGENT_UI_SKIP_HEADED_HANDOFF:-0}" == "1" ]] && return 0
-  agent_ui_android_lib 2>/dev/null || return 0
-  # want_keep_headed GCs stale android-headed.keep when Galaxy is not headed.
-  android_emu_want_keep_headed || android_emu_want_window || return 0
-
-  keep="$(android_emu_headed_keep_name 2>/dev/null || true)"
-  [[ -n "$keep" ]] || keep="${ONTRACK_ANDROID_AVD:-Galaxy_S26}"
-
-  # Do not cold-boot / SurfaceView-heal Galaxy just for handoff — that is the
-  # multi-minute hang after iOS already passed (ensure_app_surface ≤25s + land).
-  # Check readiness BEFORE adopt so we never print "adopting" then "skipped".
-  if ! android_emu_avd_is_ready_named "$keep" 2>/dev/null; then
-    echo "agent-ui: headed Android handoff skipped (${keep} not ready — not cold-booting; agents stay warm)" >&2
-    return 0
-  fi
-  if ! android_emu_want_window && ! android_emu_avd_is_headed "$keep" 2>/dev/null; then
-    # Ready on adb but not a GUI — nothing for the user to watch.
-    return 0
-  fi
-
-  android_emu_adopt_android_for_headed_host || true
-
-  echo "agent-ui: headed Android handoff → ${ONTRACK_ANDROID_AVD:-Galaxy_S26} (reload + land ${route:-surface})" >&2
-  # Never call android_emu_ensure_app_surface here — blank-heal can burn 25s+.
-
-  root="$(agent_ui_repo_root)"
-  handoff_budget="${AGENT_UI_HEADED_ANDROID_HANDOFF_SECS:-12}"
-  (
-    export AGENT_UI_SKIP_LEASE=1
-    export AGENT_UI_USE_POOL=0
-    export AGENT_UI_LOCK_HELD=1
-    export AGENT_UI_LOCK_ACQUIRED=0
-    unset AGENT_UI_SLOT AGENT_UI_LOCK_DIR AGENT_UI_POOL_MODE
-    export AGENT_UI_PLATFORM=android
-    export ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-Galaxy_S26}"
-    agent_ui_pin_android_serial || true
-    agent_ui_soft_reconnect_dev_client || true
-    agent_ui_wait_for_bridge 5 || true
-
-    local land=()
-    # Never re-run --flow on handoff (see iOS handoff).
-    if [[ -n "$route" ]]; then
-      land+=(--goto "$route" --wait-route "$route")
-    elif [[ -n "$open_alias" ]]; then
-      land+=(--open "$open_alias")
-    fi
-    _="$flow"
-    if ((${#land[@]} == 0)); then
-      exit 0
-    fi
-    # Hard cap — handoff must not block a verify that already passed.
-    if command -v gtimeout >/dev/null 2>&1; then
-      gtimeout "${handoff_budget}" \
-        env AGENT_UI_SKIP_LEASE=1 AGENT_UI_PLATFORM=android \
-        "${root}/scripts/agent-ui.sh" once "${land[@]}" >/dev/null 2>&1 \
-        || echo "agent-ui: headed Android handoff land soft-failed" >&2
-    elif command -v timeout >/dev/null 2>&1; then
-      timeout "${handoff_budget}" \
-        env AGENT_UI_SKIP_LEASE=1 AGENT_UI_PLATFORM=android \
-        "${root}/scripts/agent-ui.sh" once "${land[@]}" >/dev/null 2>&1 \
-        || echo "agent-ui: headed Android handoff land soft-failed" >&2
-    else
-      AGENT_UI_SKIP_LEASE=1 AGENT_UI_PLATFORM=android \
-        "${root}/scripts/agent-ui.sh" once "${land[@]}" >/dev/null 2>&1 \
-        || echo "agent-ui: headed Android handoff land soft-failed" >&2
-    fi
-  )
-  android_emu_place_window left "${ONTRACK_ANDROID_AVD:-Galaxy_S26}" 2>/dev/null || true
-  return 0
-}
-
-# Android left + iOS right on the main display (headed GUIs only).
-agent_ui_arrange_headed_device_windows() {
-  agent_ui_ios_lib 2>/dev/null || true
-  agent_ui_android_lib 2>/dev/null || true
-  if ios_sim_app_running 2>/dev/null; then
-    ios_sim_place_window_named "$(ios_sim_viewer_name)" right 2>/dev/null || true
-  fi
-  if android_emu_want_keep_headed 2>/dev/null || android_emu_want_window 2>/dev/null; then
-    android_emu_place_window left "$(android_emu_preferred_name 2>/dev/null || echo Galaxy_S26)" 2>/dev/null || true
-  elif pgrep -x qemu-system-aarch64 >/dev/null 2>&1 || pgrep -x qemu-system-x86_64 >/dev/null 2>&1; then
-    # Headed qemu may be up without sticky keep yet — still snap left if GUI exists.
-    android_emu_place_window left "$(android_emu_preferred_name 2>/dev/null || echo Galaxy_S26)" 2>/dev/null || true
-  fi
-}
-
-# Entry: sync any open headed viewers after a successful verify close-out.
-# Usage: agent_ui_headed_viewer_handoff --route … [--flow …] …
-agent_ui_headed_viewer_handoff() {
-  [[ "${AGENT_UI_SKIP_HEADED_HANDOFF:-0}" == "1" ]] && return 0
-  agent_ui_parse_land_args "$@"
-  agent_ui_headed_ios_handoff \
-    "${AGENT_UI_LAND_ROUTE:-}" \
-    "${AGENT_UI_LAND_FLOW:-}" \
-    "${AGENT_UI_LAND_OPEN:-}"
-  agent_ui_headed_android_handoff \
-    "${AGENT_UI_LAND_ROUTE:-}" \
-    "${AGENT_UI_LAND_FLOW:-}" \
-    "${AGENT_UI_LAND_OPEN:-}"
-  agent_ui_arrange_headed_device_windows || true
-  return 0
-}
+# Agent device policy: no headed viewer handoff. Agents drive only their own
+# pool devices (onTrack Agent N / onTrack_Agent_N) and never boot, repoint,
+# adopt, or land on the user's onTrack iPhone 17 Pro / Galaxy_S26 — not even to
+# leave a window on the verified surface. Headed devices are user-invoked only
+# (ONTRACK_IOS_SIMULATOR_WINDOW=1 / ensure-android-emulator.sh --window).
 
 # Auto-lease when sourced by agent-ui CLI entrypoints. Nested children inherit
 # AGENT_UI_LOCK_HELD; verify-both sources this first so dual close-out stays atomic.
@@ -1208,5 +1019,11 @@ agent_ui_headed_viewer_handoff() {
 # “Running…” spinner while the pool boots (looks hung for minutes).
 agent_ui_refuse_piped_head_tail "agent-ui"
 if [[ "${AGENT_UI_SKIP_LEASE:-0}" != "1" ]]; then
-  agent_ui_ensure_lease || return 1
+  # Propagate AGENT_UI_NO_SLOT_EXIT (3) so entry scripts can report a clean
+  # "skipped, nothing tested" instead of looking like a UI failure.
+  agent_ui_lease_rc=0
+  agent_ui_ensure_lease || agent_ui_lease_rc=$?
+  if (( agent_ui_lease_rc != 0 )); then
+    return "${agent_ui_lease_rc}"
+  fi
 fi

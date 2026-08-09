@@ -39,6 +39,15 @@ DISMISS_PRIORITY = (
     "dont allow",
 )
 
+# Real Apple Account *system* sheets (not Profile "Sign in … Apple Account" copy).
+APPLE_ACCOUNT_PHRASES = (
+    "apple account verification",
+    "enter the password",
+    "verification failed",
+    "update apple id",
+    "sign in to apple",
+)
+
 # "Open in \"onTrack\"?" — Cancel would abort the launch; prefer Open.
 ACCEPT_PRIORITY = (
     "open",
@@ -68,27 +77,29 @@ LOCATION_PHRASES = (
     "location services",
 )
 
-DEV_MENU_PHRASES = (
-    "developer menu",
+# First-run Expo intro — has a Continue button. Header also shows "Runtime version".
+DEV_MENU_INTRO_PHRASES = (
+    "this is the developer menu",
     "useful tools in development",
     "development builds",
-    # Full Expo Dev Menu (tools) — not the first-run intro.
-    "toggle performance monitor",
-    "toggle element inspector",
-    "fast refresh",
-    "open devtools",
-    "source code explorer",
-    "runtime version",
+    "dev tools",
 )
 
-# Tools sheet specifically — Escape closes it (no Continue button).
+# Full Expo Dev Menu tools sheet — Escape closes it (no Continue).
+# Do NOT include "runtime version" here: intro chrome shows that too.
 DEV_MENU_TOOLS_PHRASES = (
     "toggle performance monitor",
     "toggle element inspector",
     "fast refresh",
     "open devtools",
     "source code explorer",
+)
+
+DEV_MENU_PHRASES = (
+    "developer menu",
     "runtime version",
+    *DEV_MENU_INTRO_PHRASES,
+    *DEV_MENU_TOOLS_PHRASES,
 )
 
 
@@ -371,12 +382,43 @@ def _is_location_prompt(result: dict) -> bool:
     return _phrases_or_text_match(result, LOCATION_PHRASES)
 
 
+def _is_apple_account_prompt(result: dict) -> bool:
+    return _phrases_or_text_match(result, APPLE_ACCOUNT_PHRASES)
+
+
 def _is_dev_menu_prompt(result: dict) -> bool:
     return _phrases_or_text_match(result, DEV_MENU_PHRASES)
 
 
+def _is_dev_menu_intro(result: dict) -> bool:
+    return _phrases_or_text_match(result, DEV_MENU_INTRO_PHRASES)
+
+
 def _is_dev_menu_tools(result: dict) -> bool:
+    # Intro chrome also says "Runtime version" / "developer menu" — never Escape that.
+    if _is_dev_menu_intro(result):
+        return False
     return _phrases_or_text_match(result, DEV_MENU_TOOLS_PHRASES)
+
+
+def _pick_soft_dismiss_target(targets: list) -> dict | None:
+    ranked: list[tuple[int, dict]] = []
+    for target in targets:
+        if not isinstance(target, dict):
+            continue
+        label = str(target.get("label") or "").strip().lower()
+        action = str(target.get("action") or "").strip().lower()
+        if action == "accept":
+            continue
+        try:
+            rank = next(i for i, needle in enumerate(DISMISS_PRIORITY) if needle in label)
+        except StopIteration:
+            continue
+        ranked.append((rank, target))
+    if not ranked:
+        return None
+    ranked.sort(key=lambda item: item[0])
+    return ranked[0][1]
 
 
 def _priority_matches_label(label: str, needle: str) -> bool:
@@ -431,32 +473,24 @@ def pick_dismiss_target(result: dict) -> dict | None:
         if accepted is not None:
             return accepted
 
+    # Apple Account system sheet often stacks over Expo intro — Not Now first.
+    if _is_apple_account_prompt(result):
+        soft = _pick_soft_dismiss_target(targets)
+        if soft is not None:
+            return soft
+
     # Expo developer-menu intro: Continue (Escape also ok as fallback).
     if _is_dev_menu_prompt(result):
         accepted = _pick_accept_target(targets, DEV_MENU_ACCEPT_PRIORITY)
         if accepted is not None:
             return accepted
 
-    ranked: list[tuple[int, dict]] = []
-    for target in targets:
-        if not isinstance(target, dict):
-            continue
-        label = str(target.get("label") or "").strip().lower()
-        action = str(target.get("action") or "").strip().lower()
-        if action == "accept":
-            continue
-        # Location sheets must not soft-deny via Don't Allow.
-        if _is_location_prompt(result) and ("don't allow" in label or "dont allow" in label):
-            continue
-        try:
-            rank = next(i for i, needle in enumerate(DISMISS_PRIORITY) if needle in label)
-        except StopIteration:
-            continue
-        ranked.append((rank, target))
-    if not ranked:
-        return None
-    ranked.sort(key=lambda item: item[0])
-    return ranked[0][1]
+    soft = _pick_soft_dismiss_target(targets)
+    if soft is not None and _is_location_prompt(result):
+        label = str(soft.get("label") or "").strip().lower()
+        if "don't allow" in label or "dont allow" in label:
+            return None
+    return soft
 
 
 def simulator_window_frame() -> tuple[float, float, float, float] | None:
@@ -599,6 +633,50 @@ def send_escape() -> None:
 def dismiss_blocking(result: dict) -> bool:
     """Click the right control for the sheet; Escape only for soft-dismiss sheets."""
     ensure_simulator_app()
+    targets = result.get("targets") or []
+    not_now = _pick_soft_dismiss_target(
+        [t for t in targets if isinstance(t, dict)]
+        if isinstance(targets, list)
+        else []
+    )
+    # Apple Account / password sheets: the button is "Not Now" — never Escape.
+    if _is_apple_account_prompt(result) or (
+        not_now is not None
+        and "not now" in str(not_now.get("label") or "").strip().lower()
+    ):
+        target = pick_dismiss_target(result) or not_now
+        if target is not None:
+            label = str(target.get("label") or "Not Now")
+            clicked = click_dismiss_target(target)
+            print(
+                f"agent-ui: tapping '{label}' on system sheet"
+                + (" — ok" if clicked else " — click missed, retry"),
+                file=sys.stderr,
+            )
+            time.sleep(0.45)
+            # Never Escape while Not Now is on screen (missed click → re-OCR).
+            return clicked
+        print(
+            'agent-ui: Apple Account sheet present but "Not Now" not found — retry OCR',
+            file=sys.stderr,
+        )
+        return False
+    # Expo intro (Continue) before tools Escape — intro header also says Runtime version.
+    if _is_dev_menu_intro(result) or (
+        _is_dev_menu_prompt(result)
+        and _pick_accept_target(targets if isinstance(targets, list) else [], DEV_MENU_ACCEPT_PRIORITY)
+        is not None
+    ):
+        target = pick_dismiss_target(result)
+        if target is not None and click_dismiss_target(target):
+            label = str(target.get("label") or "Continue")
+            print(
+                f"agent-ui: dismissed Expo developer-menu intro ({label})",
+                file=sys.stderr,
+            )
+            time.sleep(0.45)
+            return True
+        # Fall through — Escape / close as last resort for intro.
     # Expo Dev Menu tools sheet (Reload / Fast refresh): Escape — don't poke toggles.
     if _is_dev_menu_tools(result):
         print("agent-ui: dismissing Expo Dev Menu (Escape)", file=sys.stderr)
@@ -624,6 +702,14 @@ def dismiss_blocking(result: dict) -> bool:
             file=sys.stderr,
         )
         return False
+    if not clicked and _is_dev_menu_intro(result):
+        print(
+            "agent-ui: Expo intro Continue not found — Escape as fallback",
+            file=sys.stderr,
+        )
+        send_escape()
+        time.sleep(0.35)
+        return True
     if not clicked:
         print("agent-ui: sending Escape to dismiss system sheet", file=sys.stderr)
         send_escape()
@@ -709,9 +795,15 @@ def ensure_clear(*, force: bool = False) -> int:
             third = probe(force=True)
             if third.get("blocking"):
                 phrases2 = ", ".join(third.get("phrases") or phrases.split(", "))
+                buttons2 = [str(b) for b in (third.get("buttons") or [])]
+                has_not_now = any("not now" in b.lower() for b in buttons2)
                 if _is_location_prompt(third):
                     hint = 'Tap "Allow While Using App" on the location sheet'
-                elif _is_dev_menu_prompt(third):
+                elif has_not_now or _is_apple_account_prompt(third):
+                    hint = 'Tap "Not Now" on the Apple Account / system sheet'
+                elif _is_dev_menu_tools(third):
+                    hint = "Press Escape to close the Expo Dev Menu tools sheet"
+                elif _is_dev_menu_intro(third) or _is_dev_menu_prompt(third):
                     hint = 'Tap "Continue" on the Expo developer-menu intro'
                 else:
                     hint = (

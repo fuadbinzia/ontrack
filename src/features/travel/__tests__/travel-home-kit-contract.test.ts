@@ -282,15 +282,32 @@ describe('travel home kit contract', () => {
     expect(band).toBe(Math.round(windowHeight * 0.34) + topInset);
     expect(band).toBeLessThan(windowHeight);
     expect(band / windowHeight).toBeLessThan(0.5);
+    const emptyBand = travelHomeAtmosphereHeight(windowHeight, topInset, {
+      empty: true,
+    });
+    expect(emptyBand).toBe(Math.round(windowHeight * 0.44) + topInset);
+    expect(emptyBand).toBeGreaterThan(band);
+    expect(emptyBand / windowHeight).toBeLessThan(0.6);
     const travelTab = readFileSync(
       join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
       'utf8',
     );
     // 1.0.9 chrome plate + fade/paper underlay (not an in-flow photo band).
     expect(travelTab).toContain('TravelHomeBackground');
+    expect(travelTab).toContain('empty={hasNoTrips}');
+    expect(travelTab).toContain('TravelHomeEmpty');
     expect(travelTab).toContain('backgroundImage: atmosphereImage.source');
     expect(travelTab).toContain('priority: 1');
     expect(travelTab).toContain("style={styles.transparentScreen}");
+  });
+
+  it('does not auto-open New Trip over the zero-trip welcome', () => {
+    const travelTab = readFileSync(
+      join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
+      'utf8',
+    );
+    expect(travelTab).toContain('const [showForm, setShowForm] = useState(false)');
+    expect(travelTab).not.toContain('useState(plans.length === 0)');
   });
 
   it('keeps layout tokens aligned with design/travel', () => {

@@ -5,17 +5,17 @@ import { Platform } from 'react-native';
 import type { AgentUiRequest } from './handle-agent-ui-url';
 import type { AgentUiStatusPayload } from './persist';
 import {
-  applyAgentUiSlotFromUnknown,
-  getAgentUiSlot,
+    applyAgentUiSlotFromUnknown,
+    getAgentUiSlot,
 } from './slot';
 
 function agentUiPlatformParam(): 'ios' | 'android' {
   return Platform.OS === 'android' ? 'android' : 'ios';
 }
 
-/** Host may write Documents/agent-ui-pin.json before the JS bridge mounts. */
+/** iOS pin file before bridge mount. Android ignores pins (H17 host port). */
 function refreshSlotFromPinFile(): void {
-  if (getAgentUiSlot() != null) return;
+  if (Platform.OS === 'android' || getAgentUiSlot() != null) return;
   try {
     const file = new File(Paths.document, 'agent-ui-pin.json');
     if (!file.exists) return;
@@ -48,11 +48,7 @@ function hostFromHostUri(hostUri: string): string | null {
   return host || null;
 }
 
-/**
- * Resolve the agent-ui daemon base URL (dev only).
- * Prefer the packager host on port 8191 (LAN devices) with localhost fallback
- * for the iOS Simulator. Metro `/__agent_ui` proxy is optional when present.
- */
+/** Dev-only daemon base. Loopback for Simulator; LAN IP for physical devices. */
 export function resolveAgentUiHttpBase(): string {
   const override = process.env.EXPO_PUBLIC_AGENT_UI_URL?.trim();
   if (override) return override.replace(/\/+$/, '');
@@ -99,11 +95,13 @@ function candidateBases(): string[] {
   const primary = resolveAgentUiHttpBase();
   const bases = [primary];
   if (primary !== DIRECT_DAEMON) bases.push(DIRECT_DAEMON);
-  // Optional Metro proxy (when enhanceMiddleware is honored).
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (typeof hostUri === 'string' && hostUri.includes(':')) {
-    const hostPort = hostUri.split('/')[0];
-    if (hostPort) bases.push(`http://${hostPort}/__agent_ui`);
+  // Android: no Metro proxy (erases H17 host-port slot).
+  if (Platform.OS !== 'android') {
+    const hostUri = Constants.expoConfig?.hostUri;
+    if (typeof hostUri === 'string' && hostUri.includes(':')) {
+      const hostPort = hostUri.split('/')[0];
+      if (hostPort) bases.push(`http://${hostPort}/__agent_ui`);
+    }
   }
   return [...new Set(bases)];
 }
@@ -117,6 +115,13 @@ export async function fetchAgentUiCommand(
   const slot = getAgentUiSlot();
   const slotQuery =
     slot != null && slot >= 1 ? `&slot=${encodeURIComponent(String(slot))}` : '';
+  // Identify the device so the daemon hands us only our own commands — a pool
+  // slot and the user's headed simulator otherwise race for the same queue.
+  const ownDeviceName = Constants.deviceName;
+  const deviceQuery =
+    typeof ownDeviceName === 'string' && ownDeviceName.length > 0
+      ? `&device=${encodeURIComponent(ownDeviceName)}`
+      : '';
   // Prefer the cached working base first so we do not open parallel /next
   // waits against Metro proxy + daemon (was a source of dropped commands).
   const bases = candidateBases();
@@ -125,7 +130,7 @@ export async function fetchAgentUiCommand(
     bases.splice(0, bases.length, cachedBase, ...rest);
   }
   for (const base of bases) {
-    const url = `${base}/next?waitMs=${Math.max(0, waitMs)}&platform=${platform}${slotQuery}`;
+    const url = `${base}/next?waitMs=${Math.max(0, waitMs)}&platform=${platform}${slotQuery}${deviceQuery}`;
     try {
       const res = await fetch(url, {
         method: 'GET',
@@ -146,6 +151,22 @@ export async function fetchAgentUiCommand(
         typeof pinned === 'string' &&
         pinned.length > 0 &&
         pinned !== platform
+      ) {
+        void requeueAgentUiCommand(request);
+        continue;
+      }
+      // iOS commands are addressed to the leased sim by name — several sims
+      // share one daemon, so a foreign device must not run (or adopt the slot
+      // of) another device's command. No name stamped = accept (legacy host).
+      const wantDevice = (request as { iosDeviceName?: unknown }).iosDeviceName;
+      const ownDevice = Constants.deviceName;
+      if (
+        platform === 'ios' &&
+        typeof wantDevice === 'string' &&
+        wantDevice.length > 0 &&
+        typeof ownDevice === 'string' &&
+        ownDevice.length > 0 &&
+        wantDevice !== ownDevice
       ) {
         void requeueAgentUiCommand(request);
         continue;

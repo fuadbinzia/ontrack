@@ -493,7 +493,8 @@ def capture_screenshot(path: Path) -> Path:
 
     target = (os.environ.get("ONTRACK_IOS_SIMULATOR_UDID") or "").strip() or "booted"
     # Shutdown / missing devices make `simctl io screenshot` hang forever.
-    if not _ios_device_is_booted(target):
+    booted_ok = _ios_device_is_booted(target)
+    if not booted_ok:
         raise SystemExit(
             f"error: screenshot failed: device not Booted ({target[:8] if target != 'booted' else target})"
         )

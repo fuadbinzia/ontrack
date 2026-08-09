@@ -21,8 +21,14 @@ interface DevModeState {
   /** `agent` = seed/verify sandbox; `user` = Developer Hub toggle. Both exit on cold start. */
   source: DevModeSource | null;
   liveSnapshot: DevModeLiveSnapshot | null;
+  /**
+   * Opt this device out of the cold-start sign-in gate. Unlike `enabled`, it
+   * deliberately survives relaunch — that is the behaviour it controls.
+   */
+  staySignedIn: boolean;
   setEnabledFlag: (enabled: boolean) => void;
   setLiveSnapshot: (snapshot: DevModeLiveSnapshot | null) => void;
+  setStaySignedIn: (staySignedIn: boolean) => void;
 }
 
 export const useDevMode = create<DevModeState>()(
@@ -31,8 +37,10 @@ export const useDevMode = create<DevModeState>()(
       enabled: false,
       source: null,
       liveSnapshot: null,
+      staySignedIn: false,
       setEnabledFlag: (enabled) => set({ enabled }),
       setLiveSnapshot: (liveSnapshot) => set({ liveSnapshot }),
+      setStaySignedIn: (staySignedIn) => set({ staySignedIn }),
     }),
     {
       name: STORAGE_KEYS.devMode,
@@ -41,6 +49,7 @@ export const useDevMode = create<DevModeState>()(
         enabled: state.enabled,
         source: state.source,
         liveSnapshot: state.liveSnapshot,
+        staySignedIn: state.staySignedIn,
       }),
     },
   ),

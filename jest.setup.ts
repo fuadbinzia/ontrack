@@ -3,7 +3,6 @@ import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/asy
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
 jest.mock('react-native-reanimated', () => {
-  const React = require('react');
   const { View } = require('react-native');
   const Animated = {
     View,
@@ -13,19 +12,36 @@ jest.mock('react-native-reanimated', () => {
   return {
     __esModule: true,
     default: Animated,
-    Easing: { bezier: () => ({}) },
+    Easing: {
+      bezier: () => ({}),
+      quad: (t: number) => t,
+      inOut: (fn: unknown) => fn,
+    },
     FadeIn: {},
     FadeInDown: {},
     FadeOut: {},
     LinearTransition: {},
+    ReduceMotion: { System: 'system', Never: 'never', Always: 'always' },
     useSharedValue: (value: unknown) => ({ value }),
     useAnimatedStyle: () => ({}),
+    // jest.fn so suites can flip Reduce Motion per case.
+    useReducedMotion: jest.fn(() => false),
     withTiming: (value: unknown) => value,
     withSpring: (value: unknown) => value,
+    withRepeat: (value: unknown) => value,
+    withSequence: (...values: unknown[]) => values[0],
+    withDelay: (_ms: number, value: unknown) => value,
+    cancelAnimation: () => {},
     runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
     Extrapolation: { CLAMP: 'clamp' },
     interpolate: () => 0,
   };
+});
+
+// Frosted chrome renders in component tests — stub the native blur layer.
+jest.mock('expo-blur', () => {
+  const { View } = require('react-native');
+  return { BlurView: View };
 });
 
 jest.mock('react-native-worklets', () => ({

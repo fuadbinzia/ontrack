@@ -21,7 +21,7 @@ function flightItem(
     date: '2026-09-08',
     startMinutes: 600,
     durationMinutes: 180,
-    shareMode: 'private',
+    shareMode: 'trip',
     bookingUrl: 'https://example.com/book',
     flight: {
       airline: 'AA',
@@ -37,7 +37,7 @@ function flightItem(
 }
 
 describe('itinerary visibility', () => {
-  it('defaults missing shareMode to private on normalize', () => {
+  it('defaults missing shareMode to trip on normalize', () => {
     const normalized = normalizeTravelItineraryItem({
       id: 'item-legacy',
       kind: 'activity',
@@ -46,27 +46,32 @@ describe('itinerary visibility', () => {
       startMinutes: 600,
       durationMinutes: 90,
     });
-    expect(normalized?.shareMode).toBe('private');
-    expect(normalized?.sharedWithUserIds).toBeUndefined();
+    expect(normalized?.shareMode).toBe('trip');
   });
 
-  it('keeps selected share targets and drops them for non-selected modes', () => {
+  it('collapses legacy private and selected share modes to trip', () => {
     expect(
       normalizeTravelItineraryItem({
-        ...flightItem({
-          shareMode: 'selected',
-          sharedWithUserIds: ['user-a', 'user-a', ''],
-        }),
-      })?.sharedWithUserIds,
-    ).toEqual(['user-a']);
+        id: 'item-legacy-private',
+        kind: 'moment',
+        title: 'Sunset',
+        date: '2026-09-09',
+        startMinutes: 600,
+        durationMinutes: 30,
+        shareMode: 'private',
+      })?.shareMode,
+    ).toBe('trip');
     expect(
       normalizeTravelItineraryItem({
-        ...flightItem({
-          shareMode: 'trip',
-          sharedWithUserIds: ['user-a'],
-        }),
-      })?.sharedWithUserIds,
-    ).toBeUndefined();
+        id: 'item-legacy-selected',
+        kind: 'activity',
+        title: 'Museum',
+        date: '2026-09-09',
+        startMinutes: 600,
+        durationMinutes: 90,
+        shareMode: 'selected',
+      })?.shareMode,
+    ).toBe('trip');
   });
 
   it('treats missing owner as owned by the viewer', () => {
@@ -79,42 +84,24 @@ describe('itinerary visibility', () => {
     ).toBe(false);
   });
 
-  it('hides private peer flights from other travelers', () => {
-    const privatePeer = flightItem({
+  it('shows every stop to co-travelers', () => {
+    const peerPrivateLegacy = flightItem({
+      id: 'item-peer',
       ownerUserId: 'user-host',
-      shareMode: 'private',
     });
-    expect(canViewerSeeItineraryItem(privatePeer, 'user-me')).toBe(false);
-    expect(canViewerSeeItineraryItem(privatePeer, 'user-host')).toBe(true);
-  });
-
-  it('shows trip-shared and selected shares correctly', () => {
     const tripShared = flightItem({
       id: 'item-trip',
       ownerUserId: 'user-host',
       shareMode: 'trip',
     });
-    const selected = flightItem({
-      id: 'item-selected',
-      ownerUserId: 'user-host',
-      shareMode: 'selected',
-      sharedWithUserIds: ['user-me'],
-    });
-    const selectedOther = flightItem({
-      id: 'item-other',
-      ownerUserId: 'user-host',
-      shareMode: 'selected',
-      sharedWithUserIds: ['user-other'],
-    });
+    expect(canViewerSeeItineraryItem(peerPrivateLegacy, 'user-me')).toBe(true);
     expect(canViewerSeeItineraryItem(tripShared, 'user-me')).toBe(true);
-    expect(canViewerSeeItineraryItem(selected, 'user-me')).toBe(true);
-    expect(canViewerSeeItineraryItem(selectedOther, 'user-me')).toBe(false);
     expect(
       visibleItineraryForViewer(
-        [privateItem(), tripShared, selected, selectedOther],
+        [ownedItem(), peerPrivateLegacy, tripShared],
         'user-me',
       ).map((item) => item.id),
-    ).toEqual(['item-mine', 'item-trip', 'item-selected']);
+    ).toEqual(['item-mine', 'item-peer', 'item-trip']);
   });
 
   it('strips booking secrets from shared payloads', () => {
@@ -138,18 +125,16 @@ describe('itinerary visibility', () => {
   it('merges remote share metadata onto owned local items without dropping secrets', () => {
     const local = flightItem({
       ownerUserId: 'user-me',
-      shareMode: 'private',
+      shareMode: 'trip',
     });
     const remote = flightItem({
       ownerUserId: 'user-me',
-      shareMode: 'selected',
-      sharedWithUserIds: ['user-a'],
+      shareMode: 'trip',
       sharedUpdatedAt: '2026-08-07T12:00:00.000Z',
       flight: { airline: 'AA', flightNumber: '100' },
     });
     const merged = mergeOwnedItineraryItemWithRemote(local, remote);
-    expect(merged.shareMode).toBe('selected');
-    expect(merged.sharedWithUserIds).toEqual(['user-a']);
+    expect(merged.shareMode).toBe('trip');
     expect(merged.flight?.confirmationCode).toBe('ABC123');
     expect(merged.flight?.seat).toBe('12A');
   });
@@ -196,14 +181,14 @@ describe('itinerary visibility', () => {
     expect(preserved.bookingUrl).toBe('https://example.com/mine');
   });
 
-  it('labels share cues for owners and co-travelers', () => {
-    expect(itineraryShareCueLabel(privateItem(), 'user-me')).toBe('Only you');
+  it('labels peer-owned stops for co-travelers', () => {
+    expect(itineraryShareCueLabel(ownedItem(), 'user-me')).toBeUndefined();
     expect(
       itineraryShareCueLabel(
         flightItem({ ownerUserId: 'user-me', shareMode: 'trip' }),
         'user-me',
       ),
-    ).toBe('Shared with trip');
+    ).toBeUndefined();
     expect(
       itineraryShareCueLabel(
         flightItem({ ownerUserId: 'user-host', shareMode: 'trip' }),
@@ -213,10 +198,10 @@ describe('itinerary visibility', () => {
   });
 });
 
-function privateItem(): TravelItineraryItem {
+function ownedItem(): TravelItineraryItem {
   return flightItem({
     id: 'item-mine',
     ownerUserId: 'user-me',
-    shareMode: 'private',
+    shareMode: 'trip',
   });
 }

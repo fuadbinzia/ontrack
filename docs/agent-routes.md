@@ -145,7 +145,6 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `travel-demo-add-flight-connecting` | Seed → United GUA→IAH→LGA connecting prefills Add Flight Name/route |
 | `travel-demo-add-flight-roundtrip` | Seed → Chase round-trip prefills → submit → expand outbound card (passenger ready) |
 | `travel-demo-edit-flight` | Seed → open demo flight editor |
-| `travel-demo-share-flight` | Seed → expand demo flight → open share sheet |
 | `open-new-trip` | Travel list → New Trip sheet |
 | `open-new-checklist` | Checklists → new-list name field ready |
 | `open-home-location` | Today → Home location weather sheet |

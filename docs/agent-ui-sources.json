@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-08-09T17:14:40Z",
-  "idCount": 568,
+  "idCount": 565,
   "byId": {
     "ontrack.activityForm.analyzePhoto": {
       "feature": "activityForm",
@@ -6218,51 +6218,6 @@
         "travel.itineraryAdd.title"
       ]
     },
-    "ontrack.travel.itineraryShare.close": {
-      "feature": "travel",
-      "entry": "src/app/(tabs)/travel.tsx",
-      "skill": ".cursor/skills/travel/SKILL.md",
-      "files": [
-        "src/features/travel/travel-itinerary-share-sheet.tsx"
-      ],
-      "keyPaths": [
-        "travel.itineraryShare.close"
-      ]
-    },
-    "ontrack.travel.itineraryShare.save": {
-      "feature": "travel",
-      "entry": "src/app/(tabs)/travel.tsx",
-      "skill": ".cursor/skills/travel/SKILL.md",
-      "files": [
-        "src/features/travel/travel-itinerary-share-sheet.tsx"
-      ],
-      "keyPaths": [
-        "travel.itineraryShare.save"
-      ]
-    },
-    "ontrack.travel.itineraryShare.sheet": {
-      "feature": "travel",
-      "entry": "src/app/(tabs)/travel.tsx",
-      "skill": ".cursor/skills/travel/SKILL.md",
-      "files": [
-        "src/app/(tabs)/food/community.tsx",
-        "src/app/(tabs)/food/preferences.tsx",
-        "src/app/(tabs)/food/recipes/[id].tsx",
-        "src/app/(tabs)/food/scan.tsx",
-        "src/app/(tabs)/profile/index.tsx",
-        "src/app/(tabs)/travel/[id].tsx",
-        "src/app/(tabs)/travel/index.tsx",
-        "src/app/(tabs)/vehicles/[id].tsx",
-        "src/components/primitives/date-field-calendar.tsx",
-        "src/components/primitives/date-field.tsx",
-        "src/components/primitives/glass-plate.tsx",
-        "src/components/primitives/glass-primary-action.tsx"
-      ],
-      "keyPaths": [
-        "sheet",
-        "travel.itineraryShare.sheet"
-      ]
-    },
     "ontrack.travel.list.empty.create": {
       "feature": "travel",
       "entry": "src/app/(tabs)/travel.tsx",
@@ -8613,9 +8568,6 @@
         "ontrack.travel.itineraryAdd.submit",
         "ontrack.travel.itineraryAdd.time",
         "ontrack.travel.itineraryAdd.title",
-        "ontrack.travel.itineraryShare.close",
-        "ontrack.travel.itineraryShare.save",
-        "ontrack.travel.itineraryShare.sheet",
         "ontrack.travel.list.empty.create",
         "ontrack.travel.list.empty.search",
         "ontrack.travel.list.search",

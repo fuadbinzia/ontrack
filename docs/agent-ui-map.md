@@ -961,14 +961,6 @@ Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scr
 | `ontrack.travel.planDetail.addStay`            | Empty-state CTA to add a stay                                            |
 | `ontrack.travel.planDetail.addRental`          | Empty-state CTA to add a rental                                          |
 | `ontrack.travel.planDetail.backToTravel`       | Empty-state back to Travel when plan is missing                          |
-| `ontrack.travel.timelineItem.<id>.share`       | Open per-stop share settings (private / trip / selected people)          |
-| `ontrack.travel.itineraryShare.sheet`          | Itinerary share sheet body                                               |
-| `ontrack.travel.itineraryShare.close`          | Close itinerary share sheet                                              |
-| `ontrack.travel.itineraryShare.save`           | Save itinerary share settings                                            |
-| `ontrack.travel.itineraryShare.mode.private`   | Share mode: only me                                                      |
-| `ontrack.travel.itineraryShare.mode.trip`      | Share mode: everyone on trip                                             |
-| `ontrack.travel.itineraryShare.mode.selected`  | Share mode: choose people                                                |
-| `ontrack.travel.itineraryShare.person.<userId>`| Toggle a co-traveler in selected share mode                              |
 | `ontrack.travel.timelineAdd.close`             | Kind picker close                                                        |
 | `ontrack.travel.timelineAdd.kind.<kind>`       | Timeline kind choice                                                     |
 | `ontrack.travel.timelineDay.<date>`            | Expand/collapse a timeline day group                                     |

@@ -19,10 +19,7 @@ import {
 import { BookingOpenSheet } from '@/features/travel/booking-open-sheet';
 import { flightItineraryCaptionParts } from '@/features/travel/flight-arrival';
 import { flightItemDisplayTitle } from '@/features/travel/flight-route-label';
-import {
-    isItineraryItemOwnedBy,
-    itineraryShareCueLabel,
-} from '@/features/travel/itinerary-visibility';
+import { itineraryShareCueLabel } from '@/features/travel/itinerary-visibility';
 import { openAddressWithMapsChooser } from '@/features/travel/open-address-with-maps';
 import { RentalCompanyLogo } from '@/features/travel/rental-company-logo';
 import { StayLocationThumbnail } from '@/features/travel/stay-location-thumbnail';
@@ -113,7 +110,6 @@ export function TravelTimelineNode({
   onRemovePhoto,
   onRemove,
   onSaveNotes,
-  onShare,
 }: TravelTimelineNodeProps) {
   const theme = useTheme();
   const { s, spacing: rs, typography } = useResponsive();
@@ -125,7 +121,6 @@ export function TravelTimelineNode({
     lineHeight: denseChromeLineHeight,
   };
   const localUserId = user?.id;
-  const ownsItem = isItineraryItemOwnedBy(item, localUserId);
   const shareCue = itineraryShareCueLabel(item, localUserId);
   const [notesOpen, setNotesOpen] = useState(false);
   const [editingTransport, setEditingTransport] = useState(false);
@@ -567,7 +562,6 @@ export function TravelTimelineNode({
               planStartDate={planStartDate}
               planEndDate={planEndDate}
               toolbarActionSize={toolbarActionSize}
-              canShare={ownsItem && Boolean(onShare)}
               dense={dense}
               onGlass={onGlass}
               onEditedFlightDetailsChange={onEditedFlightDetailsChange}
@@ -591,7 +585,6 @@ export function TravelTimelineNode({
               onBeginItemEdit={onBeginItemEdit}
               onOpenNotes={() => setNotesOpen(true)}
               onAddPhotos={onAddPhotos}
-              onShare={onShare}
               onOpenBooking={openBooking}
               onRemove={onRemove}
             />

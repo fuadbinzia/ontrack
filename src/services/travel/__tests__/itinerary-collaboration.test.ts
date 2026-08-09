@@ -35,7 +35,7 @@ function item(
     date: '2026-09-08',
     startMinutes: 600,
     durationMinutes: 180,
-    shareMode: 'private',
+    shareMode: 'trip',
     flight: {
       airline: 'AA',
       flightNumber: '1',
@@ -47,9 +47,9 @@ function item(
 }
 
 describe('itinerary collaboration merge', () => {
-  it('keeps owned private items and drops peer items that are no longer shared', () => {
+  it('keeps owned items and drops peer items that are no longer shared', () => {
     const local = planWith([
-      item({ id: 'mine', ownerUserId: 'user-me', shareMode: 'private' }),
+      item({ id: 'mine', ownerUserId: 'user-me', shareMode: 'trip' }),
       item({
         id: 'peer-gone',
         ownerUserId: 'user-host',
@@ -122,8 +122,7 @@ describe('itinerary collaboration merge', () => {
     const parsed = parseRemoteItineraryItem({
       itemId: 'item-9',
       ownerUserId: 'user-host',
-      shareMode: 'selected',
-      sharedWithUserIds: ['user-me'],
+      shareMode: 'trip',
       updatedAt: '2026-08-07T12:00:00.000Z',
       payload: {
         id: 'item-9',
@@ -137,10 +136,28 @@ describe('itinerary collaboration merge', () => {
     expect(parsed).toMatchObject({
       id: 'item-9',
       ownerUserId: 'user-host',
-      shareMode: 'selected',
-      sharedWithUserIds: ['user-me'],
+      shareMode: 'trip',
       sharedUpdatedAt: '2026-08-07T12:00:00.000Z',
       title: 'Hike',
     });
+  });
+
+  it('collapses legacy selected remote rows to trip', () => {
+    const parsed = parseRemoteItineraryItem({
+      itemId: 'item-legacy',
+      ownerUserId: 'user-host',
+      shareMode: 'selected',
+      sharedWithUserIds: ['user-me'],
+      updatedAt: '2026-08-07T12:00:00.000Z',
+      payload: {
+        id: 'item-legacy',
+        kind: 'activity',
+        title: 'Museum',
+        date: '2026-09-09',
+        startMinutes: 600,
+        durationMinutes: 90,
+      },
+    });
+    expect(parsed?.shareMode).toBe('trip');
   });
 });

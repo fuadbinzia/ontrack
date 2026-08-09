@@ -230,7 +230,6 @@ describe('glass plate contract', () => {
 
   it('forbids opaque paper fills on shared product chrome shells', () => {
     const expenses = read('src/features/travel/expenses/travel-expenses-sheet.tsx');
-    const share = read('src/features/travel/travel-itinerary-share-sheet.tsx');
     const importAction = read('src/features/travel/confirmation-import-action.tsx');
     const prompt = read('src/components/primitives/app-prompt.tsx');
     const dataChoice = read('src/app/auth/data-choice.tsx');
@@ -241,9 +240,6 @@ describe('glass plate contract', () => {
     expect(expenses).toContain('GlassIconWell');
     expect(expenses).not.toContain('backgroundColor: theme.accentFaint');
     expect(expenses).not.toContain('backgroundColor: chrome.tint');
-    expect(share).toContain('GlassPlate');
-    expect(share).not.toContain('backgroundColor: theme.backgroundSunken');
-    expect(share).not.toContain('theme.accentSoft');
     expect(importAction).toContain('GlassPlate');
     expect(importAction).not.toContain('backgroundColor: chrome.importActionBg');
     expect(prompt).toContain('GlassIconWell');

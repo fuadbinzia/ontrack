@@ -81,5 +81,4 @@ export type TravelTimelineNodeProps = {
   onRemovePhoto: (uri: string) => void;
   onRemove: () => void;
   onSaveNotes: (notes: TravelItemNote[]) => void;
-  onShare?: () => void;
 };

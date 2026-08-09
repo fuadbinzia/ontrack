@@ -100,7 +100,7 @@ function useStarTwinkleClock(active: boolean): SharedValue<number> {
     }
     clock.value = 0;
     clock.value = withRepeat(
-      withTiming(1, { duration: 7000, easing: Easing.linear }),
+      withTiming(1, { duration: 5800, easing: Easing.linear }),
       -1,
       false,
     );
@@ -134,14 +134,14 @@ function TwinklingStar({
   clock: SharedValue<number>;
 }) {
   const phase = starSeedUnit(seed, 1);
-  // Wide enough to read as a sparkle; still short vs the rest gap.
-  const flashWidth = 0.055 + starSeedUnit(seed, 3) * 0.07;
-  const peak = 0.75 + starSeedUnit(seed, 5) * 0.25;
+  // Readable sparkle without disco — modest flash vs rest, no halo bloom.
+  const flashWidth = 0.06 + starSeedUnit(seed, 3) * 0.08;
+  const peak = 0.8 + starSeedUnit(seed, 5) * 0.2;
   // Dim between flashes so the brightening is obvious (was ~0.78 — nearly static).
-  const rest = 0.32 + starSeedUnit(seed, 7) * 0.22;
+  const rest = 0.28 + starSeedUnit(seed, 7) * 0.18;
   const doubleFlash = seed % 7 === 0 || seed % 11 === 0;
   const secondBurst = seed % 5 === 0 || seed % 13 === 0;
-  const size = Math.max(1.8, r * 2);
+  const size = Math.max(2.1, r * 2.15);
 
   const style = useAnimatedStyle(() => {
     const t = (clock.value + phase) % 1;
@@ -156,13 +156,13 @@ function TwinklingStar({
       );
     }
     // Soft always-on shimmer so the field never freezes between sparks.
-    const shimmerT = (clock.value * 1.6 + phase * 2.3) % 1;
-    const shimmer = unitFlash(shimmerT, 0.5);
-    const floor = rest + shimmer * 0.14;
+    const shimmerT = (clock.value * 1.7 + phase * 2.3) % 1;
+    const shimmer = unitFlash(shimmerT, 0.48);
+    const floor = rest + shimmer * 0.16;
     const bright = floor + flash * peak * (1 - floor);
     return {
       opacity: baseOpacity * bright,
-      transform: [{ scale: 0.88 + flash * 0.42 + shimmer * 0.08 }],
+      transform: [{ scale: 0.86 + flash * 0.48 + shimmer * 0.1 }],
     };
   });
 

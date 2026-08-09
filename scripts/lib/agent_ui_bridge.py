@@ -11,7 +11,6 @@ import argparse
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -103,63 +102,23 @@ def stamp_platform(payload: dict) -> dict:
     elif device and agent_ui_platform() == "ios":
         body["device"] = device
         os.environ.setdefault("ONTRACK_IOS_SIMULATOR_UDID", device)
+    if agent_ui_platform() == "ios":
+        # Address iOS commands to the leased sim by name. Several sims share one
+        # Metro bundle and daemon, so slot alone lets the user's headed sim drain
+        # the pool queue (and adopt its slot) while host ops target the lease.
+        sim_name = (os.environ.get("ONTRACK_IOS_SIMULATOR") or "").strip()
+        if sim_name:
+            body["iosDeviceName"] = sim_name
     return body
 
 
-def _android_adb_bin() -> str | None:
-    for key in ("ADB_BIN", "ANDROID_ADB"):
-        raw = (os.environ.get(key) or "").strip()
-        if raw and Path(raw).is_file():
-            return raw
-    home = Path.home()
-    for candidate in (
-        home / "Library/Android/sdk/platform-tools/adb",
-        Path(os.environ.get("ANDROID_HOME", "")) / "platform-tools/adb",
-        Path(os.environ.get("ANDROID_SDK_ROOT", "")) / "platform-tools/adb",
-    ):
-        if candidate.is_file():
-            return str(candidate)
-    which = shutil.which("adb")
-    return which
-
-
-def write_android_slot_pin_file(slot: int) -> bool:
-    """Write files/agent-ui-pin.json inside the Android app via run-as (debug builds)."""
-    adb = _android_adb_bin()
-    if not adb:
-        return False
-    serial = (
-        (os.environ.get("ONTRACK_ANDROID_SERIAL") or "").strip()
-        or (os.environ.get("ANDROID_SERIAL") or "").strip()
-        or (os.environ.get("AGENT_UI_DEVICE") or "").strip()
-    )
-    bundle = (os.environ.get("BUNDLE_ID") or "com.imtihoss.ontracknow").strip()
-    pin_json = json.dumps({"slot": slot}, separators=(",", ":"))
-    # Expo Paths.document → app files/ on Android.
-    script = (
-        "mkdir -p files && "
-        f"printf '%s' '{pin_json}' > files/agent-ui-pin.json"
-    )
-    cmd = [adb]
-    if serial:
-        cmd.extend(["-s", serial])
-    cmd.extend(["shell", "run-as", bundle, "sh", "-c", script])
-    try:
-        proc = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=8, check=False
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return False
-    return proc.returncode == 0
-
-
 def write_slot_pin_file() -> bool:
-    """Write agent-ui-pin.json so the app polls the matching daemon queue."""
+    """iOS Documents/agent-ui-pin.json. Android no-op (host-port slot — H17)."""
     slot = agent_ui_slot()
     if slot is None:
         return False
     if agent_ui_platform() == "android":
-        return write_android_slot_pin_file(slot)
+        return True
     try:
         data = resolve_data_dir()
         pin = data / "Documents" / "agent-ui-pin.json"
@@ -610,6 +569,17 @@ def build_payload(args: argparse.Namespace) -> dict:
         return {"op": "overlay", "to": args.to or "toggle"}
     if op == "devmode":
         return {"op": "devmode", "to": args.to or "status"}
+    if op == "login":
+        # Password only ever comes from the environment (never argv) so it cannot
+        # leak through `ps` or a shell history line.
+        email = (getattr(args, "email", None) or os.environ.get("ONTRACK_AGENT_ACCOUNT_EMAIL") or "").strip()
+        password = os.environ.get("ONTRACK_AGENT_ACCOUNT_PASSWORD_RESOLVED") or ""
+        if not email or not password:
+            raise SystemExit(
+                "login needs ONTRACK_AGENT_ACCOUNT_EMAIL + "
+                "ONTRACK_AGENT_ACCOUNT_PASSWORD_RESOLVED (see scripts/lib/agent-credentials.sh)"
+            )
+        return {"op": "login", "email": email, "password": password}
     if op == "hit":
         payload = {"op": "hit"}
         if getattr(args, "x", None) is not None:
@@ -964,6 +934,199 @@ def _android_cold_root(current: str | None, route_want: str | None) -> bool:
     return not current or current == "/"
 
 
+HMR_BEACON_REL = Path("src/utils/dev/metro-hmr-beacon.ts")
+HMR_BEACON_RE = re.compile(r"METRO_HMR_BEACON\s*=\s*'([^']+)'")
+HMR_BEACON_NS_RE = re.compile(r"(\d+)$")
+
+
+def hmr_beacon_path(root: Path | None = None) -> Path:
+    return (root or repo_root()) / HMR_BEACON_REL
+
+
+def read_hmr_beacon(root: Path | None = None) -> str | None:
+    path = hmr_beacon_path(root)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    match = HMR_BEACON_RE.search(text)
+    return match.group(1) if match else None
+
+
+def hmr_beacon_ns(value: str | None) -> int:
+    """Numeric generation from `metro-hmr-beacon-<time_ns>` (0 if unknown)."""
+    if not value:
+        return 0
+    match = HMR_BEACON_NS_RE.search(value.strip())
+    if not match:
+        return 0
+    try:
+        return int(match.group(1))
+    except ValueError:
+        return 0
+
+
+def beacon_satisfies(app_beacon: str | None, minimum: str) -> bool:
+    """True when the app is on `minimum` or a newer beacon (watcher may re-bump)."""
+    return hmr_beacon_ns(app_beacon) >= hmr_beacon_ns(minimum) > 0
+
+
+def bump_hmr_beacon(root: Path | None = None) -> str:
+    """Rewrite the Metro HMR beacon nonce so connected clients must refresh."""
+    root = root or repo_root()
+    path = hmr_beacon_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    nonce = f"metro-hmr-beacon-{time.time_ns()}"
+    path.write_text(
+        "// Local Metro watcher probe artifact (gitignored).\n"
+        "// Created by scripts/ensure-metro-hmr-beacon.sh; nonce updates by "
+        "metro-watcher.sh / agent_ui_bridge ensure_js_fresh (H20).\n"
+        f"export const METRO_HMR_BEACON = '{nonce}';\n",
+        encoding="utf-8",
+    )
+    return nonce
+
+
+def _soft_reconnect_dev_client(root: Path | None = None) -> None:
+    """Soft Metro reconnect without taking a new agent-ui lease."""
+    root = root or repo_root()
+    env = os.environ.copy()
+    env["AGENT_UI_SKIP_LEASE"] = "1"
+    # Nested soft reconnect must not fight the parent lease holder.
+    env.setdefault("AGENT_UI_LOCK_HELD", "1")
+    script = f"""
+set -euo pipefail
+# shellcheck source=/dev/null
+source "{root}/scripts/lib/agent-ui-host.sh"
+agent_ui_soft_reconnect_dev_client
+"""
+    subprocess.run(
+        ["bash", "-c", script],
+        cwd=str(root),
+        env=env,
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+
+def ensure_js_fresh(
+    *,
+    root: Path | None = None,
+    wait_secs: float | None = None,
+    bump: bool | None = None,
+) -> dict[str, Any]:
+    """Ensure the device JS runtime is at least as new as the HMR beacon (H20).
+
+    Warm Android often keeps a live agent-ui bridge on a stale bundle ("App
+    already connected") while iOS cold-reconnects and picks up new testIDs.
+    Bump (unless AGENT_UI_EXPECTED_HMR_BEACON is preset), wait for HMR, then
+    soft-reconnect once if the app is still behind. Accept app beacons that are
+    newer than the minimum — Metro watcher probes may re-bump the file mid-wait.
+    """
+    root = root or repo_root()
+    if _env_flag("AGENT_UI_SKIP_JS_FRESH"):
+        return {"ok": True, "skipped": True, "detail": "AGENT_UI_SKIP_JS_FRESH"}
+
+    minimum = (os.environ.get("AGENT_UI_EXPECTED_HMR_BEACON") or "").strip()
+    did_bump = False
+    if bump is None:
+        # Preset env (verify-both parent bump) → wait only; else bump a new nonce.
+        bump = not minimum
+    if bump:
+        minimum = bump_hmr_beacon(root)
+        did_bump = True
+        os.environ["AGENT_UI_EXPECTED_HMR_BEACON"] = minimum
+    elif not minimum:
+        minimum = read_hmr_beacon(root) or ""
+        if not minimum:
+            minimum = bump_hmr_beacon(root)
+            did_bump = True
+        os.environ["AGENT_UI_EXPECTED_HMR_BEACON"] = minimum
+
+    deadline = float(
+        wait_secs
+        if wait_secs is not None
+        else os.environ.get("AGENT_UI_JS_FRESH_WAIT_SECS", "12")
+    )
+    poll_wait = min(2.5, max(0.8, deadline / 4))
+    platform = agent_ui_platform()
+    refreshed = False
+
+    def _app_beacon() -> str | None:
+        status = send({"op": "route"}, wait_secs=poll_wait, allow_fail=True)
+        raw = status.get("hmrBeacon")
+        return raw.strip() if isinstance(raw, str) and raw.strip() else None
+
+    # Give Fast Refresh a short window before forcing a reload.
+    hmr_grace = float(os.environ.get("AGENT_UI_JS_FRESH_HMR_GRACE_SECS", "2.5"))
+    started = time.time()
+    while time.time() - started < hmr_grace:
+        got = _app_beacon()
+        if beacon_satisfies(got, minimum):
+            return {
+                "ok": True,
+                "hmrBeacon": got,
+                "minimum": minimum,
+                "bumped": did_bump,
+                "refreshed": False,
+                "detail": "hmr matched",
+            }
+        time.sleep(0.35)
+
+    got = _app_beacon()
+    if beacon_satisfies(got, minimum):
+        return {
+            "ok": True,
+            "hmrBeacon": got,
+            "minimum": minimum,
+            "bumped": did_bump,
+            "refreshed": False,
+            "detail": "hmr matched",
+        }
+
+    print(
+        f"agent-ui: JS stale on {platform} "
+        f"(app hmr={got or '?'} min={minimum}) — soft reconnect…",
+        file=sys.stderr,
+    )
+    _soft_reconnect_dev_client(root)
+    refreshed = True
+    if platform == "android":
+        # Soft reconnect wakes on `/` — verify must not skip land.
+        os.environ["AGENT_UI_ANDROID_FORCE_LAND"] = "1"
+
+    match_deadline = time.time() + max(deadline, 8.0)
+    while time.time() < match_deadline:
+        got = _app_beacon()
+        if beacon_satisfies(got, minimum):
+            return {
+                "ok": True,
+                "hmrBeacon": got,
+                "minimum": minimum,
+                "bumped": did_bump,
+                "refreshed": refreshed,
+                "detail": "matched after soft reconnect",
+            }
+        time.sleep(0.45)
+
+    print(
+        f"error: agent-ui: JS still stale on {platform} after soft reconnect "
+        f"(app hmr={got or '?'} min={minimum})",
+        file=sys.stderr,
+    )
+    return {
+        "ok": False,
+        "hmrBeacon": got,
+        "expected": minimum,
+        "minimum": minimum,
+        "bumped": did_bump,
+        "refreshed": refreshed,
+        "detail": "stale after soft reconnect",
+    }
+
+
 def run_verify(argv: list[str], *, wait_secs: float) -> dict[str, Any]:
     """Skip flow/open when already on --route; then assert (+ optional color/shot).
 
@@ -975,6 +1138,17 @@ def run_verify(argv: list[str], *, wait_secs: float) -> dict[str, Any]:
     Android cold boot / reconnect still wakes on `/`: same auto-goto path, plus
     one land retry if the first pass races JS mount.
     """
+    # H20: warm Android bridge ≠ fresh JS. Prove the HMR beacon before asserts.
+    fresh = ensure_js_fresh(wait_secs=min(12.0, max(6.0, wait_secs)))
+    if not fresh.get("ok"):
+        return {
+            "ok": False,
+            "op": "ensure-js-fresh",
+            "detail": fresh.get("detail") or "JS bundle stale",
+            "hmrBeacon": fresh.get("hmrBeacon"),
+            "expected": fresh.get("expected"),
+        }
+
     args = list(argv)
     route_want: str | None = None
     land_ops: list[dict[str, Any]] = []
@@ -1117,6 +1291,7 @@ def main(argv: list[str] | None = None) -> int:
     p_send.add_argument("--id")
     p_send.add_argument("--prefix")
     p_send.add_argument("--to")
+    p_send.add_argument("--email")
     p_send.add_argument("--x", type=float)
     p_send.add_argument("--y", type=float)
     p_send.add_argument("--contains")
@@ -1172,7 +1347,27 @@ def main(argv: list[str] | None = None) -> int:
 
     p_pin = sub.add_parser(
         "write-slot-pin",
-        help="write agent-ui-pin.json for the current AGENT_UI_SLOT (iOS Documents / Android files)",
+        help="write iOS Documents/agent-ui-pin.json for AGENT_UI_SLOT (Android no-op)",
+    )
+
+    p_js = sub.add_parser(
+        "ensure-js-fresh",
+        help="bump/wait Metro HMR beacon so warm Android is not on a stale bundle (H20)",
+    )
+    p_js.add_argument(
+        "--no-bump",
+        action="store_true",
+        help="wait for AGENT_UI_EXPECTED_HMR_BEACON or the current on-disk beacon",
+    )
+    p_js.add_argument(
+        "--wait-secs",
+        type=float,
+        default=float(os.environ.get("AGENT_UI_JS_FRESH_WAIT_SECS", "12")),
+    )
+    p_js.add_argument(
+        "--bump-only",
+        action="store_true",
+        help="rewrite the beacon file and print the nonce (no device wait)",
     )
 
     args = parser.parse_args(argv)
@@ -1182,6 +1377,19 @@ def main(argv: list[str] | None = None) -> int:
         ok = write_slot_pin_file()
         print(json.dumps({"ok": ok, "slot": agent_ui_slot()}, separators=(",", ":")))
         return 0 if ok else 1
+
+    if args.cmd == "ensure-js-fresh":
+        if args.bump_only:
+            nonce = bump_hmr_beacon(root)
+            print(nonce)
+            return 0
+        data = ensure_js_fresh(
+            root=root,
+            wait_secs=args.wait_secs,
+            bump=not args.no_bump,
+        )
+        print(json.dumps(data, separators=(",", ":")))
+        return 0 if data.get("ok") else 1
 
     if args.cmd == "data-dir":
         if args.refresh:
@@ -1234,7 +1442,7 @@ def main(argv: list[str] | None = None) -> int:
     expect_dump = bool(args.expect_dump or payload.get("op") == "dump")
     allow_fail = bool(
         args.allow_fail
-        or payload.get("op") in {"exists", "prefix", "route", "assert"}
+        or payload.get("op") in {"exists", "prefix", "route", "assert", "login"}
     )
     data = send(
         payload,
@@ -1243,7 +1451,7 @@ def main(argv: list[str] | None = None) -> int:
         expect_dump=expect_dump,
     )
     print(json.dumps(data, separators=(",", ":")))
-    if payload.get("op") == "assert":
+    if payload.get("op") in {"assert", "login"}:
         return 0 if data.get("ok") else 1
     return 0
 

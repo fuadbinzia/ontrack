@@ -3,12 +3,14 @@ import { useEffect } from 'react';
 import { BackHandler, Platform } from 'react-native';
 
 import { BottomNavBar } from '@/components/navigation/bottom-nav-bar';
+import { useShouldShowWelcome } from '@/features/auth/welcome-preview';
 import { usePreferences } from '@/store/preferences';
 import { useUI } from '@/store/ui';
 import { todayKey } from '@/utils/date';
 
 export default function TabsLayout() {
   const hasOnboarded = usePreferences((s) => s.hasOnboarded);
+  const showWelcome = useShouldShowWelcome(hasOnboarded);
   const setSelectedDate = useUI((state) => state.setSelectedDate);
   const router = useRouter();
 
@@ -24,8 +26,8 @@ export default function TabsLayout() {
     return () => sub.remove();
   }, [router]);
 
-  if (!hasOnboarded) {
-    return <Redirect href="/onboarding" />;
+  if (showWelcome) {
+    return <Redirect href="/welcome" />;
   }
 
   return (
@@ -60,7 +62,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="to-do" />
       <Tabs.Screen name="social" />
       <Tabs.Screen name="insights" />
-      <Tabs.Screen name="profile" />
       <Tabs.Screen name="workouts" />
       <Tabs.Screen name="plants" />
       <Tabs.Screen name="travel" />
@@ -68,6 +69,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="games" />
       <Tabs.Screen name="vehicles" />
       <Tabs.Screen name="health" />
+      <Tabs.Screen name="food" />
+      <Tabs.Screen name="profile" />
     </Tabs>
   );
 }

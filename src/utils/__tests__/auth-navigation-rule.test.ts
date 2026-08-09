@@ -47,6 +47,19 @@ describe('authentication navigation invariants', () => {
     }
   });
 
+  it('hosts guest upgrade sign-in on root /account outside the tab dock', () => {
+    const account = readFileSync(join(process.cwd(), 'src/app/account.tsx'), 'utf8');
+    const profileAccount = readFileSync(
+      join(process.cwd(), 'src/app/(tabs)/profile/account.tsx'),
+      'utf8',
+    );
+    expect(account).toContain('AuthScreen');
+    expect(account).toContain('variant="upgrade"');
+    expect(account).not.toContain('Redirect');
+    expect(profileAccount).toContain('Redirect');
+    expect(profileAccount).toContain("href=\"/account\"");
+  });
+
   it('holds the static loading shell until hydration and account resolution finish', () => {
     expect(rootLayout).toContain("if (!hydrated || phase === 'loading')");
     expect(rootLayout).toContain('LoadingBlock');
@@ -104,8 +117,31 @@ describe('authentication navigation invariants', () => {
       join(process.cwd(), 'src/features/auth/auth-provider.tsx'),
       'utf8',
     );
+    const guestDirty = readFileSync(
+      join(process.cwd(), 'src/features/auth/auth-guest-dirty.ts'),
+      'utf8',
+    );
     expect(authProvider).toContain("!guestEnabled || phase === 'authenticated' || phase === 'welcome'");
-    expect(authProvider).toContain('useVehicles.subscribe(mark)');
+    expect(authProvider).toContain('subscribeGuestDirtyStores()');
+    expect(guestDirty).toContain('useVehicles.subscribe(mark)');
+    expect(guestDirty).toContain('useRecipes.subscribe(mark)');
+    expect(guestDirty).toContain('useFoodProfile.subscribe(mark)');
+  });
+
+  it('returns cancelled provider sign-in to the login gate, never auto-guest', () => {
+    const authProvider = readFileSync(
+      join(process.cwd(), 'src/features/auth/auth-provider.tsx'),
+      'utf8',
+    );
+    expect(authProvider).toContain('authCancelPhase');
+    expect(authProvider).toContain('isProviderCancellation(providerError)');
+    // Cancel / dismiss must not reuse boot fallbackPhase (that can enter guest).
+    const cancelBlock = authProvider.match(
+      /if \(isProviderCancellation\(providerError\)\) \{[\s\S]*?\} else \{/,
+    )?.[0];
+    expect(cancelBlock).toBeDefined();
+    expect(cancelBlock).toContain('authCancelPhase');
+    expect(cancelBlock).not.toContain('fallbackPhase');
   });
 
   it('gates app routes on settled guest or authenticated phases only', () => {

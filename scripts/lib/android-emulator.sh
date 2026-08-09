@@ -21,6 +21,10 @@
 _ONTRACK_ANDROID_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 : "${ROOT:=$(cd "${_ONTRACK_ANDROID_LIB_DIR}/../.." && pwd)}"
 
+# Launch-budget helper (agent policy: >30s to launch is a defect to diagnose).
+# shellcheck disable=SC1091
+source "${_ONTRACK_ANDROID_LIB_DIR}/device-launch-budget.sh"
+
 android_emu_sdk_bin() {
   local name="$1"
   if [[ -x "${ANDROID_HOME}/emulator/${name}" ]]; then
@@ -380,6 +384,15 @@ android_emu_live_headed_galaxy_name() {
 android_emu_want_keep_headed() {
   case "${ONTRACK_ANDROID_KEEP_HEADED:-}" in
     1|true|TRUE|yes|YES) return 0 ;;
+  esac
+  # Agent device policy: a leased agent stays on its own onTrack_Agent_N AVD.
+  # A live headed Galaxy no longer wins the agent's device (and is never killed
+  # either — see android_emu_shutdown_others). Explicit KEEP_HEADED=1 above is
+  # the only way an agent shell targets the user's window.
+  if android_emu_pool_mode || [[ -n "${AGENT_UI_SLOT:-}" ]]; then
+    return 1
+  fi
+  case "${ONTRACK_ANDROID_KEEP_HEADED:-}" in
     0|false|FALSE|no|NO)
       # Pool verify-both sets KEEP=0 to ignore *stale* sticky keep files — but a
       # live headed GUI must still win (never "Saving state…" the user window).
@@ -453,6 +466,12 @@ android_emu_first_warm_agent_name() {
 # No-op when keep is stale (Galaxy not headed) — want_keep_headed GCs the file.
 android_emu_adopt_android_for_headed_host() {
   local name keep
+  # Agent device policy: pool/leased agents never adopt the user's GUI AVD.
+  # Adoption is for user-invoked headed runs only (ensure-android-emulator.sh
+  # --window / android:ensure:window).
+  if android_emu_pool_mode || [[ -n "${AGENT_UI_SLOT:-}" ]]; then
+    return 0
+  fi
   android_emu_want_keep_headed || android_emu_want_window || return 0
   keep="$(android_emu_headed_keep_name 2>/dev/null || true)"
   [[ -n "$keep" ]] || keep="Galaxy_S26"
@@ -824,6 +843,8 @@ android_emu_wait_boot() {
   local serial="$1"
   local budget="${2:-120}"
   local deadline=$((SECONDS + budget)) adb_bin boot state offline_hits=0
+  local launch_started
+  launch_started="$(device_launch_timer_start)"
   adb_bin="$(android_emu_sdk_bin adb)"
   [[ -n "$adb_bin" && -n "$serial" ]] || return 1
   "$adb_bin" -s "$serial" wait-for-device >/dev/null 2>&1 || true
@@ -842,12 +863,16 @@ android_emu_wait_boot() {
     offline_hits=0
     boot="$("$adb_bin" -s "$serial" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')"
     if [[ "$boot" == "1" ]]; then
+      device_launch_timer_report "$launch_started" "Android boot_completed ${serial}" \
+        "cold boot after peer emu kill / stale snapshot"
       # Soft keyboard still available when a hardware keyboard is attached.
       "$adb_bin" -s "$serial" shell settings put secure show_ime_with_hard_keyboard 1 >/dev/null 2>&1 || true
       return 0
     fi
     sleep 1
   done
+  device_launch_timer_report "$launch_started" "Android boot_completed ${serial} (TIMED OUT)" \
+    "cold boot after peer emu kill / stale snapshot"
   return 1
 }
 
@@ -889,7 +914,7 @@ android_emu_ensure_ready() {
 android_emu_ensure_adb_reverse() {
   local metro_port="${METRO_PORT:-8081}"
   local daemon_port="${AGENT_UI_HTTP_PORT:-8191}"
-  local list port added=0
+  local list port host_port added=0
 
   ANDROID_EMU_REVERSE_ADDED=0
 
@@ -898,16 +923,27 @@ android_emu_ensure_adb_reverse() {
     return 1
   fi
 
+  # Guest 8191 → host 8191+slot (H17).
+  local daemon_host_port="$daemon_port"
+  if [[ -n "${AGENT_UI_SLOT:-}" && "${AGENT_UI_SLOT}" =~ ^[1-9][0-9]*$ ]]; then
+    daemon_host_port=$((daemon_port + AGENT_UI_SLOT))
+  fi
+
   list="$(android_emu_adb reverse --list 2>/dev/null || true)"
   for port in "$metro_port" "$daemon_port"; do
-    if printf '%s\n' "$list" | grep -qE "tcp:${port}[[:space:]]+tcp:${port}"; then
+    host_port="$port"
+    [[ "$port" == "$daemon_port" ]] && host_port="$daemon_host_port"
+    if printf '%s\n' "$list" | grep -qE "tcp:${port}[[:space:]]+tcp:${host_port}\$"; then
       continue
     fi
-    if android_emu_adb reverse "tcp:${port}" "tcp:${port}" >/dev/null 2>&1; then
-      echo "adb reverse tcp:${port} → host:${port}"
+    if printf '%s\n' "$list" | grep -qE "tcp:${port}[[:space:]]+tcp:"; then
+      android_emu_adb reverse --remove "tcp:${port}" >/dev/null 2>&1 || true
+    fi
+    if android_emu_adb reverse "tcp:${port}" "tcp:${host_port}" >/dev/null 2>&1; then
+      echo "adb reverse tcp:${port} → host:${host_port}"
       added=1
     else
-      echo "error: adb reverse tcp:${port} failed" >&2
+      echo "error: adb reverse tcp:${port} → host:${host_port} failed" >&2
       return 1
     fi
   done
@@ -915,13 +951,49 @@ android_emu_ensure_adb_reverse() {
   if [[ "$added" == "1" ]]; then
     ANDROID_EMU_REVERSE_ADDED=1
   else
-    echo "adb reverse ok (Metro ${metro_port}, agent-ui ${daemon_port})"
+    echo "adb reverse ok (Metro ${metro_port}, agent-ui ${daemon_host_port})"
   fi
   return 0
 }
 
 android_emu_app_package() {
   printf '%s' "${BUNDLE_ID:-com.imtihoss.ontracknow}"
+}
+
+# True when the app on *this* serial holds a socket to the agent-ui daemon.
+# A live PID is not enough (dead JS runtime). Unknown `ss` → treat as connected.
+android_emu_app_bridge_connected() {
+  local daemon_port="${AGENT_UI_HTTP_PORT:-8191}" out
+  out="$(android_emu_adb shell "ss -tn 2>/dev/null | grep -c ':${daemon_port}'" 2>/dev/null | tr -d '\r' | head -1)"
+  if [[ -z "$out" || ! "$out" =~ ^[0-9]+$ ]]; then
+    return 0
+  fi
+  (( out > 0 ))
+}
+
+# Process up + no daemon socket → force-stop so the next VIEW is a launch intent.
+# Returns 0 when a stop ran, 1 when healthy / not running.
+android_emu_force_stop_if_wedged() {
+  local pkg
+  pkg="$(android_emu_app_package)"
+  android_emu_adb shell pidof "$pkg" >/dev/null 2>&1 || return 1
+  android_emu_app_bridge_connected && return 1
+  echo "Wedged Android app (not polling agent-ui) — force-stopping before relaunch"
+  android_emu_adb shell am force-stop "$pkg" >/dev/null 2>&1 || true
+  sleep 1
+  return 0
+}
+
+# Reverse + wedge heal before a Metro VIEW. Caller opens the URL (and optional monkey).
+# Pass "loud" to keep reverse diagnostics (ensure-packager); default is quiet.
+android_emu_prepare_metro_dev_client() {
+  if [[ "${1:-}" == "loud" ]]; then
+    android_emu_ensure_adb_reverse || return 1
+  else
+    android_emu_ensure_adb_reverse >/dev/null 2>&1 || return 1
+  fi
+  android_emu_force_stop_if_wedged || true
+  return 0
 }
 
 # Headed handoff only (or ONTRACK_ANDROID_ENSURE_APP_SURFACE=1).
@@ -1134,7 +1206,10 @@ ensure_preferred_android_emulator() {
     # Detach into a new session so Cursor aborting an agent shell does not
     # SIGTERM the emulator. Plain `nohup … &` stays in the agent process group
     # and dies with the terminal (same failure mode as Metro before start_new_session).
+    local emu_agent=0
+    android_emu_is_agent_avd_name "$name" && emu_agent=1
     EMU_BIN="$emu_bin" EMU_LOG="$log" EMU_AVD="$name" EMU_WINDOW="$want_window" \
+      EMU_AGENT="$emu_agent" \
       EMU_NO_SNAPSHOT="$no_snap" EMU_NO_SNAPSHOT_SAVE="$agent_no_snapshot_save" \
       HOME="$HOME" USER="${USER:-}" TMPDIR="${TMPDIR:-/tmp}" ANDROID_HOME="${ANDROID_HOME}" \
       PATH="$PATH" \
@@ -1145,6 +1220,7 @@ emu = os.environ["EMU_BIN"]
 log_path = os.environ["EMU_LOG"]
 avd = os.environ["EMU_AVD"]
 window = os.environ.get("EMU_WINDOW", "0") == "1"
+agent = os.environ.get("EMU_AGENT", "0") == "1"
 no_snap = os.environ.get("EMU_NO_SNAPSHOT", "0") == "1"
 no_save = os.environ.get("EMU_NO_SNAPSHOT_SAVE", "0") == "1"
 args = [emu, "-avd", avd, "-netdelay", "none", "-netspeed", "full"]
@@ -1154,6 +1230,9 @@ if no_save:
     args += ["-no-snapshot-save"]
 if not window:
     args += ["-no-window", "-no-audio", "-no-boot-anim"]
+elif agent:
+    # Agent devices stay silent even if something asks for a window.
+    args += ["-no-audio", "-no-boot-anim"]
 env = {
     "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
     "HOME": os.environ.get("HOME", ""),
@@ -1180,15 +1259,20 @@ PY
 
   android_emu_wait_for_serial() {
     # Agent clones often need longer than the first qemu attach.
-    local deadline=$((SECONDS + 90))
+    local deadline=$((SECONDS + 90)) attach_started
+    attach_started="$(device_launch_timer_start)"
     serial=""
     while (( SECONDS < deadline )); do
       serial="$(android_emu_preferred_serial || true)"
       if [[ -n "$serial" ]]; then
+        device_launch_timer_report "$attach_started" "Android adb attach ${name}" \
+          "qemu slow start / console port race after emu kill"
         return 0
       fi
       sleep 1
     done
+    device_launch_timer_report "$attach_started" "Android adb attach ${name} (TIMED OUT)" \
+      "qemu failed to start / orphaned lock in the AVD directory"
     return 1
   }
 

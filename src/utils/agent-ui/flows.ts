@@ -90,6 +90,17 @@ export const AGENT_UI_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],
+  /** Zero-trip welcome on Travel Home (clears leftover seeds). */
+  'travel-home-empty': [
+    { op: 'dismiss', prefix: 'ontrack.travel.' },
+    { op: 'seed', to: 'travel-home-empty' },
+    { op: 'goto', to: 'travel' },
+    {
+      op: 'wait',
+      id: 'ontrack.travel.list.empty.create',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   /** Visual QA: Travel Home seed → Iceland itinerary (live sky when tier allows). */
   'travel-home-iceland': [
     { op: 'dismiss', prefix: 'ontrack.travel.' },
@@ -337,7 +348,18 @@ export const AGENT_UI_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],
+  /** Food module: seed profile/pantry/recipes/meal plan → Food home. */
   'food-demo': [
+    { op: 'seed', to: 'food-demo' },
+    { op: 'goto', to: 'food' },
+    {
+      op: 'wait',
+      id: 'ontrack.food.home.section.suggestions',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  /** Legacy meal-detail journey (previously named `food-demo`). */
+  'food-detail-demo': [
     { op: 'seed', to: 'food-demo' },
     { op: 'goto', to: `detail/food/${AGENT_UI_DEMO_FOOD_ACTIVITY_ID}` },
     {

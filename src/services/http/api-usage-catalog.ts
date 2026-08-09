@@ -120,6 +120,17 @@ export const API_USAGE_CATALOG: readonly ApiUsageCatalogEntry[] = [
     healthProbe: { kind: 'openai' },
   },
   {
+    id: 'openai-food',
+    name: 'OpenAI (food)',
+    provider: 'OpenAI',
+    usedBy: ['AI recipe ideas', 'Ingredient label scan'],
+    metering: 'app-rate-limit',
+    bucket: 'food',
+    configKey: 'openai',
+    guardNames: ['openai'],
+    healthProbe: { kind: 'openai' },
+  },
+  {
     id: 'openai-plant',
     name: 'OpenAI (plants)',
     provider: 'OpenAI',

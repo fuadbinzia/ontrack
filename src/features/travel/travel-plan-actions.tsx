@@ -1,4 +1,3 @@
-import * as WebBrowser from 'expo-web-browser';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/primitives';
@@ -6,6 +5,7 @@ import { spacing } from '@/design-system';
 import type { TravelPlan } from '@/features/travel/types';
 import { googleWeatherUrl } from '@/features/travel/weather';
 import { AgentUiIds } from '@/utils/agent-ui';
+import { openInAppBrowser } from '@/utils/safe-url';
 
 export function TravelPlanActions({
   plan,
@@ -23,7 +23,7 @@ export function TravelPlanActions({
         testID={AgentUiIds.travel.planDetail.weather}
         accessibilityLabel={`Weather for ${plan.destination}`}
         onPress={() =>
-          void WebBrowser.openBrowserAsync(
+          void openInAppBrowser(
             googleWeatherUrl(plan.destination, plan.startDate, plan.endDate),
           )
         }>

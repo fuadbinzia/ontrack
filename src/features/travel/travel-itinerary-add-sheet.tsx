@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import {
     BackHandler,
     Keyboard,
-    type KeyboardEvent,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -11,10 +10,10 @@ import {
     StyleSheet,
     useWindowDimensions,
     View,
+    type KeyboardEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BlurView } from 'expo-blur';
 import { radii } from '@/design-system';
 import {
     ITEM_KINDS,
@@ -26,7 +25,9 @@ import type { TravelItemKind } from '@/features/travel/types';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
+import { useUI } from '@/store/ui';
 import { AgentUiIds } from '@/utils/agent-ui';
+import { BlurView } from 'expo-blur';
 
 type FormProps = Omit<ComponentProps<typeof TravelItineraryForm>, 'kind' | 'hideSubmit'>;
 
@@ -68,7 +69,8 @@ export function TravelItineraryAddSheet({
   const { allowsBlur } = usePerformanceTier();
   const insets = useSafeAreaInsets();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const { spacing: rs } = useResponsive();
+  const { spacing: rs, layout } = useResponsive();
+  const measuredTabBarHeight = useUI((state) => state.tabBarHeight);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const dark = theme.name === 'dark';
   const kindLabel =
@@ -76,8 +78,17 @@ export function TravelItineraryAddSheet({
   const title =
     kind === 'moment' ? 'Add Moment' : kind === 'flight' ? 'Add Flights' : `Add ${kindLabel}`;
   const submitLabel = kind === 'moment' ? 'Add Moment' : 'Add to Timeline';
-  // Keep room for the status bar; sheet itself is always flush to the screen bottom.
-  const sheetMaxHeight = Math.round(windowHeight * 0.92);
+  // In-tree overlay sits under the tab dock — clear it (IME covers the dock).
+  const tabBarHeight =
+    measuredTabBarHeight > 0
+      ? measuredTabBarHeight
+      : layout.bottomNavBarBaseHeight + insets.bottom;
+  const sheetBottom = keyboardInset > 0 ? keyboardInset : tabBarHeight;
+  // Keep room for the status bar + docked IME / tab bar.
+  const sheetMaxHeight = Math.max(
+    320,
+    Math.round(windowHeight * 0.92) - sheetBottom,
+  );
 
   useEffect(() => {
     if (!visible) return;
@@ -132,7 +143,8 @@ export function TravelItineraryAddSheet({
         style={styles.backdrop}
       />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        // Inset lift owns avoidance (same as SheetScaffold).
+        behavior={undefined}
         keyboardVerticalOffset={0}
         pointerEvents="box-none"
         style={styles.modalRoot}>
@@ -145,9 +157,8 @@ export function TravelItineraryAddSheet({
                 ? 'rgba(255,255,255,0.22)'
                 : 'rgba(255,255,255,0.7)',
               maxHeight: sheetMaxHeight,
-              // Lift the whole sheet above the soft keyboard (chat composer pattern).
-              // Safe-area pad stays on the footer so glass paints flush to the floor.
-              marginBottom: keyboardInset,
+              // Clear tab dock (or IME when open). CTA scrolls with the form.
+              bottom: sheetBottom,
             },
           ]}>
           {Platform.OS === 'android' ? (
@@ -185,7 +196,7 @@ export function TravelItineraryAddSheet({
           )}
           <View
             style={[
-              styles.header,
+              styles.headerSlot,
               {
                 paddingHorizontal: rs.lg,
               },
@@ -200,43 +211,36 @@ export function TravelItineraryAddSheet({
             />
           </View>
 
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-            showsVerticalScrollIndicator={false}
-            bounces
-            style={styles.scroll}
-            contentContainerStyle={{
-              flexGrow: 0,
-              gap: rs.sm,
-              paddingHorizontal: rs.lg,
-              paddingTop: rs.xs,
-              paddingBottom: rs.md,
-            }}>
-            <TravelItineraryForm
-              kind={kind}
-              hideSubmit
-              onAdd={onAdd}
-              {...formProps}
-            />
-          </ScrollView>
-
-          <View
-            style={[
-              styles.footer,
-              {
+          <View style={styles.body}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+              automaticallyAdjustKeyboardInsets={false}
+              showsVerticalScrollIndicator={false}
+              bounces
+              style={styles.scroll}
+              contentContainerStyle={{
+                flexGrow: 0,
+                gap: rs.sm,
                 paddingHorizontal: rs.lg,
-                paddingTop: rs.sm,
-                paddingBottom: Math.max(insets.bottom, rs.sm),
-              },
-            ]}>
-            <ItinerarySheetSubmitButton
-              label={submitLabel}
-              onPress={onAdd}
-              testID={AgentUiIds.travel.itineraryAdd.submit}
-              icon={kind === 'moment' ? 'photo' : 'calendar-add'}
-            />
+                paddingTop: rs.xs,
+                paddingBottom: rs.md,
+              }}>
+              <TravelItineraryForm
+                kind={kind}
+                hideSubmit
+                onAdd={onAdd}
+                {...formProps}
+              />
+              <View style={{ paddingTop: rs.xs }}>
+                <ItinerarySheetSubmitButton
+                  label={submitLabel}
+                  onPress={onAdd}
+                  testID={AgentUiIds.travel.itineraryAdd.submit}
+                  icon={kind === 'moment' ? 'photo' : 'calendar-add'}
+                />
+              </View>
+            </ScrollView>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -259,6 +263,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    flexDirection: 'column',
     borderTopLeftRadius: radii.xl,
     borderTopRightRadius: radii.xl,
     borderBottomLeftRadius: 0,
@@ -268,7 +278,6 @@ const styles = StyleSheet.create({
     borderRightWidth: StyleSheet.hairlineWidth,
     borderCurve: 'continuous',
     overflow: 'hidden',
-    width: '100%',
   },
   androidGlassLight: {
     backgroundColor: 'rgba(255, 255, 255, 0.78)',
@@ -280,11 +289,15 @@ const styles = StyleSheet.create({
     experimental_backgroundImage:
       'linear-gradient(165deg, rgba(36,42,54,0.78) 0%, rgba(12,16,24,0.62) 50%, rgba(8,12,18,0.76) 100%)',
   },
-  header: {},
+  headerSlot: { flexShrink: 0 },
+  body: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 0,
+  },
   scroll: {
     flexGrow: 1,
     flexShrink: 1,
     minHeight: 0,
   },
-  footer: {},
 });

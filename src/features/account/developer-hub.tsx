@@ -20,6 +20,7 @@ import {
     SettingsGroup,
     SettingsToggleRow,
 } from '@/components/primitives';
+import { useAuthSession } from '@/features/auth/auth-provider';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useCloudSyncStatus } from '@/services/cloud/sync';
 import { apiRequest } from '@/services/http/api-client';
@@ -44,6 +45,13 @@ import { DeveloperInsightsPanel } from './developer-insights-panel';
 import { DeveloperReleaseNotesPanel } from './developer-release-notes-panel';
 import { formatBytes, listLocalStorageSizes, type StorageSizeRow } from './developer-storage';
 
+/**
+ * Loaded automatically when Dev Mode turns on, so the tabs a sandbox is most
+ * often opened for are populated without hunting for a chip. Everything here is
+ * purged again on exit.
+ */
+const DEV_MODE_AUTO_SEEDS: readonly AgentUiFixtureName[] = ['travel-home', 'food-demo'];
+
 function useOverlayEnabled() {
   return useSyncExternalStore(
     subscribeAgentUiOverlay,
@@ -58,6 +66,9 @@ export function DeveloperHub() {
   const overlayOn = useOverlayEnabled();
   const sync = useCloudSyncStatus();
   const devModeEnabled = useDevMode((state) => state.enabled);
+  const staySignedIn = useDevMode((state) => state.staySignedIn);
+  const setStaySignedIn = useDevMode((state) => state.setStaySignedIn);
+  const { lockSession } = useAuthSession();
   const [routeAlias, setRouteAlias] = useState('travel');
   const [seedMessage, setSeedMessage] = useState<string | undefined>();
   const [storageRows, setStorageRows] = useState<StorageSizeRow[]>([]);
@@ -97,7 +108,8 @@ export function DeveloperHub() {
     else if (name === 'health-demo') agentUiNavigate('/health');
     else if (name === 'vehicle-demo') agentUiNavigate('/vehicles');
     else if (name === 'plants-demo') agentUiNavigate('/plants');
-    else if (name === 'activity-demo' || name === 'food-demo') agentUiNavigate('/');
+    else if (name === 'activity-demo') agentUiNavigate('/');
+    else if (name === 'food-demo') agentUiNavigate('/food');
     else if (name === 'workouts-demo') agentUiNavigate('/workouts');
     else if (name === 'vision-board-demo') agentUiNavigate('/vision-board');
   };
@@ -112,13 +124,13 @@ export function DeveloperHub() {
     // Yield so the Switch + Demo seeds chrome paint before fixture work.
     deferUntilIdle(() => {
       if (!useDevMode.getState().enabled) return;
-      const result = seedAgentUiFixture('travel-home');
-      if (!result) {
+      const seeded = DEV_MODE_AUTO_SEEDS.filter((name) => seedAgentUiFixture(name));
+      if (seeded.length === 0) {
         setSeedMessage('Dev Mode on — tap a Demo seed below to load fixtures.');
         return;
       }
       // Stay on Developer Tools so Demo seeds appear under the toggle.
-      setSeedMessage(`Seeded ${result.fixture} — open Travel to browse.`);
+      setSeedMessage(`Seeded ${seeded.join(' + ')} — open Travel or Food to browse.`);
     });
   };
 
@@ -175,8 +187,8 @@ export function DeveloperHub() {
               label="Dev Mode"
               detail={
                 devModeEnabled
-                  ? 'On: live data is snapshotted and cloud sync is paused. Travel demos load automatically; other Demo seeds below stay local too. Everything seeded here is removed when you turn this off (real trips you create or edit are kept).'
-                  : 'Off by default (also clears on app restart). Turn on to sandbox your account — loads travel demos and shows Demo seeds. Agents also use this while seeding, then turn it off again.'
+                  ? 'On: live data is snapshotted and cloud sync is paused. Travel and Food demos load automatically; other Demo seeds below stay local too. Everything seeded here is removed when you turn this off (real trips you create or edit are kept).'
+                  : 'Off by default (also clears on app restart). Turn on to sandbox your account — loads travel and food demos and shows Demo seeds. Agents also use this while seeding, then turn it off again.'
               }
               detailNumberOfLines={5}
               value={devModeEnabled}
@@ -184,6 +196,20 @@ export function DeveloperHub() {
                 void toggleDevMode(next);
               }}
               testID={AgentUiIds.developer.devMode}
+            />
+            <SettingsToggleRow
+              label="Stay signed in"
+              detail="Off: closing the app fully means signing in again on next launch (guests re-enter from Welcome). Turn on to keep this device signed in while testing. Simulators and emulators never ask."
+              detailNumberOfLines={4}
+              value={staySignedIn}
+              onValueChange={setStaySignedIn}
+              testID={AgentUiIds.developer.staySignedIn}
+            />
+            <SettingsActionRow
+              label="Lock session now"
+              detail="Show the sign-in gate without signing out — the same screen a relaunch gives you."
+              testID={AgentUiIds.developer.lockSession}
+              onPress={lockSession}
             />
           </SettingsGroup>
           {devModeEnabled ? (

@@ -38,7 +38,14 @@ if [[ $# -lt 1 ]]; then
 fi
 
 # shellcheck source=lib/agent-ui-host.sh
-source "${ROOT}/scripts/lib/agent-ui-host.sh"
+LEASE_RC=0
+source "${ROOT}/scripts/lib/agent-ui-host.sh" || LEASE_RC=$?
+if (( LEASE_RC != 0 )); then
+  if (( LEASE_RC == 3 )); then
+    echo "verify: skipped UI verify — no free agent device slot (nothing tested; agent devices only)" >&2
+  fi
+  exit "${LEASE_RC}"
+fi
 
 agent_ui_ensure_app_up
 agent_ui_apply_wait_budget flow
@@ -84,8 +91,6 @@ raise SystemExit(0 if ok else 1)
 PY
 VERIFY_EXIT=$?
 
-# Headed Simulator/Galaxy open → sync that viewer to the verified surface.
-if [[ "${VERIFY_EXIT}" -eq 0 ]]; then
-  agent_ui_headed_viewer_handoff "$@" || true
-fi
+# No headed handoff: agents never drive the user's simulator/emulator, not even
+# to leave it on the verified surface (see .cursor/skills/agent-ui/SKILL.md).
 exit "${VERIFY_EXIT}"

@@ -92,6 +92,7 @@ export function createIdFromAgentUiItemIds(
 export type AgentUiFixtureName =
   | 'travel-demo'
   | 'travel-home'
+  | 'travel-home-empty'
   | 'travel-restore-documents'
   | 'checklist-demo'
   | 'grocery-demo'
@@ -656,6 +657,20 @@ export function seedAgentUiFixture(
     };
   }
 
+  if (fixture === 'travel-home-empty') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTravel } = require('@/store/travel') as typeof import('@/store/travel');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useUI } = require('@/store/ui') as typeof import('@/store/ui');
+    // Clear leftover seeds so zero-trip welcome is visible.
+    useTravel.getState().replacePlans([]);
+    useUI.getState().setTabBarCollapsed(false);
+    return {
+      fixture,
+      primaryId: 'travel-home-empty',
+    };
+  }
+
   if (fixture === 'checklist-demo') {
     const built = buildAgentUiDemoChecklist();
     upsertTodoFixtureLists({
@@ -828,6 +843,11 @@ export function seedAgentUiFixture(
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useSchedule } =
       require('@/store/schedule') as typeof import('@/store/schedule');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { seedFoodDemoStores } =
+      require('./fixtures-food') as typeof import('./fixtures-food');
+    const { recipeId } = seedFoodDemoStores();
+
     const activity = useSchedule.getState().saveEvent({
       id: AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
       detailKind: 'food',
@@ -851,6 +871,7 @@ export function seedAgentUiFixture(
       fixture,
       primaryId: activity.id,
       activityId: activity.id,
+      recipeId,
     };
   }
 
@@ -949,6 +970,9 @@ export function normalizeFixtureName(
     key === 'trip-travel-home-iceland'
   ) {
     return 'travel-home';
+  }
+  if (key === 'travel-home-empty' || key === 'travel-empty') {
+    return 'travel-home-empty';
   }
   if (
     key === 'travel-restore-documents' ||
@@ -1130,4 +1154,9 @@ export function purgeAgentUiDemoFixtures(): void {
   if (useVehicles.getState().vehicles.some((vehicle) => vehicle.id === AGENT_UI_DEMO_VEHICLE_ID)) {
     useVehicles.getState().removeVehicle(AGENT_UI_DEMO_VEHICLE_ID);
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { purgeFoodDemoFixtures } =
+    require('./fixtures-food') as typeof import('./fixtures-food');
+  purgeFoodDemoFixtures();
 }

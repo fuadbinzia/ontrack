@@ -2,6 +2,8 @@
 
 onTrack authenticates through Supabase with Google and Apple. The app contains no email/password sign-in or sign-up controls. Existing Supabase sessions remain valid on the device until the user signs out.
 
+**See also:** [Guest account data](./systems/guest-account-data.md) — what happens when a guest signs in with local plans (merge / discard / keep / start fresh).
+
 ## Supabase
 
 1. Enable Google and Apple under **Authentication → Providers**.

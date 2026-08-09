@@ -11,7 +11,7 @@
 import { categoryPalette, palette, type CategoryColorKey } from './colors';
 
 export type ThemeAppearance = 'light' | 'dark';
-export type ThemeFeatureScope = 'default' | 'travel' | 'plants' | 'vehicles';
+export type ThemeFeatureScope = 'default' | 'travel' | 'plants' | 'vehicles' | 'food';
 
 export interface Theme {
   name: ThemeAppearance;
@@ -142,6 +142,46 @@ export const darkVehicleTheme: Theme = {
   textOnAccent: '#F5FAFD',
 };
 
+export const lightFoodTheme: Theme = {
+  ...lightTheme,
+  // Warm-neutral editorial ivory — quiet chrome that recedes behind food
+  // photography; graphite accent instead of a hue so imagery owns the color.
+  backgroundPrimary: '#F7F4EE',
+  backgroundSecondary: '#FBF9F5',
+  backgroundElevated: '#FFFDF9',
+  backgroundSunken: '#EFEBE2',
+  separator: '#E1DBD0',
+  textPrimary: '#25231F',
+  textSecondary: '#6D6860',
+  textTertiary: '#918B82',
+  accentPrimary: palette.foodGraphite,
+  accentSoft: palette.foodGraphiteSoft,
+  accentFaint: palette.foodGraphiteFaint,
+  textOnAccent: '#F6F2EA',
+  success: '#3E8D68',
+  warning: '#B9852F',
+  danger: '#B95750',
+};
+
+export const darkFoodTheme: Theme = {
+  ...darkTheme,
+  backgroundPrimary: '#11110F',
+  backgroundSecondary: '#171613',
+  backgroundElevated: '#1C1B18',
+  backgroundSunken: '#171613',
+  separator: '#302D28',
+  textPrimary: '#F6F2EA',
+  textSecondary: '#C0B9AF',
+  textTertiary: '#8E887F',
+  accentPrimary: palette.foodGraphiteDark,
+  accentSoft: palette.foodGraphiteSoftDark,
+  accentFaint: palette.foodGraphiteFaintDark,
+  textOnAccent: '#1B1916',
+  success: '#3E8D68',
+  warning: '#B9852F',
+  danger: '#B95750',
+};
+
 export interface CategoryColors {
   main: string;
   tint: string;
@@ -196,6 +236,9 @@ export function resolveBaseTheme(scope: ThemeFeatureScope, appearance: ThemeAppe
   }
   if (scope === 'vehicles') {
     return appearance === 'dark' ? darkVehicleTheme : lightVehicleTheme;
+  }
+  if (scope === 'food') {
+    return appearance === 'dark' ? darkFoodTheme : lightFoodTheme;
   }
   return appearance === 'dark' ? darkTheme : lightTheme;
 }

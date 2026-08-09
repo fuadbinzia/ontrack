@@ -1,4 +1,3 @@
-import * as WebBrowser from 'expo-web-browser';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
@@ -54,6 +53,7 @@ import { TravelTimelineNodeStructured } from '@/features/travel/travel-timeline-
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { openInAppBrowser } from '@/utils/safe-url';
 import { useState } from 'react';
 
 export function TravelTimelineNode({
@@ -188,7 +188,7 @@ export function TravelTimelineNode({
       setBookingOpen(resolved);
       return;
     }
-    void WebBrowser.openBrowserAsync(resolved.url);
+    void openInAppBrowser(resolved.url);
   };
   const isMoment = item.kind === 'moment';
   const isStructuredTravelKind =

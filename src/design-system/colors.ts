@@ -45,6 +45,14 @@ export const palette = {
   plantGreenSoftDark: '#4E8A60',
   plantGreenFaintDark: '#1B3021',
 
+  // Food — warm-neutral graphite/ivory, scoped to the Food feature
+  foodGraphite: '#292722',
+  foodGraphiteSoft: '#37332D',
+  foodGraphiteFaint: '#E7E1D7',
+  foodGraphiteDark: '#EEE9E0',
+  foodGraphiteSoftDark: '#D7D1C5',
+  foodGraphiteFaintDark: '#34312C',
+
   // Vehicles — steel blues, scoped to the Vehicles feature
   vehicleSteel: '#3A5F7A',
   vehicleSteelSoft: '#5A7F99',

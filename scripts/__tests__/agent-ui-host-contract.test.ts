@@ -141,7 +141,54 @@ describe('agent-ui host scripts contract', () => {
     expect(metro).toContain('8191');
   });
 
-  it('claims a dedicated agent device pool slot (max 5) across entry points', () => {
+  it('routes Android to its pool slot by daemon host port (H17)', () => {
+    const pool = read('scripts/lib/agent-ui-pool.sh');
+    expect(pool).toContain('export AGENT_UI_POOL_HARD_MAX');
+
+    const daemon = read('scripts/lib/agent_ui_daemon.py');
+    expect(daemon).toContain('AGENT_UI_POOL_HARD_MAX');
+    expect(daemon).toContain('def _slot_port_count(');
+    expect(daemon).toContain('_slot_port_count()');
+    expect(daemon).toContain('def slot_from_port(');
+    expect(daemon).toContain('slot = self.slot_from_port() or slot');
+
+    const android = read('scripts/lib/android-emulator.sh');
+    expect(android).toContain('daemon_host_port=$((daemon_port + AGENT_UI_SLOT))');
+    expect(android).toContain('reverse --remove');
+    expect(android).toContain('android_emu_force_stop_if_wedged');
+    expect(android).toContain('android_emu_prepare_metro_dev_client');
+
+    const host = read('scripts/lib/agent-ui-host.sh');
+    expect(host).toContain('agent-ui-dev-client.sh');
+    expect(host).toContain('android_emu_prepare_metro_dev_client');
+    expect(host).toMatch(
+      /agent_ui_pin_slot\(\)[\s\S]*?agent_ui_is_android && return 0/,
+    );
+    expect(host).toMatch(
+      /agent_ui_write_slot_pin\(\)[\s\S]*?agent_ui_is_android && return 0/,
+    );
+    expect(host).not.toMatch(/Android run-as files/);
+
+    const ensure = read('scripts/ensure-packager.sh');
+    expect(ensure).toContain('agent-ui-dev-client.sh');
+    expect(ensure).toContain('agent_ui_dev_client_metro_url');
+    expect(ensure).toContain('android_emu_prepare_metro_dev_client');
+    expect(ensure).not.toContain('declare -F agent_ui_write_slot_pin');
+
+    const bridgePy = read('scripts/lib/agent_ui_bridge.py');
+    expect(bridgePy).not.toContain('write_android_slot_pin_file');
+    expect(bridgePy).toMatch(
+      /def write_slot_pin_file[\s\S]*?android[\s\S]*?return True/,
+    );
+    expect(bridgePy).not.toContain('Android files');
+
+    const bridge = read('src/utils/agent-ui/http-bridge.ts');
+    expect(bridge).not.toContain('10.0.2.2');
+    expect(bridge).toMatch(/Platform\.OS !== 'android'[\s\S]*?__agent_ui/);
+    expect(bridge).toMatch(/Platform\.OS === 'android' \|\| getAgentUiSlot/);
+  });
+
+  it('claims a dedicated agent device pool slot (max 2/platform) across entry points', () => {
     const host = read('scripts/lib/agent-ui-host.sh');
     const pool = read('scripts/lib/agent-ui-pool.sh');
     expect(host).toContain('agent-ui-pool.sh');
@@ -156,10 +203,11 @@ describe('agent-ui host scripts contract', () => {
     expect(pool).toContain('ios_sim_shutdown_agent_named');
     expect(pool).toContain('android_emu_shutdown_named');
     expect(pool).toContain('AGENT_UI_KEEP_DEVICES');
-    expect(pool).toContain('AGENT_UI_KEEP_IOS');
-    expect(pool).toContain('AGENT_UI_KEEP_ANDROID');
+    expect(pool).toContain('AGENT_UI_KEEP_IOS:=0');
+    expect(pool).toContain('AGENT_UI_KEEP_ANDROID:=0');
     expect(pool).toContain('agent_ui_pool_keep_ios');
     expect(pool).toContain('agent_ui_pool_keep_android');
+    expect(pool).toContain('shutting down orphaned');
     expect(pool).toContain('agent_ui_pool_gc_idle_ios');
     expect(pool).toContain('agent_ui_pool_gc_idle_android');
     expect(pool).toContain('agent_ui_pool_slot_ios_warm');
@@ -171,6 +219,22 @@ describe('agent-ui host scripts contract', () => {
     expect(pool).toContain('AGENT_UI_POOL_MAX');
     expect(pool).toContain('onTrack Agent');
     expect(pool).toContain('onTrack_Agent_');
+    // Policy: 2 iOS + 2 Android agent devices, hard-capped and not overridable.
+    expect(pool).toContain('AGENT_UI_POOL_HARD_MAX=2');
+    expect(pool).toContain('AGENT_UI_POOL_MAX:=2');
+    // No free slot → stop without testing (never queue, never a user device).
+    expect(pool).toContain('AGENT_UI_LOCK_WAIT_SECS:=0}');
+    expect(pool).toContain('AGENT_UI_NO_SLOT_EXIT=3');
+    expect(pool).toContain('stopping without UI verify');
+    expect(pool).toContain('never fall back to a non-agent device');
+    // Agent-only binding guard + orphan reaping + graceful shutdown.
+    expect(pool).toContain('agent_ui_assert_agent_device_bound');
+    expect(pool).toContain('agent_ui_pool_reap_orphans');
+    expect(pool).toMatch(/trap 'agent_ui_release_lease' EXIT INT TERM HUP/);
+    expect(host).toContain('agent_ui_assert_agent_device_bound');
+    expect(host).toContain('AGENT_UI_POOL_MAX:=2');
+    expect(host).toContain('AGENT_UI_LOCK_WAIT_SECS:=0}');
+    expect(host).toContain('AGENT_UI_DEVICE_LAUNCH_BUDGET_SECS:=30');
     expect(host).toContain('AGENT_UI_SKIP_LEASE');
     expect(host).toContain('AGENT_UI_LOCK_WAIT_SECS');
     expect(host).toContain('AGENT_UI_LOCK_DIR');
@@ -180,6 +244,9 @@ describe('agent-ui host scripts contract', () => {
     // Fresh pool slots: heal may boot without install — fall through to clone.
     expect(host).toContain('agent_ui_pool_ensure_app_installed');
     expect(host).toContain('Fall through to clone/launch');
+    // H21: cold boot must not burn ensure-packager reconnect before launch.
+    expect(host).toContain('AGENT_UI_PACKAGER_SKIP_RECONNECT=1');
+    expect(host).toContain('booting device');
     expect(host).toContain('agent_ui_soft_reconnect_dev_client');
     expect(host).toContain('agent_ui_device_host_responds');
     expect(host).toContain('agent_ui_restart_device');
@@ -207,66 +274,45 @@ describe('agent-ui host scripts contract', () => {
     expect(verifyBoth).toContain('AGENT_UI_LOCK_HELD');
     expect(verifyBoth).toContain('AGENT_UI_SLOT');
     expect(verifyBoth).toContain('AGENT_UI_SKIP_LEASE');
+    // H20: shared HMR beacon bump before parallel iOS/Android verify.
+    expect(verifyBoth).toContain('ensure-js-fresh --bump-only');
+    expect(verifyBoth).toContain('AGENT_UI_EXPECTED_HMR_BEACON');
     // Android side must wait for a fully booted emulator before verify.
     expect(verifyBoth).toContain('android_emu_ensure_ready');
     expect(verifyBoth).toContain('ensuring Android emulator is up and ready');
     expect(verifyBoth).toContain('soft reconnect');
     expect(verifyBoth).toContain('iOS app up but bridge quiet');
     expect(verifyBoth).not.toMatch(/ensure-packager\.sh" --start --android \|\| true/);
-    // Headed Simulator open → handoff preferred Pro (not stale Agent N window).
-    expect(verifyBoth).toContain('agent_ui_headed_viewer_handoff');
-    // Dual-run children must not mid-handoff Galaxy (looks hung after iOS ok).
-    expect(verifyBoth).toContain('AGENT_UI_SKIP_HEADED_HANDOFF=1');
-    // Pool ignores sticky keep when GUI closed; live headed Galaxy adopts.
-    expect(verifyBoth).toContain('sticky headed keep ignored');
-    expect(verifyBoth).toContain('ONTRACK_ANDROID_KEEP_HEADED=0');
-    expect(verifyBoth).toContain('live headed');
-    expect(verifyBoth).toContain('not killing user window');
-    expect(verifyBoth).toContain('android_emu_live_headed_galaxy_name');
-    expect(host).toContain('agent_ui_headed_ios_handoff');
-    expect(host).toContain('headed viewer handoff');
-    expect(host).toContain('AGENT_UI_SKIP_HEADED_HANDOFF');
-    expect(host).toContain('Never re-run --flow here');
-    expect(host).toContain('not cold-booting');
-    expect(host).toContain('agents stay warm');
-    // Ready check BEFORE adopt — never "adopting" then "skipped".
-    expect(host).toMatch(
-      /agent_ui_headed_android_handoff\(\)[\s\S]*?android_emu_avd_is_ready_named[\s\S]*?android_emu_adopt_android_for_headed_host/,
-    );
-    // Android handoff must not SurfaceView-heal (≤25s) after verify already passed.
-    expect(host).toContain('Never call android_emu_ensure_app_surface here');
-    expect(host).toContain('AGENT_UI_HEADED_ANDROID_HANDOFF_SECS');
-    expect(host).not.toMatch(
-      /agent_ui_headed_android_handoff\(\)[\s\S]*?\bandroid_emu_ensure_app_surface\b(?! here)/,
-    );
-    // Lease sets ONTRACK_IOS_SIMULATOR=Agent N — handoff must use viewer name.
-    expect(host).toContain('ios_sim_viewer_name');
-    expect(host).toContain('ONTRACK_IOS_SIMULATOR_UDID=');
-    expect(host).not.toMatch(
-      /agent_ui_headed_ios_handoff\(\)[\s\S]*?name="\$\(ios_sim_preferred_name\)"/,
-    );
-    // Soft reconnect first — hard terminate races Fabric BlurView remounts.
-    expect(host).toContain('Prefer soft reconnect');
-    expect(host).toContain('app context has been lost');
-    expect(host).toMatch(
-      /agent_ui_headed_ios_handoff\(\)[\s\S]*?agent_ui_soft_reconnect_dev_client[\s\S]*?simctl terminate/,
-    );
+    // Agents never touch the user's devices: no headed viewer handoff anywhere,
+    // and no adopting a live headed Galaxy for an agent run.
+    for (const script of [
+      'scripts/agent-ui-verify-both.sh',
+      'scripts/agent-ui-verify.sh',
+      'scripts/lib/agent-ui-host.sh',
+    ]) {
+      expect(read(script)).not.toContain('agent_ui_headed_viewer_handoff');
+      expect(read(script)).not.toContain('agent_ui_headed_ios_handoff');
+      expect(read(script)).not.toContain('agent_ui_headed_android_handoff');
+      expect(read(script)).not.toContain('agent_ui_arrange_headed_device_windows');
+    }
+    expect(verifyBoth).not.toContain('AGENT_UI_SKIP_HEADED_HANDOFF');
+    expect(verifyBoth).not.toContain('android_emu_adopt_android_for_headed_host');
+    expect(verifyBoth).toContain('No headed viewer handoff');
     // Headed WINDOW=1 still hard-fails alert OCR; headless Agent pool soft-continues.
     expect(host).toContain(
       'iOS system-alert clear failed while headed Simulator is required',
     );
     expect(host).toContain('ONTRACK_IOS_SIMULATOR_WINDOW');
     expect(host).toContain('continuing (bridge is up)');
-    // Headed layout: Android left, iOS right.
-    expect(host).toContain('agent_ui_arrange_headed_device_windows');
-    expect(host).toContain('ios_sim_place_window_named');
-    expect(host).toContain('android_emu_place_window left');
     const simLib = read('scripts/lib/ios-simulator.sh');
-    expect(simLib).toContain('ios_sim_focus_window_named');
     expect(simLib).toContain('ios_sim_place_window_named');
-    expect(simLib).toContain('ios_sim_viewer_name');
     expect(simLib).toContain('onTrack\\ Agent*|onTrack_Agent*');
-    expect(read('scripts/agent-ui-verify.sh')).toContain('agent_ui_headed_viewer_handoff');
+    // Launch budget: 30s, instrumented on both boot waits.
+    const launchBudget = read('scripts/lib/device-launch-budget.sh');
+    expect(launchBudget).toContain('AGENT_UI_DEVICE_LAUNCH_BUDGET_SECS:=30');
+    expect(launchBudget).toContain('device_launch_timer_report');
+    expect(simLib).toContain('device-launch-budget.sh');
+    expect(simLib).toContain('device_launch_timer_report');
 
     const emu = read('scripts/lib/android-emulator.sh');
     // Pool kills must be fast (no 20s snapshot save) and peers stay up.
@@ -287,25 +333,30 @@ describe('agent-ui host scripts contract', () => {
     expect(emu).toContain('android-headed.keep');
     expect(emu).toContain('clearing stale headed keep');
     expect(emu).toContain('not running headed');
-    expect(emu).toContain('android_emu_adopt_android_for_headed_host');
-    expect(emu).toContain('adopting headed');
     expect(emu).toContain('cannot run agent beside GUI');
     expect(emu).toContain('NEVER run agents');
     expect(emu).toContain('Never kill a live headed GUI');
+    // Agent AVDs stay silent even if a window is requested.
+    expect(emu).toContain('EMU_AGENT');
+    expect(emu).toContain('Agent devices stay silent');
+    // Adoption of the user's Galaxy is refused while a pool lease is held.
+    expect(emu).toMatch(/pool lease[\s\S]*?never adopt|never adopt[\s\S]*?pool/i);
+    expect(emu).toContain('device_launch_timer_report');
 
     // Galaxy must not spoof android bridge status for an Agent AVD.
     expect(host).toContain('agent_ui_app_process_running || return 1');
     expect(verifyBoth).toContain('Android still quiet');
     expect(verifyBoth).toContain('agent_ui_bridge_answers');
-    expect(verifyBoth).toContain('android_emu_adopt_android_for_headed_host');
     expect(verifyBoth).toContain('ensuring Android emulator is up and ready');
 
     const bridge = read('scripts/lib/agent_ui_bridge.py');
     expect(bridge).toContain('has_flow_land');
     expect(bridge).toContain('and not has_flow_land');
-    expect(bridge).toContain('write_android_slot_pin_file');
     expect(bridge).toContain('write-slot-pin');
-    expect(bridge).toContain('files/agent-ui-pin.json');
+    // iOS pin file only — Android uses host-port routing (H17).
+    expect(bridge).toContain('Documents');
+    expect(bridge).toContain('agent-ui-pin.json');
+    expect(bridge).not.toContain('write_android_slot_pin_file');
 
     const ensure = read('scripts/ensure-packager.sh');
     expect(ensure).toContain('AGENT_UI_SKIP_LEASE=1');
@@ -364,6 +415,65 @@ test "$rc" -ne 0
 grep -qE 'agent device slot|device slots are busy' /tmp/agent-ui-pool-wait.err
 `;
     execFileSync('bash', ['-c', script], { encoding: 'utf8', timeout: 30_000 });
+  });
+
+  it('signs each agent device into its own agent_N account (dev-only, env creds)', () => {
+    const creds = read('scripts/lib/agent-credentials.sh');
+    const login = read('scripts/agent-ui-login.sh');
+    const setup = read('scripts/agent-accounts-setup.sh');
+    const bridge = read('scripts/lib/agent_ui_bridge.py');
+    const host = read('scripts/lib/agent-ui-host.sh');
+
+    expect(existsSync(join(root, 'scripts/lib/agent_accounts_setup.py'))).toBe(true);
+    expect(setup).toContain('agent_accounts_setup.py');
+    expect(creds).toContain('agent_creds_account_index');
+    expect(creds).toContain('agent_creds_load_account');
+    expect(creds).toContain('ONTRACK_AGENT_ACCOUNT_');
+    expect(creds).toContain('.env.local');
+    expect(login).toContain('agent_creds_load_account');
+    expect(login).toContain('agent_ui_send_op login');
+    expect(login).toContain('--guest');
+    expect(host).toContain('ONTRACK_AGENT_ACCOUNT_PASSWORD_RESOLVED');
+    // Passwords only travel by env — never argv (ps / shell history leak).
+    expect(bridge).toContain('ONTRACK_AGENT_ACCOUNT_PASSWORD_RESOLVED');
+    expect(bridge).not.toContain('"--password"');
+    // Synthetic addresses only (no personal identifiers in source).
+    for (const text of [creds, login, setup, read('scripts/lib/agent_accounts_setup.py')]) {
+      expect(text).not.toMatch(/@(gmail|icloud|outlook|hotmail|yahoo)\./i);
+    }
+
+    // Functional: index = (android ? 2 : 0) + slot, and the default email follows.
+    const script = `
+set -euo pipefail
+ROOT=${JSON.stringify(root)}
+export AGENT_UI_ROOT="$ROOT"
+# shellcheck disable=SC1091
+source "$ROOT/scripts/lib/agent-credentials.sh"
+AGENT_UI_SLOT=1 test "$(AGENT_UI_SLOT=1 agent_creds_account_index ios)" = 1
+test "$(AGENT_UI_SLOT=2 agent_creds_account_index ios)" = 2
+test "$(AGENT_UI_SLOT=1 agent_creds_account_index android)" = 3
+test "$(AGENT_UI_SLOT=2 agent_creds_account_index android)" = 4
+# Unleased device resolves no account at all.
+if AGENT_UI_SLOT= agent_creds_account_index ios 2>/dev/null; then exit 1; fi
+# Shared password fallback + default synthetic email.
+(
+  export AGENT_UI_SLOT=2 ONTRACK_AGENT_ACCOUNT_PASSWORD=test-only
+  agent_creds_load_account android
+  test "$ONTRACK_AGENT_ACCOUNT_INDEX" = 4
+  test "$ONTRACK_AGENT_ACCOUNT_EMAIL" = "agent_4@example.com"
+)
+# No password anywhere → caller must skip sign-in, not fail hard.
+if ( export AGENT_UI_SLOT=1; unset ONTRACK_AGENT_ACCOUNT_PASSWORD; agent_creds_load_account ios ); then
+  exit 1
+fi
+echo "agent account creds ok"
+`;
+    const out = execFileSync('bash', ['-c', script], {
+      encoding: 'utf8',
+      timeout: 30_000,
+      env: { ...process.env, HOME: '/tmp' },
+    });
+    expect(out).toContain('agent account creds ok');
   });
 
   it('verification entry points gate on app-up before bridge work', () => {

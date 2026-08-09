@@ -11,6 +11,7 @@ import {
     StyleSheet,
     useWindowDimensions,
     View,
+    type KeyboardEvent,
     type StyleProp,
     type ViewStyle,
 } from 'react-native';
@@ -104,7 +105,7 @@ export interface SheetScaffoldProps extends PropsWithChildren {
   surface?: 'solid' | 'glass';
 }
 
-/** Canonical modal sheet: safe areas, neutral X, scroll body, and fixed footer. */
+/** Canonical modal sheet: safe areas, neutral X, scroll body, and in-scroll CTA. */
 export function SheetScaffold({
   visible,
   eyebrow,
@@ -130,11 +131,17 @@ export function SheetScaffold({
   const theme = useTheme();
   const { allowsBlur } = usePerformanceTier();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const { spacing, layout } = useResponsive();
   const scrollRef = useRef<ScrollView>(null);
   const [lockedHeight, setLockedHeight] = useState<number>();
-  const availableHeight = Math.max(320, windowHeight - insets.top - spacing.sm);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  // Room above the soft keyboard so fields + footer stay reachable (Android
+  // Modals ignore windowSoftInputMode; absolute bottom sheets need an inset).
+  const availableHeight = Math.max(
+    320,
+    windowHeight - insets.top - spacing.sm - keyboardInset,
+  );
   const sheetMaxHeight =
     maxHeight == null ? Math.round(availableHeight * 0.98) : Math.min(maxHeight, availableHeight);
   const sheetMinHeight =
@@ -148,10 +155,43 @@ export function SheetScaffold({
   useEffect(() => {
     if (!visible) {
       setLockedHeight(undefined);
+      setKeyboardInset(0);
       return;
     }
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [scrollKey, title, visible]);
+
+  useEffect(() => {
+    if (!visible) {
+      setKeyboardInset(0);
+      return;
+    }
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillChangeFrame' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const updateInset = (event: KeyboardEvent) => {
+      Keyboard.scheduleLayoutAnimation(event);
+      const { height: kbHeight, screenY, width: kbWidth } = event.endCoordinates;
+      // Floating / side IMEs should not lift the sheet; docked IMEs must.
+      const fullWidth = kbWidth >= windowWidth * 0.8;
+      if (!fullWidth) {
+        setKeyboardInset(0);
+        return;
+      }
+      const fromScreenY = Math.max(0, windowHeight - screenY - insets.bottom);
+      const fromHeight = Math.max(0, kbHeight - insets.bottom);
+      setKeyboardInset(fromScreenY > 0 ? fromScreenY : fromHeight);
+    };
+    const showSubscription = Keyboard.addListener(showEvent, updateInset);
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [visible, insets.bottom, windowHeight, windowWidth]);
 
   // Dismiss unmounts immediately — holding a Modal for exit anim traps touches
   // and makes the next navigation feel stuck under an invisible overlay.
@@ -206,7 +246,9 @@ export function SheetScaffold({
           />
         ) : null}
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          // Inset lift owns avoidance — KAV padding double-counts with absolute
+          // bottom sheets (and Android never honored behavior here anyway).
+          behavior={undefined}
           keyboardVerticalOffset={0}
           pointerEvents="box-none"
           style={[styles.avoid, { paddingTop: insets.top }]}>
@@ -239,6 +281,8 @@ export function SheetScaffold({
                 minHeight: sheetMinHeight,
                 height: lockHeight ? lockedHeight : undefined,
                 paddingHorizontal: layout.screenPadding,
+                // Lift flush-bottom sheet above docked IME (chat / add-sheet pattern).
+                bottom: keyboardInset,
               },
             ]}>
             {/*
@@ -284,6 +328,7 @@ export function SheetScaffold({
               )
             ) : null}
             <View
+              style={styles.headerSlot}
               onStartShouldSetResponder={() => {
                 Keyboard.dismiss();
                 return false;
@@ -300,31 +345,37 @@ export function SheetScaffold({
                 closeAppearance={glass ? 'glass' : 'solid'}
               />
             </View>
-            <ScrollView
-              key={scrollKey ?? 'sheet'}
-              ref={scrollRef}
-              scrollEnabled={scrollEnabled}
-              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-              contentInsetAdjustmentBehavior="never"
-              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              style={styles.scroll}
-              contentContainerStyle={[
-                styles.content,
-                {
-                  gap: spacing.lg,
-                  paddingBottom: footer ? spacing.md : bottomPad,
-                },
-                contentContainerStyle,
-              ]}>
-              {children}
-            </ScrollView>
-            {footer ? (
-              <View style={{ paddingTop: spacing.md, paddingBottom: bottomPad }}>
-                {footer}
-              </View>
-            ) : null}
+            {/*
+              Bound the ScrollView viewport so tall forms scroll under maxHeight
+              (Android Yoga especially). CTA lives in-scroll — never pinned under
+              the tab dock / home indicator.
+            */}
+            <View style={styles.body}>
+              <ScrollView
+                key={scrollKey ?? 'sheet'}
+                ref={scrollRef}
+                scrollEnabled={scrollEnabled}
+                // Sheet lifts via keyboardInset — extra scroll insets would double-pad.
+                automaticallyAdjustKeyboardInsets={false}
+                contentInsetAdjustmentBehavior="never"
+                keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                style={styles.scroll}
+                contentContainerStyle={[
+                  styles.content,
+                  {
+                    gap: spacing.lg,
+                    paddingBottom: bottomPad,
+                  },
+                  contentContainerStyle,
+                ]}>
+                {children}
+                {footer ? (
+                  <View style={{ paddingTop: spacing.xs }}>{footer}</View>
+                ) : null}
+              </ScrollView>
+            </View>
           </Animated.View>
         </KeyboardAvoidingView>
         <AppPromptHost embedded />
@@ -347,6 +398,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: '100%',
+    flexDirection: 'column',
     // Absolute bottom pin — flex-end alone can leave a gap on Android when the
     // dialog window / nav-bar insets disagree with Yoga.
     borderTopLeftRadius: radii.xl,
@@ -372,6 +424,16 @@ const styles = StyleSheet.create({
     experimental_backgroundImage:
       'linear-gradient(165deg, rgba(36,42,54,0.62) 0%, rgba(12,16,24,0.48) 50%, rgba(8,12,18,0.58) 100%)',
   },
-  scroll: { flexShrink: 1 },
+  headerSlot: { flexShrink: 0 },
+  body: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 0,
+  },
+  scroll: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 0,
+  },
   content: { flexGrow: 1 },
 });

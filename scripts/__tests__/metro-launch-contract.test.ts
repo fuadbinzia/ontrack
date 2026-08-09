@@ -106,6 +106,21 @@ describe('metro launch command contract', () => {
     expect(ensure).toMatch(/METRO_RELAUNCHED.*==\s*"1"[\s\S]*?reconnect_dev_client/);
   });
 
+  it('skips reconnect on cold boot heal and re-launches a dead iOS process (H21)', () => {
+    // H19 shutdown leaves the app dead. Waiting a full reconnect timeout before
+    // the host launches doubles cold-path time and looks like "reinstalling".
+    const ensure = read('scripts/ensure-packager.sh');
+    expect(ensure).toContain('AGENT_UI_PACKAGER_SKIP_RECONNECT');
+    expect(ensure).toContain('app_process_running');
+    expect(ensure).toContain('app process never started after launch');
+    expect(ensure).toContain('App not running — launching + connecting to Metro');
+    expect(ensure).not.toContain('Checking app install on');
+
+    const host = read('scripts/lib/agent-ui-host.sh');
+    expect(host).toContain('AGENT_UI_PACKAGER_SKIP_RECONNECT=1');
+    expect(host).toContain('booting device');
+  });
+
   it('heals a persisted Fast Refresh-off dev client toggle', () => {
     // RCTDevMenu.hotLoadingEnabled=0 persists per install and silently
     // disables HMR regardless of Metro/Watchman health.
@@ -113,6 +128,38 @@ describe('metro launch command contract', () => {
     expect(ensure).toContain('ensure_fast_refresh_enabled');
     expect(ensure).toContain('hotLoadingEnabled = 0');
     expect(ensure).toMatch(/defaults write "\$BUNDLE_ID" RCTDevMenu -dict-add hotLoadingEnabled -bool YES/);
+  });
+
+  it('does not trust Android "already connected" without HMR beacon freshness (H20)', () => {
+    // Warm Android keeps answering the agent-ui bridge on a stale bundle while
+    // iOS reconnects — new testIDs assert-miss only on Android. ensure-packager
+    // and verify must prove the Metro HMR beacon before treating the app as ready.
+    const ensure = read('scripts/ensure-packager.sh');
+    expect(ensure).toContain('ensure-js-fresh');
+    expect(ensure).toContain('JS matches Metro HMR beacon');
+    expect(ensure).not.toMatch(
+      /App already connected to packager \(no reconnect\)\.\s*\n\s*exit 0/,
+    );
+
+    const bridge = read('scripts/lib/agent_ui_bridge.py');
+    expect(bridge).toContain('def ensure_js_fresh');
+    expect(bridge).toContain('def beacon_satisfies');
+    expect(bridge).toContain('hmrBeacon');
+    expect(bridge).toContain('AGENT_UI_SKIP_JS_FRESH');
+    expect(bridge).toContain('AGENT_UI_EXPECTED_HMR_BEACON');
+    // verify always proves freshness before land/assert (H20).
+    expect(bridge).toContain('# H20: warm Android bridge ≠ fresh JS');
+    expect(bridge).toContain('fresh = ensure_js_fresh');
+    // Watcher may re-bump mid-wait — accept app beacon newer than the minimum.
+    expect(bridge).toContain('hmr_beacon_ns(app_beacon) >= hmr_beacon_ns(minimum)');
+
+    const verifyBoth = read('scripts/agent-ui-verify-both.sh');
+    expect(verifyBoth).toContain('ensure-js-fresh --bump-only');
+    expect(verifyBoth).toContain('AGENT_UI_EXPECTED_HMR_BEACON');
+
+    const persist = read('src/utils/agent-ui/persist.ts');
+    expect(persist).toContain('hmrBeacon');
+    expect(persist).toContain('METRO_HMR_BEACON');
   });
 
   it("live probe trusts Metro's watchman health check, not subscription since", () => {
@@ -238,11 +285,24 @@ describe('metro launch command contract', () => {
     expect(alerts).toContain('_is_location_prompt');
     expect(alerts).toContain('allow while using app');
     expect(alerts).toContain('DEV_MENU_PHRASES');
+    expect(alerts).toContain('DEV_MENU_INTRO_PHRASES');
     expect(alerts).toContain('DEV_MENU_TOOLS_PHRASES');
     expect(alerts).toContain('DEV_MENU_ACCEPT_PRIORITY');
     expect(alerts).toContain('_is_dev_menu_prompt');
+    expect(alerts).toContain('_is_dev_menu_intro');
     expect(alerts).toContain('_is_dev_menu_tools');
+    // Intro has Continue; tools Escape. "runtime version" must not force Escape.
+    // Apple Account password sheet → Not Now (never Escape while that label is OCR'd).
+    expect(alerts).toContain('dismissed Expo developer-menu intro');
     expect(alerts).toContain('dismissing Expo Dev Menu (Escape)');
+    expect(alerts).toContain('APPLE_ACCOUNT_PHRASES');
+    expect(alerts).toContain("tapping '{label}' on system sheet");
+    expect(alerts).toContain('Not Now');
+    const toolsBlock = alerts.slice(
+      alerts.indexOf('DEV_MENU_TOOLS_PHRASES'),
+      alerts.indexOf('DEV_MENU_PHRASES ='),
+    );
+    expect(toolsBlock).not.toContain('runtime version');
   });
 
   it('times out wedged simctl RPCs and serializes ensure-packager device ops', () => {
@@ -336,8 +396,9 @@ describe('metro launch command contract', () => {
     // Warm agent reconnect: cold 90s budget only when app process missing.
     const packager = read('scripts/ensure-packager.sh');
     expect(packager).toContain('extra=90');
+    expect(packager).toContain('extra=45');
     expect(packager).toContain('pidof "$BUNDLE_ID"');
-    expect(packager).toContain("Warm reuse: app already running");
+    expect(packager).toContain('agent_ui_dev_client_metro_url');
     const ensure = read('scripts/ensure-android-emulator.sh');
     expect(ensure).toContain('ensure_preferred_android_emulator');
     expect(ensure).toContain('--window');

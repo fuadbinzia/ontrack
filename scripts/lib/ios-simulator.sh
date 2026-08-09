@@ -28,6 +28,11 @@
 # terminate / launch concurrently).
 : "${ONTRACK_SIMCTL_TIMEOUT_SECS:=10}"
 
+# Launch-budget helper (agent policy: >30s to launch is a defect to diagnose).
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/device-launch-budget.sh"
+
+
 # Run `xcrun simctl …` with a hard alarm so agents fail fast instead of wedging.
 # Usage: ios_simctl_timed [secs] <simctl-args…>
 # Exit 142 (SIGALRM) on timeout. Default secs: ONTRACK_SIMCTL_TIMEOUT_SECS.
@@ -903,12 +908,16 @@ ensure_preferred_ios_simulator() {
     ios_sim_open_focused "$udid"
   fi
 
+  local launch_started
+  launch_started="$(device_launch_timer_start)"
   local deadline=$((SECONDS + 60))
   while (( SECONDS < deadline )); do
     if ! ios_sim_want_window && [[ "$name" == onTrack\ Agent* ]]; then
       ios_sim_park_agent_windows
     fi
     if xcrun simctl list devices booted 2>/dev/null | grep -q "$udid"; then
+      device_launch_timer_report "$launch_started" "iOS boot ${name}" \
+        "wedged CoreSimulator / orphan simctl io / cold clone"
       ios_sim_shutdown_others "$udid"
       if [[ "$opened" == "1" ]]; then
         ios_sim_prune_peers_briefly "$udid"
@@ -926,6 +935,8 @@ ensure_preferred_ios_simulator() {
     fi
     sleep 0.5
   done
+  device_launch_timer_report "$launch_started" "iOS boot ${name} (TIMED OUT)" \
+    "wedged CoreSimulator / orphan simctl io"
   echo "error: timed out booting ${name} (${udid})" >&2
   return 1
 }

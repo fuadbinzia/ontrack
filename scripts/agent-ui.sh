@@ -30,6 +30,7 @@ usage:
   agent-ui.sh source <id|keyPath> | --label TEXT
   agent-ui.sh overlay on|off|toggle|status
   agent-ui.sh devmode on|off|release|status
+  agent-ui.sh login [--guest|--status]   # sign in as this slot's agent_N account
 EOF
   exit 2
 }
@@ -111,6 +112,9 @@ case "${CMD}" in
     ;;
   devmode)
     exec "${ROOT}/scripts/agent-ui-devmode.sh" "$@"
+    ;;
+  login)
+    exec "${ROOT}/scripts/agent-ui-login.sh" "$@"
     ;;
   -h|--help|help)
     usage

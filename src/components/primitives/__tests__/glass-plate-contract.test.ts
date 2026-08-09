@@ -308,6 +308,37 @@ describe('glass plate contract', () => {
     expect(timeline).not.toContain('#DCEAF8');
   });
 
+  it('keeps Food components on shared Glass* primitives', () => {
+    const image = read('src/components/primitives/food-image.tsx');
+    const recipe = read('src/features/food/components/recipe-card.tsx');
+    const stat = read('src/features/food/components/nutrition-stat.tsx');
+    const safety = read('src/features/food/components/ingredient-safety-row.tsx');
+    const country = read('src/features/food/components/country-restriction-row.tsx');
+    const stack = read('src/features/food/components/avatar-stack.tsx');
+    const sheet = read('src/features/food/food-sheet.tsx');
+
+    expect(image).toContain('GlassPlate');
+    expect(image).toContain('mist');
+    expect(recipe).toContain('FoodImage');
+    expect(recipe).toContain('Card');
+    expect(stat).toContain('GlassPlate');
+    expect(stat).toContain('mist');
+    expect(safety).toContain('GlassIconWell');
+    expect(safety).toContain('StatusBadge');
+    expect(country).toContain('GlassMetaChip');
+    expect(country).toContain('GlassIconWell');
+    expect(stack).toContain('GlassPlate');
+    expect(sheet).toContain('SheetScaffold');
+    expect(sheet).toContain('surface="glass"');
+    // No opaque paper fills or hand-rolled blur geometry in Food chrome.
+    for (const src of [image, recipe, stat, safety, country, stack, sheet]) {
+      expect(src).not.toContain('backgroundElevated');
+      expect(src).not.toContain('backgroundSunken');
+      expect(src).not.toContain('accentFaint');
+      expect(src).not.toContain('BlurView');
+    }
+  });
+
   it('keeps Today weather/empty CTA/FAB on frosted glass', () => {
     const header = read('src/features/daily-tracking/day-header.tsx');
     const dayView = read('src/features/daily-tracking/day-view.tsx');

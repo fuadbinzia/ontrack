@@ -1,11 +1,11 @@
 import {
-  checkApiRateLimit,
-  peekApiRateLimit,
-  peekAllApiRateLimits,
-  resetApiRateLimitsForTests,
+    checkApiRateLimit,
+    peekAllApiRateLimits,
+    peekApiRateLimit,
+    resetApiRateLimitsForTests,
 } from '../api-rate-limit';
-import { API_USAGE_CATALOG } from '../api-usage-catalog';
 import { buildApiUsageSnapshot } from '../api-usage';
+import { API_USAGE_CATALOG } from '../api-usage-catalog';
 
 describe('peekApiRateLimit', () => {
   afterEach(() => {
@@ -32,6 +32,7 @@ describe('peekApiRateLimit', () => {
     const peeks = peekAllApiRateLimits('dev-user');
     expect(Object.keys(peeks).sort()).toEqual([
       'flights',
+      'food',
       'health',
       'movies',
       'nutrition',

@@ -61,4 +61,9 @@ export const TAB_META: Record<
     icon: 'health',
     href: '/(tabs)/health',
   },
+  food: {
+    label: 'Food',
+    icon: 'food',
+    href: '/(tabs)/food',
+  },
 };

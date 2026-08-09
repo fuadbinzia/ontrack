@@ -35,6 +35,7 @@ import { privateVehiclePayload, useVehicles } from '@/store/vehicles';
 import { useVisionBoard } from '@/store/vision-board';
 import type { Plant } from '@/types/models';
 
+import { mergeDomainPayload, type JsonObject as MergeJsonObject } from './account-data-merge';
 import { decideAccountData } from './data-ownership';
 import { loadEntitlements } from './entitlements';
 import { prepareCloudMedia, resolveCloudMedia } from './media';
@@ -51,7 +52,10 @@ export type SyncDomainName =
   | 'vision-board'
   | 'vehicles';
 export type InitialSyncResult = 'ready' | 'conflict';
-type JsonObject = Record<string, unknown>;
+/** Choices on `/auth/data-choice` after a dirty guest upgrade (not cancel). */
+export type AccountSyncResolution = 'merge' | 'discard-device' | 'keep-device' | 'start-fresh';
+export type DataChoiceVariant = 'new-account' | 'existing-account';
+type JsonObject = MergeJsonObject;
 
 interface CloudSyncStatus {
   state: 'disabled' | 'signed-out' | 'syncing' | 'synced' | 'error';
@@ -286,8 +290,44 @@ let stopSubscriptions: (() => void) | undefined;
 let activeUserId: string | undefined;
 let activeEmail: string | undefined;
 let pendingRemote: Map<SyncDomainName, JsonObject> | undefined;
+/** Set while `pendingRemote` is held — drives new vs existing account chooser copy. */
+let pendingCloudEmpty = false;
 /** When true, domain change subscriptions do not push (Dev Mode sandbox). */
 let cloudSyncPushPaused = false;
+
+export function getPendingDataChoiceVariant(): DataChoiceVariant | null {
+  if (pendingRemote === undefined) return null;
+  return pendingCloudEmpty ? 'new-account' : 'existing-account';
+}
+
+function clearPendingDataChoice() {
+  pendingRemote = undefined;
+  pendingCloudEmpty = false;
+}
+
+function snapshotLocalDomains(): Map<SyncDomainName, JsonObject> {
+  const snapshot = new Map<SyncDomainName, JsonObject>();
+  for (const domain of domains) {
+    snapshot.set(domain.name, domain.read());
+  }
+  return snapshot;
+}
+
+async function finishAccountSyncReady(isCurrent: () => boolean) {
+  if (!isCurrent() || !activeUserId) {
+    cancelAccountSync();
+    throw new Error('Sign-in was cancelled.');
+  }
+  clearPendingDataChoice();
+  await loadEntitlements(activeUserId);
+  startSubscriptions(activeUserId, activeEmail);
+  useCloudSyncStatus.setState({
+    state: 'synced',
+    email: activeEmail,
+    lastSyncedAt: new Date().toISOString(),
+    message: undefined,
+  });
+}
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Sync failed.';
@@ -614,7 +654,11 @@ export async function prepareAccountSync(
     }
   }
 
-  const decision = decideAccountData(remote.size, localCanConflict, localCanConflict);
+  const decision = decideAccountData(
+    remote.size,
+    localCanConflict,
+    hasMeaningfulLocalData(),
+  );
   if (decision === 'upload-device') {
     if (!isCurrent()) {
       cancelAccountSync();
@@ -634,6 +678,7 @@ export async function prepareAccountSync(
       throw new Error('Sign-in was cancelled.');
     }
     pendingRemote = remote;
+    pendingCloudEmpty = remote.size === 0;
     return 'conflict';
   } else {
     if (!isCurrent()) {
@@ -657,34 +702,32 @@ export async function prepareAccountSync(
     }
   }
 
-  if (!isCurrent()) {
-    cancelAccountSync();
-    throw new Error('Sign-in was cancelled.');
-  }
-
-  pendingRemote = undefined;
-  await loadEntitlements(userId);
-  startSubscriptions(userId, email);
-  useCloudSyncStatus.setState({
-    state: 'synced',
-    email,
-    lastSyncedAt: new Date().toISOString(),
-    message: undefined,
-  });
+  await finishAccountSyncReady(isCurrent);
   return 'ready';
 }
 
 export async function resolveAccountSync(
-  choice: 'cloud' | 'device',
+  choice: AccountSyncResolution,
   isCurrent: () => boolean = () => true,
 ) {
-  if (!activeUserId || !pendingRemote) throw new Error('There is no data choice to resolve.');
+  if (!activeUserId || pendingRemote === undefined) {
+    throw new Error('There is no data choice to resolve.');
+  }
   useCloudSyncStatus.setState({ state: 'syncing', email: activeEmail, message: undefined });
   if (!isCurrent()) {
     cancelAccountSync();
     throw new Error('Sign-in was cancelled.');
   }
-  if (choice === 'cloud') {
+
+  if (choice === 'keep-device') {
+    await pushDomains(activeUserId, domains);
+  } else if (choice === 'start-fresh') {
+    // Drop guest-synced domains; leave the new cloud account empty.
+    for (const domain of domains) {
+      domain.reset();
+    }
+    useNutrition.getState().reset();
+  } else if (choice === 'discard-device') {
     const retained = await applyRemote(pendingRemote, isCurrent);
     if (!isCurrent()) {
       cancelAccountSync();
@@ -693,26 +736,33 @@ export async function resolveAccountSync(
     if (retained.length > 0) {
       await pushDomains(activeUserId, retained);
     }
-  } else {
+  } else if (choice === 'merge') {
+    if (pendingRemote.size === 0) {
+      throw new Error('Merge requires an existing cloud account.');
+    }
+    const deviceSnapshot = snapshotLocalDomains();
+    await applyRemote(pendingRemote, isCurrent);
+    if (!isCurrent()) {
+      cancelAccountSync();
+      throw new Error('Sign-in was cancelled.');
+    }
+    for (const domain of domains) {
+      if (domain.name === 'preferences' || domain.name === 'addons') continue;
+      const device = deviceSnapshot.get(domain.name);
+      if (!device) continue;
+      const merged = mergeDomainPayload(domain.name, domain.read(), device);
+      domain.write(merged);
+    }
     await pushDomains(activeUserId, domains);
+  } else {
+    throw new Error('Unknown data choice.');
   }
-  if (!isCurrent()) {
-    cancelAccountSync();
-    throw new Error('Sign-in was cancelled.');
-  }
-  pendingRemote = undefined;
-  await loadEntitlements(activeUserId);
-  startSubscriptions(activeUserId, activeEmail);
-  useCloudSyncStatus.setState({
-    state: 'synced',
-    email: activeEmail,
-    lastSyncedAt: new Date().toISOString(),
-    message: undefined,
-  });
+
+  await finishAccountSyncReady(isCurrent);
 }
 
 export function cancelAccountSync() {
-  pendingRemote = undefined;
+  clearPendingDataChoice();
   stopCloudSync();
   useCloudSyncStatus.setState({
     state: getSupabaseClient() ? 'signed-out' : 'disabled',

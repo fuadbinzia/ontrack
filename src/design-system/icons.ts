@@ -84,6 +84,25 @@ export const appIcons = {
   agents: { ios: 'person.2.badge.gearshape', android: 'manage_accounts', web: 'manage_accounts' },
   'scan-document': { ios: 'doc.text.viewfinder', android: 'document_scanner', web: 'document_scanner' },
 
+  // Food
+  scan: { ios: 'viewfinder', android: 'qr_code_scanner', web: 'qr_code_scanner' },
+  pantry: { ios: 'cabinet.fill', android: 'kitchen', web: 'kitchen' },
+  allergy: { ios: 'allergens', android: 'allergies', web: 'allergies' },
+  leftover: {
+    ios: 'takeoutbag.and.cup.and.straw.fill',
+    android: 'takeout_dining',
+    web: 'takeout_dining',
+  },
+  restaurant: { ios: 'fork.knife.circle', android: 'storefront', web: 'storefront' },
+  'ai-chef': { ios: 'wand.and.stars', android: 'auto_fix_high', web: 'auto_fix_high' },
+  nutrition: { ios: 'carrot', android: 'nutrition', web: 'nutrition' },
+  recipe: { ios: 'book', android: 'auto_stories', web: 'auto_stories' },
+  'meal-plan': {
+    ios: 'calendar.badge.checkmark',
+    android: 'event_available',
+    web: 'event_available',
+  },
+
   // Navigation and actions
   today: { ios: 'sun.max.fill', android: 'light_mode', web: 'light_mode' },
   profile: { ios: 'person.fill', android: 'person', web: 'person' },
@@ -150,6 +169,13 @@ export const appIcons = {
   'calendar-add': { ios: 'calendar.badge.plus', android: 'calendar_add_on', web: 'calendar_add_on' },
   health: { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
   favorite: { ios: 'heart', android: 'favorite_border', web: 'favorite_border' },
+  'favorite-filled': { ios: 'heart.fill', android: 'favorite', web: 'favorite' },
+  warning: {
+    ios: 'exclamationmark.triangle.fill',
+    android: 'warning',
+    web: 'warning',
+  },
+  globe: { ios: 'globe', android: 'public', web: 'public' },
   'nutrition-profiles': { ios: 'heart.text.clipboard', android: 'clinical_notes', web: 'clinical_notes' },
   play: { ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' },
   pause: { ios: 'pause.fill', android: 'pause', web: 'pause' },
@@ -244,6 +270,22 @@ export const appIconSections = [
     ],
   },
   {
+    id: 'food',
+    title: 'Food',
+    description: 'Recipes, pantry, scanning, and meal planning.',
+    icons: [
+      'scan',
+      'pantry',
+      'allergy',
+      'leftover',
+      'restaurant',
+      'ai-chef',
+      'nutrition',
+      'recipe',
+      'meal-plan',
+    ],
+  },
+  {
     id: 'navigation',
     title: 'Navigation & actions',
     description: 'Chrome, editing, sharing, and common controls.',
@@ -301,6 +343,9 @@ export const appIconSections = [
       'calendar-add',
       'health',
       'favorite',
+      'favorite-filled',
+      'warning',
+      'globe',
       'nutrition-profiles',
       'play',
       'pause',

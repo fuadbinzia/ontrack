@@ -20,6 +20,8 @@ import { motion, spacing } from '@/design-system';
 import { UsageAnalyticsTracker } from '@/features/analytics/usage-analytics-tracker';
 import { AuthSessionProvider, useAuthSession } from '@/features/auth/auth-provider';
 import { withoutGuestDirtyTracking } from '@/features/auth/guest-dirty-tracking';
+import { useShouldShowWelcome } from '@/features/auth/welcome-preview';
+import { seedFoodIfNeeded } from '@/features/food/food-seed';
 import {
     TravelAtmosphereProvider,
     useTravelRouteAtmosphere,
@@ -124,7 +126,15 @@ function RootNavigator({ hydrated }: { hydrated: boolean }) {
   // Guest upgrade (`authenticating`) must not keep the full app shell open —
   // only settled guest / authenticated phases get app routes.
   const appAccess = phase === 'authenticated' || phase === 'guest';
-  const welcomeAccess = phase === 'welcome' || phase === 'authenticating' || phase === 'error';
+  // `locked` is the cold-start sign-in gate: same route, re-authentication copy.
+  // First-run canvas covers signed-out + guest/auth who still need name/goal.
+  const showWelcome = useShouldShowWelcome(hasOnboarded);
+  const welcomeAccess =
+    phase === 'welcome' ||
+    phase === 'authenticating' ||
+    phase === 'error' ||
+    phase === 'locked' ||
+    ((phase === 'guest' || phase === 'authenticated') && showWelcome);
   useTodoCollaboration(hydrated && phase === 'authenticated');
   useVehicleCollaboration(hydrated && phase === 'authenticated');
   useRootStartupEffects({
@@ -142,7 +152,9 @@ function RootNavigator({ hydrated }: { hydrated: boolean }) {
   }, [phase, router]);
 
   useEffect(() => {
-    if (hydrated && appAccess) withoutGuestDirtyTracking(seedIfNeeded);
+    if (!hydrated || !appAccess) return;
+    withoutGuestDirtyTracking(seedIfNeeded);
+    withoutGuestDirtyTracking(seedFoodIfNeeded);
   }, [appAccess, hydrated, seedIfNeeded]);
 
   useMealPhotoMigration(hydrated && appAccess && aiEnabled);

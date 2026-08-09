@@ -12,15 +12,22 @@ export const TRAVEL_HOME_ATMOSPHERE_NIGHT = require('../../../assets/images/trav
 
 type TravelHomeBackgroundProps = {
   enabled: boolean;
+  /** Taller hero band when there are no trips (empty welcome straddles the fade). */
+  empty?: boolean;
 };
 
 /**
  * Window-space height for the atmosphere hero band (includes status-bar inset).
- * Matches the mock: ~top third, soft-fading into page paper before Your Trips —
- * not a full-page photo.
+ * Default ~top third for trip cards; empty welcome uses a deeper band so the
+ * invitation sits in the soft photo→paper dissolve — never a full-page photo.
  */
-export function travelHomeAtmosphereHeight(windowHeight: number, topInset: number): number {
-  return Math.round(windowHeight * 0.34) + topInset;
+export function travelHomeAtmosphereHeight(
+  windowHeight: number,
+  topInset: number,
+  options?: { empty?: boolean },
+): number {
+  const ratio = options?.empty ? 0.44 : 0.34;
+  return Math.round(windowHeight * ratio) + topInset;
 }
 
 /** Day mountain wash or Iceland aurora — same geometry either theme. */
@@ -35,13 +42,15 @@ export function travelHomeAtmosphereSource(themeName: string) {
  */
 export function TravelHomeBackground({
   enabled: _enabled,
+  empty = false,
 }: TravelHomeBackgroundProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const dark = theme.name === 'dark';
   /** Content-space height of the upper atmosphere band. */
-  const contentPhotoHeight = travelHomeAtmosphereHeight(height, insets.top) - insets.top;
+  const contentPhotoHeight =
+    travelHomeAtmosphereHeight(height, insets.top, { empty }) - insets.top;
   const paper = dark ? theme.backgroundPrimary : travelHomeTokens.colors.surface;
   // Transparent Screen on Travel home — publish paper so the tab dock matches.
   usePageSurfaceBackground(paper, { priority: 1 });

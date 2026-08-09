@@ -19,6 +19,10 @@ export const STORAGE_KEYS = {
   visionBoard: 'ontrack/vision-board/v1',
   vehicles: 'ontrack/vehicles/v1',
   health: 'ontrack/health/v1',
+  foodProfile: 'ontrack/food-profile/v1',
+  foodPantry: 'ontrack/food-pantry/v1',
+  foodRecipes: 'ontrack/food-recipes/v1',
+  foodMealPlan: 'ontrack/food-meal-plan/v1',
   flightParserMemory: 'ontrack/travel-flight-parser-memory/v1',
   usageAnalytics: 'ontrack/usage-analytics/v1',
   /** Floating tab carousel order by last focus (device-local). */

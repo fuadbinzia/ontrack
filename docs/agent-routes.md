@@ -47,6 +47,24 @@ Pin is required when iOS Simulator and Android Emulator are both running — oth
   --assert-exists travel.list.tripWeather.trip-agent-ui-demo \
   --assert-route /travel/trip-agent-ui-demo
 
+# Food tab — runtime routes drop the (tabs) group (/food, not /(tabs)/food)
+./scripts/agent-ui-verify-both.sh --route /food --flow food-demo \
+  --exists ontrack.food.home.section.suggestions
+
+# Food Phase 5 surfaces (same runtime-route rule)
+./scripts/agent-ui-verify-both.sh --route /food/ai-ideas --flow food-demo \
+  --exists ontrack.food.aiIdeas.generate
+./scripts/agent-ui-verify-both.sh --route /food/scan --flow food-demo \
+  --exists ontrack.food.scan.capture
+./scripts/agent-ui-verify-both.sh --route /food/ingredients --flow food-demo \
+  --exists ontrack.food.ingredients.search
+./scripts/agent-ui-verify-both.sh --route /food/preferences --flow food-demo \
+  --exists ontrack.food.preferences.section.diet
+./scripts/agent-ui-verify-both.sh --route /food/plan --flow food-demo \
+  --exists ontrack.food.plan.section.week
+./scripts/agent-ui-verify-both.sh --route /food/community --flow food-demo \
+  --exists ontrack.food.community.section.feed
+
 # Leftover sheets: land flows dismiss travel overlays first; or once --dismiss
 ./scripts/agent-ui.sh once --dismiss --flow travel-demo-hub \
   --assert-exists travel.list.currency.trip-agent-ui-demo
@@ -119,7 +137,8 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 |------|----------------|
 | `travel-demo` | Seed demo trip → open plan detail |
 | `travel-demo-list` | Seed → travel list with demo itinerary button |
-| `travel-home` | Seed Iceland/Antigua visual fixtures → Travel Home list |
+| `travel-home` | Seed Iceland/Antigua visual fixtures → Travel Home list. Smoke: `verify-both --route /travel --flow travel-home --exists travel.list.section.yourTrips` (H18 — bare goto fails empty guest) |
+| `travel-home-empty` | Clear trips → Travel Home zero-trip welcome (`travel.list.empty.create`) |
 | `travel-home-iceland` | Seed travel-home → open Iceland itinerary (`skyDecor`) |
 | `travel-demo-add-flight` | Seed → add-flight sheet |
 | `travel-demo-timeline-add` | Seed → plan detail → Add to Timeline kind picker |
@@ -162,11 +181,12 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `vehicle-demo` | Seed demo vehicle → vehicles list card |
 | `vehicle-demo-detail` | Seed → open vehicle detail |
 | `vehicle-demo-expenses` | Seed → expenses section (amount field) |
-| `food-demo` | Seed meal activity → food detail (edit ready) |
+| `food-demo` | Seed food profile/pantry/recipes/meal plan + meal activity → Food home |
+| `food-detail-demo` | Seed → meal detail (edit ready; former `food-demo` landing) |
 | `games-balloon-pop` | Games hub → Balloon Pop Play ready |
 | `travel-list` / `calendar` / `today` / `checklists` / `health` / `health-mood` / `health-settings` / `activity-form` / `profile` / `vehicles` / `vehicles-new` / `social` / `workouts` / `plants` / `plants-new` / `vision-board` / `games` | Goto + settle |
 
-Demo IDs (`src/utils/agent-ui/fixtures.ts`): travel `trip-agent-ui-demo` / `item-agent-ui-demo-flight` / chase outbound+return; checklist `list-agent-ui-demo-checklist` / `task-agent-ui-demo-plan`; grocery `list-agent-ui-demo-grocery` / `recipe-agent-ui-demo-pasta`; health `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm`; vehicle `vehicle-agent-ui-demo`; plant `plant-sample-monstera`; activity `activity-agent-ui-demo-mindfulness`; workout `activity-agent-ui-demo-workout`; vision `vision-mindset` / `vision-sample-forest`.
+Demo IDs (`src/utils/agent-ui/fixtures.ts`): travel `trip-agent-ui-demo` / `item-agent-ui-demo-flight` / chase outbound+return; checklist `list-agent-ui-demo-checklist` / `task-agent-ui-demo-plan`; grocery `list-agent-ui-demo-grocery` / `recipe-agent-ui-demo-pasta`; health `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm`; vehicle `vehicle-agent-ui-demo`; plant `plant-sample-monstera`; activity `activity-agent-ui-demo-mindfulness`; workout `activity-agent-ui-demo-workout`; vision `vision-mindset` / `vision-sample-forest`; food meal `activity-agent-ui-demo-meal` + `recipe-agent-ui-food-*` / `pantry-agent-ui-food-*` / `plan-agent-ui-food-*` (`src/features/food/fixtures.ts`).
 
 Chase traveler-count proof (no dump — stable ids after submit):
 

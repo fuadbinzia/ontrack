@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 describe('current-device sign-out invariants', () => {
-  const provider = readFileSync(
-    join(process.cwd(), 'src/features/auth/auth-provider.tsx'),
-    'utf8',
-  );
+  // Sign-out/delete flows live in the colocated exit module; the provider keeps
+  // the session listener that reacts to an unexpected SIGNED_OUT.
+  const provider = [
+    readFileSync(join(process.cwd(), 'src/features/auth/auth-provider.tsx'), 'utf8'),
+    readFileSync(join(process.cwd(), 'src/features/auth/auth-account-exit.ts'), 'utf8'),
+  ].join('\n');
   const account = readFileSync(join(process.cwd(), 'src/services/cloud/account.ts'), 'utf8');
   const sync = readFileSync(join(process.cwd(), 'src/services/cloud/sync.ts'), 'utf8');
 

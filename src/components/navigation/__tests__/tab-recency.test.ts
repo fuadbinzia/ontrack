@@ -1,3 +1,4 @@
+import { TAB_META } from '../bottom-nav-tab-meta';
 import {
     arrangeRecentsLeftRestRight,
     compareTabsByRecency,
@@ -6,6 +7,14 @@ import {
 } from '../tab-recency';
 
 describe('tab-recency', () => {
+  // A tab missing here never records focus, so it can never center in the rail.
+  it('covers every carousel tab', () => {
+    const ordered = new Set<string>(DEFAULT_TAB_ORDER);
+    expect(
+      Object.keys(TAB_META).filter((name) => !ordered.has(name)),
+    ).toEqual([]);
+  });
+
   it('keeps DEFAULT_TAB_ORDER aligned with the tabs layout cold-start sequence', () => {
     expect([...DEFAULT_TAB_ORDER]).toEqual([
       '(today)',
@@ -13,7 +22,6 @@ describe('tab-recency', () => {
       'to-do',
       'social',
       'insights',
-      'profile',
       'workouts',
       'plants',
       'travel',
@@ -21,6 +29,8 @@ describe('tab-recency', () => {
       'games',
       'vehicles',
       'health',
+      'food',
+      'profile',
     ]);
   });
 
@@ -28,10 +38,10 @@ describe('tab-recency', () => {
     const routes = DEFAULT_TAB_ORDER.map((name) => ({ name }));
     const ordered = orderRoutesByRecency(routes, {}).map((r) => r.name);
     expect(ordered[0]).toBe('(today)');
-    // No recents → right walks DEFAULT order; left wraps to last catalog tab.
+    // No recents → right walks DEFAULT order; left wraps to Profile for new users.
     expect(ordered[1]).toBe('calendar');
     expect(ordered[2]).toBe('to-do');
-    expect(ordered[ordered.length - 1]).toBe('health');
+    expect(ordered[ordered.length - 1]).toBe('profile');
   });
 
   it('puts prior tabs on the left (most recent closest) and the rest on the right', () => {

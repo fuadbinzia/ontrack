@@ -46,6 +46,28 @@ export function scaleTypographyToken<T extends { fontSize: number; lineHeight?: 
   return next;
 }
 
+/** Coarse phone size buckets for gutter / density decisions (not tablets). */
+export type PhoneWidthClass = 'compact' | 'regular' | 'large';
+
+export function widthClass(width: number): PhoneWidthClass {
+  if (!Number.isFinite(width) || width <= 0) return 'regular';
+  if (width <= 359) return 'compact';
+  if (width >= 480) return 'large';
+  return 'regular';
+}
+
+/** Screen-edge content gutter per width class (14 / 16 / 20). */
+export function contentGutter(width: number): number {
+  switch (widthClass(width)) {
+    case 'compact':
+      return 14;
+    case 'large':
+      return 20;
+    default:
+      return 16;
+  }
+}
+
 function round1(value: number): number {
   return Math.round(value * 10) / 10;
 }

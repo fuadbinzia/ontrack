@@ -76,3 +76,6 @@ __pycache__/
 
 # Local one-off SQL scratch (ops / verify queries)
 /tmp-*.sql
+
+# Design hand-off packages (large mock boards; distilled into .cursor/skills/)
+.design/

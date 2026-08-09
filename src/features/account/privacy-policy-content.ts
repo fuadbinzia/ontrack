@@ -63,7 +63,7 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
   {
     title: 'Guest mode',
     paragraphs: [
-      'Guest mode keeps data on the device until you sign in. Guest data is not synced to your cloud account unless you choose to create or sign in to an account and resolve how local and cloud data should combine.',
+      'Guest mode keeps data on the device until you sign in. If you create a new account, you can keep guest plans (upload them) or start fresh. If you sign into an existing account, you can merge device-only plans into your cloud account or use cloud data only — cloud stays the source of truth and is never silently replaced by guest data.',
     ],
   },
   {

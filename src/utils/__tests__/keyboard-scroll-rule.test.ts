@@ -38,6 +38,46 @@ describe('keyboard scrolling invariant', () => {
     expect(chatScreen).not.toContain('<KeyboardAvoidingView');
   });
 
+  it('lifts modal sheets above the docked soft keyboard', () => {
+    const scaffold = readFileSync(
+      join(process.cwd(), 'src/components/primitives/sheet-scaffold.tsx'),
+      'utf8',
+    );
+
+    expect(scaffold).toContain("'keyboardWillChangeFrame'");
+    expect(scaffold).toContain('Keyboard.scheduleLayoutAnimation(event)');
+    expect(scaffold).toContain('bottom: keyboardInset');
+    expect(scaffold).toContain('automaticallyAdjustKeyboardInsets={false}');
+  });
+
+  it('keeps sheet CTAs in-scroll (never pinned under the tab dock)', () => {
+    const scaffold = readFileSync(
+      join(process.cwd(), 'src/components/primitives/sheet-scaffold.tsx'),
+      'utf8',
+    );
+    const addSheet = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-itinerary-add-sheet.tsx'),
+      'utf8',
+    );
+
+    for (const source of [scaffold, addSheet]) {
+      expect(source).toContain('styles.body');
+      expect(source).toContain('styles.headerSlot');
+      expect(source).not.toContain('styles.footerSlot');
+      expect(source).toMatch(/body:\s*\{[\s\S]*?minHeight:\s*0/);
+      expect(source).toContain('<ScrollView');
+    }
+
+    // Footer / submit rendered inside the ScrollView children, not as a sibling.
+    expect(scaffold).toMatch(
+      /<ScrollView[\s\S]*\{footer \? \([\s\S]*<\/ScrollView>/,
+    );
+    expect(addSheet).toMatch(
+      /<ScrollView[\s\S]*ItinerarySheetSubmitButton[\s\S]*<\/ScrollView>/,
+    );
+    expect(addSheet).toContain('sheetBottom');
+  });
+
   it('lets the to-do list own the complete page scroll gesture', () => {
     const todoScreen = readFileSync(
       join(process.cwd(), 'src/features/todos/todo-list-screen.tsx'),

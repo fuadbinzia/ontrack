@@ -1,11 +1,10 @@
-import * as WebBrowser from 'expo-web-browser';
-
 import type { AppIconName } from '@/design-system';
 import {
   resolveHostelworldCity,
   type HostelworldCity,
 } from '@/features/travel/stays/hostelworld-city';
 import type { TravelPlan } from '@/features/travel/types';
+import { openInAppBrowser } from '@/utils/safe-url';
 
 export type StayProviderId = 'booking' | 'airbnb' | 'hostelworld';
 
@@ -151,5 +150,5 @@ export async function searchStays(
     provider.id === 'hostelworld'
       ? await resolveHostelworldSearchUrl(input)
       : provider.searchUrl(input);
-  await WebBrowser.openBrowserAsync(url);
+  await openInAppBrowser(url);
 }

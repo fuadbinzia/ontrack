@@ -12,7 +12,8 @@ import Vision
 /// }
 
 let blockingNeedles = [
-  "apple account",
+  // Real Apple Account *system* sheets — avoid Profile "Apple Account" copy.
+  "apple account verification",
   "apple id",
   "enter the password",
   "verification failed",
@@ -24,16 +25,19 @@ let blockingNeedles = [
   "your location?",
   "location services",
   // Expo dev-client intro — Continue / close so verify is not stuck under it.
+  // "runtime version" is intro chrome too (not tools-only).
   "developer menu",
+  "this is the developer menu",
   "useful tools in development",
   "development builds",
+  "dev tools",
+  "runtime version",
   // Expo Dev Menu tools sheet (Reload / Fast refresh) — Escape / close.
   "toggle performance monitor",
   "toggle element inspector",
   "fast refresh",
   "open devtools",
   "source code explorer",
-  "runtime version",
 ]
 
 /// Soft dismiss (account / soft-deny sheets). Never preferred for location.

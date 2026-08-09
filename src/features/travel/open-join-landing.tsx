@@ -110,7 +110,7 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
         router.replace(
           hasOnboarded
             ? (`/travel/${merged.id}` as never)
-            : ({ pathname: '/onboarding', params: { returnTo: '/travel' } } as never),
+            : ({ pathname: '/welcome', params: { returnTo: '/travel' } } as never),
         );
         return;
       }
@@ -121,7 +121,7 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
         router.replace(
           hasOnboarded
             ? (`/travel/${resolved.tripId}` as never)
-            : ({ pathname: '/onboarding', params: { returnTo: '/travel' } } as never),
+            : ({ pathname: '/welcome', params: { returnTo: '/travel' } } as never),
         );
         return;
       }
@@ -140,7 +140,7 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
       router.replace(
         hasOnboarded
           ? (`/travel/${plan.id}` as never)
-          : ({ pathname: '/onboarding', params: { returnTo: '/travel' } } as never),
+          : ({ pathname: '/welcome', params: { returnTo: '/travel' } } as never),
       );
     } catch (error) {
       openedApproved.current = false;

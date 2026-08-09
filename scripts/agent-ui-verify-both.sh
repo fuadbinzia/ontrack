@@ -8,18 +8,19 @@
 # Default: run iOS + Android **in parallel** (daemon queues are platform:slot —
 # no cross-talk). Wall-clock ≈ max(ios, android) instead of sum.
 # Ensures Android packager/emulator if needed. Exits non-zero if either side fails.
+# Exit 3 = no free agent device slot; nothing was tested (not a UI failure).
 #
 # Env:
 #   SKIP_IOS=1 / SKIP_ANDROID=1 — escape hatches (do not use for normal close-out)
 #   AGENT_UI_VERIFY_SERIAL=1 — iOS then Android (debug only; slower)
 #   ONTRACK_ANDROID_AVD / AGENT_UI_DEVICE — android device pin
 #   AGENT_UI_SKIP_LEASE=1 — bypass device pool / lease (escape hatch only)
-#   AGENT_UI_LOCK_WAIT_SECS — how long to wait for a free pool slot (default 300)
-#   AGENT_UI_POOL_MAX — max concurrent agent device slots (default 5)
-#   AGENT_UI_KEEP_IOS=1 (default) — leave pool sim warm across lease EXIT
-#   AGENT_UI_KEEP_ANDROID=1 (default) — leave pool AVD warm across lease EXIT
-#   AGENT_UI_KEEP_IOS=0 / KEEP_ANDROID=0 — kill that platform on release
-#   AGENT_UI_KEEP_DEVICES=1 — keep both platforms (debug)
+#   AGENT_UI_LOCK_WAIT_SECS — wait for a free slot (default 0 = stop, exit 3)
+#   AGENT_UI_POOL_MAX — agent device slots (default/max 2 → 4 devices total)
+#   AGENT_UI_KEEP_IOS=0 / KEEP_ANDROID=0 (default) — safe shutdown on lease EXIT
+#     (Android saves default_boot first for fast reload; never leave orphans)
+#   AGENT_UI_KEEP_IOS=1 / KEEP_ANDROID=1 — park that platform warm (debug)
+#   AGENT_UI_KEEP_DEVICES=1 — park both platforms warm (debug)
 #
 # Agents: do NOT pipe this script through `tail`/`head` — progress is on stderr/stdout
 # and pipes buffer until exit (looks hung for minutes). Prefer bare invoke or `tee`.
@@ -55,11 +56,30 @@ fi
 # Pipe refuse runs at the end of host.sh (before auto-lease).
 echo "verify-both: sourcing host (lease + pipe guard)…" >&2
 # shellcheck source=lib/agent-ui-host.sh
-source "${ROOT}/scripts/lib/agent-ui-host.sh"
+LEASE_RC=0
+source "${ROOT}/scripts/lib/agent-ui-host.sh" || LEASE_RC=$?
+if (( LEASE_RC != 0 )); then
+  if (( LEASE_RC == 3 )); then
+    echo "verify-both: skipped UI verify — no free agent device slot (nothing tested; agent devices only)" >&2
+  fi
+  exit "${LEASE_RC}"
+fi
 if [[ "${AGENT_UI_VERIFY_SERIAL:-0}" == "1" ]]; then
   echo "verify-both: host ready slot=${AGENT_UI_SLOT:-?} — serial iOS then Android" >&2
 else
   echo "verify-both: host ready slot=${AGENT_UI_SLOT:-?} — parallel iOS + Android" >&2
+fi
+
+# H20: bump the Metro HMR beacon once before forking platforms. Each side's
+# verify waits for that nonce (or soft-reconnects). Without a shared bump,
+# warm Android keeps answering the bridge on a stale bundle while iOS reloads.
+if [[ "${AGENT_UI_SKIP_JS_FRESH:-0}" != "1" ]]; then
+  AGENT_UI_EXPECTED_HMR_BEACON="$(
+    AGENT_UI_SKIP_LEASE=1 AGENT_UI_LOCK_HELD=1 \
+      python3 "${ROOT}/scripts/lib/agent_ui_bridge.py" ensure-js-fresh --bump-only
+  )"
+  export AGENT_UI_EXPECTED_HMR_BEACON
+  echo "verify-both: HMR beacon ${AGENT_UI_EXPECTED_HMR_BEACON} (both platforms must match before assert)" >&2
 fi
 
 ARGS=("$@")
@@ -88,17 +108,14 @@ run_ios() {
 
   # Clear sticky android pin so default host stamp is ios.
   # Keep lease env so the child does not wait on our lockdir.
-  # Skip per-platform handoff — iOS verify must not adopt Galaxy mid dual-run
-  # (that re-ran travel-demo on the 8GB GUI and looked hung for minutes).
-  # One handoff runs at the end of verify-both after both asserts pass.
   env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
     AGENT_UI_PLATFORM=ios \
-    AGENT_UI_SKIP_HEADED_HANDOFF=1 \
     AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
     AGENT_UI_LOCK_ACQUIRED=0 \
     AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
     AGENT_UI_LOCK_DIR="${AGENT_UI_LOCK_DIR:-}" \
     AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+    AGENT_UI_EXPECTED_HMR_BEACON="${AGENT_UI_EXPECTED_HMR_BEACON:-}" \
     ONTRACK_IOS_SIMULATOR="${ONTRACK_IOS_SIMULATOR:-}" \
     ONTRACK_IOS_SIMULATOR_UDID="${ONTRACK_IOS_SIMULATOR_UDID:-}" \
     ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
@@ -116,25 +133,16 @@ run_android() {
   # Mid-boot adb "device" previously raced into verify and failed with route=?.
   # shellcheck source=lib/android-emulator.sh
   source "${ROOT}/scripts/lib/android-emulator.sh"
-  # Pool dual-verify: sticky android-headed.keep alone must not force Galaxy
-  # adopt when the GUI is closed (kills warm Agent_* → multi-minute cold path).
-  # A *live* headed Galaxy always wins — never emu-kill the user window
-  # ("Saving state…"). Explicit ONTRACK_ANDROID_KEEP_HEADED=1 also forces Galaxy.
+  # Agent device policy: a leased agent always stays on its own onTrack_Agent_N
+  # AVD. A live headed Galaxy neither wins the device nor gets killed — sticky
+  # android-headed.keep is ignored here (ONTRACK_ANDROID_KEEP_HEADED=1 is the
+  # only escape, and it means the user asked for the window).
   if [[ -n "${AGENT_UI_SLOT:-}" || "${AGENT_UI_POOL_MODE:-0}" == "1" ]]; then
     if [[ "${ONTRACK_ANDROID_KEEP_HEADED:-}" != "1" ]]; then
-      live_headed="$(android_emu_live_headed_galaxy_name 2>/dev/null || true)"
-      if [[ -n "$live_headed" ]]; then
-        export ONTRACK_ANDROID_KEEP_HEADED=1
-        echo "verify-both: live headed ${live_headed} — adopting (not killing user window)" >&2
-      else
-        export ONTRACK_ANDROID_KEEP_HEADED=0
-        echo "verify-both: pool Android stays on Agent AVD (sticky headed keep ignored; ONTRACK_ANDROID_KEEP_HEADED=1 forces Galaxy)" >&2
-      fi
+      export ONTRACK_ANDROID_KEEP_HEADED=0
+      echo "verify-both: pool Android stays on Agent AVD (headed Galaxy never adopted, never killed)" >&2
     fi
   fi
-  # Headed Galaxy keep / live GUI: remount to Galaxy + kill agents BEFORE ensure.
-  # 16GB hosts thrash for minutes if Agent_* runs beside the 8GB GUI.
-  android_emu_adopt_android_for_headed_host || true
   echo "verify-both: ensuring Android emulator is up and ready (${ONTRACK_ANDROID_AVD:-preferred})…" >&2
   if ! android_emu_ensure_ready; then
     echo "error: verify-both: Android emulator failed to become ready" >&2
@@ -225,12 +233,12 @@ run_android() {
   fi
   AGENT_UI_PLATFORM=android \
     AGENT_UI_ANDROID_FORCE_LAND="${android_force_land}" \
-    AGENT_UI_SKIP_HEADED_HANDOFF=1 \
     AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
     AGENT_UI_LOCK_ACQUIRED=0 \
     AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
     AGENT_UI_LOCK_DIR="${AGENT_UI_LOCK_DIR:-}" \
     AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+    AGENT_UI_EXPECTED_HMR_BEACON="${AGENT_UI_EXPECTED_HMR_BEACON:-}" \
     ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
     ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
     "${ROOT}/scripts/agent-ui.sh" verify "${ARGS[@]}"
@@ -270,9 +278,8 @@ finish_verify_both() {
     exit 1
   fi
 
-  # If Simulator.app / headed Galaxy is open, leave that viewer on the verified
-  # surface with a fresh Metro bundle (pool Agent N is not what the user watches).
-  agent_ui_headed_viewer_handoff "${ARGS[@]}"
+  # No headed viewer handoff — agents never land on the user's Pro / Galaxy.
+  # Agent devices are parked warm (or shut down safely) by the lease release.
   exit 0
 }
 

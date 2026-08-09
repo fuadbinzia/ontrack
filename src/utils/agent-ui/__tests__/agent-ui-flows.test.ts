@@ -35,6 +35,7 @@ import {
 
 const mockSavePlan = jest.fn(() => true);
 const mockRecordPlanInteraction = jest.fn();
+const mockReplacePlans = jest.fn();
 const mockTodosSetState = jest.fn();
 const mockSaveFactor = jest.fn(() => AGENT_UI_DEMO_HEALTH_FACTOR_ID);
 const mockSaveMoodEntry = jest.fn(() => AGENT_UI_DEMO_HEALTH_MOOD_ID);
@@ -56,6 +57,7 @@ jest.mock('@/store/travel', () => ({
     getState: () => ({
       savePlan: mockSavePlan,
       recordPlanInteraction: mockRecordPlanInteraction,
+      replacePlans: mockReplacePlans,
     }),
   },
 }));
@@ -108,7 +110,37 @@ jest.mock('@/store/plants', () => ({
 }));
 
 jest.mock('@/utils/date', () => ({
+  ...jest.requireActual('@/utils/date'),
   todayKey: () => '2026-08-05',
+}));
+
+const mockReplaceFoodProfile = jest.fn();
+const mockPantryAddItem = jest.fn();
+const mockUpsertRecipe = jest.fn();
+const mockMealPlanAddEntry = jest.fn();
+
+jest.mock('@/store/food-profile', () => ({
+  useFoodProfile: {
+    getState: () => ({ replaceProfile: mockReplaceFoodProfile }),
+  },
+}));
+
+jest.mock('@/store/food-pantry', () => ({
+  usePantry: {
+    getState: () => ({ addItem: mockPantryAddItem }),
+  },
+}));
+
+jest.mock('@/store/food-recipes', () => ({
+  useRecipes: {
+    getState: () => ({ upsertRecipe: mockUpsertRecipe }),
+  },
+}));
+
+jest.mock('@/store/food-meal-plan', () => ({
+  useMealPlan: {
+    getState: () => ({ addEntry: mockMealPlanAddEntry }),
+  },
 }));
 
 jest.mock('@/store/schedule', () => ({
@@ -210,6 +242,29 @@ describe('agent-ui fixtures', () => {
     );
   });
 
+  it('seeds travel-home-empty by clearing plans', () => {
+    mockReplacePlans.mockClear();
+    mockSetTabBarCollapsed.mockClear();
+    const result = seedAgentUiFixture('travel-home-empty');
+    expect(result).toEqual({
+      fixture: 'travel-home-empty',
+      primaryId: 'travel-home-empty',
+    });
+    expect(mockReplacePlans).toHaveBeenCalledWith([]);
+    expect(mockSetTabBarCollapsed).toHaveBeenCalledWith(false);
+    expect(normalizeFixtureName('travel-empty')).toBe('travel-home-empty');
+    expect(resolveAgentUiFlow('travel-home-empty')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'seed', to: 'travel-home-empty' }),
+        expect.objectContaining({ op: 'goto', to: 'travel' }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.travel.list.empty.create',
+        }),
+      ]),
+    );
+  });
+
   it('builds and seeds checklist / grocery / health / vehicle fixtures', () => {
     const checklist = buildAgentUiDemoChecklist();
     expect(checklist.list.id).toBe(AGENT_UI_DEMO_CHECKLIST_LIST_ID);
@@ -291,6 +346,7 @@ describe('agent-ui fixtures', () => {
       fixture: 'food-demo',
       primaryId: AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
       activityId: AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
+      recipeId: 'recipe-agent-ui-food-chicken-tagine',
     });
     expect(mockSaveEvent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -298,6 +354,20 @@ describe('agent-ui fixtures', () => {
         detailKind: 'food',
       }),
     );
+    // food-demo hydrates all four food stores.
+    expect(mockReplaceFoodProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dietaryPreferences: expect.arrayContaining(['halal']),
+        allergies: expect.arrayContaining([
+          expect.objectContaining({ allergen: 'Peanuts', severity: 'severe' }),
+        ]),
+      }),
+    );
+    expect(mockPantryAddItem).toHaveBeenCalled();
+    expect(mockUpsertRecipe).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'recipe-agent-ui-food-chicken-tagine' }),
+    );
+    expect(mockMealPlanAddEntry).toHaveBeenCalled();
 
     expect(seedAgentUiFixture('workouts-demo')).toEqual({
       fixture: 'workouts-demo',
@@ -587,6 +657,18 @@ describe('agent-ui flows', () => {
       ]),
     );
     expect(resolveAgentUiFlow('food-demo')?.[1]).toMatchObject({
+      op: 'goto',
+      to: 'food',
+    });
+    expect(resolveAgentUiFlow('food-demo')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.food.home.section.suggestions',
+        }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('food-detail-demo')?.[1]).toMatchObject({
       op: 'goto',
       to: `detail/food/${AGENT_UI_DEMO_FOOD_ACTIVITY_ID}`,
     });

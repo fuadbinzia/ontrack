@@ -157,7 +157,7 @@ export function TravelInviteLanding({ invite }: { invite?: string }) {
               hasOnboarded
                 ? (`/travel/${memberCopy.id}` as never)
                 : ({
-                    pathname: '/onboarding',
+                    pathname: '/welcome',
                     params: { returnTo: '/travel' },
                   } as never),
             );
@@ -177,7 +177,7 @@ export function TravelInviteLanding({ invite }: { invite?: string }) {
         router.replace(
           hasOnboarded
             ? (`/travel/${existingPlan.id}` as never)
-            : ({ pathname: '/onboarding', params: { returnTo: '/travel' } } as never),
+            : ({ pathname: '/welcome', params: { returnTo: '/travel' } } as never),
         );
         return;
       }
@@ -202,7 +202,7 @@ export function TravelInviteLanding({ invite }: { invite?: string }) {
       router.replace(
         hasOnboarded
           ? (`/travel/${plan.id}` as never)
-          : ({ pathname: '/onboarding', params: { returnTo: '/travel' } } as never),
+          : ({ pathname: '/welcome', params: { returnTo: '/travel' } } as never),
       );
     })().catch((error: unknown) => {
       if (!active) return;

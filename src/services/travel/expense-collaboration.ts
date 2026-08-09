@@ -1,24 +1,25 @@
+import { resolveSelfDisplayName } from '@/features/account/self-display-name';
 import { travelChatAccessCode } from '@/features/travel/chat';
 import {
-    expensePersonIdAliases,
-    isTravelExpenseMemberId,
-    travelExpenseMemberId,
+  expensePersonIdAliases,
+  isTravelExpenseMemberId,
+  travelExpenseMemberId,
 } from '@/features/travel/expenses/expense-math';
 import { normalizeCurrencyCode } from '@/features/travel/expenses/format-money';
 import { normalizeTravelExpense } from '@/features/travel/normalize';
 import { isTravelMemberPlan } from '@/features/travel/trip-roster';
 import {
-    TRAVEL_EXPENSE_HOST_ID,
-    TRAVEL_EXPENSE_SELF_ID,
-    type TravelExpense,
-    type TravelPlan,
+  TRAVEL_EXPENSE_HOST_ID,
+  TRAVEL_EXPENSE_SELF_ID,
+  type TravelExpense,
+  type TravelPlan,
 } from '@/features/travel/types';
 import {
-    authenticatedTravelCollaborationClient,
-    collaborationMessageFrom,
-    fetchTravelTripRpc,
-    sharedTravelTripId,
-    shouldSyncTravelCollaboration,
+  authenticatedTravelCollaborationClient,
+  collaborationMessageFrom,
+  fetchTravelTripRpc,
+  sharedTravelTripId,
+  shouldSyncTravelCollaboration,
 } from '@/services/travel/travel-collaboration-shared';
 import { usePreferences } from '@/store/preferences';
 import { useTravel } from '@/store/travel';
@@ -198,7 +199,9 @@ export function peopleForPublish(
   }
   if (isTravelMemberPlan(plan) && localUserId) {
     const memberId = travelExpenseMemberId(localUserId);
-    const memberName = usePreferences.getState().name.trim() || 'Traveler';
+    const memberName = resolveSelfDisplayName({
+      preferencesName: usePreferences.getState().name,
+    });
     if (!people.some((person) => person.id === memberId)) {
       people.push({ id: memberId, name: memberName });
     }

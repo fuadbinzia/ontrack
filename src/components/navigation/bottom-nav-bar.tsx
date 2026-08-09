@@ -124,6 +124,7 @@ export function BottomNavBar({
       if (route.name === 'vision-board') return enabledAddons['vision-board'];
       if (route.name === 'games') return enabledAddons.games;
       if (route.name === 'vehicles') return enabledAddons.vehicles;
+      if (route.name === 'food') return enabledAddons.food;
       if (route.name === 'health') {
         return process.env.EXPO_OS === 'ios' && enabledAddons.health;
       }

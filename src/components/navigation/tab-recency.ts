@@ -1,13 +1,16 @@
 /** Pure tab-order helpers for the bottom-nav carousel. */
 
-/** Cold-start / never-visited fallback — matches `(tabs)/_layout` screen order. */
+/**
+ * Cold-start / never-visited fallback — matches `(tabs)/_layout` screen order.
+ * With empty recency, center=Today, right=next entries, left wraps to the last
+ * entry (Profile for brand-new users).
+ */
 export const DEFAULT_TAB_ORDER = [
   '(today)',
   'calendar',
   'to-do',
   'social',
   'insights',
-  'profile',
   'workouts',
   'plants',
   'travel',
@@ -15,6 +18,8 @@ export const DEFAULT_TAB_ORDER = [
   'games',
   'vehicles',
   'health',
+  'food',
+  'profile',
 ] as const;
 
 const DEFAULT_INDEX = new Map<string, number>(

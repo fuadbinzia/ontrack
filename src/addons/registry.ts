@@ -20,6 +20,7 @@ export const ADDONS = [
     name: 'Food Tracker',
     description: 'Meals, nutrition, photos, and food insights.',
     categoryIds: ['food'],
+    tabRoute: 'food',
   },
   {
     id: 'fitness',

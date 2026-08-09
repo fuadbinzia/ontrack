@@ -1,5 +1,5 @@
-import type { PropsWithChildren, ReactNode } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import type { PropsWithChildren, ReactNode, Ref } from 'react';
+import { Pressable, StyleSheet, type LayoutChangeEvent, type View } from 'react-native';
 
 import { AppText } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
@@ -14,6 +14,8 @@ export function ProviderButton({
   textColor,
   accessibilityLabel,
   testID,
+  buttonRef,
+  onLayout,
 }: PropsWithChildren<{
   icon: ReactNode;
   onPress: () => void;
@@ -23,9 +25,14 @@ export function ProviderButton({
   textColor: string;
   accessibilityLabel: string;
   testID?: string;
+  /** Agent-ui registration (`useAgentUiTarget`) so taps/asserts resolve. */
+  buttonRef?: Ref<View>;
+  onLayout?: (event: LayoutChangeEvent) => void;
 }>) {
   return (
     <Pressable
+      ref={buttonRef}
+      onLayout={onLayout}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
@@ -50,14 +57,14 @@ export function ProviderButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 54,
+    minHeight: 48,
     width: '100%',
     borderWidth: 1,
     borderRadius: radii.pill,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
 });

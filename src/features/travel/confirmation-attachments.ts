@@ -7,6 +7,7 @@ import {
     cloudMediaMarkerFromUri,
     resolveCloudMediaUri,
 } from '@/services/cloud/media';
+import { openInAppBrowser } from '@/utils/safe-url';
 
 import TravelDocumentReader from '../../../modules/travel-document-reader';
 
@@ -238,7 +239,15 @@ export function newestStoredConfirmationUris(
   }
 }
 
-/** Open confirmations in the system document preview (Quick Look / viewer). */
+function isRemoteConfirmationUri(uri: string): boolean {
+  return uri.startsWith('https://') || uri.startsWith('http://');
+}
+
+/**
+ * Open confirmations in the system document preview (Quick Look / viewer).
+ * Cloud-synced confirmations resolve to signed https URLs, which the native
+ * preview cannot load — those stay in the in-app browser instead of Safari.
+ */
 export async function openConfirmationAttachments(uris: string[]): Promise<void> {
   const display = confirmationUrisForDisplay(uris, 'flight');
   const candidates = display.length
@@ -253,14 +262,22 @@ export async function openConfirmationAttachments(uris: string[]): Promise<void>
   const openable = await resolveConfirmationUrisForOpen(candidates);
   if (!openable.length) return;
 
-  try {
-    if (TravelDocumentReader?.previewDocumentsAsync) {
-      await TravelDocumentReader.previewDocumentsAsync(openable);
-      return;
+  const localFiles = openable.filter((uri) => !isRemoteConfirmationUri(uri));
+  if (localFiles.length) {
+    try {
+      if (TravelDocumentReader?.previewDocumentsAsync) {
+        await TravelDocumentReader.previewDocumentsAsync(localFiles);
+        return;
+      }
+    } catch (error) {
+      if (__DEV__) console.warn('[openConfirmationAttachments] preview failed', error);
     }
-  } catch (error) {
-    if (__DEV__) console.warn('[openConfirmationAttachments] preview failed', error);
   }
 
-  await Linking.openURL(openable[0]);
+  const first = openable[0];
+  if (isRemoteConfirmationUri(first)) {
+    await openInAppBrowser(first);
+    return;
+  }
+  await Linking.openURL(first);
 }

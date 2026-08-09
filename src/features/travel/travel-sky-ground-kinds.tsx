@@ -11,6 +11,7 @@ import {
   House,
   Lighthouse,
   Palm,
+  PeakFrost,
   Pyramid,
   SetbackTower,
   SteppedPyramid,
@@ -23,6 +24,8 @@ type GroundPalette = {
   near: string;
   window: string;
   road: string;
+  /** Cool snow/frost on mountain peaks. */
+  frost: string;
 };
 
 function groundPalette(night: boolean): GroundPalette {
@@ -33,6 +36,7 @@ function groundPalette(night: boolean): GroundPalette {
       near: 'rgba(3, 6, 12, 0.96)',
       window: 'rgba(255, 214, 140, 0.55)',
       road: 'rgba(18, 24, 34, 0.95)',
+      frost: 'rgba(214, 228, 255, 0.62)',
     };
   }
   return {
@@ -41,33 +45,89 @@ function groundPalette(night: boolean): GroundPalette {
     near: 'rgba(42, 58, 74, 0.68)',
     window: 'rgba(255, 240, 200, 0.35)',
     road: 'rgba(55, 68, 82, 0.55)',
+    frost: 'rgba(245, 250, 255, 0.78)',
   };
 }
 
-function GroundFarMountains({ fill }: { fill: string }) {
+function GroundFarMountains({
+  fill,
+  frost,
+}: {
+  fill: string;
+  frost: string;
+}) {
+  const h = SKY_VIEW_H;
+  const pts = [
+    [0, h - 18],
+    [28, h - 36],
+    [52, h - 28],
+    [88, h - 48],
+    [118, h - 32],
+    [150, h - 52],
+    [190, h - 30],
+    [230, h - 46],
+    [270, h - 28],
+    [310, h - 42],
+    [340, h - 30],
+    [360, h - 22],
+  ] as const;
+  // Local apexes (higher on screen = smaller y than both neighbors).
+  const peakIdx = [1, 3, 5, 7, 9];
   return (
-    <Path
-      d={`M0 ${SKY_VIEW_H - 18}
-         L28 ${SKY_VIEW_H - 36}
-         L52 ${SKY_VIEW_H - 28}
-         L88 ${SKY_VIEW_H - 48}
-         L118 ${SKY_VIEW_H - 32}
-         L150 ${SKY_VIEW_H - 52}
-         L190 ${SKY_VIEW_H - 30}
-         L230 ${SKY_VIEW_H - 46}
-         L270 ${SKY_VIEW_H - 28}
-         L310 ${SKY_VIEW_H - 42}
-         L340 ${SKY_VIEW_H - 30}
-         L360 ${SKY_VIEW_H - 22}
-         V${SKY_VIEW_H}
+    <G>
+      <Path
+        d={`M0 ${h - 18}
+         L28 ${h - 36}
+         L52 ${h - 28}
+         L88 ${h - 48}
+         L118 ${h - 32}
+         L150 ${h - 52}
+         L190 ${h - 30}
+         L230 ${h - 46}
+         L270 ${h - 28}
+         L310 ${h - 42}
+         L340 ${h - 30}
+         L360 ${h - 22}
+         V${h}
          H0 Z`}
-      fill={fill}
-    />
+        fill={fill}
+      />
+      {peakIdx.map((i) => {
+        const [ax, ay] = pts[i]!;
+        const [lx, ly] = pts[i - 1]!;
+        const [rx, ry] = pts[i + 1]!;
+        return (
+          <PeakFrost
+            key={`frost-${ax}`}
+            ax={ax}
+            ay={ay}
+            lx={lx}
+            ly={ly}
+            rx={rx}
+            ry={ry}
+            fill={frost}
+            depth={0.3}
+          />
+        );
+      })}
+    </G>
   );
 }
 
 function NordicGround({ p, night }: { p: GroundPalette; night: boolean }) {
   const base = SKY_VIEW_H - 2;
+  const ridge = [
+    [0, base - 16],
+    [40, base - 34],
+    [78, base - 22],
+    [120, base - 40],
+    [168, base - 24],
+    [210, base - 38],
+    [260, base - 20],
+    [310, base - 32],
+    [360, base - 18],
+  ] as const;
+  const frostPeaks = [1, 3, 5, 7];
   return (
     <G>
       {/* Esja-like far ridge */}
@@ -84,6 +144,24 @@ function NordicGround({ p, night }: { p: GroundPalette; night: boolean }) {
            V${SKY_VIEW_H} H0 Z`}
         fill={p.far}
       />
+      {frostPeaks.map((i) => {
+        const [ax, ay] = ridge[i]!;
+        const [lx, ly] = ridge[i - 1]!;
+        const [rx, ry] = ridge[i + 1]!;
+        return (
+          <PeakFrost
+            key={`nordic-frost-${ax}`}
+            ax={ax}
+            ay={ay}
+            lx={lx}
+            ly={ly}
+            rx={rx}
+            ry={ry}
+            fill={p.frost}
+            depth={0.36}
+          />
+        );
+      })}
       {/* Mid ridge + firs */}
       <Path
         d={`M0 ${base - 6}
@@ -196,7 +274,7 @@ function MetroGround({ p, night }: { p: GroundPalette; night: boolean }) {
   ];
   return (
     <G>
-      <GroundFarMountains fill={p.far} />
+      <GroundFarMountains fill={p.far} frost={p.frost} />
       {blockTowers.map((t) => (
         <G key={`${t.x}-${t.h}`}>
           <Rect x={t.x} y={base - t.h} width={t.w} height={t.h} fill={p.mid} />
@@ -249,6 +327,20 @@ function MetroGround({ p, night }: { p: GroundPalette; night: boolean }) {
 
 function AlpineGround({ p }: { p: GroundPalette }) {
   const base = SKY_VIEW_H - 2;
+  const ridge = [
+    [0, base - 10],
+    [45, base - 48],
+    [70, base - 28],
+    [110, base - 58],
+    [150, base - 30],
+    [200, base - 62],
+    [245, base - 34],
+    [290, base - 54],
+    [330, base - 28],
+    [360, base - 40],
+  ] as const;
+  // Tall alpine apexes only — skip saddles so frost reads as snow caps.
+  const frostPeaks = [1, 3, 5, 7];
   return (
     <G>
       <Path
@@ -265,6 +357,24 @@ function AlpineGround({ p }: { p: GroundPalette }) {
            V${SKY_VIEW_H} H0 Z`}
         fill={p.far}
       />
+      {frostPeaks.map((i) => {
+        const [ax, ay] = ridge[i]!;
+        const [lx, ly] = ridge[i - 1]!;
+        const [rx, ry] = ridge[i + 1]!;
+        return (
+          <PeakFrost
+            key={`alpine-frost-${ax}`}
+            ax={ax}
+            ay={ay}
+            lx={lx}
+            ly={ly}
+            rx={rx}
+            ry={ry}
+            fill={p.frost}
+            depth={0.4}
+          />
+        );
+      })}
       <Path
         d={`M0 ${base}
            L80 ${base - 14}
@@ -344,7 +454,7 @@ function PastoralGround({ p, night }: { p: GroundPalette; night: boolean }) {
   const base = SKY_VIEW_H - 2;
   return (
     <G>
-      <GroundFarMountains fill={p.far} />
+      <GroundFarMountains fill={p.far} frost={p.frost} />
       <Path
         d={`M0 ${base}
            Q90 ${base - 12} 180 ${base - 4}

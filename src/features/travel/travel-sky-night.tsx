@@ -46,6 +46,14 @@ import type { TravelSkyFxPlan } from '@/features/travel/travel-sky-quality';
 import { TravelSkyWeatherFx } from '@/features/travel/travel-sky-weather-fx';
 import type { TiltSkyMotion } from '@/features/travel/use-tilt-sky-motion';
 
+/** Cool stellar fills — soft blue-white like real night-sky stars (not warm cream). */
+const STAR_FIELD = '#D8E4FF';
+const STAR_BRIGHT = '#EAF1FF';
+
+function starFill(mag: number): string {
+  return mag < 1 ? STAR_BRIGHT : STAR_FIELD;
+}
+
 /** Night defaults: stable opacity + slightly deeper tilt than day. */
 function MotionLayer({
   driftMs = 32000,
@@ -450,7 +458,7 @@ export function TravelSkyNight({
               cx={s.x}
               cy={s.y}
               r={s.r}
-              fill="#F7F3E8"
+              fill={STAR_FIELD}
               opacity={Math.min(1, s.opacity * starOpacityMul)}
             />
           ))}
@@ -460,7 +468,7 @@ export function TravelSkyNight({
               cx={s.x}
               cy={s.y}
               r={s.r}
-              fill={s.mag < 1 ? '#FFF8E8' : '#F7F3E8'}
+              fill={starFill(s.mag)}
               opacity={Math.min(1, s.opacity * starOpacityMul)}
             />
           ))}
@@ -482,7 +490,7 @@ export function TravelSkyNight({
                 r={s.r}
                 seed={s.seed}
                 baseOpacity={Math.min(1, s.opacity * starOpacityMul)}
-                color={s.mag < 1 ? '#FFF8E8' : '#F7F3E8'}
+                color={starFill(s.mag)}
                 clock={twinkleClock}
               />
             ))}

@@ -75,6 +75,8 @@ export type TravelTimelineNodeProps = {
     details: TravelTransportDetails,
     schedule: TravelRangeScheduleDraft,
   ) => void;
+  /** Opens the itinerary add sheet to edit a moment/activity. */
+  onBeginItemEdit?: () => void;
   onAddPhotos: () => void;
   onRemovePhoto: (uri: string) => void;
   onRemove: () => void;

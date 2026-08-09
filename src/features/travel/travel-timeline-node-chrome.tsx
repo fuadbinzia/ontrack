@@ -159,6 +159,7 @@ export function TimelineItemToolbar({
   onBeginRentalEdit,
   onBeginStayEdit,
   onBeginTransportEdit,
+  onBeginItemEdit,
   onOpenBooking,
   onRemove,
 }: {
@@ -179,6 +180,8 @@ export function TimelineItemToolbar({
   onBeginRentalEdit: () => void;
   onBeginStayEdit: () => void;
   onBeginTransportEdit: () => void;
+  /** Opens the itinerary sheet to edit a moment/activity. */
+  onBeginItemEdit?: () => void;
   onOpenBooking: () => void;
   onRemove: () => void;
 }) {
@@ -193,6 +196,9 @@ export function TimelineItemToolbar({
   };
   const canEdit = (kind: TravelItineraryItem['kind']) =>
     allowStructuredEditing && item.kind === kind;
+  const canEditSimpleStop =
+    Boolean(onBeginItemEdit) &&
+    (item.kind === 'moment' || item.kind === 'activity');
 
   return (
     <View
@@ -265,6 +271,17 @@ export function TimelineItemToolbar({
             icon="edit"
             accessibilityLabel={item.stay ? 'Edit Stay' : 'Add Stay Details'}
             onPress={onBeginStayEdit}
+          />
+        ) : null}
+        {canEditSimpleStop && onBeginItemEdit ? (
+          <IconButton
+            {...shared}
+            icon="edit"
+            accessibilityLabel={
+              item.kind === 'moment' ? 'Edit Moment' : 'Edit Activity'
+            }
+            testID={AgentUiIds.travel.timelineItem.edit(item.id)}
+            onPress={onBeginItemEdit}
           />
         ) : null}
         {showStructuredDetails &&

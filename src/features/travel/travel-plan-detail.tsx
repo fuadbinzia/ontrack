@@ -474,6 +474,10 @@ function TravelPlanDetailLoaded({
   const setNotesExpanded = (expanded: boolean) => {
     patchPlanUi(planId, { notesExpanded: expanded });
   };
+  const openTimelineSection = () =>
+    patchPlanUi(planId, {
+      sectionExpanded: { ...sectionExpanded, timeline: true },
+    });
   const itemEditHandlers = buildTravelPlanDetailItemHandlers({
     planId,
     plan,
@@ -487,13 +491,11 @@ function TravelPlanDetailLoaded({
     setExpenseDraft,
     setOpenExpenseSheet,
     onShare: (item: TravelItineraryItem) => setSharingItemId(item.id),
+    onBeginItemEdit: (item: TravelItineraryItem) =>
+      form.beginEditingItem(item, openTimelineSection),
   });
   const chooseAddKind = (kind: TravelItemKind) =>
-    form.chooseAddKind(kind, () =>
-      patchPlanUi(planId, {
-        sectionExpanded: { ...sectionExpanded, timeline: true },
-      }),
-    );
+    form.chooseAddKind(kind, openTimelineSection);
   const cancelAddToTimeline = () =>
     form.cancelAddToTimeline(confirmationImports.importInProgressRef, () =>
       setPreparedExpenseDraft(undefined),

@@ -108,6 +108,7 @@ export function TravelTimelineNode({
   onCancelStayEdit,
   onBeginStayEdit,
   onSaveTransportDetails,
+  onBeginItemEdit,
   onAddPhotos,
   onRemovePhoto,
   onRemove,
@@ -587,6 +588,7 @@ export function TravelTimelineNode({
               onSaveTransportDetails={onSaveTransportDetails}
               onBeginTransportEdit={() => setEditingTransport(true)}
               onCancelTransportEdit={() => setEditingTransport(false)}
+              onBeginItemEdit={onBeginItemEdit}
               onOpenNotes={() => setNotesOpen(true)}
               onAddPhotos={onAddPhotos}
               onShare={onShare}

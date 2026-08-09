@@ -124,6 +124,11 @@ describe('travel header sky décor', () => {
     expect(night).toContain('TwinklingStar');
     expect(night).toContain('useStarTwinkleClock');
     expect(night).toContain('unitFlash');
+    // Cool blue-white stellar fills (not warm cream).
+    expect(night).toContain("STAR_FIELD = '#D8E4FF'");
+    expect(night).toContain("STAR_BRIGHT = '#EAF1FF'");
+    expect(night).not.toContain('#F7F3E8');
+    expect(night).not.toContain('#FFF8E8');
     expect(night).not.toContain('PulsingStar');
     // Fabric-safe View twinkles + shared clock — not animated SVG props.
     expect(night).not.toContain('useAnimatedProps');

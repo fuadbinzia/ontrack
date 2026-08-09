@@ -11,7 +11,7 @@ onTrack authenticates through Supabase with Google and Apple. The app contains n
    - `ontrack://auth/callback`
    - the deployed HTTPS origin followed by `/auth/callback`
    - each approved local or preview web origin followed by `/auth/callback`
-3. Keep automatic identity linking enabled. Supabase may link verified identities with the same email; onTrack does not request manual identity linking.
+3. Keep automatic identity linking enabled. Supabase may link verified identities with the same email; onTrack does not request manual identity linking. Profile shows the SSO button used for the current session (`activeSignInProvider`, else newest `user.identities[].last_sign_in_at`) — not `app_metadata.provider`, which stays the first signup provider.
 4. Keep the current `app_state` RLS policies in place. Authentication uses the existing `auth.users`, `app_state`, entitlements, media, and sync infrastructure; no migration is required.
 
 ## Google

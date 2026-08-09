@@ -20,6 +20,13 @@ describe('authentication navigation invariants', () => {
     expect(rootLayout).toContain('<Stack.Protected guard={appAccess}>');
   });
 
+  it('keeps the name/goal canvas behind shouldShowWelcome on /welcome', () => {
+    const welcome = readFileSync(join(process.cwd(), 'src/app/welcome.tsx'), 'utf8');
+    expect(welcome).toContain('useShouldShowWelcome');
+    expect(welcome).toContain('WelcomeOnboardScreen');
+    expect(welcome).toContain('<AuthScreen variant="welcome" />');
+  });
+
   it('keeps every user-facing app route in the authenticated-or-guest group', () => {
     const appGroup = rootLayout.match(
       /<Stack\.Protected guard=\{appAccess\}>([\s\S]*?)<\/Stack\.Protected>/,

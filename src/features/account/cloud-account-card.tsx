@@ -10,22 +10,23 @@ import {
     ErrorMessage,
     StatusBadge,
 } from '@/components/primitives';
+import { accountProviderLabel } from '@/features/account/account-provider-label';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useCloudSyncStatus } from '@/services/cloud/sync';
-import { AgentUiIds } from '@/utils/agent-ui';
+import { useAuthAccess } from '@/store/auth-access';
+import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
 export function CloudAccountCard() {
   const router = useRouter();
   const { spacing } = useResponsive();
   const sync = useCloudSyncStatus();
   const { isGuest, user, signOutCurrentDevice } = useAuthSession();
+  const activeSignInProvider = useAuthAccess((state) => state.activeSignInProvider);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState<string>();
 
-  const provider = String(user?.app_metadata.provider ?? 'account');
-  const providerLabel =
-    provider === 'google' ? 'Google' : provider === 'apple' ? 'Apple' : 'Existing account';
+  const providerLabel = accountProviderLabel(user, activeSignInProvider);
 
   const syncTone =
     sync.state === 'syncing' ? 'neutral' : sync.state === 'error' ? 'warning' : 'success';
@@ -68,16 +69,11 @@ export function CloudAccountCard() {
       {isGuest ? (
         <>
           <View style={{ gap: spacing.xxs }}>
-            <View style={[styles.identityRow, { gap: spacing.sm }]}>
-              <AppText variant="callout" fit style={styles.flex}>
-                Guest mode
-              </AppText>
-              <View style={styles.badge}>
-                <StatusBadge label="This device" tone="neutral" showDot={false} />
-              </View>
-            </View>
+            <AppText variant="callout" fit>
+              Guest mode
+            </AppText>
             <AppText variant="caption" color="secondary" numberOfLines={2}>
-              Local name and plans stay on this device. Sign in to back up and continue elsewhere.
+              Your edits won't get saved until you create an account with us
             </AppText>
           </View>
           <Button
@@ -100,9 +96,13 @@ export function CloudAccountCard() {
                 <StatusBadge label={syncLabel} tone={syncTone} />
               </View>
             </View>
-            <AppText variant="caption" color="secondary" fit>
-              {providerLabel}
-            </AppText>
+            <AgentTestId
+              testID={AgentUiIds.profile.accountProviders}
+              label={providerLabel}>
+              <AppText variant="caption" color="secondary" fit>
+                {providerLabel}
+              </AppText>
+            </AgentTestId>
           </View>
           {sync.state === 'error' ? (
             <ErrorMessage message={sync.message ?? 'Cloud sync needs attention.'} variant="caption" />

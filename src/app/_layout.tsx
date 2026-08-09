@@ -12,12 +12,12 @@ import {
     AppPromptHost,
     AppSafeArea,
     HeaderBackButton,
-    LoadingBlock,
     RouteErrorBoundary,
     ScreenAtmosphere,
 } from '@/components/primitives';
 import { motion, spacing } from '@/design-system';
 import { UsageAnalyticsTracker } from '@/features/analytics/usage-analytics-tracker';
+import { AppBootLoader } from '@/features/auth/app-boot-loader';
 import { AuthSessionProvider, useAuthSession } from '@/features/auth/auth-provider';
 import { withoutGuestDirtyTracking } from '@/features/auth/guest-dirty-tracking';
 import { useShouldShowWelcome } from '@/features/auth/welcome-preview';
@@ -163,7 +163,7 @@ function RootNavigator({ hydrated }: { hydrated: boolean }) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ScreenAtmosphere />
-        <LoadingBlock label="Loading onTrack…" />
+        <AppBootLoader />
       </View>
     );
   }

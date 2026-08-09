@@ -39,15 +39,13 @@ export function AuthScreen({
     workingProvider,
     error,
     continueWithProvider,
-    continueAsGuest,
     signOutCurrentDevice,
     clearError,
   } = useAuthSession();
   const busy = phase === 'authenticating';
   const locked = variant === 'locked';
   // A half-open account init leaves `session` set on the error screen — another
-  // provider bind could merge the wrong graph. Guest remains available so the
-  // user can abandon the stuck session (continueAsGuest signs out locally).
+  // provider bind could merge the wrong graph. Locked unlock uses switch-account.
   const providersLocked = busy || Boolean(session);
   const gutter = width >= 720 ? spacing.xxl * 2 : spacing.xl;
   // The page never scrolls, so short windows trade card breathing room first —
@@ -69,20 +67,6 @@ export function AuthScreen({
     onPress: providersLocked
       ? undefined
       : () => { void continueWithProvider('google', returnTo); },
-  });
-  const showGuest = variant === 'welcome' || variant === 'upgrade';
-  const onContinueAsGuest = () => {
-    if (variant === 'upgrade') {
-      // Already a guest — dismiss the upgrade gate instead of re-entering guest.
-      if (router.canGoBack()) router.back();
-      else router.replace('/profile' as never);
-      return;
-    }
-    void continueAsGuest();
-  };
-  const guestAgent = useAgentUiTarget(showGuest ? AgentUiIds.auth.guest : undefined, {
-    label: 'Continue as Guest',
-    onPress: busy ? undefined : onContinueAsGuest,
   });
   const switchAccountAgent = useAgentUiTarget(locked ? AgentUiIds.auth.switchAccount : undefined, {
     label: 'Use a different account',
@@ -230,44 +214,14 @@ export function AuthScreen({
                 accessibilityLabel="Use a different account"
                 disabled={busy}
                 onPress={() => void signOutCurrentDevice(true)}
-                style={({ pressed }) => [styles.guest, { opacity: pressed ? 0.65 : 1 }]}>
+                style={({ pressed }) => [styles.secondaryAction, { opacity: pressed ? 0.65 : 1 }]}>
                 <AppText variant="caption" color="secondary" fit>
                   Use a different account
                 </AppText>
               </Pressable>
             ) : null}
 
-            {showGuest ? (
-              <View style={styles.guestBlock}>
-                <View style={styles.dividerRow} accessibilityElementsHidden>
-                  <View style={[styles.divider, { backgroundColor: theme.separator }]} />
-                  <AppText variant="caption" color="tertiary">or</AppText>
-                  <View style={[styles.divider, { backgroundColor: theme.separator }]} />
-                </View>
-                <Pressable
-                  ref={guestAgent.ref}
-                  testID={AgentUiIds.auth.guest}
-                  onLayout={guestAgent.onLayout}
-                  accessibilityRole="button"
-                  accessibilityLabel="Continue as Guest"
-                  disabled={busy}
-                  hitSlop={6}
-                  onPress={onContinueAsGuest}
-                  style={({ pressed }) => [styles.guest, { opacity: pressed ? 0.65 : 1 }]}>
-                  <AppText variant="callout" color="accent" fit>
-                    Continue as Guest
-                  </AppText>
-                </Pressable>
-                <AppText variant="caption" color="secondary" align="center">
-                  {variant === 'upgrade'
-                    ? "Try out onTrack, your edits will transfer over when you're ready to create an account"
-                    : 'Guest data stays on this device until you choose to sign in.'}
-                </AppText>
-                {legalLinks}
-              </View>
-            ) : (
-              legalLinks
-            )}
+            {legalLinks}
           </GlassPlate>
         </View>
       </Screen>
@@ -327,11 +281,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   providers: { gap: spacing.sm },
-  // One tight column: or → guest → note → legal (no cardGap between them).
-  guestBlock: { gap: spacing.xs },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  divider: { flex: 1, height: StyleSheet.hairlineWidth },
-  guest: { minHeight: 36, alignItems: 'center', justifyContent: 'center' },
+  secondaryAction: { minHeight: 36, alignItems: 'center', justifyContent: 'center' },
   dismiss: { alignSelf: 'flex-start', paddingVertical: spacing.xs },
   legalRow: {
     flexDirection: 'row',

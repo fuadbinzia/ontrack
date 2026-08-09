@@ -38,4 +38,10 @@ describe('shouldShowWelcome', () => {
     dismissForceWelcomePreview();
     expect(shouldShowWelcome(true, true)).toBe(false);
   });
+
+  it('keeps the first-run canvas off for onboarded devices when force is off', () => {
+    // Sign-out preserves hasOnboarded; with force off this must stay false so
+    // /welcome renders AuthScreen instead of the name/goal canvas.
+    expect(shouldShowWelcome(true, false, false)).toBe(false);
+  });
 });

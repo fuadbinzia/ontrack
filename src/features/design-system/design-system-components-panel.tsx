@@ -346,7 +346,6 @@ export function DesignSystemComponentsPanel({
           actionTestID={AgentUiIds.designSystem.demo('emptyAction')}
         />
         <LoadingBlock label="Loading…" />
-        <LoadingBlock label="Loading onTrack…" surface="glass" />
         <ErrorMessage message="Errors use the shared semantic danger treatment." />
       </DemoCard>
       <DemoCard title="Progress ring" catalogId="progress">

@@ -1,6 +1,7 @@
 import {
     destinationCoverCandidates,
     destinationPhotoSuggestsPeople,
+    destinationPhotoSuggestsText,
     enlargeWikimediaThumb,
     hasDestinationLandmarkIntent,
     isAllowedDestinationCoverImageUrl,
@@ -201,6 +202,34 @@ describe('destinationPhotoSuggestsPeople', () => {
     expect(
       destinationPhotoSuggestsPeople('Ponte 25 de Abril Lisbon bridge skyline'),
     ).toBe(false);
+    expect(
+      destinationPhotoSuggestsPeople(
+        'DIG15178-007 Tyeschea West looking at B.B. Kings guitar exhibition',
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('destinationPhotoSuggestsText', () => {
+  it('flags typography / signage stock without matching Texas', () => {
+    expect(destinationPhotoSuggestsText('neon sign typography wall')).toBe(
+      true,
+    );
+    expect(
+      destinationPhotoSuggestsText('Please choose a more precise name for your image'),
+    ).toBe(true);
+    expect(destinationPhotoSuggestsText('billboard poster overlay text')).toBe(
+      true,
+    );
+    expect(
+      destinationPhotoSuggestsText('Austin Texas United States skyline'),
+    ).toBe(false);
+    expect(
+      destinationPhotoSuggestsText('Ponte 25 de Abril Lisbon bridge skyline'),
+    ).toBe(false);
+    expect(
+      destinationPhotoSuggestsText('Stylized map of austin, texas'),
+    ).toBe(true);
   });
 });
 
@@ -247,6 +276,14 @@ describe('isUsableDestinationPhotoUrl', () => {
     expect(
       isUsableDestinationPhotoUrl(
         'https://upload.wikimedia.org/wikipedia/commons/a/a1/Tourist_portrait_Iceland.jpg',
+      ),
+    ).toBe(false);
+  });
+
+  it('rejects filenames that look like typography stock', () => {
+    expect(
+      isUsableDestinationPhotoUrl(
+        'https://upload.wikimedia.org/wikipedia/commons/a/a1/Neon_sign_typography_Austin.jpg',
       ),
     ).toBe(false);
   });
@@ -301,20 +338,18 @@ describe('isDirectClientCoverUrl', () => {
 });
 
 describe('mergeDestinationCoverUrls', () => {
-  it('keeps a direct-loadable backup when the primary list is proxy-only', () => {
+  it('prefers Unsplash CDN plates ahead of Wikimedia fallbacks', () => {
     const wiki =
       'https://upload.wikimedia.org/wikipedia/commons/a/a1/Paris.jpg';
     const wiki2 =
       'https://upload.wikimedia.org/wikipedia/commons/b/b2/Louvre.jpg';
-    const wiki3 =
-      'https://upload.wikimedia.org/wikipedia/commons/c/c3/Seine.jpg';
     const unsplash =
       'https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=1080';
-    expect(mergeDestinationCoverUrls([wiki, wiki2, wiki3], [unsplash], 3)).toEqual([
-      wiki,
-      wiki2,
-      unsplash,
-    ]);
+    const unsplash2 =
+      'https://images.unsplash.com/photo-1585208798174-6cedd86e019b?w=1080';
+    expect(
+      mergeDestinationCoverUrls([unsplash, unsplash2], [wiki, wiki2], 3),
+    ).toEqual([unsplash, unsplash2, wiki]);
   });
 });
 

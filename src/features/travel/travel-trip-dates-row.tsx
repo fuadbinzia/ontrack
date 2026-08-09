@@ -8,11 +8,10 @@ import {
 } from '@/features/travel/travel-chrome';
 import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import {
-    travelItineraryInk,
-    travelItineraryShellProps,
-} from '@/features/travel/travel-surface';
+    useTravelItineraryInk,
+    useTravelItineraryShellProps,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
-import { useTheme } from '@/hooks/use-theme';
 import { useAgentUiTarget } from '@/utils/agent-ui';
 import {
     formatTripDateRangeLabel,
@@ -47,7 +46,6 @@ export function TravelTripDatesRow({
   onPress,
   testID,
 }: TravelTripDatesRowProps) {
-  const theme = useTheme();
   const { s, spacing: rs, typography } = useResponsive();
   const titleIconGap = Math.max(TRAVEL_TITLE_ICON_GAP, s(TRAVEL_TITLE_ICON_GAP));
   const durationLabel = `${dayCount} ${dayCount === 1 ? 'Day' : 'Days'}`;
@@ -88,9 +86,10 @@ export function TravelTripDatesRow({
   const badgePadH = compact ? rs.sm : Math.max(12, rs.md);
   const badgePadHIcon = compact ? Math.max(6, rs.xs) : Math.max(8, rs.sm);
   const badgeMinWidthIcon = compact ? Math.max(24, s(26)) : Math.max(30, s(32));
-  // Clear/paper shell (light) / dark glass — mist chips + matching ink.
-  const primaryInk = travelItineraryInk(theme);
-  const secondaryInk = travelItineraryInk(theme, 'secondary');
+  // Artwork-tinted glass shell — mist chips + luminance-matched ink.
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
+  const shellProps = useTravelItineraryShellProps();
   const badgeInk = primaryInk;
   const badgeTextSize = compact
     ? Math.max(11, s(11))
@@ -212,7 +211,7 @@ export function TravelTripDatesRow({
 
   const plate = (
     <TravelHomeGlass
-      {...travelItineraryShellProps(theme)}
+      {...shellProps}
       style={rowStyle}>
       {content}
     </TravelHomeGlass>

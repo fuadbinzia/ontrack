@@ -21,13 +21,34 @@ import type {
     FlightJourneyLayover,
     FlightJourneyViewModel,
 } from '@/features/travel/flight-journey-model';
+import {
+    useTravelItineraryInk,
+    useTravelItineraryOnGlass,
+} from '@/features/travel/use-travel-itinerary-glass';
+import { relativeLuminanceFromHex, parseHexRgb } from '@/features/travel/travel-home-atmosphere-ink';
 import { useResponsive } from '@/hooks/use-responsive';
-import { useTheme } from '@/hooks/use-theme';
 import { formatDuration, formatMinutes } from '@/utils/date';
 
 import { FlightStatusBadge } from './flight-status-badge';
 import { formatFlightGate, formatFlightTerminal } from './flight-terminal';
 import type { FlightOperationalStatus } from './flights/types';
+
+/**
+ * Kind accents from light theme (#315A7C flight) wash out on dark artwork glass.
+ * Lift toward white until the stroke/label stays readable.
+ */
+function accentForArtworkGlass(accent: string, darkGlass: boolean): string {
+  if (!darkGlass) return accent;
+  const luma = relativeLuminanceFromHex(accent);
+  const rgb = parseHexRgb(accent);
+  if (!rgb || luma === undefined || luma >= 0.45) return accent;
+  const t = Math.min(0.72, (0.5 - luma) / 0.5);
+  const to = (n: number) =>
+    Math.round(n + (255 - n) * t)
+      .toString(16)
+      .padStart(2, '0');
+  return `#${to(rgb.r)}${to(rgb.g)}${to(rgb.b)}`.toUpperCase();
+}
 
 /** Column geometry shared by the vertical stops and the layover rule. */
 export function useJourneyMetrics() {
@@ -150,8 +171,8 @@ export function FlightFacilityChips({
   gate?: string;
   accent: string;
 }) {
-  const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
+  const primaryInk = useTravelItineraryInk();
   const chips = [
     { icon: 'location' as const, label: formatFlightTerminal(terminal) },
     { icon: 'transit' as const, label: formatFlightGate(gate) },
@@ -165,7 +186,7 @@ export function FlightFacilityChips({
       {chips.map((chip) => (
         <GlassMetaChip key={chip.icon} accessibilityLabel={chip.label}>
           <Symbol name={chip.icon} size="sm" color={accent} />
-          <AppText variant="caption" fit style={{ color: theme.textPrimary }}>
+          <AppText variant="caption" fit style={{ color: primaryInk }}>
             {chip.label}
           </AppText>
         </GlassMetaChip>
@@ -220,8 +241,11 @@ export function JourneyStrip({
   journey: FlightJourneyViewModel;
   accent: string;
 }) {
-  const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
+  const darkGlass = useTravelItineraryOnGlass();
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
+  const rail = accentForArtworkGlass(accent, darkGlass);
   const { stops, segments } = stripModel(journey);
   const stopWidth = Math.max(40, s(44));
   const dotSize = Math.max(8, s(9));
@@ -268,10 +292,10 @@ export function JourneyStrip({
               styles.stripOverhang,
               { left: -labelBleed, right: -labelBleed, bottom: 0 },
             ]}>
-            <AppText variant="caption" fit style={{ color: theme.textPrimary }}>
+            <AppText variant="caption" fit style={{ color: primaryInk }}>
               {timeLabel(stop.time)}
             </AppText>
-            <AppText variant="caption" color="secondary" fit>
+            <AppText variant="caption" fit style={{ color: secondaryInk }}>
               {stop.code}
             </AppText>
           </View>
@@ -281,7 +305,7 @@ export function JourneyStrip({
             <Symbol
               name={segment.kind === 'layover' ? 'clock' : 'flight'}
               size="sm"
-              color={accent}
+              color={rail}
             />
           </View>
         ),
@@ -295,7 +319,7 @@ export function JourneyStrip({
               width: dotSize,
               height: dotSize,
               borderRadius: dotSize / 2,
-              backgroundColor: accent,
+              backgroundColor: rail,
             }}
           />
         ),
@@ -305,7 +329,7 @@ export function JourneyStrip({
               style={{
                 height: railHeight,
                 borderRadius: railHeight / 2,
-                backgroundColor: accent,
+                backgroundColor: rail,
                 marginHorizontal: -railOverhang,
               }}
             />
@@ -317,7 +341,7 @@ export function JourneyStrip({
               ]}>
               <View style={styles.stripDashFill}>
                 <DashedLine
-                  color={accent}
+                  color={rail}
                   thickness={2}
                   dashLength={5}
                   gapLength={4}
@@ -326,12 +350,12 @@ export function JourneyStrip({
               <AppText
                 variant="caption"
                 fit
-                style={{ color: theme.textPrimary }}>
+                style={{ color: primaryInk }}>
                 {formatDuration(segment.minutes)}
               </AppText>
               <View style={styles.stripDashFill}>
                 <DashedLine
-                  color={accent}
+                  color={rail}
                   thickness={2}
                   dashLength={5}
                   gapLength={4}
@@ -355,12 +379,15 @@ export function JourneyStrip({
               { left: -labelBleed * 1.6, right: -labelBleed * 1.6, top: 0 },
             ]}>
             {segment.kind === 'leg' ? (
-              <AppText variant="caption" fit style={{ color: accent }}>
+              <AppText variant="caption" fit style={{ color: rail }}>
                 {segment.minutes ? formatDuration(segment.minutes) : ' '}
               </AppText>
             ) : (
               <GlassMetaChip accessibilityLabel="Layover">
-                <AppText variant="caption" color="secondary" fit>
+                <AppText
+                  variant="caption"
+                  fit
+                  style={{ color: secondaryInk }}>
                   Layover
                 </AppText>
               </GlassMetaChip>
@@ -423,8 +450,11 @@ export function VerticalStop({
   durationMinutes?: number;
   isLast?: boolean;
 }) {
-  const theme = useTheme();
   const { s, spacing: rs, typography } = useResponsive();
+  const darkGlass = useTravelItineraryOnGlass();
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
+  const rail = accentForArtworkGlass(accent, darkGlass);
   const { timeColWidth, railColWidth, railWidth, columnGap } =
     useJourneyMetrics();
   const place = airportCityLabel(airport);
@@ -453,7 +483,7 @@ export function VerticalStop({
           variant="callout"
           bold
           fit
-          style={{ color: theme.textPrimary, textAlign: 'center' }}>
+          style={{ color: primaryInk, textAlign: 'center' }}>
           {timeLabel(timeMinutes)}
         </AppText>
         {hasAirlineMeta ? (
@@ -463,7 +493,7 @@ export function VerticalStop({
             <AirlineLogo
               airline={airline}
               flightNumber={flightNumber}
-              fallbackColor={accent}
+              fallbackColor={rail}
             />
           </GlassIconWell>
         ) : null}
@@ -476,9 +506,9 @@ export function VerticalStop({
             height: dotSize,
             borderRadius: dotSize / 2,
             borderWidth: filledDot ? 0 : Math.max(2, s(2)),
-            borderColor: accent,
+            borderColor: rail,
             // Hollow dots stay transparent so the mist board shows through.
-            backgroundColor: filledDot ? accent : 'transparent',
+            backgroundColor: filledDot ? rail : 'transparent',
             marginTop: Math.max(4, s(5)),
           }}
         />
@@ -486,7 +516,7 @@ export function VerticalStop({
           <View
             style={{
               width: railWidth,
-              backgroundColor: accent,
+              backgroundColor: rail,
               flex: 1,
               minHeight: Math.max(36, s(40)),
               opacity: 0.85,
@@ -500,20 +530,23 @@ export function VerticalStop({
           styles.stopCopy,
           { gap: Math.max(2, s(3)), paddingBottom: rs.md },
         ]}>
-        <AppText variant="overline" color="secondary" fit>
+        <AppText variant="overline" fit style={{ color: secondaryInk }}>
           {label}
         </AppText>
         {place ? (
-          <AppText variant="callout" bold fit>
+          <AppText variant="callout" bold fit style={{ color: primaryInk }}>
             {place}
           </AppText>
         ) : null}
         {name && name !== place && name !== codeLabel(airport) ? (
-          <AppText variant="caption" color="secondary" numberOfLines={2}>
+          <AppText
+            variant="caption"
+            numberOfLines={2}
+            style={{ color: secondaryInk }}>
             {name}
           </AppText>
         ) : null}
-        <FlightFacilityChips terminal={terminal} gate={gate} accent={accent} />
+        <FlightFacilityChips terminal={terminal} gate={gate} accent={rail} />
         {showStatusControls ? (
           <View
             style={[
@@ -522,9 +555,8 @@ export function VerticalStop({
             ]}>
             <AppText
               variant="caption"
-              color="secondary"
               fit
-              style={styles.carrierText}>
+              style={[styles.carrierText, { color: secondaryInk }]}>
               Flight Status:
             </AppText>
             {statusLabel ? (
@@ -540,7 +572,7 @@ export function VerticalStop({
                 size={Math.max(28, typography.caption.lineHeight + s(8))}
                 iconSize={13}
                 background="transparent"
-                color={theme.textSecondary}
+                color={secondaryInk}
                 loading={statusSyncLoading}
                 disabled={statusSyncDisabled}
                 testID={statusSyncTestID}
@@ -558,14 +590,13 @@ export function VerticalStop({
         {carrier ? (
           <AppText
             variant="caption"
-            color="secondary"
             fit
-            style={styles.carrierText}>
+            style={[styles.carrierText, { color: secondaryInk }]}>
             {carrier}
           </AppText>
         ) : null}
         {aircraft ? (
-          <AppText variant="caption" color="secondary" fit>
+          <AppText variant="caption" fit style={{ color: secondaryInk }}>
             {aircraft}
           </AppText>
         ) : null}
@@ -573,8 +604,8 @@ export function VerticalStop({
           <GlassMetaChip
             accessibilityLabel={`${formatDuration(durationMinutes)} flight`}
             style={{ marginTop: Math.max(2, s(2)) }}>
-            <Symbol name="clock" size="sm" color={accent} />
-            <AppText variant="caption" fit style={{ color: theme.textPrimary }}>
+            <Symbol name="clock" size="sm" color={rail} />
+            <AppText variant="caption" fit style={{ color: primaryInk }}>
               {formatDuration(durationMinutes)} flight
             </AppText>
           </GlassMetaChip>
@@ -593,10 +624,9 @@ export function LayoverBanner({
   /** Accent for the dashed connectors (usually prior leg). */
   railColor: string;
 }) {
-  const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
   const city = airportCity(layover.airport);
-  const ink = theme.textSecondary;
+  const ink = useTravelItineraryInk('secondary');
   /** Keep dashed rails off the card’s left/right edges. */
   const edgeInset = rs.lg;
   const lineToPillGap = rs.sm;

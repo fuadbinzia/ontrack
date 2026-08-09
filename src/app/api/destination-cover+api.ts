@@ -10,7 +10,7 @@ export function OPTIONS(request: Request) {
   return apiOptionsResponse(request, 'GET, OPTIONS');
 }
 
-/** Free Wikimedia destination cover(s) for travel trip heroes. */
+/** Destination cover(s) for travel heroes — Unsplash scenic, Wiki lead fallback. */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = url.searchParams.get('q')?.trim() ?? '';

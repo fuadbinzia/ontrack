@@ -7,8 +7,10 @@ import {
     flightPassengerLabel,
     type FlightJourneyViewModel,
 } from '@/features/travel/flight-journey-model';
+import {
+    useTravelItineraryInk,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
-import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { formatDuration } from '@/utils/date';
 
@@ -31,8 +33,9 @@ function JourneyHero({
   journey: FlightJourneyViewModel;
   date?: string;
 }) {
-  const theme = useTheme();
   const { spacing: rs } = useResponsive();
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
   const route = journey.routeAirports.join(' → ');
   const stopLabel =
     journey.stopCount === 0
@@ -43,32 +46,41 @@ function JourneyHero({
 
   return (
     <View style={{ gap: rs.xs }}>
-      <AppText variant="heading" bold fit>
+      <AppText variant="heading" bold fit style={{ color: primaryInk }}>
         {route}
       </AppText>
       <View style={[styles.heroMeta, { gap: rs.sm }]}>
         {date ? (
           <View style={[styles.heroMetaItem, { gap: rs.xxs }]}>
-            <Symbol name="calendar" size="sm" color={theme.textSecondary} />
-            <AppText variant="caption" color="secondary" fit>
+            <Symbol name="calendar" size="sm" color={secondaryInk} />
+            <AppText
+              variant="caption"
+              fit
+              style={{ color: secondaryInk }}>
               {formatFlightJourneyDate(date)}
             </AppText>
           </View>
         ) : null}
         {date && journey.totalDurationMinutes ? (
           <View
-            style={[styles.heroMetaRule, { backgroundColor: theme.separator }]}
+            style={[
+              styles.heroMetaRule,
+              { backgroundColor: secondaryInk },
+            ]}
           />
         ) : null}
         {journey.totalDurationMinutes ? (
           <View style={[styles.heroMetaItem, { gap: rs.xxs, flexShrink: 1, minWidth: 0 }]}>
-            <Symbol name="clock" size="sm" color={theme.textSecondary} />
-            <AppText variant="caption" color="secondary" fit>
+            <Symbol name="clock" size="sm" color={secondaryInk} />
+            <AppText
+              variant="caption"
+              fit
+              style={{ color: secondaryInk }}>
               {formatDuration(journey.totalDurationMinutes)} total
             </AppText>
           </View>
         ) : null}
-        <AppText variant="caption" color="secondary" fit>
+        <AppText variant="caption" fit style={{ color: secondaryInk }}>
           · {stopLabel}
         </AppText>
       </View>

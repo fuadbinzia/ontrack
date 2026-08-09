@@ -35,19 +35,31 @@ const KIND_CHROME_DARK: Record<TravelItemKind, KindChromeSwatch> = {
 export function kindChrome(
   kind: TravelItemKind,
   theme: Theme,
+  options?: { darkGlass?: boolean },
 ): KindChromeSwatch {
-  const palette = theme.name === 'dark' ? KIND_CHROME_DARK : KIND_CHROME_LIGHT;
+  // Artwork-tinted itinerary glass can be dark in light theme — use the dark
+  // kind accents so rails / duration labels stay readable.
+  const dark = theme.name === 'dark' || Boolean(options?.darkGlass);
+  const palette = dark ? KIND_CHROME_DARK : KIND_CHROME_LIGHT;
   return palette[kind] ?? KIND_CHROME_LIGHT.activity;
 }
 
 /** Kind accent colors for timeline dots, borders, and pills. */
-export function kindAccent(kind: TravelItemKind, theme: Theme): string {
-  return kindChrome(kind, theme).accent;
+export function kindAccent(
+  kind: TravelItemKind,
+  theme: Theme,
+  options?: { darkGlass?: boolean },
+): string {
+  return kindChrome(kind, theme, options).accent;
 }
 
 /** Soft border used by the Add-to-Timeline choice cards. */
-export function kindBorder(kind: TravelItemKind, theme: Theme): string {
-  return kindChrome(kind, theme).border;
+export function kindBorder(
+  kind: TravelItemKind,
+  theme: Theme,
+  options?: { darkGlass?: boolean },
+): string {
+  return kindChrome(kind, theme, options).border;
 }
 
 export function kindIcon(kind: TravelItemKind): AppIconName {
@@ -70,6 +82,10 @@ export function kindIcon(kind: TravelItemKind): AppIconName {
 }
 
 /** Alias used by timeline spine dots. */
-export function kindDotColor(kind: TravelItemKind, theme: Theme): string {
-  return kindAccent(kind, theme);
+export function kindDotColor(
+  kind: TravelItemKind,
+  theme: Theme,
+  options?: { darkGlass?: boolean },
+): string {
+  return kindAccent(kind, theme, options);
 }

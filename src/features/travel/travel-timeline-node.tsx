@@ -48,6 +48,7 @@ import {
     TimelineFlightCaption,
     TimelineItemTitle,
 } from '@/features/travel/travel-timeline-node-chrome';
+import { useTravelItineraryMistProps, useTravelItineraryOnGlass, useTravelItineraryInk } from '@/features/travel/use-travel-itinerary-glass';
 import type { TravelTimelineNodeProps } from '@/features/travel/travel-timeline-node-props';
 import { TravelTimelineNodeStructured } from '@/features/travel/travel-timeline-node-structured';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -203,14 +204,20 @@ export function TravelTimelineNode({
   const editingStructured =
     editingFlight || editingTransport || editingRental || editingStay;
   const photos = resolveTravelPhotoUris(item.photoUris);
-  const accent = accentColor ?? kindAccent(item.kind, theme);
   const icon = kindIcon(item.kind);
   // Transport board cards (flights/ground/stays/rentals) share one compact chrome.
   // Timeline day markers also pass `compact` with `dense` and keep smaller chrome.
   const isCompactBoardCard = compact && !dense && isStructuredTravelKind;
-  // Dense day rows / board cards sit on mist. Dark boards need light ink;
-  // white itinerary boards use theme paper ink.
-  const onGlass = (isCompactBoardCard || dense) && theme.name === 'dark';
+  // Dense day rows / board cards sit on mist. Dark / artwork-tinted boards
+  // need light ink + dark-palette kind accents (readable blues on teal glass).
+  const darkGlass = useTravelItineraryOnGlass();
+  const mistProps = useTravelItineraryMistProps();
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
+  const tertiaryInk = useTravelItineraryInk('tertiary');
+  const accent =
+    accentColor ?? kindAccent(item.kind, theme, { darkGlass });
+  const onGlass = (isCompactBoardCard || dense) && darkGlass;
   const isCompactFlight = isCompactBoardCard && item.kind === 'flight';
   const showKindBadgeResolved = showKindBadge;
   // Board cards always surface schedule meta under the title (including after a
@@ -337,7 +344,7 @@ export function TravelTimelineNode({
                     style={[
                       styles.denseTimeLabel,
                       denseChromeTextStyle,
-                      onGlass ? { color: 'rgba(255,255,255,0.72)' } : undefined,
+                      onGlass ? { color: secondaryInk } : undefined,
                     ]}>
                     {leadingTimeLabel}
                   </AppText>
@@ -407,13 +414,12 @@ export function TravelTimelineNode({
                 ) : (
                   <AppText
                     variant="caption"
-                    color={onGlass ? undefined : 'secondary'}
                     fit
                     align={isCompactBoardCard ? 'center' : undefined}
                     style={[
                       isCompactBoardCard ? styles.centeredCaption : undefined,
                       dense ? denseChromeTextStyle : undefined,
-                      onGlass ? { color: 'rgba(255,255,255,0.72)' } : undefined,
+                      { color: secondaryInk },
                     ]}>
                     {caption}
                   </AppText>
@@ -422,11 +428,10 @@ export function TravelTimelineNode({
               {shareCue && !isCompactBoardCard ? (
                 <AppText
                   variant="caption"
-                  color={onGlass ? undefined : 'secondary'}
                   fit
                   style={[
                     dense ? denseChromeTextStyle : undefined,
-                    onGlass ? { color: 'rgba(255,255,255,0.72)' } : undefined,
+                    { color: secondaryInk },
                   ]}>
                   {shareCue}
                 </AppText>
@@ -452,7 +457,7 @@ export function TravelTimelineNode({
               <DisclosureChevron
                 expanded={isExpanded}
                 size={dense || compact ? 10 : 12}
-                color={onGlass ? '#FFFFFF' : theme.textTertiary}
+                color={tertiaryInk}
               />
             </View>
         </Pressable>
@@ -472,17 +477,15 @@ export function TravelTimelineNode({
             {showDenseMeta ? (
               <AppText
                 variant="caption"
-                color={onGlass ? undefined : 'secondary'}
                 fit
-                style={onGlass ? { color: 'rgba(255,255,255,0.72)' } : undefined}>
+                style={{ color: secondaryInk }}>
                 {caption}
               </AppText>
             ) : null}
             {caption && !showHeaderCaption && !showDenseMeta ? (
               <AppText
                 variant="caption"
-                color={onGlass ? undefined : 'accent'}
-                style={onGlass ? { color: 'rgba(255,255,255,0.85)' } : undefined}>
+                style={{ color: primaryInk }}>
                 {caption}
               </AppText>
             ) : null}
@@ -502,7 +505,7 @@ export function TravelTimelineNode({
                   }}
                   style={({ pressed }) => [pressed && styles.pressed]}>
                   <GlassPlate
-                    mist
+                    {...mistProps}
                     style={[
                       styles.addressLink,
                       {
@@ -515,7 +518,10 @@ export function TravelTimelineNode({
                     ]}>
                     <Symbol name="location" size="sm" color={accent} />
                     <View style={styles.addressCopy}>
-                      <AppText variant="callout" color="primary" selectable>
+                      <AppText
+                        variant="callout"
+                        selectable
+                        style={{ color: primaryInk }}>
                         {item.details}
                       </AppText>
                     </View>
@@ -525,10 +531,7 @@ export function TravelTimelineNode({
               ) : (
                 <AppText
                   variant="body"
-                  color={onGlass ? undefined : 'secondary'}
-                  style={
-                    onGlass ? { color: 'rgba(255,255,255,0.72)' } : undefined
-                  }>
+                  style={{ color: secondaryInk }}>
                   {item.details}
                 </AppText>
               )
@@ -610,7 +613,7 @@ export function TravelTimelineNode({
       ]}>
       {useMistShell ? (
         <TravelHomeGlass
-          mist
+          {...mistProps}
           style={[
             styles.nodeCard,
             {

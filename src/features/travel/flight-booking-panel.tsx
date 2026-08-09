@@ -9,6 +9,11 @@ import {
 
 import { AppText, GlassPlate, LoadingSpinner, Symbol } from '@/components/primitives';
 import { radii } from '@/design-system';
+import {
+    useTravelItineraryInk,
+    useTravelItineraryMistProps,
+    useTravelItineraryOnGlass,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
@@ -31,7 +36,7 @@ function ConfirmationCodeTrigger({
   accessibilityLabel: string;
   testID: string;
 }) {
-  const theme = useTheme();
+  const primaryInk = useTravelItineraryInk();
   const { spacing: rs, iconSizes } = useResponsive();
   const agent = useAgentUiTarget(testID, {
     label: accessibilityLabel,
@@ -56,7 +61,7 @@ function ConfirmationCodeTrigger({
       <AppText
         variant="callout"
         fit
-        style={[styles.code, styles.codeText, { color: theme.textPrimary }]}>
+        style={[styles.code, styles.codeText, { color: primaryInk }]}>
         {confirmationCode}
       </AppText>
       {loading ? (
@@ -96,6 +101,11 @@ export function FlightBookingPanel({
 }) {
   const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
+  const mistProps = useTravelItineraryMistProps();
+  const onGlass = useTravelItineraryOnGlass();
+  const divider = onGlass ? 'rgba(255,255,255,0.18)' : theme.separator;
   const openableConfirmation = confirmationUrisForDisplay(
     confirmationUris,
     'flight',
@@ -118,10 +128,10 @@ export function FlightBookingPanel({
         {
           flexGrow: options?.grow ?? 1,
           borderLeftWidth: options?.divider ? StyleSheet.hairlineWidth : 0,
-          borderLeftColor: theme.separator,
+          borderLeftColor: divider,
         },
       ]}>
-      <AppText variant="caption" color="secondary" fit>
+      <AppText variant="caption" fit style={{ color: secondaryInk }}>
         {label}
       </AppText>
       {value}
@@ -131,7 +141,7 @@ export function FlightBookingPanel({
   const confirmationValue = (() => {
     if (!confirmationCode) {
       return (
-        <AppText variant="callout" color="secondary" fit>
+        <AppText variant="callout" fit style={{ color: secondaryInk }}>
           —
         </AppText>
       );
@@ -142,7 +152,7 @@ export function FlightBookingPanel({
           variant="callout"
           selectable
           fit
-          style={[styles.code, { color: theme.textPrimary }]}>
+          style={[styles.code, { color: primaryInk }]}>
           {confirmationCode}
         </AppText>
       );
@@ -169,7 +179,7 @@ export function FlightBookingPanel({
 
   return (
     <GlassPlate
-      mist
+      {...mistProps}
       style={[
         styles.panel,
         {
@@ -184,7 +194,7 @@ export function FlightBookingPanel({
         <AgentTestId
           testID={AgentUiIds.travel.flight.passenger(itemId)}
           label={passengerLabel}>
-          <AppText variant="callout" fit style={{ color: theme.textPrimary }}>
+          <AppText variant="callout" fit style={{ color: primaryInk }}>
             {passengerLabel}
           </AppText>
         </AgentTestId>,

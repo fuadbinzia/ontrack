@@ -1,7 +1,10 @@
+import { useMemo, useState } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { Screen } from '@/components/primitives';
 import { useTravelAtmosphere } from '@/features/travel/travel-atmosphere';
+import { resolveTravelArtworkTintHex } from '@/features/travel/travel-artwork-tint';
+import { TravelArtworkTintProvider } from '@/features/travel/travel-artwork-tint-context';
 import { TravelCollapsibleSection } from '@/features/travel/travel-collapsible-section';
 import {
     TRAVEL_HEADER_DATES_SKY_OVERLAP,
@@ -15,7 +18,10 @@ import { TravelPlanChatFab } from '@/features/travel/travel-plan-chat-fab';
 import type { DetailSectionKey } from '@/features/travel/travel-plan-detail-sections';
 import { TravelPlanHero } from '@/features/travel/travel-plan-hero';
 import { TravelPlanTripTools } from '@/features/travel/travel-plan-trip-tools';
-import { resolveHeaderSkyWashTop } from '@/features/travel/travel-sky-condition';
+import {
+    resolveHeaderSkyCondition,
+    resolveHeaderSkyWashTop,
+} from '@/features/travel/travel-sky-condition';
 import { travelAccent } from '@/features/travel/travel-surface';
 import { TravelTransportSections } from '@/features/travel/travel-transport-sections';
 import type {
@@ -75,91 +81,116 @@ export function TravelPlanDetailBody({
   const datesSkyOverlap = Math.max(0, s(TRAVEL_HEADER_DATES_SKY_OVERLAP));
   const skyDestination =
     plan.destination.trim() || atmosphere.destination || '';
-  const washTop = resolveHeaderSkyWashTop({
-    themeDark: theme.name === 'dark',
+  const themeDark = theme.name === 'dark';
+  const skyCondition = resolveHeaderSkyCondition({
+    themeDark,
     timeOfDay: atmosphere.timeOfDay,
     weatherCode: atmosphere.weatherCode,
     timezone: atmosphere.timezone,
     destination: skyDestination,
     latitude: atmosphere.latitude,
   });
+  const washTop = resolveHeaderSkyWashTop({
+    themeDark,
+    timeOfDay: atmosphere.timeOfDay,
+    weatherCode: atmosphere.weatherCode,
+    timezone: atmosphere.timezone,
+    destination: skyDestination,
+    latitude: atmosphere.latitude,
+  });
+  const [plateAverageColor, setPlateAverageColor] = useState<
+    string | undefined
+  >();
+  const artworkTint = useMemo(
+    () =>
+      resolveTravelArtworkTintHex({
+        averageColor: plateAverageColor,
+        themeDark,
+        look: skyCondition.look,
+        destination: skyDestination,
+      }),
+    [plateAverageColor, skyCondition.look, skyDestination, themeDark],
+  );
   const paper =
     typeof travelStyle.backgroundColor === 'string'
       ? travelStyle.backgroundColor
       : theme.backgroundPrimary;
 
   return (
-    <View style={styles.fill}>
-      {/*
-        Short sky→paper dissolve starting at the dates card so the artwork
-        floor meets that seam (not a peach strip above it).
-      */}
-      <View
-        pointerEvents="none"
-        style={travelPlanSkyPageWashStyle({
-          skyContentBand,
-          washTop,
-          paper,
-          fadeTail: skyFadeTail,
-          washOffset: Math.max(0, datesTopGap - datesSkyOverlap),
-        })}
-      />
-      <Screen
-        style={styles.transparentScreen}
-        contentStyle={{ gap: sectionGap, paddingTop: 0 }}
-        refresh={false}>
-        <TravelPlanHero
-          plan={plan}
-          onAddPress={onAddPress}
-          onEditDates={onEditDates}
-          onEditNotes={onEditNotes}
-          notesExpanded={notesExpanded}
-          onNotesExpandedChange={onNotesExpandedChange}
+    <TravelArtworkTintProvider hex={artworkTint}>
+      <View style={styles.fill}>
+        {/*
+          Short sky→paper dissolve starting at the dates card so the artwork
+          floor meets that seam (not a peach strip above it).
+        */}
+        <View
+          pointerEvents="none"
+          style={travelPlanSkyPageWashStyle({
+            skyContentBand,
+            washTop,
+            paper,
+            fadeTail: skyFadeTail,
+            washOffset: Math.max(0, datesTopGap - datesSkyOverlap),
+          })}
         />
-        <TravelTransportSections
-          items={sortedItinerary}
-          transportExpanded={isSectionExpanded('transport')}
-          flightsExpanded={isSectionExpanded('flights')}
-          groundExpanded={isSectionExpanded('ground')}
-          staysExpanded={isSectionExpanded('stays')}
-          rentalsExpanded={isSectionExpanded('rentals')}
-          onToggleTransport={() => toggleSection('transport')}
-          onToggleFlights={() => toggleSection('flights')}
-          onToggleGround={() => toggleSection('ground')}
-          onToggleStays={() => toggleSection('stays')}
-          onToggleRentals={() => toggleSection('rentals')}
-          onAddKind={onAddKind}
-          {...itemEditHandlers}
-        />
-        <TravelCollapsibleSection
-          title="Timeline"
-          icon="clock"
-          accentColor={travelAccent(theme)}
-          card
-          compact
-          tightHeader
-          flushContent
-          expanded={isSectionExpanded('timeline')}
-          onToggle={() => toggleSection('timeline')}
-          toggleTestID={AgentUiIds.travel.planDetail.timelineSection}
-          titleVariant="subheading">
-          <TravelItineraryTimeline
+        <Screen
+          style={styles.transparentScreen}
+          contentStyle={{ gap: sectionGap, paddingTop: 0 }}
+          refresh={false}>
+          <TravelPlanHero
+            plan={plan}
+            onAddPress={onAddPress}
+            onEditDates={onEditDates}
+            onEditNotes={onEditNotes}
+            notesExpanded={notesExpanded}
+            onNotesExpandedChange={onNotesExpandedChange}
+            onPlateAverageColor={setPlateAverageColor}
+          />
+          <TravelTransportSections
             items={sortedItinerary}
-            collapsedDayDates={collapsedDayDates}
-            onToggleDay={onToggleDay}
+            transportExpanded={isSectionExpanded('transport')}
+            flightsExpanded={isSectionExpanded('flights')}
+            groundExpanded={isSectionExpanded('ground')}
+            staysExpanded={isSectionExpanded('stays')}
+            rentalsExpanded={isSectionExpanded('rentals')}
+            onToggleTransport={() => toggleSection('transport')}
+            onToggleFlights={() => toggleSection('flights')}
+            onToggleGround={() => toggleSection('ground')}
+            onToggleStays={() => toggleSection('stays')}
+            onToggleRentals={() => toggleSection('rentals')}
+            onAddKind={onAddKind}
             {...itemEditHandlers}
           />
-        </TravelCollapsibleSection>
-        <TravelPlanTripTools
-          plan={plan}
-          expanded={isSectionExpanded('tools')}
-          onToggle={() => toggleSection('tools')}
-          onOpenExpenses={onOpenExpenses}
-          onAddTransport={() => onAddKind('transport')}
-        />
-      </Screen>
-      <TravelPlanChatFab planId={plan.id} tripTitle={plan.title} />
-    </View>
+          <TravelCollapsibleSection
+            title="Timeline"
+            icon="clock"
+            accentColor={travelAccent(theme)}
+            card
+            compact
+            tightHeader
+            flushContent
+            expanded={isSectionExpanded('timeline')}
+            onToggle={() => toggleSection('timeline')}
+            toggleTestID={AgentUiIds.travel.planDetail.timelineSection}
+            titleVariant="subheading">
+            <TravelItineraryTimeline
+              items={sortedItinerary}
+              collapsedDayDates={collapsedDayDates}
+              onToggleDay={onToggleDay}
+              {...itemEditHandlers}
+            />
+          </TravelCollapsibleSection>
+          <TravelPlanTripTools
+            plan={plan}
+            expanded={isSectionExpanded('tools')}
+            onToggle={() => toggleSection('tools')}
+            onOpenExpenses={onOpenExpenses}
+            onAddTransport={() => onAddKind('transport')}
+          />
+        </Screen>
+        <TravelPlanChatFab planId={plan.id} tripTitle={plan.title} />
+      </View>
+    </TravelArtworkTintProvider>
   );
 }
 

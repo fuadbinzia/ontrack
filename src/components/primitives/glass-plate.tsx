@@ -8,7 +8,11 @@ import {
     type ViewStyle,
 } from 'react-native';
 
-import { glassMaterials, glassMistWashStyle } from '@/design-system/glass';
+import {
+    glassDynamicTintMaterials,
+    glassMaterials,
+    glassMistWashStyle,
+} from '@/design-system/glass';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -44,9 +48,15 @@ export type GlassPlateProps = ViewProps & {
   mist?: boolean;
   /**
    * Tinted glass accent. `green` = frosted sage CTA.
-   * Ignored when `clear` is set.
+   * Ignored when `clear` is set. Overridden by `tintColor` when both set.
    */
   accent?: 'default' | 'green';
+  /**
+   * Dynamic artwork / brand hex (`#RGB` / `#RRGGBB`) for frosted fills.
+   * Keeps glass translucent — never an opaque paper fill.
+   * Ignored when `clear` is set.
+   */
+  tintColor?: string;
 };
 
 /**
@@ -58,6 +68,7 @@ export type GlassPlateProps = ViewProps & {
  * - `clear` + `wash`: cool blue section shell in light.
  * - `airy`: lighter frost for circular controls over sky / photos.
  * - `mist`: translucent nested frost (fill-only — safe under clipped parents).
+ * - `tintColor`: artwork-matched translucent wash (travel itinerary shells).
  *
  * Blur is a sibling underlay (no React children inside BlurView). Always mount
  * BlurView when frosted (intensity 0 when blur gated) to avoid Fabric SIGABRTs.
@@ -73,6 +84,7 @@ export function GlassPlate({
   airy = false,
   mist = false,
   accent = 'default',
+  tintColor,
   ...rest
 }: GlassPlateProps) {
   const theme = useTheme();
@@ -82,7 +94,15 @@ export function GlassPlate({
     ? theme.name !== 'dark'
     : theme.name === 'dark';
   const invertedDark = inverted && darkPlate;
-  const greenGlass = accent === 'green' && !clear && !mist;
+  const dynamicTint =
+    !clear && tintColor
+      ? glassDynamicTintMaterials(tintColor, {
+          mist,
+          airy: mist ? false : airy,
+          allowsBlur,
+        })
+      : undefined;
+  const greenGlass = accent === 'green' && !clear && !mist && !dynamicTint;
   const greenOnLight = greenGlass && theme.name !== 'dark';
   const greenBorder = greenOnLight
     ? g.accentGreen.borderLight
@@ -113,6 +133,16 @@ export function GlassPlate({
   // is clipped on iOS and paints opaque white milk — fill only.
   if (mist) {
     const mistOnLight = theme.name !== 'dark';
+    const mistBorder = dynamicTint
+      ? dynamicTint.border
+      : mistOnLight
+        ? g.border.mistLight
+        : g.border.mist;
+    const mistFillStyle = dynamicTint
+      ? { backgroundColor: dynamicTint.fill }
+      : mistOnLight
+        ? styles.mistTintLight
+        : styles.mistTint;
     return (
       <View
         {...rest}
@@ -121,7 +151,7 @@ export function GlassPlate({
           styles.glass,
           {
             borderWidth: 1,
-            borderColor: mistOnLight ? g.border.mistLight : g.border.mist,
+            borderColor: mistBorder,
             backgroundColor: 'transparent',
           },
           style,
@@ -131,7 +161,7 @@ export function GlassPlate({
           style={[
             StyleSheet.absoluteFill,
             { zIndex: 0 },
-            mistOnLight ? styles.mistTintLight : styles.mistTint,
+            mistFillStyle,
           ]}
         />
         {children}
@@ -140,6 +170,30 @@ export function GlassPlate({
   }
 
   if (Platform.OS === 'android') {
+    if (dynamicTint) {
+      return (
+        <View
+          {...rest}
+          collapsable={false}
+          style={[
+            styles.glass,
+            {
+              borderColor: dynamicTint.border,
+              backgroundColor: 'transparent',
+            },
+            style,
+          ]}>
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { zIndex: 0, backgroundColor: dynamicTint.fill },
+            ]}
+          />
+          {children}
+        </View>
+      );
+    }
     const androidTint = greenGlass
       ? greenOnLight
         ? styles.androidTintGreenLight
@@ -205,6 +259,8 @@ export function GlassPlate({
       ? g.fill.lightBlur
       : g.fill.lightSolid;
   const greenFill = allowsBlur ? greenFillBlur : greenFillSolid;
+  const useDarkBlur =
+    Boolean(dynamicTint?.darkMaterial) || greenGlass || darkPlate;
 
   return (
     <View
@@ -213,13 +269,15 @@ export function GlassPlate({
       style={[
         styles.glass,
         {
-          borderColor: greenGlass
-            ? greenBorder
-            : darkPlate
-              ? g.border.dark
-              : airy
-                ? g.border.lightAiry
-                : g.border.light,
+          borderColor: dynamicTint
+            ? dynamicTint.border
+            : greenGlass
+              ? greenBorder
+              : darkPlate
+                ? g.border.dark
+                : airy
+                  ? g.border.lightAiry
+                  : g.border.light,
           // Keep the plate shell transparent — fill is a sibling underlay so
           // BlurView frost isn't smothered by an opaque parent background.
           backgroundColor: 'transparent',
@@ -230,10 +288,22 @@ export function GlassPlate({
         intensity={
           allowsBlur
             ? (intensity ??
-              (greenGlass ? 44 : darkPlate ? (airy ? 36 : 40) : airy ? 44 : 52))
+              (dynamicTint
+                ? airy
+                  ? 40
+                  : 46
+                : greenGlass
+                  ? 44
+                  : darkPlate
+                    ? airy
+                      ? 36
+                      : 40
+                    : airy
+                      ? 44
+                      : 52))
             : 0
         }
-        tint={greenGlass || darkPlate ? 'dark' : 'light'}
+        tint={useDarkBlur ? 'dark' : 'light'}
         pointerEvents="none"
         style={StyleSheet.absoluteFill}
       />
@@ -242,11 +312,13 @@ export function GlassPlate({
         style={[
           StyleSheet.absoluteFill,
           {
-            backgroundColor: greenGlass
-              ? greenFill
-              : darkPlate
-                ? darkFill
-                : lightFill,
+            backgroundColor: dynamicTint
+              ? dynamicTint.fill
+              : greenGlass
+                ? greenFill
+                : darkPlate
+                  ? darkFill
+                  : lightFill,
           },
         ]}
       />

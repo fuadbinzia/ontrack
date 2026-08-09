@@ -19,9 +19,12 @@ import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import {
     travelAccent,
     travelCardBorder,
-    travelItineraryInk,
-    travelItineraryShellProps,
 } from '@/features/travel/travel-surface';
+import {
+    useTravelItineraryInk,
+    useTravelItineraryOnGlass,
+    useTravelItineraryShellProps,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId } from '@/utils/agent-ui';
@@ -73,12 +76,15 @@ export function TravelCollapsibleSection({
   const theme = useTheme();
   const { s, spacing } = useResponsive();
   const label = count === undefined ? title : `${title} (${count})`;
-  // Card shells + nested kind rows sit on white paper (light) or dark glass
-  // (dark). Light mode can keep kind accents; dark forces light ink.
+  const onGlass = useTravelItineraryOnGlass();
+  const primaryInk = useTravelItineraryInk();
+  const shellProps = useTravelItineraryShellProps();
+  // Card shells + nested kind rows sit on artwork-tinted glass. Light ink when
+  // the plate is dark; kind accents stay on bright boards.
   const accent =
     card || nested
-      ? theme.name === 'dark'
-        ? travelItineraryInk(theme)
+      ? onGlass
+        ? primaryInk
         : (accentColor ?? travelAccent(theme))
       : (accentColor ?? travelAccent(theme));
   const tap = compact
@@ -122,7 +128,7 @@ export function TravelCollapsibleSection({
           borderColor: nested
             ? 'transparent'
             : card
-              ? theme.name === 'dark'
+              ? onGlass
                 ? 'rgba(255,255,255,0.12)'
                 : 'rgba(17, 74, 110, 0.10)'
               : travelCardBorder(theme),
@@ -251,7 +257,7 @@ export function TravelCollapsibleSection({
   if (card) {
     return (
       <TravelHomeGlass
-        {...travelItineraryShellProps(theme)}
+        {...shellProps}
         style={{
           borderRadius: cardRadius,
           borderCurve: 'continuous',

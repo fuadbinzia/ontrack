@@ -116,6 +116,8 @@ export function TravelPlanHero({
   onNotesExpandedChange,
   /** False during push entrance — solid chrome only; sky FX mounts after settle. */
   enableSkyDecor = true,
+  /** Static-tier still average — itinerary glass tint tracks the photo plate. */
+  onPlateAverageColor,
 }: {
   plan: TravelPlan;
   onAddPress?: () => void;
@@ -124,6 +126,7 @@ export function TravelPlanHero({
   notesExpanded?: boolean;
   onNotesExpandedChange?: (expanded: boolean) => void;
   enableSkyDecor?: boolean;
+  onPlateAverageColor?: (hex: string | undefined) => void;
 }) {
   const theme = useTheme();
   const router = useRouter();
@@ -166,9 +169,13 @@ export function TravelPlanHero({
   const [plateAverageColor, setPlateAverageColor] = useState<
     string | undefined
   >();
-  const onPlateAverageColor = useCallback((hex: string | undefined) => {
-    setPlateAverageColor(hex);
-  }, []);
+  const handlePlateAverageColor = useCallback(
+    (hex: string | undefined) => {
+      setPlateAverageColor(hex);
+      onPlateAverageColor?.(hex);
+    },
+    [onPlateAverageColor],
+  );
   // Same luminance ink as Travel Home — white over night/aurora, black over bright day.
   // Curated midtones (e.g. Guatemala header-band sample) pin dark ink when set.
   const curatedTone = matchCuratedAtmosphereForPlace(skyDestination)[0]
@@ -196,7 +203,7 @@ export function TravelPlanHero({
           timezone={atmosphere.timezone}
           statusBandRatio={statusBandRatio}
           fadeTo={pageBase}
-          onPlateAverageColor={onPlateAverageColor}
+          onPlateAverageColor={handlePlateAverageColor}
         />
       ) : undefined,
     [
@@ -206,7 +213,7 @@ export function TravelPlanHero({
       atmosphere.timezone,
       atmosphere.weatherCode,
       enableSkyDecor,
-      onPlateAverageColor,
+      handlePlateAverageColor,
       pageBase,
       plan.startDate,
       skyDestination,

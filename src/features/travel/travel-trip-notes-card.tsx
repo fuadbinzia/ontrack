@@ -16,9 +16,10 @@ import {
 import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import { itinerarySheetChrome } from '@/features/travel/travel-itinerary-sheet-chrome';
 import {
-    travelItineraryInk,
-    travelItineraryShellProps,
-} from '@/features/travel/travel-surface';
+    useTravelItineraryInk,
+    useTravelItineraryOnGlass,
+    useTravelItineraryShellProps,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { useAgentUiTarget } from '@/utils/agent-ui';
@@ -47,13 +48,14 @@ export function TravelTripNotesCard({
   const theme = useTheme();
   const chrome = itinerarySheetChrome(theme);
   const noteTone = chrome.icons.note;
-  const primaryInk = travelItineraryInk(theme);
-  const secondaryInk = travelItineraryInk(theme, 'secondary');
-  const tertiaryInk = travelItineraryInk(theme, 'tertiary');
-  const divider =
-    theme.name === 'dark'
-      ? glassMaterials.border.dark
-      : glassMaterials.clear.lightBorder;
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
+  const tertiaryInk = useTravelItineraryInk('tertiary');
+  const shellProps = useTravelItineraryShellProps();
+  const onGlass = useTravelItineraryOnGlass();
+  const divider = onGlass
+    ? glassMaterials.border.dark
+    : glassMaterials.clear.lightBorder;
   const { s, spacing: rs, typography } = useResponsive();
   const [uncontrolled, setUncontrolled] = useState(defaultExpanded);
   const expanded = expandedProp ?? uncontrolled;
@@ -99,7 +101,7 @@ export function TravelTripNotesCard({
 
   return (
     <TravelHomeGlass
-      {...travelItineraryShellProps(theme)}
+      {...shellProps}
       style={[
         styles.card,
         {

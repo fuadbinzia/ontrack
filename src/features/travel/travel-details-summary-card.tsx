@@ -6,6 +6,11 @@ import type { AppIconName } from '@/design-system';
 import { fontFamilies, radii } from '@/design-system';
 import { travelOverlineStyle } from '@/features/travel/travel-chrome';
 import { travelCardShadow } from '@/features/travel/travel-surface';
+import {
+    useTravelItineraryInk,
+    useTravelItineraryOnGlass,
+    useTravelItineraryShellProps,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -42,12 +47,17 @@ export function TravelDetailsSummaryCard({
 }) {
   const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
+  const onGlass = useTravelItineraryOnGlass();
+  const shellProps = useTravelItineraryShellProps();
+  const divider = onGlass ? 'rgba(255,255,255,0.16)' : theme.separator;
   const iconWellSize = Math.max(44, s(48));
   const wellRadius = Math.max(radii.md, s(14));
 
   return (
     <GlassPlate
-      airy
+      {...shellProps}
       style={[
         styles.card,
         {
@@ -62,11 +72,14 @@ export function TravelDetailsSummaryCard({
           {mark ?? <Symbol name={icon} size="lg" color={accentColor} />}
         </GlassIconWell>
         <View style={[styles.titleCopy, { gap: rs.xxs }]}>
-          <AppText variant="heading" fit style={styles.editorialTitle}>
+          <AppText
+            variant="heading"
+            fit
+            style={[styles.editorialTitle, { color: primaryInk }]}>
             {title}
           </AppText>
           {subtitle ? (
-            <AppText variant="caption" color="secondary" fit>
+            <AppText variant="caption" fit style={{ color: secondaryInk }}>
               {subtitle}
             </AppText>
           ) : null}
@@ -88,16 +101,15 @@ export function TravelDetailsSummaryCard({
             ]}>
             <AppText
               variant="overline"
-              color="secondary"
               fit
-              style={travelOverlineStyle}>
+              style={[travelOverlineStyle, { color: secondaryInk }]}>
               Confirmation
             </AppText>
             <AppText
               variant="subheading"
               selectable
               fit
-              style={[styles.confirmationValue, { color: theme.textPrimary }]}>
+              style={[styles.confirmationValue, { color: primaryInk }]}>
               {confirmationCode}
             </AppText>
           </Pressable>
@@ -105,7 +117,7 @@ export function TravelDetailsSummaryCard({
       </View>
 
       {rows.length ? (
-        <View style={[styles.rows, { borderTopColor: theme.separator }]}>
+        <View style={[styles.rows, { borderTopColor: divider }]}>
           {rows.map((row, index) => (
             <View
               key={`${row.label}-${index}`}
@@ -114,7 +126,7 @@ export function TravelDetailsSummaryCard({
                 {
                   gap: rs.md,
                   paddingVertical: rs.md,
-                  borderTopColor: theme.separator,
+                  borderTopColor: divider,
                 },
                 index > 0 && styles.rowDivider,
               ]}>
@@ -130,21 +142,24 @@ export function TravelDetailsSummaryCard({
               <View style={[styles.rowCopy, { gap: rs.xxs }]}>
                 <AppText
                   variant="overline"
-                  color="secondary"
                   fit
-                  style={travelOverlineStyle}>
+                  style={[travelOverlineStyle, { color: secondaryInk }]}>
                   {row.label}
                 </AppText>
                 {row.value ? (
-                  <AppText variant="subheading" fit selectable>
+                  <AppText
+                    variant="subheading"
+                    fit
+                    selectable
+                    style={{ color: primaryInk }}>
                     {row.value}
                   </AppText>
                 ) : null}
                 {row.detail ? (
                   <AppText
                     variant="caption"
-                    color="secondary"
-                    numberOfLines={2}>
+                    numberOfLines={2}
+                    style={{ color: secondaryInk }}>
                     {row.detail}
                   </AppText>
                 ) : null}

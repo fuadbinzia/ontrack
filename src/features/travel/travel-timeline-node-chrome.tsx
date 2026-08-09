@@ -6,6 +6,9 @@ import { radii, spacing } from '@/design-system';
 import { travelEditorialTextStyle } from '@/features/travel/travel-chrome';
 import { TravelItemNotesButton } from '@/features/travel/travel-item-notes-sheet';
 import type { TravelItineraryItem } from '@/features/travel/types';
+import {
+    useTravelItineraryInk,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -14,9 +17,6 @@ import { isHttpsUrl } from '@/utils/safe-url';
 export function validBookingUrl(value: string): boolean {
   return !value || isHttpsUrl(value);
 }
-
-const GLASS_INK = '#FFFFFF';
-const GLASS_INK_SECONDARY = 'rgba(255,255,255,0.72)';
 
 /** Split “Company · Location” titles so the location is readable on its own line. */
 export function TimelineItemTitle({
@@ -34,10 +34,12 @@ export function TimelineItemTitle({
   emphasize?: boolean;
   /** Center title copy in compact board cards. */
   align?: 'left' | 'center';
-  /** Light ink for mist/black-glass board cards. */
+  /** Mist / artwork-dark boards — still passed for callers; ink is luminance-aware. */
   onGlass?: boolean;
 }) {
   const { typography } = useResponsive();
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
   const primaryVariant = dense
     ? 'caption'
     : emphasize
@@ -45,8 +47,6 @@ export function TimelineItemTitle({
       : compact
         ? 'callout'
         : 'subheading';
-  const primaryInk = onGlass ? { color: GLASS_INK } : undefined;
-  const secondaryInk = onGlass ? { color: GLASS_INK_SECONDARY } : undefined;
   // Dense mist rows: caption lineHeight leaves glyphs high in the box so the
   // title+cue stack looks top-heavy next to the kind pill — keep leading tight.
   const denseLine =
@@ -69,7 +69,7 @@ export function TimelineItemTitle({
           compact && !emphasize ? styles.compactTitle : undefined,
           align === 'center' ? styles.fullWidthCopy : undefined,
           denseLine,
-          primaryInk,
+          { color: primaryInk },
         ]}>
         {title}
       </AppText>
@@ -93,20 +93,19 @@ export function TimelineItemTitle({
           compact ? styles.compactTitle : undefined,
           align === 'center' ? styles.fullWidthCopy : undefined,
           denseLine,
-          primaryInk,
+          { color: primaryInk },
         ]}>
         {head}
       </AppText>
       <AppText
         variant={compact ? 'caption' : 'subheading'}
-        color={onGlass ? undefined : compact ? 'secondary' : 'primary'}
         fit
         align={align}
         style={[
           styles.editorial,
           align === 'center' ? styles.fullWidthCopy : undefined,
           denseLine,
-          secondaryInk ?? primaryInk,
+          { color: onGlass || compact ? secondaryInk : primaryInk },
         ]}>
         {tail}
       </AppText>
@@ -120,24 +119,23 @@ export function TimelineFlightCaption({
   durationLabel,
   stopsLabel,
   align = 'left',
-  onGlass = false,
 }: {
   dateLabel: string;
   durationLabel: string;
   stopsLabel: string;
   align?: 'left' | 'center';
-  /** Light ink for mist/black-glass board cards. */
+  /** @deprecated Ink follows artwork luminance via shared hooks. */
   onGlass?: boolean;
 }) {
+  const secondaryInk = useTravelItineraryInk('secondary');
   return (
     <AppText
       variant="caption"
-      color={onGlass ? undefined : 'secondary'}
       fit
       align={align}
       style={[
         align === 'center' ? styles.fullWidthCopy : undefined,
-        onGlass ? { color: GLASS_INK_SECONDARY } : undefined,
+        { color: secondaryInk },
       ]}>
       {[dateLabel, durationLabel, stopsLabel].join(' · ')}
     </AppText>
@@ -186,11 +184,12 @@ export function TimelineItemToolbar({
 }) {
   const theme = useTheme();
   const { spacing: rs } = useResponsive();
+  const primaryInk = useTravelItineraryInk();
   // IconButton defaults to glass — only override ink on dark mist boards.
   const shared = {
     size,
     iconSize: 'sm' as const,
-    color: onGlass ? GLASS_INK : undefined,
+    color: onGlass ? primaryInk : undefined,
   };
   const canEdit = (kind: TravelItineraryItem['kind']) =>
     allowStructuredEditing && item.kind === kind;

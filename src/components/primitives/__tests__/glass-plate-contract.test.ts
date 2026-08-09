@@ -125,11 +125,11 @@ describe('glass plate contract', () => {
     expect(boot).toBeTruthy();
     expect(boot).toContain('ScreenAtmosphere');
     expect(boot).toContain('Loading onTrack');
-    expect(boot).toContain('surface="glass"');
+    expect(boot).toContain('LoadingBlock');
     expect(boot).not.toContain('backgroundPrimary');
-    expect(loading).toContain('GlassPlate');
-    expect(loading).toContain("surface = 'plain'");
-    expect(loading).toContain('airy');
+    expect(boot).not.toContain('surface="glass"');
+    expect(loading).not.toContain('GlassPlate');
+    expect(loading).toContain('LoadingSpinner');
   });
 
   it('keeps Home location sheet and Add Event assistant on glass atmosphere', () => {

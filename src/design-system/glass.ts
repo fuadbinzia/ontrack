@@ -166,3 +166,75 @@ export const glassMistWashStyle = {
       'linear-gradient(165deg, rgba(255,255,255,0.58) 0%, rgba(255,255,255,0.22) 48%, rgba(255,255,255,0.4) 100%)',
   },
 } as const satisfies Record<string, ViewStyle>;
+
+/** Relative luminance 0–1 for `#RGB` / `#RRGGBB` — undefined when not a hex. */
+export function relativeLuminanceFromColor(color: string): number | undefined {
+  const hex = color.trim();
+  if (!hex.startsWith('#')) return undefined;
+  const raw = hex.slice(1);
+  const full =
+    raw.length === 3
+      ? raw
+          .split('')
+          .map((c) => `${c}${c}`)
+          .join('')
+      : raw;
+  if (full.length !== 6 || !/^[0-9a-fA-F]{6}$/.test(full)) return undefined;
+  const r = Number.parseInt(full.slice(0, 2), 16) / 255;
+  const g = Number.parseInt(full.slice(2, 4), 16) / 255;
+  const b = Number.parseInt(full.slice(4, 6), 16) / 255;
+  const lin = (c: number) =>
+    c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+/**
+ * Artwork / brand hex → translucent glass underlay (not opaque paper).
+ * Dark materials prefer dark BlurView tint + light ink on top.
+ */
+export function glassDynamicTintMaterials(
+  hex: string,
+  options?: {
+    mist?: boolean;
+    airy?: boolean;
+    allowsBlur?: boolean;
+  },
+): { fill: string; border: string; darkMaterial: boolean } | undefined {
+  const luma = relativeLuminanceFromColor(hex);
+  if (luma === undefined) return undefined;
+  const darkMaterial = luma < 0.55;
+  const mist = options?.mist ?? false;
+  const airy = options?.airy ?? !mist;
+  const allowsBlur = options?.allowsBlur ?? true;
+
+  if (mist) {
+    return {
+      fill: colorWithAlpha(hex, darkMaterial ? 0.22 : 0.14),
+      border: colorWithAlpha(hex, darkMaterial ? 0.38 : 0.22),
+      darkMaterial,
+    };
+  }
+
+  const blurAlpha = darkMaterial
+    ? airy
+      ? 0.46
+      : 0.54
+    : airy
+      ? 0.38
+      : 0.46;
+  const solidAlpha = darkMaterial
+    ? airy
+      ? 0.58
+      : 0.66
+    : airy
+      ? 0.5
+      : 0.58;
+  return {
+    fill: colorWithAlpha(hex, allowsBlur ? blurAlpha : solidAlpha),
+    border: colorWithAlpha(
+      hex,
+      darkMaterial ? (airy ? 0.42 : 0.5) : airy ? 0.28 : 0.34,
+    ),
+    darkMaterial,
+  };
+}

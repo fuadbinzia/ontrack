@@ -1,5 +1,8 @@
 /**
- * Destination-accurate cover lookup via free Wikimedia APIs + Openverse fallback.
+ * Destination cover lookup — Unsplash landscape first (scenic, people-light),
+ * then Wikipedia/Wikivoyage page lead images. Commons/Openverse search was
+ * dropped: city queries pulled museum/exhibit portraits (Austin → LBJ Music
+ * America guitar plates, etc.).
  * Shared by the Expo API route (proper User-Agent) and the travel client.
  */
 
@@ -161,12 +164,106 @@ const DESTINATION_PEOPLE_PHOTO_TERMS = [
   'street style',
   'looking at',
   'together',
+  // Indoor exhibit / object plates (Commons city-month categories).
+  'exhibition',
+  'exhibit',
+  'memorabilia',
+  'museum',
+  'guitar',
+  'guitars',
+  'synthesizer',
+  'costume',
+  'costumes',
+  'clothing',
 ] as const;
 
 const DESTINATION_PEOPLE_PHOTO_RE = new RegExp(
   `\\b(${DESTINATION_PEOPLE_PHOTO_TERMS.join('|')})\\b`,
   'i',
 );
+
+/**
+ * Metadata / filename signals that the photo is typography-forward (signs,
+ * posters, overlays, AI lettering) rather than a clean scenic plate.
+ * Word-bounded so “Texas” never matches “text”.
+ */
+const DESTINATION_TEXT_PHOTO_TERMS = [
+  'text',
+  'texts',
+  'typography',
+  'typeface',
+  'lettering',
+  'letters?',
+  'font',
+  'fonts',
+  'sign',
+  'signs',
+  'signage',
+  'neon',
+  'billboard',
+  'billboards',
+  'poster',
+  'posters',
+  'banner',
+  'banners',
+  'plaque',
+  'plaques',
+  'graffiti',
+  'inscription',
+  'inscriptions',
+  'watermark',
+  'watermarks',
+  'caption',
+  'captions',
+  'subtitle',
+  'subtitles',
+  'overlay',
+  'overlays',
+  'infographic',
+  'infographics',
+  'screenshot',
+  'screenshots',
+  'meme',
+  'memes',
+  'quote',
+  'quotes',
+  'saying',
+  'sayings',
+  'slogan',
+  'slogans',
+  'handwriting',
+  'handwritten',
+  'chalkboard',
+  'blackboard',
+  'newspaper',
+  'magazine',
+  'headline',
+  'headlines',
+  'logo',
+  'logos',
+  'sticker',
+  'stickers',
+  'label',
+  'labels',
+  // Diagram / labeled cartography fights header copy the same way signs do.
+  'map',
+  'maps',
+] as const;
+
+const DESTINATION_TEXT_PHOTO_RE = new RegExp(
+  `\\b(${DESTINATION_TEXT_PHOTO_TERMS.join('|')})\\b`,
+  'i',
+);
+
+/** Phrases that mark AI/error lettering plates even without a lone “text” token. */
+const DESTINATION_TEXT_PHOTO_PHRASES = [
+  'precise name for your image',
+  'choose a more precise',
+  'with text',
+  'text overlay',
+  'overlay text',
+  'text on',
+] as const;
 
 /** Query operators that bias Unsplash / Openverse / Commons away from people stock. */
 const PHOTO_SEARCH_PEOPLE_EXCLUDES = [
@@ -188,55 +285,63 @@ const PHOTO_SEARCH_PEOPLE_EXCLUDES = [
   'fashion',
 ] as const;
 
-const COMMONS_PEOPLE_INTITLE_EXCLUDES = [
-  'people',
-  'person',
-  'tourist',
-  'portrait',
-  'selfie',
-  'photographing',
-  'photographer',
-  'man',
-  'woman',
-  'hiker',
-  'friend',
-  'friends',
-  'couple',
-  'crowd',
+/** Bias search away from typography / signage stock that fights header copy. */
+const PHOTO_SEARCH_TEXT_EXCLUDES = [
+  'text',
+  'typography',
+  'sign',
+  'signage',
+  'poster',
+  'billboard',
+  'watermark',
+  'graffiti',
+  'caption',
+  'neon',
+  'plaque',
+  'overlay',
+  'screenshot',
+  'meme',
+  'quote',
+  'lettering',
+  'map',
 ] as const;
 
-const OPENVERSE_PEOPLE_EXCLUDED_KEYWORDS = [
-  'people',
-  'person',
-  'man',
-  'woman',
-  'tourist',
-  'portrait',
-  'selfie',
-  'hiker',
-  'crowd',
-  'couple',
-  'friend',
-  'friends',
-  'lifestyle',
-  'fashion',
-].join(',');
-
-/** True when title/alt/URL text suggests a people-forward stock photo. */
-export function destinationPhotoSuggestsPeople(
+function destinationPhotoMetaHaystack(
   ...parts: Array<string | undefined | null>
-): boolean {
-  const haystack = parts
+): string {
+  return parts
     .map((part) => (typeof part === 'string' ? part.trim() : ''))
     .filter(Boolean)
     // Filenames use _/-; treat them as word breaks for \b matching.
     .map((part) => part.replace(/[_/-]+/g, ' '))
     .join(' ');
+}
+
+/** True when title/alt/URL text suggests a people-forward stock photo. */
+export function destinationPhotoSuggestsPeople(
+  ...parts: Array<string | undefined | null>
+): boolean {
+  const haystack = destinationPhotoMetaHaystack(...parts);
   if (!haystack) return false;
+  // LBJ Library Flickr dumps use DIG##### filenames — almost never scenery.
+  if (/\bdig\d{4,}\b/i.test(haystack)) return true;
   return DESTINATION_PEOPLE_PHOTO_RE.test(haystack);
 }
 
-/** Skip flags/maps, people stock, non-HTTPS assets, and Unsplash+ watermarks. */
+/** True when title/alt/URL suggests typography, signage, or lettering stock. */
+export function destinationPhotoSuggestsText(
+  ...parts: Array<string | undefined | null>
+): boolean {
+  const haystack = destinationPhotoMetaHaystack(...parts);
+  if (!haystack) return false;
+  const lower = haystack.toLowerCase();
+  if (DESTINATION_TEXT_PHOTO_PHRASES.some((phrase) => lower.includes(phrase))) {
+    return true;
+  }
+  return DESTINATION_TEXT_PHOTO_RE.test(haystack);
+}
+
+/** Skip flags/maps, people/text stock, non-HTTPS assets, and Unsplash+ watermarks. */
 export function isUsableDestinationPhotoUrl(url: string): boolean {
   const trimmed = url.trim();
   if (!trimmed.toLowerCase().startsWith('https://')) return false;
@@ -254,6 +359,7 @@ export function isUsableDestinationPhotoUrl(url: string): boolean {
     return false;
   }
   if (destinationPhotoSuggestsPeople(trimmed)) return false;
+  if (destinationPhotoSuggestsText(trimmed)) return false;
   return true;
 }
 
@@ -299,16 +405,20 @@ export function pickDestinationPhotoUrl(
   return undefined;
 }
 
-/** Pick a cover URL only when neither the URL nor metadata suggests people. */
+/**
+ * Pick a cover URL only when neither the URL nor metadata suggests people or
+ * typography/signage stock.
+ */
 export function pickPeopleFreeDestinationPhotoUrl(
   meta: Array<string | undefined | null>,
   ...candidates: Array<string | undefined | null>
 ): string | undefined {
   if (destinationPhotoSuggestsPeople(...meta, ...candidates)) return undefined;
+  if (destinationPhotoSuggestsText(...meta, ...candidates)) return undefined;
   return pickDestinationPhotoUrl(...candidates);
 }
 
-/** Unsplash / Openverse: push landscape landmarks, exclude people/lifestyle tags. */
+/** Unsplash / Openverse: push landscape landmarks, exclude people/text stock. */
 function photoSearchQuery(place: string): string {
   const trimmed = place.trim();
   // Bias unknown places toward architecture/skyline — lifestyle portraits often
@@ -316,9 +426,12 @@ function photoSearchQuery(place: string): string {
   const base = hasDestinationLandmarkIntent(trimmed)
     ? trimmed
     : `${trimmed} architecture landmark`;
-  const excludes = PHOTO_SEARCH_PEOPLE_EXCLUDES.map((term) => `-${term}`).join(
-    ' ',
-  );
+  const excludes = [
+    ...PHOTO_SEARCH_PEOPLE_EXCLUDES,
+    ...PHOTO_SEARCH_TEXT_EXCLUDES,
+  ]
+    .map((term) => `-${term}`)
+    .join(' ');
   return `${base} landscape ${excludes}`;
 }
 
@@ -375,120 +488,6 @@ async function fetchWikiSummaryCover(
   );
 }
 
-/** Prefer iconic travel draws over generic city stock. */
-function commonsLandmarkSearch(place: string): string {
-  const trimmed = place.trim();
-  // Keep the place token first — loose OR queries drift to unrelated places.
-  const base = hasDestinationLandmarkIntent(trimmed)
-    ? trimmed
-    : `${trimmed} architecture landmark`;
-  // CirrusSearch: prefer landscape files, drop obvious people titles.
-  const excludes = COMMONS_PEOPLE_INTITLE_EXCLUDES.map(
-    (term) => `-intitle:${term}`,
-  ).join(' ');
-  return `${base} ${excludes}`;
-}
-
-async function fetchCommonsSearchCovers(
-  place: string,
-  headers: Record<string, string>,
-  limit: number,
-): Promise<string[]> {
-  const params = new URLSearchParams({
-    action: 'query',
-    generator: 'search',
-    gsrsearch: commonsLandmarkSearch(place),
-    gsrnamespace: '6',
-    gsrlimit: String(Math.max(12, limit * 4)),
-    prop: 'imageinfo',
-    iiprop: 'url|mime',
-    iiurlwidth: '800',
-    format: 'json',
-    origin: '*',
-  });
-  const body = (await fetchJson(
-    `https://commons.wikimedia.org/w/api.php?${params.toString()}`,
-    headers,
-  )) as
-    | {
-        query?: {
-          pages?: Record<
-            string,
-            {
-              title?: string;
-              imageinfo?: Array<{
-                url?: string;
-                thumburl?: string;
-                mime?: string;
-              }>;
-            }
-          >;
-        };
-      }
-    | undefined;
-  if (!body) return [];
-  const out: string[] = [];
-  for (const page of Object.values(body.query?.pages ?? {})) {
-    if (out.length >= limit) break;
-    const info = page.imageinfo?.[0];
-    const mime = info?.mime?.toLowerCase() ?? '';
-    if (mime && !mime.startsWith('image/jpeg') && !mime.startsWith('image/png')) {
-      continue;
-    }
-    pushUniqueUrl(
-      out,
-      pickPeopleFreeDestinationPhotoUrl(
-        [page.title, info?.url, info?.thumburl],
-        info?.thumburl,
-        info?.url,
-      ),
-    );
-  }
-  return out;
-}
-
-async function fetchOpenverseCovers(
-  place: string,
-  headers: Record<string, string>,
-  limit: number,
-): Promise<string[]> {
-  const url = `https://api.openverse.org/v1/images/?${new URLSearchParams({
-    q: photoSearchQuery(place),
-    page_size: String(Math.max(8, limit * 3)),
-    category: 'photograph',
-    extension: 'jpg,png',
-    excluded_keywords: OPENVERSE_PEOPLE_EXCLUDED_KEYWORDS,
-  }).toString()}`;
-  const body = (await fetchJson(url, headers)) as
-    | {
-        results?: Array<{
-          title?: string;
-          thumbnail?: string;
-          url?: string;
-          tags?: Array<string | { name?: string }>;
-        }>;
-      }
-    | undefined;
-  if (!body) return [];
-  const out: string[] = [];
-  for (const hit of body.results ?? []) {
-    if (out.length >= limit) break;
-    const tagText = (hit.tags ?? [])
-      .map((tag) => (typeof tag === 'string' ? tag : tag.name))
-      .filter(Boolean)
-      .join(' ');
-    pushUniqueUrl(
-      out,
-      pickPeopleFreeDestinationPhotoUrl(
-        [hit.title, tagText, hit.url, hit.thumbnail],
-        hit.url,
-        hit.thumbnail,
-      ),
-    );
-  }
-  return out;
-}
-
 async function fetchUnsplashCovers(
   place: string,
   headers: Record<string, string>,
@@ -498,6 +497,8 @@ async function fetchUnsplashCovers(
     query: photoSearchQuery(place),
     per_page: String(Math.max(10, limit * 4)),
     orientation: 'landscape',
+    // Prefer safer scenic results over lifestyle/portrait stock.
+    content_filter: 'high',
   }).toString()}`;
   const body = (await fetchJson(url, headers)) as
     | {
@@ -553,12 +554,13 @@ function coverHeaders(userAgent?: string): Record<string, string> {
 }
 
 /**
- * Merge Wikimedia-first results with at least one direct-loadable URL when
- * available so trip cards still render if the image proxy is down.
+ * Merge Unsplash-first results with Wiki lead-image fallbacks.
+ * Prefers direct-loadable CDN URLs so trip cards still paint without the
+ * Wikimedia image proxy.
  */
 export function mergeDestinationCoverUrls(
-  primary: string[],
-  direct: string[],
+  preferred: string[],
+  fallback: string[],
   limit: number,
 ): string[] {
   const capped = normalizeLimit(limit);
@@ -568,24 +570,21 @@ export function mergeDestinationCoverUrls(
     pushUniqueUrl(out, url);
   };
 
-  const directUsable = direct.filter(isDirectClientCoverUrl);
-  // Keep destination-accurate Wikimedia first, but reserve a slot for a
-  // direct-loadable backup whenever the list would otherwise be proxy-only.
-  for (const url of primary) append(url);
-  if (directUsable.length > 0 && !out.some(isDirectClientCoverUrl)) {
-    if (out.length >= capped) {
-      out[capped - 1] = directUsable[0]!;
-    } else {
-      append(directUsable[0]);
-    }
-  }
-  for (const url of directUsable) append(url);
+  const preferredUsable = preferred.filter(isUsableDestinationPhotoUrl);
+  const fallbackUsable = fallback.filter(isUsableDestinationPhotoUrl);
+  // Lead with Unsplash (or other direct CDN) when present.
+  const directFirst = [
+    ...preferredUsable.filter(isDirectClientCoverUrl),
+    ...preferredUsable.filter((url) => !isDirectClientCoverUrl(url)),
+  ];
+  for (const url of directFirst) append(url);
+  for (const url of fallbackUsable) append(url);
   return out.slice(0, capped);
 }
 
 /**
- * Up to `limit` destination-relevant landscape URLs (max 3).
- * Prefer variety across providers when a single source under-delivers.
+ * Up to `limit` destination-relevant landscape URLs.
+ * Unsplash scenic stock first; Wikipedia/Wikivoyage lead images fill gaps.
  */
 export async function lookupDestinationCoverUrls(
   place: string,
@@ -596,40 +595,24 @@ export async function lookupDestinationCoverUrls(
 
   const limit = normalizeLimit(options?.limit);
   const headers = coverHeaders(options?.userAgent);
-  const primary: string[] = [];
 
-  const appendPrimary = (urls: string[]) => {
-    for (const url of urls) {
-      if (primary.length >= limit) return;
-      pushUniqueUrl(primary, url);
-    }
-  };
+  // Unsplash landscape is the primary people-light scenic provider.
+  const unsplash = await fetchUnsplashCovers(trimmed, headers, limit);
+  if (unsplash.length >= limit) return unsplash.slice(0, limit);
 
-  // Prefer Wikimedia / Openverse (clean licensing) before Unsplash napi.
+  // Wiki page lead images are usually skylines / landmarks — not Commons search.
+  const wiki: string[] = [];
   pushUniqueUrl(
-    primary,
+    wiki,
     await fetchWikiSummaryCover('en.wikipedia.org', trimmed, headers),
   );
-  if (primary.length < limit) {
+  if (unsplash.length + wiki.length < limit) {
     pushUniqueUrl(
-      primary,
+      wiki,
       await fetchWikiSummaryCover('en.wikivoyage.org', trimmed, headers),
     );
   }
-  if (primary.length < limit) {
-    appendPrimary(
-      await fetchCommonsSearchCovers(trimmed, headers, limit - primary.length),
-    );
-  }
-  if (primary.length < limit) {
-    appendPrimary(
-      await fetchOpenverseCovers(trimmed, headers, limit - primary.length),
-    );
-  }
-
-  // Always probe Unsplash so clients can show a photo without the Wiki proxy.
-  const direct = await fetchUnsplashCovers(trimmed, headers, limit);
-  return mergeDestinationCoverUrls(primary, direct, limit);
+  return mergeDestinationCoverUrls(unsplash, wiki, limit);
 }
 
 /** Single cover URL for a place name (server should pass a real User-Agent). */

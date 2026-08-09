@@ -30,8 +30,8 @@ import { travelHomeTokens } from '@/features/travel/travel-home-tokens';
 import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';
 
-/** Bump when atmosphere query strategy changes so stale street plates clear. */
-const RECENT_STORAGE_KEY = '@ontrack/travel-home-atmosphere-recent-v4';
+/** Bump when cover provider/filters change so stale people plates leave rotation. */
+const RECENT_STORAGE_KEY = '@ontrack/travel-home-atmosphere-recent-v6';
 /** Image keys + destination keys share one history so places keep cycling. */
 const RECENT_LIMIT = 16;
 

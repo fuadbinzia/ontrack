@@ -73,7 +73,8 @@ export function TravelHomeTripFrostScoop({
 
   // Valley swoop (viewBox x 0–100): lip → title dip → avatar crest.
   // Same curve, nudged up as a unit (keep relative Y deltas).
-  const lift = Math.round(milkHeight * 0.13);
+  // Small lift — keep the scoop low so more hero shows above the milk.
+  const lift = Math.round(milkHeight * 0.04);
   const leftY = Math.max(2, Math.round(milkHeight * 0.28) - lift);
   const valleyY = Math.max(leftY + 8, Math.round(milkHeight * 0.46) - lift);
   const rightY = Math.max(2, Math.round(milkHeight * 0.14) - lift);

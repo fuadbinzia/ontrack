@@ -1,6 +1,12 @@
 import { useRouter, type Href } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type TextStyle,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -51,15 +57,21 @@ function TravelHeroGlassIconButton({
   accessibilityLabel,
   testID,
   onPress,
+  /** Overline beside the glass well — whole row is one back hit target. */
+  label,
+  labelStyle,
 }: {
   icon: 'back' | 'add';
   size: number;
   accessibilityLabel: string;
   testID?: string;
   onPress: () => void;
+  label?: string;
+  labelStyle?: StyleProp<TextStyle>;
 }) {
   const theme = useTheme();
   const dark = theme.name === 'dark';
+  const { spacing } = useResponsive();
   // Same frost + ink as Travel Home FABs — never solid `clear` (opaque discs)
   // and never sky-matched white glyphs on white milk.
   const glyph = dark ? theme.textPrimary : travelHomeTokens.colors.ink;
@@ -67,6 +79,7 @@ function TravelHeroGlassIconButton({
     haptics.tap();
     onPress();
   };
+  const labeled = Boolean(label);
   return (
     <AgentTestId
       testID={testID}
@@ -78,12 +91,21 @@ function TravelHeroGlassIconButton({
         onPress={handlePress}
         hitSlop={Math.max(6, (44 - size) / 2)}
         style={({ pressed }) => [
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            opacity: pressed ? 0.72 : 1,
-          },
+          labeled
+            ? {
+                flexDirection: 'row' as const,
+                alignItems: 'center' as const,
+                gap: spacing.md,
+                flexShrink: 1,
+                minWidth: 0,
+                opacity: pressed ? 0.72 : 1,
+              }
+            : {
+                width: size,
+                height: size,
+                borderRadius: size / 2,
+                opacity: pressed ? 0.72 : 1,
+              },
         ]}>
         <TravelHomeGlass
           airy
@@ -94,6 +116,7 @@ function TravelHeroGlassIconButton({
             borderRadius: size / 2,
             alignItems: 'center',
             justifyContent: 'center',
+            flexShrink: 0,
             boxShadow: dark
               ? undefined
               : travelHomeTokens.colors.circleFabShadow,
@@ -102,6 +125,11 @@ function TravelHeroGlassIconButton({
             <Symbol name={icon} size="md" color={glyph} />
           </View>
         </TravelHomeGlass>
+        {labeled ? (
+          <AppText variant="overline" fit style={labelStyle}>
+            {label}
+          </AppText>
+        ) : null}
       </Pressable>
     </AgentTestId>
   );
@@ -189,6 +217,7 @@ export function TravelPlanHero({
   );
   // Theme paper — sky horizon dissolves into this just below the dates card.
   const pageBase = travelPageBg(theme);
+  const backSize = Math.max(32, s(32));
   useSafeAreaChrome(skyChrome, { priority: 1 });
   const skyOverlay = useMemo(
     () =>
@@ -226,26 +255,14 @@ export function TravelPlanHero({
     <View style={[styles.hero, { gap: datesTopGap }]}>
       <View style={[styles.headerBlock, { minHeight: skyContentBand }]}>
         <View style={[styles.titleRow, { gap: rs.md }]}>
-          <TravelHeroGlassIconButton
-            icon="back"
-            size={Math.max(32, s(32))}
-            accessibilityLabel="Go Back"
-            testID={AgentUiIds.chrome.back}
-            // Always land on Travel home — never pop to a prior trip in the stack.
-            // Guard dismiss: empty-stack POP → dev-only LogBox on Android.
-            onPress={() => {
-              if (router.canDismiss()) {
-                router.dismissTo('/(tabs)/travel' as Href);
-                return;
-              }
-              router.replace('/(tabs)/travel' as Href);
-            }}
-          />
           <TravelHeaderFlourish style={styles.headerCopy}>
-            <AppText
-              variant="overline"
-              fit
-              style={[
+            <TravelHeroGlassIconButton
+              icon="back"
+              size={backSize}
+              accessibilityLabel="Go Back"
+              testID={AgentUiIds.chrome.back}
+              label="Itinerary"
+              labelStyle={[
                 travelOverlineStyle,
                 styles.serif,
                 {
@@ -253,51 +270,61 @@ export function TravelPlanHero({
                   fontSize: Math.max(12, typography.caption.fontSize),
                   lineHeight: Math.max(16, s(16)),
                 },
-              ]}>
-              Itinerary
-            </AppText>
-            <TravelPlanTitle
-              title={placeName}
-              fontSize={Math.max(32, s(34))}
-              style={{ color: skyInk }}
+              ]}
+              // Always land on Travel home — never pop to a prior trip in the stack.
+              // Guard dismiss: empty-stack POP → dev-only LogBox on Android.
+              onPress={() => {
+                if (router.canDismiss()) {
+                  router.dismissTo('/(tabs)/travel' as Href);
+                  return;
+                }
+                router.replace('/(tabs)/travel' as Href);
+              }}
             />
-            {showPin ? (
-              <View
-                style={[
-                  styles.pinRow,
-                  {
-                    gap: Math.max(3, rs.xxs),
-                    marginTop: Math.max(2, s(2)),
-                    paddingRight: Math.max(72, s(80)),
-                  },
-                ]}>
-                <Symbol
-                  name="location"
-                  size={Math.max(12, s(13))}
-                  color={skyInkMuted}
-                />
-                <AppText
-                  variant="caption"
-                  fit
-                  numberOfLines={1}
+            <View style={{ paddingLeft: backSize + rs.md }}>
+              <TravelPlanTitle
+                title={placeName}
+                fontSize={Math.max(32, s(34))}
+                style={{ color: skyInk }}
+              />
+              {showPin ? (
+                <View
                   style={[
-                    styles.serif,
-                    styles.pinLabel,
+                    styles.pinRow,
                     {
-                      color: skyInkMuted,
-                      fontSize: Math.max(13, typography.caption.fontSize),
-                      lineHeight: Math.max(17, s(17)),
+                      gap: Math.max(3, rs.xxs),
+                      marginTop: Math.max(2, s(2)),
+                      paddingRight: Math.max(72, s(80)),
                     },
                   ]}>
-                  {destination}
-                </AppText>
-              </View>
-            ) : null}
+                  <Symbol
+                    name="location"
+                    size={Math.max(12, s(13))}
+                    color={skyInkMuted}
+                  />
+                  <AppText
+                    variant="caption"
+                    fit
+                    numberOfLines={1}
+                    style={[
+                      styles.serif,
+                      styles.pinLabel,
+                      {
+                        color: skyInkMuted,
+                        fontSize: Math.max(13, typography.caption.fontSize),
+                        lineHeight: Math.max(17, s(17)),
+                      },
+                    ]}>
+                    {destination}
+                  </AppText>
+                </View>
+              ) : null}
+            </View>
           </TravelHeaderFlourish>
           {onAddPress ? (
             <TravelHeroGlassIconButton
               icon="add"
-              size={Math.max(32, s(32))}
+              size={backSize}
               accessibilityLabel="Add to Timeline"
               testID={AgentUiIds.travel.planDetail.addToTimeline}
               onPress={onAddPress}

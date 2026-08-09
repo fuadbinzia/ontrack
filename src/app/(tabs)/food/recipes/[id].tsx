@@ -11,13 +11,13 @@ import {
   FOOD_IMAGE_OVERLAY_INK,
   FoodImage,
   GlassMetaChip,
-  HeaderBackButton,
   IconButton,
   ScreenHeader,
   SegmentedControl,
   Symbol,
   fieldTitleCase,
 } from '@/components/primitives';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import { recipeImageSource } from '@/features/food/food-image-source';
 import { FoodScreen } from '@/features/food/food-screen';
 import {
@@ -41,6 +41,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { selectRecipeById, useRecipes } from '@/store/food-recipes';
 import { useFoodProfile } from '@/store/food-profile';
 import { AgentUiIds } from '@/utils/agent-ui';
+import { goBackOrReplace } from '@/utils/navigation';
 
 /** Recipe detail — hero, meta, tags, sectioned content, plan + cook sheets. */
 export default function RecipeDetailScreen() {
@@ -67,7 +68,7 @@ export default function RecipeDetailScreen() {
   if (!recipe) {
     return (
       <FoodScreen>
-        <ScreenHeader eyebrow="Food" title="Recipe" leading={<HeaderBackButton compact />} />
+        <ScreenHeader eyebrow="Food" title="Recipe" leading={<FoodHeaderBackButton />} />
         <ErrorMessage
           message="This recipe is no longer available."
           style={{ marginTop: spacing.xl }}
@@ -110,7 +111,7 @@ export default function RecipeDetailScreen() {
             icon="back"
             accessibilityLabel="Go back"
             testID={AgentUiIds.food.recipeDetail.back}
-            onPress={() => router.back()}
+            onPress={() => goBackOrReplace(router, '/(tabs)/food/recipes')}
           />
           <View style={[styles.heroControlsRight, { gap: spacing.sm }]}>
             <IconButton

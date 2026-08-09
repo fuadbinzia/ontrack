@@ -1,4 +1,5 @@
-import { HeaderBackButton, ScreenHeader } from '@/components/primitives';
+import { ScreenHeader } from '@/components/primitives';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import { FoodScreen } from '@/features/food/food-screen';
 import { PlanShoppingPanel } from '@/features/food/plan-shopping';
 import { PlanWeekPanel } from '@/features/food/plan-week';
@@ -17,7 +18,7 @@ export default function FoodPlanScreen() {
         eyebrow="Food"
         title="Plan & Shopping"
         subtitle="This week's meals and what to buy for them"
-        leading={<HeaderBackButton compact />}
+        leading={<FoodHeaderBackButton />}
       />
       <PlanWeekPanel />
       <PlanShoppingPanel />

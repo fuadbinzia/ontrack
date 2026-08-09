@@ -9,12 +9,12 @@ import {
     FOOD_IMAGE_OVERLAY_INK,
     FOOD_IMAGE_OVERLAY_INK_SOFT,
     FoodImage,
-    HeaderBackButton,
     Input,
     ScreenHeader,
     SectionHeader,
 } from "@/components/primitives";
 import { RecipeCard } from "@/features/food/components";
+import { FoodHeaderBackButton } from "@/features/food/food-header-back-button";
 import { recipeImageSource } from "@/features/food/food-image-source";
 import { FoodScreen } from "@/features/food/food-screen";
 import {
@@ -78,7 +78,7 @@ export default function FoodRecipesScreen() {
       <ScreenHeader
         eyebrow="Food"
         title="Recipes"
-        leading={<HeaderBackButton compact />}
+        leading={<FoodHeaderBackButton />}
       />
 
       <Input

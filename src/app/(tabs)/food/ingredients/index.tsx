@@ -6,7 +6,6 @@ import {
   AppText,
   Card,
   EmptyState,
-  HeaderBackButton,
   Input,
   ScreenHeader,
   Symbol,
@@ -15,6 +14,7 @@ import {
   IngredientSafetyRow,
   ingredientSafetyStatusForLevel,
 } from '@/features/food/components';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import { FoodScreen } from '@/features/food/food-screen';
 import { searchIngredientKnowledge } from '@/features/food/ingredient-knowledge';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -42,7 +42,7 @@ export default function FoodIngredientsScreen() {
       <ScreenHeader
         eyebrow="Food"
         title="Ingredient Info"
-        leading={<HeaderBackButton compact />}
+        leading={<FoodHeaderBackButton />}
       />
 
       <Input

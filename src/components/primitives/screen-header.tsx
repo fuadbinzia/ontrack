@@ -167,15 +167,17 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flexShrink: 1,
   },
-  /** Labeled compact back — size to content, stay flush left with the title. */
+  /** Labeled compact back — grow so the eyebrow band is the hit target. */
   eyebrowLeading: {
+    flex: 1,
     flexShrink: 1,
     minWidth: 0,
     maxWidth: '100%',
   },
   eyebrowSpacer: {
-    flex: 1,
-    minWidth: 0,
+    flexGrow: 0,
+    flexShrink: 0,
+    width: 0,
   },
   copy: {
     flex: 1,

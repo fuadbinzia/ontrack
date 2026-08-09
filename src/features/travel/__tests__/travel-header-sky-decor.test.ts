@@ -235,6 +235,8 @@ describe('travel header sky décor', () => {
     expect(hero).toContain('TravelHeroGlassIconButton');
     expect(hero).toContain('travelHomeTokens.colors.ink');
     expect(hero).toContain('circleFabShadow');
+    // Eyebrow shares the back hit target (chevron/glass + Itinerary).
+    expect(hero).toContain('label="Itinerary"');
     expect(hero).toMatch(
       /TravelHeroGlassIconButton[\s\S]*?<TravelHomeGlass[\s\S]*?\bairy\b/,
     );

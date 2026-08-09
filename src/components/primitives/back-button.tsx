@@ -96,10 +96,10 @@ export function HeaderBackButton({
     );
   }
 
-  // Overline-matched chrome: glyph ≈ eyebrow cap height; hitSlop preserves tap target.
+  // Overline-matched chrome: glyph ≈ eyebrow cap height; ≥44pt via minHeight (not only hitSlop).
   // `Symbol` scales numeric sizes — pass the design-token base, not the already-scaled type size.
   const line = Math.round(typography.overline.lineHeight);
-  const hitPad = Math.max(0, (layout.minTapTarget - line) / 2);
+  const tap = layout.minTapTarget;
   const labeled = Boolean(label);
 
   return (
@@ -109,14 +109,16 @@ export function HeaderBackButton({
       onLayout={agent.onLayout}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      hitSlop={hitPad}
       onPress={handlePress}
       style={({ pressed }) => [
         styles.compact,
         labeled ? styles.compactLabeled : null,
         {
-          width: labeled ? undefined : Math.round(typography.overline.fontSize),
-          height: line,
+          width: labeled ? undefined : tap,
+          minWidth: labeled ? undefined : tap,
+          minHeight: tap,
+          // Keep the glyph/label optically on the overline; pad the tap shell.
+          paddingVertical: Math.max(0, (tap - line) / 2),
           gap: labeled ? spacing.xs : undefined,
           opacity: pressed ? 0.7 : 1,
         },
@@ -137,13 +139,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Hug left like the title — stretch + center was pushing the overline mid-row.
+  // Fill the ScreenHeader eyebrow leading slot — label stays left-aligned.
   compactLabeled: {
     flexDirection: 'row',
+    flex: 1,
     flexShrink: 1,
     minWidth: 0,
     maxWidth: '100%',
-    alignSelf: 'flex-start',
+    alignSelf: 'stretch',
     justifyContent: 'flex-start',
     alignItems: 'center',
   },

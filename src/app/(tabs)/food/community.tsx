@@ -7,7 +7,6 @@ import {
     AppText,
     Card,
     EmptyState,
-    HeaderBackButton,
     IconButton,
     ScreenHeader,
     SegmentedControl,
@@ -20,6 +19,7 @@ import {
     suggestedCreators,
     type CommunityTab,
 } from '@/features/food/community-data';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import {
     PostComposerSheet,
     ReportContentSheet,
@@ -98,7 +98,7 @@ export default function FoodCommunityScreen() {
         eyebrow="Food"
         title="Community"
         subtitle="What friends and creators are cooking"
-        leading={<HeaderBackButton compact />}
+        leading={<FoodHeaderBackButton />}
         trailing={
           <IconButton
             icon="add"

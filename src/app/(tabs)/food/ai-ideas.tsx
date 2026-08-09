@@ -7,7 +7,6 @@ import {
   ErrorMessage,
   GlassPlate,
   GlassPrimaryAction,
-  HeaderBackButton,
   Input,
   LoadingBlock,
   ScreenHeader,
@@ -17,6 +16,7 @@ import {
 import { radii } from '@/design-system';
 import { RecipeIdeaCard } from '@/features/food/components';
 import { buildFoodFixtureRecipeIdeas } from '@/features/food/fixtures';
+import { FoodHeaderBackButton } from '@/features/food/food-header-back-button';
 import { FoodScreen } from '@/features/food/food-screen';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -171,7 +171,7 @@ export default function FoodAiIdeasScreen() {
       <ScreenHeader
         eyebrow="Food"
         title="AI Recipe Ideas"
-        leading={<HeaderBackButton compact />}
+        leading={<FoodHeaderBackButton />}
       />
 
       <Input

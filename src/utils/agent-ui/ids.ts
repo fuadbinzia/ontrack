@@ -149,6 +149,7 @@ export const AgentUiIds = {
     },
   },
   grocery: {
+    back: 'ontrack.grocery.detail.back',
     addRecipe: 'ontrack.grocery.detail.addRecipe',
     settings: 'ontrack.grocery.detail.settings',
     share: 'ontrack.grocery.detail.share',

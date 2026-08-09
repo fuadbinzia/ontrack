@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.27',
+    date: '2026-08-09',
+    notes: [
+      'Fix food-stack back navigation and enlarge labeled header back hit targets.',
+    ],
+  },
+  {
     version: '1.0.26',
     date: '2026-08-09',
     notes: [
@@ -207,6 +214,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.27',
+    date: '2026-08-09',
+    notes: [
+      'Fix food-stack back navigation and enlarge labeled header back hit targets.',
+      'Touched: app routes.',
+    ],
+  },
   {
     version: '1.0.26',
     date: '2026-08-09',

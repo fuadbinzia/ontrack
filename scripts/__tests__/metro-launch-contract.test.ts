@@ -341,6 +341,25 @@ describe('metro launch command contract', () => {
       alerts.indexOf('DEV_MENU_PHRASES ='),
     );
     expect(toolsBlock).not.toContain('runtime version');
+
+    // Android Expo Dev Menu — uiautomator Continue/BACK + prefs suppress (showsAtLaunch).
+    const androidAlerts = read('scripts/lib/android_system_alert.py');
+    expect(androidAlerts).toContain('DEV_MENU_INTRO_PHRASES');
+    expect(androidAlerts).toContain('DEV_MENU_TOOLS_PHRASES');
+    expect(androidAlerts).toContain('dismissing Expo developer-menu intro');
+    expect(androidAlerts).toContain('dismissing Expo Dev Menu (BACK)');
+    expect(androidAlerts).toContain('showsAtLaunch');
+    expect(androidAlerts).toContain('isOnboardingFinished');
+    expect(androidAlerts).toContain('expo.modules.devmenu.sharedpreferences');
+    const androidHost = read('scripts/lib/agent-ui-host.sh');
+    expect(androidHost).toContain('agent_ui_ensure_android_system_alerts_clear');
+    expect(androidHost).toContain('android_system_alert.py');
+    expect(androidHost).toContain('AGENT_UI_SKIP_ANDROID_ALERTS');
+    const appJson = read('app.json');
+    expect(appJson).toContain('expo-dev-client');
+    expect(appJson).toContain('skipOnboarding');
+    expect(appJson).toContain('showMenuAtLaunch');
+    expect(appJson).toContain('toolsButton');
   });
 
   it('times out wedged simctl RPCs and serializes ensure-packager device ops', () => {

@@ -54,6 +54,10 @@ function measureInWindow(
 /**
  * Scroll the active Screen ScrollView so `testID` is in view.
  * Purely in-app — never uses host mouse / Simulator window coordinates.
+ *
+ * Visible bottom respects the absolute tab dock when registered — otherwise
+ * targets land under translucent glass (e.g. Profile "Features" frosting
+ * through the Profile tab on Android).
  */
 export async function scrollAgentUiTargetIntoView(testID: string): Promise<boolean> {
   if (!isAgentUiEnabled() || !testID) return false;
@@ -68,8 +72,14 @@ export async function scrollAgentUiTargetIntoView(testID: string): Promise<boole
   });
   if (!target || !viewport) return false;
 
+  const dockNode = getAgentUiTargetNode('ontrack.tabs.dock');
+  const dock = dockNode ? await measureInWindow(dockNode) : null;
+  const viewportBottom = viewport.y + viewport.height;
+  const clearBottom =
+    dock && dock.height > 0 ? Math.min(viewportBottom, dock.y) : viewportBottom;
+
   const visibleTop = viewport.y + EDGE_PAD;
-  const visibleBottom = viewport.y + viewport.height - EDGE_PAD;
+  const visibleBottom = clearBottom - EDGE_PAD;
   const targetTop = target.y;
   const targetBottom = target.y + target.height;
 

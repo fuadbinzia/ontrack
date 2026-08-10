@@ -170,6 +170,12 @@ describe('glass plate contract', () => {
     expect(avatar).not.toContain('backgroundColor: theme.backgroundPrimary');
     expect(scaffold).toContain('ScreenAtmosphere');
     expect(scaffold).toContain('scrollEnabled');
+    // Android sheet glass must stay dense enough that Travel Home trip copy
+    // cannot bleed through New Trip / form fields (no BlurView on Android).
+    expect(scaffold).toContain('androidGlassLight');
+    expect(scaffold).toContain('glassMaterials.sheet.lightFillSolid');
+    expect(scaffold).toContain('glassMaterials.sheet.darkFillSolid');
+    expect(scaffold).not.toContain("rgba(255, 255, 255, 0.58)");
     const sections = read('src/app/activity-form-sections.tsx');
     expect(activity).toContain('GlassPlate');
     expect(activity).toContain('ScreenAtmosphere');

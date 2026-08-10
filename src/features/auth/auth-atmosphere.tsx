@@ -18,9 +18,10 @@ import {
     useSafeAreaChrome,
     useSafeAreaChromeOverlay,
 } from '@/components/primitives';
-import { glassMaterials } from '@/design-system';
+import { ThemeMergeProvider, useTheme } from '@/hooks/use-theme';
 import { useLiveFxReady, usePerformanceTier } from '@/hooks/use-performance-tier';
-import { useTheme } from '@/hooks/use-theme';
+
+import { authAtmosphere, authThemeTokens } from './auth-palette';
 
 const TWINKLE_MS = 3800;
 
@@ -64,21 +65,7 @@ const STARS: readonly (readonly [number, number, number, number, 0 | 1])[] = [
   [0.6, 0.93, 0.7, 0.24, 1],
 ];
 
-/** Pale top of the sign-in sky (status-bar shell match). */
-function authAtmosphereTopColor(appearance: 'light' | 'dark'): string {
-  return appearance === 'dark'
-    ? glassMaterials.atmosphere.darkTop
-    : glassMaterials.atmosphere.lightBottom;
-}
-
-/** Warm floor the provider card floats on (bottom dock match). */
-function authAtmosphereBottomColor(appearance: 'light' | 'dark'): string {
-  return appearance === 'dark'
-    ? glassMaterials.atmosphere.darkBottom
-    : glassMaterials.atmosphere.lightTop;
-}
-
-function Starfield({ live }: { live: boolean }) {
+function Starfield({ live, color }: { live: boolean; color: string }) {
   const { width, height } = useWindowDimensions();
   const phase = useSharedValue(0);
 
@@ -125,10 +112,11 @@ function Starfield({ live }: { live: boolean }) {
             height: dot,
             borderRadius: dot / 2,
             opacity,
+            backgroundColor: color,
           },
         };
       }),
-    [height, width],
+    [color, height, width],
   );
 
   return (
@@ -159,15 +147,9 @@ function AuthSky() {
   const { allowsLoopMotion } = usePerformanceTier();
   const twinkle = useLiveFxReady(allowsLoopMotion && !reduceMotion);
 
-  const a = glassMaterials.atmosphere;
+  const a = authAtmosphere(theme.name);
   const dark = theme.name === 'dark';
-  // Light sky reads palest at the top so the wordmark sits on clean paper and
-  // the card lands on warmer cream with enough chroma to frost.
-  const colors = dark
-    ? ([a.darkTop, a.darkMid, a.darkBottom] as const)
-    : ([a.lightBottom, a.lightMid, a.lightTop] as const);
-  const orb = dark ? a.darkOrb : a.lightOrb;
-  const cool = dark ? a.darkCool : a.lightCool;
+  const colors = [a.top, a.mid, a.bottom] as const;
   const orbSize = Math.max(width, height) * 0.78;
 
   return (
@@ -179,7 +161,7 @@ function AuthSky() {
         end={{ x: 0.85, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      {dark ? <Starfield live={twinkle} /> : null}
+      {dark ? <Starfield live={twinkle} color={a.star} /> : null}
       <View
         style={[
           styles.orb,
@@ -188,7 +170,7 @@ function AuthSky() {
             height: orbSize,
             top: -orbSize * 0.3,
             right: -orbSize * 0.4,
-            experimental_backgroundImage: `radial-gradient(circle at 50% 50%, ${orb} 0%, transparent 74%)`,
+            experimental_backgroundImage: `radial-gradient(circle at 50% 50%, ${a.orb} 0%, transparent 74%)`,
           },
         ]}
       />
@@ -200,22 +182,13 @@ function AuthSky() {
             height: orbSize * 0.9,
             bottom: -orbSize * 0.44,
             left: -orbSize * 0.38,
-            experimental_backgroundImage: `radial-gradient(circle at 50% 50%, ${cool} 0%, transparent 76%)`,
+            experimental_backgroundImage: `radial-gradient(circle at 50% 50%, ${a.cool} 0%, transparent 76%)`,
           },
         ]}
       />
       <LinearGradient
-        colors={
-          dark
-            ? ['rgba(255,255,255,0.05)', 'transparent', 'rgba(0,0,0,0.3)']
-            : [
-                'rgba(255,255,255,0.5)',
-                'rgba(255,255,255,0.14)',
-                'transparent',
-                'rgba(80,55,35,0.05)',
-              ]
-        }
-        locations={dark ? [0, 0.38, 1] : [0, 0.26, 0.6, 1]}
+        colors={[...a.veil] as [string, string, ...string[]]}
+        locations={[...a.veilLocations] as [number, number, ...number[]]}
         style={StyleSheet.absoluteFill}
       />
     </View>
@@ -223,7 +196,7 @@ function AuthSky() {
 }
 
 /**
- * Full-bleed cosmic wash for the signed-out shell.
+ * Full-bleed dusty-blue wash for the signed-out shell.
  * Page atmosphere (not chrome) — an allowed opaque surface under the frost.
  *
  * The sky mounts on the app shell (window y=0) instead of inside the route so
@@ -233,17 +206,23 @@ function AuthSky() {
 export function AuthAtmosphere({ children }: PropsWithChildren) {
   const theme = useTheme();
   const { height } = useWindowDimensions();
+  const skyTokens = authAtmosphere(theme.name);
+  const merge = useMemo(() => authThemeTokens(theme.name), [theme.name]);
   const sky = useMemo(() => <AuthSky />, []);
 
-  useSafeAreaChrome(authAtmosphereTopColor(theme.name), { priority: 1 });
+  useSafeAreaChrome(skyTokens.top, { priority: 1 });
   useSafeAreaChromeOverlay(sky, height, { priority: 1 });
-  usePageSurfaceBackground(authAtmosphereBottomColor(theme.name));
+  usePageSurfaceBackground(skyTokens.bottom);
 
-  return <View style={styles.fill}>{children}</View>;
+  return (
+    <ThemeMergeProvider value={merge}>
+      <View style={styles.fill}>{children}</View>
+    </ThemeMergeProvider>
+  );
 }
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   orb: { position: 'absolute' },
-  star: { position: 'absolute', backgroundColor: '#EAF1FF' },
+  star: { position: 'absolute' },
 });

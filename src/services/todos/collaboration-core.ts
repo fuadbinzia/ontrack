@@ -1,0 +1,55 @@
+import { getSupabaseClient } from '@/services/cloud/supabase';
+import {
+  normalizeTodoState,
+  type TodoSharedSnapshot,
+} from '@/store/todos';
+
+export class TodoCollaborationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TodoCollaborationError';
+  }
+}
+
+export function messageFrom(error: { message?: string } | null, fallback: string) {
+  return error?.message?.trim() || fallback;
+}
+
+export async function authenticatedClient() {
+  const client = getSupabaseClient();
+  if (!client) {
+    throw new TodoCollaborationError(
+      'Shared lists are not configured for this build.',
+    );
+  }
+  const { data, error } = await client.auth.getSession();
+  if (error || !data.session) {
+    throw new TodoCollaborationError('Sign in to share or join a list.');
+  }
+  return client;
+}
+
+export function sharedSnapshot(value: unknown): TodoSharedSnapshot | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const candidate = value as {
+    list?: unknown;
+    tasks?: unknown;
+    members?: unknown;
+    recipes?: unknown;
+  };
+  const normalized = normalizeTodoState({
+    groceryMigrationVersion: 1,
+    lists: candidate.list ? [candidate.list] : [],
+    tasks: Array.isArray(candidate.tasks) ? candidate.tasks : [],
+    recipes: Array.isArray(candidate.recipes) ? candidate.recipes : [],
+    members: Array.isArray(candidate.members) ? candidate.members : [],
+  });
+  const list = normalized.lists.find((item) => item.mode === 'shared');
+  if (!list) return undefined;
+  return {
+    list,
+    tasks: normalized.tasks.filter((task) => task.listId === list.id),
+    recipes: normalized.recipes.filter((recipe) => recipe.listId === list.id),
+    members: normalized.members.filter((member) => member.listId === list.id),
+  };
+}

@@ -1,33 +1,38 @@
 import { isDateKey } from '@/utils/date';
-import { asPositiveNumber, asString } from '@/utils/parse';
+import { asString } from '@/utils/parse';
 import { normalizeCurrencyCode } from './expenses/format-money';
 import { normalizeFlightDetails } from './flight-details';
 import { withRoundTripFlightExpenseTitles } from './flight-expense-title';
 import { normalizeTravelItemShareMode } from './itinerary-visibility';
+import { isDuplicateItineraryItem } from './normalize-duplicates';
+import {
+  normalizeTravelExpenses,
+  normalizeTravelParticipants,
+  repairMisattributedTravelHostPlan,
+} from './normalize-expenses';
+import {
+  capitalizeRentalTitle,
+  repairLegacyHertzRentalImport,
+  repairLegacyIcelandairRoundTripImport,
+} from './normalize-legacy';
 import { normalizeRentalDetails } from './rental-details';
 import { normalizeStayDetails } from './stay-details';
 import { normalizeTransportDetails } from './transport-details';
 import { TRAVEL_PLAN_MODE_VALUES } from './travel-mode';
 import { normalizeTravelPhotoUris } from './travel-moment-media';
 import type {
-    TravelExpense,
-    TravelExpenseCategory,
-    TravelItemNote,
-    TravelItineraryItem,
-    TravelParticipant,
-    TravelPlan,
+  TravelItemNote,
+  TravelItineraryItem,
+  TravelPlan,
 } from './types';
-import { TRAVEL_EXPENSE_HOST_ID, TRAVEL_EXPENSE_SELF_ID } from './types';
 
-const EXPENSE_CATEGORIES = new Set<TravelExpenseCategory>([
-  'flight',
-  'stay',
-  'food',
-  'transport',
-  'activity',
-  'shopping',
-  'other',
-]);
+export { isDuplicateItineraryItem } from './normalize-duplicates';
+export {
+  normalizeTravelExpense,
+  normalizeTravelExpenses,
+  normalizeTravelParticipants,
+  repairMisattributedTravelHostPlan,
+} from './normalize-expenses';
 
 const ITEM_KINDS = new Set([
   'flight',
@@ -146,143 +151,6 @@ function normalizeTravelItemNotes(value: unknown): TravelItemNote[] | undefined 
   return notes.length ? notes : undefined;
 }
 
-function normalizeItineraryText(value: string | undefined): string {
-  return (value ?? '').trim().toLowerCase();
-}
-
-function sameFlightItems(
-a: TravelItineraryItem,
-b: TravelItineraryItem,
-): boolean {
-  const left = a.flight;
-  const right = b.flight;
-  if (!left || !right) return false;
-  const sameDate = a.date === b.date;
-  const sameTime = a.startMinutes === b.startMinutes;
-  const sameRoute =
-    normalizeItineraryText(left.departureAirport) ===
-      normalizeItineraryText(right.departureAirport) &&
-    normalizeItineraryText(left.arrivalAirport) ===
-      normalizeItineraryText(right.arrivalAirport);
-
-  const leftCode = normalizeItineraryText(left.confirmationCode);
-  const rightCode = normalizeItineraryText(right.confirmationCode);
-  const leftNumber = normalizeItineraryText(left.flightNumber);
-  const rightNumber = normalizeItineraryText(right.flightNumber);
-
-  if (leftCode && rightCode && leftCode === rightCode) {
-    const sameFlightNumber =
-      Boolean(leftNumber) && Boolean(rightNumber) && leftNumber === rightNumber;
-    return sameDate && (sameTime || sameRoute || sameFlightNumber);
-  }
-
-  if (
-    leftNumber &&
-    rightNumber &&
-    leftNumber === rightNumber &&
-    sameDate &&
-    sameRoute
-  ) {
-    return true;
-  }
-
-  return sameDate && sameTime && sameRoute;
-}
-
-function sameRentalItems(
-a: TravelItineraryItem,
-b: TravelItineraryItem,
-): boolean {
-  const left = a.rental;
-  const right = b.rental;
-  if (!left || !right) return false;
-  const leftCode = normalizeItineraryText(left.confirmationCode);
-  const rightCode = normalizeItineraryText(right.confirmationCode);
-  if (leftCode && leftCode === rightCode) return true;
-
-  return (
-    a.date === b.date &&
-    a.startMinutes === b.startMinutes &&
-    normalizeItineraryText(left.company) ===
-      normalizeItineraryText(right.company)
-  );
-}
-
-function sameTransportItems(
-  a: TravelItineraryItem,
-  b: TravelItineraryItem,
-): boolean {
-  const left = a.transport;
-  const right = b.transport;
-  if (!left || !right || left.mode !== right.mode) return false;
-  const sameRoute =
-    normalizeItineraryText(left.origin) === normalizeItineraryText(right.origin) &&
-    normalizeItineraryText(left.destination) === normalizeItineraryText(right.destination);
-  const leftCode = normalizeItineraryText(left.confirmationCode);
-  const rightCode = normalizeItineraryText(right.confirmationCode);
-  if (leftCode && rightCode && leftCode === rightCode) return true;
-  return a.date === b.date && a.startMinutes === b.startMinutes && sameRoute;
-}
-
-function sameStayItems(
-a: TravelItineraryItem,
-b: TravelItineraryItem,
-): boolean {
-  const left = a.stay;
-  const right = b.stay;
-  if (!left || !right) return false;
-  const leftCode = normalizeItineraryText(left.confirmationCode);
-  const rightCode = normalizeItineraryText(right.confirmationCode);
-  if (leftCode && leftCode === rightCode) return true;
-
-  return (
-    a.date === b.date &&
-    a.startMinutes === b.startMinutes &&
-    normalizeItineraryText(a.title) === normalizeItineraryText(b.title) &&
-    normalizeItineraryText(left.checkoutDate) ===
-      normalizeItineraryText(right.checkoutDate) &&
-    left.checkoutMinutes === right.checkoutMinutes
-  );
-}
-
-function sameBasicItem(a: TravelItineraryItem, b: TravelItineraryItem): boolean {
-  return (
-    a.date === b.date &&
-    a.startMinutes === b.startMinutes &&
-    a.durationMinutes === b.durationMinutes &&
-    normalizeItineraryText(a.title) === normalizeItineraryText(b.title) &&
-    normalizeItineraryText(a.bookingUrl) === normalizeItineraryText(b.bookingUrl) &&
-    normalizeItineraryText(a.details) === normalizeItineraryText(b.details)
-  );
-}
-
-export function isDuplicateItineraryItem(
-a: TravelItineraryItem,
-b: TravelItineraryItem,
-): boolean {
-  if (a.kind !== b.kind) return false;
-  if (a.id === b.id) return true;
-  switch (a.kind) {
-    case 'flight':
-      return sameFlightItems(a, b);
-    case 'rental':
-      return sameRentalItems(a, b);
-    case 'transport':
-      return sameTransportItems(a, b);
-    case 'stay':
-      return sameStayItems(a, b);
-    default:
-      return sameBasicItem(a, b);
-  }
-}
-
-/** Title-case the kind word in rental itinerary titles (“Hertz Rental”). */
-function capitalizeRentalTitle(title: string): string {
-  return title
-    .replace(/\bCar rental\b/g, 'Car Rental')
-    .replace(/\b rental\b/g, ' Rental');
-}
-
 export function normalizeTravelItinerary(value: unknown): TravelItineraryItem[] {
   if (!Array.isArray(value)) return [];
   const normalized = value.flatMap((item) => {
@@ -298,229 +166,6 @@ export function normalizeTravelItinerary(value: unknown): TravelItineraryItem[] 
     }
   }
   return deduped;
-}
-
-/**
- * Early Icelandair AB2ZQV imports flipped the return leg to EWR → KEF (and
- * sometimes used Sep 13). Confirmation: FI 623 KEF 5:00 PM → EWR 7:15 PM on Sep 14.
- */
-function repairLegacyIcelandairRoundTripImport(
-  itinerary: TravelItineraryItem[],
-): { itinerary: TravelItineraryItem[]; correctedEndDate?: string } {
-  let correctedEndDate: string | undefined;
-  const next = itinerary.map((item) => {
-    if (
-      item.kind !== 'flight' ||
-      item.flight?.flightNumber !== 'FI 623' ||
-      item.flight.departureAirport !== 'EWR' ||
-      item.flight.arrivalAirport !== 'KEF' ||
-      item.startMinutes !== 17 * 60 ||
-      item.durationMinutes !== 6 * 60 + 15 ||
-      (item.date !== '2026-09-13' && item.date !== '2026-09-14')
-    ) {
-      return item;
-    }
-    correctedEndDate = '2026-09-14';
-    return {
-      ...item,
-      title: 'Flight KEF → EWR',
-      date: '2026-09-14',
-      flight: {
-        ...item.flight,
-        departureAirport: 'KEF',
-        arrivalAirport: 'EWR',
-      },
-    };
-  });
-  return { itinerary: next, correctedEndDate };
-}
-
-/** Ground truth from Hertz confirmation L666EBA86A0 (Compact Elite · KEF). */
-const HERTZ_L666_PICKUP_MINUTES = 6 * 60 + 30;
-const HERTZ_L666_DROPOFF_MINUTES = 15 * 60;
-
-/**
- * Early Hertz OCR imports stole flight times, dropped drop-off, or used
- * incorrect placeholder pickup/drop-off times. Align L666EBA86A0 to the
- * confirmation: Sep 09 6:30 AM → Sep 14 3:00 PM at KEF.
- */
-function repairLegacyHertzRentalImport(
-  itinerary: TravelItineraryItem[],
-): TravelItineraryItem[] {
-  return itinerary.map((item) => {
-    if (
-      item.kind !== 'rental' ||
-      item.rental?.confirmationCode !== 'L666EBA86A0'
-    ) {
-      return item;
-    }
-    const alreadyCorrect =
-      item.date === '2026-09-09' &&
-      item.startMinutes === HERTZ_L666_PICKUP_MINUTES &&
-      item.rental.dropoffDate === '2026-09-14' &&
-      item.rental.dropoffMinutes === HERTZ_L666_DROPOFF_MINUTES &&
-      Boolean(item.rental.pickupLocation) &&
-      Boolean(item.rental.dropoffLocation);
-    if (alreadyCorrect) {
-      const title = capitalizeRentalTitle(item.title);
-      return title === item.title ? item : { ...item, title };
-    }
-    return {
-      ...item,
-      title: 'Hertz Rental · Keflavik International Airport (KEF)',
-      date: '2026-09-09',
-      startMinutes: HERTZ_L666_PICKUP_MINUTES,
-      durationMinutes: 60,
-      rental: {
-        ...item.rental,
-        company: 'Hertz',
-        confirmationCode: 'L666EBA86A0',
-        pickupLocation: 'Keflavik International Airport (KEF)',
-        dropoffLocation: 'Keflavik International Airport (KEF)',
-        vehicleClass: item.rental.vehicleClass ?? 'Compact Elite',
-        dropoffDate: '2026-09-14',
-        dropoffMinutes: HERTZ_L666_DROPOFF_MINUTES,
-      },
-    };
-  });
-}
-
-export function normalizeTravelParticipants(value: unknown): TravelParticipant[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((candidate) => {
-    if (!candidate || typeof candidate !== 'object') return [];
-    const participant = candidate as Partial<TravelParticipant>;
-    if (
-      typeof participant.id !== 'string' ||
-      typeof participant.name !== 'string' ||
-      !participant.name.trim() ||
-      typeof participant.inviteCode !== 'string' ||
-      !/^[a-f0-9]{20}$/.test(participant.inviteCode) ||
-      typeof participant.invitedAt !== 'string'
-    ) {
-      return [];
-    }
-    return [{
-      id: participant.id,
-      name: participant.name.trim(),
-      email: asString(participant.email)?.trim() || undefined,
-      inviteCode: participant.inviteCode,
-      invitedAt: participant.invitedAt,
-      acceptedAt: asString(participant.acceptedAt),
-    }];
-  });
-}
-
-function normalizeExpenseCategory(value: unknown): TravelExpenseCategory | undefined {
-  return typeof value === 'string' && EXPENSE_CATEGORIES.has(value as TravelExpenseCategory)
-    ? (value as TravelExpenseCategory)
-    : undefined;
-}
-
-export function normalizeTravelExpense(
-  value: unknown,
-  participantIds: Set<string>,
-): TravelExpense | undefined {
-  if (!value || typeof value !== 'object') return undefined;
-  const expense = value as Partial<TravelExpense>;
-  const amount = asPositiveNumber(expense.amount);
-  const category = normalizeExpenseCategory(expense.category);
-  const currency = normalizeCurrencyCode(expense.currency, '');
-  if (
-    typeof expense.id !== 'string' ||
-    typeof expense.title !== 'string' ||
-    !expense.title.trim() ||
-    amount === undefined ||
-    !currency ||
-    typeof expense.date !== 'string' ||
-    !isDateKey(expense.date) ||
-    !category ||
-    typeof expense.paidById !== 'string'
-  ) {
-    return undefined;
-  }
-
-  const allowedPayer =
-    expense.paidById === TRAVEL_EXPENSE_SELF_ID ||
-    expense.paidById === TRAVEL_EXPENSE_HOST_ID ||
-    expense.paidById.startsWith('member:') ||
-    participantIds.has(expense.paidById);
-  if (!allowedPayer) return undefined;
-
-  const splitWithIds = Array.isArray(expense.splitWithIds)
-    ? expense.splitWithIds.filter(
-        (id): id is string =>
-          typeof id === 'string' &&
-          (id === TRAVEL_EXPENSE_SELF_ID ||
-            id === TRAVEL_EXPENSE_HOST_ID ||
-            id.startsWith('member:') ||
-            participantIds.has(id)),
-      )
-    : [];
-  const resolvedSplit = splitWithIds.length > 0 ? [...new Set(splitWithIds)] : [expense.paidById];
-  const fallbackTimestamp = new Date().toISOString();
-
-  return {
-    id: expense.id,
-    title: expense.title.trim(),
-    amount,
-    currency,
-    date: expense.date,
-    category,
-    notes: asString(expense.notes)?.trim() || undefined,
-    paidById: expense.paidById,
-    splitWithIds: resolvedSplit,
-    createdAt: asString(expense.createdAt) ?? asString(expense.updatedAt) ?? fallbackTimestamp,
-    updatedAt: asString(expense.updatedAt) ?? asString(expense.createdAt) ?? fallbackTimestamp,
-    travelItemId: asString(expense.travelItemId)?.trim() || undefined,
-  };
-}
-
-export function normalizeTravelExpenses(
-  value: unknown,
-  participants: TravelParticipant[],
-  sharedPeople?: { id: string; name: string }[],
-): TravelExpense[] {
-  if (!Array.isArray(value)) return [];
-  const participantIds = new Set(participants.map((p) => p.id));
-  for (const person of sharedPeople ?? []) {
-    if (person.id) participantIds.add(person.id);
-  }
-  return value.flatMap((item) => {
-    const normalized = normalizeTravelExpense(item, participantIds);
-    return normalized ? [normalized] : [];
-  });
-}
-
-/**
- * True member copies never keep `openJoinCode` (invite decode leaves it empty;
- * host transfer clears it). A plan with both member chat access and a host
- * open-join code was mis-tagged as someone else’s trip — restore host ownership.
- */
-export function repairMisattributedTravelHostPlan<T extends Partial<TravelPlan>>(
-  plan: T,
-): T {
-  const openJoin =
-    typeof plan.openJoinCode === 'string' &&
-    /^[a-f0-9]{20}$/.test(plan.openJoinCode);
-  const chat =
-    typeof plan.chatAccessCode === 'string' &&
-    /^[a-f0-9]{20}$/.test(plan.chatAccessCode);
-  if (!openJoin || !chat || typeof plan.id !== 'string') return plan;
-
-  const sharedExpensePeople = Array.isArray(plan.sharedExpensePeople)
-    ? plan.sharedExpensePeople.filter(
-        (person) => person && typeof person === 'object' && person.id !== 'host',
-      )
-    : plan.sharedExpensePeople;
-
-  return {
-    ...plan,
-    chatAccessCode: undefined,
-    hostTripId: plan.id,
-    hostDisplayName: undefined,
-    ...(sharedExpensePeople ? { sharedExpensePeople } : {}),
-  };
 }
 
 export function normalizeTravelPlan(value: unknown): TravelPlan | undefined {

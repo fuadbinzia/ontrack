@@ -4,7 +4,7 @@ import path from 'node:path';
 describe('write batching', () => {
   it('sends cloud domains in a multi-row upsert', () => {
     const source = fs.readFileSync(
-      path.join(process.cwd(), 'src/services/cloud/sync.ts'),
+      path.join(process.cwd(), 'src/services/cloud/sync-session.ts'),
       'utf8',
     );
     expect(source).toContain('async function pushDomains');
@@ -16,7 +16,7 @@ describe('write batching', () => {
 
   it('chunks pending to-do mutations into one transactional RPC', () => {
     const source = fs.readFileSync(
-      path.join(process.cwd(), 'src/services/todos/collaboration.ts'),
+      path.join(process.cwd(), 'src/services/todos/collaboration-mutations.ts'),
       'utf8',
     );
     const migration = fs.readFileSync(

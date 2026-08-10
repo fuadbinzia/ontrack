@@ -286,13 +286,15 @@ describe('glass plate contract', () => {
 
   it('keeps itinerary flight journey chrome on mist glass chips', () => {
     const chrome = read('src/features/travel/flight-journey-chrome.tsx');
+    const stops = read('src/features/travel/flight-journey-stops.tsx');
     const card = read('src/features/travel/flight-journey-card.tsx');
-    expect(chrome).toContain('GlassMetaChip');
-    expect(chrome).toContain('GlassIconWell');
-    expect(chrome).not.toContain('backgroundColor: tint');
-    expect(chrome).not.toContain('backgroundColor: theme.backgroundSunken');
-    expect(chrome).not.toContain('travelMainCardFill');
-    expect(chrome).not.toContain('durationChip');
+    const journeySrc = `${chrome}\n${stops}`;
+    expect(journeySrc).toContain('GlassMetaChip');
+    expect(journeySrc).toContain('GlassIconWell');
+    expect(journeySrc).not.toContain('backgroundColor: tint');
+    expect(journeySrc).not.toContain('backgroundColor: theme.backgroundSunken');
+    expect(journeySrc).not.toContain('travelMainCardFill');
+    expect(journeySrc).not.toContain('durationChip');
     expect(card).toContain('GlassPlate');
     expect(card).toContain('airy');
   });
@@ -336,6 +338,7 @@ describe('glass plate contract', () => {
 
   it('keeps itinerary board chrome on shared Glass* primitives', () => {
     const node = read('src/features/travel/travel-timeline-node.tsx');
+    const nodeBody = read('src/features/travel/travel-timeline-node-body.tsx');
     const nodeChrome = read('src/features/travel/travel-timeline-node-chrome.tsx');
     const collapsible = read('src/features/travel/travel-collapsible-section.tsx');
     const progress = read('src/features/travel/travel-timeline-progress-chrome.tsx');
@@ -346,11 +349,12 @@ describe('glass plate contract', () => {
     const notes = read('src/features/travel/travel-item-notes-sheet.tsx');
     const actions = read('src/features/travel/travel-details-card-actions.tsx');
     const timeline = read('src/features/travel/travel-itinerary-timeline.tsx');
+    const nodeSrc = `${node}\n${nodeBody}`;
 
-    expect(node).toContain('GlassIconWell');
-    expect(node).toContain('GlassPlate');
-    expect(node).not.toContain('backgroundColor: tint');
-    expect(node).not.toContain('kindTint,');
+    expect(nodeSrc).toContain('GlassIconWell');
+    expect(nodeSrc).toContain('GlassPlate');
+    expect(nodeSrc).not.toContain('backgroundColor: tint');
+    expect(nodeSrc).not.toContain('kindTint,');
     expect(nodeChrome).not.toContain('theme.backgroundSunken');
     expect(collapsible).toContain('GlassTonePill');
     expect(collapsible).not.toContain('backgroundColor: accent');

@@ -1,8 +1,7 @@
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -15,11 +14,11 @@ import {
     Screen,
     Symbol,
 } from '@/components/primitives';
-import { fontFamilies, layout, radii, spacing, type AppIconName } from '@/design-system';
+import { fontFamilies, layout, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import { useUI } from '@/store/ui';
 import { useVisionBoard } from '@/store/vision-board';
-import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 
 import { VISION_BOARD_ACCENTS } from './defaults';
@@ -41,59 +40,12 @@ import type {
     VisionBoardImageItem,
 } from './types';
 
-function countLabel(counts: ReturnType<typeof countVisionBoardItems>) {
-  if (counts.total === 0) return 'No items yet';
-  const parts = [
-    counts.image ? `${counts.image} ${counts.image === 1 ? 'photo' : 'photos'}` : '',
-    counts.affirmation
-      ? `${counts.affirmation} ${counts.affirmation === 1 ? 'quote' : 'quotes'}`
-      : '',
-    counts.goal ? `${counts.goal} ${counts.goal === 1 ? 'goal' : 'goals'}` : '',
-  ].filter(Boolean);
-  return parts.join(' · ');
-}
-
-function boardFillPercent(counts: ReturnType<typeof countVisionBoardItems>) {
-  return Math.min(100, Math.round((counts.total / 8) * 100));
-}
-
-function VisionSectionChip({
-  label,
-  icon,
-  color,
-  onPress,
-  accessibilityLabel,
-  testID,
-}: {
-  label: string;
-  icon: AppIconName;
-  color: string;
-  onPress: () => void;
-  accessibilityLabel: string;
-  testID: string;
-}) {
-  const agent = useAgentUiTarget(testID, {
-    label: accessibilityLabel,
-    onPress,
-  });
-  return (
-    <Pressable
-      ref={agent.ref}
-      testID={testID}
-      onLayout={agent.onLayout}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      onPress={onPress}
-      style={({ pressed }) => [{ opacity: pressed ? 0.78 : 1 }]}>
-      <GlassPlate airy style={styles.sectionChip}>
-        <Symbol name={icon} size={16} color={color} />
-        <AppText fit style={[styles.sectionButtonText, { color }]}>
-          {label}
-        </AppText>
-      </GlassPlate>
-    </Pressable>
-  );
-}
+import {
+  boardFillPercent,
+  countLabel,
+  VisionSectionChip,
+} from './vision-board-dashboard-chrome';
+import { VisionBoardDashboardHero } from './vision-board-dashboard-hero';
 
 export function VisionBoardDashboard() {
   const router = useRouter();
@@ -219,61 +171,11 @@ export function VisionBoardDashboard() {
         </GlassPlate>
       ) : null}
 
-      <View style={styles.hero}>
-        {heroImage ? (
-          <Image
-            source={visionBoardImageSource(heroImage.uri)}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            accessibilityLabel={heroImage.caption || 'Latest vision board image'}
-          />
-        ) : null}
-        <LinearGradient
-          colors={
-            heroImage
-              ? ['rgba(18,20,17,0.18)', 'rgba(18,20,17,0.82)']
-              : theme.name === 'light'
-                ? ['#9BAA91', '#344A3A']
-                : ['#536351', '#1B281E']
-          }
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.heroContent}>
-          <GlassPlate airy style={styles.heroPill}>
-            <AppText style={styles.heroPillMark}>“</AppText>
-            <AppText variant="caption" style={styles.heroPillText}>
-              Today’s Affirmation
-            </AppText>
-          </GlassPlate>
-          <View style={styles.heroCopy}>
-            <AppText
-              style={[styles.heroQuote, { fontFamily: fontFamilies.serif }]}
-              numberOfLines={3}>
-              {affirmation?.text || 'I am creating a life that feels true to me.'}
-            </AppText>
-            <View style={styles.heroDivider} />
-            <AppText variant="callout" style={styles.heroSupport}>
-              {affirmation?.attribution
-                ? affirmation.attribution
-                : items.length
-                  ? 'Focus. Align. Manifest.'
-                  : 'Add your first affirmation to make this space yours.'}
-            </AppText>
-          </View>
-        </View>
-        <View style={styles.heroPagination} pointerEvents="none">
-          {[0, 1, 2, 3, 4].map((dot) => (
-            <View
-              key={dot}
-              style={[
-                styles.heroDot,
-                dot === 2 ? styles.heroDotActive : styles.heroDotInactive,
-              ]}
-            />
-          ))}
-        </View>
-      </View>
-
+      <VisionBoardDashboardHero
+        affirmation={affirmation}
+        heroImage={heroImage}
+        itemCount={items.length}
+      />
       <View style={styles.sectionHeader}>
         <AppText variant="subheading" style={styles.sectionTitle}>
           Your Categories
@@ -530,79 +432,6 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     padding: spacing.md,
   },
-  hero: {
-    width: '100%',
-    maxHeight: 280,
-    aspectRatio: 1.86,
-    overflow: 'hidden',
-    borderRadius: 22,
-    borderCurve: 'continuous',
-    boxShadow: '0 7px 22px rgba(43, 36, 29, 0.11)',
-  },
-  heroContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 28,
-  },
-  heroPill: {
-    alignSelf: 'flex-start',
-    zIndex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radii.pill,
-  },
-  heroPillMark: {
-    color: '#FFFFFF',
-    fontFamily: fontFamilies.serif,
-    fontSize: 18,
-    lineHeight: 16,
-    fontWeight: '600',
-  },
-  heroPillText: {
-    color: '#FFFFFF',
-    fontFamily: fontFamilies.serif,
-    fontSize: 11.5,
-    lineHeight: 14,
-    fontWeight: '400',
-  },
-  heroCopy: { alignItems: 'flex-start', gap: spacing.sm },
-  heroQuote: {
-    maxWidth: '72%',
-    color: '#FFFFFF',
-    fontSize: 23,
-    lineHeight: 28,
-    fontWeight: '400',
-  },
-  heroDivider: {
-    width: 20,
-    height: 1.5,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-  },
-  heroSupport: {
-    color: 'rgba(255,255,255,0.86)',
-    fontFamily: fontFamilies.serif,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: '400',
-  },
-  heroPagination: {
-    position: 'absolute',
-    bottom: 9,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 7,
-  },
-  heroDot: { width: 6, height: 6, borderRadius: 3 },
-  heroDotActive: { backgroundColor: '#FFFFFF' },
-  heroDotInactive: { backgroundColor: 'rgba(255,255,255,0.48)' },
   sectionHeader: {
     minHeight: 44,
     flexDirection: 'row',
@@ -620,24 +449,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  sectionButtonText: {
-    fontFamily: fontFamilies.serif,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '400',
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  sectionChip: {
-    zIndex: 1,
-    minHeight: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.pill,
   },
   categories: { gap: spacing.sm },
   categoryCard: {
@@ -716,5 +527,5 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: spacing.sm,
   },
-  flex: { flex: 1 },
+  flex: { flex: 1 }
 });

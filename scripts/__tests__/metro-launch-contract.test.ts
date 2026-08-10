@@ -329,6 +329,10 @@ describe('metro launch command contract', () => {
     expect(alerts).toContain('_is_dev_menu_prompt');
     expect(alerts).toContain('_is_dev_menu_intro');
     expect(alerts).toContain('_is_dev_menu_tools');
+    // Expo tools FAB (gearshape.fill) — UserDefaults suppress when Info.plist
+    // toolsButton:false is not yet in the installed agent binary.
+    expect(alerts).toContain('suppress_expo_dev_menu_fab');
+    expect(alerts).toContain('EXDevMenuShowFloatingActionButton');
     // Intro has Continue; tools Escape. "runtime version" must not force Escape.
     // Apple Account password sheet → Not Now (never Escape while that label is OCR'd).
     expect(alerts).toContain('dismissed Expo developer-menu intro');

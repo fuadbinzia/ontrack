@@ -16,11 +16,8 @@ import { formatDuration } from '@/utils/date';
 
 import { formatFlightJourneyDate } from './flight-arrival';
 import { FlightBookingPanel } from './flight-booking-panel';
-import {
-    JourneyStrip,
-    LayoverBanner,
-    VerticalStop,
-} from './flight-journey-chrome';
+import { JourneyStrip } from './flight-journey-chrome';
+import { LayoverBanner, VerticalStop } from './flight-journey-stops';
 import {
     useFlightStatus,
     type FlightStatusRequest,

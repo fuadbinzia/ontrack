@@ -3,9 +3,13 @@ import { join } from 'node:path';
 
 describe('health privacy boundary', () => {
   it('does not register health as a cloud-sync domain', () => {
-    const sync = readFileSync(join(process.cwd(), 'src/services/cloud/sync.ts'), 'utf8');
-    expect(sync).not.toContain("name: 'health'");
-    expect(sync).not.toContain('useHealth');
+    const domains = readFileSync(
+      join(process.cwd(), 'src/services/cloud/sync-domains.ts'),
+      'utf8',
+    );
+    expect(domains).not.toContain("name: 'health'");
+    // Local wipe may reset Health on sign-out, but it must never be a sync domain.
+    expect(domains).not.toContain('useHealth');
   });
 
   it('adds only the health entitlement, not a health app-state domain', () => {

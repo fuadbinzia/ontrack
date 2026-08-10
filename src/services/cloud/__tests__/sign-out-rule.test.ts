@@ -1,6 +1,21 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+function readSyncSources() {
+  const root = join(process.cwd(), 'src/services/cloud');
+  return [
+    'sync.ts',
+    'sync-domains.ts',
+    'sync-session.ts',
+    'sync-account.ts',
+    'sync-local-reset.ts',
+    'sync-refresh.ts',
+    'sync-types.ts',
+  ]
+    .map((name) => readFileSync(join(root, name), 'utf8'))
+    .join('\n');
+}
+
 describe('current-device sign-out invariants', () => {
   // Sign-out/delete flows live in the colocated exit module; the provider keeps
   // the session listener that reacts to an unexpected SIGNED_OUT.
@@ -9,7 +24,7 @@ describe('current-device sign-out invariants', () => {
     readFileSync(join(process.cwd(), 'src/features/auth/auth-account-exit.ts'), 'utf8'),
   ].join('\n');
   const account = readFileSync(join(process.cwd(), 'src/services/cloud/account.ts'), 'utf8');
-  const sync = readFileSync(join(process.cwd(), 'src/services/cloud/sync.ts'), 'utf8');
+  const sync = readSyncSources();
 
   it('flushes before local-scope sign-out and supports an explicit forced discard', () => {
     expect(provider).toContain('if (!force)');
@@ -36,15 +51,23 @@ describe('current-device sign-out invariants', () => {
   });
 
   it('does not delete cloud rows or system photo-library originals during sign-out cleanup', () => {
-    const cleanup = sync.slice(sync.indexOf('export async function clearLocalAccountData'));
-    expect(cleanup).not.toContain(".from('app_state').delete()");
-    expect(cleanup).not.toContain('MediaLibrary');
+    const cleanup = readFileSync(
+      join(process.cwd(), 'src/services/cloud/sync-local-reset.ts'),
+      'utf8',
+    );
+    const clearFn = cleanup.slice(cleanup.indexOf('export async function clearLocalAccountData'));
+    expect(clearFn).not.toContain(".from('app_state').delete()");
+    expect(clearFn).not.toContain('MediaLibrary');
   });
 
   it('preserves device first-run completion across local account wipe', () => {
-    const cleanup = sync.slice(sync.indexOf('export async function clearLocalAccountData'));
-    expect(cleanup).toContain('hadOnboarded');
-    expect(cleanup).toContain('hasOnboarded: true');
+    const cleanup = readFileSync(
+      join(process.cwd(), 'src/services/cloud/sync-local-reset.ts'),
+      'utf8',
+    );
+    const clearFn = cleanup.slice(cleanup.indexOf('export async function clearLocalAccountData'));
+    expect(clearFn).toContain('hadOnboarded');
+    expect(clearFn).toContain('hasOnboarded: true');
   });
 
   it('syncs home/current locations in preferences and keeps avatar device-only', () => {
@@ -54,4 +77,3 @@ describe('current-device sign-out invariants', () => {
     expect(sync).toContain('avatar stays device-only');
   });
 });
-

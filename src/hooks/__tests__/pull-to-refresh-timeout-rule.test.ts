@@ -6,7 +6,10 @@ describe('pull-to-refresh timeout invariants', () => {
     join(process.cwd(), 'src/hooks/use-pull-to-refresh.tsx'),
     'utf8',
   );
-  const sync = readFileSync(join(process.cwd(), 'src/services/cloud/sync.ts'), 'utf8');
+  const sync = readFileSync(
+    join(process.cwd(), 'src/services/cloud/sync-refresh.ts'),
+    'utf8',
+  );
 
   it('clears the spinner on a hard deadline even if cloud work stalls', () => {
     expect(hook).toContain('PULL_REFRESH_TIMEOUT_MS');

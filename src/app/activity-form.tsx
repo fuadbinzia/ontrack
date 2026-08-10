@@ -2,6 +2,8 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { activityFormStyles as styles } from './activity-form-styles';
+
 import {
   AppText,
   appPrompt,
@@ -57,18 +59,10 @@ import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { isDateKey, nowMinutes, todayKey } from '@/utils/date';
 import { goBackOrReplace } from '@/utils/navigation';
 
-const ASSISTANT_COPY: Record<string, { question: string; label: string; placeholder: string }> = {
-  food: { question: 'What are we eating? Give me the delicious details. 🍴', label: 'Meal', placeholder: 'Breakfast, sushi night…' },
-  gym: { question: 'What are we training today? Let’s get it on the books. 💪', label: 'Workout', placeholder: 'Leg day, morning run…' },
-  work: { question: 'What are we getting done? Future you says thanks. ✨', label: 'Focus', placeholder: 'Deep work, team planning…' },
-  sleep: { question: 'When are we heading to dreamland? 🌙', label: 'Sleep Plan', placeholder: 'Early night, power nap…' },
-  water: { question: 'How are we staying hydrated? 💧', label: 'Hydration', placeholder: 'Morning water, refill bottle…' },
-  personal: { question: 'What are we making time for?', label: 'Plan', placeholder: 'Call Mom, creative time…' },
-  mindfulness: { question: 'How are we finding a little calm? 🌿', label: 'Practice', placeholder: 'Meditation, breathing break…' },
-  learning: { question: 'What are we curious about today? 📚', label: 'Learning', placeholder: 'Spanish lesson, read chapter 3…' },
-  appointment: { question: 'Who are we meeting, and what for?', label: 'Appointment', placeholder: 'Dentist, coffee with Alex…' },
-  habit: { question: 'Which tiny win are we keeping alive? 🌟', label: 'Habit', placeholder: 'Stretch, journal…' },
-};
+import { ASSISTANT_COPY } from '@/app/activity-form-copy';
+import { ActivityFormAssistantSection } from '@/app/activity-form-assistant';
+import { ActivityFormMissingScreen } from '@/app/activity-form-missing';
+import { ActivityFormDetailEditors } from '@/app/activity-form-detail-editors';
 
 export default function ActivityFormScreen() {
   const theme = useTheme();
@@ -406,24 +400,10 @@ export default function ActivityFormScreen() {
 
   if (missingActivity) {
     return (
-      <View style={[styles.root, { backgroundColor: atmosphereFloor }]}>
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <ScreenAtmosphere />
-        </View>
-        <Screen refresh={false}>
-          <View style={styles.header}>
-            <SheetGrabber
-              testID={AgentUiIds.activityForm.grabber}
-              onPress={leave}
-              accessibilityLabel="Dismiss"
-            />
-            <AppText variant="title" style={styles.headerTitle} fit>
-              Event Not Found
-            </AppText>
-          </View>
-          <AppText variant="body" color="secondary">This event may have been deleted.</AppText>
-        </Screen>
-      </View>
+      <ActivityFormMissingScreen
+        atmosphereFloor={atmosphereFloor}
+        onLeave={leave}
+      />
     );
   }
 
@@ -448,93 +428,24 @@ export default function ActivityFormScreen() {
           </AppText>
         </View>
 
-        {!isEditing ? (
-          <View style={styles.assistant}>
-            <View style={styles.assistantHeading}>
-              <View style={[styles.assistantDot, { backgroundColor: theme.accentPrimary }]} />
-              <AppText variant="overline" color="accent">onTrack assistant</AppText>
-            </View>
-            <AppText variant="title">
-              What are we getting into?
-            </AppText>
-            <AppText variant="body" color="secondary">
-              Pick a vibe and I’ll help with the rest.
-            </AppText>
-            <View style={styles.wrap}>
-              {availableCategories.map((item) => {
-                const selectCategory = () => {
-                  setCategoryId(item.id);
-                  setTitle('');
-                  setMovie(undefined);
-                  setError(undefined);
-                };
-                const selected = item.id === categoryId;
-                return (
-                  <AgentTestId
-                    key={item.id}
-                    testID={AgentUiIds.activityForm.category(item.id)}
-                    label={item.name}
-                    onPress={selectCategory}>
-                    <Pressable
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: selected }}
-                      onPress={selectCategory}>
-                      <CategoryBadge category={item} selected={selected} size="large" />
-                    </Pressable>
-                  </AgentTestId>
-                );
-              })}
-            </View>
-            {category ? (
-              <View style={[styles.followUp, { borderTopColor: theme.separator }]}>
-                <AppText variant="bodyMedium">
-                  {category.detailKind === 'movie'
-                    ? 'Ooh, screen time. What are we watching? 🍿'
-                    : ASSISTANT_COPY[category.id]?.question ?? 'What should we call it?'}
-                </AppText>
-                {category.detailKind === 'movie' ? (
-                  <MovieEditor
-                    movie={movie}
-                    guided
-                    onSelect={(selected) => {
-                      setMovie({ ...selected, activityId: editId ?? savedDraftId });
-                      setTitle(selected.title);
-                      if (selected.runtimeMinutes) setDuration(String(selected.runtimeMinutes));
-                    }}
-                  />
-                ) : (
-                  <Input
-                    key={category.id}
-                    label={ASSISTANT_COPY[category.id]?.label ?? 'Event'}
-                    value={title}
-                    onChangeText={setTitle}
-                    placeholder={ASSISTANT_COPY[category.id]?.placeholder ?? 'What’s happening?'}
-                    autoFocus
-                    returnKeyType="next"
-                    fieldBackground={fieldFill}
-                    fieldBorderColor={fieldBorder}
-                    testID={AgentUiIds.activityForm.guidedTitle}
-                  />
-                )}
-              </View>
-            ) : null}
-          </View>
-        ) : null}
-
-        {isEditing && category ? (
-          <GlassPlate airy style={activityFormGlassCardStyle}>
-            <CategoryBadge category={category} />
-            <Input
-              label="Title"
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Event title"
-              fieldBackground={fieldFill}
-              fieldBorderColor={fieldBorder}
-              testID={AgentUiIds.activityForm.title}
-            />
-          </GlassPlate>
-        ) : null}
+        <ActivityFormAssistantSection
+          isEditing={isEditing}
+          availableCategories={availableCategories}
+          categoryId={categoryId}
+          setCategoryId={setCategoryId}
+          setTitle={setTitle}
+          setMovie={setMovie}
+          setError={setError}
+          category={category}
+          title={title}
+          movie={movie as any}
+          editId={editId}
+          savedDraftId={savedDraftId}
+          setDuration={setDuration}
+          theme={theme}
+          fieldFill={fieldFill}
+          fieldBorder={fieldBorder}
+        />
 
         {category ? (
         <>
@@ -575,40 +486,31 @@ export default function ActivityFormScreen() {
           />
         ) : null}
 
-        {category?.detailKind === 'food' ? (
-          <FoodEditor
-            meal={meal}
-            setMeal={setMeal}
-            updateItem={updateFoodItem}
-            addItem={addFoodItem}
-            removeItem={(id) => setMeal((current) => ({ ...current, items: current.items.filter((item) => item.id !== id) }))}
-          />
-        ) : null}
-        {category?.detailKind === 'gym' ? (
-          <WorkoutEditor
-            workout={workout}
-            setWorkout={setWorkout}
-            updateExercise={updateExercise}
-            addExercise={addExercise}
-            addSet={addSet}
-            updateSet={updateSet}
-            removeSet={removeSet}
-          />
-        ) : null}
-        {category?.detailKind === 'work' ? (
-          <WorkEditor session={workSession} setSession={setWorkSession} updateTask={updateTask} addTask={addTask} />
-        ) : null}
-        {isEditing && category?.detailKind === 'movie' ? (
-          <MovieEditor
-            movie={movie}
-            onSelect={(selected) => {
-              setMovie({ ...selected, activityId: editId ?? savedDraftId });
-              setTitle(selected.title);
-              if (selected.runtimeMinutes) setDuration(String(selected.runtimeMinutes));
-            }}
-          />
-        ) : null}
-
+        <ActivityFormDetailEditors
+          categoryDetailKind={category?.detailKind}
+          isEditing={isEditing}
+          meal={meal}
+          setMeal={setMeal}
+          updateFoodItem={updateFoodItem}
+          addFoodItem={addFoodItem}
+          workout={workout}
+          setWorkout={setWorkout}
+          updateExercise={updateExercise}
+          addExercise={addExercise}
+          addSet={addSet}
+          updateSet={updateSet}
+          removeSet={removeSet}
+          workSession={workSession}
+          setWorkSession={setWorkSession}
+          updateTask={updateTask}
+          addTask={addTask}
+          movie={movie as any}
+          setMovie={setMovie}
+          setTitle={setTitle}
+          setDuration={setDuration}
+          editId={editId}
+          savedDraftId={savedDraftId}
+        />
         {error ? <ErrorMessage message={error} /> : null}
         <View style={styles.actions}>
           <GlassPrimaryAction
@@ -640,16 +542,3 @@ export default function ActivityFormScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  screen: { gap: spacing.lg },
-  header: { gap: spacing.sm },
-  headerTitle: { alignSelf: 'stretch', minWidth: 0 },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  actions: { gap: spacing.sm, paddingTop: spacing.md },
-  assistant: { gap: spacing.md },
-  assistantHeading: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  assistantDot: { width: 8, height: 8, borderRadius: radii.pill },
-  followUp: { gap: spacing.md, borderTopWidth: 1, paddingTop: spacing.lg, marginTop: spacing.xs },
-});

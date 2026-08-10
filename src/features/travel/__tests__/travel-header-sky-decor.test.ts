@@ -103,22 +103,6 @@ describe('travel header sky décor', () => {
   it('drives twinkle and ray shine from device tilt motion', () => {
     expect(sky).toContain('useTiltSkyMotion');
     expect(sky).toContain('useTravelSkyQuality');
-    expect(sky).toContain('TravelSkyStaticDestination');
-    expect(sky).toContain('onPlateAverageColor');
-    const staticDestination = readFileSync(
-      join(process.cwd(), 'src/features/travel/travel-sky-static-destination.tsx'),
-      'utf8',
-    );
-    expect(staticDestination).toContain('resolveTravelHomeAtmosphereImage');
-    expect(staticDestination).toContain('TravelSkyStaticWash');
-    expect(staticDestination).toContain('TravelSkyNight');
-    expect(staticDestination).toContain('TravelSkyDay');
-    expect(staticDestination).toContain('TravelSkyGround');
-    expect(staticDestination).toContain("planTravelSkyFx('minimal')");
-    expect(staticDestination).toContain('Ken Burns');
-    expect(staticDestination).toContain('contentPosition');
-    expect(staticDestination).toContain('topVeil');
-    expect(staticDestination).toContain('bottomFade');
     expect(night).toContain('MotionLayer');
     expect(night).toContain('motion.energy');
     expect(night).toContain('TwinklingStar');
@@ -223,14 +207,14 @@ describe('travel header sky décor', () => {
     // Location ground band (trees / town / city) under celestial art.
     expect(sky).toContain('TravelSkyGround');
     expect(sky).toContain('resolveTravelSkyGroundKind');
-    // Constrained tiers only: destination still; capable devices keep live SVG.
-    expect(sky).toContain('TravelSkyStaticDestination');
-    expect(sky).toContain('preferDestinationStill');
-    expect(sky).toContain("quality === 'static' || quality === 'minimal'");
+    // Always the live SVG plate; photo stills are not the perf fallback.
+    expect(sky).toContain('TravelSkyDay');
+    expect(sky).toContain('TravelSkyNight');
+    expect(sky).not.toContain('TravelSkyStaticDestination');
+    expect(sky).not.toContain('preferDestinationStill');
     expect(sky).not.toContain('matchCuratedAtmosphereForPlace');
-    expect(hero).toContain('onPlateAverageColor');
-    expect(hero).toContain('plateAverageColor');
     expect(hero).toContain('curatedTone');
+    expect(hero).not.toContain('onPlateAverageColor');
     // Sky chrome controls: airy frost + ink glyphs (not opaque clear discs).
     expect(hero).toContain('TravelHeroGlassIconButton');
     expect(hero).toContain('travelHomeTokens.colors.ink');
@@ -268,7 +252,7 @@ describe('safe-area chrome overlay', () => {
     expect(appSafe).not.toContain('{chromeOverlay ? (');
   });
 
-  it('keeps entrance hero sky mounted so the plate fills during push', () => {
+  it('keeps one hero/sky mount across settle (no Entrance→Loaded remount)', () => {
     const hero = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-plan-hero.tsx'),
       'utf8',
@@ -277,12 +261,18 @@ describe('safe-area chrome overlay', () => {
       join(process.cwd(), 'src/features/travel/travel-plan-detail.tsx'),
       'utf8',
     );
-    expect(hero).toContain('enableSkyDecor');
+    const body = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-plan-detail-body.tsx'),
+      'utf8',
+    );
     expect(hero).toContain('TravelHeaderSkyDecor');
-    expect(detail).toContain('TravelPlanDetailEntrance');
+    expect(hero).not.toContain('enableSkyDecor');
+    // Fabric: never swap Entrance↔Loaded trees (ExpoFabricView AppContext lost).
+    expect(detail).not.toContain('TravelPlanDetailEntrance');
+    expect(detail).toContain('bodyReady');
     expect(detail).toContain('deferAfterPageTransition');
-    // Solid chrome-only entrance left Android day washes empty.
-    expect(detail).not.toContain('enableSkyDecor={false}');
+    expect(body).toContain('bodyReady');
+    expect(body).toContain('TravelPlanHero');
     expect(hero).not.toContain('skyFxOpacity');
     expect(hero).not.toContain('deferUntilIdle');
   });

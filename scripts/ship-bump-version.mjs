@@ -20,7 +20,14 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const APP_JSON = join(ROOT, 'app.json');
 const PACKAGE_JSON = join(ROOT, 'package.json');
-const NOTES_TS = join(ROOT, 'src/features/account/release-notes.ts');
+const RELEASE_NOTES_TS = join(
+  ROOT,
+  'src/features/account/release-notes-user.ts',
+);
+const CHANGELOG_TS = join(
+  ROOT,
+  'src/features/account/release-notes-changelog.ts',
+);
 
 function die(msg) {
   console.error(`error: ${msg}`);
@@ -111,7 +118,7 @@ function prependCatalogEntry(source, exportName, entryBlock) {
     `(export const ${exportName}: VersionNotesEntry\\[\\] = \\[\\n)`,
   );
   if (!re.test(source)) {
-    throw new Error(`could not find ${exportName} array in release-notes.ts`);
+    throw new Error(`could not find ${exportName} array`);
   }
   return source.replace(re, `$1${entryBlock}`);
 }
@@ -129,7 +136,12 @@ function changedPathHints(limit = 4) {
       .filter(Boolean)
       .filter((p) => !p.startsWith('scripts/ship-bump-version'))
       .filter((p) => p !== 'app.json' && p !== 'package.json')
-      .filter((p) => !p.endsWith('release-notes.ts'));
+      .filter(
+        (p) =>
+          !p.endsWith('release-notes.ts') &&
+          !p.endsWith('release-notes-user.ts') &&
+          !p.endsWith('release-notes-changelog.ts'),
+      );
     const hints = [];
     for (const p of paths) {
       if (p.startsWith('src/features/')) {
@@ -180,14 +192,15 @@ function main() {
     app.expo.runtimeVersion = String(current);
   }
 
-  let notesSource = readFileSync(NOTES_TS, 'utf8');
-  notesSource = prependCatalogEntry(
-    notesSource,
+  let releaseNotesSource = readFileSync(RELEASE_NOTES_TS, 'utf8');
+  releaseNotesSource = prependCatalogEntry(
+    releaseNotesSource,
     'RELEASE_NOTES',
     formatEntryBlock({ version: next, date, notes: [releaseNote] }),
   );
-  notesSource = prependCatalogEntry(
-    notesSource,
+  let changelogSource = readFileSync(CHANGELOG_TS, 'utf8');
+  changelogSource = prependCatalogEntry(
+    changelogSource,
     'CHANGELOG',
     formatEntryBlock({ version: next, date, notes: changelogNotes }),
   );
@@ -211,8 +224,11 @@ function main() {
 
   writeFileSync(APP_JSON, `${JSON.stringify(app, null, 2)}\n`);
   writeFileSync(PACKAGE_JSON, `${JSON.stringify(pkg, null, 2)}\n`);
-  writeFileSync(NOTES_TS, notesSource);
-  console.log('    wrote app.json, package.json, release-notes.ts');
+  writeFileSync(RELEASE_NOTES_TS, releaseNotesSource);
+  writeFileSync(CHANGELOG_TS, changelogSource);
+  console.log(
+    '    wrote app.json, package.json, release-notes-user.ts, release-notes-changelog.ts',
+  );
 }
 
 const isDirect =

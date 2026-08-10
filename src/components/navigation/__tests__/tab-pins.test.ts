@@ -4,6 +4,7 @@ import {
     mergeTrackerSections,
     MORE_TAB_ROUTE,
     NAV_PIN_LIMIT,
+    promoteMoreSelection,
     resolveMoreRetapTarget,
     sanitizeTrackerOrder,
     splitTrackerOrder,
@@ -78,5 +79,15 @@ describe('tab-pins', () => {
     );
     expect(resolveMoreRetapTarget('(today)', '(today)', 'profile')).toBeNull();
     expect(resolveMoreRetapTarget('travel', '(today)', 'profile')).toBeNull();
+  });
+
+  it('promotes a More selection to the top of More without touching In nav', () => {
+    const next = promoteMoreSelection(DEFAULT_TRACKER_ORDER, 'travel', 4);
+    expect(next).not.toBeNull();
+    expect(next!.pinnedCount).toBe(4);
+    expect(next!.trackerOrder.slice(0, 4)).toEqual([...DEFAULT_NAV_PIN_ORDER]);
+    expect(next!.trackerOrder[4]).toBe('travel');
+    expect(promoteMoreSelection(DEFAULT_TRACKER_ORDER, 'profile', 4)).toBeNull();
+    expect(promoteMoreSelection(DEFAULT_TRACKER_ORDER, 'social', 4)).toBeNull();
   });
 });

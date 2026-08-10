@@ -9,10 +9,10 @@ describe('collaborative grocery recipe contract', () => {
     ),
     'utf8',
   );
-  const collaboration = readFileSync(
-    join(process.cwd(), 'src/services/todos/collaboration.ts'),
-    'utf8',
-  );
+  const collaboration = [
+    readFileSync(join(process.cwd(), 'src/services/todos/collaboration-core.ts'), 'utf8'),
+    readFileSync(join(process.cwd(), 'src/services/todos/collaboration-mutations.ts'), 'utf8'),
+  ].join('\n');
 
   it('stores recipe headers and structured ingredient columns behind RLS', () => {
     expect(migration).toContain('create table public.todo_recipes');
@@ -37,7 +37,9 @@ describe('collaborative grocery recipe contract', () => {
     expect(migration).toContain("operation = 'add_recipe'");
     expect(migration).toContain("operation = 'set_tasks_completion'");
     expect(migration).toContain("'recipes', coalesce((");
-    expect(collaboration).toContain('recipes: sharedRecipes');
+    expect(collaboration).toContain(
+      'recipes: normalized.recipes.filter((recipe) => recipe.listId === list.id)',
+    );
     expect(collaboration).toContain('resolveSharedRecipeMedia');
   });
 

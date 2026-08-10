@@ -9,7 +9,6 @@ import {
   SegmentedControl,
 } from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
-import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
 import {
@@ -67,7 +66,6 @@ function NotesDayPager({
   currentVersionLabel: string;
   mismatchHint: boolean;
 }) {
-  const theme = useTheme();
   const { spacing, layout } = useResponsive();
   const days = groupVersionNotesByDate(entries);
 
@@ -116,8 +114,6 @@ function NotesDayPager({
         <IconButton
           icon="chevron-left"
           size={layout.minTapTarget}
-          background={theme.backgroundElevated}
-          borderColor={theme.separator}
           disabled={!canGoOlder}
           accessibilityLabel="Older ship day"
           testID={AgentUiIds.developer.releaseNotesPrev}
@@ -136,8 +132,6 @@ function NotesDayPager({
         <IconButton
           icon="chevron-right"
           size={layout.minTapTarget}
-          background={theme.backgroundElevated}
-          borderColor={theme.separator}
           disabled={!canGoNewer}
           accessibilityLabel="Newer ship day"
           testID={AgentUiIds.developer.releaseNotesNext}

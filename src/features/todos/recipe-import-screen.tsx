@@ -17,6 +17,8 @@ import {
     View,
 } from 'react-native';
 
+import { recipeImportScreenStyles as styles } from './recipe-import-screen-styles';
+
 import {
     appPrompt,
     AppText,
@@ -56,23 +58,8 @@ import { asPositiveNumber } from '@/utils/parse';
 import { pickCameraImage, pickLibraryImage } from '@/utils/pick-image';
 
 
-function withIds(ingredients: RecipeImportIngredient[]): EditableRecipeIngredient[] {
-  return ingredients.map((ingredient) => ({
-    ...ingredient,
-    id: newId('ingredient'),
-  }));
-}
-
-function sharedUrl() {
-  const payload = getSharedPayloads().find(
-    (item) => item.shareType === 'url' || item.shareType === 'text',
-  );
-  if (!payload) return undefined;
-  if (payload.shareType === 'url' && /^https:\/\//i.test(payload.value.trim())) {
-    return payload.value.trim();
-  }
-  return payload.value.match(/https:\/\/[^\s<>"']+/i)?.[0];
-}
+import { RecipeImportDraftPanel } from '@/features/todos/recipe-import-draft-panel';
+import { sharedUrl, withIds } from '@/features/todos/recipe-import-helpers';
 
 export function RecipeImportScreen({ listId }: { listId: string }) {
   const theme = useTheme();
@@ -480,172 +467,27 @@ export function RecipeImportScreen({ listId }: { listId: string }) {
       ) : null}
 
       {draft ? (
-        <>
-          <Card style={styles.detailsCard}>
-            <Input
-              label="Meal Name"
-              value={name}
-              maxLength={80}
-              onChangeText={setName}
-              testID={AgentUiIds.recipeImport.mealName}
-            />
-            {draft.sourceKind === 'url' ? (
-              <Input
-                label="Source URL"
-                value={sourceUrl}
-                maxLength={2_000}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="url"
-                onChangeText={setSourceUrl}
-                testID={AgentUiIds.recipeImport.sourceUrl}
-              />
-            ) : (
-              <View style={styles.imageSource}>
-                <Symbol name="photo" size={20} color={theme.accentPrimary} />
-                <AppText variant="caption" color="secondary">
-                  The sanitized screenshot will be kept as the meal thumbnail.
-                </AppText>
-              </View>
-            )}
-            <View style={styles.servingRow}>
-              <View style={styles.flex}>
-                <Input
-                  label="Source Servings"
-                  value={sourceServings}
-                  keyboardType="decimal-pad"
-                  testID={AgentUiIds.recipeImport.sourceServings}
-                  onChangeText={(value) => {
-                    setSourceServings(value);
-                    if (targetServings) rescale(value, targetServings);
-                  }}
-                />
-              </View>
-              <Symbol name="chevron-right" size={18} color={theme.textTertiary} />
-              <View style={styles.flex}>
-                <Input
-                  label="Target Servings"
-                  value={targetServings}
-                  keyboardType="decimal-pad"
-                  testID={AgentUiIds.recipeImport.targetServings}
-                  onChangeText={(value) => {
-                    setTargetServings(value);
-                    if (sourceServings) rescale(sourceServings, value);
-                  }}
-                />
-              </View>
-            </View>
-          </Card>
-
-          {[...draft.warnings, ...scaleWarnings].length ? (
-            <Card variant="sunken" style={styles.warningCard}>
-              <Symbol name="tip" size={20} color={theme.accentPrimary} />
-              <View style={styles.flex}>
-                {[...draft.warnings, ...scaleWarnings].map((warning, index) => (
-                  <AppText
-                    key={`${warning}-${index}`}
-                    variant="caption"
-                    color="secondary">
-                    • {warning}
-                  </AppText>
-                ))}
-              </View>
-            </Card>
-          ) : null}
-
-          <RecipeIngredientEditor
-            ingredients={ingredients}
-            onChange={setIngredients}
-            onAdd={() =>
-              setIngredients((current) => [
-                ...current,
-                {
-                  id: newId('ingredient'),
-                  name: '',
-                  canonicalKey: '',
-                  quantityValue: null,
-                  quantityText: null,
-                  unit: null,
-                  preparation: null,
-                  originalText: '',
-                  confidence: 1,
-                },
-              ])
-            }
-          />
-
-          <Button
-            size="lg"
-            icon="groceries"
-            testID={AgentUiIds.recipeImport.save}
-            disabled={
-              working ||
-              !name.trim() ||
-              !ingredients.some((ingredient) => ingredient.name.trim())
-            }
-            onPress={() => void save()}>
-            {working ? 'Saving…' : `Save to ${list.name}`}
-          </Button>
-        </>
+        <RecipeImportDraftPanel
+          draft={draft}
+          name={name}
+          setName={setName}
+          sourceUrl={sourceUrl}
+          setSourceUrl={setSourceUrl}
+          sourceServings={sourceServings}
+          setSourceServings={setSourceServings}
+          targetServings={targetServings}
+          setTargetServings={setTargetServings}
+          ingredients={ingredients}
+          setIngredients={setIngredients}
+          scaleWarnings={scaleWarnings}
+          working={working}
+          theme={theme}
+          rescale={rescale}
+          onSave={save}
+          listName={list.name}
+        />
       ) : null}
+
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    width: '100%',
-    maxWidth: layout.maxContentWidth,
-    alignSelf: 'center',
-    gap: spacing.xl,
-    paddingTop: Platform.select({ web: 64, default: spacing.sm }),
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-  },
-  headerCopy: { flex: 1, gap: spacing.xs },
-  sourceSection: { gap: spacing.lg },
-  urlCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: spacing.md,
-  },
-  flex: { flex: 1 },
-  pickerActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  analyzing: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  analyzingCopy: { flex: 1, gap: spacing.xs },
-  detailsCard: { gap: spacing.lg },
-  servingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  imageSource: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  warningCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-  },
-  optionCard: {
-    borderRadius: radii.lg,
-  },
-});

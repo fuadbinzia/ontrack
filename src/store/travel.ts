@@ -6,7 +6,7 @@ import {
   withAllAccountsTestTrip,
 } from '@/constants/travel';
 import { featureFlags } from '@/constants/feature-flags';
-import { flushCloudDomain } from '@/services/cloud/sync';
+import { flushCloudDomain } from '@/services/cloud/sync-session';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import { normalizeTravelPlan, normalizeTravelPlans } from '@/features/travel/normalize';
 import type { TravelPlan } from '@/features/travel/types';

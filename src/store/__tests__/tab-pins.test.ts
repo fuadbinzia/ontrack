@@ -56,4 +56,23 @@ describe('tab-pins store', () => {
       'travel',
     ]);
   });
+
+  it('promoteInMore moves a More row to the top of More', () => {
+    useTabPins.getState().promoteInMore('travel');
+    expect(useTabPins.getState().pinnedCount).toBe(4);
+    expect(useTabPins.getState().trackerOrder.slice(0, 5)).toEqual([
+      'profile',
+      'calendar',
+      '(today)',
+      'to-do',
+      'travel',
+    ]);
+    useTabPins.getState().promoteInMore('profile');
+    expect(useTabPins.getState().trackerOrder.slice(0, 4)).toEqual([
+      'profile',
+      'calendar',
+      '(today)',
+      'to-do',
+    ]);
+  });
 });

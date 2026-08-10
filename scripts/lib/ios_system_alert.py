@@ -22,6 +22,7 @@ import time
 from pathlib import Path
 
 CACHE_CLEAR_SECS = 90
+BUNDLE_ID = (os.environ.get("BUNDLE_ID") or "com.imtihoss.ontracknow").strip()
 
 # Set when ensure_simulator_app() launches Simulator.app for click mapping.
 # Cleared by restore_headless_gui() — only quits if *we* opened it; never kills
@@ -153,6 +154,45 @@ def mark_clear() -> None:
 
 def _ios_sim_target() -> str:
     return (os.environ.get("ONTRACK_IOS_SIMULATOR_UDID") or "").strip() or "booted"
+
+
+def suppress_expo_dev_menu_fab() -> None:
+    """Hide Expo Dev Menu tools FAB via UserDefaults (pre-rebuild agent binaries).
+
+    app.json toolsButton:false only lands after a native rebuild; older installs
+    still paint gearshape.fill over every screen. Mirror Android showFab=false.
+    """
+    udid = _ios_sim_target()
+    for key, value in (
+        ("EXDevMenuShowFloatingActionButton", "NO"),
+        ("EXDevMenuShowsAtLaunch", "NO"),
+        ("EXDevMenuIsOnboardingFinished", "YES"),
+    ):
+        try:
+            subprocess.run(
+                [
+                    "xcrun",
+                    "simctl",
+                    "spawn",
+                    udid,
+                    "defaults",
+                    "write",
+                    BUNDLE_ID,
+                    key,
+                    "-bool",
+                    value,
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=12,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            print(
+                f"agent-ui: warn — could not suppress iOS Dev Menu FAB ({key}: {exc})",
+                file=sys.stderr,
+            )
+            return
 
 
 def take_screenshot(path: Path) -> None:
@@ -734,6 +774,10 @@ def ensure_clear(*, force: bool = False) -> int:
     platform = (os.environ.get("AGENT_UI_PLATFORM") or "ios").strip().lower()
     if platform == "android":
         return 0
+
+    # Cheap UserDefaults write — hide Expo tools FAB even when OCR is skipped
+    # (true headless / agent-pool soft-continue). Survives without a rebuild.
+    suppress_expo_dev_menu_fab()
 
     try:
         try:

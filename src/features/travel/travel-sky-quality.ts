@@ -2,20 +2,26 @@ import type { PerformanceTier } from '@/utils/device-capability';
 import {
   degradePerformanceTier,
   minPerformanceTier,
-  performanceTierRank,
   resolvePerformanceTier,
-  type DeviceCapabilityInput,
 } from '@/utils/device-capability';
 
 /**
  * Itinerary sky fidelity ladder (alias of the app-wide performance tier).
- * Degrades from full motion → destination still (Ken Burns) so weak devices stay open.
+ * Non-`full` devices keep the same live SVG plate, frozen (minimal FX) — never
+ * a destination photo still.
  */
 export type TravelSkyQuality = PerformanceTier;
 
+/** Paint plan for the itinerary SVG plate (`full` animated vs frozen `minimal`). */
+export function paintTravelSkyQuality(
+  quality: TravelSkyQuality,
+): TravelSkyQuality {
+  return quality === 'full' ? 'full' : 'minimal';
+}
+
 export type TravelSkyFxPlan = {
   quality: TravelSkyQuality;
-  /** Mount loop drivers after settle (false for minimal/static). */
+  /** Mount loop drivers after settle (false for minimal). */
   liveFx: boolean;
   tilt: boolean;
   twinkle: boolean;
@@ -35,91 +41,51 @@ export type TravelSkyFxPlan = {
   dimStarScale: number;
 };
 
-export type TravelSkyCapabilityInput = DeviceCapabilityInput;
-
 export const degradeTravelSkyQuality = degradePerformanceTier;
-export const travelSkyQualityRank = performanceTierRank;
 export const minTravelSkyQuality = minPerformanceTier;
 export const resolveTravelSkyCapability = resolvePerformanceTier;
 
-/** Map a quality tier to concrete itinerary sky FX switches. */
+const FULL_FX: TravelSkyFxPlan = {
+  quality: 'full',
+  liveFx: true,
+  tilt: true,
+  twinkle: true,
+  twinkleMax: 48,
+  birds: true,
+  meteors: true,
+  satellites: true,
+  weatherFx: true,
+  rainDropMax: 17,
+  auroraMotion: true,
+  cloudDrift: true,
+  sunRays: true,
+  heatFog: true,
+  ground: true,
+  dimStarScale: 1,
+};
+
+const MINIMAL_FX: TravelSkyFxPlan = {
+  quality: 'minimal',
+  liveFx: false,
+  tilt: false,
+  twinkle: false,
+  twinkleMax: 0,
+  birds: false,
+  meteors: false,
+  satellites: false,
+  weatherFx: false,
+  rainDropMax: 0,
+  auroraMotion: false,
+  cloudDrift: false,
+  sunRays: false,
+  heatFog: false,
+  ground: true,
+  dimStarScale: 0.55,
+};
+
+/** Map a quality tier to itinerary sky FX (`full` or frozen `minimal` only). */
 export function planTravelSkyFx(quality: TravelSkyQuality): TravelSkyFxPlan {
-  switch (quality) {
-    case 'static':
-      return {
-        quality,
-        liveFx: false,
-        tilt: false,
-        twinkle: false,
-        twinkleMax: 0,
-        birds: false,
-        meteors: false,
-        satellites: false,
-        weatherFx: false,
-        rainDropMax: 0,
-        auroraMotion: false,
-        cloudDrift: false,
-        sunRays: false,
-        heatFog: false,
-        ground: false,
-        dimStarScale: 0,
-      };
-    case 'minimal':
-      return {
-        quality,
-        liveFx: false,
-        tilt: false,
-        twinkle: false,
-        twinkleMax: 0,
-        birds: false,
-        meteors: false,
-        satellites: false,
-        weatherFx: false,
-        rainDropMax: 0,
-        auroraMotion: false,
-        cloudDrift: false,
-        sunRays: false,
-        heatFog: false,
-        ground: true,
-        dimStarScale: 0.55,
-      };
-    case 'reduced':
-      return {
-        quality,
-        liveFx: true,
-        tilt: false,
-        twinkle: true,
-        twinkleMax: 10,
-        birds: false,
-        meteors: false,
-        satellites: false,
-        weatherFx: true,
-        rainDropMax: 8,
-        auroraMotion: false,
-        cloudDrift: true,
-        sunRays: true,
-        heatFog: false,
-        ground: true,
-        dimStarScale: 0.7,
-      };
-    default:
-      return {
-        quality: 'full',
-        liveFx: true,
-        tilt: true,
-        twinkle: true,
-        twinkleMax: 48,
-        birds: true,
-        meteors: true,
-        satellites: true,
-        weatherFx: true,
-        rainDropMax: 17,
-        auroraMotion: true,
-        cloudDrift: true,
-        sunRays: true,
-        heatFog: true,
-        ground: true,
-        dimStarScale: 1,
-      };
-  }
+  return paintTravelSkyQuality(quality) === 'full'
+    ? { ...FULL_FX }
+    : { ...MINIMAL_FX };
 }

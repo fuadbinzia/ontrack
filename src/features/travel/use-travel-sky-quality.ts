@@ -5,41 +5,30 @@ import {
 import {
   planTravelSkyFx,
   type TravelSkyFxPlan,
-  type TravelSkyQuality,
 } from '@/features/travel/travel-sky-quality';
 
-export type TravelSkyQualityState = {
-  plan: TravelSkyFxPlan;
-  /** True once post-settle live loops are allowed (still gated by plan.liveFx). */
-  liveReady: boolean;
-  quality: TravelSkyQuality;
-};
-
 /**
- * Itinerary sky plan on top of the app-wide performance tier.
- * Live loop drivers wait for the route settle gate.
+ * Itinerary sky FX plan from the app-wide performance tier.
+ * Non-`full` devices paint the same SVG plate with frozen (minimal) FX.
+ * Live loop drivers wait for the route settle gate and only run on `full`.
  */
-export function useTravelSkyQuality(): TravelSkyQualityState {
+export function useTravelSkyQuality(): TravelSkyFxPlan {
   const { tier, allowsSensors, allowsLoopMotion } = usePerformanceTier();
-  const quality = tier;
-  const liveReady = useLiveFxReady(
-    allowsLoopMotion && (quality === 'full' || quality === 'reduced'),
-  );
-  const basePlan = planTravelSkyFx(quality);
-  const plan: TravelSkyFxPlan = {
-    ...basePlan,
-    tilt: basePlan.tilt && allowsSensors,
-    liveFx: basePlan.liveFx && liveReady,
-    auroraMotion: basePlan.auroraMotion && liveReady,
-    cloudDrift: basePlan.cloudDrift && liveReady,
-    twinkle: basePlan.twinkle && liveReady,
-    birds: basePlan.birds && liveReady,
-    meteors: basePlan.meteors && liveReady,
-    satellites: basePlan.satellites && liveReady,
-    weatherFx: basePlan.weatherFx && liveReady,
-    heatFog: basePlan.heatFog && liveReady,
-    sunRays: basePlan.sunRays && liveReady,
+  const base = planTravelSkyFx(tier);
+  const liveReady = useLiveFxReady(allowsLoopMotion && base.liveFx);
+  const live = (on: boolean) => on && liveReady;
+  return {
+    ...base,
+    tilt: base.tilt && allowsSensors,
+    liveFx: live(base.liveFx),
+    auroraMotion: live(base.auroraMotion),
+    cloudDrift: live(base.cloudDrift),
+    twinkle: live(base.twinkle),
+    birds: live(base.birds),
+    meteors: live(base.meteors),
+    satellites: live(base.satellites),
+    weatherFx: live(base.weatherFx),
+    heatFog: live(base.heatFog),
+    sunRays: live(base.sunRays),
   };
-
-  return { plan, liveReady, quality };
 }

@@ -27,6 +27,7 @@ const DETAIL_SECTION_KEYS = new Set<DetailSectionKey>([
   'ground',
   'stays',
   'rentals',
+  'events',
   'timeline',
 ]);
 

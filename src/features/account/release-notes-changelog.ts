@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.44',
+    date: '2026-08-10',
+    notes: [
+      'Polish travel itinerary: moment photos strip/lightbox, reveal new stops, plan-detail skeleton, Pre/Post-trip buckets, and sheet/DateField chrome fixes.',
+      'Touched: app routes, features/travel.',
+    ],
+  },
+  {
     version: '1.0.43',
     date: '2026-08-10',
     notes: [

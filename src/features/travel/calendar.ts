@@ -10,6 +10,7 @@ const ITEM_ICON: Record<Exclude<TravelItemKind, 'moment'>, string> = {
   stay: '🛏️',
   activity: '📍',
   rental: '🚗',
+  event: '🎟️',
 };
 
 const PLAN_ICON: Record<NonNullable<TravelPlan['mode']>, string> = {

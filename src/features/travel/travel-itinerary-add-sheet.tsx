@@ -40,6 +40,8 @@ function sheetSubtitle(kind: TravelItemKind, editing: boolean): string {
         return 'Update this moment on your timeline';
       case 'activity':
         return 'Update this activity on your timeline';
+      case 'event':
+        return 'Update this event on your timeline';
       default:
         return 'Update details on your timeline';
     }
@@ -55,6 +57,8 @@ function sheetSubtitle(kind: TravelItemKind, editing: boolean): string {
       return 'Add route, schedule, ticket, and fare details';
     case 'moment':
       return 'Capture a moment from the trip';
+    case 'event':
+      return 'Add a show, concert, or other booked event';
     default:
       return 'Add details to keep everything organized';
   }
@@ -99,7 +103,9 @@ export function TravelItineraryAddSheet({
       ? 'Edit Moment'
       : kind === 'activity'
         ? 'Edit Activity'
-        : `Edit ${kindLabel}`
+        : kind === 'event'
+          ? 'Edit Event'
+          : `Edit ${kindLabel}`
     : kind === 'moment'
       ? 'Add Moment'
       : kind === 'flight'

@@ -1,0 +1,52 @@
+diff --git a/node_modules/expo-image-picker/ios/ImagePickerModule.swift b/node_modules/expo-image-picker/ios/ImagePickerModule.swift
+index 6d41360..63f0023 100644
+--- a/node_modules/expo-image-picker/ios/ImagePickerModule.swift
++++ b/node_modules/expo-image-picker/ios/ImagePickerModule.swift
+@@ -91,7 +91,12 @@ public class ImagePickerModule: Module, OnMediaPickingResultHandler {
+                                         options: options,
+                                         imagePickerHandler: imagePickerDelegate)
+ 
+-    if !options.allowsEditing && sourceType != .camera {
++    // PHPicker is required for multi-select. Otherwise prefer UIImagePicker when
++    // `legacy` is set — PHPicker's NSItemProvider export fails for many
++    // Simulator sample photos and iCloud-only library assets (CloudPhotoLibrary 1006).
++    let usePhPicker =
++      sourceType != .camera && !options.allowsEditing && !options.legacy
++    if usePhPicker {
+       self.launchMultiSelectPicker(pickingContext: pickingContext)
+     } else {
+       self.launchLegacyImagePicker(sourceType: sourceType, pickingContext: pickingContext)
+diff --git a/node_modules/expo-image-picker/ios/ImagePickerOptions.swift b/node_modules/expo-image-picker/ios/ImagePickerOptions.swift
+index bdaf98f..6a176e3 100644
+--- a/node_modules/expo-image-picker/ios/ImagePickerOptions.swift
++++ b/node_modules/expo-image-picker/ios/ImagePickerOptions.swift
+@@ -58,6 +58,11 @@ internal struct ImagePickerOptions: Record {
+   @Field
+   var shouldDownloadFromNetwork: Bool = false
+ 
++  /// When true, use UIImagePickerController instead of PHPicker (iOS).
++  /// PHPicker item-provider export fails for many Simulator / iCloud-only assets.
++  @Field
++  var legacy: Bool = false
++
+   func toMediaTypesArray() -> [String] {
+     var mediaTypesArray = mediaTypes.map { mediaType in
+       mediaType.toUTTypeString()
+diff --git a/node_modules/expo-image-picker/src/ImagePicker.types.ts b/node_modules/expo-image-picker/src/ImagePicker.types.ts
+index cc6b2bd..e2a66e4 100644
+--- a/node_modules/expo-image-picker/src/ImagePicker.types.ts
++++ b/node_modules/expo-image-picker/src/ImagePicker.types.ts
+@@ -543,8 +543,12 @@ export type ImagePickerOptions = {
+    */
+   preferredAssetRepresentationMode?: UIImagePickerPreferredAssetRepresentationMode;
+   /**
+-   * Uses the legacy image picker on Android. This will allow media to be selected from outside the users photo library.
++   * Uses the legacy image picker.
++   * - **Android:** allows media to be selected from outside the users photo library.
++   * - **iOS:** uses `UIImagePickerController` instead of `PHPickerViewController`
++   *   (more reliable for Simulator / iCloud-only assets; single selection only).
+    * @platform android
++   * @platform ios
+    * @default false
+    */
+   legacy?: boolean;

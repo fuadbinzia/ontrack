@@ -306,10 +306,14 @@ describe('canonical design-system contract', () => {
     const input = read('src/components/primitives/input.tsx');
     const chat = read('src/features/travel/travel-chat-screen.tsx');
     const composer = read('src/features/travel/travel-chat-composer.tsx');
+    const notes = read('src/features/travel/travel-item-notes-sheet.tsx');
     expect(input).toContain('containerStyle?: StyleProp<ViewStyle>');
     expect(chat).toContain('styles.composerArea');
     expect(composer).toContain('styles.composerDock');
     expect(composer).toContain('containerStyle={styles.composerInput}');
+    expect(composer).toContain('trailing={');
+    expect(notes).toContain('trailing={');
+    expect(notes).toContain('containerStyle={styles.composerInput}');
     expect(chat).toMatch(/paddingTop=\{rs\.(?:sm|md)\}/);
     expect(chat).not.toContain('paddingTop={0}');
   });

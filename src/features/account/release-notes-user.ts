@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.44',
+    date: '2026-08-10',
+    notes: [
+      'Polish travel itinerary: moment photos strip/lightbox, reveal new stops, plan-detail skeleton, Pre/Post-trip buckets, and sheet/DateField chrome fixes.',
+    ],
+  },
+  {
     version: '1.0.43',
     date: '2026-08-10',
     notes: [

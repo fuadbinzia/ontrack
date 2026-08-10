@@ -1,6 +1,13 @@
 import { useIsFocused, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { AppState, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  AppState,
+  StyleSheet,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type ScrollView,
+} from 'react-native';
 
 import { EmptyState, Screen } from '@/components/primitives';
 import { useAuthSession } from '@/features/auth/auth-provider';
@@ -28,6 +35,10 @@ import {
     type DetailSectionKey,
     sectionDefaultExpanded,
 } from '@/features/travel/travel-plan-detail-sections';
+import {
+    buildRevealItineraryUiPatch,
+    type RevealItineraryTarget,
+} from '@/features/travel/travel-reveal-itinerary-item';
 import { useTravelPageStyle } from '@/features/travel/travel-surface';
 import { expandTimelineEntries } from '@/features/travel/travel-timeline-entries';
 import {
@@ -288,19 +299,20 @@ function TravelPlanDetailLoaded({
       setEditedStayFileName: itemEdit.setEditedStayFileName,
     },
   });
-  const { addItem } = useTravelPlanDetailAddItem({
-    planId,
-    plan,
-    form,
-    dateDisplayFormat,
-    updatePlan,
-    setExpenseDraft,
-    setOpenExpenseSheet,
-    maybeShowImportedAddPrompt: expenseImport.maybeShowImportedAddPrompt,
-  });
-
   const planUi = useTravelPlanUi((state) => state.byPlanId[planId]);
   const patchPlanUi = useTravelPlanUi((state) => state.patchPlanUi);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollOffsetYRef = useRef(0);
+  const [pendingFocusEntryKey, setPendingFocusEntryKey] = useState<string>();
+  const onScrollOffset = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollOffsetYRef.current = event.nativeEvent.contentOffset.y;
+    },
+    [],
+  );
+  const clearPendingFocus = useCallback(() => {
+    setPendingFocusEntryKey(undefined);
+  }, []);
   const sectionExpanded = planUi?.sectionExpanded ?? {};
   const dayCollapseTouched = useMemo(
     () => new Set(planUi?.dayCollapseTouched ?? []),
@@ -362,6 +374,7 @@ function TravelPlanDetailLoaded({
     ground: sortedItinerary.filter((item) => item.kind === 'transport').length,
     stays: sortedItinerary.filter((item) => item.kind === 'stay').length,
     rentals: sortedItinerary.filter((item) => item.kind === 'rental').length,
+    events: sortedItinerary.filter((item) => item.kind === 'event').length,
   };
   const isSectionExpanded = (key: DetailSectionKey) =>
     sectionExpanded[key] ?? sectionDefaultExpanded(key, transportCounts);
@@ -381,6 +394,50 @@ function TravelPlanDetailLoaded({
       ]),
     [itinerary],
   );
+  const revealItineraryItem = useCallback(
+    (target: RevealItineraryTarget) => {
+      const latest =
+        useTravel.getState().plans.find((entry) => entry.id === planId) ?? plan;
+      const latestItems = Array.isArray(latest?.itinerary)
+        ? latest.itinerary
+        : itinerary;
+      const { patch, focusEntryKey } = buildRevealItineraryUiPatch({
+        target,
+        sectionExpanded,
+        minimizedItemIds: planUi?.minimizedItemIds,
+        defaultMinimizedItemIds: [...defaultCollapsedItemIds],
+        collapsedDayDates: [...collapsedDayDates],
+        dayCollapseTouched: [...dayCollapseTouched],
+        itinerary: latestItems,
+        planStartDate: latest.startDate,
+        planEndDate: latest.endDate,
+      });
+      patchPlanUi(planId, patch);
+      setPendingFocusEntryKey(focusEntryKey);
+    },
+    [
+      collapsedDayDates,
+      dayCollapseTouched,
+      defaultCollapsedItemIds,
+      itinerary,
+      plan,
+      planId,
+      planUi?.minimizedItemIds,
+      patchPlanUi,
+      sectionExpanded,
+    ],
+  );
+  const { addItem } = useTravelPlanDetailAddItem({
+    planId,
+    plan,
+    form,
+    dateDisplayFormat,
+    updatePlan,
+    setExpenseDraft,
+    setOpenExpenseSheet,
+    maybeShowImportedAddPrompt: expenseImport.maybeShowImportedAddPrompt,
+    onRevealItem: revealItineraryItem,
+  });
   const collapsedItemIds = planUi?.minimizedItemIds
     ? new Set(planUi.minimizedItemIds)
     : defaultCollapsedItemIds;
@@ -456,6 +513,11 @@ function TravelPlanDetailLoaded({
         onNotesExpandedChange={setNotesExpanded}
         denseHeroGlass={denseHeroGlass}
         bodyReady={bodyReady}
+        scrollRef={scrollRef}
+        onScroll={onScrollOffset}
+        pendingFocusEntryKey={pendingFocusEntryKey}
+        onFocusEntryHandled={clearPendingFocus}
+        scrollOffsetYRef={scrollOffsetYRef}
       />
       {bodyReady ? (
         <TravelPlanDetailOverlays

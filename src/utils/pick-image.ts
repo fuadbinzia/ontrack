@@ -1,6 +1,6 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
 import { appPrompt } from '@/components/primitives';
 
@@ -8,6 +8,11 @@ export type PickImageOptions = {
   quality?: number;
   allowsEditing?: boolean;
   aspect?: [number, number];
+  /**
+   * Force UIImagePickerController on iOS (skips PHPicker). More reliable for
+   * Simulator sample photos and iCloud-only assets; single selection only.
+   */
+  legacy?: boolean;
   /** Shown when camera permission is denied (settings prompt). */
   cameraDeniedMessage?: string;
   /** Shown when library permission is denied (settings prompt). */
@@ -37,7 +42,7 @@ const DEFAULT_CAMERA_DENIED =
 const DEFAULT_LIBRARY_DENIED =
   'Allow photo library access in Settings to choose an image.';
 
-/** Beat for host RN Modals (e.g. Add Photos) to unmount before PHPicker presents. */
+/** Beat for host RN Modals (e.g. Add Photos) to unmount before the system picker presents. */
 const PICKER_HOST_SETTLE_MS = 50;
 
 function cameraLaunchOptions(options: PickImageOptions = {}) {
@@ -50,19 +55,25 @@ function cameraLaunchOptions(options: PickImageOptions = {}) {
 }
 
 /**
- * Library launches always use quality 1 + Current so iOS takes the PHPicker
- * fast-path (copy original file). quality < 1 forces loadDataRepresentation,
- * which throws FailedToReadImageException for some PNG/HEIC/iCloud assets
- * ("Cannot load representation of type public.png").
+ * Library launch options.
+ * - Native quality stays 1 so iOS can use the PHPicker fast-path when not legacy.
+ * - Default to legacy UIImagePicker on iOS for single-select (PHPicker fails on
+ *   many Simulator / iCloud-only assets with CloudPhotoLibraryErrorDomain 1006).
  */
-function libraryLaunchOptions(options: PickImageOptions = {}) {
+function libraryLaunchOptions(
+  options: PickLibraryImagesOptions = {},
+  multi: boolean,
+) {
+  const legacy =
+    options.legacy ?? (Platform.OS === 'ios' && !multi);
   return {
     mediaTypes: ['images'] as ImagePicker.MediaType[],
     quality: 1,
     allowsEditing: options.allowsEditing ?? false,
     aspect: options.aspect,
+    legacy,
     preferredAssetRepresentationMode:
-      ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Current,
+      ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
     shouldDownloadFromNetwork: true,
   };
 }
@@ -116,9 +127,16 @@ function handlePickFailure(error: unknown, action: 'camera' | 'library') {
   if (__DEV__) {
     console.warn(`[pick-image] ${action} failed`, error);
   }
+  const detail = error instanceof Error ? error.message : String(error ?? '');
+  const cloudLocked =
+    /CloudPhotoLibrary|iCloud|public\.(png|image|jpeg)|Failed to read/i.test(
+      detail,
+    );
   appPrompt.alert(
     'Couldn’t add photo',
-    'That image couldn’t be read. Try another photo, or take a new one.',
+    cloudLocked
+      ? 'That photo isn’t available on this device (it may still be in iCloud). Take a new one, or choose a photo that’s already downloaded.'
+      : 'That image couldn’t be read. Try another photo, or take a new one.',
   );
 }
 
@@ -167,6 +185,9 @@ export async function pickLibraryImage(
 export async function pickLibraryImages(
   options: PickLibraryImagesOptions = {},
 ): Promise<PickedImageAsset[] | undefined> {
+  const multi = Boolean(
+    options.allowsMultipleSelection && (options.selectionLimit ?? 0) !== 1,
+  );
   try {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -179,10 +200,10 @@ export async function pickLibraryImages(
     }
     await settleBeforeSystemPicker();
     const result = await ImagePicker.launchImageLibraryAsync({
-      ...libraryLaunchOptions(options),
-      allowsMultipleSelection: options.allowsMultipleSelection ?? false,
-      orderedSelection: options.orderedSelection ?? false,
-      selectionLimit: options.selectionLimit,
+      ...libraryLaunchOptions(options, multi),
+      allowsMultipleSelection: multi,
+      orderedSelection: multi ? (options.orderedSelection ?? false) : false,
+      selectionLimit: multi ? options.selectionLimit : 1,
     });
     if (result.canceled) return undefined;
     const assets: PickedImageAsset[] = [];
@@ -191,6 +212,29 @@ export async function pickLibraryImages(
     }
     return assets;
   } catch (error) {
+    // Multi PHPicker often fails on iCloud-only assets — retry once via legacy single pick.
+    if (multi && Platform.OS === 'ios') {
+      if (__DEV__) {
+        console.warn('[pick-image] multi failed; retrying legacy single', error);
+      }
+      try {
+        await settleBeforeSystemPicker();
+        const retry = await ImagePicker.launchImageLibraryAsync({
+          ...libraryLaunchOptions({ ...options, legacy: true }, false),
+          allowsMultipleSelection: false,
+          selectionLimit: 1,
+        });
+        if (retry.canceled) return undefined;
+        const assets: PickedImageAsset[] = [];
+        for (const asset of retry.assets) {
+          assets.push(await maybeCompressAsset(asset, options.quality));
+        }
+        return assets;
+      } catch (retryError) {
+        handlePickFailure(retryError, 'library');
+        return undefined;
+      }
+    }
     handlePickFailure(error, 'library');
     return undefined;
   }

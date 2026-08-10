@@ -120,13 +120,15 @@ export function TravelItemNotesSheet({
   onSaveNotes: (notes: TravelItemNote[]) => void;
 }) {
   const theme = useTheme();
-  const { spacing } = useResponsive();
+  const { spacing, s } = useResponsive();
   const preferenceName = usePreferences((state) => state.name).trim();
   const [draft, setDraft] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [removeConfirm, setRemoveConfirm] = useState<TravelRemoveConfirmPayload | null>(null);
   const notes = item.notes ?? [];
   const isEditing = editingId != null;
+  // Nested inside the field pill — keep ≤ trailing pad so it doesn’t clip.
+  const sendSize = Math.max(32, s(34));
 
   useEffect(() => {
     if (visible) return;
@@ -202,15 +204,19 @@ export function TravelItemNotesSheet({
         maxLength={500}
         testID={AgentUiIds.travel.notes.composer}
         accessibilityLabel={isEditing ? 'Edit trip note' : 'Trip note'}
+        containerStyle={styles.composerInput}
         style={styles.input}
-      />
-      <IconButton
-        icon={isEditing ? 'check' : 'send'}
-        testID={AgentUiIds.travel.notes.submit}
-        color={draft.trim() ? theme.accentPrimary : theme.textTertiary}
-        disabled={!draft.trim()}
-        accessibilityLabel={isEditing ? 'Save note' : 'Post note'}
-        onPress={submit}
+        trailing={
+          <IconButton
+            icon={isEditing ? 'check' : 'send'}
+            testID={AgentUiIds.travel.notes.submit}
+            color={draft.trim() ? theme.accentPrimary : theme.textTertiary}
+            disabled={!draft.trim()}
+            accessibilityLabel={isEditing ? 'Save note' : 'Post note'}
+            size={sendSize}
+            onPress={submit}
+          />
+        }
       />
     </View>
   );
@@ -307,7 +313,8 @@ const styles = StyleSheet.create({
   noteHeader: { flexDirection: 'row', alignItems: 'center' },
   authorCopy: { flex: 1, minWidth: 0, flexShrink: 1 },
   noteActions: { flexDirection: 'row', justifyContent: 'flex-end' },
-  composer: { flexDirection: 'row', alignItems: 'center' },
+  composer: { flexDirection: 'row', alignItems: 'center', width: '100%' },
+  composerInput: { flex: 1, minWidth: 0 },
   input: { flex: 1, minWidth: 0 },
   dot: {
     position: 'absolute',

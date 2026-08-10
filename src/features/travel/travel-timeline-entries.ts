@@ -238,6 +238,99 @@ export function groupTimelineEntriesByDate(
     }));
 }
 
+/** Collapse / agent key for moments before the trip window. */
+export const TIMELINE_PRE_TRIP_KEY = '__timeline_pre_trip__';
+/** Collapse / agent key for moments after the trip window. */
+export const TIMELINE_POST_TRIP_KEY = '__timeline_post_trip__';
+
+export type TimelineDayZone = 'pre' | 'trip' | 'post';
+
+export type TimelineDaySection = {
+  /** Collapse / list key — calendar date or synthetic Pre-trip / Post trip. */
+  date: string;
+  zone: TimelineDayZone;
+  /** Inclusive calendar span of entries (for header meta). */
+  rangeStart: string;
+  rangeEnd: string;
+  entries: TravelTimelineEntry[];
+};
+
+function sortTimelineEntries(
+  entries: TravelTimelineEntry[],
+): TravelTimelineEntry[] {
+  return [...entries].sort((left, right) => {
+    const byDate = left.date.localeCompare(right.date);
+    if (byDate !== 0) return byDate;
+    return left.startMinutes - right.startMinutes;
+  });
+}
+
+/** Section collapse key for an itinerary date relative to the trip window. */
+export function timelineSectionKeyForDate(
+  date: string,
+  planStartDate: string,
+  planEndDate: string,
+): string {
+  if (date < planStartDate) return TIMELINE_PRE_TRIP_KEY;
+  if (date > planEndDate) return TIMELINE_POST_TRIP_KEY;
+  return date;
+}
+
+/**
+ * Groups expanded markers into trip days, plus one Pre-trip and one Post trip
+ * bucket for anything outside `planStartDate`…`planEndDate`.
+ */
+export function groupTimelineDaysForPlan(
+  entries: TravelTimelineEntry[],
+  planStartDate: string,
+  planEndDate: string,
+): TimelineDaySection[] {
+  const byDate = groupTimelineEntriesByDate(entries);
+  const preEntries: TravelTimelineEntry[] = [];
+  const postEntries: TravelTimelineEntry[] = [];
+  const sections: TimelineDaySection[] = [];
+
+  for (const day of byDate) {
+    if (day.date < planStartDate) {
+      preEntries.push(...day.entries);
+    } else if (day.date > planEndDate) {
+      postEntries.push(...day.entries);
+    } else {
+      sections.push({
+        date: day.date,
+        zone: 'trip',
+        rangeStart: day.date,
+        rangeEnd: day.date,
+        entries: day.entries,
+      });
+    }
+  }
+
+  if (preEntries.length) {
+    const sorted = sortTimelineEntries(preEntries);
+    sections.unshift({
+      date: TIMELINE_PRE_TRIP_KEY,
+      zone: 'pre',
+      rangeStart: sorted[0]!.date,
+      rangeEnd: sorted[sorted.length - 1]!.date,
+      entries: sorted,
+    });
+  }
+
+  if (postEntries.length) {
+    const sorted = sortTimelineEntries(postEntries);
+    sections.push({
+      date: TIMELINE_POST_TRIP_KEY,
+      zone: 'post',
+      rangeStart: sorted[0]!.date,
+      rangeEnd: sorted[sorted.length - 1]!.date,
+      entries: sorted,
+    });
+  }
+
+  return sections;
+}
+
 export function timelineEntryCaption(
   entry: TravelTimelineEntry,
   dateDisplayFormat: DateDisplayFormat,

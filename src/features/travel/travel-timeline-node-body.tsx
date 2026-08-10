@@ -14,8 +14,8 @@ import { openAddressWithMapsChooser } from '@/features/travel/open-address-with-
 import { RentalCompanyLogo } from '@/features/travel/rental-company-logo';
 import { StayLocationThumbnail } from '@/features/travel/stay-location-thumbnail';
 import { TRAVEL_TITLE_ICON_GAP } from '@/features/travel/travel-chrome';
+import { PhotoStrip } from '@/features/travel/travel-photo-strip';
 import {
-  PhotoStrip,
   TimelineFlightCaption,
   TimelineItemTitle,
 } from '@/features/travel/travel-timeline-node-chrome';
@@ -106,7 +106,6 @@ export function TravelTimelineNodeBody(props: TravelTimelineNodeBodyProps) {
     onSaveTransportDetails,
     onBeginItemEdit,
     onAddPhotos,
-    onRemovePhoto,
     onRemove,
     setEditingTransport,
     setNotesOpen,
@@ -320,7 +319,7 @@ export function TravelTimelineNodeBody(props: TravelTimelineNodeBodyProps) {
         </Pressable>
 
         {!isExpanded && photos.length > 0 ? (
-          <PhotoStrip uris={photos.slice(0, 4)} />
+          <PhotoStrip uris={photos.slice(0, 4)} viewerKey={item.id} />
         ) : null}
 
         <CollapsibleBody expanded={isExpanded}>
@@ -394,7 +393,7 @@ export function TravelTimelineNodeBody(props: TravelTimelineNodeBodyProps) {
               )
             ) : null}
 
-            <PhotoStrip uris={photos} onRemove={onRemovePhoto} />
+            <PhotoStrip uris={photos} viewerKey={item.id} />
 
             <TravelTimelineNodeStructured
               item={item}

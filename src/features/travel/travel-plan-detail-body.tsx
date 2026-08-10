@@ -1,7 +1,16 @@
-import { useMemo } from 'react';
-import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { useMemo, type RefObject } from 'react';
+import {
+  StyleSheet,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type ScrollView,
+  type ViewStyle,
+} from 'react-native';
+import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 
 import { Screen } from '@/components/primitives';
+import { motion } from '@/design-system';
 import { useTravelAtmosphere } from '@/features/travel/travel-atmosphere';
 import { resolveTravelArtworkTintHex } from '@/features/travel/travel-artwork-tint';
 import { TravelArtworkTintProvider } from '@/features/travel/travel-artwork-tint-context';
@@ -14,6 +23,7 @@ import {
     travelPlanSkyPageWashStyle,
 } from '@/features/travel/travel-header-sky-height';
 import { TravelItineraryTimeline } from '@/features/travel/travel-itinerary-timeline';
+import { TravelPlanDetailBodySkeleton } from '@/features/travel/travel-plan-detail-body-skeleton';
 import type { DetailSectionKey } from '@/features/travel/travel-plan-detail-sections';
 import { TravelPlanHero } from '@/features/travel/travel-plan-hero';
 import { TravelPlanTripTools } from '@/features/travel/travel-plan-trip-tools';
@@ -53,6 +63,11 @@ type TravelPlanDetailBodyProps = {
   denseHeroGlass?: boolean;
   /** After stack settle — mount transport/timeline/tools (hero/sky stay mounted). */
   bodyReady?: boolean;
+  scrollRef?: RefObject<ScrollView | null>;
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  scrollOffsetYRef?: RefObject<number>;
+  pendingFocusEntryKey?: string;
+  onFocusEntryHandled?: () => void;
 };
 
 export function TravelPlanDetailBody({
@@ -73,6 +88,11 @@ export function TravelPlanDetailBody({
   onNotesExpandedChange,
   denseHeroGlass = false,
   bodyReady = true,
+  scrollRef,
+  onScroll,
+  scrollOffsetYRef,
+  pendingFocusEntryKey,
+  onFocusEntryHandled,
 }: TravelPlanDetailBodyProps) {
   const theme = useTheme();
   const atmosphere = useTravelAtmosphere();
@@ -137,7 +157,9 @@ export function TravelPlanDetailBody({
         <Screen
           style={styles.transparentScreen}
           contentStyle={{ gap: sectionGap, paddingTop: 0 }}
-          refresh={false}>
+          refresh={false}
+          scrollRef={scrollRef}
+          onScroll={onScroll}>
           <TravelPlanHero
             plan={plan}
             onAddPress={bodyReady ? onAddPress : undefined}
@@ -150,50 +172,65 @@ export function TravelPlanDetailBody({
             denseHeroGlass={denseHeroGlass}
           />
           {bodyReady ? (
-            <>
-              <TravelTransportSections
-                items={sortedItinerary}
-                transportExpanded={isSectionExpanded('transport')}
-                flightsExpanded={isSectionExpanded('flights')}
-                groundExpanded={isSectionExpanded('ground')}
-                staysExpanded={isSectionExpanded('stays')}
-                rentalsExpanded={isSectionExpanded('rentals')}
-                onToggleTransport={() => toggleSection('transport')}
-                onToggleFlights={() => toggleSection('flights')}
-                onToggleGround={() => toggleSection('ground')}
-                onToggleStays={() => toggleSection('stays')}
-                onToggleRentals={() => toggleSection('rentals')}
-                onAddKind={onAddKind}
-                {...itemEditHandlers}
-              />
-              <TravelCollapsibleSection
-                title="Timeline"
-                icon="clock"
-                accentColor={travelAccent(theme)}
-                card
-                compact
-                tightHeader
-                flushContent
-                expanded={isSectionExpanded('timeline')}
-                onToggle={() => toggleSection('timeline')}
-                toggleTestID={AgentUiIds.travel.planDetail.timelineSection}
-                titleVariant="subheading">
-                <TravelItineraryTimeline
+            <Animated.View
+              entering={FadeIn.duration(motion.fade).reduceMotion(
+                ReduceMotion.System,
+              )}>
+              <View style={{ gap: sectionGap }}>
+                <TravelTransportSections
                   items={sortedItinerary}
-                  collapsedDayDates={collapsedDayDates}
-                  onToggleDay={onToggleDay}
+                  transportExpanded={isSectionExpanded('transport')}
+                  flightsExpanded={isSectionExpanded('flights')}
+                  groundExpanded={isSectionExpanded('ground')}
+                  staysExpanded={isSectionExpanded('stays')}
+                  rentalsExpanded={isSectionExpanded('rentals')}
+                  eventsExpanded={isSectionExpanded('events')}
+                  onToggleTransport={() => toggleSection('transport')}
+                  onToggleFlights={() => toggleSection('flights')}
+                  onToggleGround={() => toggleSection('ground')}
+                  onToggleStays={() => toggleSection('stays')}
+                  onToggleRentals={() => toggleSection('rentals')}
+                  onToggleEvents={() => toggleSection('events')}
+                  onAddKind={onAddKind}
                   {...itemEditHandlers}
                 />
-              </TravelCollapsibleSection>
-              <TravelPlanTripTools
-                plan={plan}
-                expanded={isSectionExpanded('tools')}
-                onToggle={() => toggleSection('tools')}
-                onOpenExpenses={onOpenExpenses}
-                onAddTransport={() => onAddKind('transport')}
-              />
-            </>
-          ) : null}
+                <TravelCollapsibleSection
+                  title="Timeline"
+                  icon="clock"
+                  accentColor={travelAccent(theme)}
+                  card
+                  compact
+                  tightHeader
+                  flushContent
+                  expanded={isSectionExpanded('timeline')}
+                  onToggle={() => toggleSection('timeline')}
+                  toggleTestID={AgentUiIds.travel.planDetail.timelineSection}
+                  titleVariant="subheading">
+                  <TravelItineraryTimeline
+                    items={sortedItinerary}
+                    collapsedDayDates={collapsedDayDates}
+                    onToggleDay={onToggleDay}
+                    pendingFocusEntryKey={pendingFocusEntryKey}
+                    onFocusEntryHandled={onFocusEntryHandled}
+                    scrollRef={scrollRef}
+                    scrollOffsetYRef={scrollOffsetYRef}
+                    {...itemEditHandlers}
+                  />
+                </TravelCollapsibleSection>
+                <TravelPlanTripTools
+                  plan={plan}
+                  expanded={isSectionExpanded('tools')}
+                  onToggle={() => toggleSection('tools')}
+                  onOpenExpenses={onOpenExpenses}
+                  onAddTransport={() => onAddKind('transport')}
+                />
+              </View>
+            </Animated.View>
+          ) : (
+            <TravelPlanDetailBodySkeleton
+              cardHint={sortedItinerary.length}
+            />
+          )}
         </Screen>
       </View>
     </TravelArtworkTintProvider>

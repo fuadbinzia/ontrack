@@ -114,6 +114,8 @@ export function TimelineDayHeader({
   overlineSize,
   overlineLineHeight,
   onToggleDay,
+  /** Override “Day N” — e.g. Pre-trip / Post Trip. */
+  titleLabel,
 }: {
   date: string;
   dayNumber: number;
@@ -126,13 +128,20 @@ export function TimelineDayHeader({
   overlineSize: number;
   overlineLineHeight: number;
   onToggleDay: (date: string) => void;
+  titleLabel?: string;
 }) {
   const theme = useTheme();
-  const { spacing: rs, s } = useResponsive();
+  const { spacing: rs } = useResponsive();
   const primaryInk = travelItineraryInk(theme);
   const secondaryInk = travelItineraryInk(theme, 'secondary');
-  const chipLabel = dayPhaseChipLabel(dayPhase, entryCount);
-  const dayTitle = `Day ${dayNumber} · ${dateLabel} · ${chipLabel}`;
+  // Pre-trip / Post Trip use `titleLabel` — no phase pill (Done / Today / N Stops).
+  const chipLabel = titleLabel
+    ? undefined
+    : dayPhaseChipLabel(dayPhase, entryCount);
+  const heading = titleLabel ?? `Day ${dayNumber}`;
+  const dayTitle = chipLabel
+    ? `${heading} · ${dateLabel} · ${chipLabel}`
+    : `${heading} · ${dateLabel}`;
   const dayAgent = useAgentUiTarget(AgentUiIds.travel.timelineDay.toggle(date), {
     label: dayTitle,
     onPress: () => onToggleDay(date),
@@ -153,7 +162,7 @@ export function TimelineDayHeader({
           variant="callout"
           fit
           style={[styles.dayNumber, { color: primaryInk }]}>
-          Day {dayNumber}
+          {heading}
         </AppText>
         <AppText
           variant="caption"
@@ -170,18 +179,16 @@ export function TimelineDayHeader({
           {weekday} · {dateLabel}
         </AppText>
       </View>
-      <GlassMetaChip
-        accessibilityLabel={chipLabel}
-        style={{
-          opacity: dayPhase === 'past' ? 0.72 : 1,
-        }}>
-        <AppText
-          variant="caption"
-          fit
-          style={{ fontSize: overlineSize, color: primaryInk }}>
-          {chipLabel}
-        </AppText>
-      </GlassMetaChip>
+      {chipLabel ? (
+        <GlassMetaChip accessibilityLabel={chipLabel}>
+          <AppText
+            variant="caption"
+            fit
+            style={{ fontSize: overlineSize, color: primaryInk }}>
+            {chipLabel}
+          </AppText>
+        </GlassMetaChip>
+      ) : null}
     </Pressable>
   );
 }

@@ -90,7 +90,6 @@ export type TravelTimelineNodeBodyProps = {
   onSaveTransportDetails: TravelTimelineNodeProps['onSaveTransportDetails'];
   onBeginItemEdit: TravelTimelineNodeProps['onBeginItemEdit'];
   onAddPhotos: TravelTimelineNodeProps['onAddPhotos'];
-  onRemovePhoto: TravelTimelineNodeProps['onRemovePhoto'];
   onRemove: TravelTimelineNodeProps['onRemove'];
   setEditingTransport: (value: boolean) => void;
   setNotesOpen: (value: boolean) => void;

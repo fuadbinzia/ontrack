@@ -1,8 +1,7 @@
-import { Image } from 'expo-image';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { AppText, IconButton, Symbol } from '@/components/primitives';
-import { radii, spacing } from '@/design-system';
+import { AppText, IconButton } from '@/components/primitives';
+import { spacing } from '@/design-system';
 import { travelEditorialTextStyle } from '@/features/travel/travel-chrome';
 import { TravelItemNotesButton } from '@/features/travel/travel-item-notes-sheet';
 import type { TravelItineraryItem } from '@/features/travel/types';
@@ -13,6 +12,8 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { isHttpsUrl } from '@/utils/safe-url';
+
+export { PhotoStrip } from '@/features/travel/travel-photo-strip';
 
 export function validBookingUrl(value: string): boolean {
   return !value || isHttpsUrl(value);
@@ -194,7 +195,9 @@ export function TimelineItemToolbar({
     allowStructuredEditing && item.kind === kind;
   const canEditSimpleStop =
     Boolean(onBeginItemEdit) &&
-    (item.kind === 'moment' || item.kind === 'activity');
+    (item.kind === 'moment' ||
+      item.kind === 'activity' ||
+      item.kind === 'event');
 
   return (
     <View
@@ -265,7 +268,11 @@ export function TimelineItemToolbar({
             {...shared}
             icon="edit"
             accessibilityLabel={
-              item.kind === 'moment' ? 'Edit Moment' : 'Edit Activity'
+              item.kind === 'moment'
+                ? 'Edit Moment'
+                : item.kind === 'event'
+                  ? 'Edit Event'
+                  : 'Edit Activity'
             }
             testID={AgentUiIds.travel.timelineItem.edit(item.id)}
             onPress={onBeginItemEdit}
@@ -299,51 +306,6 @@ export function TimelineItemToolbar({
   );
 }
 
-export function PhotoStrip({
-  uris,
-  onRemove,
-}: {
-  uris: string[];
-  onRemove?: (uri: string) => void;
-}) {
-  const theme = useTheme();
-  const { s } = useResponsive();
-  const size = Math.max(72, s(88));
-  if (!uris.length) return null;
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.photoStrip}>
-      {uris.map((uri) => (
-        <View
-          key={uri}
-          style={[styles.photoWrap, { width: size, height: size }]}>
-          <Image
-            source={{ uri }}
-            style={styles.photo}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-          />
-          {onRemove ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Remove photo"
-              hitSlop={6}
-              onPress={() => onRemove(uri)}
-              style={[
-                styles.photoRemove,
-                { backgroundColor: theme.overlayScrim },
-              ]}>
-              <Symbol name="close" size="sm" color={theme.textOnAccent} />
-            </Pressable>
-          ) : null}
-        </View>
-      ))}
-    </ScrollView>
-  );
-}
-
 const styles = StyleSheet.create({
   titleStack: { gap: spacing.xxs, minWidth: 0, flexShrink: 1, width: '100%' },
   denseTitleStack: { gap: 0 },
@@ -360,20 +322,4 @@ const styles = StyleSheet.create({
   },
   toolbarLeft: { justifyContent: 'flex-start' },
   compactTitle: { fontWeight: '400' },
-  photoStrip: { gap: spacing.sm, paddingVertical: spacing.xxs },
-  photoWrap: {
-    borderRadius: radii.md,
-    overflow: 'hidden',
-  },
-  photo: { width: '100%', height: '100%' },
-  photoRemove: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });

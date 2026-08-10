@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type RefObject } from 'react';
 
 import { travelItineraryTimelineStyles as styles } from './travel-itinerary-timeline-styles';
-import { AppState, StyleSheet, View } from 'react-native';
+import { AppState, View, type ScrollView } from 'react-native';
 
-import { AppText, CollapsibleBody, Symbol } from '@/components/primitives';
+import { AppText, Symbol } from '@/components/primitives';
 import { radii } from '@/design-system';
 import type { FlightDetailsDraft } from '@/features/travel/flight-details';
 import type { FlightScheduleDraft } from '@/features/travel/flight-schedule';
@@ -12,29 +12,20 @@ import type { StayDetailsDraft } from '@/features/travel/stay-details';
 import { travelEditorialTextStyle } from '@/features/travel/travel-chrome';
 import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import type { TravelRangeScheduleDraft } from '@/features/travel/travel-range-schedule';
+import { TravelTimelineDaySkeleton } from '@/features/travel/travel-plan-detail-body-skeleton';
 import {
     TRAVEL_EDITORIAL_ACCENT,
 } from '@/features/travel/travel-surface';
 import {
-    dayNumberFor,
-    daySpineColor,
-    TimelineDayBridge,
-    TimelineDayHeader,
-} from '@/features/travel/travel-timeline-day-chrome';
-import {
     expandTimelineEntries,
-    groupTimelineEntriesByDate,
+    groupTimelineDaysForPlan,
 } from '@/features/travel/travel-timeline-entries';
 import { TravelItineraryTimelineDays } from '@/features/travel/travel-itinerary-timeline-days';
-import { TravelTimelineNode } from '@/features/travel/travel-timeline-node';
 import {
-    isTimelineEntryPast,
     resolveJourneyTraveler,
     summarizeTimelineProgress,
-    timelineDayPhase,
 } from '@/features/travel/travel-timeline-progress';
 import {
-    TimelineNowMarker,
     TimelineProgressStrip,
 } from '@/features/travel/travel-timeline-progress-chrome';
 import type {
@@ -48,13 +39,12 @@ import {
 } from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import {
-    formatDateKeyMedium,
-    formatMinutes,
-    formatWeekday,
     type DateDisplayFormat,
 } from '@/utils/date';
+
+/** First paint: a couple of days, then fill the rest so long trips don't stall. */
+const TIMELINE_DAY_BATCH = 2;
 
 export function TravelItineraryTimeline({
   plan,
@@ -96,15 +86,22 @@ export function TravelItineraryTimeline({
   onBeginStayEdit,
   onBeginItemEdit,
   onAddPhotos,
-  onRemovePhoto,
   onRemove,
   onSaveNotes,
+  pendingFocusEntryKey,
+  onFocusEntryHandled,
+  scrollRef,
+  scrollOffsetYRef,
 }: {
   plan: TravelPlan;
   items: TravelItineraryItem[];
   minimizedItemIds: Set<string>;
   collapsedDayDates: Set<string>;
   dateDisplayFormat: DateDisplayFormat;
+  pendingFocusEntryKey?: string;
+  onFocusEntryHandled?: () => void;
+  scrollRef?: RefObject<ScrollView | null>;
+  scrollOffsetYRef?: RefObject<number>;
   editingFlightItemId?: string;
   editedFlightDetails: FlightDetailsDraft;
   editedFlightDetailsError?: string;
@@ -154,7 +151,6 @@ export function TravelItineraryTimeline({
   ) => void;
   onBeginItemEdit?: (item: TravelItineraryItem) => void;
   onAddPhotos: (itemId: string) => void;
-  onRemovePhoto: (itemId: string, uri: string) => void;
   onRemove: (item: TravelItineraryItem) => void;
   onSaveNotes: (
     itemId: string,
@@ -169,8 +165,13 @@ export function TravelItineraryTimeline({
   const secondaryInk = useTravelItineraryInk('secondary');
   const [now, setNow] = useState(() => new Date());
   const days = useMemo(
-    () => groupTimelineEntriesByDate(expandTimelineEntries(items)),
-    [items],
+    () =>
+      groupTimelineDaysForPlan(
+        expandTimelineEntries(items),
+        plan.startDate,
+        plan.endDate,
+      ),
+    [items, plan.endDate, plan.startDate],
   );
   const progress = useMemo(
     () =>
@@ -196,6 +197,14 @@ export function TravelItineraryTimeline({
   const spineWidth = Math.max(16, s(18));
   const dayMarkerSize = Math.max(8, s(8));
   const dayTap = Math.max(32, s(32));
+  const [mountedDayCount, setMountedDayCount] = useState(() =>
+    Math.min(TIMELINE_DAY_BATCH, Math.max(days.length, 0)),
+  );
+  const visibleDays = useMemo(
+    () => days.slice(0, mountedDayCount),
+    [days, mountedDayCount],
+  );
+  const pendingDayBones = Math.max(0, days.length - mountedDayCount);
 
   useEffect(() => {
     const tick = () => setNow(new Date());
@@ -208,6 +217,43 @@ export function TravelItineraryTimeline({
       sub.remove();
     };
   }, []);
+
+  // Keep mounted window in sync when itinerary shrinks / expands.
+  useEffect(() => {
+    setMountedDayCount((count) => {
+      if (days.length === 0) return 0;
+      if (count === 0) return Math.min(TIMELINE_DAY_BATCH, days.length);
+      return Math.min(Math.max(count, TIMELINE_DAY_BATCH), days.length);
+    });
+  }, [days.length]);
+
+  // Reveal target day immediately when scrolling to a newly added stop.
+  useEffect(() => {
+    if (!pendingFocusEntryKey) return;
+    const focusIndex = days.findIndex((day) =>
+      day.entries.some((entry) => entry.key === pendingFocusEntryKey),
+    );
+    if (focusIndex < 0) return;
+    setMountedDayCount((count) => Math.max(count, focusIndex + 1));
+  }, [days, pendingFocusEntryKey]);
+
+  // Progressive fill — paint the first days, then batch in the rest.
+  useEffect(() => {
+    if (mountedDayCount >= days.length) return;
+    let cancelled = false;
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (cancelled) return;
+        setMountedDayCount((count) =>
+          Math.min(count + TIMELINE_DAY_BATCH, days.length),
+        );
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [mountedDayCount, days.length]);
 
   if (days.length === 0) {
     const emptyIconBg = onGlass
@@ -275,7 +321,7 @@ export function TravelItineraryTimeline({
       />
       <TravelItineraryTimelineDays
           plan={plan}
-          days={days}
+          days={visibleDays}
           now={now}
           collapsedDayDates={collapsedDayDates}
           dayGap={dayGap}
@@ -325,10 +371,16 @@ export function TravelItineraryTimeline({
           onBeginStayEdit={onBeginStayEdit}
           onBeginItemEdit={onBeginItemEdit}
           onAddPhotos={onAddPhotos}
-          onRemovePhoto={onRemovePhoto}
           onRemove={onRemove}
           onSaveNotes={onSaveNotes}
+          pendingFocusEntryKey={pendingFocusEntryKey}
+          onFocusEntryHandled={onFocusEntryHandled}
+          scrollRef={scrollRef}
+          scrollOffsetYRef={scrollOffsetYRef}
         />
+      {pendingDayBones > 0 ? (
+        <TravelTimelineDaySkeleton count={Math.min(2, pendingDayBones)} />
+      ) : null}
     </View>
   );
 }

@@ -155,9 +155,10 @@ export const agentUiIdsTravel = {
       save: 'ontrack.travel.planNotes.save',
     },
     photoViewer: {
-      dismiss: (tripId: string) =>
-        `ontrack.travel.photoViewer.dismiss.${tripId}`,
-      close: (tripId: string) => `ontrack.travel.photoViewer.close.${tripId}`,
+      dismiss: (viewerKey: string) =>
+        `ontrack.travel.photoViewer.dismiss.${viewerKey}`,
+      close: (viewerKey: string) =>
+        `ontrack.travel.photoViewer.close.${viewerKey}`,
     },
     editTrip: {
       save: 'ontrack.travel.editTrip.save',
@@ -233,7 +234,10 @@ export const agentUiIdsTravel = {
       groundSection: 'ontrack.travel.planDetail.section.ground',
       staysSection: 'ontrack.travel.planDetail.section.stays',
       rentalsSection: 'ontrack.travel.planDetail.section.rentals',
+      eventsSection: 'ontrack.travel.planDetail.section.events',
       timelineSection: 'ontrack.travel.planDetail.section.timeline',
+      /** Glass skeleton under hero while transport/timeline/tools settle. */
+      bodyLoading: 'ontrack.travel.planDetail.section.loading',
       notesSection: 'ontrack.travel.planDetail.section.notes',
       editNotes: 'ontrack.travel.planDetail.editNotes',
       weatherCard: 'ontrack.travel.planDetail.weatherCard',
@@ -241,6 +245,7 @@ export const agentUiIdsTravel = {
       addTransport: 'ontrack.travel.planDetail.addTransport',
       addStay: 'ontrack.travel.planDetail.addStay',
       addRental: 'ontrack.travel.planDetail.addRental',
+      addEvent: 'ontrack.travel.planDetail.addEvent',
       backToTravel: 'ontrack.travel.planDetail.backToTravel',
       /** Floating glass Group Chat FAB on itinerary (icon only). */
       groupChat: 'ontrack.travel.planDetail.groupChat',
@@ -270,6 +275,9 @@ export const agentUiIdsTravel = {
         `ontrack.travel.timelineItem.${itemId}.edit`,
       openAddress: (itemId: string) =>
         `ontrack.travel.timelineItem.${itemId}.openAddress`,
+      /** Open a moment/itinerary photo in the lightbox. */
+      photo: (itemId: string, index: number) =>
+        `ontrack.travel.timelineItem.${itemId}.photo.${index}`,
     },
     flightSearch: {
       back: 'ontrack.travel.flightSearch.back',
@@ -350,6 +358,11 @@ export const agentUiIdsTravel = {
         'ontrack.travel.itineraryAdd.returnConnectionAirport',
       details: 'ontrack.travel.itineraryAdd.details',
       bookingUrl: 'ontrack.travel.itineraryAdd.bookingUrl',
+      /** Preview an attached photo in the add/edit sheet. */
+      photo: (index: number) => `ontrack.travel.itineraryAdd.photo.${index}`,
+      /** Remove an attached photo from the add/edit sheet (above the thumb). */
+      removePhoto: (index: number) =>
+        `ontrack.travel.itineraryAdd.removePhoto.${index}`,
       submit: 'ontrack.travel.itineraryAdd.submit',
     },
     chat: {

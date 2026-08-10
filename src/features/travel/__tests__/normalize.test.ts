@@ -150,6 +150,41 @@ describe('travel plan normalization', () => {
     ]);
   });
 
+  it('keeps event entries with booking links', () => {
+    expect(
+      normalizeTravelPlan({
+        ...legacyPlan,
+        itinerary: [
+          {
+            id: 'event-1',
+            kind: 'event',
+            title: 'Aurora Cruise',
+            date: '2026-09-11',
+            startMinutes: 20 * 60,
+            durationMinutes: 180,
+            bookingUrl: 'https://example.com/tickets',
+          },
+        ],
+      })?.itinerary,
+    ).toEqual([
+      {
+        id: 'event-1',
+        kind: 'event',
+        title: 'Aurora Cruise',
+        date: '2026-09-11',
+        startMinutes: 20 * 60,
+        durationMinutes: 180,
+        details: undefined,
+        bookingUrl: 'https://example.com/tickets',
+        shareMode: 'trip',
+        flight: undefined,
+        transport: undefined,
+        rental: undefined,
+        stay: undefined,
+      },
+    ]);
+  });
+
   it('keeps moment entries with photos and defaults blank titles', () => {
     expect(
       normalizeTravelPlan({

@@ -19,6 +19,8 @@ type TravelSheetHeaderProps = {
    * `page` = top-right X (full-screen chat / gates that reuse this header).
    */
   presentation?: 'sheet' | 'page';
+  /** See `SheetHeader` — false when parent owns pan/tap dismiss. */
+  grabberInteractive?: boolean;
 };
 
 /** Travel sheet/page header — sheets use SheetGrabber; pages keep the X. */
@@ -32,6 +34,7 @@ export function TravelSheetHeader({
   closeTestID,
   paddingTop,
   presentation = 'sheet',
+  grabberInteractive,
 }: TravelSheetHeaderProps) {
   const { spacing } = useResponsive();
   if (presentation === 'page') {
@@ -60,6 +63,7 @@ export function TravelSheetHeader({
       onClose={onClose}
       closeAccessibilityLabel={closeAccessibilityLabel}
       closeTestID={closeTestID}
+      grabberInteractive={grabberInteractive}
       style={paddingTop != null ? { paddingTop } : undefined}
     />
   );

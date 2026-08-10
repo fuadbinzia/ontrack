@@ -31,6 +31,7 @@ import {
   type OptimisticTravelChatMessage,
 } from '@/features/travel/chat';
 import { travelChatPlateBorder } from '@/features/travel/travel-chat-chrome';
+import { placeTravelChatMessageMenu } from '@/features/travel/travel-chat-message-menu-layout';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -59,12 +60,15 @@ export function TravelChatMessageMenu({
   message,
   anchor,
   identity,
+  /** Clears tab dock / keyboard — defaults to home-indicator only. */
+  bottomChrome = 0,
   onClose,
   onAction,
 }: {
   message: OptimisticTravelChatMessage | null;
   anchor: DropdownAnchor | null;
   identity: { userId?: string | null; deviceId?: string | null };
+  bottomChrome?: number;
   onClose: () => void;
   onAction: (action: TravelChatMessageMenuAction) => void;
 }) {
@@ -146,17 +150,21 @@ export function TravelChatMessageMenu({
     return clampNumber(preferred, minLeft, maxLeft);
   };
 
-  const reactionTopIdeal = localAnchor.y - gap - reactionHeight;
-  const reactionTopMin = insets.top + rs.sm - origin.y;
-  const reactionTop = Math.max(reactionTopMin, reactionTopIdeal);
-
-  const actionsTopIdeal = localAnchor.y + localAnchor.height + gap;
-  const actionsTopMax =
-    windowHeight - origin.y - insets.bottom - rs.sm - actionsHeight;
-  const actionsTop = Math.min(
-    actionsTopIdeal,
-    Math.max(reactionTopMin, actionsTopMax),
-  );
+  const topMin = insets.top + rs.sm - origin.y;
+  // Prefer measured tab/keyboard chrome over the home indicator alone so the
+  // last bubble's Edit/Delete rows aren't painted under the dock.
+  const bottomClearance = Math.max(bottomChrome, insets.bottom) + rs.sm;
+  const bottomMax = windowHeight - origin.y - bottomClearance;
+  const { reactionTop, actionsTop, openActionsBelow } =
+    placeTravelChatMessageMenu({
+      anchor: localAnchor,
+      reactionHeight,
+      actionsHeight,
+      gap,
+      topMin,
+      bottomMax,
+    });
+  const actionsEnter = openActionsBelow ? FadeInDown : FadeInUp;
 
   const plateBorder = travelChatPlateBorder(theme);
 
@@ -259,7 +267,7 @@ export function TravelChatMessageMenu({
       </Animated.View>
 
       <Animated.View
-        entering={FadeInDown.duration(motion.fade).reduceMotion(
+        entering={actionsEnter.duration(motion.fade).reduceMotion(
           ReduceMotion.System,
         )}
         style={[

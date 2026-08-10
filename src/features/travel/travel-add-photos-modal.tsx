@@ -28,6 +28,9 @@ export function TravelAddPhotosModal({
   removeLabel = 'Remove Photo',
 }: TravelAddPhotosModalProps) {
   const { spacing } = useResponsive();
+  // Invoke the action first so hosts can snapshot item ids, then dismiss.
+  // pick-image settles briefly before presenting the system picker so this
+  // SheetScaffold Modal is unmounted (present-over-Modal races on iOS).
   const runAndClose = (action: () => void) => {
     action();
     onClose();

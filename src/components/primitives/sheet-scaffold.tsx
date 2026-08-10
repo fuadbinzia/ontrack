@@ -14,6 +14,7 @@ import {
     type StyleProp,
     type ViewStyle,
 } from 'react-native';
+import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
     FadeIn,
     ReduceMotion,
@@ -31,6 +32,7 @@ import { AppPromptHost } from './app-prompt';
 import { ScreenAtmosphere } from './screen-atmosphere';
 import { ScreenHeader } from './screen-header';
 import { SheetGrabber } from './sheet-grabber';
+import { useSheetDismissPan } from './use-sheet-dismiss-pan';
 
 export interface SheetHeaderProps {
   eyebrow?: string;
@@ -42,6 +44,11 @@ export interface SheetHeaderProps {
   closeAccessibilityLabel?: string;
   closeTestID?: string;
   style?: StyleProp<ViewStyle>;
+  /**
+   * When false, grabber stays an a11y/agent target but does not use a Pressable
+   * (parent header pan/tap gesture owns dismiss). Default true for standalone headers.
+   */
+  grabberInteractive?: boolean;
 }
 
 export function SheetHeader({
@@ -54,6 +61,7 @@ export function SheetHeader({
   closeAccessibilityLabel = 'Dismiss',
   closeTestID,
   style,
+  grabberInteractive = true,
 }: SheetHeaderProps) {
   const { spacing } = useResponsive();
   const close = () => {
@@ -66,6 +74,7 @@ export function SheetHeader({
         testID={closeTestID}
         onPress={close}
         accessibilityLabel={closeAccessibilityLabel}
+        interactive={grabberInteractive}
       />
       <ScreenHeader
         eyebrow={eyebrow}
@@ -136,6 +145,10 @@ export function SheetScaffold({
   const { spacing, layout } = useResponsive();
   const scrollRef = useRef<ScrollView>(null);
   const [lockedHeight, setLockedHeight] = useState<number>();
+  const { headerGesture, sheetStyle, scrimStyle, onSheetLayout, close } = useSheetDismissPan({
+    visible,
+    onClose,
+  });
   // Modal ignores Android soft-input — lift on both platforms.
   const { keyboardInset } = useDockedKeyboardInset({
     enabled: visible,
@@ -168,11 +181,6 @@ export function SheetScaffold({
   // and makes the next navigation feel stuck under an invisible overlay.
   if (!visible) return null;
 
-  const close = () => {
-    Keyboard.dismiss();
-    onClose();
-  };
-
   return (
     <Modal
       animationType="none"
@@ -182,7 +190,11 @@ export function SheetScaffold({
       navigationBarTranslucent
       transparent
       visible>
-      <View accessibilityViewIsModal style={styles.modalRoot}>
+      {/*
+        Modal hosts its own native root — gestures need a GH root inside the
+        Modal (app-root GestureHandlerRootView does not cover this tree).
+      */}
+      <GestureHandlerRootView accessibilityViewIsModal style={styles.modalRoot}>
         {/*
           Scrim fades in place; card rises from below. Native Modal slide
           would drag the dim with the sheet. (Reanimated: SlideInDown =
@@ -196,6 +208,7 @@ export function SheetScaffold({
           style={[
             StyleSheet.absoluteFill,
             { backgroundColor: theme.overlayScrim },
+            scrimStyle,
           ]}
         />
         {/*
@@ -231,8 +244,9 @@ export function SheetScaffold({
               .overshootClamping(1)
               .reduceMotion(ReduceMotion.System)}
             onLayout={(event) => {
-              if (!lockHeight || lockedHeight != null) return;
               const next = Math.round(event.nativeEvent.layout.height);
+              onSheetLayout(next);
+              if (!lockHeight || lockedHeight != null) return;
               if (next > 0) setLockedHeight(next);
             }}
             pointerEvents="auto"
@@ -255,6 +269,7 @@ export function SheetScaffold({
                 // Lift flush-bottom sheet above docked IME (chat / add-sheet pattern).
                 bottom: keyboardInset,
               },
+              sheetStyle,
             ]}>
             {/*
               Glass underlay is a Fabric sibling of header/body — never wrap
@@ -298,23 +313,26 @@ export function SheetScaffold({
                 </>
               )
             ) : null}
-            <View
-              style={styles.headerSlot}
-              onStartShouldSetResponder={() => {
-                Keyboard.dismiss();
-                return false;
-              }}>
-              <SheetHeader
-                eyebrow={eyebrow}
-                title={title}
-                subtitle={subtitle}
-                subtitleIcon={subtitleIcon}
-                decoration={decoration}
-                onClose={close}
-                closeAccessibilityLabel={closeAccessibilityLabel}
-                closeTestID={closeTestID}
-              />
-            </View>
+            <GestureDetector gesture={headerGesture}>
+              <Animated.View
+                style={styles.headerSlot}
+                onStartShouldSetResponder={() => {
+                  Keyboard.dismiss();
+                  return false;
+                }}>
+                <SheetHeader
+                  eyebrow={eyebrow}
+                  title={title}
+                  subtitle={subtitle}
+                  subtitleIcon={subtitleIcon}
+                  decoration={decoration}
+                  onClose={close}
+                  closeAccessibilityLabel={closeAccessibilityLabel}
+                  closeTestID={closeTestID}
+                  grabberInteractive={false}
+                />
+              </Animated.View>
+            </GestureDetector>
             {/*
               Bound the ScrollView viewport so tall forms scroll under maxHeight
               (Android Yoga especially). CTA lives in-scroll — never pinned under
@@ -349,7 +367,7 @@ export function SheetScaffold({
           </Animated.View>
         </KeyboardAvoidingView>
         <AppPromptHost embedded />
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }

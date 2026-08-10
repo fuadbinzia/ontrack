@@ -332,6 +332,7 @@ export function TravelChatScreen({ planId }: { planId: string }) {
         message={actions.menuMessage}
         anchor={actions.menuAnchor}
         identity={{ userId: user?.id, deviceId: session.deviceId }}
+        bottomChrome={keyboardInset > 0 ? keyboardInset : tabBarHeight}
         onClose={actions.closeMessageMenu}
         onAction={actions.handleMessageMenuAction}
       />

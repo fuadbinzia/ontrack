@@ -222,9 +222,11 @@ export function TravelDateRangeEditor({
               : 'No dates selected'}
           </AppText>
           <AppText variant="caption" color="secondary" align="center">
-            {phase === 'start' || !draftHasStart
-              ? 'Tap the first day of your trip.'
-              : 'Tap the final day of your trip.'}
+            {draftHasStart && draftHasEnd && phase === 'start'
+              ? 'Tap save to update'
+              : phase === 'start' || !draftHasStart
+                ? 'Tap the first day of your trip.'
+                : 'Tap the final day of your trip.'}
           </AppText>
           <DateFieldCalendar
             value={fromDateKey(activeKey)}

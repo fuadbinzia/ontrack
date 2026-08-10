@@ -1,3 +1,4 @@
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { Linking } from 'react-native';
 
@@ -36,16 +37,63 @@ const DEFAULT_CAMERA_DENIED =
 const DEFAULT_LIBRARY_DENIED =
   'Allow photo library access in Settings to choose an image.';
 
-function launchOptions(options: PickImageOptions = {}) {
+/** Beat for host RN Modals (e.g. Add Photos) to unmount before PHPicker presents. */
+const PICKER_HOST_SETTLE_MS = 50;
+
+function cameraLaunchOptions(options: PickImageOptions = {}) {
   return {
     mediaTypes: ['images'] as ImagePicker.MediaType[],
     quality: options.quality ?? 0.9,
     allowsEditing: options.allowsEditing ?? false,
     aspect: options.aspect,
-    // Avoid FailedToReadImageException on iOS for some PNG/HEIC assets
-    // ("Cannot load representation of type public.png").
+  };
+}
+
+/**
+ * Library launches always use quality 1 + Current so iOS takes the PHPicker
+ * fast-path (copy original file). quality < 1 forces loadDataRepresentation,
+ * which throws FailedToReadImageException for some PNG/HEIC/iCloud assets
+ * ("Cannot load representation of type public.png").
+ */
+function libraryLaunchOptions(options: PickImageOptions = {}) {
+  return {
+    mediaTypes: ['images'] as ImagePicker.MediaType[],
+    quality: 1,
+    allowsEditing: options.allowsEditing ?? false,
+    aspect: options.aspect,
     preferredAssetRepresentationMode:
-      ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Current,
+    shouldDownloadFromNetwork: true,
+  };
+}
+
+async function settleBeforeSystemPicker() {
+  await new Promise<void>((resolve) =>
+    setTimeout(resolve, PICKER_HOST_SETTLE_MS),
+  );
+}
+
+async function maybeCompressAsset(
+  asset: ImagePicker.ImagePickerAsset,
+  quality: number | undefined,
+): Promise<PickedImageAsset> {
+  const compress = quality ?? 1;
+  if (compress >= 1) {
+    return {
+      uri: asset.uri,
+      fileName: asset.fileName ?? undefined,
+      fileSize: asset.fileSize,
+    };
+  }
+  const jpeg = await ImageManipulator.manipulateAsync(asset.uri, [], {
+    compress,
+    format: ImageManipulator.SaveFormat.JPEG,
+  });
+  const baseName = asset.fileName?.replace(/\.[^.]+$/, '');
+  return {
+    uri: jpeg.uri,
+    fileName: baseName ? `${baseName}.jpg` : undefined,
+    fileSize: asset.fileSize,
   };
 }
 
@@ -88,7 +136,10 @@ export async function pickCameraImage(
       );
       return undefined;
     }
-    const result = await ImagePicker.launchCameraAsync(launchOptions(options));
+    await settleBeforeSystemPicker();
+    const result = await ImagePicker.launchCameraAsync(
+      cameraLaunchOptions(options),
+    );
     if (result.canceled) return undefined;
     return result.assets[0]?.uri;
   } catch (error) {
@@ -126,18 +177,19 @@ export async function pickLibraryImages(
       );
       return undefined;
     }
+    await settleBeforeSystemPicker();
     const result = await ImagePicker.launchImageLibraryAsync({
-      ...launchOptions(options),
+      ...libraryLaunchOptions(options),
       allowsMultipleSelection: options.allowsMultipleSelection ?? false,
       orderedSelection: options.orderedSelection ?? false,
       selectionLimit: options.selectionLimit,
     });
     if (result.canceled) return undefined;
-    return result.assets.map((asset) => ({
-      uri: asset.uri,
-      fileName: asset.fileName ?? undefined,
-      fileSize: asset.fileSize,
-    }));
+    const assets: PickedImageAsset[] = [];
+    for (const asset of result.assets) {
+      assets.push(await maybeCompressAsset(asset, options.quality));
+    }
+    return assets;
   } catch (error) {
     handlePickFailure(error, 'library');
     return undefined;

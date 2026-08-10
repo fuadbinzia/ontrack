@@ -7,7 +7,7 @@ imagery, category colors, and data visualizations; they do not redefine controls
 
 | Intent | Component | Placement |
 |---|---|---|
-| Dismiss bottom sheet | `SheetGrabber` via `SheetHeader` / `SheetScaffold` | Centered top swipe pill (tap also dismisses) |
+| Dismiss bottom sheet | `SheetGrabber` via `SheetHeader` / `SheetScaffold` | Centered top swipe pill — pan header down or tap to dismiss |
 | Dismiss page / full-screen overlay | `IconButton` through `ScreenHeader` `onClose` | Neutral top-right X |
 | Back | `HeaderBackButton compact` via `ScreenHeader` `leading` | Overline-sized on the eyebrow row; title + subtitle stay full-bleed left |
 | Section rhythm | `SectionHeader flush` | Use inside `Screen`/`View` gaps so margins are not doubled |

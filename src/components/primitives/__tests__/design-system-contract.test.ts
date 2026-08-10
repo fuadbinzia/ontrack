@@ -39,6 +39,16 @@ describe('canonical design-system contract', () => {
     expect(sheet).not.toMatch(
       /function SheetHeader[\s\S]*?onClose=\{close\}[\s\S]*?<\/ScreenHeader>/,
     );
+    expect(sheet).toContain('GestureHandlerRootView');
+    expect(sheet).toContain('GestureDetector');
+    expect(sheet).toContain('useSheetDismissPan');
+    expect(sheet).toContain('grabberInteractive={false}');
+    expect(read('src/components/primitives/use-sheet-dismiss-pan.ts')).toContain(
+      'Gesture.Exclusive',
+    );
+    expect(read('src/features/travel/travel-itinerary-add-sheet.tsx')).toContain(
+      'useSheetDismissPan',
+    );
     expect(read('src/features/travel/travel-sheet.tsx')).toContain('SheetHeader');
     expect(read('src/app/activity-form.tsx')).toContain('SheetGrabber');
     expect(read('src/features/social/social-friends-modal.tsx')).toContain('SheetGrabber');

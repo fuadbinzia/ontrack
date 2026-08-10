@@ -45,7 +45,7 @@ export function AuthHero({
         <AuthBrandMark />
         <AppText
           variant="overline"
-          color="primary"
+          color="accent"
           style={{ letterSpacing: s(3.4) }}
           fit>
           onTrack
@@ -81,7 +81,6 @@ function HeroCopy({ headline, intro }: { headline: string; intro: string }) {
     <>
       <AppText
         variant="display"
-        align="center"
         numberOfLines={3}
         adjustsFontSizeToFit
         minimumFontScale={0.6}
@@ -104,7 +103,6 @@ function HeroCopy({ headline, intro }: { headline: string; intro: string }) {
       <AppText
         variant="body"
         color="secondary"
-        align="center"
         numberOfLines={4}
         adjustsFontSizeToFit
         minimumFontScale={0.72}

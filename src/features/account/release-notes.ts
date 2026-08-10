@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.34',
+    date: '2026-08-10',
+    notes: [
+      'Add use-sync-external-store so EAS OTA export resolves zustand.',
+    ],
+  },
+  {
     version: '1.0.33',
     date: '2026-08-10',
     notes: [
@@ -256,6 +263,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.34',
+    date: '2026-08-10',
+    notes: [
+      'Add use-sync-external-store so EAS OTA export resolves zustand.',
+      'Ship via ship:push (TestFlight + device OTA).',
+    ],
+  },
   {
     version: '1.0.33',
     date: '2026-08-10',

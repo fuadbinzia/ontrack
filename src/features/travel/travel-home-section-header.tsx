@@ -1,29 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Keyboard,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Keyboard,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from 'react-native';
 import Animated, {
-  Easing,
-  Extrapolation,
-  interpolate,
-  ReduceMotion,
-  runOnJS,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
+    Easing,
+    Extrapolation,
+    interpolate,
+    ReduceMotion,
+    runOnJS,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 
 import { Symbol } from '@/components/primitives';
 import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import {
-  travelHomeFontFamily,
-  travelHomeTokens,
+    travelHomeFontFamily,
+    travelHomeTokens,
 } from '@/features/travel/travel-home-tokens';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -264,8 +264,8 @@ export function TravelHomeSectionHeader({
           maxFontSizeMultiplier={1.1}
           numberOfLines={1}
           style={{
-            // Opposite the scoop: dark frost + white (light); light frost + ink (dark).
-            color: dark ? travelHomeTokens.colors.ink : '#FFFFFF',
+            // `inverted` is always a dark plate — white ink on every theme.
+            color: '#FFFFFF',
             fontSize: Math.max(11, s(12)),
             fontWeight: '400',
             fontFamily: travelHomeFontFamily,

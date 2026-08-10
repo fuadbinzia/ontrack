@@ -38,7 +38,7 @@ export type FoodSheetProps = PropsWithChildren<{
 
 /**
  * Every Food sheet uses this thin glass preset over `SheetScaffold` —
- * handle-free header X, scrollable body + in-scroll CTA. Zero per-screen
+ * swipe grabber, scrollable body + in-scroll CTA. Zero per-screen
  * sheet geometry (see `.cursor/skills/food/SKILL.md`).
  */
 export function FoodSheet({

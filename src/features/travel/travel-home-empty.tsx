@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useIsFocused } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 import { AppText, GlassIconWell, Symbol } from '@/components/primitives';
 import { fieldTitleCase } from '@/components/primitives/field-title-case';
@@ -27,12 +27,13 @@ export function TravelHomeEmpty({ onAddTrip }: TravelHomeEmptyProps) {
   const theme = useTheme();
   const { s, spacing, layout } = useResponsive();
   const dark = theme.name === 'dark';
-  const isFocused = useIsFocused();
-  /** Bottom-nav preload mounts Travel off-screen — gate entrance until focus. */
-  const [entranceReady, setEntranceReady] = useState(isFocused);
-  useEffect(() => {
-    if (isFocused) setEntranceReady(true);
-  }, [isFocused]);
+  /** Remount on every Travel focus so FadeInDown replays (tab stays mounted). */
+  const [entranceKey, setEntranceKey] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setEntranceKey((key) => key + 1);
+    }, []),
+  );
 
   const actionLabel = fieldTitleCase('Add Your First Trip');
   const handleAction = () => {
@@ -137,8 +138,10 @@ export function TravelHomeEmpty({ onAddTrip }: TravelHomeEmptyProps) {
 
   return (
     <AgentTestId testID={AgentUiIds.travel.list.sectionEmpty}>
-      {entranceReady ? (
-        <Animated.View entering={FadeInDown.springify().damping(18)}>
+      {entranceKey > 0 ? (
+        <Animated.View
+          key={entranceKey}
+          entering={FadeInDown.springify().damping(18)}>
           {body}
         </Animated.View>
       ) : (

@@ -1,7 +1,14 @@
 import { Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppText, Button, GlassPlate, IconButton, Symbol, useScreenAtmosphereChrome } from '@/components/primitives';
+import {
+  AppText,
+  Button,
+  GlassPlate,
+  SheetGrabber,
+  Symbol,
+  useScreenAtmosphereChrome,
+} from '@/components/primitives';
 import { radii } from '@/design-system';
 import { socialChrome, socialShadow } from '@/features/social/social-chrome';
 import type { SocialPlaceholder } from '@/features/social/social-types';
@@ -39,20 +46,17 @@ export function SocialActionModal({
             paddingHorizontal: spacing.lg,
           },
         ]}>
-        <View style={styles.header}>
+        <View style={[styles.header, { gap: spacing.md }]}>
+          <SheetGrabber
+            testID={AgentUiIds.social.actionModal.close}
+            accessibilityLabel="Close social action"
+            onPress={onClose}
+          />
           <View style={styles.headerCopy}>
             <AppText variant="overline" style={{ color: chrome.primary }} fit>
               Social
             </AppText>
           </View>
-          <IconButton
-            testID={AgentUiIds.social.actionModal.close}
-            icon="close"
-            background={chrome.surface}
-            borderColor={chrome.border}
-            accessibilityLabel="Close social action"
-            onPress={onClose}
-          />
         </View>
 
         {content ? (
@@ -119,11 +123,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignSelf: 'stretch',
   },
   headerCopy: {
-    flex: 1,
+    alignSelf: 'stretch',
     minWidth: 0,
   },
   center: {

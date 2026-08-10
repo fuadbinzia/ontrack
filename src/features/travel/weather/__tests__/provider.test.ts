@@ -87,4 +87,12 @@ describe('travel weather provider', () => {
     expect(weatherIconForCode(80)).toBe('weather-showers');
     expect(weatherIconForCode(95)).toBe('weather-thunder');
   });
+
+  it('maps clear / partly cloudy / showers to night icons after sunset', () => {
+    expect(weatherIconForCode(0, { isDay: false })).toBe('weather-clear-night');
+    expect(weatherIconForCode(2, { isDay: false })).toBe('weather-partly-cloudy-night');
+    expect(weatherIconForCode(80, { isDay: false })).toBe('weather-showers-night');
+    expect(weatherIconForCode(3, { isDay: false })).toBe('weather-cloudy');
+    expect(weatherIconForCode(0, { isDay: true })).toBe('weather-clear');
+  });
 });

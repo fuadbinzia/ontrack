@@ -18,13 +18,13 @@ describe('accountProviderLabel', () => {
         },
         'google',
       ),
-    ).toBe('Google');
+    ).toBe('Signed in via Google');
   });
 
   it('uses first-signup provider when identities are absent', () => {
     expect(
       accountProviderLabel({ app_metadata: { provider: 'apple' } }),
-    ).toBe('Apple');
+    ).toBe('Signed in via Apple');
   });
 
   it('shows only the most recently used identity when none was recorded', () => {
@@ -36,6 +36,6 @@ describe('accountProviderLabel', () => {
           { provider: 'google', last_sign_in_at: '2026-08-09T00:00:00.000Z' },
         ],
       }),
-    ).toBe('Google');
+    ).toBe('Signed in via Google');
   });
 });

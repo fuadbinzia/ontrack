@@ -1,5 +1,5 @@
-import { useIsFocused } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { EmptyState } from '@/components/primitives';
@@ -56,17 +56,17 @@ export function TravelHomeYourTrips({
   onLayoutY,
 }: TravelHomeYourTripsProps) {
   const { s } = useResponsive();
-  const isFocused = useIsFocused();
   /**
-   * Bottom-nav neighbor `preload` mounts Travel off-screen. Trip-card
-   * `FadeInDown` only runs on mount — gate the list until first focus so the
-   * spring entrance plays when the user can see it (same idea as plan-detail
-   * waiting for focus before mounting the heavy itinerary body).
+   * Trip-card `FadeInDown` only runs on mount. Tab stays mounted (and
+   * neighbor `preload` can mount Travel off-screen), so bump a key on every
+   * focus to remount the list — same Today activity-card spring, every land.
    */
-  const [entranceReady, setEntranceReady] = useState(isFocused);
-  useEffect(() => {
-    if (isFocused) setEntranceReady(true);
-  }, [isFocused]);
+  const [entranceKey, setEntranceKey] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setEntranceKey((key) => key + 1);
+    }, []),
+  );
   const searchActive = isTravelHomeTripSearchActive(searchOpen, searchQuery);
   const peekHeight = Math.max(
     0,
@@ -124,8 +124,9 @@ export function TravelHomeYourTrips({
         </AgentTestId>
       ) : null}
 
-      {entranceReady ? (
+      {entranceKey > 0 ? (
         <View
+          key={entranceKey}
           style={{ gap: travelHomeTokens.spacing.cardGap }}
           onTouchStart={searchActive ? onDismissSearch : undefined}>
           {plans.map((plan, index) => (

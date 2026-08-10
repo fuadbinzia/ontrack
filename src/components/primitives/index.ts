@@ -69,6 +69,8 @@ export { SectionHeader } from './section-header';
 export { SegmentedControl } from './segmented-control';
 export { SettingsGroup } from './settings-group';
 export { SettingsActionRow, SettingsRow, SettingsToggleRow } from './settings-row';
+export { SheetGrabber } from './sheet-grabber';
+export type { SheetGrabberProps } from './sheet-grabber';
 export { SheetHeader, SheetScaffold } from './sheet-scaffold';
 export { StackedFieldLabel } from './stacked-field-label';
 export {

@@ -276,8 +276,8 @@ function RootNavigator({ hydrated }: { hydrated: boolean }) {
           name="activity-form"
           options={{
             presentation: 'modal',
-            // In-content back (activity-form) — transparent native header
-            // sat under the full-bleed ScrollView and ate real taps.
+            // In-content swipe grabber — hide native header so it can't
+            // sit under the full-bleed ScrollView and eat taps / chrome.
             headerShown: false,
             contentStyle: { backgroundColor: 'transparent', paddingTop: 0 },
           }}

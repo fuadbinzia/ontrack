@@ -24,6 +24,7 @@ import { CloudAccountCard } from '@/features/account/cloud-account-card';
 import { useCanUseDeveloperTools } from '@/features/account/dev-access';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { ProfileAvatarEditorSheet } from '@/features/account/profile-avatar-editor-sheet';
+import { ProfileIdentityEditorSheet } from '@/features/account/profile-identity-editor-sheet';
 import { getAppBuild, getAppVersion } from '@/features/account/release-notes';
 import { resolveSelfDisplayName } from '@/features/account/self-display-name';
 import { useAuthSession } from '@/features/auth/auth-provider';
@@ -161,8 +162,10 @@ export default function ProfileSettingsScreen() {
   const resetVisionBoard = useVisionBoard((state) => state.reset);
   const resetHealth = useHealth((state) => state.reset);
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const [identityOpen, setIdentityOpen] = useState(false);
 
   const displayName = resolveSelfDisplayName({ preferencesName: name, user });
+  const blurb = goal.trim() || 'Live intentionally';
   const appVersion = getAppVersion();
   const appBuild = getAppBuild();
   const versionDetail =
@@ -176,9 +179,21 @@ export default function ProfileSettingsScreen() {
     haptics.tap();
     setAvatarOpen(true);
   };
+  const openIdentity = () => {
+    haptics.tap();
+    setIdentityOpen(true);
+  };
   const avatarAgent = useAgentUiTarget(AgentUiIds.profile.avatar, {
     label: 'Customize profile icon',
     onPress: openAvatar,
+  });
+  const displayNameAgent = useAgentUiTarget(AgentUiIds.profile.displayName, {
+    label: 'Edit name and blurb',
+    onPress: openIdentity,
+  });
+  const blurbAgent = useAgentUiTarget(AgentUiIds.profile.blurb, {
+    label: 'Edit name and blurb',
+    onPress: openIdentity,
   });
   const openTmdb = () => {
     void openHttpsUrl('https://www.themoviedb.org');
@@ -250,37 +265,41 @@ export default function ProfileSettingsScreen() {
         scrollOffsetY.current = event.nativeEvent.contentOffset.y;
       }}
       contentStyle={{ gap: rs.lg }}>
-      <Pressable
-        ref={avatarAgent.ref}
-        accessibilityRole="button"
-        accessibilityLabel="Customize profile icon"
-        testID={avatarAgent.testID}
-        onLayout={avatarAgent.onLayout}
-        onPress={openAvatar}
-        style={[styles.hero, { gap: rs.sm }]}>
-        <ProfileAvatar displayName={displayName} size={avatarSize} isSelf />
+      <View style={[styles.hero, { gap: rs.sm }]}>
+        <Pressable
+          ref={avatarAgent.ref}
+          accessibilityRole="button"
+          accessibilityLabel="Customize profile icon"
+          testID={avatarAgent.testID}
+          onLayout={avatarAgent.onLayout}
+          onPress={openAvatar}>
+          <ProfileAvatar displayName={displayName} size={avatarSize} isSelf />
+        </Pressable>
         <View style={[styles.heroCopy, { gap: rs.xxs, minWidth: 0, flexShrink: 1 }]}>
-          <AgentTestId testID={AgentUiIds.profile.displayName} label={displayName}>
+          <Pressable
+            ref={displayNameAgent.ref}
+            accessibilityRole="button"
+            accessibilityLabel="Edit name and blurb"
+            testID={displayNameAgent.testID}
+            onLayout={displayNameAgent.onLayout}
+            onPress={openIdentity}>
             <AppText variant="title" fit numberOfLines={1}>
               {displayName}
             </AppText>
-          </AgentTestId>
-          {/* Guests keep a local name; caption must not look like a cloud account. */}
-          {isGuest ? (
-            <AgentTestId
-              testID={AgentUiIds.profile.guestStatus}
-              label="Create an account to save your progress">
-              <AppText variant="caption" color="secondary" numberOfLines={1} fit>
-                Create an account to save your progress
-              </AppText>
-            </AgentTestId>
-          ) : (
+          </Pressable>
+          <Pressable
+            ref={blurbAgent.ref}
+            accessibilityRole="button"
+            accessibilityLabel="Edit name and blurb"
+            testID={blurbAgent.testID}
+            onLayout={blurbAgent.onLayout}
+            onPress={openIdentity}>
             <AppText variant="caption" color="secondary" numberOfLines={1} fit>
-              {goal || 'Living intentionally'}
+              {blurb}
             </AppText>
-          )}
+          </Pressable>
         </View>
-      </Pressable>
+      </View>
 
       <AgentTestId
         testID={AgentUiIds.profile.section.account}
@@ -436,6 +455,7 @@ export default function ProfileSettingsScreen() {
       <DangerZone testID={AgentUiIds.profile.section.dangerZone}>
         <DestructiveSection
           flush
+          icon={null}
           label="Reset All Data"
           description="Clears local schedules, add-ons data, and app photos."
           onPress={handleReset}
@@ -445,6 +465,7 @@ export default function ProfileSettingsScreen() {
         {showDeleteAccount ? (
           <DestructiveSection
             flush
+            icon={null}
             label="Delete Account"
             description="Permanently deletes your cloud account and synced data. This cannot be undone."
             onPress={handleDeleteAccount}
@@ -505,6 +526,10 @@ export default function ProfileSettingsScreen() {
       </AgentTestId>
 
       <ProfileAvatarEditorSheet visible={avatarOpen} onClose={() => setAvatarOpen(false)} />
+      <ProfileIdentityEditorSheet
+        visible={identityOpen}
+        onClose={() => setIdentityOpen(false)}
+      />
     </Screen>
   );
 }

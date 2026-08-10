@@ -27,12 +27,16 @@ describe('travel home kit contract', () => {
     expect(source).toContain('collapsable={false}');
     expect(source).toContain('heroPageSlots');
     expect(source).toContain('scrollEnabled={scrollInteractive}');
-    // Page ticks bind to uploaded visibleUris once they paint (placeholders
-    // never become pages; never advertise paging before swipe works).
+    // Uploads win; else rotating live destination heroes. Scenic underlay is
+    // loading/miss only — never a static stand-in carousel page.
     expect(source).toContain('TravelHomeCarouselStepper');
     expect(source).toContain('uploadedTripCoverUris');
-    expect(source).toContain('fetchDestinationCoverUri');
-    expect(source).not.toContain('fetchDestinationHeroUris');
+    expect(source).toContain('fetchDestinationHeroUris');
+    expect(source).not.toContain('fetchRemoteDestinationCoverUri');
+    expect(source).not.toMatch(
+      /fetchDestinationCoverUri\s*\(/,
+    );
+    expect(source).not.toContain('placeholderUri');
     expect(source).toContain(
       'count={hasPaintedRemote ? visibleUris.length : 0}',
     );
@@ -64,7 +68,8 @@ describe('travel home kit contract', () => {
     expect(source).toContain('onLoad');
     expect(source).toContain('scenicUnderlay');
     expect(source).toContain('opacity: hasPaintedRemote ? 0 : 1');
-    expect(source).toContain('zIndex: 1');
+    // Scenic plate sits above the paging remotes until one paints.
+    expect(source).toContain('zIndex: 2');
     expect(source).not.toContain('{ opacity: hasPaintedRemote ? 1 : 0 }');
     expect(source).not.toContain('opacity: fixtureSource && !hasRemoteHeroes ? 1 : 0');
   });
@@ -232,8 +237,11 @@ describe('travel home kit contract', () => {
     expect(header).toContain('collapseSearch');
     expect(header).toContain('searchMinimize');
     expect(header).toContain('{title}');
-    // Theme-native plate/scoop; count badge stays inverted for contrast.
+    // Theme-native plate/scoop; count badge stays inverted + white ink.
     expect(header).toMatch(/<TravelHomeGlass[\s\S]*?\binverted\b/);
+    expect(header).toMatch(
+      /inverted[\s\S]*?color:\s*'#FFFFFF'[\s\S]*?\{count\}/,
+    );
     expect(header).not.toContain('plateDark');
     expect(header).not.toContain('scoopLight');
     // Count sits at the far right inside the search scoop.
@@ -261,9 +269,9 @@ describe('travel home kit contract', () => {
     );
   });
 
-  it('defers trip-card mount until Travel is focused (preload entrance)', () => {
-    // Neighbor-tab preload mounts Travel off-screen; FadeInDown only runs on
-    // mount — cards must wait for first focus so the spring plays on-screen.
+  it('replays trip-card FadeInDown on every Travel focus (tab land bounce)', () => {
+    // FadeInDown is mount-only; tab stays mounted (and preload can mount
+    // off-screen) — entranceKey + useFocusEffect remounts the list each land.
     const yourTrips = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-home-your-trips.tsx'),
       'utf8',
@@ -272,8 +280,9 @@ describe('travel home kit contract', () => {
       join(process.cwd(), 'src/features/travel/travel-home-trip-card.tsx'),
       'utf8',
     );
-    expect(yourTrips).toContain('useIsFocused');
-    expect(yourTrips).toContain('entranceReady');
+    expect(yourTrips).toContain('useFocusEffect');
+    expect(yourTrips).toContain('entranceKey');
+    expect(yourTrips).toContain('key={entranceKey}');
     expect(card).toContain('FadeInDown');
     expect(card).toContain('springify()');
   });
@@ -379,7 +388,17 @@ describe('travel home kit contract', () => {
     for (const trip of travelHomeFixture.trips) {
       expect(trip).not.toHaveProperty('imageUrl');
       expect(trip.imageQuery.length).toBeGreaterThan(0);
+      // 3+ members → UI shows self + +N (fixture lists the self face only).
+      expect(trip.visibleMembers.length).toBeLessThanOrEqual(2);
+      expect(trip.memberCount).toBeGreaterThanOrEqual(trip.visibleMembers.length);
+      if (trip.memberCount > 2) {
+        expect(trip.visibleMembers).toHaveLength(1);
+      }
     }
+    expect(travelHomeFixture.trips[0]?.memberCount).toBe(4);
+    expect(travelHomeFixture.trips[0]?.visibleMembers).toHaveLength(1);
+    expect(travelHomeFixture.trips[1]?.memberCount).toBe(5);
+    expect(travelHomeFixture.trips[1]?.visibleMembers).toHaveLength(1);
   });
 
   it('lists required visual regression scenarios', () => {

@@ -21,10 +21,7 @@ import {
     loadFxRates,
     type FxRates,
 } from '@/features/travel/expenses/fx-rates';
-import {
-    currencyAsItineraryChrome,
-    currencySheetChrome,
-} from '@/features/travel/travel-currency-chrome';
+import { currencySheetChrome } from '@/features/travel/travel-currency-chrome';
 import { TravelCurrencyRatePanel } from '@/features/travel/travel-currency-rate-panel';
 import { TravelCurrencySideCard } from '@/features/travel/travel-currency-side-card';
 import { TravelSheetModal } from '@/features/travel/travel-sheet';
@@ -79,7 +76,6 @@ function TravelCurrencySheetContent({
 }) {
   const theme = useTheme();
   const chrome = currencySheetChrome(theme);
-  const sheetChrome = currencyAsItineraryChrome(theme);
   const { s, spacing: rs, layout } = useResponsive();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -494,7 +490,6 @@ function TravelCurrencySheetContent({
       closeTestID={AgentUiIds.travel.currency.close}
       minHeight={sheetMinHeight}
       scrollKey={`${plan.id}-${visible ? 'open' : 'closed'}`}
-      chrome={sheetChrome}
       footer={
         <AgentTestId
           testID={AgentUiIds.travel.currency.done}

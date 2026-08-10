@@ -6,6 +6,7 @@ import {
     hasDestinationLandmarkIntent,
     isAllowedDestinationCoverImageUrl,
     isDirectClientCoverUrl,
+    isRemoteDestinationCoverUri,
     isUsableDestinationPhotoUrl,
     localTripCoverUri,
     mergeDestinationCoverUrls,
@@ -354,8 +355,33 @@ describe('mergeDestinationCoverUrls', () => {
   });
 });
 
+describe('isRemoteDestinationCoverUri', () => {
+  it('flags Unsplash / Wikimedia / cover-proxy plates', () => {
+    expect(
+      isRemoteDestinationCoverUri(
+        'https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=1080',
+      ),
+    ).toBe(true);
+    expect(
+      isRemoteDestinationCoverUri(
+        'https://upload.wikimedia.org/wikipedia/commons/a/a1/Paris.jpg',
+      ),
+    ).toBe(true);
+    expect(
+      isRemoteDestinationCoverUri(
+        'http://localhost:8081/api/destination-cover-image?src=https%3A%2F%2Fupload.wikimedia.org%2Ffoo.jpg',
+      ),
+    ).toBe(true);
+    expect(
+      isRemoteDestinationCoverUri(
+        'file:///Documents/travel-moments/cover-a.jpg',
+      ),
+    ).toBe(false);
+  });
+});
+
 describe('uploadedTripCoverUris', () => {
-  it('returns only user uploads (not moment photos)', () => {
+  it('returns only user uploads (not moment photos or live destination URLs)', () => {
     expect(
       uploadedTripCoverUris(
         plan({
@@ -393,6 +419,17 @@ describe('uploadedTripCoverUris', () => {
               durationMinutes: 60,
               photoUris: ['file:///Documents/travel-moments/moment.jpg'],
             },
+          ],
+        }),
+      ),
+    ).toEqual([]);
+    expect(
+      uploadedTripCoverUris(
+        plan({
+          coverUri:
+            'https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=1080',
+          coverUris: [
+            'https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=1080',
           ],
         }),
       ),

@@ -18,8 +18,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 
-export type { OptimisticTravelChatMessage } from '@/features/travel/chat';
-export type TravelChatRowPalette = ReturnType<typeof travelChatPalette>;
+type TravelChatRowPalette = ReturnType<typeof travelChatPalette>;
 
 export function TravelChatMessageRow({
   message,

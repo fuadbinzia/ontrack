@@ -2,8 +2,8 @@
 export type AccountSsoProvider = 'apple' | 'google';
 
 const PROVIDER_LABEL: Record<AccountSsoProvider, string> = {
-  apple: 'Apple',
-  google: 'Google',
+  apple: 'Signed in via Apple',
+  google: 'Signed in via Google',
 };
 
 function asSsoProvider(raw: unknown): AccountSsoProvider | undefined {

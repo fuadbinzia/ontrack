@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppText, Button, Symbol } from '@/components/primitives';
+import { AppText, Button, SheetGrabber, Symbol } from '@/components/primitives';
 import { categoryColors, layout, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import { BenchPressAnimation } from './bench-press-animation';
@@ -134,6 +134,10 @@ function DemoContent({
             contentContainerStyle={styles.sheetContent}
             showsVerticalScrollIndicator={false}>
             <View style={styles.sheetHeader}>
+              <SheetGrabber
+                accessibilityLabel="Close animation"
+                onPress={onClose}
+              />
               <View style={styles.flex}>
                 <AppText variant="overline" color="accent">Anatomy in Motion</AppText>
                 <AppText variant="title">{exercise.name}</AppText>
@@ -142,14 +146,6 @@ function DemoContent({
                   {anatomySex === 'female' ? 'Female' : 'Male'}
                 </AppText>
               </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close animation"
-                hitSlop={8}
-                onPress={onClose}
-                style={[styles.closeButton, { backgroundColor: theme.backgroundSunken }]}>
-                <AppText variant="heading" color="primary" style={styles.closeMark}>×</AppText>
-              </Pressable>
             </View>
 
             <View
@@ -286,19 +282,7 @@ const styles = StyleSheet.create({
     padding: layout.screenPadding,
   },
     sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-  },
-    closeButton: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 21,
-  },
-    closeMark: {
-    marginTop: -2,
+    gap: spacing.sm,
   },
     animationCard: {
     gap: spacing.md,

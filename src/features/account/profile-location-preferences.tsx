@@ -1,16 +1,23 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import {
+    useEffect,
+    useRef,
+    useState,
+    type MutableRefObject,
+    type RefObject,
+} from 'react';
 import { Pressable, View } from 'react-native';
 
 import {
-  ErrorMessage,
-  GlassIconWell,
-  SettingsGroup,
-  Symbol,
+    ErrorMessage,
+    GlassIconWell,
+    SettingsGroup,
+    Symbol,
 } from '@/components/primitives';
-import { CityAutofindSettingsRow } from '@/features/account/city-autofind-settings-row';
 import { radii } from '@/design-system';
-import { getDestinationCurrentWeather } from '@/features/travel/weather';
+import { CityAutofindSettingsRow } from '@/features/account/city-autofind-settings-row';
+import { getDestinationCurrentWeather } from '@/features/travel/weather/provider';
 import { temperatureUnitForDateFormat } from '@/features/travel/weather/temperature-unit';
+import type { TemperatureUnit } from '@/features/travel/weather/types';
 import { useCurrentPlaceLabel } from '@/hooks/use-current-place-label';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -32,7 +39,7 @@ type ProfileLocationPreferencesProps = {
  */
 async function normalizePlaceLabel(
   raw: string,
-  unit: 'fahrenheit' | 'celsius',
+  unit: TemperatureUnit,
 ): Promise<string> {
   const trimmed = raw.trim();
   if (!trimmed) return '';
@@ -42,6 +49,45 @@ async function normalizePlaceLabel(
     return label || trimmed;
   } catch {
     return trimmed;
+  }
+}
+
+/** Commit immediately, then normalize when non-empty (shared by Home / Current). */
+async function persistPlaceLabel(input: {
+  raw: string;
+  getSaved: () => string;
+  commit: (value: string) => void;
+  onUnchanged?: (trimmed: string, saved: string) => void;
+  genRef: MutableRefObject<number>;
+  setSaving: (saving: boolean) => void;
+  unit: TemperatureUnit;
+  setError: (error: string | undefined) => void;
+}): Promise<void> {
+  const trimmed = input.raw.trim();
+  const saved = input.getSaved();
+  if (trimmed === saved) {
+    input.setError(undefined);
+    input.onUnchanged?.(trimmed, saved);
+    return;
+  }
+
+  input.commit(trimmed);
+  input.setError(undefined);
+  if (!trimmed) {
+    haptics.tap();
+    return;
+  }
+
+  const gen = ++input.genRef.current;
+  input.setSaving(true);
+  haptics.tap();
+  try {
+    const normalized = await normalizePlaceLabel(trimmed, input.unit);
+    if (gen !== input.genRef.current) return;
+    if (normalized !== trimmed) input.commit(normalized);
+    haptics.success();
+  } finally {
+    if (gen === input.genRef.current) input.setSaving(false);
   }
 }
 
@@ -108,72 +154,36 @@ export function ProfileLocationPreferences({
     writeCurrentDraft('', false);
   }, [currentLocation, gpsPlace.label, gpsPlace.status]);
 
-  const persistHome = async (raw: string) => {
-    const trimmed = raw.trim();
-    const saved = usePreferences.getState().homeLocation.trim();
-    if (trimmed === saved) {
-      setError(undefined);
-      return;
-    }
+  const persistHome = (raw: string) =>
+    persistPlaceLabel({
+      raw,
+      getSaved: () => usePreferences.getState().homeLocation.trim(),
+      commit: (value) => {
+        setHomeLocation(value);
+        writeHomeDraft(value);
+      },
+      genRef: homeSaveGen,
+      setSaving: setSavingHome,
+      unit,
+      setError,
+    });
 
-    // Commit immediately so leaving the screen cannot lose the edit.
-    setHomeLocation(trimmed);
-    writeHomeDraft(trimmed);
-    setError(undefined);
-    if (!trimmed) {
-      haptics.tap();
-      return;
-    }
-
-    const gen = ++homeSaveGen.current;
-    setSavingHome(true);
-    haptics.tap();
-    try {
-      const normalized = await normalizePlaceLabel(trimmed, unit);
-      if (gen !== homeSaveGen.current) return;
-      if (normalized !== trimmed) {
-        setHomeLocation(normalized);
-        writeHomeDraft(normalized);
-      }
-      haptics.success();
-    } finally {
-      if (gen === homeSaveGen.current) setSavingHome(false);
-    }
-  };
-
-  const persistCurrent = async (raw: string) => {
-    const trimmed = raw.trim();
-    const saved = usePreferences.getState().currentLocation.trim();
-    if (trimmed === saved) {
-      setError(undefined);
-      writeCurrentDraft(trimmed || saved, false);
-      return;
-    }
-
-    // Always persist the override (including when it matches GPS).
-    setCurrentLocation(trimmed);
-    writeCurrentDraft(trimmed, false);
-    setError(undefined);
-    if (!trimmed) {
-      haptics.tap();
-      return;
-    }
-
-    const gen = ++currentSaveGen.current;
-    setSavingCurrent(true);
-    haptics.tap();
-    try {
-      const normalized = await normalizePlaceLabel(trimmed, unit);
-      if (gen !== currentSaveGen.current) return;
-      if (normalized !== trimmed) {
-        setCurrentLocation(normalized);
-        writeCurrentDraft(normalized, false);
-      }
-      haptics.success();
-    } finally {
-      if (gen === currentSaveGen.current) setSavingCurrent(false);
-    }
-  };
+  const persistCurrent = (raw: string) =>
+    persistPlaceLabel({
+      raw,
+      getSaved: () => usePreferences.getState().currentLocation.trim(),
+      commit: (value) => {
+        setCurrentLocation(value);
+        writeCurrentDraft(value, false);
+      },
+      onUnchanged: (trimmed, saved) => {
+        writeCurrentDraft(trimmed || saved, false);
+      },
+      genRef: currentSaveGen,
+      setSaving: setSavingCurrent,
+      unit,
+      setError,
+    });
 
   const commitHome = () => void persistHome(homeDraftRef.current);
   // Only blur-save when the user actually edited — avoids GPS mirror clobbering

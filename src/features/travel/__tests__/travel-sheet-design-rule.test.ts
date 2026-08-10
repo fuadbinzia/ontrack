@@ -65,7 +65,7 @@ describe('canonical travel sheet design', () => {
     expect(sheet).toContain('surface="glass"');
     expect(sheet).toContain('closeAppearance="glass"');
     expect(scaffold).toContain("surface?: 'solid' | 'glass'");
-    expect(scaffold).toContain("closeAppearance={glass ? 'glass' : 'solid'}");
+    expect(scaffold).toContain('<SheetGrabber');
     expect(scaffold).toContain('<BlurView');
     expect(addSheet).toContain('<BlurView');
     expect(addSheet).not.toContain('chrome.sheetBg');
@@ -115,13 +115,19 @@ describe('canonical travel sheet design', () => {
       join(process.cwd(), 'src/features/travel/travel-chat-screen.tsx'),
       'utf8',
     );
+    const accessGate = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-chat-access-gate.tsx'),
+      'utf8',
+    );
     const detail = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-plan-detail.tsx'),
       'utf8',
     );
 
     expect(chat).not.toContain('paddingTop={rs.md}');
-    expect(chat.match(/paddingTop=\{rs\.sm\}/g)).toHaveLength(3);
+    expect(accessGate).not.toContain('paddingTop={rs.md}');
+    expect(chat.match(/paddingTop=\{rs\.sm\}/g)).toHaveLength(1);
+    expect(accessGate.match(/paddingTop=\{rs\.sm\}/g)).toHaveLength(2);
     expect(detail).not.toMatch(/screen:\s*\{[^}]*paddingTop:\s*0/);
   });
 

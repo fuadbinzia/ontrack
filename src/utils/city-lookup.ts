@@ -52,15 +52,21 @@ export function formatCitySuggestion(
 }
 
 /**
- * Keep populated places (PPL*) and drop POIs / airports when feature_code is present.
- * Unknown codes still pass — Open-Meteo search is city-oriented.
+ * Keep cities (PPL*), countries / territories (PCL*), and admin localities (ADM1–4).
+ * Drop POIs / airports / parks when feature_code is present.
+ * Unknown codes still pass — Open-Meteo search is place-oriented.
  */
 export function isCityLikeFeatureCode(code: unknown): boolean {
   if (typeof code !== 'string' || !code.trim()) return true;
   const upper = code.trim().toUpperCase();
+  // Populated places (cities, towns, capitals, …)
   if (upper.startsWith('PPL')) return true;
-  // Admin seats / capitals sometimes use ADM* with a city name — keep ADM2+ when named.
-  if (upper === 'ADM2' || upper === 'ADM3' || upper === 'ADM4') return true;
+  // Countries & dependent political entities (Iceland, France, …) — GeoNames PCL*
+  if (upper.startsWith('PCL') || upper === 'TERR') return true;
+  // Regions / admin seats with a place name (states, counties, …)
+  if (upper === 'ADM1' || upper === 'ADM2' || upper === 'ADM3' || upper === 'ADM4') {
+    return true;
+  }
   return false;
 }
 

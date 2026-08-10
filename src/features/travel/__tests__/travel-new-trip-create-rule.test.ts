@@ -85,6 +85,9 @@ describe('new trip creation feedback', () => {
     );
     // Fields sit on the glass sheet as frosted pills, not solid white cards.
     expect(newTripSheet).toContain('itinerarySheetFieldProps');
+    expect(editTrip).toContain('itinerarySheetFieldProps');
+    expect(newTripSheet).toContain('TRIP_TITLE_PLACEHOLDER');
+    expect(editTrip).toContain('TRIP_TITLE_PLACEHOLDER');
     expect(chrome).toContain('glassFieldBackground');
     expect(chrome).toContain('fieldBorderRadius: radii.pill');
     expect(chrome).not.toMatch(/field:\s*'#FFFFFF'/);

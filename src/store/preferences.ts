@@ -46,6 +46,7 @@ interface PreferencesState {
   setHomeLocation: (location: string) => void;
   setCurrentLocation: (location: string) => void;
   setName: (name: string) => void;
+  setGoal: (goal: string) => void;
   setAvatar: (avatar: ProfileAvatarMeta) => void;
   setThemePreference: (pref: ThemePreference) => void;
   setAiEnabled: (enabled: boolean) => void;
@@ -99,6 +100,10 @@ export const usePreferences = create<PreferencesState>()(
         const trimmed = name.trim();
         // Legacy "You" placeholder → empty so resolveSelfDisplayName falls back to Guest.
         set({ name: /^you$/i.test(trimmed) ? '' : trimmed });
+      },
+      setGoal: (goal) => {
+        useAuthAccess.getState().markGuestDataDirty();
+        set({ goal: goal.trim() });
       },
       setAvatar: (avatar) => {
         useAuthAccess.getState().markGuestDataDirty();

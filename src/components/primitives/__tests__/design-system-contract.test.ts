@@ -11,6 +11,7 @@ describe('canonical design-system contract', () => {
       'ScreenHeader',
       'SegmentedControl',
       'FormSection',
+      'SheetGrabber',
       'SheetScaffold',
       'DestructiveSection',
       'DangerZone',
@@ -29,6 +30,19 @@ describe('canonical design-system contract', () => {
     ]) {
       expect(barrel).toContain(name);
     }
+  });
+
+  it('uses SheetGrabber for bottom-sheet dismiss chrome (not header X)', () => {
+    const sheet = read('src/components/primitives/sheet-scaffold.tsx');
+    expect(sheet).toContain('SheetGrabber');
+    expect(sheet).toMatch(/function SheetHeader[\s\S]*?<SheetGrabber/);
+    expect(sheet).not.toMatch(
+      /function SheetHeader[\s\S]*?onClose=\{close\}[\s\S]*?<\/ScreenHeader>/,
+    );
+    expect(read('src/features/travel/travel-sheet.tsx')).toContain('SheetHeader');
+    expect(read('src/app/activity-form.tsx')).toContain('SheetGrabber');
+    expect(read('src/features/social/social-friends-modal.tsx')).toContain('SheetGrabber');
+    expect(read('src/features/social/social-action-modal.tsx')).toContain('SheetGrabber');
   });
 
   it('title-cases chrome titles in shared header and button primitives', () => {
@@ -264,6 +278,15 @@ describe('canonical design-system contract', () => {
     expect(read('src/features/travel/travel-plan-details-editor.tsx')).toContain(
       'DestructiveSection',
     );
+    expect(read('src/features/travel/travel-plan-details-editor.tsx')).toContain(
+      'DangerZone',
+    );
+    expect(read('src/features/travel/travel-plan-details-editor.tsx')).toContain(
+      'descriptionAlign="center"',
+    );
+    expect(read('src/features/travel/travel-plan-details-editor.tsx')).toContain(
+      'title={null}',
+    );
     expect(read('src/components/primitives/index.ts')).toContain('DangerZone');
     expect(read('src/app/(tabs)/profile/index.tsx')).toContain('DangerZone');
     expect(read('src/app/(tabs)/profile/index.tsx')).toContain('flush');
@@ -272,9 +295,11 @@ describe('canonical design-system contract', () => {
   it('keeps the Travel chat composer cohesive and full width', () => {
     const input = read('src/components/primitives/input.tsx');
     const chat = read('src/features/travel/travel-chat-screen.tsx');
+    const composer = read('src/features/travel/travel-chat-composer.tsx');
     expect(input).toContain('containerStyle?: StyleProp<ViewStyle>');
-    expect(chat).toContain('styles.composerDock');
-    expect(chat).toContain('containerStyle={styles.composerInput}');
+    expect(chat).toContain('styles.composerArea');
+    expect(composer).toContain('styles.composerDock');
+    expect(composer).toContain('containerStyle={styles.composerInput}');
     expect(chat).toMatch(/paddingTop=\{rs\.(?:sm|md)\}/);
     expect(chat).not.toContain('paddingTop={0}');
   });

@@ -529,8 +529,10 @@ export const AgentUiIds = {
   },
   profile: {
     avatar: 'ontrack.profile.avatar',
-    /** Hero display name (prefs / SSO / default Guest). */
+    /** Hero display name (prefs / SSO / default Guest) — opens identity editor. */
     displayName: 'ontrack.profile.displayName',
+    /** Hero blurb under the name (preferences `goal`). */
+    blurb: 'ontrack.profile.blurb',
     avatarEditor: {
       close: 'ontrack.profile.avatar.close',
       save: 'ontrack.profile.avatar.save',
@@ -538,6 +540,12 @@ export const AgentUiIds = {
       takePhoto: 'ontrack.profile.avatar.takePhoto',
       chooseLibrary: 'ontrack.profile.avatar.chooseLibrary',
       searchIcons: 'ontrack.profile.avatar.searchIcons',
+    },
+    identityEditor: {
+      close: 'ontrack.profile.identity.close',
+      save: 'ontrack.profile.identity.save',
+      name: 'ontrack.profile.identity.name',
+      goal: 'ontrack.profile.identity.goal',
     },
     /** Hero caption while unsigned — local name is not a cloud account. */
     guestStatus: 'ontrack.profile.guestStatus',
@@ -648,7 +656,8 @@ export const AgentUiIds = {
     analyzePhoto: 'ontrack.activityForm.analyzePhoto',
     removePhoto: 'ontrack.activityForm.removePhoto',
     save: 'ontrack.activityForm.save',
-    back: 'ontrack.activityForm.back',
+    /** Non-interactive swipe-down affordance at the top of the modal. */
+    grabber: 'ontrack.activityForm.grabber',
     cancel: 'ontrack.activityForm.cancel',
     delete: 'ontrack.activityForm.delete',
   },
@@ -910,6 +919,7 @@ export const AgentUiIds = {
       startDate: 'ontrack.travel.editTrip.startDate',
       endDate: 'ontrack.travel.editTrip.endDate',
       notes: 'ontrack.travel.editTrip.notes',
+      dangerZone: 'ontrack.travel.editTrip.dangerZone',
     },
     detailsEditor: {
       save: (itemId: string) => `ontrack.travel.detailsEditor.save.${itemId}`,

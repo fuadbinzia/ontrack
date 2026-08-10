@@ -11,6 +11,11 @@ import {
     itinerarySheetFieldProps,
 } from '@/features/travel/travel-itinerary-sheet-chrome';
 import { TravelSheetPrimaryAction } from '@/features/travel/travel-list-actions';
+import {
+    TRIP_DESTINATION_PLACEHOLDER,
+    TRIP_NOTES_PLACEHOLDER,
+    TRIP_TITLE_PLACEHOLDER,
+} from '@/features/travel/travel-plan-details';
 import { TravelSheetModal } from '@/features/travel/travel-sheet';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -33,7 +38,6 @@ interface TravelNewTripSheetProps {
   onClose: () => void;
 }
 
-/** Bottom-sheet composer for starting a new trip from Travel home. */
 export function TravelNewTripSheet({
   visible,
   title,
@@ -77,7 +81,7 @@ export function TravelNewTripSheet({
           stackedLabel="Trip Name"
           value={title}
           onChangeText={onTitleChange}
-          placeholder="Fun in the Sun!"
+          placeholder={TRIP_TITLE_PLACEHOLDER}
           accessibilityLabel="Trip Name"
           {...itinerarySheetFieldProps(chrome, 'flight')}
         />
@@ -87,7 +91,7 @@ export function TravelNewTripSheet({
           stackedLabel="Destination"
           value={destination}
           onChange={onDestinationChange}
-          placeholder="Anywhere Sunny"
+          placeholder={TRIP_DESTINATION_PLACEHOLDER}
           accessibilityLabel="Destination"
           {...itinerarySheetFieldProps(chrome, 'location')}
         />
@@ -107,7 +111,7 @@ export function TravelNewTripSheet({
           stackedLabel="Notes"
           value={notes}
           onChangeText={onNotesChange}
-          placeholder="Ideas, budgets, must-dos…"
+          placeholder={TRIP_NOTES_PLACEHOLDER}
           multiline
           accessibilityLabel="Notes"
           {...itinerarySheetFieldProps(chrome, 'note')}

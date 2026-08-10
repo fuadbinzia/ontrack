@@ -37,4 +37,6 @@ export interface DestinationCurrentWeather {
   weatherCode: number;
   condition: string;
   symbol: string;
+  /** Open-Meteo `is_day` — false after local sunset for night chrome icons. */
+  isDay?: boolean;
 }

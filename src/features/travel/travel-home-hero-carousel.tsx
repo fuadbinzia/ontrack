@@ -16,7 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
-    fetchDestinationCoverUri,
+    fetchDestinationHeroUris,
     uploadedTripCoverUris,
 } from '@/features/travel/destination-cover';
 import { peekUnsplashCoverColor } from '@/features/travel/destination-cover-lookup';
@@ -72,14 +72,15 @@ export function TravelHomeHeroCarousel({
    * warm screens drop stale plates.
    */
   const uploadedKey = uploadedTripCoverUris(plan).join('|');
-  const destinationKey = `cover-v12:${plan.id}:${plan.destination}:${plan.title}:${uploadedKey}`;
+  const destinationKey = `cover-v13:${plan.id}:${plan.destination}:${plan.title}:${uploadedKey}`;
   const fixtureSource =
     __DEV__ ? travelHomeFixtureHeroSource(plan.id) : undefined;
   const fallbackSource = travelHomeAtmosphereSource(theme.name);
-  /** User uploads only — destination placeholders never become carousel pages. */
+  /**
+   * Carousel pages: user uploads when present, else a rotating live destination
+   * trio. Scenic underlay is loading/miss only — never a stand-in carousel page.
+   */
   const [uris, setUris] = useState<string[]>([]);
-  /** Single destination plate when there are no uploads (static, not paged). */
-  const [placeholderUri, setPlaceholderUri] = useState<string | undefined>();
   const [failedUris, setFailedUris] = useState<Record<string, true>>({});
   /** URI that has fired expo-image `onLoad` — not merely been requested. */
   const [paintedRemoteUri, setPaintedRemoteUri] = useState<string | undefined>();
@@ -92,28 +93,25 @@ export function TravelHomeHeroCarousel({
   // presence alone left Android on brandBlueSoft while proxies were mid-load
   // or silent-failed without onError.
   const hasPaintedRemote = Boolean(
-    paintedRemoteUri &&
-      (visibleUris.includes(paintedRemoteUri) ||
-        paintedRemoteUri === placeholderUri),
+    paintedRemoteUri && visibleUris.includes(paintedRemoteUri),
   );
 
-  // Clear only when the trip/cover identity changes.
+  // Clear only when the trip/cover identity changes — keep the prior trio
+  // painted while focus re-picks a rotated set from the landmark pool.
   useEffect(() => {
     setIndex(0);
     setUris([]);
-    setPlaceholderUri(undefined);
     setFailedUris({});
     setPaintedRemoteUri(undefined);
     scrollRef.current?.scrollTo({ x: 0, animated: false });
   }, [destinationKey, fixtureSource]);
 
-  // Uploads drive the live carousel; placeholders stay static (no steppers).
+  // Uploads win; otherwise rotate live destination landmark photos each focus.
   useFocusEffect(
     useCallback(() => {
       let active = true;
       const uploaded = uploadedTripCoverUris(plan);
       if (uploaded.length > 0) {
-        setPlaceholderUri(undefined);
         setFailedUris({});
         setUris(uploaded);
         setIndex(0);
@@ -127,16 +125,20 @@ export function TravelHomeHeroCarousel({
         };
       }
 
-      setUris([]);
-      onActiveImageChange?.(undefined, 0, 0);
-      void fetchDestinationCoverUri({
-        ...plan,
-        coverUri: undefined,
-        coverUris: undefined,
-      }).then((next) => {
-        if (!active || !next) return;
-        setPlaceholderUri(next);
-      });
+      // Fixture/atmosphere underlay while remotes load (and if they miss).
+      void fetchDestinationHeroUris(plan, undefined, { salt: Date.now() }).then(
+        (next) => {
+          if (!active || next.length === 0) return;
+          setFailedUris({});
+          setUris(next);
+          setIndex(0);
+          scrollProgress.value = 0;
+          onActiveImageChange?.(next[0], 0, next.length);
+          if (next[1]) {
+            void Image.prefetch(next[1]).catch(() => undefined);
+          }
+        },
+      );
       return () => {
         active = false;
       };
@@ -313,42 +315,6 @@ export function TravelHomeHeroCarousel({
             );
           })}
         </Animated.ScrollView>
-        {/*
-          Destination placeholder when there are no uploads — static only
-          (never enters the live slide carousel / steppers).
-        */}
-        {placeholderUri && visibleUris.length === 0 ? (
-          <Image
-            source={{ uri: placeholderUri }}
-            style={[
-              styles.fallback,
-              imageRadiusStyle,
-              travelHomeHeroOverscanStyle(heroWidth, height),
-              {
-                backgroundColor: heroSurface,
-                zIndex: 1,
-              },
-            ]}
-            contentFit="cover"
-            contentPosition={travelHomeHeroContentPosition(
-              peekUnsplashCoverColor(placeholderUri),
-            )}
-            transition={180}
-            recyclingKey={placeholderUri}
-            pointerEvents="none"
-            accessible={false}
-            importantForAccessibility="no"
-            onLoad={() => {
-              setPaintedRemoteUri((previous) => previous ?? placeholderUri);
-            }}
-            onError={() => {
-              setPlaceholderUri(undefined);
-              setPaintedRemoteUri((previous) =>
-                previous === placeholderUri ? undefined : previous,
-              );
-            }}
-          />
-        ) : null}
         {/*
           Scenic cover on top until a hero plate paints. Never key this off
           URI presence alone — Android used to flash brandBlueSoft while

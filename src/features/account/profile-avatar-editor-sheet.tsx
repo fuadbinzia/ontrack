@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Pressable,
@@ -117,11 +117,6 @@ export function ProfileAvatarEditorSheet({
   const iconCell = Math.max(52, s(56));
 
   const mode = draft.kind;
-  const subtitle = useMemo(() => {
-    if (mode === 'photo') return 'Upload a square photo friends will recognize.';
-    if (mode === 'icon') return 'Pick an icon friends will recognize.';
-    return 'Colored initials from your name.';
-  }, [mode]);
 
   const setMode = (next: Mode) => {
     setDraft((current) => {
@@ -232,7 +227,6 @@ export function ProfileAvatarEditorSheet({
       visible={visible}
       eyebrow="Profile"
       title={`${titleName}’s Icon`}
-      subtitle={subtitle}
       onClose={onClose}
       closeAccessibilityLabel="Close avatar editor"
       closeTestID={AgentUiIds.profile.avatarEditor.close}

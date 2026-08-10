@@ -17,6 +17,7 @@ import {
     persistTravelMomentPhotos,
     resolveTravelPhotoUris,
 } from '@/features/travel/travel-moment-media';
+import { stripTripCoverUploads } from '@/features/travel/travel-plan-details';
 import type { TravelPlan } from '@/features/travel/types';
 import { resolveExpoApiUrl } from '@/services/http/api-url';
 import { fetchWithTimeout } from '@/services/http/fetch-with-timeout';
@@ -154,8 +155,23 @@ function rememberHeroRecentKeys(
 export const TRIP_COVER_UPLOAD_MAX = DESTINATION_COVER_MAX;
 
 /**
+ * True for Unsplash / Wikimedia / cover-proxy URLs. These are live destination
+ * plates — never treat them as user-uploaded carousel pages.
+ */
+export function isRemoteDestinationCoverUri(uri: string): boolean {
+  const trimmed = uri.trim();
+  if (!trimmed) return false;
+  if (trimmed.includes('/api/destination-cover-image')) return true;
+  if (!/^https?:\/\//i.test(trimmed)) return false;
+  return (
+    isDirectClientCoverUrl(trimmed) || isAllowedDestinationCoverImageUrl(trimmed)
+  );
+}
+
+/**
  * User-uploaded covers only (resolved, capped). Never includes destination
- * placeholders or moment itinerary photos — those must not enter the carousel.
+ * placeholders, remote live plates, or moment itinerary photos — those must
+ * not enter the upload carousel.
  */
 export function uploadedTripCoverUris(plan: TravelPlan): string[] {
   const raw =
@@ -164,7 +180,9 @@ export function uploadedTripCoverUris(plan: TravelPlan): string[] {
       : plan.coverUri
         ? [plan.coverUri]
         : [];
-  return resolveTravelPhotoUris(raw).slice(0, TRIP_COVER_UPLOAD_MAX);
+  return resolveTravelPhotoUris(raw)
+    .filter((uri) => !isRemoteDestinationCoverUri(uri))
+    .slice(0, TRIP_COVER_UPLOAD_MAX);
 }
 
 /**
@@ -509,14 +527,28 @@ export async function fetchPlaceCoverUris(
   return orderHeroUrisForClient(uris).map(toClientDisplayCoverUri);
 }
 
-/** Resolve a remote destination cover URL (cached per destination query). */
+/**
+ * Live destination plate only (Unsplash / Wiki). Never returns user uploads or
+ * moment photos — those must not enter the trip-card upload carousel.
+ */
+export async function fetchRemoteDestinationCoverUri(
+  plan: TravelPlan,
+): Promise<string | undefined> {
+  return fetchPlaceCoverUri(
+    destinationCoverCandidates(stripTripCoverUploads(plan)),
+  );
+}
+
+/**
+ * Prefer a user upload, else a live remote destination plate.
+ * Does not use moment itinerary photos (those are not trip covers).
+ */
 export async function fetchDestinationCoverUri(
   plan: TravelPlan,
 ): Promise<string | undefined> {
-  const local = localTripCoverUri(plan);
-  if (local) return local;
-
-  return fetchPlaceCoverUri(destinationCoverCandidates(plan));
+  const uploaded = uploadedTripCoverUris(plan)[0];
+  if (uploaded) return uploaded;
+  return fetchRemoteDestinationCoverUri(plan);
 }
 
 /**
@@ -581,9 +613,9 @@ async function resolveDestinationHeroPool(
 }
 
 /**
- * Up to 3 destination landmark URIs for callers that still want a remote pool.
- * Travel Home carousel pages use {@link uploadedTripCoverUris} only — do not
- * mix these remotes into the live slide set.
+ * Up to 3 rotating live destination landmark URIs (Unsplash / Wiki).
+ * Travel Home uses these as carousel pages when there are no user uploads —
+ * never mix uploads/moments into this set.
  */
 export async function fetchDestinationHeroUris(
   plan: TravelPlan,
@@ -593,7 +625,7 @@ export async function fetchDestinationHeroUris(
   const capped = Math.max(1, Math.min(DESTINATION_COVER_MAX, limit));
   const out: string[] = [];
 
-  const places = destinationCoverCandidates(plan)
+  const places = destinationCoverCandidates(stripTripCoverUploads(plan))
     .map((c) => c.trim())
     .filter((c) => c.length >= 2);
   if (!places.length) return out.map(toClientDisplayCoverUri);

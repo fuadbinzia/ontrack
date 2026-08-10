@@ -7,7 +7,6 @@ import type { ProfileAvatarMeta } from '@/features/account/profile-avatar-model'
 import type { TravelPlan } from '@/features/travel/types';
 import { getSupabaseClient } from '@/services/cloud/supabase';
 import { getNotificationsModule } from '@/services/notifications/runtime';
-import { newUuid } from '@/utils/id';
 import {
     addDays,
     formatDateLong,
@@ -15,6 +14,7 @@ import {
     fromDateKey,
     toDateKey,
 } from '@/utils/date';
+import { newUuid } from '@/utils/id';
 
 export const TRAVEL_CHAT_NOTIFICATION_CHANNEL = 'event-chat';
 export const TRAVEL_CHAT_REACTION_EMOJIS = [
@@ -228,12 +228,6 @@ export function travelChatAccessCode(plan: TravelPlan): string | undefined {
   return accepted[0]?.inviteCode;
 }
 
-function randomDeviceId(): string {
-  // Cryptographically random so the device id (also the chat rate-limit key)
-  // cannot be predicted or ground down by an attacker.
-  return newUuid();
-}
-
 async function readStoredChatDeviceId(): Promise<string | null> {
   if (process.env.EXPO_OS === 'web') {
     try {
@@ -260,7 +254,9 @@ async function writeStoredChatDeviceId(value: string): Promise<void> {
 export async function getTravelChatDeviceId(): Promise<string> {
   const existing = await readStoredChatDeviceId();
   if (existing) return existing;
-  const created = randomDeviceId();
+  // Cryptographically random so the device id (also the chat rate-limit key)
+  // cannot be predicted or ground down by an attacker.
+  const created = newUuid();
   await writeStoredChatDeviceId(created);
   return created;
 }

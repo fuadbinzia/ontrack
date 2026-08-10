@@ -184,6 +184,7 @@ export function TravelChatScreen({ planId }: { planId: string }) {
 
       <View style={{ paddingHorizontal: responsiveLayout.screenPadding, zIndex: 1 }}>
         <TravelSheetHeader
+          presentation="page"
           eyebrow="Group Chat"
           title={plan.title}
           subtitle={headerSubtitle}

@@ -1,9 +1,8 @@
 import type { PropsWithChildren, ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 
-import { ScreenHeader, SheetScaffold } from '@/components/primitives';
+import { ScreenHeader, SheetHeader, SheetScaffold } from '@/components/primitives';
 import type { AppIconName } from '@/design-system';
-import type { ItinerarySheetChrome } from '@/features/travel/travel-itinerary-sheet-chrome';
 import { useResponsive } from '@/hooks/use-responsive';
 
 type TravelSheetHeaderProps = {
@@ -14,12 +13,15 @@ type TravelSheetHeaderProps = {
   onClose: () => void;
   closeAccessibilityLabel: string;
   closeTestID?: string;
-  /** Kept for source compatibility; shared semantic chrome now owns presentation. */
-  chrome?: ItinerarySheetChrome;
   paddingTop?: number;
+  /**
+   * `sheet` = swipe grabber (bottom sheets).
+   * `page` = top-right X (full-screen chat / gates that reuse this header).
+   */
+  presentation?: 'sheet' | 'page';
 };
 
-/** Travel sheet header — shared sheet contract (no flight-path flourish). */
+/** Travel sheet/page header — sheets use SheetGrabber; pages keep the X. */
 export function TravelSheetHeader({
   eyebrow,
   title,
@@ -29,10 +31,28 @@ export function TravelSheetHeader({
   closeAccessibilityLabel,
   closeTestID,
   paddingTop,
+  presentation = 'sheet',
 }: TravelSheetHeaderProps) {
   const { spacing } = useResponsive();
+  if (presentation === 'page') {
+    return (
+      <ScreenHeader
+        eyebrow={eyebrow}
+        title={title}
+        subtitle={subtitle}
+        subtitleIcon={subtitleIcon}
+        onClose={onClose}
+        closeAccessibilityLabel={closeAccessibilityLabel}
+        closeTestID={closeTestID}
+        closeAppearance="glass"
+        style={[
+          { paddingTop: paddingTop ?? spacing.md, paddingBottom: spacing.xl },
+        ]}
+      />
+    );
+  }
   return (
-    <ScreenHeader
+    <SheetHeader
       eyebrow={eyebrow}
       title={title}
       subtitle={subtitle}
@@ -40,10 +60,7 @@ export function TravelSheetHeader({
       onClose={onClose}
       closeAccessibilityLabel={closeAccessibilityLabel}
       closeTestID={closeTestID}
-      closeAppearance="glass"
-      style={[
-        { paddingTop: paddingTop ?? spacing.md, paddingBottom: spacing.xl },
-      ]}
+      style={paddingTop != null ? { paddingTop } : undefined}
     />
   );
 }
@@ -63,11 +80,9 @@ type TravelSheetModalProps = PropsWithChildren<{
   minHeight?: number;
   lockHeight?: boolean;
   scrollKey?: string | number;
-  /** Kept for source compatibility; feature chrome no longer restyles controls. */
-  chrome?: ItinerarySheetChrome;
 }>;
 
-/** Every Travel sheet now inherits the app-wide safe area, X, body, and footer contract. */
+/** Every Travel sheet inherits the app-wide grabber, body, and footer contract. */
 export function TravelSheetModal({
   visible,
   eyebrow,

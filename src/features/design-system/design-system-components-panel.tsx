@@ -24,6 +24,7 @@ import {
     PanelTitle,
     ProgressRing,
     SectionHeader,
+    SheetGrabber,
     StatusBadge,
     Symbol,
     ToolbarRow,
@@ -140,6 +141,7 @@ export function DesignSystemComponentsPanel({
       <DemoCard title="Collapsible section" catalogId="collapsibleSection">
         <CollapsibleSection
           title="Runtime"
+          description="Environment details while collapsed"
           expanded={collapsedOpen}
           onExpandedChange={setCollapsedOpen}
           testID={AgentUiIds.designSystem.demo('collapsible')}>
@@ -211,6 +213,12 @@ export function DesignSystemComponentsPanel({
           onPress={onOpenSheet}>
           Open Sheet
         </Button>
+      </DemoCard>
+      <DemoCard title="Sheet grabber" catalogId="sheetGrabber">
+        <SheetGrabber accessibilityLabel="Example sheet grabber" />
+        <AppText variant="caption" color="secondary">
+          Bottom sheets dismiss with this pill (tap or swipe) — not a header X.
+        </AppText>
       </DemoCard>
 
       <SectionHeader title="Buttons & actions" flush />
@@ -445,6 +453,7 @@ export const COMPONENTS_PANEL_CATALOG_IDS: readonly DesignCatalogElement['id'][]
   'glassPrimaryAction',
   'dangerZone',
   'sheetScaffold',
+  'sheetGrabber',
   'button',
   'iconButton',
   'destructive',

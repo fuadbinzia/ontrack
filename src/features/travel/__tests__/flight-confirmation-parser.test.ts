@@ -8,9 +8,11 @@ import {
 
 import { applyImportedFlightsToPlan } from '../apply-imported-flights';
 import { CHASE_ROUNDTRIP_CONFIRMATION } from '../fixtures/chase-roundtrip-confirmation';
+import { JETBLUE_TRIP_DETAIL_ROUNDTRIP } from '../fixtures/jetblue-trip-detail-roundtrip';
 import { UNITED_CONNECTING_CONFIRMATION } from '../fixtures/united-connecting-confirmation';
 import { mergeImportedFlights } from '../flight-confirmation-itinerary';
 import { parseFlightConfirmation } from '../flight-confirmation-parser';
+import { flightConfirmationSchedule } from '../flight-confirmation-schedule';
 import type { TravelPlan } from '../types';
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
@@ -433,5 +435,68 @@ describe('flight confirmation expense', () => {
     expect(second.expenses).toHaveLength(1);
     expect(second.expenses[0].amount).toBe(950);
     expect(second.expenses[0].id).toBe(first.expenses[0].id);
+  });
+
+  it('parses JetBlue trip-detail screenshots with airports, terminals, and times', () => {
+    const year = new Date().getFullYear();
+    const parsed = parseFlightConfirmation(JETBLUE_TRIP_DETAIL_ROUNDTRIP);
+    expect(parsed.segments).toHaveLength(2);
+    expect(parsed.segments[0]).toMatchObject({
+      date: `${year}-08-10`,
+      startMinutes: 6 * 60 + 40,
+      arrivalMinutes: 10 * 60 + 32,
+      durationMinutes: 3 * 60 + 52,
+      flight: {
+        airline: 'JetBlue',
+        flightNumber: 'B6 2709',
+        confirmationCode: 'WYDBAP',
+        departureAirport: 'JFK',
+        departureTerminal: '5',
+        departureGate: '527',
+        arrivalAirport: 'SDQ',
+        arrivalTerminal: 'Main',
+      },
+    });
+    expect(parsed.segments[1]).toMatchObject({
+      date: `${year}-08-14`,
+      startMinutes: 17 * 60 + 53,
+      arrivalMinutes: 21 * 60 + 50,
+      durationMinutes: 3 * 60 + 57,
+      flight: {
+        flightNumber: 'B6 1850',
+        departureAirport: 'SDQ',
+        departureTerminal: 'Main',
+        arrivalAirport: 'JFK',
+        arrivalTerminal: '5',
+      },
+    });
+    expect(flightConfirmationSchedule(parsed)).toMatchObject({
+      departureDate: `${year}-08-10`,
+      departureMinutes: 6 * 60 + 40,
+      arrivalDate: `${year}-08-10`,
+      arrivalMinutes: 10 * 60 + 32,
+    });
+    let nextId = 0;
+    const applied = applyImportedFlightsToPlan({
+      plan: {
+        ...basePlan(),
+        startDate: `${year}-08-10`,
+        endDate: `${year}-08-14`,
+      },
+      imported: parsed,
+      createId: () => `jetblue-${++nextId}`,
+    });
+    const flights = applied.itinerary.filter((item) => item.kind === 'flight');
+    expect(flights).toHaveLength(2);
+    expect(flights[0]?.flight).toMatchObject({
+      departureAirport: 'JFK',
+      arrivalAirport: 'SDQ',
+      flightNumber: 'B6 2709',
+    });
+    expect(flights[1]?.flight).toMatchObject({
+      departureAirport: 'SDQ',
+      arrivalAirport: 'JFK',
+      flightNumber: 'B6 1850',
+    });
   });
 });

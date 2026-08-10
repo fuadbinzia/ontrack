@@ -13,6 +13,8 @@ import {
     AGENT_UI_DEMO_HEALTH_MOOD_ID,
     AGENT_UI_DEMO_PLANT_ID,
     AGENT_UI_DEMO_TRIP_ID,
+    AGENT_UI_PUNTA_CANA_OUTBOUND_ID,
+    AGENT_UI_PUNTA_CANA_TRIP_ID,
     AGENT_UI_DEMO_VEHICLE_ID,
     AGENT_UI_DEMO_VISION_CATEGORY_ID,
     AGENT_UI_DEMO_VISION_ITEM_ID,
@@ -63,6 +65,22 @@ export const AGENT_UI_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
     // Sky overlay mounts with Loaded chrome (enableSkyDecor) — after transport.
+    {
+      op: 'wait',
+      id: 'ontrack.travel.chrome.skyDecor',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  /** Airbnb Punta Cana stay mock (trip-page OCR fields fully populated). */
+  'travel-punta-cana': [
+    { op: 'dismiss', prefix: 'ontrack.travel.' },
+    { op: 'seed', to: 'travel-punta-cana' },
+    { op: 'goto', to: `travel/${AGENT_UI_PUNTA_CANA_TRIP_ID}` },
+    {
+      op: 'wait',
+      id: 'ontrack.travel.planDetail.section.transport',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
     {
       op: 'wait',
       id: 'ontrack.travel.chrome.skyDecor',
@@ -207,6 +225,26 @@ export const AGENT_UI_FLOWS = {
     {
       op: 'wait',
       id: `ontrack.travel.flight.passenger.${AGENT_UI_DEMO_CHASE_OUTBOUND_ID}`,
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  'travel-demo-add-flight-jetblue': [
+    { op: 'dismiss', prefix: 'ontrack.travel.' },
+    { op: 'seed', to: 'travel-demo' },
+    {
+      op: 'goto',
+      to: `travel/${AGENT_UI_DEMO_TRIP_ID}/add/flight?importFlight=jetblue`,
+    },
+    {
+      op: 'wait',
+      prefix: 'ontrack.travel.itineraryAdd.',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'wait', ms: 350 },
+    { op: 'tap', id: 'ontrack.travel.itineraryAdd.submit' },
+    {
+      op: 'wait',
+      id: `ontrack.travel.timelineItem.${AGENT_UI_PUNTA_CANA_OUTBOUND_ID}.default`,
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],

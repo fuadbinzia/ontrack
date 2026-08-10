@@ -1,3 +1,5 @@
+import { AIRBNB_PUNTA_CANA_TRIPS_PAGE } from '../fixtures/airbnb-punta-cana-trips-page';
+import { expandedTripRangeForStay } from '../stay-confirmation-itinerary';
 import { parseStayConfirmation } from '../stay-confirmation-parser';
 
 const BOOKING_CENTERHOTEL = `
@@ -232,6 +234,85 @@ Check-out: Sep 12, 2026 11:00 AM
     expect(parsed.details).toBeUndefined();
     expect(parsed.stay.confirmationCode).toBe('ROOM123');
   });
+
+  it('parses Airbnb trip page yearless dates without an existing trip range', () => {
+    const parsed = parseStayConfirmation(AIRBNB_PUNTA_CANA_TRIPS_PAGE);
+    const year = new Date().getFullYear();
+    expect(parsed.title).toBe('Punta Cana');
+    expect(parsed.title).not.toMatch(/hosted by/i);
+    expect(parsed.details).toBe(
+      'Punta Cana, La Altagracia Province 23000, Dominican Republic',
+    );
+    expect(parsed.details).not.toBe('Punta Cana, La Altagracia');
+    expect(parsed.date).toBe(`${year}-08-10`);
+    expect(parsed.stay.checkoutDate).toBe(`${year}-08-14`);
+    expect(parsed.startMinutes).toBe(16 * 60);
+    expect(Number(parsed.stay.checkoutMinutes)).toBe(10 * 60);
+    expect(parsed.stay.notes).toContain('Hosted by Lisbeth');
+    expect(parsed.bookingUrl).toContain('airbnb.com/trips');
+  });
+
+  it('does not treat Airbnb Your stay + Hosted by as the stay title', () => {
+    const parsed = parseStayConfirmation(`
+Your stay
+Hosted by Lisbeth
+August 10 – 14
+Punta Cana, La Altagracia
+Province 23000,
+Dominican Republic
+Check-in
+Monday, August 10
+After 4:00 PM
+Checkout
+Friday, August 14
+Before 10:00 AM
+`);
+    expect(parsed.title).toBe('Punta Cana');
+    expect(parsed.details).toContain('Dominican Republic');
+    expect(parsed.stay.notes).toContain('Hosted by Lisbeth');
+  });
+
+  it('fills blank trip dates from stay check-in / check-out', () => {
+    const parsed = parseStayConfirmation(AIRBNB_PUNTA_CANA_TRIPS_PAGE);
+    expect(
+      expandedTripRangeForStay({ startDate: '', endDate: '' }, parsed),
+    ).toEqual({
+      startDate: parsed.date,
+      endDate: parsed.stay.checkoutDate,
+    });
+  });
+
+  it('widens an existing trip range to cover the stay', () => {
+    expect(
+      expandedTripRangeForStay(
+        { startDate: '2026-08-11', endDate: '2026-08-12' },
+        {
+          date: '2026-08-10',
+          stay: { checkoutDate: '2026-08-14' },
+        },
+      ),
+    ).toEqual({
+      startDate: '2026-08-10',
+      endDate: '2026-08-14',
+    });
+  });
+
+  it('rolls yearless checkout into the next year when the stay crosses New Year', () => {
+    const year = new Date().getFullYear();
+    const parsed = parseStayConfirmation(`
+Ski Cabin
+Hosted by Alex
+December 28 – January 3
+
+Check-in
+Sunday, December 28
+After 4:00 PM
+
+Checkout
+Saturday, January 3
+Before 10:00 AM
+`);
+    expect(parsed.date).toBe(`${year}-12-28`);
+    expect(parsed.stay.checkoutDate).toBe(`${year + 1}-01-03`);
+  });
 });
-
-

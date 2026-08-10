@@ -18,6 +18,9 @@ describe('glass plate contract', () => {
     expect(button).toContain('allowsBlur');
     expect(button).toContain('appearance = \'glass\'');
     expect(plate).toContain('allowsBlur');
+    // Android has no BlurView frost for tinted plates — never use blur alphas there.
+    expect(plate).toContain("Platform.OS === 'ios' && allowsBlur");
+    expect(plate).toContain('frostedFill');
     expect(plate).toContain('intensity={');
     expect(plate).toContain(': 0');
     // BlurView is a direct sibling underlay (not nested in another absoluteFill —

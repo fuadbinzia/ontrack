@@ -92,6 +92,14 @@ export function travelSafeAreaStyle(
   return { backgroundColor: travelSafeAreaBackground(theme) };
 }
 
+export type TravelItineraryShellOptions = {
+  /**
+   * Denser frost when hero chrome sits under an expanded flight card
+   * (sky/wash bleed kills contrast on airy plates). Still glass — never paper.
+   */
+  dense?: boolean;
+};
+
 /**
  * Itinerary plan-detail shells: frosted airy glass in both themes.
  * Sky atmosphere shows through — do not paint opaque paper fills over these.
@@ -100,15 +108,23 @@ export function travelSafeAreaStyle(
 export function travelItineraryShellProps(
   theme: Theme,
   tintColor?: string,
+  options?: TravelItineraryShellOptions,
 ): {
   clear?: boolean;
   airy?: boolean;
   intensity?: number;
   tintColor?: string;
 } {
+  const dense = options?.dense === true;
   return {
-    airy: true,
-    intensity: theme.name === 'dark' ? 40 : 48,
+    airy: !dense,
+    intensity: dense
+      ? theme.name === 'dark'
+        ? 64
+        : 72
+      : theme.name === 'dark'
+        ? 40
+        : 48,
     ...(tintColor ? { tintColor } : {}),
   };
 }

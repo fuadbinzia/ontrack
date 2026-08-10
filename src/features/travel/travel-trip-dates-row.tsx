@@ -31,6 +31,8 @@ interface TravelTripDatesRowProps {
   endDate?: string;
   dayCount: number;
   compact?: boolean;
+  /** Denser frost while an expanded flight card darkens the hero stack. */
+  denseGlass?: boolean;
   onPress?: () => void;
   testID?: string;
 }
@@ -43,6 +45,7 @@ export function TravelTripDatesRow({
   endDate,
   dayCount,
   compact = false,
+  denseGlass = false,
   onPress,
   testID,
 }: TravelTripDatesRowProps) {
@@ -89,7 +92,7 @@ export function TravelTripDatesRow({
   // Artwork-tinted glass shell — mist chips + luminance-matched ink.
   const primaryInk = useTravelItineraryInk();
   const secondaryInk = useTravelItineraryInk('secondary');
-  const shellProps = useTravelItineraryShellProps();
+  const shellProps = useTravelItineraryShellProps({ dense: denseGlass });
   const badgeInk = primaryInk;
   const badgeTextSize = compact
     ? Math.max(11, s(11))

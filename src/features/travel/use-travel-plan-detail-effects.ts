@@ -8,6 +8,7 @@ import {
     attachOrphanedFlightConfirmationUris,
 } from '@/features/travel/confirmation-uri-attach';
 import { CHASE_ROUNDTRIP_CONFIRMATION } from '@/features/travel/fixtures/chase-roundtrip-confirmation';
+import { JETBLUE_TRIP_DETAIL_ROUNDTRIP } from '@/features/travel/fixtures/jetblue-trip-detail-roundtrip';
 import { UNITED_CONNECTING_CONFIRMATION } from '@/features/travel/fixtures/united-connecting-confirmation';
 import { mergeFlightConfirmationDraftDetails } from '@/features/travel/flight-confirmation-draft';
 import type { ImportedFlightConfirmation } from '@/features/travel/flight-confirmation-import';
@@ -36,8 +37,12 @@ import { useTravel } from '@/store/travel';
 import {
     AGENT_UI_DEMO_CHASE_OUTBOUND_ID,
     AGENT_UI_DEMO_CHASE_RETURN_ID,
+    AGENT_UI_PUNTA_CANA_OUTBOUND_ID,
+    AGENT_UI_PUNTA_CANA_RETURN_ID,
 } from '@/utils/agent-ui/fixtures';
 import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
+
+type FlightImportFixture = 'roundtrip' | 'connecting' | 'jetblue';
 
 type DetailEffectsOptions = {
   planId: string;
@@ -45,7 +50,7 @@ type DetailEffectsOptions = {
   form: TravelPlanDetailAddForm;
   updatePlan: (plan: TravelPlan) => void;
   accountEmail?: string;
-  initialFlightImportFixture?: 'roundtrip' | 'connecting';
+  initialFlightImportFixture?: FlightImportFixture;
   autoOpenStayBooking?: boolean;
   autoOpenReservationEmail?: string;
   setDevBookingOpen: (
@@ -107,7 +112,8 @@ export function useTravelPlanDetailEffects({
     if (
       !__DEV__ ||
       (initialFlightImportFixture !== 'roundtrip' &&
-        initialFlightImportFixture !== 'connecting')
+        initialFlightImportFixture !== 'connecting' &&
+        initialFlightImportFixture !== 'jetblue')
     ) {
       return;
     }
@@ -119,29 +125,48 @@ export function useTravelPlanDetailEffects({
       return;
     }
     form.appliedFlightImportFixture.current = true;
-    const isConnectingFixture = initialFlightImportFixture === 'connecting';
+    const year = new Date().getFullYear();
+    const fixtureSource =
+      initialFlightImportFixture === 'connecting'
+        ? {
+            text: UNITED_CONNECTING_CONFIRMATION,
+            tripRange: { startDate: '2026-09-27', endDate: '2026-09-27' },
+            fileName: 'united-gua-iah-lga-confirmation.png',
+            agentUiItemIds: undefined as string[] | undefined,
+          }
+        : initialFlightImportFixture === 'jetblue'
+          ? {
+              text: JETBLUE_TRIP_DETAIL_ROUNDTRIP,
+              tripRange: {
+                startDate: `${year}-08-10`,
+                endDate: `${year}-08-14`,
+              },
+              fileName: 'jetblue-trip-detail-jfk-sdq.png',
+              agentUiItemIds: [
+                AGENT_UI_PUNTA_CANA_OUTBOUND_ID,
+                AGENT_UI_PUNTA_CANA_RETURN_ID,
+              ],
+            }
+          : {
+              text: CHASE_ROUNDTRIP_CONFIRMATION,
+              tripRange: { startDate: '2026-09-08', endDate: '2026-09-14' },
+              fileName: 'JORDAN LEE has shared their trip details with you.pdf',
+              agentUiItemIds: [
+                AGENT_UI_DEMO_CHASE_OUTBOUND_ID,
+                AGENT_UI_DEMO_CHASE_RETURN_ID,
+              ],
+            };
     const parsed = parseFlightConfirmation(
-      isConnectingFixture
-        ? UNITED_CONNECTING_CONFIRMATION
-        : CHASE_ROUNDTRIP_CONFIRMATION,
-      isConnectingFixture
-        ? { startDate: '2026-09-27', endDate: '2026-09-27' }
-        : { startDate: '2026-09-08', endDate: '2026-09-14' },
+      fixtureSource.text,
+      fixtureSource.tripRange,
     );
     const imported: ImportedFlightConfirmation = {
       ...parsed,
-      fileName: isConnectingFixture
-        ? 'united-gua-iah-lga-confirmation.png'
-        : 'JORDAN LEE has shared their trip details with you.pdf',
+      fileName: fixtureSource.fileName,
       confirmationUris: [],
-      ...(isConnectingFixture
-        ? {}
-        : {
-            agentUiItemIds: [
-              AGENT_UI_DEMO_CHASE_OUTBOUND_ID,
-              AGENT_UI_DEMO_CHASE_RETURN_ID,
-            ],
-          }),
+      ...(fixtureSource.agentUiItemIds
+        ? { agentUiItemIds: fixtureSource.agentUiItemIds }
+        : {}),
     };
     const directions = splitRoundTripDirections(imported.segments);
     const outboundSegments = directions?.outbound ?? imported.segments;

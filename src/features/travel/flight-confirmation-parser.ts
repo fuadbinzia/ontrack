@@ -15,6 +15,8 @@ import { flightExpenseTitleFromSegments } from './flight-expense-title';
 import {
     parseLabeledFlightGate,
     parseLabeledFlightTerminal,
+    parseOrderedBareFlightGates,
+    parseOrderedBareFlightTerminals,
 } from './flight-terminal';
 
 export interface ParsedFlightSegment {
@@ -98,17 +100,39 @@ function parseMinutes(
   return hour * 60 + minute;
 }
 
-function findDepartureTime(text: string): number | undefined {
-  const labeledBlock =
-    /(?:depart(?:ure|s|ing)?|takeoff|return)\s*(?:time)?\s*[:\-]?([\s\S]{0,220})/i.exec(
-      text,
-    );
+function findLabeledClockMinutes(
+  text: string,
+  label: RegExp,
+): number | undefined {
+  const labeledBlock = label.exec(text);
   const labeled = labeledBlock
     ? /\b(\d{1,2})[:.](\d{2})\s*(AM|PM)\b/i.exec(labeledBlock[1])
     : undefined;
   if (labeled) return parseMinutes(labeled[1], labeled[2], labeled[3]);
+  return undefined;
+}
+
+function findDepartureTime(text: string): number | undefined {
+  // Prefer "Departs" over "Boards" / "Doors close" on airline trip-detail UIs.
+  const departs = findLabeledClockMinutes(
+    text,
+    /(?:^|\n)\s*departs?\s*[:\-]?([\s\S]{0,80})/i,
+  );
+  if (departs !== undefined) return departs;
+  const labeled = findLabeledClockMinutes(
+    text,
+    /(?:depart(?:ure|ing)?|takeoff|return)\s*(?:time)?\s*[:\-]?([\s\S]{0,220})/i,
+  );
+  if (labeled !== undefined) return labeled;
   const generic = /\b(\d{1,2}):(\d{2})\s*(AM|PM)\b/i.exec(text);
   return generic ? parseMinutes(generic[1], generic[2], generic[3]) : undefined;
+}
+
+function findArrivalTime(text: string): number | undefined {
+  return findLabeledClockMinutes(
+    text,
+    /(?:^|\n)\s*(?:arriv(?:e|es|al|ing))\s*(?:time)?\s*[:\-]?([\s\S]{0,80})/i,
+  );
 }
 
 function findDurationMinutes(text: string): number | undefined {
@@ -205,19 +229,34 @@ function findRoute(text: string): {
     routeHits.push({ index: match.index, departureAirport, arrivalAirport });
   }
 
-  const standaloneMatches = Array.from(text.matchAll(/^\s*([A-Z]{3})\s*$/gm)).filter(
-    (match) => validAirportCode(match[1]?.toUpperCase()),
+  const standaloneMatches = [
+    ...text.matchAll(/^\s*([A-Z]{3})\s*$/gm),
+    // JetBlue trip detail: "JFK Terminal 5" on one OCR line (same-line only —
+    // `\s` would also match "SDQ\\nTerminal" and double-count the bare code).
+    ...text.matchAll(/^\s*([A-Z]{3})[ \t]+(?:Terminal|Gate)\b/gim),
+  ].filter((match) => validAirportCode(match[1]?.toUpperCase()));
+  // Preserve document order (matchAll on two patterns is not merged by index).
+  standaloneMatches.sort(
+    (left, right) => (left.index ?? 0) - (right.index ?? 0),
   );
-  if (standaloneMatches.length >= 2) {
-    const first = standaloneMatches[0]!;
-    const second = standaloneMatches[1]!;
-    if (first.index !== undefined && second.index !== undefined) {
-      routeHits.push({
-        index: first.index,
-        departureAirport: first[1]!.toUpperCase(),
-        arrivalAirport: second[1]!.toUpperCase(),
-      });
-    }
+  // One hit per index; then first two *distinct* codes (dep ≠ arr).
+  const orderedCodes: { index: number; code: string }[] = [];
+  const seenIndexes = new Set<number>();
+  for (const match of standaloneMatches) {
+    if (match.index === undefined || seenIndexes.has(match.index)) continue;
+    seenIndexes.add(match.index);
+    orderedCodes.push({ index: match.index, code: match[1]!.toUpperCase() });
+  }
+  const departureHit = orderedCodes[0];
+  const arrivalHit = orderedCodes.find(
+    (hit) => hit.code !== departureHit?.code,
+  );
+  if (departureHit && arrivalHit) {
+    routeHits.push({
+      index: departureHit.index,
+      departureAirport: departureHit.code,
+      arrivalAirport: arrivalHit.code,
+    });
   }
 
   const parenthesizedCodes = Array.from(text.matchAll(/\(([A-Z]{3})\)/g)).filter(
@@ -463,10 +502,11 @@ function applyTimedAirportItinerary(
     eventLegs,
     segments,
   );
+  // Round-trips (JetBlue trip detail, etc.) already have per-leg airports from
+  // parseSegment. A global Boards/Doors/Departs/Arrives scan must not rewrite them.
+  if (!connecting) return segments;
   // Only grow beyond recognized flight numbers when layover/connection evidence exists.
-  const targetLegs = connecting
-    ? Math.max(segments.length, eventLegs)
-    : segments.length;
+  const targetLegs = Math.max(segments.length, eventLegs);
   if (targetLegs < 2 || events.length < targetLegs * 2) return segments;
 
   const padded = connecting
@@ -545,12 +585,18 @@ function parseSegment(
     flight.airline = airlineName(flightNumber.code) ?? '';
   }
   const route = findRoute(text);
+  const bareTerminals = parseOrderedBareFlightTerminals(text);
+  const bareGates = parseOrderedBareFlightGates(text);
   flight.departureAirport = route.departureAirport;
-  flight.departureTerminal = parseLabeledFlightTerminal(text, 'departure');
-  flight.departureGate = parseLabeledFlightGate(text, 'departure');
+  flight.departureTerminal =
+    parseLabeledFlightTerminal(text, 'departure') || bareTerminals.departure;
+  flight.departureGate =
+    parseLabeledFlightGate(text, 'departure') || bareGates.departure;
   flight.arrivalAirport = route.arrivalAirport;
-  flight.arrivalTerminal = parseLabeledFlightTerminal(text, 'arrival');
-  flight.arrivalGate = parseLabeledFlightGate(text, 'arrival');
+  flight.arrivalTerminal =
+    parseLabeledFlightTerminal(text, 'arrival') || bareTerminals.arrival;
+  flight.arrivalGate =
+    parseLabeledFlightGate(text, 'arrival') || bareGates.arrival;
   flight.seat =
     firstMatch(text, [
       /(?:seat|seat\s+assignment)\s*(?:[:#-]\s*|\n\s*)([A-Z]?\d{1,3}[A-Z]?)\b/i,
@@ -570,7 +616,16 @@ function parseSegment(
     tripRange?.endDate,
   );
   const startMinutes = findDepartureTime(text);
-  const durationMinutes = findDurationMinutes(text);
+  const arrivalMinutes = findArrivalTime(text);
+  let durationMinutes = findDurationMinutes(text);
+  if (
+    durationMinutes === undefined &&
+    startMinutes !== undefined &&
+    arrivalMinutes !== undefined
+  ) {
+    const span = (arrivalMinutes - startMinutes + 24 * 60) % (24 * 60);
+    if (span > 0) durationMinutes = span;
+  }
   const aircraft = findAircraft(text);
   const routeTitle = [flight.departureAirport, flight.arrivalAirport]
     .filter(Boolean)
@@ -585,11 +640,20 @@ function parseSegment(
     (date ? 1 : 0) +
     (startMinutes !== undefined ? 1 : 0) +
     (durationMinutes !== undefined ? 1 : 0);
+  let arrivalDate: string | undefined;
+  if (date && arrivalMinutes !== undefined) {
+    arrivalDate =
+      startMinutes !== undefined && arrivalMinutes < startMinutes
+        ? addDays(date, 1)
+        : date;
+  }
   return {
     flight,
     title,
     date,
     startMinutes,
+    ...(arrivalDate ? { arrivalDate } : {}),
+    ...(arrivalMinutes !== undefined ? { arrivalMinutes } : {}),
     durationMinutes,
     ...(aircraft ? { aircraft } : {}),
     detectedFieldCount,

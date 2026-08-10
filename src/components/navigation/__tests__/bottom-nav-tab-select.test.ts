@@ -1,33 +1,36 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-describe('bottom nav direct tab select', () => {
+describe('bottom nav fixed slots', () => {
   const source = readFileSync(
     join(process.cwd(), 'src/components/navigation/bottom-nav-bar.tsx'),
     'utf8',
   );
 
-  it('does not reshuffle recency during selectTab (avoids stalling tab loads)', () => {
-    const selectStart = source.indexOf('const selectTab = () => {');
-    expect(selectStart).toBeGreaterThanOrEqual(0);
-    const selectBody = source.slice(
-      selectStart,
-      source.indexOf('const onLongPress', selectStart),
-    );
-    expect(selectBody).toContain('carouselPendingRouteName: route.name');
-    expect(selectBody).toContain('canonicalPositionForRoute(0, routeCount)');
-    expect(selectBody).not.toContain('recordTabFocus');
-    expect(selectBody).not.toContain('shortestTargetPosition');
+  it('renders pinned trackers plus More (no carousel remount path)', () => {
+    expect(source).toContain('MORE_TAB_ROUTE');
+    expect(source).toContain('splitTrackerOrder');
+    expect(source).toContain("kind: 'more'");
+    expect(source).not.toContain('orderRoutesByRecency');
+    expect(source).not.toContain('recordTabFocus');
+    expect(source).not.toContain('shortestTargetPosition');
+    expect(source).not.toContain('withSpring');
   });
 
-  it('runs rail chrome only after page load (settle + idle)', () => {
+  it('selects More when the focused route is outside the bar pins', () => {
+    expect(source).toContain('!focusedInBar');
+    expect(source).toContain('TAB_META.trackers.href');
+  });
+
+  it('retapping More dismisses Trackers to the last pin', () => {
+    expect(source).toContain('resolveMoreRetapTarget');
+    expect(source).toContain('lastPinRouteRef');
+  });
+
+  it('preloads bar slots after settle and optimistically selects on tap', () => {
+    expect(source).toContain('navigation.preload');
     expect(source).toContain('deferAfterPageLoad');
-    expect(source).toMatch(
-      /deferAfterPageLoad\(\(\) => \{[\s\S]*?recordTabFocus\(routeName\)/,
-    );
-    expect(source).toMatch(
-      /deferAfterPageLoad\(\(\) => \{[\s\S]*?navigation\.preload/,
-    );
-    expect(source).toContain('centerIndexForRail');
+    expect(source).toContain('setPendingRouteName');
+    expect(source).toContain('pendingRouteName');
   });
 });

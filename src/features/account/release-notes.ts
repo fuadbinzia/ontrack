@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.32',
+    date: '2026-08-09',
+    notes: [
+      'Ship pinned tab bar with Trackers hub, denser itinerary glass under expanded flights, and stronger stay/flight confirmation imports.',
+    ],
+  },
+  {
     version: '1.0.31',
     date: '2026-08-09',
     notes: [
@@ -242,6 +249,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.32',
+    date: '2026-08-09',
+    notes: [
+      'Ship pinned tab bar with Trackers hub, denser itinerary glass under expanded flights, and stronger stay/flight confirmation imports.',
+      'Touched: app routes, features/travel.',
+    ],
+  },
   {
     version: '1.0.31',
     date: '2026-08-09',

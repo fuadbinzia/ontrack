@@ -16,10 +16,23 @@ export const AgentUiIds = {
     vehicles: 'ontrack.tabs.vehicles',
     health: 'ontrack.tabs.health',
     food: 'ontrack.tabs.food',
+    /** More → Trackers (pin/reorder hub). */
+    more: 'ontrack.tabs.more',
     carouselPrev: 'ontrack.tabs.carousel.prev',
     carouselNext: 'ontrack.tabs.carousel.next',
     /** Layout anchor for the page-matching bottom nav fill (not tappable). */
     dock: 'ontrack.tabs.dock',
+  },
+  trackers: {
+    screen: 'ontrack.trackers.screen',
+    row: (routeName: string) =>
+      `ontrack.trackers.row.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    add: (routeName: string) =>
+      `ontrack.trackers.add.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    remove: (routeName: string) =>
+      `ontrack.trackers.remove.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    drag: (routeName: string) =>
+      `ontrack.trackers.drag.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
   },
   health: {
     settings: 'ontrack.health.settings',
@@ -1177,6 +1190,9 @@ export function tabTestIdForRoute(routeName: string): string | undefined {
       return AgentUiIds.tabs.health;
     case 'food':
       return AgentUiIds.tabs.food;
+    case 'trackers':
+    case 'more':
+      return AgentUiIds.tabs.more;
     default:
       return undefined;
   }

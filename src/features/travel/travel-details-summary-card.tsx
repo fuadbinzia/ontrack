@@ -28,6 +28,7 @@ export function TravelDetailsSummaryCard({
   subtitle,
   icon,
   mark,
+  markStandalone = false,
   accentColor,
   confirmationCode,
   onPressConfirmation,
@@ -39,6 +40,8 @@ export function TravelDetailsSummaryCard({
   icon: AppIconName;
   /** Brand mark filling the header well instead of the glyph. */
   mark?: ReactNode;
+  /** When true, `mark` owns chrome (e.g. bare OTA logo — no outer well). */
+  markStandalone?: boolean;
   accentColor: string;
   confirmationCode?: string;
   onPressConfirmation?: () => void;
@@ -68,9 +71,13 @@ export function TravelDetailsSummaryCard({
         },
       ]}>
       <View style={[styles.header, { gap: rs.md }]}>
-        <GlassIconWell size={iconWellSize} borderRadius={wellRadius}>
-          {mark ?? <Symbol name={icon} size="lg" color={accentColor} />}
-        </GlassIconWell>
+        {mark && markStandalone ? (
+          mark
+        ) : (
+          <GlassIconWell size={iconWellSize} borderRadius={wellRadius}>
+            {mark ?? <Symbol name={icon} size="lg" color={accentColor} />}
+          </GlassIconWell>
+        )}
         <View style={[styles.titleCopy, { gap: rs.xxs }]}>
           <AppText
             variant="heading"

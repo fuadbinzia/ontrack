@@ -70,6 +70,17 @@ function findDateCandidates(text: string): DateCandidate[] {
       match.index,
     );
   }
+  // JetBlue / airline app trip detail: "Date" / "Aug 10" (no year).
+  const year = new Date().getFullYear();
+  const monthDayPattern = new RegExp(
+    `\\b(${monthNames})\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b(?!\\s*[,]?\\s*(?:2[0O][0-9O]{2}|\\d{2}))`,
+    'gi',
+  );
+  for (const match of text.matchAll(monthDayPattern)) {
+    const month = MONTH_NUMBER[match[1].slice(0, 3).toLowerCase()];
+    const day = Number(match[2]);
+    push(dateKey(year, month, day), match.index ?? 0);
+  }
   return candidates.sort((left, right) => left.index - right.index);
 }
 

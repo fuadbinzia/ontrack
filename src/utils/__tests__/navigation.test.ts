@@ -47,10 +47,13 @@ describe('feature route ownership', () => {
     },
   );
 
-  it('removes the legacy More section from the tab carousel', () => {
+  it('keeps More as the Trackers tab (not the legacy more.tsx route)', () => {
     expect(
       existsSync(join(process.cwd(), 'src/app', '(tabs)', 'more.tsx')),
     ).toBe(false);
+    expect(
+      existsSync(join(process.cwd(), 'src/app', '(tabs)', 'trackers.tsx')),
+    ).toBe(true);
   });
 
   it('keeps day selection in the tab navigator instead of a root-stack route', () => {

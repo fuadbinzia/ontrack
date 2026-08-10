@@ -136,6 +136,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | Flow | What it does |
 |------|----------------|
 | `travel-demo` | Seed demo trip → open plan detail |
+| `travel-punta-cana` | Seed Airbnb Punta Cana stay mock → open plan detail (`trip-agent-ui-punta-cana`) |
 | `travel-demo-list` | Seed → travel list with demo itinerary button |
 | `travel-home` | Seed Iceland/Antigua visual fixtures → Travel Home list. Smoke: `verify-both --route /travel --flow travel-home --exists travel.list.section.yourTrips` (H18 — bare goto fails empty guest) |
 | `travel-home-empty` | Clear trips → Travel Home zero-trip welcome (`travel.list.empty.create`) |
@@ -144,6 +145,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `travel-demo-timeline-add` | Seed → plan detail → Add to Timeline kind picker |
 | `travel-demo-add-flight-connecting` | Seed → United GUA→IAH→LGA connecting prefills Add Flight Name/route |
 | `travel-demo-add-flight-roundtrip` | Seed → Chase round-trip prefills → submit → expand outbound card (passenger ready) |
+| `travel-demo-add-flight-jetblue` | Seed → JetBlue JFK↔SDQ trip-detail prefills → submit → outbound timeline card |
 | `travel-demo-edit-flight` | Seed → open demo flight editor |
 | `open-new-trip` | Travel list → New Trip sheet |
 | `open-new-checklist` | Checklists → new-list name field ready |

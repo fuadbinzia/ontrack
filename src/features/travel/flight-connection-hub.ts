@@ -237,12 +237,30 @@ function clearCollapsedLegArrival(
   };
 }
 
+function segmentDateGapDays(left?: string, right?: string): number | undefined {
+  if (!left || !right) return undefined;
+  const gapMs =
+    new Date(`${right}T12:00:00`).getTime() -
+    new Date(`${left}T12:00:00`).getTime();
+  return Math.round(gapMs / (24 * 60 * 60 * 1000));
+}
+
 export function repairConnectingSegments(
   segments: ParsedFlightSegment[],
   sourceText = '',
 ): ParsedFlightSegment[] {
   const expanded = expandConnectingFromSummary(segments, sourceText);
   if (expanded.length < 2) return expanded;
+
+  // Multi-day turnarounds (JetBlue round-trips) share a destination/origin
+  // airport but are not connections — leave per-leg airports alone.
+  const roundTripGap = segmentDateGapDays(
+    expanded[0]?.date,
+    expanded[1]?.date,
+  );
+  if (roundTripGap !== undefined && roundTripGap > 1) {
+    return expanded.map(clearCollapsedLegArrival);
+  }
 
   // Resolve the hub before clearing collapsed "IAH → IAH" pairs so destination
   // noise like "LGA → LGA" still fails closed without a layover city.

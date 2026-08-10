@@ -142,6 +142,8 @@ export function TravelPlanHero({
   onEditNotes,
   notesExpanded,
   onNotesExpandedChange,
+  /** Denser dates/Notes frost while a flight card is expanded below. */
+  denseHeroGlass = false,
   /** False during push entrance — solid chrome only; sky FX mounts after settle. */
   enableSkyDecor = true,
   /** Static-tier still average — itinerary glass tint tracks the photo plate. */
@@ -153,6 +155,7 @@ export function TravelPlanHero({
   onEditNotes?: () => void;
   notesExpanded?: boolean;
   onNotesExpandedChange?: (expanded: boolean) => void;
+  denseHeroGlass?: boolean;
   enableSkyDecor?: boolean;
   onPlateAverageColor?: (hex: string | undefined) => void;
 }) {
@@ -340,6 +343,7 @@ export function TravelPlanHero({
           endDate={plan.endDate}
           dayCount={dayCount}
           compact
+          denseGlass={denseHeroGlass}
           onPress={onEditDates}
           testID={onEditDates ? AgentUiIds.travel.list.editDates(plan.id) : undefined}
         />
@@ -355,6 +359,7 @@ export function TravelPlanHero({
           onEdit={onEditNotes}
           expanded={notesExpanded}
           onExpandedChange={onNotesExpandedChange}
+          denseGlass={denseHeroGlass}
         />
       ) : null}
     </View>

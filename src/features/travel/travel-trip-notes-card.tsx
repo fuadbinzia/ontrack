@@ -36,6 +36,8 @@ export function TravelTripNotesCard({
   defaultExpanded = false,
   expanded: expandedProp,
   onExpandedChange,
+  /** Denser frost while an expanded flight card darkens the hero stack. */
+  denseGlass = false,
 }: {
   notes: string;
   toggleTestID?: string;
@@ -44,6 +46,7 @@ export function TravelTripNotesCard({
   defaultExpanded?: boolean;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
+  denseGlass?: boolean;
 }) {
   const theme = useTheme();
   const chrome = itinerarySheetChrome(theme);
@@ -51,7 +54,7 @@ export function TravelTripNotesCard({
   const primaryInk = useTravelItineraryInk();
   const secondaryInk = useTravelItineraryInk('secondary');
   const tertiaryInk = useTravelItineraryInk('tertiary');
-  const shellProps = useTravelItineraryShellProps();
+  const shellProps = useTravelItineraryShellProps({ dense: denseGlass });
   const onGlass = useTravelItineraryOnGlass();
   const divider = onGlass
     ? glassMaterials.border.dark

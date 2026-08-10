@@ -4,7 +4,7 @@ import { PixelRatio, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import type { SymbolSize } from '@/components/primitives';
-import { Symbol } from '@/components/primitives';
+import { GlassIconWell, Symbol } from '@/components/primitives';
 import {
   fetchPlaceCoverUri,
   stayCoverCandidates,
@@ -12,9 +12,6 @@ import {
 import { fetchStayBrandMark } from '@/features/travel/stay-brand-lookup';
 import { stayBrandDomain } from '@/features/travel/stay-company';
 import { resolveTravelPhotoUris } from '@/features/travel/travel-moment-media';
-
-/** Brand marks sit on a light plate (Booking, Hilton, etc.). */
-const LOGO_PLATE_BACKGROUND = '#FFFFFF';
 
 function isSvgSource(uri: string): boolean {
   const lower = uri.toLowerCase();
@@ -40,15 +37,58 @@ type BrandMark =
   | { kind: 'svg'; xml: string; domain: string }
   | { kind: 'raster'; uri: string; domain: string };
 
+function BrandLogoMark({
+  brandMark,
+  title,
+  onError,
+}: {
+  brandMark: BrandMark;
+  title?: string;
+  onError: () => void;
+}) {
+  const pixelSize = Math.round(64 * Math.max(3, PixelRatio.get()));
+  const label = `${title?.trim() || brandMark.domain} logo`;
+  if (brandMark.kind === 'svg') {
+    return (
+      <SvgXml
+        xml={brandMark.xml}
+        width="100%"
+        height="100%"
+        accessibilityLabel={label}
+      />
+    );
+  }
+  return (
+    <Image
+      source={{
+        uri: brandMark.uri,
+        width: pixelSize,
+        height: pixelSize,
+      }}
+      style={StyleSheet.absoluteFill}
+      contentFit="contain"
+      transition={120}
+      recyclingKey={`stay-brand:${brandMark.domain}@${pixelSize}`}
+      cachePolicy="memory-disk"
+      allowDownscaling={false}
+      accessibilityIgnoresInvertColors
+      accessibilityLabel={label}
+      onError={onError}
+    />
+  );
+}
+
 /**
  * Stay kind-pill / summary mark:
- * company/OTA logo → attached photo → place cover → bed icon.
+ * company/OTA logo (no outer circle) → attached photo → place cover → bed icon in circle.
  */
 export function StayLocationThumbnail({
   title,
   address,
   bookingUrl,
   photoUris,
+  /** When set, owns chrome: logo = bare mark; otherwise circular well. */
+  size,
   fallbackIconSize = 'lg',
   fallbackColor,
 }: {
@@ -56,6 +96,7 @@ export function StayLocationThumbnail({
   address?: string;
   bookingUrl?: string;
   photoUris?: string[];
+  size?: number;
   fallbackIconSize?: SymbolSize;
   fallbackColor: string;
 }) {
@@ -126,52 +167,52 @@ export function StayLocationThumbnail({
     };
   }, [brandMark, brandLookupDone, localPhoto, queryKey, title, address]);
 
-  // --- Company / OTA logo ---
+  const clearBrand = () => setBrandMark(undefined);
+
+  // --- Company / OTA logo: bare mark (no white plate / outer circle) ---
   if (brandMark) {
-    const pixelSize = Math.round(64 * Math.max(3, PixelRatio.get()));
+    if (size != null) {
+      const logoRadius = Math.max(6, Math.round(size * 0.22));
+      return (
+        <View
+          style={{
+            width: size,
+            height: size,
+            borderRadius: logoRadius,
+            overflow: 'hidden',
+          }}>
+          <BrandLogoMark
+            brandMark={brandMark}
+            title={title}
+            onError={clearBrand}
+          />
+        </View>
+      );
+    }
     return (
       <View style={StyleSheet.absoluteFill}>
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: LOGO_PLATE_BACKGROUND },
-          ]}
+        <BrandLogoMark
+          brandMark={brandMark}
+          title={title}
+          onError={clearBrand}
         />
-        <View style={styles.logoInset}>
-          {brandMark.kind === 'svg' ? (
-            <SvgXml
-              xml={brandMark.xml}
-              width="100%"
-              height="100%"
-              accessibilityLabel={`${title?.trim() || brandMark.domain} logo`}
-            />
-          ) : (
-            <Image
-              source={{
-                uri: brandMark.uri,
-                width: pixelSize,
-                height: pixelSize,
-              }}
-              style={StyleSheet.absoluteFill}
-              contentFit="contain"
-              transition={120}
-              recyclingKey={`stay-brand:${brandMark.domain}@${pixelSize}`}
-              cachePolicy="memory-disk"
-              allowDownscaling={false}
-              accessibilityIgnoresInvertColors
-              accessibilityLabel={`${title?.trim() || brandMark.domain} logo`}
-              onError={() => {
-                setBrandMark(undefined);
-              }}
-            />
-          )}
-        </View>
       </View>
     );
   }
 
   // Wait for brand discovery before falling back to place photos.
   if (!brandLookupDone && !localPhoto) {
+    if (size != null) {
+      return (
+        <GlassIconWell size={size} borderRadius={size / 2}>
+          <Symbol
+            name="lodging"
+            size={fallbackIconSize}
+            color={fallbackColor}
+          />
+        </GlassIconWell>
+      );
+    }
     return (
       <Symbol name="lodging" size={fallbackIconSize} color={fallbackColor} />
     );
@@ -180,20 +221,34 @@ export function StayLocationThumbnail({
   // --- Place / attached photo ---
   const photoUri = localPhoto ?? (!photoFailed ? remoteUri : undefined);
   if (photoUri) {
+    const photo = (
+      <Image
+        source={{ uri: photoUri }}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        transition={160}
+        recyclingKey={`stay-thumb:${photoUri}`}
+        cachePolicy="memory-disk"
+        accessibilityIgnoresInvertColors
+        accessibilityLabel={title?.trim() || 'Stay photo'}
+        onError={() => setPhotoFailed(true)}
+      />
+    );
+    if (size != null) {
+      return (
+        <GlassIconWell size={size} borderRadius={size / 2}>
+          <View style={StyleSheet.absoluteFill}>{photo}</View>
+        </GlassIconWell>
+      );
+    }
+    return <View style={StyleSheet.absoluteFill}>{photo}</View>;
+  }
+
+  if (size != null) {
     return (
-      <View style={StyleSheet.absoluteFill}>
-        <Image
-          source={{ uri: photoUri }}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          transition={160}
-          recyclingKey={`stay-thumb:${photoUri}`}
-          cachePolicy="memory-disk"
-          accessibilityIgnoresInvertColors
-          accessibilityLabel={title?.trim() || 'Stay photo'}
-          onError={() => setPhotoFailed(true)}
-        />
-      </View>
+      <GlassIconWell size={size} borderRadius={size / 2}>
+        <Symbol name="lodging" size={fallbackIconSize} color={fallbackColor} />
+      </GlassIconWell>
     );
   }
 
@@ -201,13 +256,3 @@ export function StayLocationThumbnail({
     <Symbol name="lodging" size={fallbackIconSize} color={fallbackColor} />
   );
 }
-
-const styles = StyleSheet.create({
-  logoInset: {
-    position: 'absolute',
-    top: '12%',
-    right: '12%',
-    bottom: '12%',
-    left: '12%',
-  },
-});

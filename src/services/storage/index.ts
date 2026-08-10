@@ -27,6 +27,8 @@ export const STORAGE_KEYS = {
   usageAnalytics: 'ontrack/usage-analytics/v1',
   /** Floating tab carousel order by last focus (device-local). */
   tabRecency: 'ontrack/tab-recency/v1',
+  /** Pinned bottom-nav trackers + Trackers page order (device-local). */
+  tabPins: 'ontrack/tab-pins/v1',
   /** Dev Mode toggle + live-account snapshot (sandbox isolation). */
   devMode: 'ontrack/dev-mode/v1',
 } as const;

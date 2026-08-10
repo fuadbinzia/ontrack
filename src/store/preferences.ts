@@ -20,8 +20,16 @@ interface PreferencesState {
   hasOnboarded: boolean;
   name: string;
   goal: string;
-  /** City/place used for Today local weather (typed by the user). */
+  /**
+   * User-authored home city/place for Today weather.
+   * Never auto-filled from GPS — only set via Profile → Preferences.
+   */
   homeLocation: string;
+  /**
+   * Optional override for the Today “Current” weather place.
+   * Empty → live device geolocation. Never writes `homeLocation`.
+   */
+  currentLocation: string;
   /** Self avatar — local-first; synced to cloud when signed in. */
   avatar: ProfileAvatarMeta;
   themePreference: ThemePreference;
@@ -36,6 +44,7 @@ interface PreferencesState {
   dateDisplayFormat: DateDisplayFormat;
   completeOnboarding: (input: { name: string; goal: string }) => void;
   setHomeLocation: (location: string) => void;
+  setCurrentLocation: (location: string) => void;
   setName: (name: string) => void;
   setAvatar: (avatar: ProfileAvatarMeta) => void;
   setThemePreference: (pref: ThemePreference) => void;
@@ -54,6 +63,7 @@ export const usePreferences = create<PreferencesState>()(
       name: '',
       goal: '',
       homeLocation: '',
+      currentLocation: '',
       avatar: emptyAvatarMeta(),
       themePreference: 'system',
       aiEnabled: true,
@@ -76,7 +86,14 @@ export const usePreferences = create<PreferencesState>()(
           dateDisplayFormat: dateDisplayFormatForLocale(dateLocale),
         });
       },
-      setHomeLocation: (homeLocation) => set({ homeLocation: homeLocation.trim() }),
+      setHomeLocation: (homeLocation) => {
+        useAuthAccess.getState().markGuestDataDirty();
+        set({ homeLocation: homeLocation.trim() });
+      },
+      setCurrentLocation: (currentLocation) => {
+        useAuthAccess.getState().markGuestDataDirty();
+        set({ currentLocation: currentLocation.trim() });
+      },
       setName: (name) => {
         useAuthAccess.getState().markGuestDataDirty();
         const trimmed = name.trim();
@@ -97,6 +114,7 @@ export const usePreferences = create<PreferencesState>()(
           name: '',
           goal: '',
           homeLocation: '',
+          currentLocation: '',
           avatar: emptyAvatarMeta(),
           themePreference: 'system',
           aiEnabled: true,

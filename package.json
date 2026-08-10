@@ -1,12 +1,10 @@
 {
   "name": "ontrack",
   "main": "expo-router/entry",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-navigation/bottom-tabs": "^7.18.8",
-    "@react-navigation/native": "^7.3.8",
     "@shopify/flash-list": "2.0.2",
     "@supabase/supabase-js": "^2.110.8",
     "babel-plugin-react-compiler": "^1.0.0",

@@ -134,10 +134,13 @@ export const appIcons = {
   photo: { ios: 'photo', android: 'image', web: 'image' },
   bookmark: { ios: 'bookmark', android: 'bookmark_border', web: 'bookmark_border' },
   location: { ios: 'mappin.and.ellipse', android: 'location_on', web: 'location_on' },
+  /** Classic teardrop map pin (Material `location_on` / SF `mappin`). */
+  'map-pin': { ios: 'mappin', android: 'location_on', web: 'location_on' },
   link: { ios: 'link', android: 'link', web: 'link' },
   search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
   'open-external': { ios: 'arrow.up.forward.app', android: 'open_in_new', web: 'open_in_new' },
-  chat: { ios: 'message.fill', android: 'chat', web: 'chat' },
+  // Material `chat` is a lined text-bubble; `chat_bubble` matches SF `message.fill`.
+  chat: { ios: 'message.fill', android: 'chat_bubble', web: 'chat_bubble' },
   send: { ios: 'paperplane.fill', android: 'send', web: 'send' },
   currency: { ios: 'dollarsign.circle', android: 'attach_money', web: 'attach_money' },
   calculator: {
@@ -185,6 +188,7 @@ export const appIcons = {
   repeat: { ios: 'repeat', android: 'repeat', web: 'repeat' },
   timer: { ios: 'timer', android: 'timer', web: 'timer' },
   'arrow-up': { ios: 'arrow.up', android: 'arrow_upward', web: 'arrow_upward' },
+  reply: { ios: 'arrowshape.turn.up.left.fill', android: 'reply', web: 'reply' },
 
   // Activity status
   'status-completed': { ios: 'checkmark.circle.fill', android: 'check_circle', web: 'check_circle' },
@@ -312,6 +316,7 @@ export const appIconSections = [
       'photo',
       'bookmark',
       'location',
+      'map-pin',
       'link',
       'search',
       'open-external',
@@ -355,6 +360,7 @@ export const appIconSections = [
       'repeat',
       'timer',
       'arrow-up',
+      'reply',
     ],
   },
   {

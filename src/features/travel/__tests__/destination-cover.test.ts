@@ -12,6 +12,7 @@ import {
     pickRotatingHeroUris,
     proxyDestinationCoverImageUrl,
     stayCoverCandidates,
+    uploadedTripCoverUris,
 } from '../destination-cover';
 import type { TravelPlan } from '../types';
 
@@ -350,6 +351,52 @@ describe('mergeDestinationCoverUrls', () => {
     expect(
       mergeDestinationCoverUrls([unsplash, unsplash2], [wiki, wiki2], 3),
     ).toEqual([unsplash, unsplash2, wiki]);
+  });
+});
+
+describe('uploadedTripCoverUris', () => {
+  it('returns only user uploads (not moment photos)', () => {
+    expect(
+      uploadedTripCoverUris(
+        plan({
+          coverUris: [
+            'file:///Documents/travel-moments/cover-a.jpg',
+            'file:///Documents/travel-moments/cover-b.jpg',
+          ],
+          itinerary: [
+            {
+              id: 'm1',
+              kind: 'moment',
+              title: 'Sunset',
+              date: '2026-08-01',
+              startMinutes: 0,
+              durationMinutes: 60,
+              photoUris: ['file:///Documents/travel-moments/moment.jpg'],
+            },
+          ],
+        }),
+      ),
+    ).toEqual([
+      'file:///Documents/travel-moments/cover-a.jpg',
+      'file:///Documents/travel-moments/cover-b.jpg',
+    ]);
+    expect(
+      uploadedTripCoverUris(
+        plan({
+          itinerary: [
+            {
+              id: 'm1',
+              kind: 'moment',
+              title: 'Sunset',
+              date: '2026-08-01',
+              startMinutes: 0,
+              durationMinutes: 60,
+              photoUris: ['file:///Documents/travel-moments/moment.jpg'],
+            },
+          ],
+        }),
+      ),
+    ).toEqual([]);
   });
 });
 

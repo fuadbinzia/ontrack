@@ -9,6 +9,44 @@ function read(relative: string): string {
 }
 
 describe('metro launch command contract', () => {
+  it('keeps app code off @react-navigation/* (expo-router SDK 56+ fork)', () => {
+    let out = '';
+    try {
+      out = execFileSync(
+        'rg',
+        [
+          '-n',
+          "from ['\"]@react-navigation/|require\\(['\"]@react-navigation/",
+          'src',
+          '--glob',
+          '*.{ts,tsx,js,jsx}',
+        ],
+        { cwd: root, encoding: 'utf8' },
+      );
+    } catch (error: unknown) {
+      const status =
+        error && typeof error === 'object' && 'status' in error
+          ? (error as { status?: number }).status
+          : undefined;
+      // rg exit 1 = no matches (desired).
+      if (status !== 1) throw error;
+      out = '';
+    }
+    expect(out.trim()).toBe('');
+
+    const pkg = JSON.parse(read('package.json')) as {
+      dependencies?: Record<string, string>;
+    };
+    expect(pkg.dependencies?.['@react-navigation/bottom-tabs']).toBeUndefined();
+    expect(pkg.dependencies?.['@react-navigation/native']).toBeUndefined();
+    expect(read('src/components/navigation/bottom-nav-bar.tsx')).toContain(
+      "from 'expo-router/js-tabs'",
+    );
+    expect(read('src/features/travel/travel-chat-screen.tsx')).toContain(
+      "from 'expo-router/js-tabs'",
+    );
+  });
+
   it('routes npm start family through the shared start-metro launcher', () => {
     const pkg = JSON.parse(read('package.json')) as {
       scripts: Record<string, string>;

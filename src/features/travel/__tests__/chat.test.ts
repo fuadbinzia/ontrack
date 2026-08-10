@@ -1,9 +1,13 @@
 import {
-  buildTravelChatListItems,
-  isTravelChatMessageMine,
-  travelChatAccessCode,
-  travelChatDayLabel,
-  type TravelChatMessage,
+    applyTravelChatPeerReadAt,
+    buildTravelChatListItems,
+    isTravelChatMessageMine,
+    mergeTravelChatMessages,
+    toggleTravelChatReactionLocal,
+    travelChatAccessCode,
+    travelChatDayLabel,
+    travelChatDeliveryStatus,
+    type TravelChatMessage,
 } from '../chat';
 import type { TravelPlan } from '../types';
 
@@ -31,6 +35,8 @@ function message(
     senderName: 'Sam',
     senderDeviceId: 'device-1',
     body: 'Hello',
+    kind: 'text',
+    reactions: [],
     ...partial,
   };
 }
@@ -219,5 +225,60 @@ describe('buildTravelChatListItems', () => {
 
   it('returns an empty list when there are no messages', () => {
     expect(buildTravelChatListItems([])).toEqual([]);
+  });
+});
+
+describe('travel chat merge / ticks / reactions', () => {
+  it('keeps pending optimistic rows that are not on the remote snapshot', () => {
+    const remote = [
+      message({ id: 'm1', createdAt: '2026-08-06T12:00:00.000Z' }),
+    ];
+    const current = [
+      ...remote,
+      {
+        ...message({ id: 'pending-1', createdAt: '2026-08-06T12:01:00.000Z' }),
+        pending: true,
+      },
+    ];
+    const merged = mergeTravelChatMessages(remote, current);
+    expect(merged.map((item) => item.id)).toEqual(['m1', 'pending-1']);
+  });
+
+  it('marks delivered messages read once a peer watermark passes createdAt', () => {
+    expect(
+      travelChatDeliveryStatus({
+        createdAt: '2026-08-06T12:00:00.000Z',
+        peerLastReadAt: '2026-08-06T12:00:01.000Z',
+      }),
+    ).toBe('read');
+    expect(
+      travelChatDeliveryStatus({
+        createdAt: '2026-08-06T12:00:00.000Z',
+        peerLastReadAt: '2026-08-06T11:59:00.000Z',
+      }),
+    ).toBe('sent');
+    expect(
+      travelChatDeliveryStatus({
+        createdAt: '2026-08-06T12:00:00.000Z',
+        pending: true,
+      }),
+    ).toBe('pending');
+  });
+
+  it('applies peer read watermarks across the list', () => {
+    const next = applyTravelChatPeerReadAt(
+      [message({ id: 'm1', createdAt: '2026-08-06T12:00:00.000Z' })],
+      '2026-08-06T13:00:00.000Z',
+    );
+    expect(next[0]?.peerLastReadAt).toBe('2026-08-06T13:00:00.000Z');
+  });
+
+  it('toggles my reaction and clears a previous emoji', () => {
+    const withHeart = toggleTravelChatReactionLocal([], '❤️');
+    expect(withHeart).toEqual([{ emoji: '❤️', count: 1, mine: true }]);
+    const switched = toggleTravelChatReactionLocal(withHeart, '👍');
+    expect(switched).toEqual([{ emoji: '👍', count: 1, mine: true }]);
+    const cleared = toggleTravelChatReactionLocal(switched, '👍');
+    expect(cleared).toEqual([]);
   });
 });

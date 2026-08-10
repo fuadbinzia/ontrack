@@ -31,15 +31,32 @@ export function CategoryIcon({ category, size = 40 }: CategoryIconProps) {
 
 interface CategoryBadgeProps {
   category: ActivityCategory;
+  /** Accent rim when the badge is the selected control. */
+  selected?: boolean;
+  /** `large` = vibe picker chips (bigger type + tap target). */
+  size?: 'default' | 'large';
 }
 
 /** Small pill label with the category color. */
-export function CategoryBadge({ category }: CategoryBadgeProps) {
+export function CategoryBadge({
+  category,
+  selected = false,
+  size = 'default',
+}: CategoryBadgeProps) {
   const theme = useTheme();
   const colors = categoryColors(theme, category.colorKey);
+  const large = size === 'large';
   return (
-    <View style={[styles.badge, { backgroundColor: colors.tint }]}>
-      <AppText variant="caption" style={{ color: colors.main }}>
+    <View
+      style={[
+        styles.badge,
+        large ? styles.badgeLarge : null,
+        {
+          backgroundColor: colors.tint,
+          borderColor: selected ? theme.accentPrimary : 'transparent',
+        },
+      ]}>
+      <AppText variant={large ? 'callout' : 'caption'} fit={large} style={{ color: colors.main }}>
         {category.name}
       </AppText>
     </View>
@@ -49,8 +66,15 @@ export function CategoryBadge({ category }: CategoryBadgeProps) {
 const styles = StyleSheet.create({
   badge: {
     borderRadius: radii.pill,
+    borderWidth: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xxs,
     alignSelf: 'flex-start',
+  },
+  badgeLarge: {
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    justifyContent: 'center',
   },
 });

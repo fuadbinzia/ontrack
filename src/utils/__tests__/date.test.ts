@@ -3,6 +3,7 @@ import {
     formatDateKey,
     formatDateKeyMedium,
     formatDateKeyShort,
+    formatDateLong,
     formatDatePickerTitle,
     formatMonthTitle,
     formatTimePickerTitle,
@@ -41,6 +42,11 @@ describe('date keys', () => {
 
   it('keeps the full year in calendar picker month titles', () => {
     expect(formatMonthTitle(2026, 8)).toBe('September 2026');
+  });
+
+  it('formats long dates with an optional year', () => {
+    expect(formatDateLong('2026-08-10')).toBe('August 10');
+    expect(formatDateLong('2026-08-10', { year: true })).toBe('August 10, 2026');
   });
 
   it('formats short timeline dates without year or leading zeros', () => {

@@ -48,7 +48,7 @@ export {
     isAllowedDestinationCoverImageUrl,
     isDirectClientCoverUrl,
     isUsableDestinationPhotoUrl,
-    mergeDestinationCoverUrls,
+    mergeDestinationCoverUrls
 } from '@/features/travel/destination-cover-lookup';
 
 export type FetchDestinationHeroOptions = {
@@ -150,15 +150,30 @@ function rememberHeroRecentKeys(
   return next.slice(0, HERO_RECENT_LIMIT);
 }
 
+/** Max user-uploaded covers on a trip card / edit field. */
+export const TRIP_COVER_UPLOAD_MAX = DESTINATION_COVER_MAX;
+
 /**
- * Custom cover, else first photo on a moment stop.
+ * User-uploaded covers only (resolved, capped). Never includes destination
+ * placeholders or moment itinerary photos — those must not enter the carousel.
+ */
+export function uploadedTripCoverUris(plan: TravelPlan): string[] {
+  const raw =
+    Array.isArray(plan.coverUris) && plan.coverUris.length > 0
+      ? plan.coverUris
+      : plan.coverUri
+        ? [plan.coverUri]
+        : [];
+  return resolveTravelPhotoUris(raw).slice(0, TRIP_COVER_UPLOAD_MAX);
+}
+
+/**
+ * First uploaded cover, else first photo on a moment stop.
  * Flight/stay confirmation screenshots must not become the trip hero.
  */
 export function localTripCoverUri(plan: TravelPlan): string | undefined {
-  if (plan.coverUri) {
-    const custom = resolveTravelPhotoUris([plan.coverUri])[0];
-    if (custom) return custom;
-  }
+  const uploaded = uploadedTripCoverUris(plan)[0];
+  if (uploaded) return uploaded;
   for (const item of plan.itinerary ?? []) {
     if (item.kind !== 'moment') continue;
     const photos = resolveTravelPhotoUris(item.photoUris);
@@ -172,9 +187,22 @@ export async function persistTravelCoverPhoto(
   uri: string,
   planId: string,
 ): Promise<string> {
-  const [next] = await persistTravelMomentPhotos([uri], `cover-${planId}`);
+  const [next] = await persistTravelCoverPhotos([uri], planId);
   if (!next) throw new Error('Could not save trip cover photo.');
   return next;
+}
+
+/** Persist up to {@link TRIP_COVER_UPLOAD_MAX} cover picks. */
+export async function persistTravelCoverPhotos(
+  uris: readonly string[],
+  planId: string,
+): Promise<string[]> {
+  const capped = uris
+    .map((uri) => uri.trim())
+    .filter(Boolean)
+    .slice(0, TRIP_COVER_UPLOAD_MAX);
+  if (capped.length === 0) return [];
+  return persistTravelMomentPhotos(capped, `cover-${planId}`);
 }
 
 /**
@@ -553,9 +581,9 @@ async function resolveDestinationHeroPool(
 }
 
 /**
- * Up to 3 hero images for a trip card carousel.
- * Local custom/moment cover stays first when present; remotes rotate from a
- * larger landmark pool so revisits do not always show the same three.
+ * Up to 3 destination landmark URIs for callers that still want a remote pool.
+ * Travel Home carousel pages use {@link uploadedTripCoverUris} only — do not
+ * mix these remotes into the live slide set.
  */
 export async function fetchDestinationHeroUris(
   plan: TravelPlan,
@@ -563,10 +591,7 @@ export async function fetchDestinationHeroUris(
   options?: FetchDestinationHeroOptions,
 ): Promise<string[]> {
   const capped = Math.max(1, Math.min(DESTINATION_COVER_MAX, limit));
-  const local = localTripCoverUri(plan);
   const out: string[] = [];
-  pushUniqueUri(out, local);
-  if (out.length >= capped) return out.map(toClientDisplayCoverUri);
 
   const places = destinationCoverCandidates(plan)
     .map((c) => c.trim())

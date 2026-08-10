@@ -81,12 +81,15 @@ export function TravelDetailsSummaryCard({
         <View style={[styles.titleCopy, { gap: rs.xxs }]}>
           <AppText
             variant="heading"
-            fit
+            numberOfLines={2}
             style={[styles.editorialTitle, { color: primaryInk }]}>
             {title}
           </AppText>
           {subtitle ? (
-            <AppText variant="caption" fit style={{ color: secondaryInk }}>
+            <AppText
+              variant="caption"
+              numberOfLines={2}
+              style={{ color: secondaryInk }}>
               {subtitle}
             </AppText>
           ) : null}
@@ -108,14 +111,14 @@ export function TravelDetailsSummaryCard({
             ]}>
             <AppText
               variant="overline"
-              fit
+              numberOfLines={1}
               style={[travelOverlineStyle, { color: secondaryInk }]}>
               Confirmation
             </AppText>
             <AppText
               variant="subheading"
               selectable
-              fit
+              numberOfLines={2}
               style={[styles.confirmationValue, { color: primaryInk }]}>
               {confirmationCode}
             </AppText>

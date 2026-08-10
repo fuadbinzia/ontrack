@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 
 import { getDestinationCurrentWeather } from '@/features/travel/weather';
+import { temperatureUnitForDateFormat } from '@/features/travel/weather/temperature-unit';
 import type { DateDisplayFormat } from '@/utils/date';
 
 import {
@@ -32,10 +33,6 @@ export function useTravelAtmosphere(): TravelAtmosphere {
   return useContext(TravelAtmosphereContext);
 }
 
-function temperatureUnit(dateDisplayFormat: DateDisplayFormat) {
-  return dateDisplayFormat === 'mdy' ? 'fahrenheit' : 'celsius';
-}
-
 /** Loads cached live conditions only while a Travel route is active. */
 export function useTravelRouteAtmosphere(
   destination: string | undefined,
@@ -63,7 +60,7 @@ export function useTravelRouteAtmosphere(
     const controller = new AbortController();
     void getDestinationCurrentWeather(
       normalizedDestination,
-      temperatureUnit(dateDisplayFormat),
+      temperatureUnitForDateFormat(dateDisplayFormat),
       controller.signal,
     ).then((weather) => {
       setClock(new Date());

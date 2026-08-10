@@ -269,7 +269,12 @@ export interface TravelPlan {
   startDate: string;
   endDate: string;
   notes?: string;
-  /** Durable local cover thumbnail (file:// / ontrack-media:). */
+  /**
+   * User-uploaded trip cover photos (durable file:// / ontrack-media:), max 3.
+   * Drives the Travel Home hero carousel; destination placeholders never mix in.
+   */
+  coverUris?: string[];
+  /** First of `coverUris` — legacy alias for older payloads / cloud media. */
   coverUri?: string;
   itinerary: TravelItineraryItem[];
   participants: TravelParticipant[];

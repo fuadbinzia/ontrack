@@ -26,29 +26,24 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
 
-import { TravelPlanModePicker } from './travel-mode-picker';
 import { TravelPlanCoverField } from './travel-plan-cover-field';
-import type { TravelPlan, TravelPlanMode } from './types';
+import type { TravelPlan } from './types';
 
 interface TravelPlanDetailsEditorProps {
   plan: TravelPlan;
   title: string;
-  mode: TravelPlanMode;
-  origin: string;
   destination: string;
   notes: string;
   startDate: string;
   endDate: string;
-  coverUri?: string;
+  coverUris: string[];
   error?: string;
   onTitleChange: (value: string) => void;
-  onModeChange: (value: TravelPlanMode) => void;
-  onOriginChange: (value: string) => void;
   onDestinationChange: (value: string) => void;
   onNotesChange: (value: string) => void;
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
-  onCoverUriChange: (uri: string | undefined) => void;
+  onCoverUrisChange: (uris: string[]) => void;
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
@@ -60,22 +55,18 @@ interface TravelPlanDetailsEditorProps {
 export function TravelPlanDetailsEditor({
   plan,
   title,
-  mode,
-  origin,
   destination,
   notes,
   startDate,
   endDate,
-  coverUri,
+  coverUris,
   error,
   onTitleChange,
-  onModeChange,
-  onOriginChange,
   onDestinationChange,
   onNotesChange,
   onStartDateChange,
   onEndDateChange,
-  onCoverUriChange,
+  onCoverUrisChange,
   onSave,
   onCancel,
   onDelete,
@@ -132,8 +123,8 @@ export function TravelPlanDetailsEditor({
           <View style={{ gap: rs.md }}>
             <TravelPlanCoverField
               plan={plan}
-              coverUri={coverUri}
-              onCoverUriChange={onCoverUriChange}
+              coverUris={coverUris}
+              onCoverUrisChange={onCoverUrisChange}
               initialPickerOpen={initialCoverPickerOpen}
             />
             <View style={[styles.divider, { backgroundColor: chrome.fieldBorder }]} />
@@ -146,20 +137,9 @@ export function TravelPlanDetailsEditor({
               onChangeText={onTitleChange}
               icon="flight"
               stackedLabel="Trip Name"
-              placeholder="e.g. Birthday in Lisbon"
+              placeholder="e.g. Fun in the Sun!"
               accessibilityLabel="Trip Name"
               {...field('flight')}
-            />
-            <TravelPlanModePicker value={mode} onChange={onModeChange} />
-            <AddressAutofindField
-              testID={AgentUiIds.travel.editTrip.origin}
-              value={origin}
-              onChange={onOriginChange}
-              icon="route"
-              stackedLabel="Starting Point"
-              placeholder="e.g. New York, NY (optional)"
-              accessibilityLabel="Starting Point, optional"
-              {...field('location')}
             />
             <AddressAutofindField
               testID={AgentUiIds.travel.editTrip.destination}
@@ -167,7 +147,7 @@ export function TravelPlanDetailsEditor({
               onChange={onDestinationChange}
               icon="location"
               stackedLabel="Destination"
-              placeholder="e.g. Lisbon, Portugal"
+              placeholder="e.g. Anywhere Sunny"
               accessibilityLabel="Destination"
               {...field('location')}
             />

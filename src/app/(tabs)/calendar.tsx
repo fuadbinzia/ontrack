@@ -17,7 +17,13 @@ import { useAddons } from '@/store/addons';
 import { useSchedule } from '@/store/schedule';
 import { useUI } from '@/store/ui';
 import { AgentUiIds } from '@/utils/agent-ui';
-import { formatMonthTitle, fromDateKey, toDateKey, todayKey } from '@/utils/date';
+import {
+    formatDateLong,
+    formatMonthTitle,
+    fromDateKey,
+    toDateKey,
+    todayKey,
+} from '@/utils/date';
 
 export default function CalendarScreen() {
   const router = useRouter();
@@ -46,6 +52,7 @@ export default function CalendarScreen() {
     () => (activitiesByDate[selected] ?? []).length,
     [activitiesByDate, selected],
   );
+  const dayLabel = formatDateLong(selected, { year: true });
 
   const shiftMonth = (delta: number) => {
     const next = new Date(year, month + delta, 1);
@@ -116,16 +123,19 @@ export default function CalendarScreen() {
             gap: rs.md,
           },
         ]}>
-        <AppText variant="callout" color="secondary">
+        <AppText variant="callout" color="secondary" align="center" fit>
           {dayCount === 0
-            ? 'No activities planned for this day.'
-            : `${dayCount} ${dayCount === 1 ? 'activity' : 'activities'} planned`}
+            ? 'Wide open day.'
+            : dayCount === 1
+              ? '1 thing lined up'
+              : `${dayCount} things lined up`}
         </AppText>
         <Button
           onPress={openDay}
+          trailing="chevron-right"
           testID={AgentUiIds.calendar.openDay}
-          accessibilityLabel="Open Day">
-          Open Day
+          accessibilityLabel={`Open ${dayLabel}`}>
+          {dayLabel}
         </Button>
       </GlassPlate>
     </Screen>

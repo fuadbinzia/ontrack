@@ -409,17 +409,13 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | ----------------------------------- | ------------------------ |
 | `ontrack.today.prevDay`             | Previous day             |
 | `ontrack.today.nextDay`             | Next day                 |
-| `ontrack.today.weather`             | Home weather banner when data exists (H/L; tap → location sheet only on Today) |
+| `ontrack.today.weather`             | Home weather tile (no chevron; tap → Profile `?reveal=homeLocation`, scroll only) |
+| `ontrack.today.currentLocation`     | Current weather tile (tap → Profile `?reveal=currentLocation`, scroll only) |
 | `ontrack.today.progress`            | Day completion ring (hidden at 0%) |
 | `ontrack.today.addActivity`         | Add activity             |
 | `ontrack.today.emptyAddActivity`    | Empty-state add          |
 | `ontrack.today.activity.<id>`       | Activity card            |
 | `ontrack.today.activityToggle.<id>` | Activity complete toggle |
-| `ontrack.today.location.close`      | Location sheet close     |
-| `ontrack.today.location.useCurrent` | Use current location     |
-| `ontrack.today.location.place`      | Place search field       |
-| `ontrack.today.location.save`       | Save location            |
-| `ontrack.today.location.clear`      | Clear location           |
 
 ## Calendar (`/(tabs)/calendar`)
 
@@ -428,7 +424,7 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.calendar.jumpToday`        | Jump to Today       |
 | `ontrack.calendar.prevMonth`        | Previous month      |
 | `ontrack.calendar.nextMonth`        | Next month          |
-| `ontrack.calendar.openDay`          | Open selected day   |
+| `ontrack.calendar.openDay`          | Open selected day (date + chevron) |
 | `ontrack.calendar.day.<YYYY-MM-DD>` | Month grid day cell |
 
 ## Event detail (`/detail/generic/<activityId>`)
@@ -625,7 +621,11 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.section.appInformation`            | App Information footer section      |
 | `ontrack.profile.version`                           | App version row in App Information  |
 | `ontrack.profile.theme.system` / `.light` / `.dark` | Theme segment                       |
-| `ontrack.profile.homeLocation`                      | Home location                       |
+| `ontrack.profile.homeLocation`                      | Home location inline field (Open-Meteo city autocomplete) |
+| `ontrack.profile.currentLocation`                   | Current location override field (never writes Home) |
+| `ontrack.profile.currentLocationLocate`             | Far-right locate — clear override + fill from device GPS |
+| `ontrack.profile.*.suggestion.<n>`                  | City suggestion row                     |
+| `ontrack.profile.*.suggestionsDismiss`              | Dismiss city suggestions                |
 | `ontrack.profile.agents`                            | Manage Agents                       |
 | `ontrack.profile.nutrition`                         | Nutrition profiles                  |
 | `ontrack.profile.privacy`                           | Privacy Policy                      |
@@ -756,8 +756,9 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 | `ontrack.travel.newTrip.notes`                    | New-trip notes field                               |
 | `ontrack.travel.newTrip.create`                   | Create the trip                                    |
 | `ontrack.travel.editTrip.title`                   | Edit-trip title field                              |
-| `ontrack.travel.editTrip.cover`                   | Change the edit-trip cover photo                   |
-| `ontrack.travel.editTrip.origin`                  | Edit-trip starting point (address autocomplete)    |
+| `ontrack.travel.editTrip.cover`                   | Open add cover photos sheet                        |
+| `ontrack.travel.editTrip.addCover`                | Add cover photos (up to 3)                         |
+| `ontrack.travel.editTrip.removeCover.<index>`     | Remove a cover photo by index                      |
 | `ontrack.travel.editTrip.destination`             | Edit-trip destination (address autocomplete)       |
 | `ontrack.travel.editTrip.startDate`               | Edit-trip departure date                           |
 | `ontrack.travel.editTrip.endDate`                 | Edit-trip return date                              |
@@ -957,7 +958,7 @@ Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scr
 | ~~`ontrack.travel.planDetail.weather`~~        | **Unused** — use `list.tripWeather.<tripId>` on the travel list          |
 | ~~`ontrack.travel.planDetail.currency`~~       | **Unused** — use `list.currency.<tripId>` on the travel list             |
 | `ontrack.travel.planDetail.addToTimeline`      | Add to Timeline                                                          |
-| `ontrack.travel.planDetail.groupChat`          | Floating glass Group Chat FAB (icon only, bottom-right)                  |
+| `ontrack.travel.planDetail.groupChat`          | Group Chat — itinerary header top-right, left of Add (+)                 |
 | `ontrack.travel.planDetail.section.tools`      | Expand/collapse Trip Tools (glass action grid)                           |
 | `ontrack.travel.planDetail.section.transport`  | Expand/collapse transport group                                          |
 | `ontrack.travel.planDetail.section.timeline`   | Expand/collapse timeline                                                 |
@@ -999,8 +1000,6 @@ Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scr
 | `ontrack.travel.itineraryAdd.returnLayoverDuration` | Roundtrip returning layover duration                                |
 | `ontrack.travel.itineraryAdd.returnConnectionAirport` | Roundtrip returning connection airport                            |
 | `ontrack.travel.itineraryAdd.submit`           | Save the itinerary item                                                  |
-| `ontrack.travel.tripMode.<mode>`               | Choose primary travel mode on edit-trip details (not new-trip sheet)     |
-| `ontrack.travel.editTrip.origin`               | Optional edited-trip starting point                                      |
 | `ontrack.travel.list.addTransport.<tripId>`    | Add transport from a non-flight trip card                                |
 | `ontrack.travel.transport.mode.<mode>`         | Choose driving, rail, transit, rideshare, taxi, ferry, shuttle, or other |
 | `ontrack.travel.transport.origin`              | Transport origin or pick-up                                              |
@@ -1070,8 +1069,19 @@ Deep link: `ontrack://travel/<planId>` → `/travel/[id]`
 | ----------------------------------------- | --------------------- |
 | `ontrack.travel.chat.close`               | Close Group Chat      |
 | `ontrack.travel.chat.enableNotifications` | Turn On notifications |
+| `ontrack.travel.chat.dismissNotifications`| Dismiss alerts banner |
+| `ontrack.travel.chat.menu`                | Header chat settings    |
+| `ontrack.travel.chat.settingsClose`       | Close chat settings sheet |
+| `ontrack.travel.chat.settingsEnableNotifications` | Turn on alerts (settings sheet) |
 | `ontrack.travel.chat.composer`            | Message composer      |
 | `ontrack.travel.chat.send`                | Send message          |
+| `ontrack.travel.chat.replyCancel`         | Cancel reply quote    |
+| `ontrack.travel.chat.messageActions`      | Long-press message bubble |
+| `ontrack.travel.chat.menuReply`           | Popover Reply         |
+| `ontrack.travel.chat.menuCopy`            | Popover Copy          |
+| `ontrack.travel.chat.menuEdit`            | Popover Edit          |
+| `ontrack.travel.chat.menuDelete`          | Popover Delete        |
+| `ontrack.travel.chat.reaction.<emoji>`    | Reaction chip / tray emoji |
 
 Deep link: `ontrack://travel/<planId>/chat` → `/travel/[id]/chat`
 

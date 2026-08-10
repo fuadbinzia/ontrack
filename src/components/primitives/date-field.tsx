@@ -3,7 +3,12 @@ import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { glassFieldBackground, radii, shadows } from '@/design-system';
+import {
+  glassFieldBackground,
+  radii,
+  shadows,
+  type AppIconName,
+} from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';
@@ -35,6 +40,8 @@ interface DateFieldProps {
   placeholder?: string;
   /** Persistent label above the value (sheet stacked chrome). */
   stackedLabel?: string;
+  /** Leading plate icon. Defaults to calendar; pass `null` to hide. */
+  icon?: AppIconName | null;
   iconBackground?: string;
   iconColor?: string;
   fieldBackground?: string;
@@ -74,6 +81,7 @@ export function DateField({
   disabled = false,
   placeholder = 'MM/DD/YY',
   stackedLabel,
+  icon,
   iconBackground,
   iconColor,
   fieldBackground,
@@ -114,6 +122,7 @@ export function DateField({
   const resolvedA11yLabel = accessibilityLabel ?? label ?? stackedLabel ?? 'Date';
   const pickerTitle = formatDatePickerTitle(resolvedA11yLabel);
   const stacked = Boolean(stackedLabel);
+  const leadingIcon = icon === null ? undefined : (icon ?? 'calendar');
 
   const openPicker = () => {
     const initial = initialPickerDate(value, minimumDate, maximumDate);
@@ -156,11 +165,11 @@ export function DateField({
         })}>
         {stacked ? (
           <StackedIconField
-            icon="calendar"
+            icon={leadingIcon}
             stackedLabel={stackedLabel!}
             stackedLabelColor={stackedLabelColor ?? theme.textPrimary}
-            iconBackground={iconBackground}
-            iconColor={iconColor}
+            iconBackground={leadingIcon ? iconBackground : undefined}
+            iconColor={leadingIcon ? iconColor : undefined}
             fieldBackground={fieldBackground ?? glassFieldBackground(theme.name)}
             fieldBorderColor={fieldBorderColor}
             borderRadius={fieldBorderRadius ?? radii.lg}
@@ -186,14 +195,16 @@ export function DateField({
               borderRadius: radii.md,
               paddingHorizontal: spacing.md,
               paddingVertical: 0,
-              gap: spacing.sm,
+              gap: leadingIcon ? spacing.sm : 0,
               backgroundColor: fieldBackground ?? glassFieldBackground(theme.name),
             })}>
-            <FieldLeadingIcon
-              name="calendar"
-              backgroundColor={iconBackground}
-              color={iconColor}
-            />
+            {leadingIcon ? (
+              <FieldLeadingIcon
+                name={leadingIcon}
+                backgroundColor={iconBackground}
+                color={iconColor}
+              />
+            ) : null}
             <AppText
               variant="body"
               fit

@@ -23,7 +23,7 @@ describe('travel plan normalization', () => {
     });
   });
 
-  it('keeps a durable coverUri and drops invalid ones', () => {
+  it('keeps durable coverUris (and coverUri alias) and drops invalid ones', () => {
     expect(
       normalizeTravelPlan({
         ...legacyPlan,
@@ -31,6 +31,25 @@ describe('travel plan normalization', () => {
       }),
     ).toMatchObject({
       coverUri: 'file:///Documents/travel-moments/cover-trip.jpg',
+      coverUris: ['file:///Documents/travel-moments/cover-trip.jpg'],
+    });
+    expect(
+      normalizeTravelPlan({
+        ...legacyPlan,
+        coverUris: [
+          'file:///Documents/travel-moments/cover-a.jpg',
+          'file:///Documents/travel-moments/cover-b.jpg',
+          'file:///Documents/travel-moments/cover-c.jpg',
+          'file:///Documents/travel-moments/cover-d.jpg',
+        ],
+      }),
+    ).toMatchObject({
+      coverUri: 'file:///Documents/travel-moments/cover-a.jpg',
+      coverUris: [
+        'file:///Documents/travel-moments/cover-a.jpg',
+        'file:///Documents/travel-moments/cover-b.jpg',
+        'file:///Documents/travel-moments/cover-c.jpg',
+      ],
     });
     expect(
       normalizeTravelPlan({

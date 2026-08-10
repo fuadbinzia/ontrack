@@ -240,7 +240,11 @@ export const API_USAGE_CATALOG: readonly ApiUsageCatalogEntry[] = [
     id: 'open-meteo',
     name: 'Open-Meteo',
     provider: 'Open-Meteo',
-    usedBy: ['Travel weather', 'Today home weather'],
+    usedBy: [
+      'Travel weather',
+      'Today home weather',
+      'Profile city autocomplete (geocoding)',
+    ],
     metering: 'unmetered',
     limitNote: 'Public free API — no in-app quota.',
     healthProbe: {

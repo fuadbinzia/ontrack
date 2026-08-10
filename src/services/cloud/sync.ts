@@ -129,32 +129,50 @@ const domains: {
         hasOnboarded: state.hasOnboarded,
         name: state.name,
         goal: state.goal,
+        // Survive sign-out → sign-in (local wipe + cloud restore).
+        homeLocation: state.homeLocation,
+        currentLocation: state.currentLocation,
         themePreference: state.themePreference,
         aiEnabled: state.aiEnabled,
         hapticsEnabled: state.hapticsEnabled,
+        usageAnalyticsEnabled: state.usageAnalyticsEnabled,
         dateLocale: state.dateLocale,
         dateDisplayFormat: state.dateDisplayFormat,
       };
     },
     write: (payload) => {
+      const local = usePreferences.getState();
       usePreferences.setState({
         hasOnboarded: typeof payload.hasOnboarded === 'boolean' ? payload.hasOnboarded : false,
         name: typeof payload.name === 'string' ? payload.name : '',
         goal: typeof payload.goal === 'string' ? payload.goal : '',
+        homeLocation:
+          typeof payload.homeLocation === 'string'
+            ? payload.homeLocation.trim()
+            : local.homeLocation,
+        currentLocation:
+          typeof payload.currentLocation === 'string'
+            ? payload.currentLocation.trim()
+            : local.currentLocation,
         themePreference:
           payload.themePreference === 'light' || payload.themePreference === 'dark'
             ? payload.themePreference
             : 'system',
         aiEnabled: typeof payload.aiEnabled === 'boolean' ? payload.aiEnabled : true,
         hapticsEnabled: typeof payload.hapticsEnabled === 'boolean' ? payload.hapticsEnabled : true,
+        usageAnalyticsEnabled:
+          typeof payload.usageAnalyticsEnabled === 'boolean'
+            ? payload.usageAnalyticsEnabled
+            : local.usageAnalyticsEnabled,
         dateLocale:
           typeof payload.dateLocale === 'string'
             ? payload.dateLocale
-            : usePreferences.getState().dateLocale,
+            : local.dateLocale,
         dateDisplayFormat:
           payload.dateDisplayFormat === 'mdy' || payload.dateDisplayFormat === 'iso'
             ? payload.dateDisplayFormat
-            : usePreferences.getState().dateDisplayFormat,
+            : local.dateDisplayFormat,
+        // avatar stays device-only — never in app_state preferences payload.
       });
     },
     reset: () => usePreferences.getState().resetAll(),
@@ -558,8 +576,9 @@ async function applyRemote(
     throw new Error('Sign-in was cancelled.');
   }
   for (const domain of replacing) {
-    // Preferences write merges cloud fields only. A full resetAll would wipe
-    // device-only homeLocation / avatar that are not in app_state.
+    // Preferences write merges cloud scalars only (keeps device-only avatar).
+    // A full resetAll before write would wipe avatar and any fields missing
+    // from older cloud payloads.
     if (domain.name !== 'preferences') {
       domain.reset();
     }

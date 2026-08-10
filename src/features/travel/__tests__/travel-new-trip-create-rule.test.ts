@@ -18,7 +18,7 @@ describe('new trip creation feedback', () => {
       /if \(!saved\) \{\s*creatingPlanRef\.current = false;\s*setError\([\s\S]*?\);\s*return;\s*\}/,
     );
     expect(newTripSheet).toContain(
-      '{error ? <ErrorMessage message={error} /> : null}',
+      '{error ? <ErrorMessage message={error} align="center" /> : null}',
     );
   });
 
@@ -62,6 +62,10 @@ describe('new trip creation feedback', () => {
       join(process.cwd(), 'src/features/travel/travel-itinerary-sheet-chrome.ts'),
       'utf8',
     );
+    const editTrip = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-plan-details-editor.tsx'),
+      'utf8',
+    );
 
     expect(travelTab).toContain('<TravelNewTripSheet');
     expect(travelTab).toContain('visible={showForm}');
@@ -69,17 +73,19 @@ describe('new trip creation feedback', () => {
     expect(newTripSheet).toContain('title="Start a New Trip"');
     expect(newTripSheet).not.toContain('eyebrow=');
     expect(newTripSheet).not.toContain('TravelPlanModePicker');
+    expect(editTrip).not.toContain('TravelPlanModePicker');
     expect(newTripSheet).not.toContain('Import Flight Itinerary');
     expect(newTripSheet).not.toContain('importItinerary');
     expect(newTripSheet).not.toContain('Starting Point');
     expect(newTripSheet).not.toContain('newTrip.origin');
+    expect(editTrip).not.toContain('Starting Point');
     expect(newTripSheet).toContain('testID={AgentUiIds.travel.newTrip.dates}');
     expect(newTripSheet).toContain(
       'calendarTestID={AgentUiIds.travel.newTrip.calendar}',
     );
     // Fields sit on the glass sheet as frosted pills, not solid white cards.
     expect(newTripSheet).toContain('itinerarySheetFieldProps');
-    expect(chrome).toContain('SHEET_FIELD_GLASS_LIGHT');
+    expect(chrome).toContain('glassFieldBackground');
     expect(chrome).toContain('fieldBorderRadius: radii.pill');
     expect(chrome).not.toMatch(/field:\s*'#FFFFFF'/);
   });

@@ -14,7 +14,6 @@ import {
     travelPlanSkyPageWashStyle,
 } from '@/features/travel/travel-header-sky-height';
 import { TravelItineraryTimeline } from '@/features/travel/travel-itinerary-timeline';
-import { TravelPlanChatFab } from '@/features/travel/travel-plan-chat-fab';
 import type { DetailSectionKey } from '@/features/travel/travel-plan-detail-sections';
 import { TravelPlanHero } from '@/features/travel/travel-plan-hero';
 import { TravelPlanTripTools } from '@/features/travel/travel-plan-trip-tools';
@@ -192,7 +191,6 @@ export function TravelPlanDetailBody({
             onAddTransport={() => onAddKind('transport')}
           />
         </Screen>
-        <TravelPlanChatFab planId={plan.id} tripTitle={plan.title} />
       </View>
     </TravelArtworkTintProvider>
   );

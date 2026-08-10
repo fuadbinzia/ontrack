@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.38",
+    "version": "1.0.39",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -118,6 +118,14 @@
       "expo-image",
       "expo-status-bar",
       "expo-web-browser",
+      [
+        "expo-dev-client",
+        {
+          "skipOnboarding": true,
+          "showMenuAtLaunch": false,
+          "toolsButton": false
+        }
+      ],
       "expo-apple-authentication",
       "expo-secure-store",
       [

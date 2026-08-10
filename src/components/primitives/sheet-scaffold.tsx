@@ -383,16 +383,20 @@ const styles = StyleSheet.create({
     borderLeftWidth: StyleSheet.hairlineWidth,
     borderRightWidth: StyleSheet.hairlineWidth,
   },
-  /** Dense frosted plate — readable form chrome over the dim scrim. */
+  /**
+   * Dense frosted plate — readable form chrome over the dim scrim.
+   * Prior ~0.58 milk let Travel Home trip titles bleed through New Trip fields
+   * on Android (no BlurView). Match sheet.lightFillSolid / darkFillSolid.
+   */
   androidGlassLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.58)',
+    backgroundColor: glassMaterials.sheet.lightFillSolid,
     experimental_backgroundImage:
-      'linear-gradient(165deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.48) 48%, rgba(255,255,255,0.64) 100%)',
+      'linear-gradient(165deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.82) 48%, rgba(252,250,246,0.90) 100%)',
   },
   androidGlassDark: {
-    backgroundColor: 'rgba(12, 16, 24, 0.52)',
+    backgroundColor: glassMaterials.sheet.darkFillSolid,
     experimental_backgroundImage:
-      'linear-gradient(165deg, rgba(36,42,54,0.62) 0%, rgba(12,16,24,0.48) 50%, rgba(8,12,18,0.58) 100%)',
+      'linear-gradient(165deg, rgba(36,42,54,0.88) 0%, rgba(12,16,24,0.78) 50%, rgba(8,12,18,0.86) 100%)',
   },
   headerSlot: { flexShrink: 0 },
   body: {

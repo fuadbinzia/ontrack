@@ -265,15 +265,21 @@ export function BottomNavBar({
           },
         ]}>
         {Platform.OS === 'android' ? (
+          // Android has no BlurView here — a thin barWash (0.42) lets scroll
+          // chrome (Profile "Features", timeline titles) read through the dock.
+          // Use the solid nav fill + a denser wash so glass still feels cool
+          // without ghosting section titles over tab labels.
           <View
             pointerEvents="none"
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: barWash,
+                backgroundColor: darkBar
+                  ? glassMaterials.nav.darkFillSolid
+                  : glassMaterials.nav.lightFillSolid,
                 experimental_backgroundImage: darkBar
-                  ? 'linear-gradient(180deg, rgba(36,42,54,0.55) 0%, rgba(12,16,24,0.72) 100%)'
-                  : 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(247,244,238,0.78) 100%)',
+                  ? 'linear-gradient(180deg, rgba(36,42,54,0.72) 0%, rgba(12,16,24,0.92) 100%)'
+                  : 'linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(247,244,238,0.94) 100%)',
               },
             ]}
           />

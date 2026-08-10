@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { bottomNavContentInset } from '@/components/navigation/bottom-nav-inset';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -18,8 +19,8 @@ import { useUI } from '@/store/ui';
 import { useAgentUiScrollContainer } from '@/utils/agent-ui/use-agent-ui-scroll-container';
 
 import {
-    usePageSurfaceBackground,
-    useSafeAreaChrome,
+  usePageSurfaceBackground,
+  useSafeAreaChrome,
 } from './safe-area-chrome';
 import { useScreenAtmosphereChrome } from './screen-atmosphere';
 
@@ -103,7 +104,12 @@ export function Screen({
       bottomInset === 'safe'
         ? insets.bottom + spacing.lg
         : bottomInset
-          ? insets.bottom + layout.tabBarInset
+          ? bottomNavContentInset(
+              insets.bottom,
+              spacing.sm,
+              Platform.OS,
+              layout.bottomNavBarBaseHeight,
+            )
           : spacing.xl,
     ...(padded
       ? {

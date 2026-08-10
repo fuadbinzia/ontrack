@@ -12,6 +12,7 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { bottomNavContentInset } from '@/components/navigation/bottom-nav-inset';
 import {
   appPrompt,
   AppText,
@@ -99,7 +100,13 @@ export function TodoListsOverview() {
     () => [
       styles.listContent,
       {
-        paddingBottom: insets.bottom + layout.tabBarInset + spacing.lg,
+        paddingBottom:
+          bottomNavContentInset(
+            insets.bottom,
+            spacing.sm,
+            Platform.OS,
+            layout.bottomNavBarBaseHeight,
+          ) + spacing.lg,
       },
     ],
     [insets.bottom],

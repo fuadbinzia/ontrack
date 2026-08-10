@@ -473,6 +473,23 @@ agent_ui_ensure_ios_system_alerts_clear() {
     python3 "$(agent_ui_repo_root)/scripts/lib/ios_system_alert.py" ensure
 }
 
+# Dismiss blocking Android Expo Dev Menu (intro Continue / tools BACK) and
+# persist showsAtLaunch=false so cold starts stay clear. Cached clear ~90s.
+# No-op on iOS / when AGENT_UI_SKIP_ANDROID_ALERTS=1.
+agent_ui_ensure_android_system_alerts_clear() {
+  if ! agent_ui_is_android; then
+    return 0
+  fi
+  if [[ "${AGENT_UI_SKIP_ANDROID_ALERTS:-0}" == "1" ]]; then
+    return 0
+  fi
+  AGENT_UI_ROOT="$(agent_ui_repo_root)" AGENT_UI_PLATFORM=android \
+  ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
+  ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-${ANDROID_SERIAL:-}}" \
+  BUNDLE_ID="${BUNDLE_ID}" \
+    python3 "$(agent_ui_repo_root)/scripts/lib/android_system_alert.py" ensure
+}
+
 # iOS Documents pin so the bridge polls platform:slot. Android: no-op (H17).
 agent_ui_write_slot_pin() {
   [[ -n "${AGENT_UI_SLOT:-}" ]] || return 0
@@ -586,6 +603,11 @@ agent_ui_finish_app_up() {
       return 1
     fi
     echo "agent-ui: iOS system-alert clear failed — continuing (bridge is up)" >&2
+  fi
+  # Android Expo Dev Menu intro/tools sheet blocks taps + screenshots until
+  # Continue/BACK — mirror iOS ensure (also suppresses showsAtLaunch prefs).
+  if ! agent_ui_ensure_android_system_alerts_clear; then
+    echo "agent-ui: Android system-alert clear failed — continuing (bridge is up)" >&2
   fi
   return 0
 }

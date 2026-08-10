@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.38',
+    date: '2026-08-10',
+    notes: [
+      'Fix Android Google sign-in callback race and triple-slash scheme matching.',
+    ],
+  },
+  {
     version: '1.0.37',
     date: '2026-08-10',
     notes: [
@@ -284,6 +291,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.38',
+    date: '2026-08-10',
+    notes: [
+      'Fix Android Google sign-in callback race and triple-slash scheme matching.',
+      'Touched: app routes.',
+    ],
+  },
   {
     version: '1.0.37',
     date: '2026-08-10',

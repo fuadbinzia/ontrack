@@ -194,3 +194,10 @@ export function weatherPlaceLabelLadder(locationLabel: string): string[] {
   const city = formatWeatherPlaceLabel(locationLabel, { detail: 'city' });
   return [...new Set([full, region, city].filter(Boolean))];
 }
+
+/** True when two place strings resolve to the same weather chrome label. */
+export function weatherPlacesMatch(a: string, b: string): boolean {
+  const left = formatWeatherPlaceLabel(a.trim(), { detail: 'full' }).toLocaleLowerCase();
+  const right = formatWeatherPlaceLabel(b.trim(), { detail: 'full' }).toLocaleLowerCase();
+  return Boolean(left) && left === right;
+}

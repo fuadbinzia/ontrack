@@ -9,6 +9,7 @@ import {
   formatHomeWeatherTemperatureLabel,
   formatWeatherPlaceLabel,
   weatherPlaceLabelLadder,
+  weatherPlacesMatch,
   homeWeatherForecastThrough,
   homeWeatherHistoryFrom,
   isHomeWeatherDateInWindow,
@@ -45,6 +46,21 @@ describe('formatWeatherPlaceLabel', () => {
       'Brooklyn, NY',
       'Brooklyn',
     ]);
+  });
+
+  it('matches equivalent home/current place strings', () => {
+    expect(
+      weatherPlacesMatch(
+        'Brooklyn, New York, United States',
+        'brooklyn, new york, united states',
+      ),
+    ).toBe(true);
+    expect(
+      weatherPlacesMatch('Brooklyn, NY, US', 'Brooklyn, New York, United States'),
+    ).toBe(true);
+    expect(weatherPlacesMatch('Brooklyn, New York, United States', 'Austin, TX')).toBe(
+      false,
+    );
   });
 });
 

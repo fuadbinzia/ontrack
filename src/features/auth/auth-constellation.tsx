@@ -13,7 +13,6 @@ import Animated, {
     useReducedMotion,
     useSharedValue,
     withRepeat,
-    withSequence,
     withTiming,
     type SharedValue,
 } from 'react-native-reanimated';
@@ -27,19 +26,21 @@ import { useTheme } from '@/hooks/use-theme';
 
 import {
   AUTH_COPY_BASE_HEIGHT,
-  AUTH_COPY_TOP,
-  AUTH_COPY_WIDTH,
-  AUTH_ORBIT_NODES,
+  AUTH_ORBIT_ELLIPSE,
+  AUTH_ORBIT_GUIDES,
+  AUTH_ORBIT_TABS,
+  authCopyFrame,
   authCopyMaxHeightFrac,
+  authOrbitNodesForTabs,
 } from './auth-constellation-layout';
 import { settleAuthCanvasExtent } from './auth-canvas-extent';
 
 /** Matches `styles.hero` in `auth-screen.tsx` so the bleed stays symmetric. */
 export const HERO_MAX_WIDTH = 620;
 
-/** Whole-group sway, in degrees, at the extremes of the drift cycle. */
-const SWAY_DEG = 2.4;
-const SWAY_MS = 7600;
+/** Slow revolution so labels stay readable while the ring feels alive. */
+const ORBIT_MS = 240000;
+const BREATHE_MS = 4200;
 
 const CopyScaleContext = createContext(1);
 
@@ -51,51 +52,44 @@ export function useAuthCopyScale(): number {
   return useContext(CopyScaleContext);
 }
 
-/** Dotted guides: `[cx, cy, rx, ry]` in canvas fractions. */
-const ORBITS: readonly (readonly [number, number, number, number])[] = [
-  [0.68, 0.4, 0.42, 0.34],
-  [0.58, 0.5, 0.31, 0.34],
-  [0.58, 0.3, 0.56, 0.58],
-];
-
 function ConstellationNode({
   label,
   icon,
-  x,
-  y,
+  deg,
   well,
   slot,
   width,
   height,
-  sway,
+  orbit,
 }: {
   label: string;
   icon: AppIconName;
-  x: number;
-  y: number;
+  deg: number;
   well: number;
   slot: number;
   width: number;
   height: number;
-  sway: SharedValue<number>;
+  orbit: SharedValue<number>;
 }) {
   const theme = useTheme();
+  const { cx, cy, rx, ry } = AUTH_ORBIT_ELLIPSE;
 
-  // Counter-rotate by the group's sway so glyphs and labels stay upright
-  // while the orbit drifts. Deliberately no entrance animation: this screen
-  // mounts during app bootstrap, where Reanimated skips `entering`, which
-  // would strand every node at its hidden initial state.
-  const style = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${-sway.value * SWAY_DEG}deg` }],
-  }));
+  // Ride the ellipse around the copy. Labels stay upright — only position
+  // advances with orbit. No entrance animation: bootstrap mounts skip
+  // Reanimated `entering`, which would strand nodes hidden.
+  const style = useAnimatedStyle(() => {
+    const theta = ((deg + orbit.value * 360) * Math.PI) / 180;
+    return {
+      left: (cx + rx * Math.cos(theta)) * width,
+      top: (cy + ry * Math.sin(theta)) * height,
+    };
+  });
 
   return (
     <Animated.View
       style={[
         styles.node,
         {
-          left: x * width,
-          top: y * height,
           width: slot,
           marginLeft: -slot / 2,
           marginTop: -well / 2,
@@ -115,29 +109,32 @@ function ConstellationNode({
 function Planet({
   width,
   height,
-  sway,
+  breathe,
   animate,
 }: {
   width: number;
   height: number;
-  sway: SharedValue<number>;
+  breathe: SharedValue<number>;
   animate: boolean;
 }) {
   const theme = useTheme();
   const dark = theme.name === 'dark';
-  // Height-clamped so a compressed canvas keeps a sphere, not a clipped arc.
-  const diameter = Math.min(width * 0.68, height * 0.82);
-  const bloom = diameter * 1.45;
-  const cx = width * 0.7;
-  const cy = height * 0.44;
+  // Sit behind the copy — sized to the inner clear zone, not the full ring.
+  const diameter = Math.min(
+    width * AUTH_ORBIT_ELLIPSE.rx * 1.55,
+    height * AUTH_ORBIT_ELLIPSE.ry * 1.55,
+  );
+  const bloom = diameter * 1.4;
+  const cx = width * AUTH_ORBIT_ELLIPSE.cx;
+  const cy = height * AUTH_ORBIT_ELLIPSE.cy;
 
   const limb = colorWithAlpha(theme.accentPrimary, dark ? 0.5 : 0.38);
-  const core = dark ? 'rgba(10,9,14,0.72)' : 'rgba(255,251,244,0.5)';
+  const core = dark ? 'rgba(20, 28, 34, 0.72)' : 'rgba(241, 244, 245, 0.55)';
   const halo = colorWithAlpha(theme.accentPrimary, dark ? 0.22 : 0.16);
 
   const bloomStyle = useAnimatedStyle(() => ({
-    opacity: animate ? 0.78 + sway.value * 0.22 : 1,
-    transform: [{ scale: animate ? 1 + sway.value * 0.03 : 1 }],
+    opacity: animate ? 0.78 + breathe.value * 0.22 : 1,
+    transform: [{ scale: animate ? 1 + breathe.value * 0.03 : 1 }],
   }));
 
   return (
@@ -171,8 +168,6 @@ function Planet({
           },
         ]}
       />
-      {/* Lit limb — a rim arc rather than a full ring, so the sphere reads
-          as lit from the lower right the way the sky implies. */}
       <View
         pointerEvents="none"
         style={[
@@ -194,8 +189,8 @@ function Planet({
 }
 
 /**
- * The signed-out hero: every onTrack surface as a lit satellite around one
- * planet, with the welcome copy sharing the same field.
+ * The signed-out hero: every onTrack surface as a satellite orbiting the
+ * welcome copy — one ring, one idea.
  */
 export function AuthConstellation({
   children,
@@ -209,12 +204,10 @@ export function AuthConstellation({
   const drifting = useLiveFxReady(allowsLoopMotion && !reduceMotion);
 
   // Bleed to the display edge on phones; on tablets stay inside the hero
-  // column so the planet does not drift away from the copy.
+  // column so the ring does not drift away from the copy.
   const width = Math.min(windowWidth, HERO_MAX_WIDTH + bleed * 2);
   // The canvas takes whatever the provider card leaves. Until first layout,
   // fall back to a window fraction so the sky paints on the very first frame.
-  // Track the live slot afterward — a taller card must compress the orbit
-  // (busy/error chrome floats above the plate and does not own this height).
   const [measuredHeight, setMeasuredHeight] = useState(0);
   const height =
     measuredHeight || Math.min(470, Math.max(280, windowHeight * 0.38));
@@ -224,60 +217,64 @@ export function AuthConstellation({
   }, []);
   const well = Math.min(48, Math.max(30, height * 0.115));
   const slot = well * 1.95;
+  const copyFrame = authCopyFrame();
   const copyMaxHeight = height * authCopyMaxHeightFrac(well / height);
-  // Take the tighter of canvas height vs. the clear band under the intro so a
-  // compressed upgrade hero cannot run "your devices" into Games.
   const copyScale = Math.min(
     1,
     Math.max(0.62, height / AUTH_COPY_BASE_HEIGHT),
     Math.max(0.62, copyMaxHeight / (AUTH_COPY_BASE_HEIGHT * 0.55)),
   );
 
-  const sway = useSharedValue(0);
+  const orbit = useSharedValue(0);
+  const breathe = useSharedValue(0);
+
   useEffect(() => {
     if (!drifting) {
-      sway.value = withTiming(0, {
+      orbit.value = withTiming(0, {
+        duration: 0,
+        reduceMotion: ReduceMotion.System,
+      });
+      breathe.value = withTiming(0, {
         duration: 0,
         reduceMotion: ReduceMotion.System,
       });
       return;
     }
-    // Ease out to +1, then yo-yo ±1 forever. A non-reversed sequence that
-    // ended at -1 used to snap back to 0 on every withRepeat restart.
-    sway.value = withSequence(
+    orbit.value = 0;
+    orbit.value = withRepeat(
       withTiming(1, {
-        duration: SWAY_MS / 2,
+        duration: ORBIT_MS,
+        easing: Easing.linear,
+        reduceMotion: ReduceMotion.System,
+      }),
+      -1,
+      false,
+      undefined,
+      ReduceMotion.System,
+    );
+    breathe.value = 0;
+    breathe.value = withRepeat(
+      withTiming(1, {
+        duration: BREATHE_MS,
         easing: Easing.inOut(Easing.sin),
         reduceMotion: ReduceMotion.System,
       }),
-      withRepeat(
-        withTiming(-1, {
-          duration: SWAY_MS,
-          easing: Easing.inOut(Easing.sin),
-          reduceMotion: ReduceMotion.System,
-        }),
-        -1,
-        true,
-        undefined,
-        ReduceMotion.System,
-      ),
+      -1,
+      true,
+      undefined,
+      ReduceMotion.System,
     );
-  }, [drifting, sway]);
+  }, [breathe, drifting, orbit]);
 
-  const groupStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${sway.value * SWAY_DEG}deg` }],
-  }));
-
-  const nodes = useMemo(
-    () =>
-      AUTH_ORBIT_NODES.filter(
-        (node) => !(node.dropWhenCompact && widthClass === 'compact'),
-      ).map((node) => ({
-        ...node,
-        meta: TAB_META[node.tab],
-      })),
-    [widthClass],
-  );
+  const nodes = useMemo(() => {
+    const tabs = AUTH_ORBIT_TABS.filter(
+      (node) => !(node.dropWhenCompact && widthClass === 'compact'),
+    );
+    return authOrbitNodesForTabs(tabs).map((node) => ({
+      ...node,
+      meta: TAB_META[node.tab],
+    }));
+  }, [widthClass]);
 
   const orbitColor = colorWithAlpha(
     theme.accentPrimary,
@@ -292,53 +289,61 @@ export function AuthConstellation({
     <View
       onLayout={onLayout}
       style={[styles.canvas, { width, marginHorizontal: -bleed }]}>
-      <Planet width={width} height={height} sway={sway} animate={drifting} />
-      <Animated.View
+      <Planet
+        width={width}
+        height={height}
+        breathe={breathe}
+        animate={drifting}
+      />
+      <View
         pointerEvents="none"
         accessible
         accessibilityRole="image"
         accessibilityLabel={summary}
-        style={[StyleSheet.absoluteFill, groupStyle]}>
-        {ORBITS.map(([cx, cy, rx, ry], index) => (
-          <View
-            key={`orbit-${index}`}
-            style={[
-              styles.orbit,
-              {
-                left: cx * width - rx * width,
-                top: cy * height - ry * height,
-                width: rx * width * 2,
-                height: ry * height * 2,
-                borderRadius: rx * width,
-                borderColor: orbitColor,
-              },
-            ]}
-          />
-        ))}
+        style={StyleSheet.absoluteFill}>
+        {AUTH_ORBIT_GUIDES.map((guide, index) => {
+          const w = guide.rx * width * 2;
+          const h = guide.ry * height * 2;
+          return (
+            <View
+              key={`orbit-${index}`}
+              style={[
+                styles.orbit,
+                {
+                  left: guide.cx * width - w / 2,
+                  top: guide.cy * height - h / 2,
+                  width: w,
+                  height: h,
+                  borderRadius: '50%',
+                  borderColor: orbitColor,
+                },
+              ]}
+            />
+          );
+        })}
         {nodes.map((node) =>
           node.meta ? (
             <ConstellationNode
               key={node.tab}
               label={node.meta.label}
               icon={node.meta.icon}
-              x={node.x}
-              y={node.y}
+              deg={node.deg}
               well={well}
               slot={slot}
               width={width}
               height={height}
-              sway={sway}
+              orbit={orbit}
             />
           ) : null,
         )}
-      </Animated.View>
+      </View>
       <View
         style={[
           styles.copy,
           {
-            left: bleed,
-            top: height * AUTH_COPY_TOP,
-            width: width * AUTH_COPY_WIDTH,
+            left: width * copyFrame.left,
+            top: height * copyFrame.top,
+            width: width * copyFrame.width,
             maxHeight: copyMaxHeight,
             gap: spacing.sm * copyScale,
           },
@@ -354,8 +359,16 @@ export function AuthConstellation({
 const styles = StyleSheet.create({
   canvas: { flex: 1, minHeight: 0, alignSelf: 'center', overflow: 'hidden' },
   absolute: { position: 'absolute' },
-  limb: { borderWidth: 1, borderTopColor: 'transparent', borderLeftColor: 'transparent' },
+  limb: {
+    borderWidth: 1,
+    borderTopColor: 'transparent',
+    borderLeftColor: 'transparent',
+  },
   orbit: { position: 'absolute', borderWidth: 1, borderStyle: 'dotted' },
   node: { position: 'absolute', alignItems: 'center', gap: 3 },
-  copy: { position: 'absolute' },
+  copy: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

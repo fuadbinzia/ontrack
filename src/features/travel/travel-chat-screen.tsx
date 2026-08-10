@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { bottomNavBottomPad } from '@/components/navigation/bottom-nav-inset';
 import {
   EmptyState,
   ErrorMessage,
@@ -76,7 +77,7 @@ export function TravelChatScreen({ planId }: { planId: string }) {
   });
   const measuredTabBarHeight = useUI((state) => state.tabBarHeight);
   const navTabBarHeight = useBottomTabBarHeight();
-  const tabBarBottomPad = insets.bottom > 0 ? 6 : spacing.sm;
+  const tabBarBottomPad = bottomNavBottomPad(insets.bottom, spacing.sm);
   const tabBarHeight = Math.max(
     measuredTabBarHeight,
     navTabBarHeight,

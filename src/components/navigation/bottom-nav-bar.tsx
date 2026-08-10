@@ -33,13 +33,14 @@ import {
 } from '@/utils/agent-ui';
 import { deferAfterPageLoad } from '@/utils/defer-after-page-load';
 
+import { bottomNavBottomPad } from './bottom-nav-inset';
 import { BottomNavTabItem } from './bottom-nav-tab-item';
 import { TAB_META } from './bottom-nav-tab-meta';
 import {
-    MORE_TAB_ROUTE,
-    NAV_PIN_LIMIT,
-    resolveMoreRetapTarget,
-    splitTrackerOrder,
+  MORE_TAB_ROUTE,
+  NAV_PIN_LIMIT,
+  resolveMoreRetapTarget,
+  splitTrackerOrder,
 } from './tab-pins';
 
 type BottomNavBarProps = Parameters<
@@ -217,9 +218,9 @@ export function BottomNavBar({
     };
   }, [enabledNames, router]);
 
-  // Keep in sync with chat/sheet dock math — home-indicator uses a small pad,
-  // not the full inset (bar already sits on the physical bottom).
-  const bottomLabelPad = insets.bottom > 0 ? 6 : spacing.sm;
+  // Android system/gesture nav: full inset. iOS home indicator: small pad.
+  // Keep in sync with chat dock math (`bottomNavBottomPad`).
+  const bottomLabelPad = bottomNavBottomPad(insets.bottom, spacing.sm);
   const barHeight = layout.bottomNavBarBaseHeight + bottomLabelPad;
   const tabCaptionStyle = {
     fontSize: s(9.5),

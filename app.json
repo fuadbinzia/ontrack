@@ -2,14 +2,17 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.35",
+    "version": "1.0.36",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
     "userInterfaceStyle": "automatic",
     "runtimeVersion": "1.0.2",
     "updates": {
-      "url": "https://u.expo.dev/bd232bf6-7397-4463-b25a-9b67d78e5695"
+      "url": "https://u.expo.dev/bd232bf6-7397-4463-b25a-9b67d78e5695",
+      "requestHeaders": {
+        "expo-channel-name": "device"
+      }
     },
     "ios": {
       "icon": "./assets/expo.icon",

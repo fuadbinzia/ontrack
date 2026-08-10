@@ -85,20 +85,24 @@ export function oauthRedirectUrl() {
   return Platform.OS === 'web' ? Linking.createURL('auth/callback') : 'ontrack://auth/callback';
 }
 
+/** Normalize custom-scheme callback URLs so host/path variants match. */
+export function oauthCallbackRouteKey(url: string) {
+  const parsed = new URL(url);
+  const path = `${parsed.host}${parsed.pathname}`.replace(/\/+/g, '/').replace(/\/$/, '');
+  return `${parsed.protocol}//${path.replace(/^\//, '')}`;
+}
+
 export function oauthCodeFromUrl(url: string, expectedRedirect = oauthRedirectUrl()) {
   let callback: URL;
-  let expected: URL;
   try {
     callback = new URL(url);
-    expected = new URL(expectedRedirect);
+    // Validate expectedRedirect parses; compare via route key so Android’s
+    // `ontrack:///auth/callback` matches `ontrack://auth/callback`.
+    void new URL(expectedRedirect);
   } catch {
     throw new CloudAccountError('The sign-in response was malformed. Please try again.');
   }
-  if (
-    callback.protocol !== expected.protocol ||
-    callback.host !== expected.host ||
-    callback.pathname.replace(/\/$/, '') !== expected.pathname.replace(/\/$/, '')
-  ) {
+  if (oauthCallbackRouteKey(url) !== oauthCallbackRouteKey(expectedRedirect)) {
     throw new CloudAccountError('The sign-in response did not match this device.');
   }
   const providerError = callback.searchParams.get('error_description') ?? callback.searchParams.get('error');

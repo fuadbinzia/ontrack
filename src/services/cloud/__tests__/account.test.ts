@@ -15,6 +15,12 @@ describe('OAuth callback validation', () => {
     expect(oauthCodeFromUrl(`${redirect}?code=one-time-code`, redirect)).toBe('one-time-code');
   });
 
+  it('accepts the Android triple-slash custom-scheme form', () => {
+    expect(oauthCodeFromUrl('ontrack:///auth/callback?code=one-time-code', redirect)).toBe(
+      'one-time-code',
+    );
+  });
+
   it.each([
     ['malformed callback', 'not a url'],
     ['wrong originating route', 'ontrack://other/callback?code=code'],

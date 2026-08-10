@@ -1,5 +1,5 @@
 ---
-description: App chrome must be glass UI — no opaque paper fills
+description: App chrome must be glass UI — no opaque paper fills; no first-pass shortcuts
 globs: src/**/*.{tsx,ts}
 alwaysApply: true
 ---
@@ -7,6 +7,17 @@ alwaysApply: true
 # Glass UI (mandatory)
 
 **Every product chrome surface is glass.** Opaque “paper” fills are debt — migrate when you touch the file; do not ship new paper.
+
+## No shortcuts (non-negotiable)
+
+Ship glass-correct chrome in the **same change** that introduces or edits the UI. Do **not**:
+
+- Prototype with paper / opaque `rgba` wells / `surface="solid"` and “fix glass later”
+- Use `GlassPlate mist` as a stand-in for top-level cards, list rows, or hub panels (mist = nested chips on boards only)
+- Skip `GlassIconWell` / `GlassTonePill` / `GlassMetaChip` for ad-hoc fills
+- Leave retrofit as a follow-up when the glass primitive already exists
+
+If the right Glass* primitive is unclear, stop and match an existing glass surface in-repo — do not invent a flat fill.
 
 ## Prefer
 
@@ -28,6 +39,7 @@ Do **not** paint product chrome with:
 - Solid `kindTint` / `tint` wells or duration chips
 - `Card` / `SettingsGroup` with `surface="solid"` for new UI
 - Opaque cream/sage mock palettes for converters, share rows, settle wells, etc.
+- Raw `backgroundColor: 'rgba(…)'` (or solid hex) on chrome plates / wells / chips when a Glass* primitive fits
 
 Selected state = **border / accent text**, not an opaque fill over glass.
 
@@ -42,10 +54,11 @@ Selected state = **border / accent text**, not an opaque fill over glass.
 
 ## When editing UI
 
-1. If you see paper fills on chrome → replace with the Glass* primitive above in the **same change**.
-2. Keep `glass-plate-contract.test.ts` green; extend it when you retire a paper pattern.
-3. Nested mist chips on boards: `GlassPlate mist` / shared Glass* helpers — never clipped BlurView milk.
-4. Think cool: frost + atmosphere, not flat admin paper.
+1. New or touched chrome → Glass* primitives **in that change** (no paper shortcut, no mist-for-card shortcut).
+2. If you see paper fills on chrome → replace with the Glass* primitive above in the **same change**.
+3. Keep `glass-plate-contract.test.ts` green; extend it when you retire a paper pattern.
+4. Nested mist chips on boards: `GlassPlate mist` / shared Glass* helpers — never clipped BlurView milk.
+5. Think cool: frost + atmosphere, not flat admin paper.
 
 Contract tests: `src/components/primitives/__tests__/glass-plate-contract.test.ts`.
 Materials: `src/design-system/glass.ts` + `GlassPlate`.

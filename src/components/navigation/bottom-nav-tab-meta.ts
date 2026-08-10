@@ -2,7 +2,7 @@ import type { Href } from 'expo-router';
 
 import type { AppIconName } from '@/design-system';
 
-/** Route name → label / icon / href for the bottom carousel. */
+/** Route name → label / icon / href for the bottom bar + Trackers catalog. */
 export const TAB_META: Record<
   string,
   { label: string; icon: AppIconName; href: Href }
@@ -65,5 +65,10 @@ export const TAB_META: Record<
     label: 'Food',
     icon: 'food',
     href: '/(tabs)/food',
+  },
+  trackers: {
+    label: 'More',
+    icon: 'more',
+    href: '/(tabs)/trackers',
   },
 };

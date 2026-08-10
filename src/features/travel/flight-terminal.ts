@@ -74,3 +74,36 @@ export function parseLabeledFlightGate(
   const bare = /\bgate\s*[:#-]?\s*([A-Z]{0,2}\s?\d{1,3}[A-Z]?)\b/i.exec(text);
   return normalizeFacility('gate', bare?.[1]);
 }
+
+/**
+ * JetBlue-style trip detail stacks bare "Terminal …" / "Gate …" under each
+ * airport column (departure then arrival). Ignore placeholder "-".
+ */
+function parseOrderedBareFacilities(
+  facility: FlightFacility,
+  text: string,
+): { departure: string; arrival: string } {
+  const values = Array.from(
+    text.matchAll(new RegExp(`^\\s*${facility}\\s+([^\\n|]{1,24})\\s*$`, 'gim')),
+  )
+    .map((match) => normalizeFacility(facility, match[1]))
+    .filter((value) => value.length > 0 && value !== '-');
+  return {
+    departure: values[0] ?? '',
+    arrival: values[1] ?? '',
+  };
+}
+
+export function parseOrderedBareFlightTerminals(text: string): {
+  departure: string;
+  arrival: string;
+} {
+  return parseOrderedBareFacilities('terminal', text);
+}
+
+export function parseOrderedBareFlightGates(text: string): {
+  departure: string;
+  arrival: string;
+} {
+  return parseOrderedBareFacilities('gate', text);
+}

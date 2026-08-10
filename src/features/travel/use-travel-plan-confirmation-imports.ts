@@ -37,6 +37,7 @@ import {
     importStayConfirmation,
     type StayConfirmationImportSource,
 } from '@/features/travel/stay-confirmation-import';
+import { expandedTripRangeForStay } from '@/features/travel/stay-confirmation-itinerary';
 import type { StayDetailsDraft } from '@/features/travel/stay-details';
 import { applyStayExpenseFromImport } from '@/features/travel/stay-expense-from-import';
 import { DETAILS_MAX_LENGTH } from '@/features/travel/travel-itinerary-form';
@@ -493,6 +494,19 @@ export function useTravelPlanConfirmationImports({
             pickerUi,
           ));
       if (!imported) return;
+      const latestBefore =
+        useTravel.getState().plans.find((entry) => entry.id === plan.id) ?? plan;
+      const range = expandedTripRangeForStay(latestBefore, imported);
+      if (
+        range.startDate !== latestBefore.startDate ||
+        range.endDate !== latestBefore.endDate
+      ) {
+        updatePlan({
+          ...latestBefore,
+          ...range,
+          updatedAt: new Date().toISOString(),
+        });
+      }
       if (imported.amount !== undefined && imported.amount > 0 && target === 'new') {
         prepareImportedExpenseDraft(
           imported.amount,

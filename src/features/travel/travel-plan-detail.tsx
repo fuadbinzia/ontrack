@@ -86,7 +86,7 @@ type TravelPlanDetailProps = {
   /** DEV: open an import-result sheet on mount for simulator QA. */
   initialImportResult?: TravelImportResult;
   /** DEV: prefill Add Flight from a known confirmation fixture (no document picker). */
-  initialFlightImportFixture?: 'roundtrip' | 'connecting';
+  initialFlightImportFixture?: 'roundtrip' | 'connecting' | 'jetblue';
 };
 
 export function TravelPlanDetail(props: TravelPlanDetailProps) {
@@ -466,6 +466,11 @@ function TravelPlanDetailLoaded({
   const setNotesExpanded = (expanded: boolean) => {
     patchPlanUi(planId, { notesExpanded: expanded });
   };
+  // Hero dates/Notes sit over sky — densify only while a flight card is open
+  // so airy frost stays the default when nothing is stacked under them.
+  const denseHeroGlass = sortedItinerary.some(
+    (item) => item.kind === 'flight' && !collapsedItemIds.has(item.id),
+  );
   const openTimelineSection = () =>
     patchPlanUi(planId, {
       sectionExpanded: { ...sectionExpanded, timeline: true },
@@ -510,6 +515,7 @@ function TravelPlanDetailLoaded({
         onOpenExpenses={() => setOpenExpenseSheet(true)}
         notesExpanded={notesExpanded}
         onNotesExpandedChange={setNotesExpanded}
+        denseHeroGlass={denseHeroGlass}
       />
       <TravelPlanDetailOverlays
         plan={plan}

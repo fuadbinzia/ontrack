@@ -348,37 +348,40 @@ export function TravelTimelineNode({
               </View>
             ) : null}
             {showKindBadgeResolved ? (
-              <GlassIconWell
-                size={kindPillSize}
-                borderRadius={kindPillSize / 2}>
-                {dense ? (
-                  <Symbol name={icon} size={11} color={accent} />
-                ) : item.kind === 'flight' ? (
-                  <AirlineLogo
-                    airline={item.flight?.airline}
-                    flightNumber={item.flight?.flightNumber}
-                    fallbackIconSize={boardIconSize}
-                    fallbackColor={accent}
-                  />
-                ) : item.kind === 'rental' && item.rental?.company ? (
-                  <RentalCompanyLogo
-                    company={item.rental.company}
-                    fallbackIconSize={boardIconSize}
-                    fallbackColor={accent}
-                  />
-                ) : item.kind === 'stay' ? (
-                  <StayLocationThumbnail
-                    title={item.title}
-                    address={item.details}
-                    bookingUrl={item.bookingUrl}
-                    photoUris={item.photoUris}
-                    fallbackIconSize={boardIconSize}
-                    fallbackColor={accent}
-                  />
-                ) : (
-                  <Symbol name={icon} size={boardIconSize} color={accent} />
-                )}
-              </GlassIconWell>
+              item.kind === 'stay' ? (
+                <StayLocationThumbnail
+                  size={kindPillSize}
+                  title={item.title}
+                  address={item.details}
+                  bookingUrl={item.bookingUrl}
+                  photoUris={item.photoUris}
+                  fallbackIconSize={boardIconSize}
+                  fallbackColor={accent}
+                />
+              ) : (
+                <GlassIconWell
+                  size={kindPillSize}
+                  borderRadius={kindPillSize / 2}>
+                  {dense ? (
+                    <Symbol name={icon} size={11} color={accent} />
+                  ) : item.kind === 'flight' ? (
+                    <AirlineLogo
+                      airline={item.flight?.airline}
+                      flightNumber={item.flight?.flightNumber}
+                      fallbackIconSize={boardIconSize}
+                      fallbackColor={accent}
+                    />
+                  ) : item.kind === 'rental' && item.rental?.company ? (
+                    <RentalCompanyLogo
+                      company={item.rental.company}
+                      fallbackIconSize={boardIconSize}
+                      fallbackColor={accent}
+                    />
+                  ) : (
+                    <Symbol name={icon} size={boardIconSize} color={accent} />
+                  )}
+                </GlassIconWell>
+              )
             ) : null}
             <View
               style={[

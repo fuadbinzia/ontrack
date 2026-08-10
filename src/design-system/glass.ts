@@ -208,9 +208,25 @@ export function glassDynamicTintMaterials(
   const allowsBlur = options?.allowsBlur ?? true;
 
   if (mist) {
+    // Mist never mounts BlurView. When the parent also lacks frost (Android /
+    // blur-gated iOS), use denser washes so artwork doesn’t read sharp through chips.
+    const mistFill = allowsBlur
+      ? darkMaterial
+        ? 0.22
+        : 0.14
+      : darkMaterial
+        ? 0.52
+        : 0.38;
+    const mistBorder = allowsBlur
+      ? darkMaterial
+        ? 0.38
+        : 0.22
+      : darkMaterial
+        ? 0.58
+        : 0.4;
     return {
-      fill: colorWithAlpha(hex, darkMaterial ? 0.22 : 0.14),
-      border: colorWithAlpha(hex, darkMaterial ? 0.38 : 0.22),
+      fill: colorWithAlpha(hex, mistFill),
+      border: colorWithAlpha(hex, mistBorder),
       darkMaterial,
     };
   }
@@ -224,16 +240,30 @@ export function glassDynamicTintMaterials(
       : 0.46;
   const solidAlpha = darkMaterial
     ? airy
-      ? 0.58
-      : 0.66
+      ? 0.72
+      : 0.8
     : airy
-      ? 0.5
-      : 0.58;
+      ? 0.62
+      : 0.7;
   return {
     fill: colorWithAlpha(hex, allowsBlur ? blurAlpha : solidAlpha),
     border: colorWithAlpha(
       hex,
-      darkMaterial ? (airy ? 0.42 : 0.5) : airy ? 0.28 : 0.34,
+      allowsBlur
+        ? darkMaterial
+          ? airy
+            ? 0.42
+            : 0.5
+          : airy
+            ? 0.28
+            : 0.34
+        : darkMaterial
+          ? airy
+            ? 0.55
+            : 0.62
+          : airy
+            ? 0.4
+            : 0.48,
     ),
     darkMaterial,
   };

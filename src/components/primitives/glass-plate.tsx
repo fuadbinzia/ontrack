@@ -94,12 +94,15 @@ export function GlassPlate({
     ? theme.name !== 'dark'
     : theme.name === 'dark';
   const invertedDark = inverted && darkPlate;
+  // Android (and blur-gated tiers) paint fill-only glass — never pass blur
+  // alphas when there is no BlurView frost, or artwork reads sharp through plates.
+  const frostedFill = Platform.OS === 'ios' && allowsBlur;
   const dynamicTint =
     !clear && tintColor
       ? glassDynamicTintMaterials(tintColor, {
           mist,
           airy: mist ? false : airy,
-          allowsBlur,
+          allowsBlur: frostedFill,
         })
       : undefined;
   const greenGlass = accent === 'green' && !clear && !mist && !dynamicTint;
@@ -347,24 +350,24 @@ const styles = StyleSheet.create({
   /** Nested mist on white itinerary boards — cool graphite, not white milk. */
   mistTintLight: glassMistWashStyle.onLight,
   androidTintDark: {
-    backgroundColor: 'rgba(12, 16, 24, 0.32)',
+    backgroundColor: 'rgba(12, 16, 24, 0.62)',
     experimental_backgroundImage:
-      'linear-gradient(160deg, rgba(36,42,54,0.38) 0%, rgba(12,16,24,0.28) 50%, rgba(8,12,18,0.36) 100%)',
+      'linear-gradient(160deg, rgba(36,42,54,0.7) 0%, rgba(12,16,24,0.54) 50%, rgba(8,12,18,0.66) 100%)',
   },
   androidTintDarkAiry: {
-    backgroundColor: 'rgba(12, 16, 24, 0.22)',
+    backgroundColor: 'rgba(12, 16, 24, 0.5)',
     experimental_backgroundImage:
-      'linear-gradient(160deg, rgba(36,42,54,0.28) 0%, rgba(12,16,24,0.16) 50%, rgba(8,12,18,0.24) 100%)',
+      'linear-gradient(160deg, rgba(36,42,54,0.58) 0%, rgba(12,16,24,0.42) 50%, rgba(8,12,18,0.54) 100%)',
   },
   androidTintInverted: {
-    backgroundColor: 'rgba(12, 16, 24, 0.58)',
+    backgroundColor: 'rgba(12, 16, 24, 0.72)',
     experimental_backgroundImage:
-      'linear-gradient(160deg, rgba(36,42,54,0.64) 0%, rgba(12,16,24,0.54) 50%, rgba(8,12,18,0.62) 100%)',
+      'linear-gradient(160deg, rgba(36,42,54,0.78) 0%, rgba(12,16,24,0.66) 50%, rgba(8,12,18,0.74) 100%)',
   },
   androidTintInvertedAiry: {
-    backgroundColor: 'rgba(12, 16, 24, 0.38)',
+    backgroundColor: 'rgba(12, 16, 24, 0.58)',
     experimental_backgroundImage:
-      'linear-gradient(160deg, rgba(36,42,54,0.44) 0%, rgba(12,16,24,0.32) 50%, rgba(8,12,18,0.40) 100%)',
+      'linear-gradient(160deg, rgba(36,42,54,0.64) 0%, rgba(12,16,24,0.5) 50%, rgba(8,12,18,0.6) 100%)',
   },
   androidTintGreen: {
     backgroundColor: glassMaterials.accentGreen.fill,

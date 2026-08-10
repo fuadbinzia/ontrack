@@ -84,9 +84,18 @@ describe('itinerary page glass chrome', () => {
       join(process.cwd(), 'src/features/travel/travel-surface.tsx'),
       'utf8',
     );
-    expect(surface).toContain('airy: true');
-    expect(surface).toContain("intensity: theme.name === 'dark' ? 40 : 48");
+    // Default airy frost; dense only while an expanded flight darkens the hero.
+    expect(surface).toContain('airy: !dense');
+    expect(surface).toContain('dense?: boolean');
+    expect(surface).toContain('? 64');
+    expect(surface).toContain('? 40');
     expect(surface).not.toMatch(/:\s*\{\s*clear:\s*true\s*\}/);
+    const planDetail = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-plan-detail.tsx'),
+      'utf8',
+    );
+    expect(planDetail).toContain('denseHeroGlass');
+    expect(planDetail).toContain("item.kind === 'flight'");
     const board = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-timeline-node.tsx'),
       'utf8',

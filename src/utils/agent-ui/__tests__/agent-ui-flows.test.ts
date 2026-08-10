@@ -13,6 +13,8 @@ import {
     AGENT_UI_DEMO_PLANT_ID,
     AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID,
     AGENT_UI_DEMO_TRIP_ID,
+    AGENT_UI_PUNTA_CANA_STAY_ID,
+    AGENT_UI_PUNTA_CANA_TRIP_ID,
     AGENT_UI_DEMO_VEHICLE_ID,
     AGENT_UI_DEMO_VISION_CATEGORY_ID,
     AGENT_UI_DEMO_VISION_ITEM_ID,
@@ -22,6 +24,7 @@ import {
     buildAgentUiDemoChecklist,
     buildAgentUiDemoGrocery,
     buildAgentUiDemoTrip,
+    buildAgentUiPuntaCanaTrip,
     createIdFromAgentUiItemIds,
     formatAgentUiSeedDetail,
     normalizeFixtureName,
@@ -207,6 +210,52 @@ describe('agent-ui fixtures', () => {
     expect(mockRecordPlanInteraction).toHaveBeenCalledWith(AGENT_UI_DEMO_TRIP_ID);
   });
 
+  it('builds and seeds the Airbnb Punta Cana stay mock', () => {
+    const year = new Date('2026-08-09T12:00:00.000Z').getFullYear();
+    const plan = buildAgentUiPuntaCanaTrip('2026-08-09T12:00:00.000Z');
+    expect(plan.id).toBe(AGENT_UI_PUNTA_CANA_TRIP_ID);
+    expect(plan.startDate).toBe(`${year}-08-10`);
+    expect(plan.endDate).toBe(`${year}-08-14`);
+    expect(plan.itinerary.map((item) => item.kind)).toEqual([
+      'flight',
+      'stay',
+      'flight',
+    ]);
+    expect(
+      plan.itinerary.find((item) => item.id === AGENT_UI_PUNTA_CANA_STAY_ID),
+    ).toMatchObject({
+      kind: 'stay',
+      details: expect.stringContaining('La Altagracia'),
+      stay: {
+        checkoutDate: `${year}-08-14`,
+        checkoutMinutes: 10 * 60,
+        notes: 'Hosted by Lisbeth',
+      },
+    });
+    expect(
+      plan.itinerary.find((item) => item.kind === 'flight' && item.date === `${year}-08-10`),
+    ).toMatchObject({
+      flight: {
+        departureAirport: 'JFK',
+        arrivalAirport: 'SDQ',
+        flightNumber: 'B6 2709',
+      },
+    });
+    expect(normalizeFixtureName('punta-cana')).toBe('travel-punta-cana');
+    mockSavePlan.mockClear();
+    mockRecordPlanInteraction.mockClear();
+    expect(seedAgentUiFixture('travel-punta-cana')).toEqual({
+      fixture: 'travel-punta-cana',
+      primaryId: AGENT_UI_PUNTA_CANA_TRIP_ID,
+      planId: AGENT_UI_PUNTA_CANA_TRIP_ID,
+      itemId: AGENT_UI_PUNTA_CANA_STAY_ID,
+    });
+    expect(resolveAgentUiFlow('travel-punta-cana')?.[1]).toMatchObject({
+      op: 'seed',
+      to: 'travel-punta-cana',
+    });
+  });
+
   it('seeds travel-home visual trips with Iceland first', () => {
     mockSavePlan.mockClear();
     mockRecordPlanInteraction.mockClear();
@@ -281,6 +330,7 @@ describe('agent-ui fixtures', () => {
     expect(AGENT_UI_FIXTURE_NAMES).toEqual(
       expect.arrayContaining([
         'travel-demo',
+        'travel-punta-cana',
         'checklist-demo',
         'grocery-demo',
         'health-demo',

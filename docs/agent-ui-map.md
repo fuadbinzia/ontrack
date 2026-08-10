@@ -33,6 +33,7 @@ Each map row below is a stable id; use `agent-ui-source.sh` for the **file** col
 ```bash
 # Named flow (seed + navigate + settle — preferred)
 ./scripts/agent-ui-flow.sh travel-demo
+./scripts/agent-ui-flow.sh travel-punta-cana
 ./scripts/agent-ui-flow.sh travel-demo-add-flight
 ./scripts/agent-ui-flow.sh open-new-checklist
 ./scripts/agent-ui-flow.sh profile
@@ -125,9 +126,15 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.tabs.games`                                      | Games            | addon                                                                                                 |
 | `ontrack.tabs.vehicles`                                   | Vehicles         | addon                                                                                                 |
 | `ontrack.tabs.food`                                       | Food             | addon                                                                                                 |
-| `ontrack.tabs.carousel.prev`                              | Previous tabs    | Left rail arrow — nudge bottom nav carousel                                                         |
-| `ontrack.tabs.carousel.next`                              | Next tabs        | Right rail arrow — nudge bottom nav carousel                                                        |
+| `ontrack.tabs.more`                                       | More             | Opens Trackers (`/(tabs)/trackers`) — pin/reorder hub                                                 |
+| `ontrack.tabs.carousel.prev`                              | Previous tabs    | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
+| `ontrack.tabs.carousel.next`                              | Next tabs        | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.dock`                                       | Bottom nav       | Layout anchor — page-matching bottom nav fill (not tappable)                                          |
+| `ontrack.trackers.screen`                                 | Trackers         | More hub — In nav / Others reorder                                                                  |
+| `ontrack.trackers.row.<route>`                            | Trackers         | Open a tracker from the list (`(today)` → `_today_`)                                                |
+| `ontrack.trackers.add.<route>`                            | Trackers         | Add tracker to nav (when under pin limit)                                                           |
+| `ontrack.trackers.remove.<route>`                         | Trackers         | Retired — demote via drag into More                                                                 |
+| `ontrack.trackers.drag.<route>`                           | Trackers         | Long-press drag handle to reorder                                                                   |
 | `ontrack.vehicles.list.add`                               | Vehicles         | Add a vehicle                                                                                         |
 | `ontrack.vehicles.list.vehicle.<vehicleId>`               | Vehicles         | Open a vehicle (`vehicle-agent-ui-demo` via `vehicle-demo`)                                           |
 | `ontrack.vehicles.detail.settings`                        | Vehicle detail   | Open vehicle settings                                                                                 |

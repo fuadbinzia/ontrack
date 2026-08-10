@@ -1,5 +1,6 @@
 import { StayLocationThumbnail } from '@/features/travel/stay-location-thumbnail';
 import { kindAccent } from '@/features/travel/travel-kind-chrome';
+import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import {
     formatDateKeyMedium,
@@ -49,7 +50,9 @@ export function StayDetailsSummary({
   dateDisplayFormat?: DateDisplayFormat;
 }) {
   const theme = useTheme();
+  const { s } = useResponsive();
   const accent = kindAccent('stay', theme);
+  const markSize = Math.max(44, s(48));
   const checkinStamp = formatStamp(checkinDate, checkinMinutes);
   const checkoutStamp = formatStamp(
     details.checkoutDate,
@@ -104,8 +107,10 @@ export function StayDetailsSummary({
     <TravelDetailsSummaryCard
       title={title?.trim() || 'Stay'}
       icon="lodging"
+      markStandalone
       mark={
         <StayLocationThumbnail
+          size={markSize}
           title={title}
           address={address}
           bookingUrl={bookingUrl}

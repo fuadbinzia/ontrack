@@ -50,6 +50,8 @@ type TravelPlanDetailBodyProps = {
   onOpenExpenses: () => void;
   notesExpanded: boolean;
   onNotesExpandedChange: (expanded: boolean) => void;
+  /** Dates/Notes denser frost while a flight card is expanded. */
+  denseHeroGlass?: boolean;
 };
 
 export function TravelPlanDetailBody({
@@ -68,6 +70,7 @@ export function TravelPlanDetailBody({
   onOpenExpenses,
   notesExpanded,
   onNotesExpandedChange,
+  denseHeroGlass = false,
 }: TravelPlanDetailBodyProps) {
   const theme = useTheme();
   const atmosphere = useTravelAtmosphere();
@@ -144,6 +147,7 @@ export function TravelPlanDetailBody({
             onEditNotes={onEditNotes}
             notesExpanded={notesExpanded}
             onNotesExpandedChange={onNotesExpandedChange}
+            denseHeroGlass={denseHeroGlass}
             onPlateAverageColor={setPlateAverageColor}
           />
           <TravelTransportSections

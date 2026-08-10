@@ -131,8 +131,59 @@ function collectDates(text: string, fallbackYear?: number): string[] {
       );
       if (value) candidates.push(value);
     }
+    // Airbnb trip header: "August 10 – 14" / "August 10 - August 14"
+    const monthDayRange = new RegExp(
+      `\\b(${MONTH_NAMES})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\s*[–—-]\\s*(?:(${MONTH_NAMES})\\s+)?(\\d{1,2})(?:st|nd|rd|th)?\\b`,
+      'gi',
+    );
+    for (const match of text.matchAll(monthDayRange)) {
+      const start = dateKeyFromMonthName(
+        match[1],
+        match[2],
+        String(fallbackYear),
+      );
+      let end = dateKeyFromMonthName(
+        match[3] || match[1],
+        match[4],
+        String(fallbackYear),
+      );
+      // "December 28 – January 3" → checkout lands in the next calendar year.
+      if (start && end && end < start) {
+        end = bumpDateKeyYear(end, 1) ?? end;
+      }
+      if (start) candidates.push(start);
+      if (end) candidates.push(end);
+    }
   }
   return candidates;
+}
+
+/** Year for yearless stay dates ("Monday, August 10", "August 10 – 14"). */
+function resolveFallbackYear(): number {
+  return new Date().getFullYear();
+}
+
+function bumpDateKeyYear(
+  value: string,
+  deltaYears: number,
+): string | undefined {
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return undefined;
+  }
+  return dateKey(year + deltaYears, month, day);
+}
+
+/** When checkout sorted before check-in (Dec → Jan), roll checkout into next year. */
+function ensureCheckoutOnOrAfterCheckin(
+  checkinDate: string | undefined,
+  checkoutDate: string | undefined,
+): string | undefined {
+  if (!checkoutDate) return undefined;
+  if (!checkinDate || checkoutDate >= checkinDate) return checkoutDate;
+  return bumpDateKeyYear(checkoutDate, 1) ?? checkoutDate;
 }
 
 /**
@@ -344,13 +395,18 @@ function looksLikeStreetAddress(value: string): boolean {
 }
 
 function findHotelName(text: string): string {
+  // Do not use bare "stay" — Airbnb "Your stay\nHosted by…" steals the host line.
   const labeled = firstMatch(text, [
-    /(?:hotel(?:\s+name)?|property(?:\s+name)?|accommodation(?:\s+name)?|lodging|stay)\s*[:#-]?\s*([^\n]{3,80})/i,
+    /(?:hotel(?:\s+name)?|property(?:\s+name)?|accommodation(?:\s+name)?|lodging)\s*[:#-]?\s*([^\n]{3,80})/i,
     /(?:listing|listing\s+title|unit\s+name)\s*[:#-]?\s*([^\n]{3,80})/i,
+    /(?:^|\n)\s*stay\s*[:#-]\s*([^\n]{3,80})/i,
   ]);
   if (
     labeled &&
-    !/^(?:details|information|confirmation|itinerary)$/i.test(labeled.trim())
+    !/^(?:details|information|confirmation|itinerary|hosted\s+by)$/i.test(
+      labeled.trim(),
+    ) &&
+    !/^hosted\s+by\b/i.test(labeled.trim())
   ) {
     return labeled.replace(/\s+/g, ' ').trim();
   }
@@ -374,12 +430,20 @@ function findHotelName(text: string): string {
     if (
       line.length >= 4 &&
       line.length <= 80 &&
-      !/^(?:airbnb|booking(?:\.com)?|marriott|hilton|hyatt|expedia|trivago|vrbo|reservation|itinerary|confirmation|travel|receipt|invoice|where\s+you|who(?:'|’)?s|check[\s-]?in|check[\s-]?out|payment|total|entire\s+|private\s+room|your\s+(?:reservation|booking|stay|trip|itinerary)|you(?:'|’)?re\s+all\s+set)/i.test(
+      !/^(?:airbnb|booking(?:\.com)?|marriott|hilton|hyatt|expedia|trivago|vrbo|reservation|itinerary|confirmation|travel|receipt|invoice|where\s+you|who(?:'|’)?s|check[\s-]?in|check[\s-]?out|payment|total|entire\s+|private\s+room|your\s+(?:reservation|booking|stay|trip|itinerary)|you(?:'|’)?re\s+all\s+set|hosted\s+by|getting\s+there|province|state|department|municipality|district|county|region)\b/i.test(
         line,
       ) &&
       !/(?:guest|bedroom|bed|bath|night|adult|is\s+confirmed|confirmed)/i.test(line) &&
       !/^\d{1,2}\/\d{1,2}\/\d{2,4}/.test(line) &&
+      !/^\d{3,6}\b/.test(line) &&
+      !/^(?:after|before|from|until)\b/i.test(line) &&
+      !/\b(?:am|pm)\b/i.test(line) &&
+      !/\b\d{1,2}:\d{2}\b/.test(line) &&
+      !/\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december)\b/i.test(
+        line,
+      ) &&
       !looksLikeStreetAddress(line) &&
+      !looksLikeAddressContinuation(line) &&
       !/^[A-Z0-9-]{5,24}$/.test(line) &&
       /[A-Za-z]{3,}/.test(line)
     ) {
@@ -408,6 +472,62 @@ function findHotelName(text: string): string {
   return '';
 }
 
+/** Airbnb wraps geo lines mid-phrase ("La Altagracia" / "Province 23000,"). */
+function looksLikeAddressContinuation(line: string): boolean {
+  const trimmed = line.trim().replace(/,\s*$/, '');
+  if (trimmed.length < 2 || trimmed.length > 80) return false;
+  if (
+    /^(?:check[\s-]?in|check[\s-]?out|getting\s+there|hosted\s+by|book\s+a|host\s+recommendations?|scape\s+park|your\s+stay)\b/i.test(
+      trimmed,
+    )
+  ) {
+    return false;
+  }
+  if (looksLikeStreetAddress(trimmed)) return true;
+  if (
+    /^(?:province|state|department|municipality|district|county|region)\b/i.test(
+      trimmed,
+    )
+  ) {
+    return true;
+  }
+  if (/^\d{3,6}\b/.test(trimmed)) return true;
+  // Country / territory line (e.g. "Dominican Republic")
+  if (
+    /^(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3})$/.test(trimmed) &&
+    /\b(?:republic|kingdom|states|islands|federation|emirates)\b/i.test(trimmed)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function appendAddressFragment(base: string, next: string): string {
+  const cleanBase = base.replace(/,\s*$/, '').replace(/\s+/g, ' ').trim();
+  const cleanNext = next.replace(/,\s*$/, '').replace(/\s+/g, ' ').trim();
+  if (!cleanNext) return cleanBase;
+  if (
+    /^(?:province|state|department|municipality|district|county|region)\b/i.test(
+      cleanNext,
+    )
+  ) {
+    return `${cleanBase} ${cleanNext}`;
+  }
+  return `${cleanBase}, ${cleanNext}`;
+}
+
+function extendAddressLines(lines: string[], start: number): string {
+  let address = lines[start]?.trim() ?? '';
+  for (let i = start + 1; i < Math.min(lines.length, start + 4); i += 1) {
+    const line = lines[i]?.trim() ?? '';
+    if (!looksLikeAddressContinuation(line)) break;
+    const next = appendAddressFragment(address, line);
+    if (next.length > 160) break;
+    address = next;
+  }
+  return address.replace(/\s+/g, ' ').trim();
+}
+
 function findAddress(text: string): string {
   // 1. Explicit labeled address
   const labeled = firstMatch(text, [
@@ -417,11 +537,13 @@ function findAddress(text: string): string {
     return labeled.replace(/\s+/g, ' ').trim();
   }
 
-  // 2. High-confidence line matching in document (e.g. Airbnb location lines, street lines)
+  // 2. High-confidence line (+ wrapped Airbnb geo continuations)
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-  for (const line of lines) {
-    if (looksLikeStreetAddress(line)) {
-      return line.replace(/\s+/g, ' ').trim();
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!looksLikeStreetAddress(lines[i])) continue;
+    const extended = extendAddressLines(lines, i);
+    if (looksLikeStreetAddress(extended) || extended.includes(',')) {
+      return extended;
     }
   }
 
@@ -522,9 +644,7 @@ export function parseStayConfirmation(
   stay.checkoutMinutes = '';
   stay.confirmationCode = findConfirmationCode(text);
 
-  const fallbackYear = tripRange?.startDate
-    ? Number(tripRange.startDate.slice(0, 4))
-    : undefined;
+  const fallbackYear = resolveFallbackYear();
 
   const labeledDates = findLabeledStayDates(text, fallbackYear);
 
@@ -553,10 +673,27 @@ export function parseStayConfirmation(
   let checkinDate =
     labeledDates.checkin ??
     preferDateInRange(checkinDates, tripRange?.startDate, tripRange?.endDate);
+  const resolvedCheckin = checkinDate;
+  const checkoutOnOrAfterCheckin = resolvedCheckin
+    ? checkoutDates.filter((value) => value >= resolvedCheckin)
+    : checkoutDates;
+  const checkoutRolledToNextYear =
+    resolvedCheckin && checkoutOnOrAfterCheckin.length === 0
+      ? checkoutDates
+          .map((value) => bumpDateKeyYear(value, 1))
+          .filter(
+            (value): value is string =>
+              typeof value === 'string' && value >= resolvedCheckin,
+          )
+      : [];
   let checkoutDate =
-    labeledDates.checkout ??
+    ensureCheckoutOnOrAfterCheckin(resolvedCheckin, labeledDates.checkout) ??
     preferDateInRange(
-      checkoutDates.filter((value) => !checkinDate || value >= checkinDate),
+      checkoutOnOrAfterCheckin.length
+        ? checkoutOnOrAfterCheckin
+        : checkoutRolledToNextYear.length
+          ? checkoutRolledToNextYear
+          : checkoutDates,
       tripRange?.startDate,
       tripRange?.endDate,
     );
@@ -564,6 +701,7 @@ export function parseStayConfirmation(
   if (!checkoutDate && datePool.length > 1) {
     checkoutDate = datePool[datePool.length - 1];
   }
+  checkoutDate = ensureCheckoutOnOrAfterCheckin(checkinDate, checkoutDate);
   if (checkoutDate) stay.checkoutDate = checkoutDate;
 
   const checkinPrefixed = checkinSections.flatMap(findPrefixedTimes);
@@ -594,7 +732,7 @@ export function parseStayConfirmation(
 
   const fromText = findHotelName(text);
   const fromFile = hotelNameFromFileName(options?.fileName);
-  const hotelName =
+  let hotelName =
     (fromFile &&
     /hotel|inn|resort|hostel|suite|apartment|guesthouse|centerhotel/i.test(
       fromFile,
@@ -605,6 +743,19 @@ export function parseStayConfirmation(
     fromText ||
     '';
   const address = findAddress(text);
+  // Airbnb trip pages often omit a listing title — use the city from the address.
+  const weakTitle =
+    !hotelName ||
+    /^hosted\s+by\b/i.test(hotelName) ||
+    /^(?:after|before|from|until)\b/i.test(hotelName) ||
+    /\b(?:am|pm)\b/i.test(hotelName) ||
+    looksLikeAddressContinuation(hotelName);
+  if (weakTitle && address) {
+    const city = address.split(',')[0]?.trim();
+    if (city && city.length >= 3 && city.length <= 60) {
+      hotelName = city;
+    }
+  }
   const bookingUrl = findBookingUrl(text);
   const details = address || undefined;
 

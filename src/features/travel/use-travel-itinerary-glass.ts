@@ -7,13 +7,16 @@ import {
   travelItineraryInk,
   travelItineraryMistProps,
   travelItineraryShellProps,
+  type TravelItineraryShellOptions,
 } from '@/features/travel/travel-surface';
 import { useTheme } from '@/hooks/use-theme';
 
-export function useTravelItineraryShellProps() {
+export function useTravelItineraryShellProps(
+  options?: TravelItineraryShellOptions,
+) {
   const theme = useTheme();
   const { hex } = useTravelArtworkTint();
-  return travelItineraryShellProps(theme, hex);
+  return travelItineraryShellProps(theme, hex, options);
 }
 
 export function useTravelItineraryMistProps() {

@@ -22,6 +22,15 @@ export const AGENT_UI_DEMO_CONNECTING_FLIGHT_ID =
 /** Stable stay with an address so agents can exercise Open with… maps. */
 export const AGENT_UI_DEMO_STAY_ID = 'item-agent-ui-demo-stay';
 
+/** Airbnb Punta Cana stay mock (screenshot / trip-page OCR fixture). */
+export const AGENT_UI_PUNTA_CANA_TRIP_ID = 'trip-agent-ui-punta-cana';
+export const AGENT_UI_PUNTA_CANA_STAY_ID = 'item-agent-ui-punta-cana-stay';
+/** JetBlue JFK → SDQ (trip-detail OCR). */
+export const AGENT_UI_PUNTA_CANA_OUTBOUND_ID =
+  'item-agent-ui-punta-cana-outbound';
+/** JetBlue SDQ → JFK (trip-detail OCR). */
+export const AGENT_UI_PUNTA_CANA_RETURN_ID = 'item-agent-ui-punta-cana-return';
+
 export const AGENT_UI_DEMO_RENTAL_ID = 'item-agent-ui-demo-rental';
 /** Chase round-trip fixture outbound (EWR → KEF) after importFlight=roundtrip submit. */
 export const AGENT_UI_DEMO_CHASE_OUTBOUND_ID =
@@ -91,6 +100,7 @@ export function createIdFromAgentUiItemIds(
 
 export type AgentUiFixtureName =
   | 'travel-demo'
+  | 'travel-punta-cana'
   | 'travel-home'
   | 'travel-home-empty'
   | 'travel-restore-documents'
@@ -111,6 +121,7 @@ export const AGENT_UI_DEMO_HOME_LOCATION = 'Austin, Texas, United States';
 /** Reserved sandbox / agent-ui trip ids — never keep these on a live account. */
 export const AGENT_UI_RESERVED_TRIP_IDS: readonly string[] = [
   AGENT_UI_DEMO_TRIP_ID,
+  AGENT_UI_PUNTA_CANA_TRIP_ID,
   TRAVEL_HOME_ICELAND_TRIP_ID,
   TRAVEL_HOME_ANTIGUA_TRIP_ID,
   TRAVEL_HOME_THIRD_TRIP_ID,
@@ -125,6 +136,7 @@ export function fixtureNameForReservedTripId(
   id: string,
 ): AgentUiFixtureName | null {
   if (id === AGENT_UI_DEMO_TRIP_ID) return 'travel-demo';
+  if (id === AGENT_UI_PUNTA_CANA_TRIP_ID) return 'travel-punta-cana';
   if (
     id === TRAVEL_HOME_ICELAND_TRIP_ID ||
     id === TRAVEL_HOME_ANTIGUA_TRIP_ID ||
@@ -424,6 +436,86 @@ export function buildAgentUiDemoTrip(
   };
 }
 
+/** Airbnb Punta Cana stay from trip-page OCR (Lisbeth host, Aug 10–14). */
+export function buildAgentUiPuntaCanaTrip(
+  nowIso = new Date().toISOString(),
+): TravelPlan {
+  const year = new Date(nowIso).getFullYear();
+  const startDate = `${year}-08-10`;
+  const endDate = `${year}-08-14`;
+  return {
+    id: AGENT_UI_PUNTA_CANA_TRIP_ID,
+    title: 'Punta Cana',
+    mode: 'flight',
+    destination: 'Punta Cana, Dominican Republic',
+    startDate,
+    endDate,
+    notes:
+      'Airbnb stay + JetBlue JFK↔SDQ mock (Hosted by Lisbeth). Safe to overwrite.',
+    origin: 'New York, NY',
+    itinerary: [
+      {
+        id: AGENT_UI_PUNTA_CANA_OUTBOUND_ID,
+        kind: 'flight',
+        title: 'B6 2709',
+        date: startDate,
+        startMinutes: 6 * 60 + 40,
+        durationMinutes: 3 * 60 + 52,
+        flight: {
+          airline: 'JetBlue',
+          flightNumber: 'B6 2709',
+          departureAirport: 'JFK',
+          departureTerminal: '5',
+          departureGate: '527',
+          arrivalAirport: 'SDQ',
+          arrivalTerminal: 'Main',
+          confirmationCode: 'WYDBAP',
+          passengerCount: 2,
+        },
+      },
+      {
+        id: AGENT_UI_PUNTA_CANA_STAY_ID,
+        kind: 'stay',
+        title: 'Punta Cana',
+        date: startDate,
+        startMinutes: 16 * 60,
+        // Check-in 4:00 PM → checkout 10:00 AM four calendar days later.
+        durationMinutes: 3 * 24 * 60 + 18 * 60,
+        details: 'Punta Cana, La Altagracia Province 23000, Dominican Republic',
+        bookingUrl: 'https://www.airbnb.com/trips/v1/1',
+        stay: {
+          checkoutDate: endDate,
+          checkoutMinutes: 10 * 60,
+          notes: 'Hosted by Lisbeth',
+        },
+      },
+      {
+        id: AGENT_UI_PUNTA_CANA_RETURN_ID,
+        kind: 'flight',
+        title: 'B6 1850',
+        date: endDate,
+        startMinutes: 17 * 60 + 53,
+        durationMinutes: 3 * 60 + 57,
+        flight: {
+          airline: 'JetBlue',
+          flightNumber: 'B6 1850',
+          departureAirport: 'SDQ',
+          departureTerminal: 'Main',
+          arrivalAirport: 'JFK',
+          arrivalTerminal: '5',
+          confirmationCode: 'WYDBAP',
+          passengerCount: 2,
+        },
+      },
+    ],
+    participants: [],
+    baseCurrency: 'USD',
+    expenses: [],
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: nowIso,
+  };
+}
+
 export function buildAgentUiDemoChecklist(nowIso = new Date().toISOString()): {
   list: TodoList;
   tasks: TodoTask[];
@@ -626,6 +718,21 @@ export function seedAgentUiFixture(
       primaryId: plan.id,
       planId: plan.id,
       flightItemId: AGENT_UI_DEMO_FLIGHT_ID,
+    };
+  }
+
+  if (fixture === 'travel-punta-cana') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTravel } = require('@/store/travel') as typeof import('@/store/travel');
+    const plan = buildAgentUiPuntaCanaTrip();
+    const saved = useTravel.getState().savePlan(plan);
+    if (!saved) return null;
+    useTravel.getState().recordPlanInteraction(plan.id);
+    return {
+      fixture,
+      primaryId: plan.id,
+      planId: plan.id,
+      itemId: AGENT_UI_PUNTA_CANA_STAY_ID,
     };
   }
 
@@ -965,6 +1072,14 @@ export function normalizeFixtureName(
     return 'travel-demo';
   }
   if (
+    key === 'travel-punta-cana' ||
+    key === 'punta-cana' ||
+    key === 'punta' ||
+    key === AGENT_UI_PUNTA_CANA_TRIP_ID
+  ) {
+    return 'travel-punta-cana';
+  }
+  if (
     key === 'travel-home' ||
     key === 'travel-home-visual' ||
     key === 'trip-travel-home-iceland'
@@ -1061,6 +1176,7 @@ export function normalizeFixtureName(
 /** Fixtures shown in Developer Hub / listed for routine seeding. */
 export const AGENT_UI_FIXTURE_NAMES = [
   'travel-demo',
+  'travel-punta-cana',
   'travel-home',
   'checklist-demo',
   'grocery-demo',

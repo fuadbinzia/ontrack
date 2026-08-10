@@ -56,8 +56,11 @@ export default function TravelPlanScreen() {
         ? { stage: 'expense-saved' }
         : undefined;
   const initialFlightImportFixture =
-    __DEV__ && (importFlight === 'roundtrip' || importFlight === 'connecting')
-      ? (importFlight as 'roundtrip' | 'connecting')
+    __DEV__ &&
+    (importFlight === 'roundtrip' ||
+      importFlight === 'connecting' ||
+      importFlight === 'jetblue')
+      ? (importFlight as 'roundtrip' | 'connecting' | 'jetblue')
       : undefined;
 
   // DEV-only: deep-link `?theme=dark|light|system` for simulator QA of themed sheets.

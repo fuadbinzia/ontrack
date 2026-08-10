@@ -1,7 +1,6 @@
 /**
  * Artwork → itinerary glass tint.
- * Uses the lightest usable hue from the plate / sky so frosted shells match
- * the artwork without tipping into dark milk that fights body copy.
+ * Night / dark sky → dark frost + light ink. Day → light frost + dark ink.
  */
 
 import { glassDynamicTintMaterials } from '@/design-system/glass';
@@ -11,7 +10,10 @@ import {
   relativeLuminanceFromHex,
 } from '@/features/travel/travel-home-atmosphere-ink';
 import { destinationShowsAurora } from '@/features/travel/travel-sky-aurora-destinations';
-import { type HeaderSkyLook } from '@/features/travel/travel-sky-condition';
+import {
+  headerSkyChromeColor,
+  type HeaderSkyLook,
+} from '@/features/travel/travel-sky-condition';
 
 /** Normalize `#RGB` / `#RRGGBB` to `#RRGGBB` when valid. */
 export function normalizeArtworkTintHex(hex: string): string | undefined {
@@ -40,9 +42,28 @@ export function pickLightestArtworkTint(
   return best;
 }
 
+/** Lowest-luminance hex among candidates (invalid entries skipped). */
+export function pickDarkestArtworkTint(
+  ...candidates: Array<string | undefined | null>
+): string | undefined {
+  let best: string | undefined;
+  let bestLuma = Number.POSITIVE_INFINITY;
+  for (const candidate of candidates) {
+    const hex = candidate ? normalizeArtworkTintHex(candidate) : undefined;
+    if (!hex) continue;
+    const luma = relativeLuminanceFromHex(hex);
+    if (luma === undefined) continue;
+    if (luma < bestLuma) {
+      best = hex;
+      bestLuma = luma;
+    }
+  }
+  return best;
+}
+
 /**
  * Lift dark plate/chrome samples toward a light pastel of the same hue so
- * glass fills stay readable (dark ink) while still tracking the artwork.
+ * day glass stays readable with dark ink while still tracking the artwork.
  */
 export function lightenArtworkTintForGlass(hex: string): string {
   const normalized = normalizeArtworkTintHex(hex);
@@ -63,25 +84,36 @@ export function lightenArtworkTintForGlass(hex: string): string {
 }
 
 /**
- * @deprecated Prefer {@link lightenArtworkTintForGlass} — glass uses light tints.
- * Kept for callers/tests that still name deepen; now lifts instead of crushing.
+ * Crush bright plate samples toward a dark glass hue so night frost keeps
+ * light ink and doesn’t wash out as milky white over the sky.
  */
 export function deepenArtworkTintForGlass(hex: string): string {
-  return lightenArtworkTintForGlass(hex);
+  const normalized = normalizeArtworkTintHex(hex);
+  if (!normalized) return hex;
+  const rgb = parseHexRgb(normalized);
+  const luma = relativeLuminanceFromHex(normalized);
+  if (!rgb || luma === undefined) return normalized;
+  // Already a dark glass candidate.
+  if (luma <= 0.28) return normalized;
+  const target = 0.18;
+  const t = Math.min(0.88, Math.max(0.35, (luma - target) / Math.max(0.08, luma)));
+  const to = (n: number) =>
+    Math.round(n * (1 - t))
+      .toString(16)
+      .padStart(2, '0');
+  return `#${to(rgb.r)}${to(rgb.g)}${to(rgb.b)}`.toUpperCase();
 }
 
-/**
- * Light sky-family stops for live SVG plates (status chrome stays dark;
- * itinerary glass prefers these mist hues).
- */
+/** Day sky-family stops for light itinerary frost. */
 export function headerSkyLightTintColor(options: {
   themeDark: boolean;
   look: HeaderSkyLook;
   destination?: string;
 }): string {
   if (options.themeDark || options.look.startsWith('night')) {
+    // Night resolves via chrome (dark glass) — keep a cool mist for callers
+    // that still ask for a light stop in isolation.
     if (destinationShowsAurora(options.destination ?? '')) {
-      // Iceland / aurora veil — cool mist teal, not the dark status chrome.
       return '#B7CBD0';
     }
     return '#B4C0D0';
@@ -100,10 +132,16 @@ export function headerSkyLightTintColor(options: {
   }
 }
 
+function artworkGlassPrefersDarkPlate(options: {
+  themeDark: boolean;
+  look: HeaderSkyLook;
+}): boolean {
+  return options.themeDark || options.look.startsWith('night');
+}
+
 /**
- * Prefer the lightest usable tint among plate sample + sky light stop so glass
- * matches artwork without dark fills. Live SVG uses the light sky mist (not
- * status-bar chrome).
+ * Night / dark theme → dark sky chrome (+ deepened sample) for dark glass +
+ * light ink. Day → lightest pastel frost for dark ink.
  */
 export function resolveTravelArtworkTintHex(options: {
   averageColor?: string;
@@ -111,6 +149,18 @@ export function resolveTravelArtworkTintHex(options: {
   look: HeaderSkyLook;
   destination?: string;
 }): string {
+  if (artworkGlassPrefersDarkPlate(options)) {
+    const chrome = headerSkyChromeColor({
+      themeDark: options.themeDark,
+      look: options.look,
+      destination: options.destination,
+    });
+    const sampled = options.averageColor
+      ? deepenArtworkTintForGlass(options.averageColor)
+      : undefined;
+    return pickDarkestArtworkTint(sampled, chrome) ?? chrome;
+  }
+
   const lightSky = headerSkyLightTintColor({
     themeDark: options.themeDark,
     look: options.look,

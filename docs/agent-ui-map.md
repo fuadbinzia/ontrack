@@ -409,8 +409,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | ----------------------------------- | ------------------------ |
 | `ontrack.today.prevDay`             | Previous day             |
 | `ontrack.today.nextDay`             | Next day                 |
-| `ontrack.today.weather`             | Home weather tile (no chevron; tap → Profile `?reveal=homeLocation`, scroll only) |
-| `ontrack.today.currentLocation`     | Current weather tile (tap → Profile `?reveal=currentLocation`, scroll only) |
+| `ontrack.today.weather`             | Home weather tile (full width when home≡current; else left half). Tap → Profile `?reveal=homeLocation` |
+| `ontrack.today.currentLocation`     | Current weather tile only when place ≠ home (right half). Tap → Profile `?reveal=currentLocation` |
 | `ontrack.today.progress`            | Day completion ring (hidden at 0%) |
 | `ontrack.today.addActivity`         | Add activity             |
 | `ontrack.today.emptyAddActivity`    | Empty-state add          |

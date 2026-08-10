@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.37',
+    date: '2026-08-10',
+    notes: [
+      'Collapse Today weather to one full-width banner when home and current match.',
+    ],
+  },
+  {
     version: '1.0.36',
     date: '2026-08-10',
     notes: [
@@ -277,6 +284,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.37',
+    date: '2026-08-10',
+    notes: [
+      'Collapse Today weather to one full-width banner when home and current match.',
+      'Touched: features/daily-tracking.',
+    ],
+  },
   {
     version: '1.0.36',
     date: '2026-08-10',

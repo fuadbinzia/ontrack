@@ -15,6 +15,7 @@ export { unitSymbol };
 export {
   formatWeatherPlaceLabel,
   weatherPlaceLabelLadder,
+  weatherPlacesMatch,
   type WeatherPlaceLabelDetail,
 } from './weather-place-label';
 

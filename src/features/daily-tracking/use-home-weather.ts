@@ -4,6 +4,7 @@ import { useCurrentPlaceLabel } from '@/hooks/use-current-place-label';
 import { usePreferences } from '@/store/preferences';
 import { todayKey } from '@/utils/date';
 
+import { weatherPlacesMatch } from './weather-place-label';
 import { usePlaceWeather } from './use-place-weather';
 
 export function useHomeWeather(date?: string) {
@@ -33,11 +34,22 @@ export function useHomeWeather(date?: string) {
   const icon: AppIconName | undefined = hasSavedHome ? home.icon : current.icon;
   const showWeather = Boolean(weather);
 
-  // Second tile whenever Home is set on Today and Current has a place to show
-  // (override or GPS). Keep both even when labels match — collapsing made it
-  // look like the side-by-side UI was “lost” after Current/Home edits.
+  // Same place → one full-width home banner (side-by-side only when distinct).
+  const homeLabel = home.weather?.locationLabel ?? '';
+  const currentLabel = current.weather?.locationLabel ?? '';
+  const samePlace =
+    Boolean(currentQuery) &&
+    (weatherPlacesMatch(savedHome, currentQuery) ||
+      (Boolean(homeLabel) &&
+        Boolean(currentLabel) &&
+        weatherPlacesMatch(homeLabel, currentLabel)));
+
   const showCurrentWeather =
-    hasSavedHome && viewingToday && Boolean(currentQuery) && Boolean(current.weather);
+    hasSavedHome &&
+    viewingToday &&
+    Boolean(currentQuery) &&
+    Boolean(current.weather) &&
+    !samePlace;
 
   return {
     hasSavedHome,

@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.41',
+    date: '2026-08-10',
+    notes: [
+      'Make bottom-nav tab hops instant by keeping scenes attached and eager-mounting bar pins.',
+    ],
+  },
+  {
     version: '1.0.40',
     date: '2026-08-10',
     notes: [

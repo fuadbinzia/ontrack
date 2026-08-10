@@ -24,6 +24,21 @@ export function normalizeTravelPhotoUris(value: unknown): string[] | undefined {
   return uris.length ? uris : undefined;
 }
 
+/** True when expo-image can be given this URI (local bytes or remote/https). */
+export function isLoadableTravelPhotoUri(uri: string): boolean {
+  const trimmed = uri.trim();
+  if (!trimmed) return false;
+  if (
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('content://')
+  ) {
+    return true;
+  }
+  if (!trimmed.startsWith('file://')) return false;
+  return readableLocalFileUri(trimmed) != null;
+}
+
 /** Resolve stored photo URIs against the current app Documents container. */
 export function resolveTravelPhotoUris(uris?: string[]): string[] {
   if (!uris?.length) return [];
@@ -35,13 +50,21 @@ export function resolveTravelPhotoUris(uris?: string[]): string[] {
   return resolved;
 }
 
+function readableLocalFileUri(uri: string): string | undefined {
+  try {
+    const file = new File(uri);
+    // size === 0 means missing or unreadable — those paint as blank tiles.
+    if (!file.exists || file.size <= 0) return undefined;
+    return file.uri || uri;
+  } catch {
+    return undefined;
+  }
+}
+
 function resolveTravelPhotoUri(uri: string): string | undefined {
   if (uri.startsWith('ontrack-media:')) return uri;
-  try {
-    if (new File(uri).exists) return uri;
-  } catch {
-    // Fall through to Documents-relative remap.
-  }
+  const direct = readableLocalFileUri(uri);
+  if (direct) return direct;
 
   if (Platform.OS === 'web' || !uri.startsWith('file://')) return undefined;
 
@@ -55,7 +78,8 @@ function resolveTravelPhotoUri(uri: string): string | undefined {
 
   try {
     const remapped = new File(Paths.document, ...relative.split('/').filter(Boolean));
-    return remapped.exists ? remapped.uri : undefined;
+    if (!remapped.exists || remapped.size <= 0) return undefined;
+    return remapped.uri;
   } catch {
     return undefined;
   }

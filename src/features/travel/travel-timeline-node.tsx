@@ -91,7 +91,6 @@ export function TravelTimelineNode({
   onSaveTransportDetails,
   onBeginItemEdit,
   onAddPhotos,
-  onRemovePhoto,
   onRemove,
   onSaveNotes,
 }: TravelTimelineNodeProps) {
@@ -321,7 +320,6 @@ export function TravelTimelineNode({
       onSaveTransportDetails={onSaveTransportDetails}
       onBeginItemEdit={onBeginItemEdit}
       onAddPhotos={onAddPhotos}
-      onRemovePhoto={onRemovePhoto}
       onRemove={onRemove}
       setEditingTransport={setEditingTransport}
       setNotesOpen={setNotesOpen}

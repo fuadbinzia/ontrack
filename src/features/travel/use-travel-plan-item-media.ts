@@ -106,13 +106,8 @@ export function useTravelPlanItemMedia({
     });
   };
 
-  const removePhotoFromItem = (itemId: string, uri: string) => {
-    const current = itinerary.find((item) => item.id === itemId);
-    if (!current) return;
-    setItemPhotos(
-      itemId,
-      (current.photoUris ?? []).filter((entry) => entry !== uri),
-    );
+  const clearPhotosFromItem = (itemId: string) => {
+    setItemPhotos(itemId, []);
   };
 
   const appendPhotosToItem = async (itemId: string, uris: string[]) => {
@@ -161,7 +156,7 @@ export function useTravelPlanItemMedia({
     setRemoveConfirm,
     confirmRemoveItem,
     saveItemNotes,
-    removePhotoFromItem,
+    clearPhotosFromItem,
     appendPhotosToItem,
     addPhotosToItem,
     clearAddPhotos,

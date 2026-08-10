@@ -48,6 +48,7 @@ export type AgentUiRouteAlias = keyof typeof AGENT_UI_ROUTE_ALIASES;
 const TRAVEL_ADD_KINDS = new Set([
   'moment',
   'activity',
+  'event',
   'flight',
   'transport',
   'stay',

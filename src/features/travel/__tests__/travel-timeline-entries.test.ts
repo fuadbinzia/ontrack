@@ -1,6 +1,9 @@
 import {
   expandTimelineEntries,
+  groupTimelineDaysForPlan,
   groupTimelineEntriesByDate,
+  TIMELINE_POST_TRIP_KEY,
+  TIMELINE_PRE_TRIP_KEY,
   timelineEntryCaption,
 } from '../travel-timeline-entries';
 import type { TravelItineraryItem } from '../types';
@@ -87,6 +90,58 @@ describe('travel timeline entries', () => {
       'Board Flight',
       'Land',
     ]);
+  });
+
+  it('buckets out-of-range moments into Pre-trip and Post trip', () => {
+    const pre: TravelItineraryItem = {
+      id: 'm-pre',
+      kind: 'moment',
+      title: 'Pack',
+      date: '2026-09-01',
+      startMinutes: 10 * 60,
+      durationMinutes: 15,
+    };
+    const pre2: TravelItineraryItem = {
+      id: 'm-pre-2',
+      kind: 'moment',
+      title: 'Visa',
+      date: '2026-09-05',
+      startMinutes: 14 * 60,
+      durationMinutes: 15,
+    };
+    const onTrip: TravelItineraryItem = {
+      id: 'm-trip',
+      kind: 'moment',
+      title: 'Harbor',
+      date: '2026-09-10',
+      startMinutes: 12 * 60,
+      durationMinutes: 15,
+    };
+    const post: TravelItineraryItem = {
+      id: 'm-post',
+      kind: 'moment',
+      title: 'Laundry',
+      date: '2026-09-20',
+      startMinutes: 9 * 60,
+      durationMinutes: 15,
+    };
+    const sections = groupTimelineDaysForPlan(
+      expandTimelineEntries([onTrip, post, pre2, pre]),
+      '2026-09-08',
+      '2026-09-14',
+    );
+    expect(sections.map((day) => ({ date: day.date, zone: day.zone }))).toEqual([
+      { date: TIMELINE_PRE_TRIP_KEY, zone: 'pre' },
+      { date: '2026-09-10', zone: 'trip' },
+      { date: TIMELINE_POST_TRIP_KEY, zone: 'post' },
+    ]);
+    expect(sections[0].entries.map((e) => e.item.id)).toEqual([
+      'm-pre',
+      'm-pre-2',
+    ]);
+    expect(sections[0].rangeStart).toBe('2026-09-01');
+    expect(sections[0].rangeEnd).toBe('2026-09-05');
+    expect(sections[2].entries.map((e) => e.item.id)).toEqual(['m-post']);
   });
 
   it('formats action captions without the full span', () => {

@@ -69,7 +69,7 @@ export function SheetHeader({
     onClose();
   };
   return (
-    <View style={[{ paddingTop: spacing.xs, paddingBottom: spacing.xl, gap: spacing.sm }, style]}>
+    <View style={[{ paddingBottom: spacing.xl, gap: spacing.sm }, style]}>
       <SheetGrabber
         testID={closeTestID}
         onPress={close}

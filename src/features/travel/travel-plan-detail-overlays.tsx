@@ -146,8 +146,10 @@ export function TravelPlanDetailOverlays({
           if (!itemId) return;
           void (async () => {
             const assets = await pickLibraryImages({
-              allowsMultipleSelection: true,
-              selectionLimit: 8,
+              allowsMultipleSelection: false,
+              selectionLimit: 1,
+              legacy: true,
+              allowsEditing: true,
             });
             if (assets?.length) {
               await itemMedia.appendPhotosToItem(
@@ -157,6 +159,21 @@ export function TravelPlanDetailOverlays({
             }
           })();
         }}
+        onRemovePhoto={
+          (itinerary.find((item) => item.id === itemMedia.addPhotosItemId)
+            ?.photoUris?.length ?? 0) > 0
+            ? () => {
+                const itemId = itemMedia.addPhotosItemIdRef.current;
+                if (itemId) itemMedia.clearPhotosFromItem(itemId);
+              }
+            : undefined
+        }
+        removeLabel={
+          (itinerary.find((item) => item.id === itemMedia.addPhotosItemId)
+            ?.photoUris?.length ?? 0) > 1
+            ? 'Remove All Photos'
+            : 'Remove Photo'
+        }
       />
       <TravelItineraryAddSheet
         visible={form.isAddingItem}

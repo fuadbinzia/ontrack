@@ -13,6 +13,7 @@ import {
   TimelineDayBridge,
   TimelineDayHeader,
 } from '@/features/travel/travel-timeline-day-chrome';
+import { TravelTimelineFocusAnchor } from '@/features/travel/travel-timeline-focus-anchor';
 import { TravelTimelineNode } from '@/features/travel/travel-timeline-node';
 import {
   isTimelineEntryPast,
@@ -81,21 +82,39 @@ export function TravelItineraryTimelineDays(p: Record<string, any>) {
     onBeginStayEdit,
     onBeginItemEdit,
     onAddPhotos,
-    onRemovePhoto,
     onRemove,
     onSaveNotes,
+    pendingFocusEntryKey,
+    onFocusEntryHandled,
+    scrollRef,
+    scrollOffsetYRef,
   } = p;
 
   return (
     <>
       {days.map((day: any, dayIndex: number) => {
-        const dayNumber = dayNumberFor(plan.startDate, day.date);
-        const dateLabel = formatDateKeyMedium(day.date);
-        const weekday = formatWeekday(day.date);
+        const zone = day.zone as 'pre' | 'trip' | 'post' | undefined;
+        const dayNumber =
+          zone === 'trip' || !zone
+            ? dayNumberFor(plan.startDate, day.date)
+            : 0;
+        const rangeStart = (day.rangeStart as string | undefined) ?? day.date;
+        const rangeEnd = (day.rangeEnd as string | undefined) ?? day.date;
+        const dateLabel =
+          rangeStart === rangeEnd
+            ? formatDateKeyMedium(rangeStart)
+            : `${formatDateKeyMedium(rangeStart)} – ${formatDateKeyMedium(rangeEnd)}`;
+        const weekday =
+          zone === 'pre'
+            ? 'Before the trip'
+            : zone === 'post'
+              ? 'After the trip'
+              : formatWeekday(day.date);
+        const titleLabel =
+          zone === 'pre' ? 'Pre-trip' : zone === 'post' ? 'Post Trip' : undefined;
         const dayExpanded = !collapsedDayDates.has(day.date);
         const entryCount = day.entries.length;
         const dayPhase = timelineDayPhase(day.date, day.entries, now);
-        const dayPast = dayPhase === 'past';
         const spineColor = daySpineColor(dayIndex, theme.name);
         const prevSpineColor =
           dayIndex > 0 ? daySpineColor(dayIndex - 1, theme.name) : spineColor;
@@ -104,7 +123,7 @@ export function TravelItineraryTimelineDays(p: Record<string, any>) {
             ? day.entries.findIndex((entry: any) => !isTimelineEntryPast(entry, now))
             : -1;
         return (
-          <View key={day.date} style={{ opacity: dayPast ? 0.58 : 1 }}>
+          <View key={day.date}>
             {dayIndex > 0 ? (
               <View
                 pointerEvents="none"
@@ -189,7 +208,6 @@ export function TravelItineraryTimelineDays(p: Record<string, any>) {
                                 : dayMarkerSize),
                             bottom: 0,
                             backgroundColor: spineColor,
-                            opacity: dayPast ? 0.55 : 1,
                           },
                         ]}
                       />
@@ -208,6 +226,7 @@ export function TravelItineraryTimelineDays(p: Record<string, any>) {
                       overlineSize={typography.overline.fontSize}
                       overlineLineHeight={typography.overline.lineHeight}
                       onToggleDay={onToggleDay}
+                      titleLabel={titleLabel}
                     />
                     <CollapsibleBody expanded={dayExpanded}>
                       <View style={{ gap: rs.xs }}>
@@ -236,7 +255,6 @@ export function TravelItineraryTimelineDays(p: Record<string, any>) {
                                 ? day.entries[index - 1].startMinutes
                                 : undefined;
                             const showTime = prevMinutes !== entry.startMinutes;
-                            const entryPast = isTimelineEntryPast(entry, now);
                             const showNowBefore =
                               firstUpcomingIndex > 0 &&
                               index === firstUpcomingIndex;
@@ -280,6 +298,14 @@ export function TravelItineraryTimelineDays(p: Record<string, any>) {
                                     </AppText>
                                   </View>
                                 ) : null}
+                                <TravelTimelineFocusAnchor
+                                  active={
+                                    Boolean(pendingFocusEntryKey) &&
+                                    pendingFocusEntryKey === entry.key
+                                  }
+                                  scrollRef={scrollRef}
+                                  scrollOffsetYRef={scrollOffsetYRef}
+                                  onHandled={onFocusEntryHandled}>
                                 <View
                                   style={[
                                     styles.eventShell,
@@ -295,7 +321,6 @@ export function TravelItineraryTimelineDays(p: Record<string, any>) {
                                           ? StyleSheet.hairlineWidth
                                           : 0,
                                       borderTopColor: theme.separator,
-                                      opacity: entryPast ? 0.55 : 1,
                                     },
                                   ]}>
                                   <TravelTimelineNode
@@ -387,15 +412,13 @@ export function TravelItineraryTimelineDays(p: Record<string, any>) {
                                         : undefined
                                     }
                                     onAddPhotos={() => onAddPhotos(item.id)}
-                                    onRemovePhoto={(uri) =>
-                                      onRemovePhoto(item.id, uri)
-                                    }
                                     onRemove={() => onRemove(item)}
                                     onSaveNotes={(notes) =>
                                       onSaveNotes(item.id, notes)
                                     }
                                   />
                                 </View>
+                                </TravelTimelineFocusAnchor>
                               </View>
                             );
                           })}

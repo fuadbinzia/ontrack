@@ -41,6 +41,7 @@ const ITEM_KINDS = new Set([
   'activity',
   'rental',
   'moment',
+  'event',
 ]);
 const DEFAULT_MOMENT_DURATION_MINUTES = 15;
 

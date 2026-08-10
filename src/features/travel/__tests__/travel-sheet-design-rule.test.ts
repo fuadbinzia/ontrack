@@ -80,6 +80,13 @@ describe('canonical travel sheet design', () => {
         }),
       );
     }
+
+    const removeConfirm = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-remove-confirm-modal.tsx'),
+      'utf8',
+    );
+    expect(removeConfirm).toContain('appearance="glass"');
+    expect(removeConfirm).not.toMatch(/icon=["']delete["']/);
   });
 
   it('uses the travel sheet header for chat instead of the default stack bar', () => {

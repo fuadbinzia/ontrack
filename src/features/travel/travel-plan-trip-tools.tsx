@@ -80,7 +80,7 @@ export function TravelPlanTripTools({
           style={{
             paddingHorizontal: rs.sm,
             paddingTop: rs.xs,
-            paddingBottom: rs.sm,
+            paddingBottom: rs.md,
           }}>
           <TravelTripActionGrid
             tripId={plan.id}

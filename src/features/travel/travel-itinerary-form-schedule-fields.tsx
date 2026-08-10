@@ -45,7 +45,7 @@ export function TravelItineraryFormScheduleFields({
   const chrome = itinerarySheetChrome(theme);
   const { spacing: rs } = useResponsive();
   const usesRange = kind === 'stay' || kind === 'flight' || kind === 'rental';
-  const showActivityTimes = kind === 'activity';
+  const showActivityTimes = kind === 'activity' || kind === 'event';
   const rangeStartLabel =
     kind === 'stay'
       ? 'Check-in'
@@ -179,8 +179,8 @@ export function TravelItineraryFormScheduleFields({
               value={date}
               stackedLabel="Date *"
               placeholder="Select date"
-              minimumDate={planStartDate}
-              maximumDate={planEndDate}
+              minimumDate={kind === 'moment' ? undefined : planStartDate}
+              maximumDate={kind === 'moment' ? undefined : planEndDate}
               onChange={onDateChange}
               {...itinerarySheetFieldProps(chrome, 'calendar')}
             />

@@ -44,11 +44,15 @@ export function SheetGrabber({
     />
   );
 
+  // Compact lip inset; hitSlop + parent header pan keep dismiss easy.
   const slotPad = {
     paddingTop: spacing.xs,
-    paddingBottom: spacing.xxs,
-    minHeight: layout.minTapTarget,
+    paddingBottom: spacing.xs,
   };
+  const dismissHitSlop = Math.max(
+    8,
+    Math.ceil((layout.minTapTarget - s(5) - spacing.xs - spacing.xs) / 2),
+  );
 
   if (onPress && interactive) {
     return (
@@ -60,7 +64,7 @@ export function SheetGrabber({
         accessibilityLabel={accessibilityLabel}
         accessibilityHint="Swipe down or tap to dismiss"
         onPress={onPress}
-        hitSlop={8}
+        hitSlop={dismissHitSlop}
         style={({ pressed }) => [
           styles.slot,
           slotPad,
@@ -98,7 +102,7 @@ export function SheetGrabber({
         pointerEvents="none"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        style={[styles.slot, { paddingTop: spacing.xs, paddingBottom: spacing.xxs }]}>
+        style={[styles.slot, slotPad]}>
         {pill}
       </View>
     </AgentTestId>
@@ -109,7 +113,7 @@ const styles = StyleSheet.create({
   slot: {
     alignSelf: 'stretch',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   pill: {
     borderRadius: radii.pill,

@@ -14,7 +14,7 @@ export type TravelTransportMode =
   | 'other';
 
 export type TravelItemKind =
-  'flight' | 'transport' | 'stay' | 'activity' | 'rental' | 'moment';
+  'flight' | 'transport' | 'stay' | 'activity' | 'rental' | 'moment' | 'event';
 
 export interface TravelRouteStop {
   id: string;

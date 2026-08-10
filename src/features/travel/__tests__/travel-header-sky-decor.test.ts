@@ -272,6 +272,7 @@ describe('safe-area chrome overlay', () => {
     expect(detail).toContain('bodyReady');
     expect(detail).toContain('deferAfterPageTransition');
     expect(body).toContain('bodyReady');
+    expect(body).toContain('TravelPlanDetailBodySkeleton');
     expect(body).toContain('TravelPlanHero');
     expect(hero).not.toContain('skyFxOpacity');
     expect(hero).not.toContain('deferUntilIdle');

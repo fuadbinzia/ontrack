@@ -5,24 +5,44 @@ export type DetailSectionKey =
   | 'ground'
   | 'stays'
   | 'rentals'
+  | 'events'
   | 'timeline';
 
+/**
+ * First-visit defaults for plan-detail accordion sections.
+ * Persisted `sectionExpanded` in `travel-plan-ui` always wins once the user toggles.
+ *
+ * Match the intended first paint: Transport + Timeline open; Tools closed;
+ * nested transport kinds collapsed until the user opens them.
+ */
 export function sectionDefaultExpanded(
   key: DetailSectionKey,
-  counts: { flights: number; ground: number; stays: number; rentals: number },
+  counts: {
+    flights: number;
+    ground: number;
+    stays: number;
+    rentals: number;
+    events: number;
+  },
 ): boolean {
   switch (key) {
     case 'tools':
-      // Start open so calendar / weather / chat stay one tap away.
-      return true;
+      return false;
     case 'transport':
-      return counts.flights + counts.ground + counts.stays + counts.rentals > 0;
-    // Nested kinds stay open so empty-state CTAs remain discoverable.
+      return (
+        counts.flights +
+          counts.ground +
+          counts.stays +
+          counts.rentals +
+          counts.events >
+        0
+      );
     case 'flights':
     case 'ground':
     case 'stays':
     case 'rentals':
-      return true;
+    case 'events':
+      return false;
     case 'timeline':
       return true;
   }

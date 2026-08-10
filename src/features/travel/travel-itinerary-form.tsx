@@ -35,11 +35,13 @@ import {
     TravelItineraryStayFields,
     TravelItineraryStayNotesField,
 } from '@/features/travel/travel-itinerary-stay-fields';
+import { TravelPhotoLightbox } from '@/features/travel/travel-photo-lightbox';
 import type { TravelItemKind } from '@/features/travel/types';
 import { useAutoGrowingNote } from '@/features/travel/use-auto-growing-note';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import { AgentUiIds } from '@/utils/agent-ui';
+import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { haptics } from '@/utils/haptics';
 import { pickCameraImage, pickLibraryImages } from '@/utils/pick-image';
 
 /** Silent cap for itinerary details / notes (no counter in the UI). */
@@ -51,6 +53,7 @@ export type ConfirmationImportSource = 'document' | 'screenshots';
 export const ITEM_KINDS: { value: TravelItemKind; label: string }[] = [
   { value: 'moment', label: 'Moment' },
   { value: 'activity', label: 'Activity' },
+  { value: 'event', label: 'Event' },
   { value: 'flight', label: 'Flight' },
   { value: 'transport', label: 'Transport' },
   { value: 'stay', label: 'Stay' },
@@ -172,6 +175,7 @@ export function TravelItineraryForm({
   const chrome = itinerarySheetChrome(theme);
   const { s, spacing: rs, typography } = useResponsive();
   const [photosModalVisible, setPhotosModalVisible] = useState(false);
+  const [viewPhotoUri, setViewPhotoUri] = useState<string | undefined>();
   const isMoment = kind === 'moment';
   const thumb = Math.max(64, s(72));
   // Grow the TextInput value area only — outer stacked chrome already sizes the row.
@@ -220,7 +224,15 @@ export function TravelItineraryForm({
           : undefined;
 
   const nameTone =
-    kind === 'stay' ? 'lodging' : kind === 'flight' ? 'flight' : kind === 'moment' ? 'photo' : 'note';
+    kind === 'stay'
+      ? 'lodging'
+      : kind === 'flight'
+        ? 'flight'
+        : kind === 'moment'
+          ? 'photo'
+          : kind === 'event'
+            ? 'calendar'
+            : 'note';
   const nameIcon =
     kind === 'stay'
       ? ('lodging' as const)
@@ -228,9 +240,11 @@ export function TravelItineraryForm({
         ? ('flight' as const)
         : kind === 'transport'
           ? ('route' as const)
-        : kind === 'moment'
-          ? ('photo' as const)
-          : ('note' as const);
+          : kind === 'moment'
+            ? ('photo' as const)
+            : kind === 'event'
+              ? ('appointment' as const)
+              : ('note' as const);
 
   const appendPhotos = (uris: string[]) => {
     if (!uris.length) return;
@@ -317,7 +331,9 @@ export function TravelItineraryForm({
                 ? 'e.g. Train to Washington'
                 : kind === 'moment'
                   ? 'e.g. Sunset at the falls'
-                  : 'e.g. Dinner in Alfama'
+                  : kind === 'event'
+                    ? 'e.g. Northern Lights cruise'
+                    : 'e.g. Dinner in Alfama'
         }
         accessibilityLabel={
           kind === 'stay'
@@ -425,7 +441,9 @@ export function TravelItineraryForm({
                 ? 'Insurance, driver, or desk notes…'
                 : kind === 'moment'
                   ? 'What made this moment special…'
-                  : 'Add any helpful details…'
+                  : kind === 'event'
+                    ? 'Venue, seat, or entry notes…'
+                    : 'Add any helpful details…'
           }
           accessibilityLabel={isMoment ? 'Notes' : 'Details'}
           multiline
@@ -458,31 +476,79 @@ export function TravelItineraryForm({
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={[styles.photoStrip, { gap: rs.sm }]}>
-              {photoUris.map((uri) => (
-                <View
-                  key={uri}
-                  style={[styles.photoWrap, { width: thumb, height: thumb }]}>
-                  <Image
-                    source={{ uri }}
-                    style={styles.photo}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                  />
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Remove photo"
-                    hitSlop={6}
-                    onPress={() =>
-                      onPhotoUrisChange(photoUris.filter((entry) => entry !== uri))
-                    }
-                    style={[
-                      styles.photoRemove,
-                      { backgroundColor: theme.overlayScrim },
-                    ]}>
-                    <Symbol name="close" size="sm" color={theme.textOnAccent} />
-                  </Pressable>
-                </View>
-              ))}
+              {photoUris.map((uri, index) => {
+                const openLabel = 'View photo';
+                const removeLabel = 'Remove photo';
+                const removeSize = Math.max(28, s(28));
+                return (
+                  <View
+                    key={uri}
+                    style={[styles.photoCluster, { width: thumb, gap: rs.xxs }]}>
+                    <View style={styles.photoRemoveRow}>
+                      <AgentTestId
+                        testID={AgentUiIds.travel.itineraryAdd.removePhoto(index)}
+                        label={removeLabel}
+                        onPress={() =>
+                          onPhotoUrisChange(photoUris.filter((entry) => entry !== uri))
+                        }>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={removeLabel}
+                          hitSlop={6}
+                          onPress={() =>
+                            onPhotoUrisChange(
+                              photoUris.filter((entry) => entry !== uri),
+                            )
+                          }
+                          style={[
+                            styles.photoRemove,
+                            {
+                              width: removeSize,
+                              height: removeSize,
+                              borderRadius: removeSize / 2,
+                              backgroundColor: theme.overlayScrim,
+                            },
+                          ]}>
+                          <Symbol
+                            name="close"
+                            size="sm"
+                            color={theme.textOnAccent}
+                          />
+                        </Pressable>
+                      </AgentTestId>
+                    </View>
+                    <View
+                      style={[styles.photoWrap, { width: thumb, height: thumb }]}>
+                      <AgentTestId
+                        testID={AgentUiIds.travel.itineraryAdd.photo(index)}
+                        label={openLabel}
+                        onPress={() => {
+                          haptics.tap();
+                          setViewPhotoUri(uri);
+                        }}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={openLabel}
+                          onPress={() => {
+                            haptics.tap();
+                            setViewPhotoUri(uri);
+                          }}
+                          style={({ pressed }) => [
+                            styles.photo,
+                            pressed ? styles.photoPressed : undefined,
+                          ]}>
+                          <Image
+                            source={{ uri }}
+                            style={styles.photo}
+                            contentFit="cover"
+                            cachePolicy="memory-disk"
+                          />
+                        </Pressable>
+                      </AgentTestId>
+                    </View>
+                  </View>
+                );
+              })}
             </ScrollView>
           ) : null}
           <Button variant="secondary" icon="photo" onPress={choosePhotos}>
@@ -539,9 +605,15 @@ export function TravelItineraryForm({
       onChooseFromPhotos={() => {
         void (async () => {
           try {
+            // Single-select UIImagePicker — PHPicker fails on Simulator / iCloud-only
+            // assets (CloudPhotoLibrary 1006). allowsEditing forces that path on
+            // current binaries; legacy:true is the no-crop path after native rebuild.
+            // Tap Add More Photos to attach additional shots.
             const assets = await pickLibraryImages({
-              allowsMultipleSelection: true,
-              selectionLimit: 8,
+              allowsMultipleSelection: false,
+              selectionLimit: 1,
+              legacy: true,
+              allowsEditing: true,
             });
             if (assets?.length) appendPhotos(assets.map((asset) => asset.uri));
           } catch (error) {
@@ -549,6 +621,22 @@ export function TravelItineraryForm({
           }
         })();
       }}
+      onRemovePhoto={
+        photoUris.length
+          ? () => {
+              onPhotoUrisChange([]);
+            }
+          : undefined
+      }
+      removeLabel={
+        photoUris.length > 1 ? 'Remove All Photos' : 'Remove Photo'
+      }
+    />
+    <TravelPhotoLightbox
+      uri={viewPhotoUri}
+      visible={Boolean(viewPhotoUri)}
+      viewerKey="itineraryAdd"
+      onClose={() => setViewPhotoUri(undefined)}
     />
     </>
   );
@@ -557,19 +645,25 @@ export function TravelItineraryForm({
 const styles = StyleSheet.create({
   formBody: {},
   photoSection: {},
-  photoStrip: {},
+  photoStrip: {
+    alignItems: 'flex-start',
+  },
+  photoCluster: {
+    alignItems: 'flex-end',
+  },
+  photoRemoveRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+  },
   photoWrap: {
     borderRadius: radii.sm,
     overflow: 'hidden',
   },
+  photoPressed: { opacity: 0.72 },
   photo: { width: '100%', height: '100%' },
   photoRemove: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },

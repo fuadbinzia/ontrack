@@ -21,6 +21,10 @@ import {
     validateTransportDetails,
 } from '@/features/travel/transport-details';
 import { persistTravelMomentPhotos } from '@/features/travel/travel-moment-media';
+import {
+  firstCreatedItineraryItem,
+  type RevealItineraryTarget,
+} from '@/features/travel/travel-reveal-itinerary-item';
 import type { TravelItineraryItem, TravelPlan } from '@/features/travel/types';
 import type { TravelPlanDetailAddForm } from '@/features/travel/use-travel-plan-detail-add-form';
 import { newId } from '@/store/schedule';
@@ -45,6 +49,8 @@ type AddItemOptions = {
     plan: TravelPlan,
     duplicateItinerary: boolean,
   ) => void;
+  /** After a successful save, land on that stop in the itinerary Timeline. */
+  onRevealItem?: (target: RevealItineraryTarget) => void;
 };
 
 export function useTravelPlanDetailAddItem({
@@ -56,7 +62,21 @@ export function useTravelPlanDetailAddItem({
   setExpenseDraft,
   setOpenExpenseSheet,
   maybeShowImportedAddPrompt,
+  onRevealItem,
 }: AddItemOptions) {
+  const revealItem = (item: Pick<TravelItineraryItem, 'id' | 'date' | 'kind'>) => {
+    onRevealItem?.({ itemId: item.id, date: item.date, kind: item.kind });
+  };
+  const revealCreatedInPlan = (
+    before: TravelPlan,
+    after: TravelPlan,
+  ) => {
+    const created = firstCreatedItineraryItem(
+      before.itinerary ?? [],
+      after.itinerary ?? [],
+    );
+    if (created) revealItem(created);
+  };
   const addItemInProgressRef = useRef(false);
   const stopAddItem = () => {
     addItemInProgressRef.current = false;
@@ -115,12 +135,15 @@ export function useTravelPlanDetailAddItem({
     if (
       !/^\d{4}-\d{2}-\d{2}$/.test(form.date) ||
       (form.kind !== 'flight' &&
+        form.kind !== 'moment' &&
         (form.date < plan.startDate || form.date > plan.endDate))
     ) {
       return addItemError(
         form.kind === 'flight'
           ? 'Choose a valid departure date.'
-          : `Choose a date between ${formatDateKey(plan.startDate, dateDisplayFormat)} and ${formatDateKey(plan.endDate, dateDisplayFormat)}.`,
+          : form.kind === 'moment'
+            ? 'Choose a valid date.'
+            : `Choose a date between ${formatDateKey(plan.startDate, dateDisplayFormat)} and ${formatDateKey(plan.endDate, dateDisplayFormat)}.`,
       );
     }
     if (
@@ -198,7 +221,7 @@ export function useTravelPlanDetailAddItem({
       if (form.kind === 'flight' && span > 3 * 24 * 60) {
         return addItemError('Flight duration looks too long. Check the arrival time.');
       }
-    } else if (form.kind === 'activity') {
+    } else if (form.kind === 'activity' || form.kind === 'event') {
       if (
         form.endMinutes === null ||
         form.endMinutes < 0 ||
@@ -342,6 +365,7 @@ export function useTravelPlanDetailAddItem({
       form.resetAddForm();
       form.setIsAddingItem(false);
       stopAddItem();
+      revealCreatedInPlan(currentPlan, nextPlan);
       maybeShowImportedAddPrompt(nextPlan, false);
       return;
     }
@@ -388,6 +412,7 @@ export function useTravelPlanDetailAddItem({
       form.resetAddForm();
       form.setIsAddingItem(false);
       stopAddItem();
+      revealCreatedInPlan(currentPlan, nextPlan);
       maybeShowImportedAddPrompt(nextPlan, false);
       return;
     }
@@ -395,7 +420,9 @@ export function useTravelPlanDetailAddItem({
     const editingItemId = form.editingItemId;
     const editingSimpleStop =
       Boolean(editingItemId) &&
-      (form.kind === 'moment' || form.kind === 'activity');
+      (form.kind === 'moment' ||
+        form.kind === 'activity' ||
+        form.kind === 'event');
     const itemId = editingSimpleStop ? editingItemId! : newId('trip-item');
     const now = new Date().toISOString();
     const flightConfirmationUris =
@@ -435,7 +462,12 @@ export function useTravelPlanDetailAddItem({
       const beforeItems = Array.isArray(before.itinerary) ? before.itinerary : [];
       if (editingSimpleStop) {
         const existing = beforeItems.find((entry) => entry.id === itemId);
-        if (!existing || (existing.kind !== 'moment' && existing.kind !== 'activity')) {
+        if (
+          !existing ||
+          (existing.kind !== 'moment' &&
+            existing.kind !== 'activity' &&
+            existing.kind !== 'event')
+        ) {
           return addItemError('This stop can no longer be edited.');
         }
         const persistedPhotos = form.photoUris.length
@@ -468,12 +500,17 @@ export function useTravelPlanDetailAddItem({
         };
         updatePlan(nextPlan);
         clearCompletedForm(true);
+        revealItem(incomingItem);
         return;
       }
       if (beforeItems.some((existing) => isDuplicateItineraryItem(existing, incomingItem))) {
         const merged = mergeDuplicateItemConfirmationUris(before, incomingItem);
         if (merged) updatePlan(merged);
         clearCompletedForm(false);
+        const dup = beforeItems.find((entry) =>
+          isDuplicateItineraryItem(entry, incomingItem),
+        );
+        if (dup) revealItem(dup);
         maybeShowImportedAddPrompt(merged ?? before, false);
         return;
       }
@@ -489,6 +526,10 @@ export function useTravelPlanDetailAddItem({
         const merged = mergeDuplicateItemConfirmationUris(latest, incomingItem);
         if (merged) updatePlan(merged);
         clearCompletedForm(false);
+        const dup = latestItems.find((entry) =>
+          isDuplicateItineraryItem(entry, incomingItem),
+        );
+        if (dup) revealItem(dup);
         maybeShowImportedAddPrompt(merged ?? latest, false);
         return;
       }
@@ -516,6 +557,7 @@ export function useTravelPlanDetailAddItem({
         setOpenExpenseSheet(true);
       }
       clearCompletedForm(true);
+      revealItem(incomingItem);
       maybeShowImportedAddPrompt(latest, false);
     })().catch((caught: unknown) => {
       if (__DEV__) console.warn('[addTravelItineraryItem]', caught);

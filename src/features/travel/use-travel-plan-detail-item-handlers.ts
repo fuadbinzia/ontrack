@@ -134,7 +134,6 @@ export function buildTravelPlanDetailItemHandlers({
       }
     },
     onAddPhotos: itemMedia.addPhotosToItem,
-    onRemovePhoto: itemMedia.removePhotoFromItem,
     onRemove: itemMedia.confirmRemoveItem,
     onSaveNotes: itemMedia.saveItemNotes,
     onBeginItemEdit,

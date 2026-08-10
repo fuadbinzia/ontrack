@@ -1,6 +1,7 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { Button, SheetScaffold } from '@/components/primitives';
+import { SheetScaffold } from '@/components/primitives';
+import { TravelSheetAction } from '@/features/travel/travel-list-actions';
 import { useResponsive } from '@/hooks/use-responsive';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
@@ -56,34 +57,42 @@ export function TravelAddPhotosModal({
       closeAccessibilityLabel="Close photo actions"
       closeTestID={AgentUiIds.travel.addPhotos.close}
       surface="glass">
-      <View style={{ gap: spacing.md }}>
-        <Button
-          variant="primary"
+      <View style={[styles.grid, { gap: spacing.sm }]}>
+        <TravelSheetAction
+          label="Take Photo"
           icon="camera"
+          tone="photo"
           testID={AgentUiIds.travel.addPhotos.takePhoto}
           accessibilityLabel="Take Photo"
-          onPress={() => runAndClose(onTakePhoto)}>
-          Take Photo
-        </Button>
-        <Button
-          variant="secondary"
+          onPress={() => runAndClose(onTakePhoto)}
+        />
+        <TravelSheetAction
+          label="Choose from Photos"
           icon="photo"
+          tone="photo"
           testID={AgentUiIds.travel.addPhotos.chooseFromPhotos}
           accessibilityLabel="Choose from Photos"
-          onPress={() => runAndClose(onChooseFromPhotos)}>
-          Choose from Photos
-        </Button>
+          onPress={() => runAndClose(onChooseFromPhotos)}
+        />
         {onRemovePhoto ? (
-          <Button
-            variant="danger"
+          <TravelSheetAction
+            label={removeLabel}
             icon="delete"
+            tone="chat"
+            wide
             testID={AgentUiIds.travel.addPhotos.removePhoto}
             accessibilityLabel={removeLabel}
-            onPress={confirmRemove}>
-            {removeLabel}
-          </Button>
+            onPress={confirmRemove}
+          />
         ) : null}
       </View>
     </SheetScaffold>
   );
 }
+
+const styles = StyleSheet.create({
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+});

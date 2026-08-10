@@ -738,8 +738,11 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 | `ontrack.travel.planNotes.close`                 | Close the trip notes editor                               |
 | `ontrack.travel.planNotes.field`                 | Trip notes text field                                     |
 | `ontrack.travel.planNotes.save`                  | Save trip notes                                           |
-| `ontrack.travel.photoViewer.dismiss.<tripId>`    | Dismiss the expanded trip photo                           |
-| `ontrack.travel.photoViewer.close.<tripId>`      | Close the expanded trip photo                             |
+| `ontrack.travel.photoViewer.dismiss.<viewerKey>` | Dismiss the expanded trip/moment photo                    |
+| `ontrack.travel.photoViewer.close.<viewerKey>`   | Close the expanded trip/moment photo                      |
+| `ontrack.travel.timelineItem.<itemId>.photo.<n>` | Open a moment/itinerary photo in the lightbox             |
+| `ontrack.travel.itineraryAdd.photo.<n>`          | Preview an attached photo in the add/edit sheet           |
+| `ontrack.travel.itineraryAdd.removePhoto.<n>`    | Remove an attached photo (control above the thumb)        |
 
 ### Travel canonical actions
 
@@ -967,13 +970,16 @@ Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scr
 | `ontrack.travel.planDetail.section.tools`      | Expand/collapse Trip Tools (glass action grid)                           |
 | `ontrack.travel.planDetail.section.transport`  | Expand/collapse transport group                                          |
 | `ontrack.travel.planDetail.section.timeline`   | Expand/collapse timeline                                                 |
+| `ontrack.travel.planDetail.section.loading`    | Glass skeleton under hero while itinerary cards settle                   |
 | `ontrack.travel.planDetail.section.notes`      | Expand/collapse trip notes                                               |
 | `ontrack.travel.planDetail.editNotes`          | Open the trip notes editor from the notes card body                      |
 | `ontrack.travel.planDetail.section.ground`     | Expand/collapse Transit items                                            |
+| `ontrack.travel.planDetail.section.events`     | Expand/collapse Events items                                             |
 | `ontrack.travel.planDetail.addFlight`          | Empty-state CTA to add a flight                                          |
 | `ontrack.travel.planDetail.addTransport`       | Empty-state CTA to add ground/transit                                    |
 | `ontrack.travel.planDetail.addStay`            | Empty-state CTA to add a stay                                            |
 | `ontrack.travel.planDetail.addRental`          | Empty-state CTA to add a rental                                          |
+| `ontrack.travel.planDetail.addEvent`           | Empty-state CTA to add an event                                          |
 | `ontrack.travel.planDetail.backToTravel`       | Empty-state back to Travel when plan is missing                          |
 | `ontrack.travel.timelineAdd.close`             | Kind picker close                                                        |
 | `ontrack.travel.timelineAdd.kind.<kind>`       | Timeline kind choice                                                     |

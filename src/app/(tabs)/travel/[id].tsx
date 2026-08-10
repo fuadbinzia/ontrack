@@ -9,6 +9,7 @@ import { usePreferences, type ThemePreference } from '@/store/preferences';
 const ADD_KINDS = new Set<TravelItemKind>([
   'moment',
   'activity',
+  'event',
   'flight',
   'transport',
   'stay',

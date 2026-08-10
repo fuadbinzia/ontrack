@@ -18,7 +18,7 @@ type TravelRemoveConfirmModalProps = {
   disableBackdropDismiss?: boolean;
 };
 
-/** Canonical destructive confirmation: neutral top-right X plus one danger action. */
+/** Canonical destructive confirmation: grabber dismiss + one glass danger action. */
 export function TravelRemoveConfirmModal({
   payload,
   onCancel,
@@ -47,7 +47,7 @@ export function TravelRemoveConfirmModal({
       surface="glass">
       <Button
         variant="danger"
-        icon="delete"
+        appearance="glass"
         onPress={confirm}
         testID={payload.confirmTestID ?? AgentUiIds.travel.removeConfirm.confirm}
         accessibilityLabel={actionLabel}>

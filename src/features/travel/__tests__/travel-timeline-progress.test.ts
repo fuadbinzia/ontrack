@@ -107,7 +107,7 @@ describe('travel timeline progress', () => {
     ).toBe(false);
   });
 
-  it('classifies day phases and auto-collapses completed days', () => {
+  it('classifies day phases and auto-collapses every timeline day', () => {
     const now = timelineClockSample('2026-09-28', 8 * 60);
     expect(timelineDayPhase('2026-09-27', days[0].entries, now)).toBe('past');
     expect(timelineDayPhase('2026-09-28', days[1].entries, now)).toBe('past');
@@ -123,20 +123,23 @@ describe('travel timeline progress', () => {
     expect([...autoCollapsedTimelineDates(days, now)].sort()).toEqual([
       '2026-09-27',
       '2026-09-28',
+      '2026-09-29',
+      '2026-09-30',
     ]);
   });
 
-  it('keeps user-expanded past days open after clock sync', () => {
-    const autoCollapsed = new Set(['2026-09-27', '2026-09-28']);
+  it('keeps user-expanded days open after remount / clock sync', () => {
+    const autoCollapsed = autoCollapsedTimelineDates(days);
     const resolved = resolveCollapsedTimelineDates({
       days,
       autoCollapsed,
-      currentCollapsed: new Set(['2026-09-28']),
+      currentCollapsed: new Set(['2026-09-28', '2026-09-29', '2026-09-30']),
       userTouched: new Set(['2026-09-27']),
     });
     expect(resolved.has('2026-09-27')).toBe(false);
     expect(resolved.has('2026-09-28')).toBe(true);
-    expect(resolved.has('2026-09-29')).toBe(false);
+    expect(resolved.has('2026-09-29')).toBe(true);
+    expect(resolved.has('2026-09-30')).toBe(true);
   });
 
   it('summarizes upcoming, in-progress, and complete trips', () => {

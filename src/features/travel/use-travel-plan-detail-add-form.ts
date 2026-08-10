@@ -28,6 +28,7 @@ import type {
   TravelItineraryItem,
   TravelPlan,
 } from '@/features/travel/types';
+import { nowMinutes, todayKey } from '@/utils/date';
 
 type UseTravelPlanDetailAddFormOptions = {
   plan: TravelPlan;
@@ -172,6 +173,12 @@ export function useTravelPlanDetailAddForm({
         setDate(plan.startDate);
         setStartMinutes(9 * 60);
         setTransportDetails(defaultTransportDetails());
+      } else if (nextKind === 'moment') {
+        // Capture “now” so a moment lands on the current local clock (may be outside trip).
+        const minutes = nowMinutes();
+        setDate(todayKey());
+        setStartMinutes(minutes);
+        setEndMinutes(Math.min(minutes + 15, 24 * 60 - 1));
       } else {
         setDate(plan.startDate);
         setStartMinutes(9 * 60);
@@ -193,7 +200,13 @@ export function useTravelPlanDetailAddForm({
 
   const beginEditingItem = useCallback(
     (item: TravelItineraryItem, onOpenTimeline?: () => void) => {
-      if (item.kind !== 'moment' && item.kind !== 'activity') return;
+      if (
+        item.kind !== 'moment' &&
+        item.kind !== 'activity' &&
+        item.kind !== 'event'
+      ) {
+        return;
+      }
       resetAddForm();
       setEditingItemId(item.id);
       setKind(item.kind);
@@ -202,7 +215,7 @@ export function useTravelPlanDetailAddForm({
       setStartMinutes(item.startMinutes);
       setEndDate(item.date);
       setEndMinutes(
-        item.kind === 'activity'
+        item.kind === 'activity' || item.kind === 'event'
           ? activityEndMinutesFromItem(item)
           : Math.min(item.startMinutes + 60, 24 * 60 - 1),
       );

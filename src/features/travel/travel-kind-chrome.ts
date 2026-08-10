@@ -16,6 +16,7 @@ type KindChromeSwatch = {
 const KIND_CHROME_LIGHT: Record<TravelItemKind, KindChromeSwatch> = {
   moment: { accent: '#A85661', tint: '#F7E8EB', border: '#E8CDD3' },
   activity: { accent: '#56663A', tint: '#F2F2E9', border: '#D9DBC8' },
+  event: { accent: '#B86E2A', tint: '#F8F0E6', border: '#E8D5BB' },
   flight: { accent: '#315A7C', tint: '#EDF3F8', border: '#C9D9E6' },
   transport: { accent: '#2F6B62', tint: '#EAF4F1', border: '#C4DDD7' },
   stay: { accent: '#765432', tint: '#F7EEE4', border: '#E8D4BB' },
@@ -25,6 +26,7 @@ const KIND_CHROME_LIGHT: Record<TravelItemKind, KindChromeSwatch> = {
 const KIND_CHROME_DARK: Record<TravelItemKind, KindChromeSwatch> = {
   moment: { accent: '#D68C96', tint: '#2A1E20', border: '#5A3E44' },
   activity: { accent: '#ADBF87', tint: '#22261D', border: '#48513A' },
+  event: { accent: '#E0A86A', tint: '#2A2218', border: '#5A4834' },
   flight: { accent: '#8DB2CF', tint: '#1B252D', border: '#3D5262' },
   transport: { accent: '#83C7BB', tint: '#192725', border: '#355850' },
   stay: { accent: '#D7AE83', tint: '#29221C', border: '#594938' },
@@ -74,6 +76,8 @@ export function kindIcon(kind: TravelItemKind): AppIconName {
       return 'route';
     case 'activity':
       return 'location';
+    case 'event':
+      return 'appointment';
     case 'moment':
       return 'bookmark';
     default:

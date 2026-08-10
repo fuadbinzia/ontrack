@@ -88,7 +88,6 @@ type TransportHandlers = {
     schedule: TravelRangeScheduleDraft,
   ) => void;
   onAddPhotos: (itemId: string) => void;
-  onRemovePhoto: (itemId: string, uri: string) => void;
   onRemove: (item: TravelItineraryItem) => void;
   onSaveNotes: (
     itemId: string,
@@ -216,7 +215,6 @@ function TransportItemList({
             handlers.onSaveTransportDetails(item.id, details, schedule)
           }
           onAddPhotos={() => handlers.onAddPhotos(item.id)}
-          onRemovePhoto={(uri) => handlers.onRemovePhoto(item.id, uri)}
           onRemove={() => handlers.onRemove(item)}
           onSaveNotes={(notes) => handlers.onSaveNotes(item.id, notes)}
         />
@@ -232,11 +230,13 @@ export function TravelTransportSections({
   groundExpanded,
   staysExpanded,
   rentalsExpanded,
+  eventsExpanded,
   onToggleTransport,
   onToggleFlights,
   onToggleGround,
   onToggleStays,
   onToggleRentals,
+  onToggleEvents,
   onAddKind,
   ...handlers
 }: TransportHandlers & {
@@ -246,11 +246,13 @@ export function TravelTransportSections({
   groundExpanded: boolean;
   staysExpanded: boolean;
   rentalsExpanded: boolean;
+  eventsExpanded: boolean;
   onToggleTransport: () => void;
   onToggleFlights: () => void;
   onToggleGround: () => void;
   onToggleStays: () => void;
   onToggleRentals: () => void;
+  onToggleEvents: () => void;
   onAddKind: (kind: TravelItemKind) => void;
 }) {
   const { spacing: rs } = useResponsive();
@@ -260,10 +262,12 @@ export function TravelTransportSections({
   const ground = items.filter((item) => item.kind === 'transport');
   const stays = items.filter((item) => item.kind === 'stay');
   const rentals = items.filter((item) => item.kind === 'rental');
+  const events = items.filter((item) => item.kind === 'event');
   const flightAccent = kindAccent('flight', theme, { darkGlass });
   const groundAccent = kindAccent('transport', theme, { darkGlass });
   const stayAccent = kindAccent('stay', theme, { darkGlass });
   const rentalAccent = kindAccent('rental', theme, { darkGlass });
+  const eventAccent = kindAccent('event', theme, { darkGlass });
 
   return (
     <TravelCollapsibleSection
@@ -364,6 +368,27 @@ export function TravelTransportSections({
               actionIcon: 'route',
               actionTestID: AgentUiIds.travel.planDetail.addTransport,
               onAction: () => onAddKind('transport'),
+            }}
+            {...handlers}
+          />
+        </TravelCollapsibleSection>
+        <TravelCollapsibleSection
+          title="EVENTS"
+          icon="appointment"
+          accentColor={eventAccent}
+          compact
+          expanded={eventsExpanded}
+          onToggle={onToggleEvents}
+          toggleTestID={AgentUiIds.travel.planDetail.eventsSection}
+          nested>
+          <TransportItemList
+            items={events}
+            empty={{
+              message: 'Shows, concerts, tickets, and other booked events.',
+              actionLabel: 'Add Event',
+              actionIcon: 'appointment',
+              actionTestID: AgentUiIds.travel.planDetail.addEvent,
+              onAction: () => onAddKind('event'),
             }}
             {...handlers}
           />

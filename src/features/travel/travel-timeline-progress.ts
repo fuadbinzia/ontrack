@@ -5,6 +5,8 @@ import { transportModeIcon } from '@/features/travel/travel-mode';
 import {
     expandTimelineEntries,
     groupTimelineEntriesByDate,
+    TIMELINE_POST_TRIP_KEY,
+    TIMELINE_PRE_TRIP_KEY,
     type TravelTimelineEntry,
 } from '@/features/travel/travel-timeline-entries';
 import type { TravelItemKind, TravelItineraryItem } from '@/features/travel/types';
@@ -35,6 +37,7 @@ export type JourneyTravelerBeat =
   | 'stay'
   | 'rental'
   | 'activity'
+  | 'event'
   | 'moment'
   | 'complete';
 
@@ -60,6 +63,7 @@ const BEAT_LABEL: Record<JourneyTravelerBeat, string> = {
   stay: 'Stay',
   rental: 'Rental',
   activity: 'Activity',
+  event: 'Event',
   moment: 'Moment',
   complete: 'Trip complete',
 };
@@ -83,6 +87,8 @@ function beatFromKind(kind: TravelItemKind): Exclude<
       return 'rental';
     case 'moment':
       return 'moment';
+    case 'event':
+      return 'event';
     case 'activity':
     default:
       return 'activity';
@@ -252,10 +258,14 @@ export function isTimelineEntryPast(
 
 export function timelineDayPhase(
   date: string,
-  entries: readonly Pick<TravelTimelineEntry, 'startMinutes'>[],
+  entries: readonly Pick<TravelTimelineEntry, 'startMinutes' | 'date'>[],
   now: Date = new Date(),
 ): TimelineDayPhase {
   const today = toDateKey(now);
+  // Pre-trip / Post trip buckets use synthetic keys — phase from real entry dates.
+  if (date === TIMELINE_PRE_TRIP_KEY || date === TIMELINE_POST_TRIP_KEY) {
+    return timelineEntriesPhase(entries, now);
+  }
   if (date < today) return 'past';
   if (date > today) return 'upcoming';
   if (entries.length === 0) return 'current';
@@ -265,20 +275,44 @@ export function timelineDayPhase(
     : 'current';
 }
 
-/** Past days auto-collapse; today stays open until every stop has elapsed. */
-export function autoCollapsedTimelineDates(
-  days: readonly { date: string; entries: readonly Pick<TravelTimelineEntry, 'startMinutes'>[] }[],
+/** Phase for a multi-date bucket (Pre-trip / Post trip). */
+export function timelineEntriesPhase(
+  entries: readonly Pick<TravelTimelineEntry, 'startMinutes' | 'date'>[],
   now: Date = new Date(),
-): Set<string> {
-  return new Set(
-    days
-      .filter((day) => timelineDayPhase(day.date, day.entries, now) === 'past')
-      .map((day) => day.date),
-  );
+): TimelineDayPhase {
+  if (!entries.length) return 'upcoming';
+  const today = toDateKey(now);
+  const withDates = entries.map((entry) => ({
+    date: entry.date,
+    startMinutes: entry.startMinutes,
+  }));
+  if (withDates.every((entry) => entry.date < today)) return 'past';
+  if (withDates.every((entry) => entry.date > today)) return 'upcoming';
+  const todayEntries = withDates.filter((entry) => entry.date === today);
+  if (!todayEntries.length) return 'current';
+  const nowMinutes = minutesFromMidnight(now);
+  const todayDone = todayEntries.every((entry) => entry.startMinutes <= nowMinutes);
+  const hasFuture = withDates.some((entry) => entry.date > today);
+  if (todayDone && !hasFuture) return 'past';
+  return 'current';
 }
 
 /**
- * Merge clock-driven collapse with user toggles.
+ * First-visit / untouched default: every timeline day starts collapsed.
+ * `now` kept for call-site stability; phase no longer drives auto-collapse.
+ */
+export function autoCollapsedTimelineDates(
+  days: readonly {
+    date: string;
+    entries: readonly Pick<TravelTimelineEntry, 'startMinutes' | 'date'>[];
+  }[],
+  _now: Date = new Date(),
+): Set<string> {
+  return new Set(days.map((day) => day.date));
+}
+
+/**
+ * Merge default collapse with user toggles.
  * Untouched days follow `autoCollapsed`; touched days keep the user's choice.
  */
 export function resolveCollapsedTimelineDates(options: {
@@ -301,12 +335,21 @@ export function resolveCollapsedTimelineDates(options: {
 export function summarizeTimelineProgress(options: {
   planStartDate: string;
   planEndDate: string;
-  days: readonly { date: string; entries: readonly Pick<TravelTimelineEntry, 'startMinutes'>[] }[];
+  days: readonly {
+    date: string;
+    entries: readonly Pick<TravelTimelineEntry, 'startMinutes' | 'date'>[];
+  }[];
   now?: Date;
 }): TimelineProgressSummary {
   const now = options.now ?? new Date();
-  const totalDays = Math.max(1, options.days.length);
-  const phases = options.days.map((day) =>
+  // Progress “Day N of M” counts trip days only — Pre-trip / Post trip are extras.
+  const tripDays = options.days.filter(
+    (day) =>
+      day.date !== TIMELINE_PRE_TRIP_KEY && day.date !== TIMELINE_POST_TRIP_KEY,
+  );
+  const daysForProgress = tripDays.length ? tripDays : options.days;
+  const totalDays = Math.max(1, daysForProgress.length);
+  const phases = daysForProgress.map((day) =>
     timelineDayPhase(day.date, day.entries, now),
   );
   const completedDays = phases.filter((phase) => phase === 'past').length;

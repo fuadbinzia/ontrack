@@ -61,8 +61,11 @@ export function validateTravelDateRange(
     return { error: 'The return date must be on or after departure.', conflicts: [] };
   }
 
+  // Moments may live in Pre-trip / Post trip outside the trip window.
   const conflicts = itinerary.filter(
-    (item) => item.date < startDate || item.date > endDate,
+    (item) =>
+      item.kind !== 'moment' &&
+      (item.date < startDate || item.date > endDate),
   );
   if (conflicts.length > 0) {
     const names = conflicts.map((item) => `“${item.title}”`).join(', ');

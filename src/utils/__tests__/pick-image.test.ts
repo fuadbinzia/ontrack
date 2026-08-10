@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { Platform } from 'react-native';
 
 import { pickLibraryImages } from '@/utils/pick-image';
 
@@ -30,13 +31,14 @@ describe('pickLibraryImages', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
+    Platform.OS = 'ios';
   });
 
   afterEach(() => {
     jest.useRealTimers();
   });
 
-  it('launches the library on the iOS fast-path (quality 1 + Current)', async () => {
+  it('uses iOS legacy UIImagePicker for single-select library picks', async () => {
     const pending = pickLibraryImages({ quality: 0.9 });
     await jest.advanceTimersByTimeAsync(50);
     const assets = await pending;
@@ -44,7 +46,9 @@ describe('pickLibraryImages', () => {
     expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         quality: 1,
-        preferredAssetRepresentationMode: 'current',
+        legacy: true,
+        allowsMultipleSelection: false,
+        preferredAssetRepresentationMode: 'compatible',
         shouldDownloadFromNetwork: true,
       }),
     );
@@ -57,5 +61,22 @@ describe('pickLibraryImages', () => {
     const assets = await pending;
 
     expect(assets?.[0]?.uri).toBe('file:///tmp/photo.heic');
+  });
+
+  it('keeps PHPicker multi-select (legacy off) when requested', async () => {
+    const pending = pickLibraryImages({
+      allowsMultipleSelection: true,
+      selectionLimit: 8,
+    });
+    await jest.advanceTimersByTimeAsync(50);
+    await pending;
+
+    expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowsMultipleSelection: true,
+        selectionLimit: 8,
+        legacy: false,
+      }),
+    );
   });
 });

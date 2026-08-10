@@ -1,15 +1,15 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, View, type DimensionValue } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View, type DimensionValue } from 'react-native';
 
-import { GlassIconWell, IconButton, Symbol } from '@/components/primitives';
+import { GlassIconWell, Symbol } from '@/components/primitives';
 import {
     fetchDestinationCoverUri,
     localTripCoverUri,
 } from '@/features/travel/destination-cover';
 import { itinerarySheetChrome } from '@/features/travel/travel-itinerary-sheet-chrome';
 import { travelPlanModeIcon } from '@/features/travel/travel-mode';
+import { TravelPhotoLightbox } from '@/features/travel/travel-photo-lightbox';
 import type { TravelPlan } from '@/features/travel/types';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -122,66 +122,13 @@ export function TravelTripCover({
       ) : (
         cover
       )}
-      <TravelTripCoverLightbox
+      <TravelPhotoLightbox
         uri={uri}
         visible={expanded}
-        planId={plan.id}
+        viewerKey={plan.id}
         onClose={close}
       />
     </>
-  );
-}
-
-function TravelTripCoverLightbox({
-  uri,
-  visible,
-  planId,
-  onClose,
-}: {
-  uri?: string;
-  visible: boolean;
-  planId: string;
-  onClose: () => void;
-}) {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
-  const { s, spacing: rs } = useResponsive();
-  const closeSize = Math.max(44, s(46));
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      presentationStyle="overFullScreen"
-      statusBarTranslucent
-      onRequestClose={onClose}>
-      <View
-        accessibilityViewIsModal
-        style={[styles.lightbox, { backgroundColor: theme.overlayScrim, paddingTop: insets.top }]}>
-        <AgentTestId
-          testID={AgentUiIds.travel.photoViewer.dismiss(planId)}
-          label="Dismiss photo"
-          onPress={onClose}
-          style={StyleSheet.absoluteFill}>
-          <Pressable accessibilityLabel="Dismiss photo" onPress={onClose} style={StyleSheet.absoluteFill} />
-        </AgentTestId>
-        {uri ? <Image source={{ uri }} style={styles.expandedImage} contentFit="contain" /> : null}
-        <View
-          style={[
-            styles.lightboxHeader,
-            { top: insets.top + rs.sm, paddingHorizontal: rs.md },
-          ]}>
-          <IconButton
-            icon="close"
-            size={closeSize}
-            testID={AgentUiIds.travel.photoViewer.close(planId)}
-            accessibilityLabel="Close photo"
-            onPress={onClose}
-          />
-        </View>
-      </View>
-    </Modal>
   );
 }
 
@@ -195,23 +142,4 @@ const styles = StyleSheet.create({
   },
   pressable: { flexShrink: 0 },
   pressed: { opacity: 0.72 },
-  lightbox: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingBottom: 0,
-  },
-  expandedImage: {
-    width: '100%',
-    height: '100%',
-  },
-  lightboxHeader: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    zIndex: 2,
-    elevation: 2,
-  },
 });

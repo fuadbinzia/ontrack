@@ -22,7 +22,7 @@ import {
 } from '@/utils/date';
 
 import { AppText } from './app-text';
-import { IconButton } from './button';
+import { Button, IconButton } from './button';
 import { DateFieldCalendar } from './date-field-calendar';
 import { FieldLeadingIcon, fieldLeadingIconRowStyle } from './field-leading-icon';
 import { stackedFieldMinHeight } from './field-leading-icon-style';
@@ -139,10 +139,6 @@ export function DateField({
     onChange(toDateKey(draftDate));
     setShowPicker(false);
   };
-  const doneAgent = useAgentUiTarget(testID ? `${testID}.done` : undefined, {
-    label: 'Done',
-    onPress: commitDraft,
-  });
 
   return (
     <View style={{ gap: spacing.sm }}>
@@ -288,27 +284,14 @@ export function DateField({
                 onValueChange={setDraftDate}
                 testID={testID}
               />
-              <Pressable
-                ref={doneAgent.ref}
-                testID={testID ? `${testID}.done` : undefined}
-                onLayout={doneAgent.onLayout}
-                accessibilityRole="button"
-                accessibilityLabel="Done"
+              <Button
+                appearance="solid"
+                variant="primary"
                 onPress={commitDraft}
-                style={({ pressed }) => [
-                  styles.done,
-                  {
-                    minHeight: Math.max(44, s(48)),
-                    paddingHorizontal: spacing.md,
-                    backgroundColor: theme.accentPrimary,
-                    borderColor: theme.accentSoft,
-                    opacity: pressed ? 0.85 : 1,
-                  },
-                ]}>
-                <AppText variant="subheading" color="onAccent" fit>
-                  Done
-                </AppText>
-              </Pressable>
+                testID={testID ? `${testID}.done` : undefined}
+                accessibilityLabel="Done">
+                Done
+              </Button>
             </GlassPlate>
           </View>
         </Modal>
@@ -337,13 +320,5 @@ const styles = StyleSheet.create({
   calendarTitle: {
     flex: 1,
     minWidth: 0,
-  },
-  done: {
-    ...shadows.raised,
-    borderRadius: radii.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderCurve: 'continuous',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

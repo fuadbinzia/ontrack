@@ -79,4 +79,18 @@ describe('travel date range validation', () => {
     expect(result.conflicts).toEqual([FLIGHT]);
     expect(result.error).toContain('Flight home');
   });
+
+  it('allows moments outside the trip window when shortening dates', () => {
+    const moment: TravelItineraryItem = {
+      id: 'm1',
+      kind: 'moment',
+      title: 'Prep',
+      date: '2026-09-01',
+      startMinutes: 600,
+      durationMinutes: 15,
+    };
+    expect(
+      validateTravelDateRange('2026-09-08', '2026-09-14', [moment, FLIGHT]),
+    ).toEqual({ conflicts: [] });
+  });
 });

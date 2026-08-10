@@ -13,6 +13,7 @@ import {
   IconButton,
   Input,
   LoadingBlock,
+  SheetGrabber,
   Symbol,
   useScreenAtmosphereChrome,
 } from '@/components/primitives';
@@ -78,6 +79,11 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
           },
         ]}>
         <View style={[styles.header, { paddingHorizontal: spacing.lg, gap: spacing.md }]}>
+          <SheetGrabber
+            testID={AgentUiIds.social.friends.close}
+            accessibilityLabel="Close friends"
+            onPress={props.onClose}
+          />
           <View style={styles.headerCopy}>
             <AppText variant="overline" style={{ color: chrome.primary }} fit>
               Your circle
@@ -86,14 +92,6 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
               {title}
             </AppText>
           </View>
-          <IconButton
-            testID={AgentUiIds.social.friends.close}
-            icon="close"
-            background={chrome.surface}
-            borderColor={chrome.border}
-            accessibilityLabel="Close friends"
-            onPress={props.onClose}
-          />
         </View>
 
         {!props.signedIn ? (
@@ -427,11 +425,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignSelf: 'stretch',
   },
   headerCopy: {
-    flex: 1,
+    alignSelf: 'stretch',
     minWidth: 0,
     gap: 2,
   },

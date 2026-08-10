@@ -9,11 +9,11 @@ import {
   ErrorMessage,
   GlassPlate,
   GlassPrimaryAction,
-  HeaderBackButton,
   Input,
   Screen,
   ScreenAtmosphere,
   screenAtmosphereBottomColor,
+  SheetGrabber,
 } from '@/components/primitives';
 import { CategoryBadge } from '@/components/shared';
 import { isCategoryEnabled } from '@/addons/registry';
@@ -412,11 +412,10 @@ export default function ActivityFormScreen() {
         </View>
         <Screen refresh={false}>
           <View style={styles.header}>
-            <HeaderBackButton
-              accessibilityLabel="Close"
-              fallback="/(tabs)/calendar"
+            <SheetGrabber
+              testID={AgentUiIds.activityForm.grabber}
               onPress={leave}
-              testID={AgentUiIds.activityForm.back}
+              accessibilityLabel="Dismiss"
             />
             <AppText variant="title" style={styles.headerTitle} fit>
               Event Not Found
@@ -439,11 +438,10 @@ export default function ActivityFormScreen() {
       </View>
       <Screen contentStyle={styles.screen} refresh={false}>
         <View style={styles.header}>
-          <HeaderBackButton
-            accessibilityLabel="Close"
-            fallback="/(tabs)/calendar"
+          <SheetGrabber
+            testID={AgentUiIds.activityForm.grabber}
             onPress={close}
-            testID={AgentUiIds.activityForm.back}
+            accessibilityLabel="Dismiss"
           />
           <AppText variant="title" style={styles.headerTitle} fit>
             {isEditing ? editorTitle : 'Add Event'}
@@ -646,8 +644,8 @@ export default function ActivityFormScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   screen: { gap: spacing.lg },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  headerTitle: { flex: 1, minWidth: 0 },
+  header: { gap: spacing.sm },
+  headerTitle: { alignSelf: 'stretch', minWidth: 0 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   actions: { gap: spacing.sm, paddingTop: spacing.md },
   assistant: { gap: spacing.md },

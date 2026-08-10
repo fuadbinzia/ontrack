@@ -1,5 +1,6 @@
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
+import type { AppIconName } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -13,6 +14,10 @@ export interface DestructiveSectionProps {
   testID: string;
   accessibilityLabel?: string;
   style?: ViewStyle;
+  /** Align description copy above the danger CTA. */
+  descriptionAlign?: 'left' | 'center';
+  /** Leading button glyph. Defaults to delete; pass `null` to hide. */
+  icon?: AppIconName | null;
   /**
    * Drop the standalone top rule / padding when nested in `DangerZone`
    * (or another parent that owns the chrome).
@@ -28,6 +33,8 @@ export function DestructiveSection({
   testID,
   accessibilityLabel = label,
   style,
+  descriptionAlign = 'left',
+  icon = 'delete',
   flush = false,
 }: DestructiveSectionProps) {
   const theme = useTheme();
@@ -47,13 +54,16 @@ export function DestructiveSection({
         style,
       ]}>
       {description ? (
-        <AppText variant="callout" color="secondary">
+        <AppText
+          variant="callout"
+          color="secondary"
+          align={descriptionAlign}>
           {description}
         </AppText>
       ) : null}
       <Button
         variant="danger"
-        icon="delete"
+        icon={icon ?? undefined}
         onPress={onPress}
         testID={testID}
         accessibilityLabel={accessibilityLabel}>

@@ -10,11 +10,20 @@ import type {
     TravelWeatherDay,
 } from './types';
 
-const FORECAST_DAYS = 16;
+/** Open-Meteo daily forecast length (docs: up to 16). */
+export const WEATHER_FORECAST_DAYS = 16;
 /** Open-Meteo forecast `past_days` / start_date floor (docs: 0–92). */
 export const OPEN_METEO_PAST_DAYS_MAX = 92;
+export const WEATHER_UNAVAILABLE_MESSAGE = 'Weather is temporarily unavailable.';
 const REQUEST_TIMEOUT_MS = 10_000;
 const CACHE_TTL_MS = 30 * 60 * 1000;
+
+export function weatherFetchErrorMessage(
+  reason: unknown,
+  fallback = WEATHER_UNAVAILABLE_MESSAGE,
+): string {
+  return reason instanceof Error ? reason.message : fallback;
+}
 
 export type TravelWeatherFetchOptions = {
   /** Include up to N calendar days before today (capped at OPEN_METEO_PAST_DAYS_MAX). */
@@ -49,6 +58,7 @@ interface CurrentForecastResponse {
   current?: {
     temperature_2m?: unknown;
     weather_code?: unknown;
+    is_day?: unknown;
   };
 }
 
@@ -85,7 +95,9 @@ async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Weather request timed out.');
     }
-    throw error instanceof Error ? error : new Error('Weather is temporarily unavailable.');
+    throw error instanceof Error
+      ? error
+      : new Error(WEATHER_UNAVAILABLE_MESSAGE);
   }
 }
 
@@ -95,7 +107,7 @@ export function forecastWindow(
   today = todayKey(),
   options?: TravelWeatherFetchOptions,
 ): ForecastWindow {
-  const availableThrough = addDays(today, FORECAST_DAYS - 1);
+  const availableThrough = addDays(today, WEATHER_FORECAST_DAYS - 1);
   const pastDays = Math.max(
     0,
     Math.min(options?.pastDays ?? 0, OPEN_METEO_PAST_DAYS_MAX),
@@ -107,7 +119,7 @@ export function forecastWindow(
   if (startDate > availableThrough) {
     return {
       availability: 'too-early',
-      availableOn: addDays(startDate, -(FORECAST_DAYS - 1)),
+      availableOn: addDays(startDate, -(WEATHER_FORECAST_DAYS - 1)),
     };
   }
 
@@ -135,17 +147,32 @@ export function describeWeatherCode(code: number): Pick<TravelWeatherDay, 'condi
 }
 
 /** Monochrome SF Symbol mapping for Today chrome / tab bar. */
-export function weatherIconForCode(code: number): AppIconName {
-  if (code === 0) return 'weather-clear';
-  if (code === 1 || code === 2) return 'weather-partly-cloudy';
+export function weatherIconForCode(
+  code: number,
+  options?: { isDay?: boolean },
+): AppIconName {
+  const night = options?.isDay === false;
+  if (code === 0) return night ? 'weather-clear-night' : 'weather-clear';
+  if (code === 1 || code === 2) {
+    return night ? 'weather-partly-cloudy-night' : 'weather-partly-cloudy';
+  }
   if (code === 3) return 'weather-cloudy';
   if (code === 45 || code === 48) return 'weather-fog';
   if (code >= 51 && code <= 67) return 'weather-rain';
   if (code >= 71 && code <= 77) return 'weather-snow';
-  if (code >= 80 && code <= 82) return 'weather-showers';
+  if (code >= 80 && code <= 82) {
+    return night ? 'weather-showers-night' : 'weather-showers';
+  }
   if (code === 85 || code === 86) return 'weather-snow';
   if (code >= 95) return 'weather-thunder';
-  return 'weather-partly-cloudy';
+  return night ? 'weather-partly-cloudy-night' : 'weather-partly-cloudy';
+}
+
+/** Normalize Open-Meteo `is_day` (0/1) for chrome icons. */
+export function weatherIsDayFlag(value: unknown): boolean | undefined {
+  if (value === 0 || value === false) return false;
+  if (value === 1 || value === true) return true;
+  return undefined;
 }
 
 function locationLabel(result: GeocodingResult, fallback: string): string {
@@ -317,7 +344,7 @@ async function requestDestinationCurrentWeather(
   const forecastUrl = new URL('https://api.open-meteo.com/v1/forecast');
   forecastUrl.searchParams.set('latitude', String(location.latitude));
   forecastUrl.searchParams.set('longitude', String(location.longitude));
-  forecastUrl.searchParams.set('current', 'temperature_2m,weather_code');
+  forecastUrl.searchParams.set('current', 'temperature_2m,weather_code,is_day');
   forecastUrl.searchParams.set('temperature_unit', temperatureUnit);
   forecastUrl.searchParams.set('timezone', 'auto');
   const forecast = await fetchJson<CurrentForecastResponse>(forecastUrl.toString(), signal);
@@ -334,6 +361,7 @@ async function requestDestinationCurrentWeather(
     temperature: Math.round(temperature),
     temperatureUnit,
     weatherCode,
+    isDay: weatherIsDayFlag(forecast.current?.is_day),
     ...describeWeatherCode(weatherCode),
   };
 }
@@ -344,7 +372,8 @@ export function getDestinationCurrentWeather(
   temperatureUnit: TemperatureUnit,
   signal?: AbortSignal,
 ): Promise<DestinationCurrentWeather> {
-  const key = `current|${destination.trim().toLocaleLowerCase()}|${temperatureUnit}`;
+  // v2: response includes `is_day` for night chrome icons.
+  const key = `current|v2|${destination.trim().toLocaleLowerCase()}|${temperatureUnit}`;
   const cached = currentCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
     return raceWeatherPromise(cached.promise, signal);
@@ -386,9 +415,4 @@ function raceWeatherPromise<T>(
       },
     );
   });
-}
-
-export function clearTravelWeatherCache(): void {
-  cache.clear();
-  currentCache.clear();
 }

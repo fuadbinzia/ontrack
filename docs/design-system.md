@@ -7,7 +7,8 @@ imagery, category colors, and data visualizations; they do not redefine controls
 
 | Intent | Component | Placement |
 |---|---|---|
-| Dismiss or cancel | `IconButton` through `ScreenHeader` / `SheetScaffold` | Neutral top-right X |
+| Dismiss bottom sheet | `SheetGrabber` via `SheetHeader` / `SheetScaffold` | Centered top swipe pill (tap also dismisses) |
+| Dismiss page / full-screen overlay | `IconButton` through `ScreenHeader` `onClose` | Neutral top-right X |
 | Back | `HeaderBackButton compact` via `ScreenHeader` `leading` | Overline-sized on the eyebrow row; title + subtitle stay full-bleed left |
 | Section rhythm | `SectionHeader flush` | Use inside `Screen`/`View` gaps so margins are not doubled |
 | Settings panel | `SettingsGroup` | Frosted glass panel for stacked `SettingsRow` / toggle / action rows |
@@ -32,7 +33,7 @@ top-right X; it is not rendered as a second full-width button.
 - Related actions stay together and use the same order across empty, populated, and editing states.
 - The interface responds immediately with pressed state and haptics, then shows shared loading or error UI.
 - Helpful defaults and nearby field errors replace instructions users would otherwise have to remember.
-- Navigation preserves context. Back returns to the previous task; X dismisses without implying navigation.
+- Navigation preserves context. Back returns to the previous task; sheet grabber / page X dismisses without implying navigation.
 - Color adds recognition and feature identity, but meaning never depends on color alone.
 
 ## Composition

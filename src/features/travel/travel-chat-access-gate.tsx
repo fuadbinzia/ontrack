@@ -39,6 +39,7 @@ export function TravelChatAccessGate(props: TravelChatAccessGateProps) {
           { paddingHorizontal: responsiveLayout.screenPadding },
         ]}>
         <TravelSheetHeader
+          presentation="page"
           eyebrow="Group Chat"
           title="Travel"
           subtitle="Plan Together · Stay Connected"
@@ -64,6 +65,7 @@ export function TravelChatAccessGate(props: TravelChatAccessGateProps) {
       <TravelChatLandscape color={props.palette.mountainColor} />
       <View style={{ paddingHorizontal: responsiveLayout.screenPadding, zIndex: 1 }}>
         <TravelSheetHeader
+          presentation="page"
           eyebrow="Group Chat"
           title={props.plan.title}
           subtitle={props.memberSubtitle}

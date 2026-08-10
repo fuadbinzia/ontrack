@@ -14,8 +14,11 @@ import { GlassPlate } from './glass-plate';
 import { SectionHeader } from './section-header';
 
 type DangerZoneProps = PropsWithChildren<{
-  /** Defaults to "Danger Zone" (title-cased by SectionHeader). */
-  title?: string;
+  /**
+   * Overline above the panel. Defaults to "Danger Zone".
+   * Pass `null` to hide the title (panel only).
+   */
+  title?: string | null;
   testID?: string;
   style?: ViewStyle;
 }>;
@@ -25,7 +28,7 @@ type DangerZoneProps = PropsWithChildren<{
  * Place `DestructiveSection flush` (or other danger CTAs) as children.
  */
 export function DangerZone({
-  title = 'Danger Zone',
+  title,
   testID,
   style,
   children,
@@ -33,13 +36,16 @@ export function DangerZone({
   const theme = useTheme();
   const { spacing } = useResponsive();
   const items = Children.toArray(children).filter(Boolean) as ReactNode[];
+  const heading = title === undefined ? 'Danger Zone' : title;
 
   return (
     <AgentTestId
       testID={testID}
-      label={title}
+      label={heading ?? 'Danger Zone'}
       style={[{ gap: spacing.sm, width: '100%' }, style]}>
-      <SectionHeader title={title} flush titleColor="danger" />
+      {heading ? (
+        <SectionHeader title={heading} flush titleColor="danger" />
+      ) : null}
       <GlassPlate
         style={[
           styles.panel,

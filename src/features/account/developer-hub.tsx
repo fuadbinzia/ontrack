@@ -175,11 +175,12 @@ export function DeveloperHub() {
         }
       />
 
-      <View style={{ gap: spacing.xs }}>
+      <View style={{ gap: spacing.lg }}>
         <DeveloperReleaseNotesPanel />
 
         <CollapsibleSection
           title="Navigate"
+          description="Dev Mode sandbox, demo seeds, and design screens"
           testID={AgentUiIds.developer.section.navigate}>
           <SettingsGroup>
             <SettingsToggleRow
@@ -250,7 +251,10 @@ export function DeveloperHub() {
 
         <DeveloperInsightsPanel />
 
-        <CollapsibleSection title="Runtime" testID={AgentUiIds.developer.section.runtime}>
+        <CollapsibleSection
+          title="Runtime"
+          description="Environment, Metro host, API base, and current route"
+          testID={AgentUiIds.developer.section.runtime}>
           <Card airy style={{ gap: spacing.sm }} testID={AgentUiIds.developer.env}>
             <PanelTitle>Environment</PanelTitle>
             <MetaList
@@ -272,6 +276,7 @@ export function DeveloperHub() {
 
         <CollapsibleSection
           title="Diagnostics"
+          description="Agent overlay, cloud sync status, and local storage"
           testID={AgentUiIds.developer.section.diagnostics}>
           <SettingsGroup>
             <SettingsToggleRow
@@ -328,6 +333,7 @@ export function DeveloperHub() {
 
         <CollapsibleSection
           title="Tools"
+          description="Open routes by alias and reset API rate limits"
           testID={AgentUiIds.developer.section.tools}>
           <Card airy style={{ gap: spacing.sm }}>
             <FormSection title="Open route" description="Alias or path from agent-routes.">

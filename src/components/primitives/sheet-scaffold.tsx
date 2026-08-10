@@ -30,6 +30,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { AppPromptHost } from './app-prompt';
 import { ScreenAtmosphere } from './screen-atmosphere';
 import { ScreenHeader } from './screen-header';
+import { SheetGrabber } from './sheet-grabber';
 
 export interface SheetHeaderProps {
   eyebrow?: string;
@@ -40,7 +41,6 @@ export interface SheetHeaderProps {
   onClose: () => void;
   closeAccessibilityLabel?: string;
   closeTestID?: string;
-  closeAppearance?: 'solid' | 'glass';
   style?: StyleProp<ViewStyle>;
 }
 
@@ -51,9 +51,8 @@ export function SheetHeader({
   subtitleIcon,
   decoration,
   onClose,
-  closeAccessibilityLabel = 'Close',
+  closeAccessibilityLabel = 'Dismiss',
   closeTestID,
-  closeAppearance = 'glass',
   style,
 }: SheetHeaderProps) {
   const { spacing } = useResponsive();
@@ -62,18 +61,20 @@ export function SheetHeader({
     onClose();
   };
   return (
-    <ScreenHeader
-      eyebrow={eyebrow}
-      title={title}
-      subtitle={subtitle}
-      subtitleIcon={subtitleIcon}
-      decoration={decoration}
-      onClose={close}
-      closeAccessibilityLabel={closeAccessibilityLabel}
-      closeTestID={closeTestID}
-      closeAppearance={closeAppearance}
-      style={[{ paddingTop: spacing.md, paddingBottom: spacing.xl }, style]}
-    />
+    <View style={[{ paddingTop: spacing.xs, paddingBottom: spacing.xl, gap: spacing.sm }, style]}>
+      <SheetGrabber
+        testID={closeTestID}
+        onPress={close}
+        accessibilityLabel={closeAccessibilityLabel}
+      />
+      <ScreenHeader
+        eyebrow={eyebrow}
+        title={title}
+        subtitle={subtitle}
+        subtitleIcon={subtitleIcon}
+        decoration={decoration}
+      />
+    </View>
   );
 }
 
@@ -95,7 +96,7 @@ export interface SheetScaffoldProps extends PropsWithChildren {
   scrollKey?: string | number;
   /** Disable body scroll while nested gestures (e.g. color picker) are active. */
   scrollEnabled?: boolean;
-  /** Tap dimmed area outside the card to dismiss (default on). Header X still works. */
+  /** Tap dimmed area outside the card to dismiss (default on). Grabber still works. */
   dismissOnBackdropPress?: boolean;
   backdropTestID?: string;
   /**
@@ -105,7 +106,7 @@ export interface SheetScaffoldProps extends PropsWithChildren {
   surface?: 'solid' | 'glass';
 }
 
-/** Canonical modal sheet: safe areas, neutral X, scroll body, and in-scroll CTA. */
+/** Canonical modal sheet: safe areas, swipe grabber, scroll body, and in-scroll CTA. */
 export function SheetScaffold({
   visible,
   eyebrow,
@@ -114,7 +115,7 @@ export function SheetScaffold({
   subtitleIcon,
   decoration,
   onClose,
-  closeAccessibilityLabel = 'Close',
+  closeAccessibilityLabel = 'Dismiss',
   closeTestID,
   contentContainerStyle,
   footer,
@@ -312,7 +313,6 @@ export function SheetScaffold({
                 onClose={close}
                 closeAccessibilityLabel={closeAccessibilityLabel}
                 closeTestID={closeTestID}
-                closeAppearance={glass ? 'glass' : 'solid'}
               />
             </View>
             {/*

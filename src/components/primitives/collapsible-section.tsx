@@ -18,6 +18,8 @@ type CollapsibleSectionProps = PropsWithChildren<{
   defaultExpanded?: boolean;
   expanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
+  /** One-line blurb under the title while collapsed; hidden when the section opens. */
+  description?: string;
   /** Non-interactive trailing caption (shown only while expanded; hidden when `actionLabel` is set). */
   detail?: string;
   actionLabel?: string;
@@ -36,6 +38,7 @@ export function CollapsibleSection({
   defaultExpanded = false,
   expanded: expandedProp,
   onExpandedChange,
+  description,
   detail,
   actionLabel,
   onAction,
@@ -59,6 +62,7 @@ export function CollapsibleSection({
   const actionText = actionLabel ? fieldTitleCase(actionLabel) : undefined;
   const showAction = Boolean(expanded && actionText && onAction);
   const showDetail = Boolean(expanded && detail && !showAction);
+  const showDescription = Boolean(!expanded && description);
   const toggle = () => {
     haptics.select();
     setExpanded(!expanded);
@@ -84,18 +88,37 @@ export function CollapsibleSection({
           onLayout={toggleAgent.onLayout}
           accessibilityRole="button"
           accessibilityLabel={`${expanded ? 'Collapse' : 'Expand'} ${titleText}`}
+          accessibilityHint={showDescription ? description : undefined}
           accessibilityState={{ expanded }}
           onPress={toggle}
-          style={[styles.toggle, { minHeight: layout.minTapTarget, gap: spacing.xs }]}>
-          {leading}
-          <AppText variant="overline" color="secondary" fit style={styles.title}>
-            {titleText}
-          </AppText>
-          <DisclosureChevron
-            expanded={expanded}
-            size="sm"
-            color={theme.textSecondary}
-          />
+          style={[
+            styles.toggle,
+            {
+              minHeight: layout.minTapTarget,
+              gap: spacing.xxs,
+              paddingVertical: showDescription ? spacing.xxs : 0,
+            },
+          ]}>
+          <View style={[styles.titleRow, { gap: spacing.xs }]}>
+            {leading}
+            <AppText variant="overline" color="secondary" fit style={styles.title}>
+              {titleText}
+            </AppText>
+            <DisclosureChevron
+              expanded={expanded}
+              size="sm"
+              color={theme.textSecondary}
+            />
+          </View>
+          {showDescription ? (
+            <AppText
+              variant="caption"
+              color="tertiary"
+              numberOfLines={1}
+              style={[styles.description, { paddingLeft: spacing.lg }]}>
+              {description}
+            </AppText>
+          ) : null}
         </Pressable>
         {showAction ? (
           <Pressable
@@ -145,12 +168,21 @@ const styles = StyleSheet.create({
   toggle: {
     flex: 1,
     minWidth: 0,
+    justifyContent: 'center',
+  },
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 0,
   },
   title: {
     flexShrink: 1,
     minWidth: 0,
+  },
+  description: {
+    flexShrink: 1,
+    minWidth: 0,
+    paddingRight: 28,
   },
   detail: {
     flexShrink: 1,

@@ -47,7 +47,11 @@ import {
     isTravelHomeTripSearchActive,
 } from '@/features/travel/travel-home-your-trips';
 import { TravelNewTripSheet } from '@/features/travel/travel-new-trip-sheet';
-import { validateTravelPlanDetails } from '@/features/travel/travel-plan-details';
+import {
+    stripTripCoverUploads,
+    tripCoverUploadFields,
+    validateTravelPlanDetails,
+} from '@/features/travel/travel-plan-details';
 import { TravelPlanDetailsEditor } from '@/features/travel/travel-plan-details-editor';
 import { useTravelPageStyle } from '@/features/travel/travel-surface';
 import type { TravelPlan, TravelPlanMode } from '@/features/travel/types';
@@ -402,13 +406,8 @@ function TravelScreenContent() {
     setEditNotes(plan.notes ?? '');
     setEditStartDate(plan.startDate);
     setEditEndDate(plan.endDate);
-    setEditCoverUris(
-      Array.isArray(plan.coverUris) && plan.coverUris.length > 0
-        ? [...plan.coverUris]
-        : plan.coverUri
-          ? [plan.coverUri]
-          : [],
-    );
+    // Durable uploads only — never seed the editor with a live destination URL.
+    setEditCoverUris(uploadedTripCoverUris(plan));
     setDetailsError(undefined);
     deferAfterPageTransition(() => interactWithPlan(plan.id));
   };
@@ -448,20 +447,16 @@ function TravelScreenContent() {
         return setDetailsError('Couldn’t save the cover photo. Try another image.');
       }
     }
+    // Omit prior uploads when cleared so the trip card falls back to a live
+    // destination photo (or the scenic placeholder when live isn't available).
     const next: TravelPlan = {
-      ...plan,
+      ...stripTripCoverUploads(plan),
       ...validation.value,
       startDate: editStartDate,
       endDate: editEndDate,
       updatedAt: new Date().toISOString(),
+      ...tripCoverUploadFields(coverUris),
     };
-    if (coverUris.length > 0) {
-      next.coverUris = coverUris;
-      next.coverUri = coverUris[0];
-    } else {
-      delete next.coverUris;
-      delete next.coverUri;
-    }
     const isOnCalendar = isTravelPlanOnCalendar(activities, plan.id);
     savePlan(next);
     if (isOnCalendar) replaceTravelActivities(next.id, travelCalendarDrafts(next));

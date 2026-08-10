@@ -3,9 +3,9 @@ import { Keyboard, type View } from 'react-native';
 
 import { type DropdownAnchor } from '@/components/primitives/dropdown-layout';
 import {
-  CITY_LOOKUP_MIN_QUERY,
-  searchCities,
-  type CitySuggestion,
+    CITY_LOOKUP_MIN_QUERY,
+    searchCities,
+    type CitySuggestion,
 } from '@/utils/city-lookup';
 
 const DEBOUNCE_MS = 320;
@@ -55,15 +55,13 @@ export function useCityAutofindSuggestions({
     Keyboard.dismiss();
   };
 
-  const measureAndOpen = () => {
-    if (suppressUntilTypedRef.current) return;
-    const generation = ++openGenerationRef.current;
+  const measureFieldAnchor = (generation: number, andOpen: boolean) => {
     fieldRef.current?.measureInWindow((x, y, width, measuredHeight) => {
       if (generation !== openGenerationRef.current) return;
       if (suppressUntilTypedRef.current) return;
       if (width <= 0 || measuredHeight <= 0) return;
       setAnchor({ x, y, width, height: measuredHeight });
-      setOpen(true);
+      if (andOpen) setOpen(true);
     });
   };
 
@@ -99,7 +97,9 @@ export function useCityAutofindSuggestions({
         setSuggestions(results);
         setLoading(false);
         if (results.length > 0) {
-          measureAndOpen();
+          if (!suppressUntilTypedRef.current) {
+            measureFieldAnchor(++openGenerationRef.current, true);
+          }
         } else {
           setOpen(false);
           setAnchor(undefined);
@@ -119,13 +119,7 @@ export function useCityAutofindSuggestions({
       return;
     }
     if (anchor) return;
-    const generation = openGenerationRef.current;
-    fieldRef.current?.measureInWindow((x, y, width, measuredHeight) => {
-      if (generation !== openGenerationRef.current) return;
-      if (suppressUntilTypedRef.current) return;
-      if (width <= 0 || measuredHeight <= 0) return;
-      setAnchor({ x, y, width, height: measuredHeight });
-    });
+    measureFieldAnchor(openGenerationRef.current, false);
   }, [open, anchor, fieldRef]);
 
   const applySuggestion = (suggestion: CitySuggestion) => {

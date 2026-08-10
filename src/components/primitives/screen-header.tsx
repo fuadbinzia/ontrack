@@ -24,7 +24,7 @@ export interface ScreenHeaderProps {
   trailing?: ReactNode;
   /** Optional decorative layer behind the title copy. */
   decoration?: ReactNode;
-  /** Canonical dismiss control. When present it always renders as the top-right neutral X. */
+  /** Page/full-screen dismiss (top-right X). Bottom sheets use `SheetGrabber` instead. */
   onClose?: () => void;
   closeAccessibilityLabel?: string;
   closeTestID?: string;

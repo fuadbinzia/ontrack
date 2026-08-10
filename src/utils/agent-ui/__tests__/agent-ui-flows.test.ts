@@ -25,11 +25,14 @@ import {
     buildAgentUiDemoGrocery,
     buildAgentUiDemoTrip,
     buildAgentUiPuntaCanaTrip,
+    buildTravelHomeVisualTrips,
     createIdFromAgentUiItemIds,
     formatAgentUiSeedDetail,
     normalizeFixtureName,
     seedAgentUiFixture,
 } from '../fixtures';
+import { normalizeTravelPlan } from '@/features/travel/normalize';
+import { resolveTravelCoTravelerPeople } from '@/features/travel/travel-cotraveler-people';
 import {
     AGENT_UI_WAIT_TIMEOUT_MS,
     listAgentUiFlowNames,
@@ -291,6 +294,19 @@ describe('agent-ui fixtures', () => {
     );
   });
 
+  it('keeps travel-home co-travelers through normalize (Antigua 1+4)', () => {
+    const antigua = buildTravelHomeVisualTrips().find(
+      (plan) => plan.id === 'trip-travel-home-antigua',
+    );
+    expect(antigua).toBeTruthy();
+    const normalized = normalizeTravelPlan(antigua);
+    expect(normalized?.participants).toHaveLength(4);
+    for (const person of normalized?.participants ?? []) {
+      expect(person.inviteCode).toMatch(/^[a-f0-9]{20}$/);
+    }
+    expect(resolveTravelCoTravelerPeople(normalized!, 'You')).toHaveLength(5);
+  });
+
   it('seeds travel-home-empty by clearing plans', () => {
     mockReplacePlans.mockClear();
     mockSetTabBarCollapsed.mockClear();
@@ -475,6 +491,7 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('today-prev-day');
     expect(listAgentUiFlowNames()).toContain('today-next-day');
     expect(listAgentUiFlowNames()).toContain('open-avatar-editor');
+    expect(listAgentUiFlowNames()).toContain('open-profile-identity');
     expect(listAgentUiFlowNames()).toContain('open-developer');
     expect(listAgentUiFlowNames()).toContain('profile-usage-analytics');
     expect(listAgentUiFlowNames()).toContain('checklist-demo');

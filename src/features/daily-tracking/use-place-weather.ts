@@ -1,24 +1,36 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { AppIconName } from '@/design-system';
+import { travelTimeOfDay } from '@/features/travel/travel-atmosphere-model';
 import {
-  getDestinationCurrentWeather,
-  getTravelWeather,
-  weatherIconForCode,
-  type DestinationCurrentWeather,
-  type TemperatureUnit,
-  type TravelWeather,
-} from '@/features/travel/weather';
+    getDestinationCurrentWeather,
+    getTravelWeather,
+    weatherFetchErrorMessage,
+    weatherIconForCode,
+} from '@/features/travel/weather/provider';
+import type {
+    DestinationCurrentWeather,
+    TemperatureUnit,
+    TravelWeather,
+} from '@/features/travel/weather/types';
 import { todayKey } from '@/utils/date';
 
 import {
-  HOME_WEATHER_PAST_DAYS,
-  homeWeatherForecastThrough,
-  homeWeatherHistoryFrom,
-  isHomeWeatherDateInWindow,
-  resolveHomeWeatherForDate,
-  type HomeWeatherSnapshot,
+    HOME_WEATHER_PAST_DAYS,
+    homeWeatherForecastThrough,
+    homeWeatherHistoryFrom,
+    isHomeWeatherDateInWindow,
+    resolveHomeWeatherForDate,
+    type HomeWeatherSnapshot,
 } from './resolve-home-weather-day';
+
+/** Prefer Open-Meteo `is_day`; else local night band when live + timezone known. */
+function weatherChromeIsDay(weather: HomeWeatherSnapshot): boolean | undefined {
+  if (typeof weather.isDay === 'boolean') return weather.isDay;
+  if (!weather.isLive) return true;
+  if (!weather.timezone) return undefined;
+  return travelTimeOfDay(new Date(), weather.timezone) !== 'night';
+}
 
 export function usePlaceWeather(
   place: string,
@@ -76,8 +88,7 @@ export function usePlaceWeather(
       })
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
-        nextCurrentError =
-          reason instanceof Error ? reason.message : 'Weather is temporarily unavailable.';
+        nextCurrentError = weatherFetchErrorMessage(reason);
       })
       .finally(() => {
         currentSettled = true;
@@ -97,8 +108,7 @@ export function usePlaceWeather(
       })
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
-        nextForecastError =
-          reason instanceof Error ? reason.message : 'Weather is temporarily unavailable.';
+        nextForecastError = weatherFetchErrorMessage(reason);
       })
       .finally(() => {
         forecastSettled = true;
@@ -108,16 +118,15 @@ export function usePlaceWeather(
     return () => controller.abort();
   }, [hasLocation, temperatureUnit, trimmed]);
 
-  const weather: HomeWeatherSnapshot | undefined = useMemo(() => {
-    if (!date) {
-      return resolveHomeWeatherForDate({
-        date: todayKey(),
+  const weather: HomeWeatherSnapshot | undefined = useMemo(
+    () =>
+      resolveHomeWeatherForDate({
+        date: date ?? todayKey(),
         current,
         forecast,
-      });
-    }
-    return resolveHomeWeatherForDate({ date, current, forecast });
-  }, [current, date, forecast]);
+      }),
+    [current, date, forecast],
+  );
 
   const inForecastWindow = !date || isHomeWeatherDateInWindow(date);
   const viewingToday = !date || date === todayKey();
@@ -128,7 +137,7 @@ export function usePlaceWeather(
       : forecastError ?? (!weather ? currentError : undefined);
 
   const icon: AppIconName | undefined = weather
-    ? weatherIconForCode(weather.weatherCode)
+    ? weatherIconForCode(weather.weatherCode, { isDay: weatherChromeIsDay(weather) })
     : undefined;
 
   return {

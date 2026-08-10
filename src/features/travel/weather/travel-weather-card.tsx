@@ -23,7 +23,12 @@ import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import type { DateDisplayFormat } from '@/utils/date';
 import { formatDateKey } from '@/utils/date';
 
-import { getDestinationCurrentWeather, getTravelWeather, weatherIconForCode } from './provider';
+import {
+    getDestinationCurrentWeather,
+    getTravelWeather,
+    weatherFetchErrorMessage,
+    weatherIconForCode,
+} from './provider';
 import { temperatureUnitForDateFormat, unitSymbol } from './temperature-unit';
 import type { DestinationCurrentWeather, TravelWeather } from './types';
 
@@ -96,8 +101,7 @@ export function TravelWeatherCard({
       })
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
-        nextForecastError =
-          reason instanceof Error ? reason.message : 'Weather is temporarily unavailable.';
+        nextForecastError = weatherFetchErrorMessage(reason);
       })
       .finally(() => {
         forecastSettled = true;
@@ -110,8 +114,10 @@ export function TravelWeatherCard({
       })
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
-        nextCurrentError =
-          reason instanceof Error ? reason.message : 'Current conditions are unavailable.';
+        nextCurrentError = weatherFetchErrorMessage(
+          reason,
+          'Current conditions are unavailable.',
+        );
       })
       .finally(() => {
         currentSettled = true;
@@ -147,7 +153,11 @@ export function TravelWeatherCard({
       <View style={styles.header}>
         <GlassIconWell size={iconSize} borderRadius={iconSize / 2}>
           <Symbol
-            name={current ? weatherIconForCode(current.weatherCode) : 'weather'}
+            name={
+              current
+                ? weatherIconForCode(current.weatherCode, { isDay: current.isDay })
+                : 'weather'
+            }
             size="md"
             color={accent}
           />
@@ -325,7 +335,11 @@ function CurrentWeatherBlock({
         </AppText>
         <View style={[styles.currentRow, { gap: rs.md }]}>
           <GlassIconWell size={iconSize} borderRadius={iconSize / 2} variant="airy">
-            <Symbol name={weatherIconForCode(current.weatherCode)} size="lg" color={accent} />
+            <Symbol
+              name={weatherIconForCode(current.weatherCode, { isDay: current.isDay })}
+              size="lg"
+              color={accent}
+            />
           </GlassIconWell>
           <View style={styles.flex}>
             <AppText

@@ -1,7 +1,7 @@
 import type {
   DestinationCurrentWeather,
   TravelWeather,
-} from '@/features/travel/weather';
+} from '@/features/travel/weather/types';
 
 import {
   formatHomeWeatherPrimaryLabel,
@@ -58,6 +58,7 @@ const current: DestinationCurrentWeather = {
   weatherCode: 0,
   condition: 'Clear',
   symbol: '☀️',
+  isDay: true,
 };
 
 const forecast: TravelWeather = {
@@ -135,6 +136,7 @@ describe('resolveHomeWeatherForDate', () => {
       locationLabel: 'Austin, Texas, United States',
       timezone: 'America/Chicago',
       isLive: true,
+      isDay: true,
     });
   });
 

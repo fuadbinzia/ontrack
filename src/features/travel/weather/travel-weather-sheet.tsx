@@ -54,7 +54,6 @@ export function TravelWeatherSheet({
       closeTestID={AgentUiIds.travel.weather.close}
       minHeight={sheetMinHeight}
       scrollKey={`${plan.id}-${visible ? 'open' : 'closed'}`}
-      chrome={chrome}
       footer={
         <AgentTestId
           testID={AgentUiIds.travel.weather.done}

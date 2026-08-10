@@ -130,7 +130,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.tabs.carousel.prev`                              | Previous tabs    | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.carousel.next`                              | Next tabs        | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.dock`                                       | Bottom nav       | Layout anchor — page-matching bottom nav fill (not tappable)                                          |
-| `ontrack.trackers.screen`                                 | Trackers         | More hub — In nav / Others reorder                                                                  |
+| `ontrack.trackers.screen`                                 | Sections         | More hub — In nav / Others reorder                                                                  |
 | `ontrack.trackers.row.<route>`                            | Trackers         | Open a tracker from the list (`(today)` → `_today_`)                                                |
 | `ontrack.trackers.add.<route>`                            | Trackers         | Add tracker to nav (when under pin limit)                                                           |
 | `ontrack.trackers.remove.<route>`                         | Trackers         | Retired — demote via drag into More                                                                 |
@@ -451,8 +451,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.activityForm.analyzePhoto`     | Re-run meal photo analysis             |
 | `ontrack.activityForm.removePhoto`      | Remove photo                           |
 | `ontrack.activityForm.save`             | Save the event                         |
-| `ontrack.activityForm.back`             | Close / back (header)                  |
-| `ontrack.activityForm.cancel`           | Cancel                                 |
+| `ontrack.activityForm.grabber`          | Swipe-down dismiss grabber             |
+| `ontrack.activityForm.cancel`           | Cancel / dismiss                       |
 | `ontrack.activityForm.delete`           | Delete the event                       |
 | `ontrack.activityForm.choice.<group>.<value>` | Editor choice chips (meal type, workout type, …) |
 
@@ -601,14 +601,19 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | testID                                              | Control                             |
 | --------------------------------------------------- | ----------------------------------- |
 | `ontrack.profile.avatar`                            | Customize avatar                    |
-| `ontrack.profile.displayName`                       | Hero display name (default Guest)   |
+| `ontrack.profile.displayName`                       | Hero name — opens identity editor   |
+| `ontrack.profile.blurb`                             | Hero blurb — opens identity editor  |
 | `ontrack.profile.avatar.close`                      | Avatar editor close                 |
 | `ontrack.profile.avatar.save`                       | Avatar editor save                  |
 | `ontrack.profile.avatar.mode.<initials\|icon\|photo>` | Avatar editor mode segment        |
 | `ontrack.profile.avatar.takePhoto`                  | Avatar editor take photo            |
 | `ontrack.profile.avatar.chooseLibrary`              | Avatar editor choose from library   |
 | `ontrack.profile.avatar.searchIcons`                | Avatar editor icon search           |
-| `ontrack.profile.guestStatus`                       | Hero caption while guest (local)    |
+| `ontrack.profile.identity.close`                    | Name & blurb editor close           |
+| `ontrack.profile.identity.save`                     | Name & blurb editor save            |
+| `ontrack.profile.identity.name`                     | Name field in identity editor       |
+| `ontrack.profile.identity.goal`                     | Blurb field in identity editor      |
+| `ontrack.profile.guestStatus`                       | (legacy) Guest caption — unused; Account card covers guest CTA |
 | `ontrack.profile.section.account`                   | Account section anchor              |
 | `ontrack.profile.section.appearance`                | Appearance section anchor           |
 | `ontrack.profile.section.developer`                 | Developer section anchor            |
@@ -1042,13 +1047,14 @@ Deep link: `ontrack://travel/<planId>` → `/travel/[id]`
 
 | testID                                         | Control                                               |
 | ---------------------------------------------- | ----------------------------------------------------- |
-| `ontrack.travel.addPhotos.close`               | Close X                                               |
+| `ontrack.travel.addPhotos.close`               | Dismiss grabber                                       |
 | `ontrack.travel.addPhotos.takePhoto`           | Take Photo                                            |
 | `ontrack.travel.addPhotos.chooseFromPhotos`    | Choose from Photos                                    |
 | `ontrack.travel.addPhotos.removePhoto`         | Remove Photo (optional)                               |
 | `ontrack.travel.editTrip.save`                 | Save edited trip details                              |
 | `ontrack.travel.editTrip.cancel`               | Cancel editing a trip                                 |
-| `ontrack.travel.calendarUpdated.dismiss`       | Close X and return to Travel                          |
+| `ontrack.travel.editTrip.dangerZone`           | Edit-trip danger zone (delete trip)                   |
+| `ontrack.travel.calendarUpdated.dismiss`       | Dismiss grabber and return to Travel                  |
 | `ontrack.travel.calendarUpdated.goToCalendar`  | Go to Calendar                                        |
 | `ontrack.travel.itineraryAdd.close`            | Close add-to-timeline sheet                           |
 | `ontrack.travel.expenses.paidBy.<personId>`    | Paid By person avatar (`self`, `host`, `member:…`, …) |

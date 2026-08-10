@@ -3,7 +3,7 @@
     {
       "id": "trip-travel-home-iceland",
       "destination": "Iceland",
-      "location": "Reykjav\u00edk, Iceland",
+      "location": "Reykjavík, Iceland",
       "startDate": "2026-09-08",
       "endDate": "2026-09-14",
       "dayCount": 7,
@@ -11,14 +11,10 @@
       "visibleMembers": [
         {
           "id": "m1",
-          "name": "Member 1"
-        },
-        {
-          "id": "m2",
-          "name": "Member 2"
+          "name": "Alex Rivera"
         }
       ],
-      "imageQuery": "Reykjavik Iceland city mountains travel landscape"
+      "imageQuery": "Iceland northern lights aurora Gullfoss Blue Lagoon"
     },
     {
       "id": "trip-travel-home-antigua",
@@ -27,22 +23,14 @@
       "startDate": "2026-09-22",
       "endDate": "2026-09-27",
       "dayCount": 6,
-      "memberCount": 6,
+      "memberCount": 5,
       "visibleMembers": [
         {
           "id": "m3",
-          "name": "Member 3"
-        },
-        {
-          "id": "m4",
-          "name": "Member 4"
-        },
-        {
-          "id": "m5",
-          "name": "Member 5"
+          "name": "Casey Morgan"
         }
       ],
-      "imageQuery": "Antigua Guatemala Santa Catalina arch volcano travel landscape"
+      "imageQuery": "Antigua Guatemala Santa Catalina Arch Lake Atitlan Tikal Acatenango"
     }
   ]
 }

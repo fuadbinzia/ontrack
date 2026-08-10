@@ -1,9 +1,6 @@
 /**
- * Deterministic Travel Home fixture data for previews / visual checks.
- * Mirrored from `design/travel/fixtures/travel-home.fixture.json`.
- *
- * Agent-ui seed ids (`trip-travel-home-*`) use stable Wikimedia hero URLs so
- * visual QA does not depend on live cover lookups.
+ * Deterministic Travel Home fixture (app + agent-ui seeds).
+ * Design-kit JSON mirror: `design/travel/fixtures/travel-home.fixture.json`.
  */
 import { travelHomeTokens } from '@/features/travel/travel-home-tokens';
 
@@ -53,10 +50,8 @@ export const travelHomeFixture: TravelHomeFixture = {
       endDate: '2026-09-14',
       dayCount: 7,
       memberCount: 4,
-      visibleMembers: [
-        { id: 'm1', name: 'Alex Rivera' },
-        { id: 'm2', name: 'Jordan Lee' },
-      ],
+      // 3+ travelers → self face only (+N); pair trips may list 2.
+      visibleMembers: [{ id: 'm1', name: 'Alex Rivera' }],
       imageQuery: 'Iceland northern lights aurora Gullfoss Blue Lagoon',
     },
     {
@@ -66,12 +61,8 @@ export const travelHomeFixture: TravelHomeFixture = {
       startDate: '2026-09-22',
       endDate: '2026-09-27',
       dayCount: 6,
-      memberCount: 6,
-      visibleMembers: [
-        { id: 'm3', name: 'Casey Morgan' },
-        { id: 'm4', name: 'Sam Quinn' },
-        { id: 'm5', name: 'Riley Chen' },
-      ],
+      memberCount: 5,
+      visibleMembers: [{ id: 'm3', name: 'Casey Morgan' }],
       imageQuery:
         'Antigua Guatemala Santa Catalina Arch Lake Atitlan Tikal Acatenango',
     },

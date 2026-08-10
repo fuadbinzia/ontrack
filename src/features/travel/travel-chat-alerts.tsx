@@ -1,13 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 
 import {
-  AppText,
-  Button,
-  GlassPlate,
-  IconButton,
+    AppText,
+    Button,
+    GlassPlate,
+    IconButton,
 } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
-import { dismissTravelChatAlertsBanner } from '@/features/travel/chat';
 import { travelChatPlateBorder } from '@/features/travel/travel-chat-chrome';
 import { TravelSheetPrimaryAction } from '@/features/travel/travel-list-actions';
 import { TravelSheetModal } from '@/features/travel/travel-sheet';

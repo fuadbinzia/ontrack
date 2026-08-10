@@ -13,7 +13,23 @@ import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 
-const MAX_VISIBLE = 3;
+/**
+ * Pair threshold: 1–2 travelers show every face; 3+ collapses to self + +N.
+ * (`TRAVEL_HOME_TRAVELER_PAIR_SLOTS` = max faces without a count chip.)
+ */
+export const TRAVEL_HOME_TRAVELER_PAIR_SLOTS = 2;
+
+/** How many faces render and how many collapse into the +N chip. */
+export function travelHomeTravelerStackSplit(total: number): {
+  visible: number;
+  overflow: number;
+} {
+  if (total <= TRAVEL_HOME_TRAVELER_PAIR_SLOTS) {
+    return { visible: total, overflow: 0 };
+  }
+  // 3+: current user only, remainder in +N.
+  return { visible: 1, overflow: total - 1 };
+}
 
 type TravelHomeTravelerStackProps = {
   people: CoTravelerAvatarPerson[];
@@ -22,7 +38,7 @@ type TravelHomeTravelerStackProps = {
   onPress?: () => void;
 };
 
-/** Title-row avatar stack: up to 2 faces + +N overflow chip. */
+/** Title-row avatar stack: ≤2 faces, else self + +N. */
 export function TravelHomeTravelerStack({
   people,
   tripTitle,
@@ -35,18 +51,13 @@ export function TravelHomeTravelerStack({
 
   const size = Math.max(34, s(travelHomeTokens.sizes.avatar));
   const overlap = travelHomeTokens.spacing.avatarOverlap;
-  /**
-   * Match reference stacks: Iceland 2+2, Antigua 3+3.
-   * ≤3 → all faces; 4 → 2 +2; ≥5 → 3 +N.
-   */
-  const faceSlots =
-    people.length <= 3
-      ? people.length
-      : people.length === 4
-        ? 2
-        : Math.min(MAX_VISIBLE, people.length);
-  const shown = people.slice(0, faceSlots);
-  const remainder = people.length - shown.length;
+  const { visible: faceSlots, overflow: remainder } = travelHomeTravelerStackSplit(
+    people.length,
+  );
+  const shown =
+    faceSlots === 1 && remainder > 0
+      ? [people.find((person) => person.isSelf) ?? people[0]!]
+      : people.slice(0, faceSlots);
   const width =
     size +
     Math.max(0, shown.length - 1) * (size - overlap) +

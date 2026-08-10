@@ -556,6 +556,22 @@ export const AGENT_UI_FLOWS = {
     },
     { op: 'wait', ms: 250 },
   ],
+  'open-profile-identity': [
+    { op: 'dismiss', prefix: 'ontrack.profile.identity.' },
+    { op: 'goto', to: 'profile' },
+    {
+      op: 'wait',
+      id: 'ontrack.profile.displayName',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.profile.displayName' },
+    {
+      op: 'wait',
+      id: 'ontrack.profile.identity.close',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'wait', ms: 250 },
+  ],
   'open-developer': [
     { op: 'goto', to: 'developer' },
     {

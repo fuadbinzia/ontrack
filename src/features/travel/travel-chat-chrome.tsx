@@ -2,16 +2,13 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { AppText, GlassMetaChip } from '@/components/primitives';
-import { ProfileAvatar } from '@/features/account/profile-avatar';
-import { travelDialogPalette } from '@/features/travel/travel-dialog-chrome';
-import type { TravelChatMember } from '@/features/travel/chat';
 import { glassMaterials } from '@/design-system/glass';
+import { ProfileAvatar } from '@/features/account/profile-avatar';
+import type { TravelChatMember } from '@/features/travel/chat';
+import { travelDialogPalette } from '@/features/travel/travel-dialog-chrome';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 
-export type { TravelChatMember } from '@/features/travel/chat';
-
-/** Ink + accent tokens for the group-chat surface (chrome is GlassPlate). */
 export function travelChatPalette(theme: ReturnType<typeof useTheme>) {
   const dialog = travelDialogPalette(theme);
   const light = dialog.light;
@@ -29,7 +26,6 @@ export function travelChatPlateBorder(theme: ReturnType<typeof useTheme>): strin
     : glassMaterials.border.lightStrong;
 }
 
-/** Overlapping member discs with a thin gold rim (header under subtitle). */
 export function TravelChatMemberStack({
   members,
   maxVisible = 5,
@@ -80,7 +76,6 @@ export function TravelChatMemberStack({
   );
 }
 
-/** Date divider: line · diamond · label · diamond · line. */
 export function TravelChatDateSeparator({ label }: { label: string }) {
   const theme = useTheme();
   const palette = travelChatPalette(theme);
@@ -137,7 +132,6 @@ export function TravelChatDateSeparator({ label }: { label: string }) {
   );
 }
 
-/** Soft circular destination seal behind the close control. */
 export function TravelChatDestinationStamp({
   title,
   destination,
@@ -201,10 +195,9 @@ export function TravelChatDestinationStamp({
   );
 }
 
-/** Faint landscape sketch spanning the lower half of the chat screen. */
 export function TravelChatLandscape({ color }: { color: string }) {
   const { height: windowHeight } = useWindowDimensions();
-  /** Fill most of the screen length so the cream field isn’t a blank middle band. */
+  // Tall enough that the cream field doesn’t read as a blank middle band.
   const height = Math.round(windowHeight * 0.62);
 
   return (

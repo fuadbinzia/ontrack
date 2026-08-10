@@ -210,6 +210,14 @@ export type AgentUiSeedResult = {
   itemId?: string;
 };
 
+/** Stable 20-char hex — `normalizeTravelParticipants` drops anything else. */
+function travelHomeInviteCode(seed: string): string {
+  const hex = Array.from(seed)
+    .map((ch) => ch.charCodeAt(0).toString(16).padStart(2, '0'))
+    .join('');
+  return `${hex}${'0'.repeat(20)}`.slice(0, 20);
+}
+
 function buildTravelHomeParticipant(
   id: string,
   name: string,
@@ -218,7 +226,7 @@ function buildTravelHomeParticipant(
   return {
     id,
     name,
-    inviteCode: `home-${id}`,
+    inviteCode: travelHomeInviteCode(id),
     invitedAt: nowIso,
     acceptedAt: nowIso,
   };
@@ -226,7 +234,7 @@ function buildTravelHomeParticipant(
 
 /**
  * Iceland + Antigua + third trip for Travel Home visual QA.
- * Hero images resolve via `travelHomeFixtureHeroUris` in __DEV__.
+ * Hero images resolve via `travelHomeFixtureHeroSource` in __DEV__.
  */
 export function buildTravelHomeVisualTrips(
   nowIso = new Date().toISOString(),
@@ -273,7 +281,6 @@ export function buildTravelHomeVisualTrips(
       buildTravelHomeParticipant('p-home-sam', 'Sam Quinn', nowIso),
       buildTravelHomeParticipant('p-home-riley', 'Riley Chen', nowIso),
       buildTravelHomeParticipant('p-home-avery', 'Avery Brooks', nowIso),
-      buildTravelHomeParticipant('p-home-jamie', 'Jamie Patel', nowIso),
     ],
     baseCurrency: 'USD',
     expenses: [],

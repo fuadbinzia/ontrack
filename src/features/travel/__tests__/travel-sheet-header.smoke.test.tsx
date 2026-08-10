@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { TravelSheetHeader } from '@/features/travel/travel-sheet';
 
 describe('TravelSheetHeader smoke', () => {
-  it('renders title and closes via the close control', () => {
+  it('renders title and closes via the swipe grabber', () => {
     const onClose = jest.fn();
     render(
       <TravelSheetHeader

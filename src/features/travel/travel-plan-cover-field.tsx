@@ -6,11 +6,12 @@ import { AppText, Button, GlassIconWell, Symbol } from '@/components/primitives'
 import { fontFamilies } from '@/design-system';
 import {
     TRIP_COVER_UPLOAD_MAX,
-    fetchDestinationCoverUri,
-    localTripCoverUri,
+    fetchRemoteDestinationCoverUri,
+    isRemoteDestinationCoverUri,
 } from '@/features/travel/destination-cover';
 import { TravelAddPhotosModal } from '@/features/travel/travel-add-photos-modal';
 import { itinerarySheetChrome } from '@/features/travel/travel-itinerary-sheet-chrome';
+import { resolveTravelPhotoUris } from '@/features/travel/travel-moment-media';
 import type { TravelPlan } from '@/features/travel/types';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -36,11 +37,6 @@ export function TravelPlanCoverField({
   const { s, spacing: rs } = useResponsive();
   const size = Math.max(72, s(76));
   const thumb = Math.max(64, s(68));
-  const localFallback = localTripCoverUri({
-    ...plan,
-    coverUri: undefined,
-    coverUris: undefined,
-  });
   const [remoteFallback, setRemoteFallback] = useState<{
     key: string;
     uri?: string;
@@ -48,26 +44,22 @@ export function TravelPlanCoverField({
   const [pickerVisible, setPickerVisible] = useState(initialPickerOpen);
   const destinationKey = `${plan.id}:${plan.destination}:${plan.title}`;
   const slotsLeft = Math.max(0, TRIP_COVER_UPLOAD_MAX - coverUris.length);
-  const preview =
-    coverUris[0] ??
-    localFallback ??
-    (remoteFallback.key === destinationKey ? remoteFallback.uri : undefined);
+  const hasUploads = coverUris.length > 0;
+  const livePreview =
+    remoteFallback.key === destinationKey ? remoteFallback.uri : undefined;
 
   useEffect(() => {
-    if (coverUris.length > 0 || localFallback) return;
+    if (hasUploads) return;
     let active = true;
-    void fetchDestinationCoverUri({
-      ...plan,
-      coverUri: undefined,
-      coverUris: undefined,
-    }).then((uri) => {
+    // Live destination plate only — never moment/upload URIs.
+    void fetchRemoteDestinationCoverUri(plan).then((uri) => {
       if (active) setRemoteFallback({ key: destinationKey, uri });
     });
     return () => {
       active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- destinationKey covers plan fields used for remote covers
-  }, [coverUris.length, localFallback, destinationKey]);
+  }, [hasUploads, destinationKey]);
 
   const appendUris = (uris: string[]) => {
     if (!uris.length || slotsLeft <= 0) return;
@@ -76,9 +68,21 @@ export function TravelPlanCoverField({
       if (next.length >= TRIP_COVER_UPLOAD_MAX) break;
       const trimmed = uri.trim();
       if (!trimmed || next.includes(trimmed)) continue;
+      // Never persist a live destination CDN/proxy plate as a user upload.
+      if (isRemoteDestinationCoverUri(trimmed)) continue;
       next.push(trimmed);
     }
     onCoverUrisChange(next);
+  };
+
+  const removeAt = (index: number) => {
+    haptics.tap();
+    onCoverUrisChange(coverUris.filter((_, i) => i !== index));
+  };
+
+  const clearUploads = () => {
+    haptics.tap();
+    onCoverUrisChange([]);
   };
 
   const chooseLibrary = async () => {
@@ -107,7 +111,7 @@ export function TravelPlanCoverField({
     setPickerVisible(true);
   };
   const coverAgent = useAgentUiTarget(AgentUiIds.travel.editTrip.cover, {
-    label: 'Add trip cover photos',
+    label: hasUploads ? 'Add more trip cover photos' : 'Add trip cover photos',
     onPress: openPicker,
   });
 
@@ -117,7 +121,9 @@ export function TravelPlanCoverField({
         <Pressable
           ref={coverAgent.ref}
           accessibilityRole="button"
-          accessibilityLabel="Add trip cover photos"
+          accessibilityLabel={
+            hasUploads ? 'Add more trip cover photos' : 'Add trip cover photos'
+          }
           testID={coverAgent.testID}
           onLayout={coverAgent.onLayout}
           onPress={openPicker}
@@ -125,27 +131,29 @@ export function TravelPlanCoverField({
             styles.row,
             { gap: rs.md, opacity: pressed ? 0.78 : 1 },
           ]}>
-          {preview && coverUris.length === 0 ? (
-            <View
-              style={[
-                styles.thumb,
-                {
-                  width: size,
-                  height: size,
-                  borderRadius: Math.max(16, s(16)),
-                },
-              ]}>
-              <Image
-                source={{ uri: preview }}
-                style={StyleSheet.absoluteFill}
-                contentFit="cover"
-                recyclingKey={preview}
-              />
-            </View>
-          ) : coverUris.length === 0 ? (
-            <GlassIconWell size={size} borderRadius={Math.max(16, s(16))}>
-              <Symbol name="flight" size="md" color={chrome.icons.flight.fg} />
-            </GlassIconWell>
+          {!hasUploads ? (
+            livePreview ? (
+              <View
+                style={[
+                  styles.thumb,
+                  {
+                    width: size,
+                    height: size,
+                    borderRadius: Math.max(16, s(16)),
+                  },
+                ]}>
+                <Image
+                  source={{ uri: livePreview }}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  recyclingKey={livePreview}
+                />
+              </View>
+            ) : (
+              <GlassIconWell size={size} borderRadius={Math.max(16, s(16))}>
+                <Symbol name="flight" size="md" color={chrome.icons.flight.fg} />
+              </GlassIconWell>
+            )
           ) : null}
           <View style={styles.copy}>
             <AppText
@@ -165,12 +173,16 @@ export function TravelPlanCoverField({
               variant="caption"
               style={[styles.description, { color: chrome.subtitle }]}
               numberOfLines={2}>
-              Up to {TRIP_COVER_UPLOAD_MAX}. Shown on your trip card.
+              {hasUploads
+                ? `Up to ${TRIP_COVER_UPLOAD_MAX}. Remove to restore the live trip-card photo.`
+                : livePreview
+                  ? `Live destination photo until you add your own (up to ${TRIP_COVER_UPLOAD_MAX}).`
+                  : `Up to ${TRIP_COVER_UPLOAD_MAX}. Shown on your trip card.`}
             </AppText>
           </View>
         </Pressable>
 
-        {coverUris.length > 0 ? (
+        {hasUploads ? (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -181,10 +193,7 @@ export function TravelPlanCoverField({
                 uri={uri}
                 index={index}
                 size={thumb}
-                onRemove={() => {
-                  haptics.tap();
-                  onCoverUrisChange(coverUris.filter((_, i) => i !== index));
-                }}
+                onRemove={() => removeAt(index)}
               />
             ))}
           </ScrollView>
@@ -196,10 +205,10 @@ export function TravelPlanCoverField({
             icon="photo"
             testID={AgentUiIds.travel.editTrip.addCover}
             accessibilityLabel={
-              coverUris.length ? 'Add more cover photos' : 'Add cover photos'
+              hasUploads ? 'Add more cover photos' : 'Add cover photos'
             }
             onPress={openPicker}>
-            {coverUris.length ? 'Add More Photos' : 'Add Photos'}
+            {hasUploads ? 'Add More Photos' : 'Add Photos'}
           </Button>
         ) : null}
       </View>
@@ -215,12 +224,10 @@ export function TravelPlanCoverField({
         onChooseFromPhotos={() => {
           void chooseLibrary();
         }}
-        onRemovePhoto={
-          coverUris.length === 1
-            ? () => onCoverUrisChange([])
-            : undefined
+        onRemovePhoto={hasUploads ? clearUploads : undefined}
+        removeLabel={
+          coverUris.length > 1 ? 'Remove All Cover Photos' : 'Remove Cover Photo'
         }
-        removeLabel="Remove Cover Photo"
       />
     </>
   );
@@ -238,6 +245,7 @@ function CoverThumb({
   onRemove: () => void;
 }) {
   const theme = useTheme();
+  const displayUri = resolveTravelPhotoUris([uri])[0] ?? uri;
   const agent = useAgentUiTarget(AgentUiIds.travel.editTrip.removeCover(index), {
     label: `Remove cover photo ${index + 1}`,
     onPress: onRemove,
@@ -245,7 +253,7 @@ function CoverThumb({
   return (
     <View style={[styles.photoWrap, { width: size, height: size }]}>
       <Image
-        source={{ uri }}
+        source={{ uri: displayUri }}
         style={styles.photo}
         contentFit="cover"
         cachePolicy="memory-disk"
@@ -256,9 +264,9 @@ function CoverThumb({
         accessibilityLabel={`Remove cover photo ${index + 1}`}
         testID={agent.testID}
         onLayout={agent.onLayout}
-        hitSlop={6}
+        hitSlop={8}
         onPress={onRemove}
-        style={[styles.photoRemove, { backgroundColor: theme.overlayScrim }]}>
+        style={[styles.photoRemove, { backgroundColor: 'rgba(0, 0, 0, 0.72)' }]}>
         <Symbol name="close" size="sm" color={theme.textOnAccent} />
       </Pressable>
     </View>
@@ -308,10 +316,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2,
   },
 });

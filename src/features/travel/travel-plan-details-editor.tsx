@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import {
     Button,
+    DangerZone,
     DateField,
     DestructiveSection,
     ErrorMessage,
@@ -12,8 +13,13 @@ import {
 import { AddressAutofindField } from '@/features/travel/address-autofind-field';
 import {
     itinerarySheetChrome,
-    travelInputFieldBackground,
+    itinerarySheetFieldProps,
 } from '@/features/travel/travel-itinerary-sheet-chrome';
+import {
+    TRIP_DESTINATION_PLACEHOLDER,
+    TRIP_NOTES_PLACEHOLDER,
+    TRIP_TITLE_PLACEHOLDER,
+} from '@/features/travel/travel-plan-details';
 import {
     TravelRemoveConfirmModal,
     type TravelRemoveConfirmPayload,
@@ -51,7 +57,6 @@ interface TravelPlanDetailsEditorProps {
   initialCoverPickerOpen?: boolean;
 }
 
-/** Dedicated Edit Trip page matching the travel mock. */
 export function TravelPlanDetailsEditor({
   plan,
   title,
@@ -85,17 +90,6 @@ export function TravelPlanDetailsEditor({
       onConfirm: onDelete,
     });
   };
-  const field = (tone: keyof typeof chrome.icons) => {
-    const icon = chrome.icons[tone];
-    return {
-      iconBackground: icon.bg,
-      iconColor: icon.fg,
-      fieldBackground: travelInputFieldBackground(theme),
-      stackedLabelColor: chrome.label,
-      placeholderColor: chrome.placeholder,
-      placeholderTextColor: chrome.placeholder,
-    };
-  };
 
   const changeStartDate = (value: string) => {
     onStartDateChange(value);
@@ -107,7 +101,6 @@ export function TravelPlanDetailsEditor({
     <View style={[styles.page, { gap: rs.lg }]}>
       <TravelScreenHeader
         title="Edit Trip"
-        subtitle="Update your journey details"
         leading={
           <HeaderBackButton
             compact
@@ -119,7 +112,7 @@ export function TravelPlanDetailsEditor({
       />
 
       <TravelSurfaceCard padding={0}>
-        <View style={[styles.cardBody, { padding: rs.lg, gap: rs.lg }]}>
+        <View style={{ padding: rs.lg, gap: rs.lg }}>
           <View style={{ gap: rs.md }}>
             <TravelPlanCoverField
               plan={plan}
@@ -137,9 +130,9 @@ export function TravelPlanDetailsEditor({
               onChangeText={onTitleChange}
               icon="flight"
               stackedLabel="Trip Name"
-              placeholder="e.g. Fun in the Sun!"
+              placeholder={TRIP_TITLE_PLACEHOLDER}
               accessibilityLabel="Trip Name"
-              {...field('flight')}
+              {...itinerarySheetFieldProps(chrome, 'flight')}
             />
             <AddressAutofindField
               testID={AgentUiIds.travel.editTrip.destination}
@@ -147,32 +140,32 @@ export function TravelPlanDetailsEditor({
               onChange={onDestinationChange}
               icon="location"
               stackedLabel="Destination"
-              placeholder="e.g. Anywhere Sunny"
+              placeholder={TRIP_DESTINATION_PLACEHOLDER}
               accessibilityLabel="Destination"
-              {...field('location')}
+              {...itinerarySheetFieldProps(chrome, 'location')}
             />
             <View style={[styles.dateRow, { gap: rs.sm }]}>
               <View style={styles.dateCol}>
                 <DateField
                   testID={AgentUiIds.travel.editTrip.startDate}
                   value={startDate}
-                  stackedLabel="Departure"
+                  stackedLabel="Start"
                   placeholder="Select date"
                   onChange={changeStartDate}
-                  accessibilityLabel="Departure date"
-                  {...field('calendar')}
+                  accessibilityLabel="Start date"
+                  {...itinerarySheetFieldProps(chrome, 'calendar')}
                 />
               </View>
               <View style={styles.dateCol}>
                 <DateField
                   testID={AgentUiIds.travel.editTrip.endDate}
                   value={endDate}
-                  stackedLabel="Return"
+                  stackedLabel="End"
                   placeholder="Select date"
                   minimumDate={startDate}
                   onChange={onEndDateChange}
-                  accessibilityLabel="Return date"
-                  {...field('calendar')}
+                  accessibilityLabel="End date"
+                  {...itinerarySheetFieldProps(chrome, 'calendar')}
                 />
               </View>
             </View>
@@ -182,10 +175,10 @@ export function TravelPlanDetailsEditor({
               onChangeText={onNotesChange}
               icon="note"
               stackedLabel="Notes"
-              placeholder="Ideas, budgets, must-dos…"
+              placeholder={TRIP_NOTES_PLACEHOLDER}
               multiline
               accessibilityLabel="Notes"
-              {...field('note')}
+              {...itinerarySheetFieldProps(chrome, 'note')}
             />
           </View>
 
@@ -199,13 +192,20 @@ export function TravelPlanDetailsEditor({
               onPress={onSave}>
               Save Details
             </Button>
-            <DestructiveSection
-              label="Delete Trip"
-              description="Permanently removes this trip and its itinerary from this device."
-              testID={AgentUiIds.travel.removeConfirm.open}
-              accessibilityLabel={`Delete ${plan.title}`}
-              onPress={openDeleteTrip}
-            />
+            <DangerZone
+              title={null}
+              testID={AgentUiIds.travel.editTrip.dangerZone}>
+              <DestructiveSection
+                flush
+                icon={null}
+                descriptionAlign="center"
+                label="Delete Trip"
+                description="Permanently removes this trip and its itinerary from this device."
+                testID={AgentUiIds.travel.removeConfirm.open}
+                accessibilityLabel={`Delete ${plan.title}`}
+                onPress={openDeleteTrip}
+              />
+            </DangerZone>
           </View>
         </View>
       </TravelSurfaceCard>
@@ -222,7 +222,6 @@ const styles = StyleSheet.create({
   page: {
     flexGrow: 1,
   },
-  cardBody: {},
   actions: {
     width: '100%',
   },

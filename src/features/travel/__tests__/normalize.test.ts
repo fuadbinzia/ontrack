@@ -23,6 +23,16 @@ describe('travel plan normalization', () => {
     });
   });
 
+  it('omits cover fields when uploads are cleared', () => {
+    const cleared = normalizeTravelPlan({
+      ...legacyPlan,
+      coverUri: undefined,
+      coverUris: undefined,
+    });
+    expect(cleared?.coverUri).toBeUndefined();
+    expect(cleared?.coverUris).toBeUndefined();
+  });
+
   it('keeps durable coverUris (and coverUri alias) and drops invalid ones', () => {
     expect(
       normalizeTravelPlan({

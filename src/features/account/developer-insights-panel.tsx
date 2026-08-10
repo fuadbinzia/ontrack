@@ -66,6 +66,7 @@ export function DeveloperInsightsPanel() {
   return (
     <CollapsibleSection
       title="Product insights"
+      description="Surface time on this device and across users"
       testID={AgentUiIds.developer.section.insights}
       actionLabel="Sync"
       actionTestID={AgentUiIds.developer.insightsRefresh}

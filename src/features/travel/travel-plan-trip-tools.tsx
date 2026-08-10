@@ -14,7 +14,7 @@ import { TravelFriendsSheet } from '@/features/travel/travel-friends-sheet';
 import { travelAccent } from '@/features/travel/travel-surface';
 import { TravelTripActionGrid } from '@/features/travel/travel-trip-action-grid';
 import type { TravelPlan } from '@/features/travel/types';
-import { TravelWeatherSheet } from '@/features/travel/weather';
+import { TravelWeatherSheet } from '@/features/travel/weather/travel-weather-sheet';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';

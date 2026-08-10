@@ -153,6 +153,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `today-prev-day` | Seed home-weather → Today → previous day (H/L banner) |
 | `today-next-day` | Seed home-weather → Today → next day (H/L banner) |
 | `open-avatar-editor` | Profile → avatar editor sheet |
+| `open-profile-identity` | Profile → name & blurb editor sheet |
 | `open-developer` | Profile → Developer Tools (Dev Mode toggle; needs developer_tools) |
 | `profile-usage-analytics` | Profile → Usage Analytics GlassSwitch row |
 | `checklist-demo` | Seed demo checklist → open list detail (task ready) |

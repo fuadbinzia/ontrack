@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.42',
+    date: '2026-08-10',
+    notes: [
+      'Swipe-dismiss sheets, fix photo picker Modal race, and clear travel chat menus above the tab dock.',
+    ],
+  },
+  {
     version: '1.0.41',
     date: '2026-08-10',
     notes: [

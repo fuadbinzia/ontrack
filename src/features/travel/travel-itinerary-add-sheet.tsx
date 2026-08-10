@@ -10,8 +10,11 @@ import {
     useWindowDimensions,
     View,
 } from 'react-native';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useSheetDismissPan } from '@/components/primitives/use-sheet-dismiss-pan';
 import { radii } from '@/design-system';
 import {
     ITEM_KINDS,
@@ -120,24 +123,35 @@ export function TravelItineraryAddSheet({
     Math.round(windowHeight * 0.92) - sheetBottom,
   );
 
+  const { headerGesture, sheetStyle, scrimStyle, onSheetLayout, close } = useSheetDismissPan({
+    visible,
+    onClose,
+  });
+
   useEffect(() => {
     if (!visible) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      onClose();
+      close();
       return true;
     });
     return () => sub.remove();
-  }, [visible, onClose]);
+  }, [visible, close]);
 
   if (!visible) return null;
 
   return (
-    <View
-      accessibilityViewIsModal
-      style={[styles.overlay, { backgroundColor: theme.overlayScrim }]}>
+    <View accessibilityViewIsModal style={styles.overlay}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: theme.overlayScrim },
+          scrimStyle,
+        ]}
+      />
       <Pressable
         accessibilityLabel="Close add to timeline"
-        onPress={onClose}
+        onPress={close}
         style={styles.backdrop}
       />
       <KeyboardAvoidingView
@@ -146,7 +160,10 @@ export function TravelItineraryAddSheet({
         keyboardVerticalOffset={0}
         pointerEvents="box-none"
         style={styles.modalRoot}>
-        <View
+        <Animated.View
+          onLayout={(event) => {
+            onSheetLayout(Math.round(event.nativeEvent.layout.height));
+          }}
           style={[
             styles.sheet,
             {
@@ -158,6 +175,7 @@ export function TravelItineraryAddSheet({
               // Clear tab dock (or IME when open). CTA scrolls with the form.
               bottom: sheetBottom,
             },
+            sheetStyle,
           ]}>
           {Platform.OS === 'android' ? (
             <View
@@ -192,24 +210,27 @@ export function TravelItineraryAddSheet({
               />
             </>
           )}
-          <View
-            style={[
-              styles.headerSlot,
-              {
-                paddingHorizontal: rs.lg,
-              },
-            ]}>
-            <TravelSheetHeader
-              eyebrow="Itinerary"
-              title={title}
-              subtitle={sheetSubtitle(kind, editing)}
-              closeAccessibilityLabel={
-                editing ? 'Close edit stop' : 'Close add to timeline'
-              }
-              closeTestID={AgentUiIds.travel.itineraryAdd.close}
-              onClose={onClose}
-            />
-          </View>
+          <GestureDetector gesture={headerGesture}>
+            <Animated.View
+              style={[
+                styles.headerSlot,
+                {
+                  paddingHorizontal: rs.lg,
+                },
+              ]}>
+              <TravelSheetHeader
+                eyebrow="Itinerary"
+                title={title}
+                subtitle={sheetSubtitle(kind, editing)}
+                closeAccessibilityLabel={
+                  editing ? 'Close edit stop' : 'Close add to timeline'
+                }
+                closeTestID={AgentUiIds.travel.itineraryAdd.close}
+                onClose={close}
+                grabberInteractive={false}
+              />
+            </Animated.View>
+          </GestureDetector>
 
           <View style={styles.body}>
             <ScrollView
@@ -244,7 +265,7 @@ export function TravelItineraryAddSheet({
               </View>
             </ScrollView>
           </View>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </View>
   );

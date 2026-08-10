@@ -10,6 +10,11 @@ export type SheetGrabberProps = {
   /** When set, tap dismisses (agent-ui + a11y). Visual stays a swipe cue. */
   onPress?: () => void;
   accessibilityLabel?: string;
+  /**
+   * `false` when a parent header gesture owns pan/tap dismiss — keeps agent-ui
+   * + VoiceOver without a Pressable that steals the swipe.
+   */
+  interactive?: boolean;
 };
 
 /**
@@ -20,6 +25,7 @@ export function SheetGrabber({
   testID,
   onPress,
   accessibilityLabel = 'Dismiss',
+  interactive = true,
 }: SheetGrabberProps) {
   const theme = useTheme();
   const { s, spacing, layout } = useResponsive();
@@ -38,7 +44,13 @@ export function SheetGrabber({
     />
   );
 
-  if (onPress) {
+  const slotPad = {
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xxs,
+    minHeight: layout.minTapTarget,
+  };
+
+  if (onPress && interactive) {
     return (
       <Pressable
         ref={agent.ref}
@@ -51,15 +63,32 @@ export function SheetGrabber({
         hitSlop={8}
         style={({ pressed }) => [
           styles.slot,
-          {
-            paddingTop: spacing.xs,
-            paddingBottom: spacing.xxs,
-            minHeight: layout.minTapTarget,
-            opacity: pressed ? 0.7 : 1,
-          },
+          slotPad,
+          { opacity: pressed ? 0.7 : 1 },
         ]}>
         {pill}
       </Pressable>
+    );
+  }
+
+  if (onPress && !interactive) {
+    return (
+      <View
+        ref={agent.ref}
+        testID={testID}
+        onLayout={agent.onLayout}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint="Swipe down or tap to dismiss"
+        accessibilityActions={[{ name: 'activate' }]}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === 'activate') onPress();
+        }}
+        // RNTL `fireEvent.press`; parent header gesture handles finger tap/pan.
+        {...({ onPress } as object)}
+        style={[styles.slot, slotPad]}>
+        {pill}
+      </View>
     );
   }
 
@@ -69,10 +98,7 @@ export function SheetGrabber({
         pointerEvents="none"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        style={[
-          styles.slot,
-          { paddingTop: spacing.xs, paddingBottom: spacing.xxs },
-        ]}>
+        style={[styles.slot, { paddingTop: spacing.xs, paddingBottom: spacing.xxs }]}>
         {pill}
       </View>
     </AgentTestId>

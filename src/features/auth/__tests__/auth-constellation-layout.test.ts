@@ -1,22 +1,72 @@
 import {
+  AUTH_COPY_HEIGHT,
   AUTH_COPY_TOP,
+  AUTH_COPY_WIDTH,
+  AUTH_ORBIT_ELLIPSE,
   AUTH_ORBIT_NODES,
+  authCopyFrame,
   authCopyMaxHeightFrac,
   authLowSweepMinY,
+  authOrbitPoint,
 } from '@/features/auth/auth-constellation-layout';
 
 describe('auth constellation layout clearance', () => {
-  it('keeps the low sweep below the copy clear-line', () => {
+  it('keeps the copy band inside the ring clear-line', () => {
     const wellFrac = 0.115;
     const copyBottom = AUTH_COPY_TOP + authCopyMaxHeightFrac(wellFrac);
-    const gamesTop = authLowSweepMinY() - wellFrac / 2;
+    const lowTop = authLowSweepMinY() - wellFrac / 2;
 
-    expect(copyBottom).toBeLessThan(gamesTop);
+    expect(copyBottom).toBeLessThan(lowTop);
   });
 
-  it('places Games on the low sweep (highest of that arc)', () => {
-    const games = AUTH_ORBIT_NODES.find((node) => node.tab === 'games');
-    expect(games?.y).toBe(authLowSweepMinY());
-    expect(games?.y).toBeGreaterThanOrEqual(0.85);
+  it('centres the ring on the copy (text is the sun)', () => {
+    const frame = authCopyFrame();
+    expect(frame.center).toBeCloseTo(AUTH_ORBIT_ELLIPSE.cx, 5);
+    expect(frame.left + frame.width / 2).toBeCloseTo(AUTH_ORBIT_ELLIPSE.cx, 5);
+    expect(frame.top + frame.height / 2).toBeCloseTo(AUTH_ORBIT_ELLIPSE.cy, 5);
+    expect(frame.width).toBe(AUTH_COPY_WIDTH);
+    expect(frame.height).toBe(AUTH_COPY_HEIGHT);
+  });
+
+  it('keeps Food inside the right edge at rest (well + label clearance)', () => {
+    const food = AUTH_ORBIT_NODES.find((node) => node.tab === 'food');
+    expect(food?.x).toBeLessThanOrEqual(0.86);
+    expect(AUTH_ORBIT_ELLIPSE.cx + AUTH_ORBIT_ELLIPSE.rx).toBeLessThanOrEqual(
+      0.86,
+    );
+  });
+
+  it('rides a wider ellipse so the ring reads elliptical', () => {
+    expect(AUTH_ORBIT_ELLIPSE.rx).toBeGreaterThan(AUTH_ORBIT_ELLIPSE.ry);
+
+    const low = AUTH_ORBIT_NODES.filter((node) => node.y >= 0.7);
+    const ys = low.map((node) => node.y);
+    expect(ys.length).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(0.04);
+  });
+
+  it('keeps every satellite on the shared ellipse', () => {
+    for (const node of AUTH_ORBIT_NODES) {
+      const nx = (node.x - AUTH_ORBIT_ELLIPSE.cx) / AUTH_ORBIT_ELLIPSE.rx;
+      const ny = (node.y - AUTH_ORBIT_ELLIPSE.cy) / AUTH_ORBIT_ELLIPSE.ry;
+      expect(nx * nx + ny * ny).toBeCloseTo(1, 5);
+    }
+  });
+
+  it('spaces satellites evenly around the copy', () => {
+    const degs = AUTH_ORBIT_NODES.map((node) => node.deg);
+    const step = 360 / degs.length;
+    for (let i = 1; i < degs.length; i += 1) {
+      expect((degs[i]! - degs[i - 1]! + 360) % 360).toBeCloseTo(step, 5);
+    }
+  });
+
+  it('exposes authOrbitPoint for the same ring', () => {
+    const top = authOrbitPoint(270);
+    expect(top.x).toBeCloseTo(AUTH_ORBIT_ELLIPSE.cx, 5);
+    expect(top.y).toBeCloseTo(
+      AUTH_ORBIT_ELLIPSE.cy - AUTH_ORBIT_ELLIPSE.ry,
+      5,
+    );
   });
 });

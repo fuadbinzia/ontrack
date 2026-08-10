@@ -247,8 +247,13 @@ describe('glass plate contract', () => {
     expect(dataChoice).toContain('Card airy');
     expect(dataChoice).not.toContain('backgroundColor: theme.backgroundElevated');
     expect(dataChoice).not.toContain('backgroundColor: theme.backgroundSunken');
+    expect(people).toContain('SheetScaffold');
+    expect(people).toContain('surface="glass"');
+    expect(people).toContain('GlassPrimaryAction');
     expect(people).not.toContain('selectedBg');
     expect(people).not.toContain('theme.accentFaint');
+    expect(people).not.toContain('presentationStyle="pageSheet"');
+    expect(people).not.toContain('useScreenAtmosphereChrome');
     expect(dateField).toContain('GlassPlate');
     expect(dateField).not.toContain('backgroundColor: theme.backgroundElevated');
     expect(timeField).toContain('GlassPlate');

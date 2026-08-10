@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radii.lg,
     ...(Platform.OS === 'web'
-      ? { boxShadow: '0 6px 18px rgba(61, 50, 32, 0.12)' }
+      ? { boxShadow: '0 6px 18px rgba(41, 54, 59, 0.1)' }
       : shadows.raised),
   },
   // Sits above the plate without participating in the card's flex height.

@@ -1,6 +1,7 @@
 import type { Ref } from 'react';
 import type { LayoutChangeEvent, View } from 'react-native';
 
+import { authPalette } from './auth-palette';
 import { ProviderButton } from './provider-button';
 import { AppleMark } from './provider-marks';
 
@@ -19,8 +20,9 @@ export function AppleProviderButton({
   buttonRef?: Ref<View>;
   onLayout?: (event: LayoutChangeEvent) => void;
 }) {
-  const backgroundColor = dark ? '#FFFFFF' : '#000000';
-  const textColor = dark ? '#000000' : '#FFFFFF';
+  // Dusty-blue mock: Apple fill is ink charcoal, not pure black.
+  const backgroundColor = dark ? '#FFFFFF' : authPalette.ink;
+  const textColor = dark ? authPalette.ink : '#FFFFFF';
   return (
     <ProviderButton
       icon={<AppleMark color={textColor} />}

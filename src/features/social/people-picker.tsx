@@ -1,27 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import {
   AppText,
-  Button,
   GlassPlate,
-  IconButton,
-  useScreenAtmosphereChrome,
+  GlassPrimaryAction,
+  SheetScaffold,
 } from '@/components/primitives';
 import { radii } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import {
-  type FriendProfile,
-} from '@/services/friends';
+import { type FriendProfile } from '@/services/friends';
 import { useFriends } from '@/store/friends';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
@@ -43,7 +32,6 @@ export function PeoplePicker({
   confirmLabel?: string;
 }) {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const { spacing, s, typography } = useResponsive();
   const friends = useFriends((state) => state.friends);
   const [query, setQuery] = useState('');
@@ -91,104 +79,77 @@ export function PeoplePicker({
   const searchAgent = useAgentUiTarget(AgentUiIds.peoplePicker.search, {
     label: 'Search name or email',
   });
-  useScreenAtmosphereChrome(visible);
+  const confirmText = `${confirmLabel}${selected.size > 0 ? ` (${selected.size})` : ''}`;
 
   return (
-    <Modal
+    <SheetScaffold
       visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}>
-      <View
-        style={[
-          styles.root,
-          {
-            paddingTop: insets.top + spacing.sm,
-            paddingBottom: insets.bottom + spacing.lg,
-            paddingHorizontal: spacing.lg,
-          },
-        ]}>
-        <View style={[styles.header, { marginBottom: spacing.md }]}>
-          <View style={styles.headerCopy}>
-            <AppText variant="heading" fit>
-              {title}
-            </AppText>
-          </View>
-          <IconButton
-            icon="close"
-            testID={AgentUiIds.peoplePicker.close}
-            accessibilityLabel="Close"
-            onPress={onClose}
-          />
-        </View>
-
-        <GlassPlate
-          airy
-          style={[
-            styles.search,
-            {
-              minHeight: Math.max(44, s(48)),
-              paddingHorizontal: spacing.md,
-              marginBottom: spacing.md,
-            },
-          ]}>
-          <TextInput
-            ref={searchAgent.ref as never}
-            testID={searchAgent.testID}
-            onLayout={searchAgent.onLayout}
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search name or email"
-            placeholderTextColor={theme.textTertiary}
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={[
-              styles.searchInput,
-              {
-                color: theme.textPrimary,
-                fontSize: typography.callout.fontSize,
-              },
-            ]}
-          />
-        </GlassPlate>
-
-        <ScrollView
-          style={styles.list}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
-          {available.length === 0 ? (
-            <AppText variant="body" color="secondary" style={{ marginTop: spacing.lg }}>
-              {friends.length === 0
-                ? 'Add friends on the Social tab first.'
-                : 'No matching friends.'}
-            </AppText>
-          ) : (
-            available.map((friend) => (
-              <PeoplePickerFriendRow
-                key={friend.userId}
-                friend={friend}
-                selected={selected.has(friend.userId)}
-                accentBorder={theme.accentPrimary}
-                idleBorder={theme.separator}
-                minHeight={Math.max(52, s(56))}
-                paddingHorizontal={spacing.md}
-                marginBottom={spacing.sm}
-                gap={spacing.md}
-                onPress={() => toggle(friend.userId)}
-              />
-            ))
-          )}
-        </ScrollView>
-
-        <Button
-          testID={AgentUiIds.peoplePicker.confirm}
+      title={title}
+      onClose={onClose}
+      closeAccessibilityLabel="Close"
+      closeTestID={AgentUiIds.peoplePicker.close}
+      surface="glass"
+      contentContainerStyle={{ gap: spacing.sm }}
+      footer={
+        <GlassPrimaryAction
+          label={confirmText}
           disabled={selected.size === 0}
           onPress={confirm}
-          style={{ marginTop: spacing.md }}>
-          {`${confirmLabel}${selected.size > 0 ? ` (${selected.size})` : ''}`}
-        </Button>
-      </View>
-    </Modal>
+          testID={AgentUiIds.peoplePicker.confirm}
+        />
+      }>
+      <GlassPlate
+        airy
+        style={[
+          styles.search,
+          {
+            minHeight: Math.max(44, s(48)),
+            paddingHorizontal: spacing.md,
+            marginBottom: spacing.sm,
+          },
+        ]}>
+        <TextInput
+          ref={searchAgent.ref as never}
+          testID={searchAgent.testID}
+          onLayout={searchAgent.onLayout}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search name or email"
+          placeholderTextColor={theme.textTertiary}
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={[
+            styles.searchInput,
+            {
+              color: theme.textPrimary,
+              fontSize: typography.callout.fontSize,
+            },
+          ]}
+        />
+      </GlassPlate>
+
+      {available.length === 0 ? (
+        <AppText variant="body" color="secondary" style={{ marginTop: spacing.md }}>
+          {friends.length === 0
+            ? 'Add friends on the Social tab first.'
+            : 'No matching friends.'}
+        </AppText>
+      ) : (
+        available.map((friend) => (
+          <PeoplePickerFriendRow
+            key={friend.userId}
+            friend={friend}
+            selected={selected.has(friend.userId)}
+            accentBorder={theme.accentPrimary}
+            idleBorder={theme.separator}
+            minHeight={Math.max(52, s(56))}
+            paddingHorizontal={spacing.md}
+            gap={spacing.md}
+            onPress={() => toggle(friend.userId)}
+          />
+        ))
+      )}
+    </SheetScaffold>
   );
 }
 
@@ -199,7 +160,6 @@ function PeoplePickerFriendRow({
   idleBorder,
   minHeight,
   paddingHorizontal,
-  marginBottom,
   gap,
   onPress,
 }: {
@@ -209,7 +169,6 @@ function PeoplePickerFriendRow({
   idleBorder: string;
   minHeight: number;
   paddingHorizontal: number;
-  marginBottom: number;
   gap: number;
   onPress: () => void;
 }) {
@@ -226,12 +185,7 @@ function PeoplePickerFriendRow({
       accessibilityLabel={friend.displayName}
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={[
-        styles.rowWrap,
-        {
-          marginBottom,
-        },
-      ]}>
+      style={styles.rowWrap}>
       <GlassPlate
         airy
         style={[
@@ -244,34 +198,23 @@ function PeoplePickerFriendRow({
             gap,
           },
         ]}>
-      <View style={styles.rowCopy}>
-        <AppText variant="callout" fit>
-          {friend.displayName}
+        <View style={styles.rowCopy}>
+          <AppText variant="callout" fit>
+            {friend.displayName}
+          </AppText>
+          <AppText variant="caption" color="secondary" fit>
+            {friend.email}
+          </AppText>
+        </View>
+        <AppText variant="caption" color={selected ? 'accent' : 'secondary'} fit>
+          {selected ? 'Selected' : 'Select'}
         </AppText>
-        <AppText variant="caption" color="secondary" fit>
-          {friend.email}
-        </AppText>
-      </View>
-      <AppText variant="caption" color={selected ? 'accent' : 'tertiary'} fit>
-        {selected ? 'Selected' : 'Select'}
-      </AppText>
       </GlassPlate>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerCopy: {
-    flex: 1,
-    flexShrink: 1,
-    minWidth: 0,
-  },
   search: {
     borderRadius: radii.md,
   },
@@ -280,7 +223,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 0,
   },
-  list: { flex: 1 },
   rowWrap: {
     width: '100%',
   },

@@ -1,5 +1,6 @@
 import {
   AUTH_COPY_HEIGHT,
+  AUTH_COPY_PLANET_PAD,
   AUTH_COPY_TOP,
   AUTH_COPY_WIDTH,
   AUTH_ORBIT_ELLIPSE,
@@ -8,6 +9,7 @@ import {
   authCopyMaxHeightFrac,
   authLowSweepMinY,
   authOrbitPoint,
+  authPlanetRadiusFrac,
 } from '@/features/auth/auth-constellation-layout';
 
 describe('auth constellation layout clearance', () => {
@@ -28,11 +30,27 @@ describe('auth constellation layout clearance', () => {
     expect(frame.height).toBe(AUTH_COPY_HEIGHT);
   });
 
+  it('keeps the copy band inside the planet disc', () => {
+    const r = authPlanetRadiusFrac() - AUTH_COPY_PLANET_PAD;
+    const frame = authCopyFrame();
+    const corners = [
+      { x: frame.left, y: frame.top },
+      { x: frame.left + frame.width, y: frame.top },
+      { x: frame.left, y: frame.top + frame.height },
+      { x: frame.left + frame.width, y: frame.top + frame.height },
+    ];
+    for (const corner of corners) {
+      const dx = corner.x - AUTH_ORBIT_ELLIPSE.cx;
+      const dy = corner.y - AUTH_ORBIT_ELLIPSE.cy;
+      expect(dx * dx + dy * dy).toBeLessThanOrEqual(r * r + 1e-9);
+    }
+  });
+
   it('keeps Food inside the right edge at rest (well + label clearance)', () => {
     const food = AUTH_ORBIT_NODES.find((node) => node.tab === 'food');
-    expect(food?.x).toBeLessThanOrEqual(0.86);
+    expect(food?.x).toBeLessThanOrEqual(0.9);
     expect(AUTH_ORBIT_ELLIPSE.cx + AUTH_ORBIT_ELLIPSE.rx).toBeLessThanOrEqual(
-      0.86,
+      0.9,
     );
   });
 

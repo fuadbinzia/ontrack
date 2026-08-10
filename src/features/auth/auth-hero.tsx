@@ -13,7 +13,7 @@ const COPY = {
   welcome: {
     headline: 'Your day, one place.',
     intro:
-      'Schedule, track meals, workouts, and focus — without juggling different apps.',
+      'Schedule, track meals, workouts, travel and more — without juggling different apps.',
   },
   upgrade: {
     headline: 'Take onTrack with you.',
@@ -75,7 +75,8 @@ function HeroCopy({ headline, intro }: { headline: string; intro: string }) {
   const theme = useTheme();
   const { s, typography } = useResponsive();
   const scale = useAuthCopyScale();
-  const introScale = Math.max(scale, 0.86);
+  // Slightly larger than the canvas scale so the intro stays readable in the ring.
+  const introScale = Math.max(scale * 1.12, 0.84);
 
   return (
     <>
@@ -84,7 +85,7 @@ function HeroCopy({ headline, intro }: { headline: string; intro: string }) {
         align="center"
         numberOfLines={3}
         adjustsFontSizeToFit
-        minimumFontScale={0.6}
+        minimumFontScale={0.55}
         style={{
           fontSize: typography.display.fontSize * scale,
           lineHeight: typography.display.lineHeight * scale,
@@ -95,7 +96,7 @@ function HeroCopy({ headline, intro }: { headline: string; intro: string }) {
         style={[
           styles.rule,
           {
-            width: s(46) * scale,
+            width: s(40) * scale,
             height: Math.max(1, s(1.5)),
             backgroundColor: theme.accentPrimary,
           },
@@ -105,9 +106,9 @@ function HeroCopy({ headline, intro }: { headline: string; intro: string }) {
         variant="body"
         color="secondary"
         align="center"
-        numberOfLines={4}
+        numberOfLines={5}
         adjustsFontSizeToFit
-        minimumFontScale={0.72}
+        minimumFontScale={0.7}
         style={{
           fontSize: typography.body.fontSize * introScale,
           lineHeight: typography.body.lineHeight * introScale,

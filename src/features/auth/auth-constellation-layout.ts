@@ -22,21 +22,21 @@ export type AuthOrbitEllipse = {
 };
 
 /**
- * Full circle centred on the welcome copy. Radius leaves room for wells so
- * the rightmost point stays on-canvas.
+ * Full circle centred on the welcome copy. Wide enough that the planet can
+ * hold the full intro; wells still clear the canvas edge under sway.
  */
 export const AUTH_ORBIT_ELLIPSE: AuthOrbitEllipse = {
   cx: 0.5,
   cy: 0.5,
-  rx: 0.34,
-  ry: 0.34,
+  rx: 0.4,
+  ry: 0.4,
 };
 
 /** Dotted guides: concentric with the satellite ring. */
 export const AUTH_ORBIT_GUIDES: readonly AuthOrbitEllipse[] = [
   AUTH_ORBIT_ELLIPSE,
-  { ...AUTH_ORBIT_ELLIPSE, rx: 0.24, ry: 0.24 },
-  { ...AUTH_ORBIT_ELLIPSE, rx: 0.42, ry: 0.42 },
+  { ...AUTH_ORBIT_ELLIPSE, rx: 0.3, ry: 0.3 },
+  { ...AUTH_ORBIT_ELLIPSE, rx: 0.48, ry: 0.48 },
 ];
 
 /** Clockwise from upper-left so the top sweep reads Social → Calendar → Travel. */
@@ -88,9 +88,37 @@ export function authOrbitNodesForTabs(
  */
 export const AUTH_ORBIT_NODES: readonly AuthOrbitNode[] = authOrbitNodesForTabs();
 
-/** Copy band centred on the ring (width/height are canvas fractions). */
-export const AUTH_COPY_WIDTH = 0.5;
-export const AUTH_COPY_HEIGHT = 0.3;
+/** Matches constellation `well` sizing (`height * 0.115`). */
+export const AUTH_ORBIT_WELL_FRAC = 0.115;
+/** Clear air between planet rim and satellite wells. */
+export const AUTH_PLANET_ICON_GAP_FRAC = 0.035;
+/** Extra inset so glyphs stay inside the planet face (not on the rim). */
+export const AUTH_COPY_PLANET_PAD = 0.03;
+
+/** Planet radius as a canvas fraction (orbit minus well/2 minus gap). */
+export function authPlanetRadiusFrac(
+  ellipse: AuthOrbitEllipse = AUTH_ORBIT_ELLIPSE,
+  wellFrac: number = AUTH_ORBIT_WELL_FRAC,
+  gapFrac: number = AUTH_PLANET_ICON_GAP_FRAC,
+): number {
+  return Math.max(
+    0.18,
+    Math.min(ellipse.rx, ellipse.ry) - wellFrac / 2 - gapFrac,
+  );
+}
+
+/**
+ * Copy band centred on the planet — width/height satisfy
+ * `(w/2)² + (h/2)² ≤ (planetR − pad)²` so text cannot spill past the disc.
+ */
+const AUTH_COPY_INNER_R =
+  authPlanetRadiusFrac() - AUTH_COPY_PLANET_PAD;
+export const AUTH_COPY_WIDTH = 0.42;
+export const AUTH_COPY_HEIGHT =
+  2 *
+  Math.sqrt(
+    Math.max(0, AUTH_COPY_INNER_R ** 2 - (AUTH_COPY_WIDTH / 2) ** 2),
+  );
 
 /** Top of the copy band — derived from the ring centre. */
 export const AUTH_COPY_TOP =

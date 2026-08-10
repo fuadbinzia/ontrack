@@ -15,23 +15,23 @@ describe('bottom nav bar background invariant', () => {
     expect(tabsLayout).toMatch(/tabBarBackground:\s*\(\)\s*=>\s*null/);
   });
 
-  it('frosts the dock over page atmosphere with a transparent capsule', () => {
+  it('frosts the dock over page atmosphere and clears Android system nav', () => {
     const source = readFileSync(
       join(process.cwd(), 'src/components/navigation/bottom-nav-bar.tsx'),
+      'utf8',
+    );
+    const inset = readFileSync(
+      join(process.cwd(), 'src/components/navigation/bottom-nav-inset.ts'),
       'utf8',
     );
 
     expect(source).toContain('usePageSurfaceBackgroundColor');
     expect(source).toContain('barBackground');
     expect(source).toContain('glassMaterials.nav');
+    expect(source).toContain('bottomNavBottomPad');
     expect(source).toContain('<BlurView');
-    expect(source).toContain("backgroundColor: 'transparent'");
-    expect(source).toMatch(/capsule:\s*\{[^}]*justifyContent:\s*'center'/);
-    expect(source).toMatch(/railEdge:\s*\{[^}]*position:\s*'absolute'/);
-    expect(source).toMatch(/capsuleClip[\s\S]*overflow:\s*'hidden'/);
-    expect(source).not.toMatch(
-      /capsule:\s*\{[^}]*overflow:\s*'hidden'/,
-    );
+    expect(source).toMatch(/barBackground[\s\S]*'transparent'/);
+    expect(inset).toContain("platform === 'android' && insetsBottom > 0");
     // Cool frosted bar tint must not return — it seams against warm page fills.
     expect(source).not.toMatch(/rgba\(8,\s*12,\s*22/);
   });

@@ -19,6 +19,13 @@ export type VersionNotesEntry = {
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.36',
+    date: '2026-08-10',
+    notes: [
+      'Lift Android tab dock above system nav; pin device OTA channel headers.',
+    ],
+  },
+  {
     version: '1.0.35',
     date: '2026-08-10',
     notes: [
@@ -270,6 +277,14 @@ export const RELEASE_NOTES: VersionNotesEntry[] = [
 
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
+  {
+    version: '1.0.36',
+    date: '2026-08-10',
+    notes: [
+      'Lift Android tab dock above system nav; pin device OTA channel headers.',
+      'Touched: features/travel.',
+    ],
+  },
   {
     version: '1.0.35',
     date: '2026-08-10',

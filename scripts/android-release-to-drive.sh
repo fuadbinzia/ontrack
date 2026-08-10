@@ -86,6 +86,31 @@ newest_local_apk() {
   printf '%s' "$newest"
 }
 
+# expo-updates reads UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY (not *_JSON).
+# Wrong key → EAS returns "channel-name: Required" and Android OTA never applies.
+assert_device_channel_headers() {
+  local manifest="$ROOT/android/app/src/main/AndroidManifest.xml"
+  if [[ ! -f "$manifest" ]]; then
+    echo "error: missing $manifest" >&2
+    exit 1
+  fi
+  if rg -q 'UPDATES_CONFIGURATION_REQUEST_HEADERS_JSON' "$manifest"; then
+    echo "error: AndroidManifest uses UPDATES_CONFIGURATION_REQUEST_HEADERS_JSON;" >&2
+    echo "       expo-updates expects UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY" >&2
+    exit 1
+  fi
+  if ! rg -q 'expo\.modules\.updates\.UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY' "$manifest"; then
+    echo "error: AndroidManifest missing UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY" >&2
+    exit 1
+  fi
+  if ! rg -q 'expo-channel-name' "$manifest"; then
+    echo "error: AndroidManifest missing expo-channel-name in request headers" >&2
+    exit 1
+  fi
+}
+
+assert_device_channel_headers
+
 if [[ "$DO_BUILD" -eq 1 ]]; then
   BUILD_STAMP="$(date +%Y%m%d-%H%M%S)"
   APK_NAME="onTrack-${APP_VERSION}-${BUILD_STAMP}-android-release.apk"

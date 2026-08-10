@@ -333,7 +333,7 @@ function WelcomeCopy() {
   const theme = useTheme();
   const { s, typography } = useResponsive();
   const scale = useAuthCopyScale();
-  const introScale = Math.max(scale, 0.86);
+  const introScale = Math.max(scale * 1.12, 0.84);
 
   return (
     <>
@@ -341,7 +341,7 @@ function WelcomeCopy() {
         variant="display"
         numberOfLines={3}
         adjustsFontSizeToFit
-        minimumFontScale={0.6}
+        minimumFontScale={0.55}
         style={{
           fontSize: typography.display.fontSize * scale,
           lineHeight: typography.display.lineHeight * scale,
@@ -352,7 +352,7 @@ function WelcomeCopy() {
         style={[
           styles.rule,
           {
-            width: s(46) * scale,
+            width: s(40) * scale,
             height: Math.max(1, s(1.5)),
             backgroundColor: theme.accentPrimary,
           },
@@ -361,14 +361,14 @@ function WelcomeCopy() {
       <AppText
         variant="body"
         color="secondary"
-        numberOfLines={4}
+        numberOfLines={5}
         adjustsFontSizeToFit
-        minimumFontScale={0.72}
+        minimumFontScale={0.7}
         style={{
           fontSize: typography.body.fontSize * introScale,
           lineHeight: typography.body.lineHeight * introScale,
         }}>
-        Schedule, track meals, workouts, and focus — without juggling different apps.
+        Schedule, track meals, workouts, travel and more — without juggling different apps.
       </AppText>
     </>
   );

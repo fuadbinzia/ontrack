@@ -29,6 +29,7 @@ import {
   AUTH_ORBIT_ELLIPSE,
   AUTH_ORBIT_GUIDES,
   AUTH_ORBIT_TABS,
+  AUTH_PLANET_ICON_GAP_FRAC,
   authCopyFrame,
   authCopyMaxHeightFrac,
   authOrbitNodesForTabs,
@@ -109,22 +110,29 @@ function ConstellationNode({
 function Planet({
   width,
   height,
+  well,
   breathe,
   animate,
 }: {
   width: number;
   height: number;
+  well: number;
   breathe: SharedValue<number>;
   animate: boolean;
 }) {
   const theme = useTheme();
   const dark = theme.name === 'dark';
-  // Sit behind the copy — sized to the inner clear zone, not the full ring.
-  const diameter = Math.min(
-    width * AUTH_ORBIT_ELLIPSE.rx * 1.55,
-    height * AUTH_ORBIT_ELLIPSE.ry * 1.55,
+  // Planet stays inside the orbit: satellite centres ride `orbitPx`, wells
+  // reach inward by ~half well — leave that plus a gap so icons never kiss.
+  const orbitPx = Math.min(
+    width * AUTH_ORBIT_ELLIPSE.rx,
+    height * AUTH_ORBIT_ELLIPSE.ry,
   );
-  const bloom = diameter * 1.4;
+  const gap = Math.min(width, height) * AUTH_PLANET_ICON_GAP_FRAC;
+  const diameter = Math.max(0, (orbitPx - well / 2 - gap) * 2);
+  const bloom = diameter * 1.35;
+
+
   const cx = width * AUTH_ORBIT_ELLIPSE.cx;
   const cy = height * AUTH_ORBIT_ELLIPSE.cy;
 
@@ -219,10 +227,11 @@ export function AuthConstellation({
   const slot = well * 1.95;
   const copyFrame = authCopyFrame();
   const copyMaxHeight = height * authCopyMaxHeightFrac(well / height);
+  // Shrink aggressively so headline + rule + intro stay inside the ring.
   const copyScale = Math.min(
     1,
-    Math.max(0.62, height / AUTH_COPY_BASE_HEIGHT),
-    Math.max(0.62, copyMaxHeight / (AUTH_COPY_BASE_HEIGHT * 0.55)),
+    Math.max(0.55, height / AUTH_COPY_BASE_HEIGHT),
+    Math.max(0.55, copyMaxHeight / (AUTH_COPY_BASE_HEIGHT * 0.55)),
   );
 
   const orbit = useSharedValue(0);
@@ -292,6 +301,7 @@ export function AuthConstellation({
       <Planet
         width={width}
         height={height}
+        well={well}
         breathe={breathe}
         animate={drifting}
       />
@@ -345,7 +355,8 @@ export function AuthConstellation({
             top: height * copyFrame.top,
             width: width * copyFrame.width,
             maxHeight: copyMaxHeight,
-            gap: spacing.sm * copyScale,
+            gap: spacing.xs * copyScale,
+            paddingHorizontal: spacing.xs,
           },
         ]}>
         <CopyScaleContext.Provider value={copyScale}>

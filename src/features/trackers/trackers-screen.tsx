@@ -331,7 +331,7 @@ export function TrackersScreen() {
               <View style={{ marginBottom: spacing.md }}>
                 <ScreenHeader
                   title="Sections"
-                  subtitle="Top items stay in the tab bar. Drag to reorder — More always stays last."
+                  subtitle="Top items stay in the navigation bar. Drag to reorder."
                 />
               </View>
             }

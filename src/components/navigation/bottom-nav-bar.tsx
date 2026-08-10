@@ -35,7 +35,10 @@ import { deferAfterPageLoad } from '@/utils/defer-after-page-load';
 
 import { bottomNavBottomPad } from './bottom-nav-inset';
 import { BottomNavTabItem } from './bottom-nav-tab-item';
-import { TAB_META } from './bottom-nav-tab-meta';
+import {
+  isTrackerRouteEnabled,
+  TAB_META,
+} from './bottom-nav-tab-meta';
 import {
   MORE_TAB_ROUTE,
   NAV_PIN_LIMIT,
@@ -48,23 +51,6 @@ type BottomNavBarProps = Parameters<
 >[0];
 
 const MAX_BAR_WIDTH = 720;
-
-function isTrackerEnabled(
-  routeName: string,
-  enabledAddons: Record<string, boolean>,
-): boolean {
-  if (routeName === 'workouts') return !!enabledAddons.fitness;
-  if (routeName === 'plants') return !!enabledAddons.plants;
-  if (routeName === 'travel') return !!enabledAddons.travel;
-  if (routeName === 'vision-board') return !!enabledAddons['vision-board'];
-  if (routeName === 'games') return !!enabledAddons.games;
-  if (routeName === 'vehicles') return !!enabledAddons.vehicles;
-  if (routeName === 'food') return !!enabledAddons.food;
-  if (routeName === 'health') {
-    return process.env.EXPO_OS === 'ios' && !!enabledAddons.health;
-  }
-  return routeName in TAB_META && routeName !== MORE_TAB_ROUTE;
-}
 
 export function BottomNavBar({
   state,
@@ -107,7 +93,7 @@ export function BottomNavBar({
   const enabledNames = useMemo(() => {
     const names = new Set<string>();
     for (const route of state.routes) {
-      if (!isTrackerEnabled(route.name, enabledAddons)) continue;
+      if (!isTrackerRouteEnabled(route.name, enabledAddons)) continue;
       if (route.name === MORE_TAB_ROUTE) continue;
       names.add(route.name);
     }
@@ -159,8 +145,8 @@ export function BottomNavBar({
     lastPinRouteRef.current = focusedRouteName;
   }, [barSlots, focusedRouteName]);
 
-  // Preload pinned bar routes (+ More) after the focused tab settles so the
-  // next tap doesn't cold-mount a lazy screen on the JS thread.
+  // Warm bar slots after the focused tab settles. Eager pins also mount via
+  // `(tabs)/_layout` lazy:false — preload covers hydration races / pin edits.
   const barRouteKey = useMemo(
     () => barSlots.map((slot) => slot.name).join('|'),
     [barSlots],
@@ -180,7 +166,7 @@ export function BottomNavBar({
           // Older navigators / incomplete preload — ignore.
         }
       }
-    }, motion.page + motion.layout);
+    }, motion.page);
   }, [barRouteKey, navigation]);
 
   // Agent-ui tab targets — register only after idle so dump/tap bookkeeping

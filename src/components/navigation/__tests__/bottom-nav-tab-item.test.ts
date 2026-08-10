@@ -11,9 +11,9 @@ describe('bottom nav tab selection motion', () => {
     'utf8',
   );
 
-  it('keeps the selection mark as a fixed rail-center dot, not per-item', () => {
-    expect(barSource).toContain('centerIndicator');
-    expect(barSource).toMatch(/Stationary center mark/);
+  it('marks the selected pin with a per-slot accent dot (not a rail-center mark)', () => {
+    expect(barSource).toContain('styles.dot');
+    expect(barSource).not.toContain('centerIndicator');
     expect(itemSource).not.toContain('indicatorStyle');
     expect(itemSource).not.toMatch(/styles\.indicator\b/);
   });

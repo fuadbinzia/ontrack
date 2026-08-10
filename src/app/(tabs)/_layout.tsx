@@ -1,10 +1,13 @@
 import { Redirect, Tabs, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { BackHandler, Platform } from 'react-native';
 
 import { BottomNavBar } from '@/components/navigation/bottom-nav-bar';
+import { eagerBottomNavRouteNames } from '@/components/navigation/bottom-nav-tab-meta';
 import { useShouldShowWelcome } from '@/features/auth/welcome-preview';
+import { useAddons } from '@/store/addons';
 import { usePreferences } from '@/store/preferences';
+import { useTabPins } from '@/store/tab-pins';
 import { useUI } from '@/store/ui';
 import { todayKey } from '@/utils/date';
 
@@ -13,6 +16,14 @@ export default function TabsLayout() {
   const showWelcome = useShouldShowWelcome(hasOnboarded);
   const setSelectedDate = useUI((state) => state.setSelectedDate);
   const router = useRouter();
+  const enabledAddons = useAddons((store) => store.enabled);
+  const trackerOrder = useTabPins((store) => store.trackerOrder);
+  const pinnedCount = useTabPins((store) => store.pinnedCount);
+  const eagerRoutes = useMemo(
+    () =>
+      eagerBottomNavRouteNames(trackerOrder, pinnedCount, enabledAddons),
+    [enabledAddons, pinnedCount, trackerOrder],
+  );
 
   // Android hardware back on a tab root otherwise dispatches empty-stack POP
   // → Expo Router LogBox ("not handled by any navigator"). Consume when there
@@ -32,13 +43,15 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      // Keep visited scenes attached — native detach/reattach is the hitch
+      // between already-warm bar pins (freezeOnBlur alone is not enough).
+      detachInactiveScreens={false}
       tabBar={(props) => <BottomNavBar {...props} />}
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
-        // Keep switches snappy — freezing blurred tabs adds a visible hitch
-        // when hopping between sections in the bottom nav rail.
         freezeOnBlur: false,
-        lazy: true,
+        // Bar pins (+ More) mount with the navigator; catalog tabs stay lazy.
+        lazy: !eagerRoutes.has(route.name),
         animation: 'none',
         sceneStyle: { backgroundColor: 'transparent' },
         tabBarStyle: {
@@ -53,7 +66,7 @@ export default function TabsLayout() {
           shadowColor: 'transparent',
         },
         tabBarBackground: () => null,
-      }}>
+      })}>
       <Tabs.Screen
         name="(today)"
         listeners={{ tabPress: () => setSelectedDate(todayKey()) }}

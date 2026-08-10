@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.41',
+    date: '2026-08-10',
+    notes: [
+      'Make bottom-nav tab hops instant by keeping scenes attached and eager-mounting bar pins.',
+      'Touched: app routes.',
+    ],
+  },
+  {
     version: '1.0.40',
     date: '2026-08-10',
     notes: [

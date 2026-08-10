@@ -1,5 +1,5 @@
 import { useRouter, type Href } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -144,10 +144,6 @@ export function TravelPlanHero({
   onNotesExpandedChange,
   /** Denser dates/Notes frost while a flight card is expanded below. */
   denseHeroGlass = false,
-  /** False during push entrance — solid chrome only; sky FX mounts after settle. */
-  enableSkyDecor = true,
-  /** Static-tier still average — itinerary glass tint tracks the photo plate. */
-  onPlateAverageColor,
 }: {
   plan: TravelPlan;
   onAddPress?: () => void;
@@ -156,8 +152,6 @@ export function TravelPlanHero({
   notesExpanded?: boolean;
   onNotesExpandedChange?: (expanded: boolean) => void;
   denseHeroGlass?: boolean;
-  enableSkyDecor?: boolean;
-  onPlateAverageColor?: (hex: string | undefined) => void;
 }) {
   const theme = useTheme();
   const router = useRouter();
@@ -196,17 +190,6 @@ export function TravelPlanHero({
     look: skyCondition.look,
     destination: skyDestination,
   });
-  // Static-tier destination still may report a richer average than solid chrome.
-  const [plateAverageColor, setPlateAverageColor] = useState<
-    string | undefined
-  >();
-  const handlePlateAverageColor = useCallback(
-    (hex: string | undefined) => {
-      setPlateAverageColor(hex);
-      onPlateAverageColor?.(hex);
-    },
-    [onPlateAverageColor],
-  );
   // Same luminance ink as Travel Home — white over night/aurora, black over bright day.
   // Curated midtones (e.g. Guatemala header-band sample) pin dark ink when set.
   const curatedTone = matchCuratedAtmosphereForPlace(skyDestination)[0]
@@ -214,7 +197,7 @@ export function TravelPlanHero({
   const { ink: skyInk, muted: skyInkMuted } = atmosphereHeaderInkColors(
     resolveAtmosphereHeaderInk({
       themeDark,
-      averageColor: plateAverageColor ?? skyChrome,
+      averageColor: skyChrome,
       curatedTone,
     }),
   );
@@ -223,29 +206,25 @@ export function TravelPlanHero({
   const backSize = Math.max(32, s(32));
   useSafeAreaChrome(skyChrome, { priority: 1 });
   const skyOverlay = useMemo(
-    () =>
-      enableSkyDecor ? (
-        <TravelHeaderSkyDecor
-          destination={skyDestination}
-          dateKey={plan.startDate}
-          latitude={atmosphere.latitude}
-          longitude={atmosphere.longitude}
-          timeOfDay={atmosphere.timeOfDay}
-          weatherCode={atmosphere.weatherCode}
-          timezone={atmosphere.timezone}
-          statusBandRatio={statusBandRatio}
-          fadeTo={pageBase}
-          onPlateAverageColor={handlePlateAverageColor}
-        />
-      ) : undefined,
+    () => (
+      <TravelHeaderSkyDecor
+        destination={skyDestination}
+        dateKey={plan.startDate}
+        latitude={atmosphere.latitude}
+        longitude={atmosphere.longitude}
+        timeOfDay={atmosphere.timeOfDay}
+        weatherCode={atmosphere.weatherCode}
+        timezone={atmosphere.timezone}
+        statusBandRatio={statusBandRatio}
+        fadeTo={pageBase}
+      />
+    ),
     [
       atmosphere.latitude,
       atmosphere.longitude,
       atmosphere.timeOfDay,
       atmosphere.timezone,
       atmosphere.weatherCode,
-      enableSkyDecor,
-      handlePlateAverageColor,
       pageBase,
       plan.startDate,
       skyDestination,

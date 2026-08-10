@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { Screen } from '@/components/primitives';
@@ -51,6 +51,8 @@ type TravelPlanDetailBodyProps = {
   onNotesExpandedChange: (expanded: boolean) => void;
   /** Dates/Notes denser frost while a flight card is expanded. */
   denseHeroGlass?: boolean;
+  /** After stack settle — mount transport/timeline/tools (hero/sky stay mounted). */
+  bodyReady?: boolean;
 };
 
 export function TravelPlanDetailBody({
@@ -70,6 +72,7 @@ export function TravelPlanDetailBody({
   notesExpanded,
   onNotesExpandedChange,
   denseHeroGlass = false,
+  bodyReady = true,
 }: TravelPlanDetailBodyProps) {
   const theme = useTheme();
   const atmosphere = useTravelAtmosphere();
@@ -100,18 +103,14 @@ export function TravelPlanDetailBody({
     destination: skyDestination,
     latitude: atmosphere.latitude,
   });
-  const [plateAverageColor, setPlateAverageColor] = useState<
-    string | undefined
-  >();
   const artworkTint = useMemo(
     () =>
       resolveTravelArtworkTintHex({
-        averageColor: plateAverageColor,
         themeDark,
         look: skyCondition.look,
         destination: skyDestination,
       }),
-    [plateAverageColor, skyCondition.look, skyDestination, themeDark],
+    [skyCondition.look, skyDestination, themeDark],
   );
   const paper =
     typeof travelStyle.backgroundColor === 'string'
@@ -141,55 +140,60 @@ export function TravelPlanDetailBody({
           refresh={false}>
           <TravelPlanHero
             plan={plan}
-            onAddPress={onAddPress}
-            onEditDates={onEditDates}
-            onEditNotes={onEditNotes}
+            onAddPress={bodyReady ? onAddPress : undefined}
+            onEditDates={bodyReady ? onEditDates : undefined}
+            onEditNotes={bodyReady ? onEditNotes : undefined}
             notesExpanded={notesExpanded}
-            onNotesExpandedChange={onNotesExpandedChange}
+            onNotesExpandedChange={
+              bodyReady ? onNotesExpandedChange : undefined
+            }
             denseHeroGlass={denseHeroGlass}
-            onPlateAverageColor={setPlateAverageColor}
           />
-          <TravelTransportSections
-            items={sortedItinerary}
-            transportExpanded={isSectionExpanded('transport')}
-            flightsExpanded={isSectionExpanded('flights')}
-            groundExpanded={isSectionExpanded('ground')}
-            staysExpanded={isSectionExpanded('stays')}
-            rentalsExpanded={isSectionExpanded('rentals')}
-            onToggleTransport={() => toggleSection('transport')}
-            onToggleFlights={() => toggleSection('flights')}
-            onToggleGround={() => toggleSection('ground')}
-            onToggleStays={() => toggleSection('stays')}
-            onToggleRentals={() => toggleSection('rentals')}
-            onAddKind={onAddKind}
-            {...itemEditHandlers}
-          />
-          <TravelCollapsibleSection
-            title="Timeline"
-            icon="clock"
-            accentColor={travelAccent(theme)}
-            card
-            compact
-            tightHeader
-            flushContent
-            expanded={isSectionExpanded('timeline')}
-            onToggle={() => toggleSection('timeline')}
-            toggleTestID={AgentUiIds.travel.planDetail.timelineSection}
-            titleVariant="subheading">
-            <TravelItineraryTimeline
-              items={sortedItinerary}
-              collapsedDayDates={collapsedDayDates}
-              onToggleDay={onToggleDay}
-              {...itemEditHandlers}
-            />
-          </TravelCollapsibleSection>
-          <TravelPlanTripTools
-            plan={plan}
-            expanded={isSectionExpanded('tools')}
-            onToggle={() => toggleSection('tools')}
-            onOpenExpenses={onOpenExpenses}
-            onAddTransport={() => onAddKind('transport')}
-          />
+          {bodyReady ? (
+            <>
+              <TravelTransportSections
+                items={sortedItinerary}
+                transportExpanded={isSectionExpanded('transport')}
+                flightsExpanded={isSectionExpanded('flights')}
+                groundExpanded={isSectionExpanded('ground')}
+                staysExpanded={isSectionExpanded('stays')}
+                rentalsExpanded={isSectionExpanded('rentals')}
+                onToggleTransport={() => toggleSection('transport')}
+                onToggleFlights={() => toggleSection('flights')}
+                onToggleGround={() => toggleSection('ground')}
+                onToggleStays={() => toggleSection('stays')}
+                onToggleRentals={() => toggleSection('rentals')}
+                onAddKind={onAddKind}
+                {...itemEditHandlers}
+              />
+              <TravelCollapsibleSection
+                title="Timeline"
+                icon="clock"
+                accentColor={travelAccent(theme)}
+                card
+                compact
+                tightHeader
+                flushContent
+                expanded={isSectionExpanded('timeline')}
+                onToggle={() => toggleSection('timeline')}
+                toggleTestID={AgentUiIds.travel.planDetail.timelineSection}
+                titleVariant="subheading">
+                <TravelItineraryTimeline
+                  items={sortedItinerary}
+                  collapsedDayDates={collapsedDayDates}
+                  onToggleDay={onToggleDay}
+                  {...itemEditHandlers}
+                />
+              </TravelCollapsibleSection>
+              <TravelPlanTripTools
+                plan={plan}
+                expanded={isSectionExpanded('tools')}
+                onToggle={() => toggleSection('tools')}
+                onOpenExpenses={onOpenExpenses}
+                onAddTransport={() => onAddKind('transport')}
+              />
+            </>
+          ) : null}
         </Screen>
       </View>
     </TravelArtworkTintProvider>

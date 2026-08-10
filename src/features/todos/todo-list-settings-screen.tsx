@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
+// StyleSheet via styles module
+
+import { todoListSettingsStyles as styles } from './todo-list-settings-styles';
 
 import {
   AppText,
@@ -42,6 +45,7 @@ import { useFriends } from '@/store/friends';
 import { useTodos, type TodoMember } from '@/store/todos';
 import { AgentUiIds, AgentTestId } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
+import { TodoListSettingsSharing } from '@/features/todos/todo-list-settings-sharing';
 
 export function TodoListSettingsScreen({ listId }: { listId: string }) {
   const router = useRouter();
@@ -356,130 +360,22 @@ export function TodoListSettingsScreen({ listId }: { listId: string }) {
       )}
 
       {owner ? (
-        <>
-          <SectionHeader title="Sharing" />
-          <Card style={{ gap: spacing.md }}>
-            <AppText variant="subheading">Editors</AppText>
-            <AppText variant="body" color="secondary">
-              Friends you add can edit items live. You stay the owner.
-              {list.mode === 'private'
-                ? ' Adding an editor moves this list into its collaborative space.'
-                : ''}
-            </AppText>
-            <Button
-              testID={AgentUiIds.listSettings.addEditors}
-              icon="people"
-              disabled={Boolean(working)}
-              onPress={() => {
-                if (!user) return requireSignIn();
-                setPickingFriends(true);
-              }}>
-              {working === 'friends' ? 'Adding…' : 'Add Editors from Friends'}
-            </Button>
-          </Card>
-          {list.mode === 'private' ? (
-            <Card style={{ gap: spacing.md }}>
-              <AppText variant="subheading">Work Together Live</AppText>
-              <AppText variant="body" color="secondary">
-                Sharing moves this list to its protected collaborative space. You remain the owner.
-              </AppText>
-              <Button
-                icon="people"
-                disabled={Boolean(working)}
-                onPress={beginSharing}>
-                {working === 'publish' ? 'Preparing…' : 'Share Join Link'}
-              </Button>
-            </Card>
-          ) : (
-            <>
-              <Card style={{ gap: spacing.md }}>
-                <AppText variant="subheading">Secure Join Link</AppText>
-                <AppText variant="body" color="secondary">
-                  Any signed-in onTrack user with the link can join as a member until you revoke it.
-                </AppText>
-                <Button disabled={Boolean(working)} onPress={shareLink} icon="send">
-                  {working === 'link' ? 'Preparing…' : 'Share Join Link'}
-                </Button>
-                {list.shareCode ? (
-                  <Button
-                    variant="ghost"
-                    disabled={Boolean(working)}
-                    onPress={() =>
-                      void run('revoke', () => revokeTodoShareLink(list.id))
-                    }>
-                    Revoke link
-                  </Button>
-                ) : null}
-              </Card>
-
-              <Card style={{ gap: spacing.md }}>
-                <AppText variant="subheading">Invite an Account</AppText>
-                <AppText variant="body" color="secondary">
-                  Email invites join as members. Promote them to editor after they accept.
-                </AppText>
-                <Input
-                  label="onTrack account email"
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="friend@example.com"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                <Button
-                  icon="invite"
-                  disabled={!email.trim() || Boolean(working)}
-                  onPress={() =>
-                    void run('email', async () => {
-                      await createTodoEmailInvite(list.id, email);
-                      await refreshPending();
-                      setEmail('');
-                      appPrompt.alert('Invitation Ready', 'It now appears in their onTrack invitation inbox.');
-                    })
-                  }>
-                  {working === 'email' ? 'Inviting…' : 'Send In-App Invite'}
-                </Button>
-                {pendingInvites.length > 0 ? (
-                  <View style={{ gap: spacing.sm, paddingTop: spacing.sm }}>
-                    <AppText variant="overline" color="secondary" fit>
-                      Pending
-                    </AppText>
-                    {pendingInvites.map((invite) => (
-                      <View
-                        key={invite.id}
-                        style={[
-                          styles.pendingRow,
-                          { minHeight: Math.max(38, s(40)), gap: spacing.md },
-                        ]}>
-                        <AppText
-                          variant="caption"
-                          color="secondary"
-                          style={styles.memberCopy}
-                          fit>
-                          {invite.email}
-                        </AppText>
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel={`Revoke invitation for ${invite.email}`}
-                          disabled={Boolean(working)}
-                          onPress={() =>
-                            void run(`invite-${invite.id}`, async () => {
-                              await revokeTodoEmailInvite(invite.id);
-                              await refreshPending();
-                            })
-                          }>
-                          <AppText variant="caption" color="danger" fit>
-                            Revoke
-                          </AppText>
-                        </Pressable>
-                      </View>
-                    ))}
-                  </View>
-                ) : null}
-              </Card>
-            </>
-          )}
-        </>
+        <TodoListSettingsSharing
+          list={list}
+          email={email}
+          setEmail={setEmail}
+          working={working}
+          pendingInvites={pendingInvites}
+          spacing={spacing}
+          s={s}
+          beginSharing={beginSharing}
+          shareLink={shareLink}
+          run={run as any}
+          refreshPending={refreshPending}
+          setPickingFriends={setPickingFriends}
+          requireSignIn={requireSignIn}
+          user={user}
+        />
       ) : null}
 
       {list.mode === 'shared' ? (
@@ -639,47 +535,3 @@ export function TodoListSettingsScreen({ listId }: { listId: string }) {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    maxWidth: 680,
-    alignSelf: 'center',
-  },
-  center: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  kindChoiceWrap: {
-    flex: 1,
-    borderRadius: radii.md,
-  },
-  kindChoice: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.md,
-    zIndex: 1,
-  },
-  memberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.pill,
-  },
-  memberCopy: { flex: 1, flexShrink: 1, minWidth: 0, gap: 2 },
-  memberActions: {
-    flexShrink: 0,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  pendingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-});

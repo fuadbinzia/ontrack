@@ -86,10 +86,20 @@ def repo_root() -> Path:
 
 
 def extract_static_ids(ids_path: Path) -> list[str]:
-    text = ids_path.read_text(encoding="utf-8")
-    # Drop template-literal factory bodies — only static string literals.
-    ids = sorted(set(STATIC_ID_RE.findall(text)))
-    return ids
+    """Collect static ontrack.* literals from ids.ts and split ids-*.ts modules."""
+    folder = ids_path.parent if ids_path.is_file() else ids_path
+    paths = sorted(
+        p
+        for p in folder.glob("ids*.ts")
+        if p.is_file() and ".test." not in p.name
+    )
+    if not paths and ids_path.is_file():
+        paths = [ids_path]
+    found: set[str] = set()
+    for path in paths:
+        # Drop template-literal factory bodies — only static string literals.
+        found.update(STATIC_ID_RE.findall(path.read_text(encoding="utf-8")))
+    return sorted(found)
 
 
 def feature_for_id(test_id: str) -> str:
@@ -163,7 +173,8 @@ def build_index(root: Path) -> dict:
             if not any(n in text for n in needles):
                 continue
             rel = str(path.relative_to(root))
-            if rel == "src/utils/agent-ui/ids.ts":
+            # Definition modules are not usage sites.
+            if rel.startswith("src/utils/agent-ui/ids") and rel.endswith(".ts"):
                 continue
             if rel == "docs/agent-ui-map.md":
                 continue

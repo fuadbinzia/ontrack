@@ -178,8 +178,6 @@ function TravelTripCoverLightbox({
             testID={AgentUiIds.travel.photoViewer.close(planId)}
             accessibilityLabel="Close photo"
             onPress={onClose}
-            background={theme.backgroundElevated}
-            borderColor={theme.separator}
           />
         </View>
       </View>

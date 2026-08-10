@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+
+import { travelItineraryTimelineStyles as styles } from './travel-itinerary-timeline-styles';
 import { AppState, StyleSheet, View } from 'react-native';
 
 import { AppText, CollapsibleBody, Symbol } from '@/components/primitives';
@@ -23,6 +25,7 @@ import {
     expandTimelineEntries,
     groupTimelineEntriesByDate,
 } from '@/features/travel/travel-timeline-entries';
+import { TravelItineraryTimelineDays } from '@/features/travel/travel-itinerary-timeline-days';
 import { TravelTimelineNode } from '@/features/travel/travel-timeline-node';
 import {
     isTimelineEntryPast,
@@ -270,388 +273,62 @@ export function TravelItineraryTimeline({
         traveler={traveler}
         accent={TRAVEL_EDITORIAL_ACCENT}
       />
-      {days.map((day, dayIndex) => {
-        const dayNumber = dayNumberFor(plan.startDate, day.date);
-        const dateLabel = formatDateKeyMedium(day.date);
-        const weekday = formatWeekday(day.date);
-        const dayExpanded = !collapsedDayDates.has(day.date);
-        const entryCount = day.entries.length;
-        const dayPhase = timelineDayPhase(day.date, day.entries, now);
-        const dayPast = dayPhase === 'past';
-        const spineColor = daySpineColor(dayIndex, theme.name);
-        const prevSpineColor =
-          dayIndex > 0 ? daySpineColor(dayIndex - 1, theme.name) : spineColor;
-        const firstUpcomingIndex =
-          dayPhase === 'current'
-            ? day.entries.findIndex((entry) => !isTimelineEntryPast(entry, now))
-            : -1;
-        return (
-          <View key={day.date} style={{ opacity: dayPast ? 0.58 : 1 }}>
-            {dayIndex > 0 ? (
-              <View
-                pointerEvents="none"
-                style={[
-                  styles.dayConnector,
-                  {
-                    height: dayGap,
-                    paddingLeft: dayBodyPadLeft,
-                  },
-                ]}>
-                <View
-                  style={[
-                    styles.spineColumn,
-                    {
-                      width: spineWidth,
-                      height: dayGap,
-                      justifyContent: 'center',
-                    },
-                  ]}>
-                  <TimelineDayBridge
-                    fromColor={prevSpineColor}
-                    toColor={spineColor}
-                    height={dayGap}
-                    thickness={Math.max(2, s(2))}
-                    dashLength={Math.max(3, s(3))}
-                  />
-                </View>
-              </View>
-            ) : null}
-            <View
-              style={[
-                styles.dayBody,
-                {
-                  gap: rs.xs,
-                  paddingTop: dayIndex === 0 ? rs.xs : 0,
-                  // Keep joined days tight; give the final day room above the
-                  // Timeline panel’s bottom radius / screen edge.
-                  paddingBottom:
-                    dayIndex === days.length - 1 ? rs.md : 0,
-                  paddingLeft: dayBodyPadLeft,
-                  paddingRight: rs.sm,
-                },
-              ]}>
-              <View style={[styles.dayRow, { gap: rs.xs }]}>
-                <View style={[styles.spineColumn, { width: spineWidth }]}>
-                  <View
-                    style={[
-                      styles.dayMarker,
-                      {
-                        width:
-                          dayPhase === 'current'
-                            ? dayMarkerSize + Math.max(2, s(2))
-                            : dayMarkerSize,
-                        height:
-                          dayPhase === 'current'
-                            ? dayMarkerSize + Math.max(2, s(2))
-                            : dayMarkerSize,
-                        borderRadius:
-                          (dayPhase === 'current'
-                              ? dayMarkerSize + Math.max(2, s(2))
-                              : dayMarkerSize) / 2,
-                          backgroundColor: spineColor,
-                          marginTop: Math.max(6, s(6)),
-                          borderWidth:
-                            dayPhase === 'current' ? Math.max(2, s(2)) : 0,
-                          borderColor:
-                            theme.name === 'dark'
-                              ? 'rgba(255,255,255,0.55)'
-                              : 'rgba(17, 74, 110, 0.22)',
-                        },
-                      ]}
-                    />
-                    {dayExpanded ? (
-                      <View
-                        style={[
-                          styles.spineLine,
-                          {
-                            top:
-                              Math.max(6, s(6)) +
-                              (dayPhase === 'current'
-                                ? dayMarkerSize + Math.max(2, s(2))
-                                : dayMarkerSize),
-                            bottom: 0,
-                            backgroundColor: spineColor,
-                            opacity: dayPast ? 0.55 : 1,
-                          },
-                        ]}
-                      />
-                    ) : null}
-                  </View>
-                  <View style={[styles.dayContent, { gap: rs.xs }]}>
-                    <TimelineDayHeader
-                      date={day.date}
-                      dayNumber={dayNumber}
-                      weekday={weekday}
-                      dateLabel={dateLabel}
-                      entryCount={entryCount}
-                      dayPhase={dayPhase}
-                      dayExpanded={dayExpanded}
-                      dayTap={dayTap}
-                      overlineSize={typography.overline.fontSize}
-                      overlineLineHeight={typography.overline.lineHeight}
-                      onToggleDay={onToggleDay}
-                    />
-                    <CollapsibleBody expanded={dayExpanded}>
-                      <View style={{ gap: rs.xs }}>
-                        {firstUpcomingIndex === 0 ? (
-                          <TimelineNowMarker
-                            accent={spineColor}
-                            spineWidth={0}
-                          />
-                        ) : null}
-                        <TravelHomeGlass
-                          {...mistProps}
-                          style={[
-                            styles.eventStack,
-                            {
-                              borderRadius: Math.max(10, s(11)),
-                              borderCurve: 'continuous',
-                              // Match top/bottom so the first/last rows don’t
-                              // sit flush against the glass radius unevenly.
-                              paddingVertical: Math.max(2, s(2)),
-                            },
-                          ]}>
-                          {day.entries.map((entry, index) => {
-                            const { item } = entry;
-                            const prevMinutes =
-                              index > 0
-                                ? day.entries[index - 1].startMinutes
-                                : undefined;
-                            const showTime = prevMinutes !== entry.startMinutes;
-                            const entryPast = isTimelineEntryPast(entry, now);
-                            const showNowBefore =
-                              firstUpcomingIndex > 0 &&
-                              index === firstUpcomingIndex;
-                            return (
-                              <View key={entry.key}>
-                                {showNowBefore ? (
-                                  <View
-                                    style={[
-                                      styles.nowInStack,
-                                      {
-                                        gap: rs.xs,
-                                        paddingHorizontal: rs.sm,
-                                        paddingVertical: Math.max(6, s(6)),
-                                        borderTopWidth: StyleSheet.hairlineWidth,
-                                        borderTopColor:
-                                          theme.name === 'dark'
-                                            ? 'rgba(255,255,255,0.18)'
-                                            : 'rgba(17, 74, 110, 0.10)',
-                                        backgroundColor:
-                                          theme.name === 'dark'
-                                            ? 'rgba(255,255,255,0.08)'
-                                            : 'rgba(17, 74, 110, 0.06)',
-                                      },
-                                    ]}>
-                                    <View
-                                      style={{
-                                        width: Math.max(8, s(8)),
-                                        height: Math.max(8, s(8)),
-                                        borderRadius: Math.max(4, s(4)),
-                                        backgroundColor: spineColor,
-                                      }}
-                                    />
-                                    <AppText
-                                      variant="caption"
-                                      fit
-                                      style={[
-                                        styles.nowInStackLabel,
-                                        { color: primaryInk },
-                                      ]}>
-                                      Now
-                                    </AppText>
-                                  </View>
-                                ) : null}
-                                <View
-                                  style={[
-                                    styles.eventShell,
-                                    {
-                                      paddingLeft: rs.sm,
-                                      paddingRight: rs.xs,
-                                      paddingVertical: Math.max(8, s(8)),
-                                      minHeight: Math.max(44, s(44)),
-                                      justifyContent: 'center',
-                                      alignItems: 'stretch',
-                                      borderTopWidth:
-                                        index > 0 || showNowBefore
-                                          ? StyleSheet.hairlineWidth
-                                          : 0,
-                                      borderTopColor: theme.separator,
-                                      opacity: entryPast ? 0.55 : 1,
-                                    },
-                                  ]}>
-                                  <TravelTimelineNode
-                                    item={item}
-                                    plan={plan}
-                                    phase={entry.phase}
-                                    displayTitle={entry.title}
-                                    entryDate={entry.date}
-                                    entryStartMinutes={entry.startMinutes}
-                                    leadingTimeLabel={
-                                      showTime
-                                        ? formatMinutes(entry.startMinutes)
-                                        : ''
-                                    }
-                                    showKindBadge
-                                    compact
-                                    dense
-                                    index={dayIndex * 4 + index}
-                                    allowStructuredEditing={false}
-                                    showStructuredDetails={false}
-                                    expanded={!minimizedItemIds.has(entry.key)}
-                                    dateDisplayFormat={dateDisplayFormat}
-                                    editingFlightItemId={editingFlightItemId}
-                                    editedFlightDetails={editedFlightDetails}
-                                    editedFlightDetailsError={
-                                      editedFlightDetailsError
-                                    }
-                                    editedFlightFileName={editedFlightFileName}
-                                    importingFlight={
-                                      importingFlightTarget === item.id
-                                    }
-                                    editingRentalItemId={editingRentalItemId}
-                                    editedRentalDetails={editedRentalDetails}
-                                    editedRentalDetailsError={
-                                      editedRentalDetailsError
-                                    }
-                                    editedRentalFileName={editedRentalFileName}
-                                    importingRental={
-                                      importingRentalTarget === item.id
-                                    }
-                                    editingStayItemId={editingStayItemId}
-                                    editedStayDetails={editedStayDetails}
-                                    editedStayDetailsError={
-                                      editedStayDetailsError
-                                    }
-                                    editedStayFileName={editedStayFileName}
-                                    importingStay={
-                                      importingStayTarget === item.id
-                                    }
-                                    planStartDate={plan.startDate}
-                                    planEndDate={plan.endDate}
-                                    onToggle={() => onToggle(entry.key)}
-                                    onEditedFlightDetailsChange={
-                                      onEditedFlightDetailsChange
-                                    }
-                                    onImportFlight={() => onImportFlight(item.id)}
-                                    onSaveFlightDetails={(schedule) =>
-                                      onSaveFlightDetails(item.id, schedule)
-                                    }
-                                    onCancelFlightEdit={onCancelFlightEdit}
-                                    onBeginFlightEdit={() =>
-                                      onBeginFlightEdit(item.id, item.flight)
-                                    }
-                                    onEditedRentalDetailsChange={
-                                      onEditedRentalDetailsChange
-                                    }
-                                    onImportRental={() => onImportRental(item.id)}
-                                    onSaveRentalDetails={(schedule) =>
-                                      onSaveRentalDetails(item.id, schedule)
-                                    }
-                                    onCancelRentalEdit={onCancelRentalEdit}
-                                    onBeginRentalEdit={() =>
-                                      onBeginRentalEdit(item.id, item.rental)
-                                    }
-                                    onEditedStayDetailsChange={
-                                      onEditedStayDetailsChange
-                                    }
-                                    onImportStay={() => onImportStay(item.id)}
-                                    onSaveStayDetails={(schedule) =>
-                                      onSaveStayDetails(item.id, schedule)
-                                    }
-                                    onCancelStayEdit={onCancelStayEdit}
-                                    onBeginStayEdit={() =>
-                                      onBeginStayEdit(item.id, item.stay)
-                                    }
-                                    onBeginItemEdit={
-                                      onBeginItemEdit
-                                        ? () => onBeginItemEdit(item)
-                                        : undefined
-                                    }
-                                    onAddPhotos={() => onAddPhotos(item.id)}
-                                    onRemovePhoto={(uri) =>
-                                      onRemovePhoto(item.id, uri)
-                                    }
-                                    onRemove={() => onRemove(item)}
-                                    onSaveNotes={(notes) =>
-                                      onSaveNotes(item.id, notes)
-                                    }
-                                  />
-                                </View>
-                              </View>
-                            );
-                          })}
-                        </TravelHomeGlass>
-                      </View>
-                    </CollapsibleBody>
-                  </View>
-                </View>
-              </View>
-            </View>
-        );
-      })}
+      <TravelItineraryTimelineDays
+          plan={plan}
+          days={days}
+          now={now}
+          collapsedDayDates={collapsedDayDates}
+          dayGap={dayGap}
+          dayBodyPadLeft={dayBodyPadLeft}
+          spineWidth={spineWidth}
+          dayMarkerSize={dayMarkerSize}
+          rs={rs}
+          s={s}
+          theme={theme}
+          mistProps={mistProps}
+          primaryInk={primaryInk}
+          typography={typography}
+          dayTap={dayTap}
+          dateDisplayFormat={dateDisplayFormat}
+          minimizedItemIds={minimizedItemIds}
+          editingFlightItemId={editingFlightItemId}
+          editedFlightDetails={editedFlightDetails}
+          editedFlightDetailsError={editedFlightDetailsError}
+          editedFlightFileName={editedFlightFileName}
+          importingFlightTarget={importingFlightTarget}
+          editingRentalItemId={editingRentalItemId}
+          editedRentalDetails={editedRentalDetails}
+          editedRentalDetailsError={editedRentalDetailsError}
+          editedRentalFileName={editedRentalFileName}
+          importingRentalTarget={importingRentalTarget}
+          editingStayItemId={editingStayItemId}
+          editedStayDetails={editedStayDetails}
+          editedStayDetailsError={editedStayDetailsError}
+          editedStayFileName={editedStayFileName}
+          importingStayTarget={importingStayTarget}
+          onToggle={onToggle}
+          onToggleDay={onToggleDay}
+          onEditedFlightDetailsChange={onEditedFlightDetailsChange}
+          onImportFlight={onImportFlight}
+          onSaveFlightDetails={onSaveFlightDetails}
+          onCancelFlightEdit={onCancelFlightEdit}
+          onBeginFlightEdit={onBeginFlightEdit}
+          onEditedRentalDetailsChange={onEditedRentalDetailsChange}
+          onImportRental={onImportRental}
+          onSaveRentalDetails={onSaveRentalDetails}
+          onCancelRentalEdit={onCancelRentalEdit}
+          onBeginRentalEdit={onBeginRentalEdit}
+          onEditedStayDetailsChange={onEditedStayDetailsChange}
+          onImportStay={onImportStay}
+          onSaveStayDetails={onSaveStayDetails}
+          onCancelStayEdit={onCancelStayEdit}
+          onBeginStayEdit={onBeginStayEdit}
+          onBeginItemEdit={onBeginItemEdit}
+          onAddPhotos={onAddPhotos}
+          onRemovePhoto={onRemovePhoto}
+          onRemove={onRemove}
+          onSaveNotes={onSaveNotes}
+        />
     </View>
   );
 }
-
-
-const styles = StyleSheet.create({
-  timeline: {},
-  dayConnector: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-  },
-  dayBody: {
-    flex: 1,
-    minWidth: 0,
-  },
-  dayRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    minWidth: 0,
-  },
-  dayContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-  eventStack: {
-    width: '100%',
-    minWidth: 0,
-  },
-  nowInStack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    minWidth: 0,
-  },
-  nowInStackLabel: {
-    flexShrink: 1,
-    minWidth: 0,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  eventShell: {
-    width: '100%',
-    minWidth: 0,
-  },
-  spineColumn: {
-    alignItems: 'center',
-    flexShrink: 0,
-    position: 'relative',
-  },
-  dayMarker: {
-    zIndex: 1,
-  },
-  spineLine: {
-    position: 'absolute',
-    width: 2,
-    borderRadius: 1,
-  },
-  emptyCard: {
-    alignItems: 'flex-start',
-  },
-  emptyIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

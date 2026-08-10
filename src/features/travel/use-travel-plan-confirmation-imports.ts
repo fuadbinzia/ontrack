@@ -1,4 +1,4 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useRef, useState } from 'react';
 
 import { appPrompt } from '@/components/primitives';
 import { applyImportedFlightsToPlan } from '@/features/travel/apply-imported-flights';
@@ -7,113 +7,50 @@ import type { ExpenseFormState } from '@/features/travel/expenses/expense-form';
 import { defaultSplitIds } from '@/features/travel/expenses/expense-math';
 import { mergeFlightConfirmationDraftDetails } from '@/features/travel/flight-confirmation-draft';
 import {
-    importFlightConfirmation,
-    type FlightConfirmationImportSource,
-    type ImportedFlightConfirmation,
+  importFlightConfirmation,
+  type FlightConfirmationImportSource,
+  type ImportedFlightConfirmation,
 } from '@/features/travel/flight-confirmation-import';
+import { splitRoundTripDirections } from '@/features/travel/flight-confirmation-itinerary';
 import {
-    splitRoundTripDirections,
-} from '@/features/travel/flight-confirmation-itinerary';
-import {
-    flightConfirmationSchedule,
-    flightDirectionSchedule,
-    type ImportedFlightSchedule,
+  flightConfirmationSchedule,
+  flightDirectionSchedule,
 } from '@/features/travel/flight-confirmation-schedule';
-import { emptyFlightDetailsDraft, type FlightDetailsDraft } from '@/features/travel/flight-details';
+import { emptyFlightDetailsDraft } from '@/features/travel/flight-details';
 import {
-    flightLegScheduleFromImported,
-    returnFlightTitle,
-    type FlightLegScheduleDraft,
-    type FlightTripType,
+  flightLegScheduleFromImported,
+  returnFlightTitle,
 } from '@/features/travel/flight-roundtrip-draft';
 import { formatFlightTitle } from '@/features/travel/flight-route-label';
 import { enrichFlightConfirmationTerminals } from '@/features/travel/flight-status-client';
 import {
-    importRentalConfirmation,
-    type RentalConfirmationImportSource,
+  importRentalConfirmation,
+  type RentalConfirmationImportSource,
 } from '@/features/travel/rental-confirmation-import';
-import type { RentalDetailsDraft } from '@/features/travel/rental-details';
 import {
-    importStayConfirmation,
-    type StayConfirmationImportSource,
+  importStayConfirmation,
+  type StayConfirmationImportSource,
 } from '@/features/travel/stay-confirmation-import';
 import { expandedTripRangeForStay } from '@/features/travel/stay-confirmation-itinerary';
-import type { StayDetailsDraft } from '@/features/travel/stay-details';
 import { applyStayExpenseFromImport } from '@/features/travel/stay-expense-from-import';
 import { DETAILS_MAX_LENGTH } from '@/features/travel/travel-itinerary-form';
+import {
+  applyFlightScheduleToAddSheet,
+  type EditBindings,
+  type TravelPlanAddSheetImportBindings,
+} from '@/features/travel/travel-plan-confirmation-import-shared';
+import { runFlightConfirmationImport } from '@/features/travel/travel-plan-confirmation-import-flight';
 import { isTravelMemberPlan } from '@/features/travel/trip-roster';
-import type { TravelItemKind, TravelPlan } from '@/features/travel/types';
+import type { StayDetailsDraft } from '@/features/travel/stay-details';
+import type { TravelPlan } from '@/features/travel/types';
 import { TRAVEL_EXPENSE_SELF_ID } from '@/features/travel/types';
 import { newId } from '@/store/schedule';
 import { useTravel } from '@/store/travel';
 
-type SetStr = Dispatch<SetStateAction<string>>;
-type SetOptStr = Dispatch<SetStateAction<string | undefined>>;
-type SetNum = Dispatch<SetStateAction<number | null>>;
-
-/** Add-sheet field setters the confirmation importers write into for `target === 'new'`. */
-export type TravelPlanAddSheetImportBindings = {
-  date: string;
-  startMinutes: number | null;
-  setTitle: SetStr;
-  setDetails: SetStr;
-  setBookingUrl: SetStr;
-  setDate: SetStr;
-  setStartMinutes: SetNum;
-  setEndDate: SetStr;
-  setEndMinutes: SetNum;
-  setDuration: SetStr;
-  setKind: Dispatch<SetStateAction<TravelItemKind>>;
-  setIsAddingItem: Dispatch<SetStateAction<boolean>>;
-  setError: SetOptStr;
-  setFlightDetails: Dispatch<SetStateAction<FlightDetailsDraft>>;
-  setFlightDetailsError: SetOptStr;
-  setImportedFlightFileName: SetOptStr;
-  setFlightTripType: Dispatch<SetStateAction<FlightTripType>>;
-  setReturnFlightTitle: SetStr;
-  setReturnFlightDetails: Dispatch<SetStateAction<FlightDetailsDraft>>;
-  setReturnFlightSchedule: Dispatch<SetStateAction<FlightLegScheduleDraft>>;
-  /** Full parsed confirmation so submit can expand connecting legs. */
-  setPendingFlightImport: Dispatch<
-    SetStateAction<ImportedFlightConfirmation | undefined>
-  >;
-  setRentalDetails: Dispatch<SetStateAction<RentalDetailsDraft>>;
-  setRentalDetailsError: SetOptStr;
-  setImportedRentalFileName: SetOptStr;
-  setStayDetails: Dispatch<SetStateAction<StayDetailsDraft>>;
-  setStayDetailsError: SetOptStr;
-  setImportedStayFileName: SetOptStr;
-};
-
-function applyFlightScheduleToAddSheet(
-  addSheet: TravelPlanAddSheetImportBindings,
-  schedule: ImportedFlightSchedule,
-) {
-  if (schedule.departureDate) addSheet.setDate(schedule.departureDate);
-  if (schedule.departureMinutes !== undefined) {
-    addSheet.setStartMinutes(schedule.departureMinutes);
-  }
-  if (schedule.durationMinutes !== undefined) {
-    addSheet.setDuration(String(schedule.durationMinutes));
-  }
-  if (schedule.arrivalDate) addSheet.setEndDate(schedule.arrivalDate);
-  if (schedule.arrivalMinutes !== undefined) {
-    addSheet.setEndMinutes(schedule.arrivalMinutes);
-  }
-}
-
-type EditBindings = {
-  setEditingFlightItemId: SetOptStr;
-  setEditedFlightDetails: Dispatch<SetStateAction<FlightDetailsDraft>>;
-  setEditedFlightDetailsError: SetOptStr;
-  setEditedFlightFileName: SetOptStr;
-  setEditingRentalItemId: SetOptStr;
-  setEditedRentalDetailsError: SetOptStr;
-  setEditingStayItemId: SetOptStr;
-  setEditedStayDetails: Dispatch<SetStateAction<StayDetailsDraft>>;
-  setEditedStayDetailsError: SetOptStr;
-  setEditedStayFileName: SetOptStr;
-};
+export type {
+  EditBindings,
+  TravelPlanAddSheetImportBindings,
+} from '@/features/travel/travel-plan-confirmation-import-shared';
 
 /**
  * Flight/rental/stay confirmation document import for plan detail
@@ -207,160 +144,26 @@ export function useTravelPlanConfirmationImports({
     );
   };
 
-  const importConfirmation = async (
+  const importConfirmation = (
     target: 'new' | string,
     source: FlightConfirmationImportSource,
-  ) => {
-    setImportingFlightTarget(target);
-    if (target === 'new') {
-      addSheet.setFlightDetailsError(undefined);
-      setImportStatusLabel(undefined);
-    } else edit.setEditedFlightDetailsError(undefined);
-    await paintImportLoading();
-    const pickerUi = confirmationPickerUi({
-      onOpening: () => setImportingFlightTarget(undefined),
-      onReading: () => setImportingFlightTarget(target),
-    });
-    try {
-      const parsedImport = await (target === 'new'
-        ? runAddSheetImport(() =>
-            importFlightConfirmation(
-              {
-                startDate: plan.startDate,
-                endDate: plan.endDate,
-              },
-              source,
-              pickerUi,
-            ),
-          )
-        : importFlightConfirmation(
-            {
-              startDate: plan.startDate,
-              endDate: plan.endDate,
-            },
-            source,
-            pickerUi,
-          ));
-      if (!parsedImport) return;
-      const imported = await enrichFlightConfirmationTerminals(parsedImport);
-      const importedSchedule = flightConfirmationSchedule(imported, {
-        date: addSheet.date,
-        startMinutes: addSheet.startMinutes ?? undefined,
-      });
-      const expenseAlert =
-        imported.amount !== undefined && imported.amount > 0
-          ? ` Added ${imported.currency ?? plan.baseCurrency} ${imported.amount.toFixed(2)} under Expenses.`
-          : '';
-      if (target === 'new') {
-        // Import only fills the draft. The user still owns the Add to Timeline action.
-        // Keep the full parse so submit can expand connecting legs into the itinerary.
-        addSheet.setPendingFlightImport(imported);
-        addSheet.setImportedFlightFileName(imported.fileName);
-        const directions = splitRoundTripDirections(imported.segments);
-        const roundTrip = Boolean(directions);
-        addSheet.setFlightTripType(roundTrip ? 'round-trip' : 'one-way');
-        const outboundSegments = directions?.outbound ?? imported.segments;
-        const outboundDetails = mergeFlightConfirmationDraftDetails(
-          emptyFlightDetailsDraft(),
-          {
-            ...imported,
-            segments: outboundSegments,
-          },
-        );
-        addSheet.setFlightDetails((current) =>
-          mergeFlightConfirmationDraftDetails(current, {
-            ...imported,
-            segments: outboundSegments,
-          }),
-        );
-        if (directions) {
-          const returnDetails = mergeFlightConfirmationDraftDetails(
-            emptyFlightDetailsDraft(),
-            { ...imported, segments: directions.returning },
-          );
-          addSheet.setReturnFlightDetails(returnDetails);
-          addSheet.setReturnFlightSchedule(
-            flightLegScheduleFromImported(
-              flightDirectionSchedule(directions.returning, imported),
-            ),
-          );
-          addSheet.setReturnFlightTitle(
-            formatFlightTitle(returnDetails) ||
-              directions.returning[0]?.title?.trim() ||
-              returnFlightTitle(returnDetails),
-          );
-        }
-        // Prefer the merged draft route (includes connection hubs) over the first leg title.
-        const reviewTitle =
-          formatFlightTitle(outboundDetails) ||
-          imported.title ||
-          outboundSegments[0]?.title;
-        if (reviewTitle) addSheet.setTitle(reviewTitle);
-        applyFlightScheduleToAddSheet(
-          addSheet,
-          directions
-            ? flightDirectionSchedule(directions.outbound, imported, {
-                date: addSheet.date,
-                startMinutes: addSheet.startMinutes ?? undefined,
-              })
-            : importedSchedule,
-        );
-        if (imported.amount !== undefined && imported.amount > 0) {
-          prepareImportedExpenseDraft(
-            imported.amount,
-            imported.currency,
-            importedSchedule.departureDate,
-            'flight',
-            imported.title ?? 'Flight expense',
-            imported.flight.confirmationCode
-              ? `Confirmation: ${imported.flight.confirmationCode}`
-              : undefined,
-          );
-        }
-        return;
-      }
-
-      if (target !== 'new') {
-        const latest =
-          useTravel.getState().plans.find((entry) => entry.id === plan.id) ??
-          plan;
-        if (!latest.itinerary.some((item) => item.id === target)) {
-          edit.setEditedFlightDetailsError(
-            'That flight is no longer on this trip.',
-          );
-          return;
-        }
-        updatePlan(
-          applyImportedFlightsToPlan({
-            plan: latest,
-            imported,
-            createId: () => newId('trip-item'),
-            targetItemId: target,
-          }),
-        );
-        edit.setEditingFlightItemId(undefined);
-        if (expenseAlert) {
-          appPrompt.alert(
-            'Flight Updated',
-            `Updated this flight from the confirmation.${expenseAlert}`,
-            undefined,
-            { cancelable: true },
-          );
-        }
-        return;
-      }
-    } catch (reason) {
-      const message =
-        reason instanceof Error
-          ? reason.message
-          : 'The confirmation document could not be read.';
-      if (target === 'new') addSheet.setFlightDetailsError(message);
-      else edit.setEditedFlightDetailsError(message);
-    } finally {
-      setImportingFlightTarget(undefined);
-      if (target === 'new') setImportStatusLabel(undefined);
-    }
-  };
+  ) =>
+    runFlightConfirmationImport(
+      {
+        plan,
+        updatePlan,
+        addSheet,
+        edit,
+        setImportingFlightTarget,
+        setImportStatusLabel,
+        paintImportLoading,
+        confirmationPickerUi,
+        runAddSheetImport,
+        prepareImportedExpenseDraft,
+      } as any,
+      target,
+      source,
+    );
 
   const importRental = async (
     target: 'new' | string,

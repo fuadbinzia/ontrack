@@ -16,14 +16,6 @@ import {
     stampOwnedItineraryDefaults,
     visibleItineraryForViewer,
 } from '@/features/travel/itinerary-visibility';
-import { useTravelAtmosphere } from '@/features/travel/travel-atmosphere';
-import {
-    TRAVEL_HEADER_DATES_SKY_OVERLAP,
-    TRAVEL_HEADER_DATES_TOP_GAP,
-    TRAVEL_HEADER_SKY_CONTENT_BAND,
-    TRAVEL_HEADER_SKY_FADE_TAIL,
-    travelPlanSkyPageWashStyle,
-} from '@/features/travel/travel-header-sky-height';
 import {
     TravelImportResult,
 } from '@/features/travel/travel-import-result-modal';
@@ -36,8 +28,6 @@ import {
     type DetailSectionKey,
     sectionDefaultExpanded,
 } from '@/features/travel/travel-plan-detail-sections';
-import { TravelPlanHero } from '@/features/travel/travel-plan-hero';
-import { resolveHeaderSkyWashTop } from '@/features/travel/travel-sky-condition';
 import { useTravelPageStyle } from '@/features/travel/travel-surface';
 import { expandTimelineEntries } from '@/features/travel/travel-timeline-entries';
 import {
@@ -58,7 +48,6 @@ import { useTravelPlanDetailEffects } from '@/features/travel/use-travel-plan-de
 import { buildTravelPlanDetailItemHandlers } from '@/features/travel/use-travel-plan-detail-item-handlers';
 import { useTravelPlanItemDetailsEdit } from '@/features/travel/use-travel-plan-item-details-edit';
 import { useTravelPlanItemMedia } from '@/features/travel/use-travel-plan-item-media';
-import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import {
     publishTravelTripItinerary,
@@ -103,9 +92,9 @@ export function TravelPlanDetail(props: TravelPlanDetailProps) {
   const plan = useTravel((state) =>
     planId ? state.plans.find((item) => item.id === planId) : undefined,
   );
-  // Light hero shell paints with the push (and during router.prefetch). Heavy
-  // itinerary waits until the screen is focused *and* the stack settle so
-  // preloaded routes don't mount timeline/sky/overlays off-screen.
+  // One stable tree from first paint: hero/sky Fabric overlay mounts once.
+  // Entrance→Loaded swaps remounted ExpoFabricView (LinearGradient) and raced
+  // AppContext ("The app context has been lost"). Heavy body waits for settle.
   const isFocused = useIsFocused();
   const [transitionSettled, setTransitionSettled] = useState(false);
   useEffect(() => {
@@ -127,71 +116,20 @@ export function TravelPlanDetail(props: TravelPlanDetailProps) {
       </Screen>
     );
   }
-  if (!transitionSettled) {
-    return <TravelPlanDetailEntrance plan={plan} />;
-  }
-  return <TravelPlanDetailLoaded {...props} planId={planId} plan={plan} />;
-}
-
-/** First-paint shell during stack push — solid sky + hero only. */
-function TravelPlanDetailEntrance({ plan }: { plan: TravelPlan }) {
-  const theme = useTheme();
-  const atmosphere = useTravelAtmosphere();
-  const travelStyle = useTravelPageStyle(theme);
-  const { s, spacing: rs } = useResponsive();
-  const skyContentBand = Math.max(TRAVEL_HEADER_SKY_CONTENT_BAND, s(152));
-  const skyFadeTail = Math.max(TRAVEL_HEADER_SKY_FADE_TAIL, s(40));
-  const datesTopGap = Math.max(rs.sm, s(TRAVEL_HEADER_DATES_TOP_GAP));
-  const datesSkyOverlap = Math.max(0, s(TRAVEL_HEADER_DATES_SKY_OVERLAP));
-  const skyDestination =
-    plan.destination.trim() || atmosphere.destination || '';
-  const washTop = resolveHeaderSkyWashTop({
-    themeDark: theme.name === 'dark',
-    timeOfDay: atmosphere.timeOfDay,
-    weatherCode: atmosphere.weatherCode,
-    timezone: atmosphere.timezone,
-    destination: skyDestination,
-    latitude: atmosphere.latitude,
-  });
-  const paper =
-    typeof travelStyle.backgroundColor === 'string'
-      ? travelStyle.backgroundColor
-      : theme.backgroundPrimary;
-  const planUi = useTravelPlanUi((state) => state.byPlanId[plan.id]);
-  const notesExpanded = planUi?.notesExpanded ?? false;
-
   return (
-    <View style={styles.root}>
-      <View style={styles.fill}>
-        <View
-          pointerEvents="none"
-          style={travelPlanSkyPageWashStyle({
-            skyContentBand,
-            washTop,
-            paper,
-            fadeTail: skyFadeTail,
-            washOffset: Math.max(0, datesTopGap - datesSkyOverlap),
-          })}
-        />
-        <Screen
-          style={styles.transparentScreen}
-          contentStyle={{ gap: Math.max(rs.md, s(20)), paddingTop: 0 }}
-          refresh={false}>
-          <TravelPlanHero
-            plan={plan}
-            // Paint sky/destination still during push — solid chrome alone
-            // reads as an empty wash (esp. warm Android day / Guatemala).
-            notesExpanded={notesExpanded}
-          />
-        </Screen>
-      </View>
-    </View>
+    <TravelPlanDetailLoaded
+      {...props}
+      planId={planId}
+      plan={plan}
+      bodyReady={transitionSettled}
+    />
   );
 }
 
 function TravelPlanDetailLoaded({
   planId,
   plan,
+  bodyReady,
   initialAddKind,
   initialOpenAddPicker = false,
   autoOpenStayBooking = false,
@@ -199,7 +137,7 @@ function TravelPlanDetailLoaded({
   initialOpenExpenses = false,
   initialImportResult,
   initialFlightImportFixture,
-}: TravelPlanDetailProps & { plan: TravelPlan }) {
+}: TravelPlanDetailProps & { plan: TravelPlan; bodyReady: boolean }) {
   const theme = useTheme();
   const travelStyle = useTravelPageStyle(theme);
   const savePlan = useTravel((state) => state.savePlan);
@@ -215,12 +153,13 @@ function TravelPlanDetailLoaded({
 
   // Warm trip-tool routes after the itinerary settles (staggered, max 3).
   useEffect(() => {
+    if (!bodyReady) return;
     return warmHrefsAfterTransition([
       { pathname: '/travel/[id]/stays', params: { id: planId } },
       { pathname: '/travel/[id]/flights', params: { id: planId } },
       { pathname: '/travel/[id]/chat', params: { id: planId } },
     ] as never);
-  }, [planId]);
+  }, [bodyReady, planId]);
 
   const updatePlan = (next: TravelPlan) => {
     const stamped = stampOwnedItineraryDefaults(next, localUserId);
@@ -516,39 +455,40 @@ function TravelPlanDetailLoaded({
         notesExpanded={notesExpanded}
         onNotesExpandedChange={setNotesExpanded}
         denseHeroGlass={denseHeroGlass}
+        bodyReady={bodyReady}
       />
-      <TravelPlanDetailOverlays
-        plan={plan}
-        itinerary={itinerary}
-        form={form}
-        confirmationImports={confirmationImports}
-        itemMedia={itemMedia}
-        editingTripDates={editingTripDates}
-        setEditingTripDates={setEditingTripDates}
-        editingTripNotes={editingTripNotes}
-        setEditingTripNotes={setEditingTripNotes}
-        openExpenseSheet={openExpenseSheet}
-        setOpenExpenseSheet={setOpenExpenseSheet}
-        expenseDraft={expenseDraft}
-        setExpenseDraft={setExpenseDraft}
-        importResult={importResult}
-        setImportResult={setImportResult}
-        importResultExpenseRef={expenseImport.importResultExpenseRef}
-        devBookingOpen={devBookingOpen}
-        setDevBookingOpen={setDevBookingOpen}
-        updatePlan={updatePlan}
-        chooseAddKind={chooseAddKind}
-        cancelAddToTimeline={cancelAddToTimeline}
-        addItem={addItem}
-        goToItinerarySafely={goToItinerarySafely}
-        openImportedExpenseReview={expenseImport.openImportedExpenseReview}
-      />
+      {bodyReady ? (
+        <TravelPlanDetailOverlays
+          plan={plan}
+          itinerary={itinerary}
+          form={form}
+          confirmationImports={confirmationImports}
+          itemMedia={itemMedia}
+          editingTripDates={editingTripDates}
+          setEditingTripDates={setEditingTripDates}
+          editingTripNotes={editingTripNotes}
+          setEditingTripNotes={setEditingTripNotes}
+          openExpenseSheet={openExpenseSheet}
+          setOpenExpenseSheet={setOpenExpenseSheet}
+          expenseDraft={expenseDraft}
+          setExpenseDraft={setExpenseDraft}
+          importResult={importResult}
+          setImportResult={setImportResult}
+          importResultExpenseRef={expenseImport.importResultExpenseRef}
+          devBookingOpen={devBookingOpen}
+          setDevBookingOpen={setDevBookingOpen}
+          updatePlan={updatePlan}
+          chooseAddKind={chooseAddKind}
+          cancelAddToTimeline={cancelAddToTimeline}
+          addItem={addItem}
+          goToItinerarySafely={goToItinerarySafely}
+          openImportedExpenseReview={expenseImport.openImportedExpenseReview}
+        />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  fill: { flex: 1 },
-  transparentScreen: { backgroundColor: 'transparent' },
 });

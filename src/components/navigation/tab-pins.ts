@@ -102,3 +102,23 @@ export function mergeTrackerSections(
   const pinnedCount = clampPinnedCount(inNav.length, trackerOrder.length);
   return { trackerOrder, pinnedCount };
 }
+
+/**
+ * Move a More-section route to the top of More. In nav stays unchanged.
+ * Returns null when the route is not in More (or already first).
+ */
+export function promoteMoreSelection(
+  order: readonly string[],
+  routeName: string,
+  pinnedCount: number = NAV_PIN_LIMIT,
+): { trackerOrder: string[]; pinnedCount: number } | null {
+  const trackerOrder = sanitizeTrackerOrder(order);
+  const pins = clampPinnedCount(pinnedCount, trackerOrder.length);
+  const inNav = trackerOrder.slice(0, pins);
+  const others = trackerOrder.slice(pins);
+  if (!others.includes(routeName) || others[0] === routeName) return null;
+  return mergeTrackerSections(
+    inNav,
+    [routeName, ...others.filter((name) => name !== routeName)],
+  );
+}

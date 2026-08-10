@@ -147,6 +147,7 @@ export function TrackersScreen() {
   const pinnedCount = useTabPins((store) => store.pinnedCount);
   const setInNavOrder = useTabPins((store) => store.setInNavOrder);
   const addToNav = useTabPins((store) => store.addToNav);
+  const promoteInMore = useTabPins((store) => store.promoteInMore);
   const [entranceKey, setEntranceKey] = useState(0);
 
   // Replay bounce every time Sections becomes focused (tab stays mounted).
@@ -193,9 +194,12 @@ export function TrackersScreen() {
     return rows;
   }, [inNav, others]);
 
-  const openTracker = (routeName: string) => {
+  const openTracker = (routeName: string, section: TrackerRow['section']) => {
     const meta = TAB_META[routeName];
     if (!meta) return;
+    if (section === 'others') {
+      promoteInMore(routeName);
+    }
     router.navigate(meta.href);
   };
 
@@ -255,7 +259,7 @@ export function TrackersScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${item.label}`}
                 testID={AgentUiIds.trackers.row(item.id)}
-                onPress={() => openTracker(item.id)}
+                onPress={() => openTracker(item.id, item.section)}
                 style={styles.rowMain}>
                 <GlassIconWell size={s(36)} borderRadius={radii.md}>
                   <Symbol

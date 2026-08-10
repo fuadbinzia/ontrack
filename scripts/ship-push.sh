@@ -14,7 +14,7 @@
 #
 # Every non--ota-only push:
 #   - bumps expo.version patch (.x.y → .x.(y+1)) in app.json (+ package.json)
-#   - prepends Release Notes + Changelog in src/features/account/release-notes.ts
+#   - prepends Release Notes + Changelog in release-notes-user/changelog.ts
 #   - pins runtimeVersion when still on appVersion policy so OTA keeps working
 #
 # Flags:

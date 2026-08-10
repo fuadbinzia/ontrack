@@ -42,9 +42,11 @@ describe('collapsible motion contract', () => {
     expect(body).toContain('TravelItineraryTimeline');
     expect(body).not.toContain('belowFoldReady');
     expect(body).not.toContain('deferUntilIdle');
-    // Plan detail paints a light entrance shell, then mounts Loaded after settle.
-    expect(detail).toContain('TravelPlanDetailEntrance');
+    // One tree + bodyReady — never Entrance→Loaded (Fabric AppContext remount).
+    expect(detail).not.toContain('TravelPlanDetailEntrance');
+    expect(detail).toContain('bodyReady');
     expect(detail).toContain('deferAfterPageTransition');
+    expect(body).toContain('bodyReady');
   });
 
   it('keeps stack page transitions on a shared settle duration', () => {

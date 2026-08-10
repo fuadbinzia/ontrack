@@ -11,7 +11,6 @@ import { TravelSkyGround } from '@/features/travel/travel-sky-ground';
 import { resolveTravelSkyGroundKind } from '@/features/travel/travel-sky-ground-kind';
 import { TravelSkyNight } from '@/features/travel/travel-sky-night';
 import { SKY_VIEW_H } from '@/features/travel/travel-sky-plate';
-import { TravelSkyStaticDestination } from '@/features/travel/travel-sky-static-destination';
 import { useTiltSkyMotion } from '@/features/travel/use-tilt-sky-motion';
 import { useTravelSkyQuality } from '@/features/travel/use-travel-sky-quality';
 import { useTheme } from '@/hooks/use-theme';
@@ -22,10 +21,8 @@ import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
  * Painted once on app-shell chrome (status bar + header) so aurora / day washes
  * stay continuous behind the clock. `headerSkyChromeColor` is the solid underlay.
  *
- * Fidelity follows device capability (and can step down at runtime) from full
- * motion → thinned FX → static SVG plate → destination still (Ken Burns).
- * Every trip uses live SVG when the tier allows (`full` / `reduced`); destination
- * stills are only for `minimal` / `static` devices.
+ * Always the live SVG plate (day/night + ground). `full` devices get motion FX;
+ * non-`full` tiers paint the same artwork frozen (minimal FX) — not a photo still.
  *
  * @param statusBandRatio Fraction of the plate reserved for the status-bar band
  *   (celestial discs stay below the clock / Dynamic Island).
@@ -42,7 +39,6 @@ export function TravelHeaderSkyDecor({
   timezone,
   /** Light/dark page base — sky art eases into this at the horizon. */
   fadeTo,
-  onPlateAverageColor,
 }: {
   statusBandRatio?: number;
   destination?: string;
@@ -53,12 +49,10 @@ export function TravelHeaderSkyDecor({
   weatherCode?: number;
   timezone?: string;
   fadeTo?: string;
-  /** Static-tier still average — hero ink tracks the photo plate. */
-  onPlateAverageColor?: (hex: string | undefined) => void;
 } = {}) {
   const theme = useTheme();
   const dark = theme.name === 'dark';
-  const { plan, quality } = useTravelSkyQuality();
+  const plan = useTravelSkyQuality();
   const motion = useTiltSkyMotion(plan.tilt);
   const statusBand = Math.max(0, Math.min(0.55, statusBandRatio)) * SKY_VIEW_H;
   const condition = resolveHeaderSkyCondition({
@@ -80,10 +74,6 @@ export function TravelHeaderSkyDecor({
   });
   const horizon = fadeTo ?? chrome;
   const groundKind = resolveTravelSkyGroundKind(destination, latitude);
-  // Capability only — do not force photo stills for curated destinations.
-  // Gate on tier (not settle-gated plan.liveFx) so we never flash still→live.
-  const preferDestinationStill =
-    quality === 'static' || quality === 'minimal';
 
   return (
     <AgentTestId
@@ -94,58 +84,39 @@ export function TravelHeaderSkyDecor({
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
         style={styles.fill}>
-        {preferDestinationStill ? (
-          <TravelSkyStaticDestination
+        {night ? (
+          <TravelSkyNight
+            condition={condition}
             destination={destination}
             dateKey={dateKey}
             latitude={latitude}
             longitude={longitude}
             statusBand={statusBand}
-            condition={condition}
-            timeOfDay={condition.timeOfDay}
-            weatherCode={weatherCode}
-            chrome={chrome}
-            night={night}
-            fadeTo={horizon}
-            onAverageColor={onPlateAverageColor}
+            motion={motion}
+            fx={plan}
           />
         ) : (
-          <>
-            {night ? (
-              <TravelSkyNight
-                condition={condition}
-                destination={destination}
-                dateKey={dateKey}
-                latitude={latitude}
-                longitude={longitude}
-                statusBand={statusBand}
-                motion={motion}
-                fx={plan}
-              />
-            ) : (
-              <TravelSkyDay
-                condition={condition}
-                statusBand={statusBand}
-                motion={motion}
-                fx={plan}
-              />
-            )}
-            {plan.ground ? (
-              <TravelSkyGround kind={groundKind} night={night} motion={motion} />
-            ) : null}
-            {/*
-              Short horizon dissolve into the theme base — not a sky wash down
-              the page. Ground foot eases into paper just below the dates card.
-            */}
-            <LinearGradient
-              pointerEvents="none"
-              colors={['transparent', 'transparent', horizon]}
-              // Keep the ground floor solid until the date-card seam.
-              locations={[0.88, 0.96, 1]}
-              style={styles.bottomFade}
-            />
-          </>
+          <TravelSkyDay
+            condition={condition}
+            statusBand={statusBand}
+            motion={motion}
+            fx={plan}
+          />
         )}
+        {plan.ground ? (
+          <TravelSkyGround kind={groundKind} night={night} motion={motion} />
+        ) : null}
+        {/*
+          Short horizon dissolve into the theme base — not a sky wash down
+          the page. Ground foot eases into paper just below the dates card.
+        */}
+        <LinearGradient
+          pointerEvents="none"
+          colors={['transparent', 'transparent', horizon]}
+          // Keep the ground floor solid until the date-card seam.
+          locations={[0.88, 0.96, 1]}
+          style={styles.bottomFade}
+        />
       </View>
     </AgentTestId>
   );

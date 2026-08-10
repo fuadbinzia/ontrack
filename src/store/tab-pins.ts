@@ -2,12 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import {
-    clampPinnedCount,
-    DEFAULT_TRACKER_ORDER,
-    mergeTrackerSections,
-    NAV_PIN_LIMIT,
-    NAV_PIN_MIN,
-    sanitizeTrackerOrder,
+  clampPinnedCount,
+  DEFAULT_TRACKER_ORDER,
+  mergeTrackerSections,
+  NAV_PIN_LIMIT,
+  NAV_PIN_MIN,
+  promoteMoreSelection,
+  sanitizeTrackerOrder,
 } from '@/components/navigation/tab-pins';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 
@@ -17,6 +18,8 @@ type TabPinsState = {
   pinnedCount: number;
   setTrackerOrder: (orderedIds: string[], pinnedCount?: number) => void;
   setInNavOrder: (inNav: string[], others: string[]) => void;
+  /** Bump a More-list route to the top of More; In nav unchanged. */
+  promoteInMore: (routeName: string) => void;
   addToNav: (routeName: string) => void;
   removeFromNav: (routeName: string) => void;
 };
@@ -38,6 +41,14 @@ export const useTabPins = create<TabPinsState>()(
       },
       setInNavOrder: (inNav, others) => {
         set(mergeTrackerSections(inNav, others));
+      },
+      promoteInMore: (routeName) => {
+        const next = promoteMoreSelection(
+          get().trackerOrder,
+          routeName,
+          get().pinnedCount,
+        );
+        if (next) set(next);
       },
       addToNav: (routeName) => {
         const trackerOrder = sanitizeTrackerOrder(get().trackerOrder);

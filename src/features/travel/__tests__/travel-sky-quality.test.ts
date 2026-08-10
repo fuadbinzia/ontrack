@@ -1,6 +1,7 @@
 import {
   degradeTravelSkyQuality,
   minTravelSkyQuality,
+  paintTravelSkyQuality,
   planTravelSkyFx,
   resolveTravelSkyCapability,
 } from '@/features/travel/travel-sky-quality';
@@ -27,7 +28,7 @@ describe('resolveTravelSkyCapability', () => {
     ).toBe('minimal');
   });
 
-  it('maps low RAM / old year-class down to static destination still', () => {
+  it('maps low RAM / old year-class down to static (frozen SVG paint)', () => {
     expect(
       resolveTravelSkyCapability({
         isDevice: true,
@@ -35,6 +36,13 @@ describe('resolveTravelSkyCapability', () => {
         totalMemory: 2 * 1024 ** 3,
       }),
     ).toBe('static');
+  });
+
+  it('paints frozen minimal SVG for every non-full tier', () => {
+    expect(paintTravelSkyQuality('full')).toBe('full');
+    expect(paintTravelSkyQuality('reduced')).toBe('minimal');
+    expect(paintTravelSkyQuality('minimal')).toBe('minimal');
+    expect(paintTravelSkyQuality('static')).toBe('minimal');
   });
 
   it('maps mid devices to reduced motion budgets', () => {
@@ -50,21 +58,22 @@ describe('resolveTravelSkyCapability', () => {
 });
 
 describe('planTravelSkyFx', () => {
-  it('turns off all loops for static and minimal', () => {
-    expect(planTravelSkyFx('static').liveFx).toBe(false);
-    expect(planTravelSkyFx('static').ground).toBe(false);
-    expect(planTravelSkyFx('minimal').liveFx).toBe(false);
-    expect(planTravelSkyFx('minimal').ground).toBe(true);
-    expect(planTravelSkyFx('minimal').birds).toBe(false);
+  it('collapses every non-full tier onto frozen minimal SVG', () => {
+    for (const tier of ['reduced', 'minimal', 'static'] as const) {
+      const plan = planTravelSkyFx(tier);
+      expect(plan).toEqual(planTravelSkyFx('minimal'));
+      expect(plan.liveFx).toBe(false);
+      expect(plan.ground).toBe(true);
+      expect(plan.birds).toBe(false);
+    }
   });
 
-  it('keeps a thinned but live set on reduced', () => {
-    const plan = planTravelSkyFx('reduced');
+  it('keeps the full live budget only on full', () => {
+    const plan = planTravelSkyFx('full');
     expect(plan.liveFx).toBe(true);
-    expect(plan.twinkleMax).toBeLessThan(planTravelSkyFx('full').twinkleMax);
-    expect(plan.birds).toBe(false);
-    expect(plan.meteors).toBe(false);
-    expect(plan.rainDropMax).toBeLessThan(planTravelSkyFx('full').rainDropMax);
+    expect(plan.twinkleMax).toBe(48);
+    expect(plan.birds).toBe(true);
+    expect(plan.meteors).toBe(true);
   });
 });
 

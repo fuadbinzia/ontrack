@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.43',
+    date: '2026-08-10',
+    notes: [
+      'Clarify Sections reorder copy (navigation bar, drop More footnote).',
+      'Touched: features/trackers.',
+    ],
+  },
+  {
     version: '1.0.42',
     date: '2026-08-10',
     notes: [

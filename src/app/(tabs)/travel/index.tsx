@@ -22,7 +22,10 @@ import { resolveSelfDisplayName } from '@/features/account/self-display-name';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { isTravelPlanOnCalendar, travelCalendarDrafts } from '@/features/travel/calendar';
 import { validateTravelDateRange } from '@/features/travel/date-range';
-import { persistTravelCoverPhoto } from '@/features/travel/destination-cover';
+import {
+    persistTravelCoverPhotos,
+    uploadedTripCoverUris,
+} from '@/features/travel/destination-cover';
 import { currencyFromLocale } from '@/features/travel/expenses/format-money';
 import { repairTravelPlansChatAccess } from '@/features/travel/travel-chat-roster';
 import { TravelFriendsSheet } from '@/features/travel/travel-friends-sheet';
@@ -113,13 +116,11 @@ function TravelScreenContent() {
   const [error, setError] = useState<string>();
   const [editingDetailsPlanId, setEditingDetailsPlanId] = useState<string>();
   const [editTitle, setEditTitle] = useState('');
-  const [editMode, setEditMode] = useState<TravelPlanMode>('flight');
-  const [editOrigin, setEditOrigin] = useState('');
   const [editDestination, setEditDestination] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
-  const [editCoverUri, setEditCoverUri] = useState<string | undefined>();
+  const [editCoverUris, setEditCoverUris] = useState<string[]>([]);
   const [detailsError, setDetailsError] = useState<string>();
   const [friendsPlanId, setFriendsPlanId] = useState<string>();
   const [friendsVisible, setFriendsVisible] = useState(false);
@@ -337,8 +338,10 @@ function TravelScreenContent() {
     return deferAfterPageTransition(() => {
       for (const id of warmTripIds) {
         const plan = plans.find((item) => item.id === id);
-        const uri = plan?.coverUri?.trim();
-        if (uri) void Image.prefetch(uri).catch(() => undefined);
+        if (!plan) continue;
+        for (const uri of uploadedTripCoverUris(plan)) {
+          void Image.prefetch(uri).catch(() => undefined);
+        }
       }
     });
   }, [plans, warmTripIds]);
@@ -395,13 +398,17 @@ function TravelScreenContent() {
     // Swap to the editor before list reorder so the tap feels instant.
     setEditingDetailsPlanId(plan.id);
     setEditTitle(plan.title);
-    setEditMode(plan.mode ?? 'flight');
-    setEditOrigin(plan.origin ?? '');
     setEditDestination(plan.destination);
     setEditNotes(plan.notes ?? '');
     setEditStartDate(plan.startDate);
     setEditEndDate(plan.endDate);
-    setEditCoverUri(plan.coverUri);
+    setEditCoverUris(
+      Array.isArray(plan.coverUris) && plan.coverUris.length > 0
+        ? [...plan.coverUris]
+        : plan.coverUri
+          ? [plan.coverUri]
+          : [],
+    );
     setDetailsError(undefined);
     deferAfterPageTransition(() => interactWithPlan(plan.id));
   };
@@ -430,10 +437,13 @@ function TravelScreenContent() {
       plan.itinerary,
     );
     if (dateValidation.error) return setDetailsError(dateValidation.error);
-    let coverUri = editCoverUri;
-    if (coverUri && coverUri !== plan.coverUri) {
+    let coverUris = editCoverUris
+      .map((uri) => uri.trim())
+      .filter(Boolean)
+      .slice(0, 3);
+    if (coverUris.length > 0) {
       try {
-        coverUri = await persistTravelCoverPhoto(coverUri, plan.id);
+        coverUris = await persistTravelCoverPhotos(coverUris, plan.id);
       } catch {
         return setDetailsError('Couldn’t save the cover photo. Try another image.');
       }
@@ -441,14 +451,17 @@ function TravelScreenContent() {
     const next: TravelPlan = {
       ...plan,
       ...validation.value,
-      mode: editMode,
-      origin: editOrigin.trim() || undefined,
       startDate: editStartDate,
       endDate: editEndDate,
       updatedAt: new Date().toISOString(),
     };
-    if (coverUri) next.coverUri = coverUri;
-    else delete next.coverUri;
+    if (coverUris.length > 0) {
+      next.coverUris = coverUris;
+      next.coverUri = coverUris[0];
+    } else {
+      delete next.coverUris;
+      delete next.coverUri;
+    }
     const isOnCalendar = isTravelPlanOnCalendar(activities, plan.id);
     savePlan(next);
     if (isOnCalendar) replaceTravelActivities(next.id, travelCalendarDrafts(next));
@@ -540,23 +553,19 @@ function TravelScreenContent() {
         <TravelPlanDetailsEditor
           plan={editingPlan}
           title={editTitle}
-          mode={editMode}
-          origin={editOrigin}
           destination={editDestination}
           notes={editNotes}
           onNotesChange={setEditNotes}
           startDate={editStartDate}
           endDate={editEndDate}
-          coverUri={editCoverUri}
+          coverUris={editCoverUris}
           error={detailsError}
           initialCoverPickerOpen={openCoverPickerOnEdit}
           onTitleChange={setEditTitle}
-          onModeChange={setEditMode}
-          onOriginChange={setEditOrigin}
           onDestinationChange={setEditDestination}
           onStartDateChange={setEditStartDate}
           onEndDateChange={setEditEndDate}
-          onCoverUriChange={setEditCoverUri}
+          onCoverUrisChange={setEditCoverUris}
           onSave={() => void saveEditedDetails(editingPlan)}
           onCancel={() => setEditingDetailsPlanId(undefined)}
           onDelete={() => {

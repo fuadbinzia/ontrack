@@ -1,7 +1,8 @@
 import { BlurView } from 'expo-blur';
 import { Tabs, useRouter } from 'expo-router';
+import { BottomTabBarHeightCallbackContext } from 'expo-router/js-tabs';
 import type { ComponentProps } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Platform,
     Pressable,
@@ -94,6 +95,7 @@ export function BottomNavBar({
   const { width } = useWindowDimensions();
   const { spacing, layout, s } = useResponsive();
   const setTabBarHeight = useUI((store) => store.setTabBarHeight);
+  const onTabBarHeightChange = useContext(BottomTabBarHeightCallbackContext);
   const enabledAddons = useAddons((store) => store.enabled);
   const trackerOrder = useTabPins((store) => store.trackerOrder);
   const pinnedCount = useTabPins((store) => store.pinnedCount);
@@ -215,7 +217,10 @@ export function BottomNavBar({
     };
   }, [enabledNames, router]);
 
+  // Keep in sync with chat/sheet dock math — home-indicator uses a small pad,
+  // not the full inset (bar already sits on the physical bottom).
   const bottomLabelPad = insets.bottom > 0 ? 6 : spacing.sm;
+  const barHeight = layout.bottomNavBarBaseHeight + bottomLabelPad;
   const tabCaptionStyle = {
     fontSize: s(9.5),
     lineHeight: s(11),
@@ -228,17 +233,24 @@ export function BottomNavBar({
     MAX_BAR_WIDTH,
   );
 
+  const reportBarHeight = (height: number) => {
+    if (height <= 0) return;
+    setTabBarHeight(height);
+    onTabBarHeightChange?.(height);
+  };
+
   return (
-    <AgentTestId testID={AgentUiIds.tabs.dock}>
+    <View
+      pointerEvents="box-none"
+      style={[styles.bar, { height: barHeight }]}
+      onLayout={(event) => reportBarHeight(event.nativeEvent.layout.height)}>
+      <AgentTestId testID={AgentUiIds.tabs.dock} style={styles.barFill}>
       <View
-        onLayout={(event) =>
-          setTabBarHeight(event.nativeEvent.layout.height)
-        }
         pointerEvents="box-none"
         style={[
-          styles.bar,
+          styles.barInner,
           {
-            height: layout.bottomNavBarBaseHeight + bottomLabelPad,
+            height: barHeight,
             maxWidth: MAX_BAR_WIDTH + layout.screenPadding * 2,
             paddingHorizontal: layout.screenPadding,
             paddingTop: spacing.xxs,
@@ -419,7 +431,8 @@ export function BottomNavBar({
           })}
         </View>
       </View>
-    </AgentTestId>
+      </AgentTestId>
+    </View>
   );
 }
 
@@ -429,6 +442,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    alignSelf: 'center',
+    width: '100%',
+    justifyContent: 'flex-end',
+  },
+  barFill: {
+    flex: 1,
+    width: '100%',
+  },
+  barInner: {
     alignSelf: 'center',
     width: '100%',
     justifyContent: 'flex-end',

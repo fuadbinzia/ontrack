@@ -7,11 +7,46 @@ import {
   formatHomeWeatherPrimaryLabel,
   formatHomeWeatherRangeLabel,
   formatHomeWeatherTemperatureLabel,
+  formatWeatherPlaceLabel,
+  weatherPlaceLabelLadder,
   homeWeatherForecastThrough,
   homeWeatherHistoryFrom,
   isHomeWeatherDateInWindow,
   resolveHomeWeatherForDate,
 } from '../resolve-home-weather-day';
+
+describe('formatWeatherPlaceLabel', () => {
+  it('keeps city + state + country abbreviations', () => {
+    expect(formatWeatherPlaceLabel('Brooklyn, New York, United States')).toBe(
+      'Brooklyn, NY, US',
+    );
+    expect(
+      formatWeatherPlaceLabel('Union Square, California, United States', {
+        detail: 'full',
+      }),
+    ).toBe('Union Square, CA, US');
+    expect(
+      formatWeatherPlaceLabel('Brooklyn, New York, United States', {
+        detail: 'region',
+      }),
+    ).toBe('Brooklyn, NY');
+    expect(
+      formatWeatherPlaceLabel('Brooklyn, New York, United States', {
+        detail: 'city',
+      }),
+    ).toBe('Brooklyn');
+    expect(formatWeatherPlaceLabel('Paris, France')).toBe('Paris, FR');
+    expect(formatWeatherPlaceLabel('Austin')).toBe('Austin');
+  });
+
+  it('builds a longest-to-shortest ladder', () => {
+    expect(weatherPlaceLabelLadder('Brooklyn, New York, United States')).toEqual([
+      'Brooklyn, NY, US',
+      'Brooklyn, NY',
+      'Brooklyn',
+    ]);
+  });
+});
 
 const current: DestinationCurrentWeather = {
   locationLabel: 'Austin, Texas, United States',

@@ -16,3 +16,7 @@ export type {
     TravelWeather,
     TravelWeatherDay,
 } from './types';
+export {
+  temperatureUnitForDateFormat,
+  unitSymbol,
+} from './temperature-unit';

@@ -11,7 +11,6 @@ import {
     StyleSheet,
     useWindowDimensions,
     View,
-    type KeyboardEvent,
     type StyleProp,
     type ViewStyle,
 } from 'react-native';
@@ -23,6 +22,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { glassMaterials, motion, radii, springs, type AppIconName } from '@/design-system';
+import { useDockedKeyboardInset } from '@/hooks/use-docked-keyboard-inset';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -95,7 +95,7 @@ export interface SheetScaffoldProps extends PropsWithChildren {
   scrollKey?: string | number;
   /** Disable body scroll while nested gestures (e.g. color picker) are active. */
   scrollEnabled?: boolean;
-  /** Backdrop dismissal is opt-in; the canonical dismiss action is the header X. */
+  /** Tap dimmed area outside the card to dismiss (default on). Header X still works. */
   dismissOnBackdropPress?: boolean;
   backdropTestID?: string;
   /**
@@ -123,7 +123,7 @@ export function SheetScaffold({
   lockHeight = false,
   scrollKey,
   scrollEnabled = true,
-  dismissOnBackdropPress = false,
+  dismissOnBackdropPress = true,
   backdropTestID,
   surface = 'glass',
   children,
@@ -131,13 +131,16 @@ export function SheetScaffold({
   const theme = useTheme();
   const { allowsBlur } = usePerformanceTier();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const { height: windowHeight } = useWindowDimensions();
   const { spacing, layout } = useResponsive();
   const scrollRef = useRef<ScrollView>(null);
   const [lockedHeight, setLockedHeight] = useState<number>();
-  const [keyboardInset, setKeyboardInset] = useState(0);
-  // Room above the soft keyboard so fields + footer stay reachable (Android
-  // Modals ignore windowSoftInputMode; absolute bottom sheets need an inset).
+  // Modal ignores Android soft-input — lift on both platforms.
+  const { keyboardInset } = useDockedKeyboardInset({
+    enabled: visible,
+    androidMode: 'modal',
+  });
+  // Room above the soft keyboard so fields + footer stay reachable.
   const availableHeight = Math.max(
     320,
     windowHeight - insets.top - spacing.sm - keyboardInset,
@@ -155,43 +158,10 @@ export function SheetScaffold({
   useEffect(() => {
     if (!visible) {
       setLockedHeight(undefined);
-      setKeyboardInset(0);
       return;
     }
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [scrollKey, title, visible]);
-
-  useEffect(() => {
-    if (!visible) {
-      setKeyboardInset(0);
-      return;
-    }
-    const showEvent =
-      Platform.OS === 'ios' ? 'keyboardWillChangeFrame' : 'keyboardDidShow';
-    const hideEvent =
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const updateInset = (event: KeyboardEvent) => {
-      Keyboard.scheduleLayoutAnimation(event);
-      const { height: kbHeight, screenY, width: kbWidth } = event.endCoordinates;
-      // Floating / side IMEs should not lift the sheet; docked IMEs must.
-      const fullWidth = kbWidth >= windowWidth * 0.8;
-      if (!fullWidth) {
-        setKeyboardInset(0);
-        return;
-      }
-      const fromScreenY = Math.max(0, windowHeight - screenY - insets.bottom);
-      const fromHeight = Math.max(0, kbHeight - insets.bottom);
-      setKeyboardInset(fromScreenY > 0 ? fromScreenY : fromHeight);
-    };
-    const showSubscription = Keyboard.addListener(showEvent, updateInset);
-    const hideSubscription = Keyboard.addListener(hideEvent, () => {
-      setKeyboardInset(0);
-    });
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, [visible, insets.bottom, windowHeight, windowWidth]);
 
   // Dismiss unmounts immediately — holding a Modal for exit anim traps touches
   // and makes the next navigation feel stuck under an invisible overlay.

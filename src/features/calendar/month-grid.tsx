@@ -57,12 +57,16 @@ function MonthDayCell({
       style={[
         styles.cell,
         styles.dayCell,
+        {
+          // Reserve rim so selected/today borders don't shift the glyph.
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: 'transparent',
+        },
         isSelected && {
           backgroundColor:
             theme.name === 'dark'
               ? 'rgba(255, 255, 255, 0.14)'
               : 'rgba(255, 255, 255, 0.55)',
-          borderWidth: StyleSheet.hairlineWidth,
           borderColor:
             theme.name === 'dark'
               ? glassMaterials.border.darkStrong
@@ -70,21 +74,16 @@ function MonthDayCell({
         },
         today &&
           !isSelected && {
-            borderWidth: StyleSheet.hairlineWidth,
             borderColor: theme.accentPrimary,
           },
       ]}>
       <AppText
         variant="callout"
+        align="center"
         color={inMonth ? (isSelected ? 'accent' : 'primary') : 'tertiary'}>
         {day}
       </AppText>
-      <View
-        style={[
-          styles.dot,
-          { backgroundColor: dot && inMonth ? dot : 'transparent' },
-        ]}
-      />
+      {dot && inMonth ? <View style={[styles.dot, { backgroundColor: dot }]} /> : null}
     </Pressable>
   );
 }
@@ -149,9 +148,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     aspectRatio: 0.9,
     borderRadius: radii.md,
-    gap: 3,
   },
+  // Overlay so the day digit stays optically centered in the plate.
   dot: {
+    position: 'absolute',
+    bottom: spacing.xs,
+    alignSelf: 'center',
     width: 5,
     height: 5,
     borderRadius: 3,

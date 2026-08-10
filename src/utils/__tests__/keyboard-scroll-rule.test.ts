@@ -26,28 +26,40 @@ describe('keyboard scrolling invariant', () => {
     expect(screen).not.toMatch(/paddingTop\s*:\s*.*insets\.top/);
   });
 
-  it('keeps the travel chat composer above the iOS keyboard', () => {
+  it('keeps docked composers and sheets on the shared keyboard inset hook', () => {
+    const hook = readFileSync(
+      join(process.cwd(), 'src/hooks/use-docked-keyboard-inset.ts'),
+      'utf8',
+    );
     const chatScreen = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-chat-screen.tsx'),
       'utf8',
     );
-
-    expect(chatScreen).toContain("'keyboardWillChangeFrame'");
-    expect(chatScreen).toContain('Keyboard.scheduleLayoutAnimation(event)');
-    expect(chatScreen).toContain('marginBottom: keyboardInset');
-    expect(chatScreen).not.toContain('<KeyboardAvoidingView');
-  });
-
-  it('lifts modal sheets above the docked soft keyboard', () => {
     const scaffold = readFileSync(
       join(process.cwd(), 'src/components/primitives/sheet-scaffold.tsx'),
       'utf8',
     );
+    const addSheet = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-itinerary-add-sheet.tsx'),
+      'utf8',
+    );
 
-    expect(scaffold).toContain("'keyboardWillChangeFrame'");
-    expect(scaffold).toContain('Keyboard.scheduleLayoutAnimation(event)');
+    expect(hook).toContain('dockedKeyboardInsetFromEvent');
+    expect(hook).toContain("androidMode === 'resize'");
+    expect(hook).not.toContain('insets.bottom');
+    expect(chatScreen).toContain('useDockedKeyboardInset');
+    // Absolute dock: IME lifts via `bottom`, not margin (flush under tab bar).
+    expect(chatScreen).toContain('bottom: keyboardInset');
+    expect(chatScreen).not.toContain('<KeyboardAvoidingView');
+    expect(scaffold).toContain('useDockedKeyboardInset');
+    expect(scaffold).toContain("androidMode: 'modal'");
     expect(scaffold).toContain('bottom: keyboardInset');
     expect(scaffold).toContain('automaticallyAdjustKeyboardInsets={false}');
+    expect(addSheet).toContain('useDockedKeyboardInset');
+    expect(addSheet).toContain("androidMode: 'resize'");
+    expect(addSheet).toContain('sheetBottom');
+    expect(addSheet).not.toContain('screenY - insets.bottom');
+    expect(addSheet).not.toContain('kbHeight - insets.bottom');
   });
 
   it('keeps sheet CTAs in-scroll (never pinned under the tab dock)', () => {
@@ -87,6 +99,20 @@ describe('keyboard scrolling invariant', () => {
     expect(todoScreen).toContain('<DraggableFlatList');
     expect(todoScreen).toContain('containerStyle={styles.list}');
     expect(todoScreen).toContain('ListHeaderComponent=');
+    expect(todoScreen).toContain('automaticallyAdjustKeyboardInsets');
     expect(todoScreen).not.toContain('TouchableWithoutFeedback');
+  });
+
+  it('lifts the vehicle parts search modal above the soft keyboard', () => {
+    const sheet = readFileSync(
+      join(
+        process.cwd(),
+        'src/features/vehicles/vehicle-parts-search-sheet.tsx',
+      ),
+      'utf8',
+    );
+    expect(sheet).toContain('useDockedKeyboardInset');
+    expect(sheet).toContain("androidMode: 'modal'");
+    expect(sheet).toContain('keyboardInset');
   });
 });

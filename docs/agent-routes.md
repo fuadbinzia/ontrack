@@ -149,7 +149,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `travel-demo-edit-flight` | Seed → open demo flight editor |
 | `open-new-trip` | Travel list → New Trip sheet |
 | `open-new-checklist` | Checklists → new-list name field ready |
-| `open-home-location` | Today → Home location weather sheet |
+| `open-home-location` | Profile → Preferences home/current location editor |
 | `today-prev-day` | Seed home-weather → Today → previous day (H/L banner) |
 | `today-next-day` | Seed home-weather → Today → next day (H/L banner) |
 | `open-avatar-editor` | Profile → avatar editor sheet |

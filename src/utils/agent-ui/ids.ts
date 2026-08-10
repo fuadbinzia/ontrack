@@ -121,6 +121,8 @@ export const AgentUiIds = {
     prevDay: 'ontrack.today.prevDay',
     nextDay: 'ontrack.today.nextDay',
     weather: 'ontrack.today.weather',
+    /** Live GPS weather bar under Home when places differ (Today only). */
+    currentLocation: 'ontrack.today.currentLocation',
     /** Layout anchor — only mounted when day completion > 0. */
     progress: 'ontrack.today.progress',
     addActivity: 'ontrack.today.addActivity',
@@ -128,13 +130,6 @@ export const AgentUiIds = {
     activity: (activityId: string) => `ontrack.today.activity.${activityId}`,
     activityToggle: (activityId: string) =>
       `ontrack.today.activityToggle.${activityId}`,
-    location: {
-      close: 'ontrack.today.location.close',
-      useCurrent: 'ontrack.today.location.useCurrent',
-      place: 'ontrack.today.location.place',
-      save: 'ontrack.today.location.save',
-      clear: 'ontrack.today.location.clear',
-    },
   },
   calendar: {
     jumpToday: 'ontrack.calendar.jumpToday',
@@ -547,6 +542,13 @@ export const AgentUiIds = {
     /** Hero caption while unsigned — local name is not a cloud account. */
     guestStatus: 'ontrack.profile.guestStatus',
     homeLocation: 'ontrack.profile.homeLocation',
+    currentLocation: 'ontrack.profile.currentLocation',
+    /** Far-right control — refresh Current from device geolocation. */
+    currentLocationLocate: 'ontrack.profile.currentLocationLocate',
+    locationSuggestion: (fieldTestID: string, index: number) =>
+      `${fieldTestID}.suggestion.${index}`,
+    locationSuggestionsDismiss: (fieldTestID: string) =>
+      `${fieldTestID}.suggestionsDismiss`,
     agents: 'ontrack.profile.agents',
     nutrition: 'ontrack.profile.nutrition',
     designSystem: 'ontrack.profile.designSystem',
@@ -745,7 +747,6 @@ export const AgentUiIds = {
       /** Layout anchor — night stars / day sunshine behind travel page titles. */
       skyDecor: 'ontrack.travel.chrome.skyDecor',
     },
-    tripMode: (mode: string) => `ontrack.travel.tripMode.${mode}`,
     flight: {
       layoverDuration: 'ontrack.travel.flight.layoverDuration',
       connectionAirport: 'ontrack.travel.flight.connectionAirport',
@@ -901,9 +902,11 @@ export const AgentUiIds = {
       save: 'ontrack.travel.editTrip.save',
       cancel: 'ontrack.travel.editTrip.cancel',
       cover: 'ontrack.travel.editTrip.cover',
+      addCover: 'ontrack.travel.editTrip.addCover',
+      removeCover: (index: number) =>
+        `ontrack.travel.editTrip.removeCover.${index}`,
       title: 'ontrack.travel.editTrip.title',
       destination: 'ontrack.travel.editTrip.destination',
-      origin: 'ontrack.travel.editTrip.origin',
       startDate: 'ontrack.travel.editTrip.startDate',
       endDate: 'ontrack.travel.editTrip.endDate',
       notes: 'ontrack.travel.editTrip.notes',
@@ -1090,8 +1093,21 @@ export const AgentUiIds = {
     chat: {
       close: 'ontrack.travel.chat.close',
       enableNotifications: 'ontrack.travel.chat.enableNotifications',
+      dismissNotifications: 'ontrack.travel.chat.dismissNotifications',
+      menu: 'ontrack.travel.chat.menu',
+      settingsClose: 'ontrack.travel.chat.settingsClose',
+      settingsEnableNotifications:
+        'ontrack.travel.chat.settingsEnableNotifications',
       composer: 'ontrack.travel.chat.composer',
       send: 'ontrack.travel.chat.send',
+      replyCancel: 'ontrack.travel.chat.replyCancel',
+      messageActions: 'ontrack.travel.chat.messageActions',
+      menuReply: 'ontrack.travel.chat.menuReply',
+      menuCopy: 'ontrack.travel.chat.menuCopy',
+      menuEdit: 'ontrack.travel.chat.menuEdit',
+      menuDelete: 'ontrack.travel.chat.menuDelete',
+      reaction: (emoji: string) =>
+        `ontrack.travel.chat.reaction.${encodeURIComponent(emoji)}`,
     },
   },
   social: {

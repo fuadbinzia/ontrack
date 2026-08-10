@@ -14,7 +14,7 @@ export type TravelRemoveConfirmPayload = {
 type TravelRemoveConfirmModalProps = {
   payload: TravelRemoveConfirmPayload | null;
   onCancel: () => void;
-  /** Retained for compatibility; backdrop dismissal is no longer part of the canonical contract. */
+  /** Retained for call-site compatibility; sheets dismiss on backdrop by default. */
   disableBackdropDismiss?: boolean;
 };
 

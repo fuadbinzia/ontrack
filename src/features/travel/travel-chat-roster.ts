@@ -1,8 +1,6 @@
 import { travelChatAccessCode } from '@/features/travel/chat';
 import { isTravelMemberPlan } from '@/features/travel/trip-roster';
-import type {
-  TravelChatMember,
-} from '@/features/travel/travel-chat-chrome';
+import type { TravelChatMember } from '@/features/travel/chat';
 import type { TravelPlan, TravelTripRosterPerson } from '@/features/travel/types';
 import { getSupabaseClient } from '@/services/cloud/supabase';
 import { asNonEmptyString, asString } from '@/utils/parse';

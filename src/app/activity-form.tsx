@@ -20,7 +20,6 @@ import { isCategoryEnabled } from '@/addons/registry';
 import {
   glassFieldBackground,
   glassFieldBorder,
-  glassMaterials,
   radii,
   spacing,
 } from '@/design-system';
@@ -452,18 +451,18 @@ export default function ActivityFormScreen() {
         </View>
 
         {!isEditing ? (
-          <GlassPlate airy style={activityFormGlassCardStyle}>
-            <View style={[styles.assistantHeading, { zIndex: 1 }]}>
+          <View style={styles.assistant}>
+            <View style={styles.assistantHeading}>
               <View style={[styles.assistantDot, { backgroundColor: theme.accentPrimary }]} />
               <AppText variant="overline" color="accent">onTrack assistant</AppText>
             </View>
-            <AppText variant="title" style={{ zIndex: 1 }}>
+            <AppText variant="title">
               What are we getting into?
             </AppText>
-            <AppText variant="body" color="secondary" style={{ zIndex: 1 }}>
+            <AppText variant="body" color="secondary">
               Pick a vibe and I’ll help with the rest.
             </AppText>
-            <View style={[styles.wrap, { zIndex: 1 }]}>
+            <View style={styles.wrap}>
               {availableCategories.map((item) => {
                 const selectCategory = () => {
                   setCategoryId(item.id);
@@ -482,28 +481,14 @@ export default function ActivityFormScreen() {
                       accessibilityRole="radio"
                       accessibilityState={{ checked: selected }}
                       onPress={selectCategory}>
-                      <GlassPlate
-                        airy={!selected}
-                        style={[
-                          styles.chip,
-                          {
-                            borderColor: selected
-                              ? theme.accentPrimary
-                              : theme.name === 'dark'
-                                ? glassMaterials.border.dark
-                                : glassMaterials.border.light,
-                            borderWidth: selected ? 1 : StyleSheet.hairlineWidth,
-                          },
-                        ]}>
-                        <CategoryBadge category={item} />
-                      </GlassPlate>
+                      <CategoryBadge category={item} selected={selected} size="large" />
                     </Pressable>
                   </AgentTestId>
                 );
               })}
             </View>
             {category ? (
-              <View style={[styles.followUp, { borderTopColor: theme.separator, zIndex: 1 }]}>
+              <View style={[styles.followUp, { borderTopColor: theme.separator }]}>
                 <AppText variant="bodyMedium">
                   {category.detailKind === 'movie'
                     ? 'Ooh, screen time. What are we watching? 🍿'
@@ -535,7 +520,7 @@ export default function ActivityFormScreen() {
                 )}
               </View>
             ) : null}
-          </GlassPlate>
+          </View>
         ) : null}
 
         {isEditing && category ? (
@@ -664,13 +649,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headerTitle: { flex: 1, minWidth: 0 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    zIndex: 1,
-  },
   actions: { gap: spacing.sm, paddingTop: spacing.md },
+  assistant: { gap: spacing.md },
   assistantHeading: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   assistantDot: { width: 8, height: 8, borderRadius: radii.pill },
   followUp: { gap: spacing.md, borderTopWidth: 1, paddingTop: spacing.lg, marginTop: spacing.xs },

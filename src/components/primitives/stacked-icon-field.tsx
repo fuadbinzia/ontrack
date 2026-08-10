@@ -82,7 +82,8 @@ export function stackedIconFieldPlateSize({
 }
 
 export type StackedIconFieldProps = {
-  icon: AppIconName | (string & {});
+  /** Omit to render stacked label/value without a leading icon plate. */
+  icon?: AppIconName | (string & {});
   stackedLabel: string;
   children: ReactNode;
   iconBackground?: string;
@@ -134,6 +135,7 @@ export function StackedIconField({
   contentStyle,
 }: StackedIconFieldProps) {
   const { iconSizes, spacing, s, typography, fontScale } = useResponsive();
+  const showIcon = Boolean(icon);
   const plate = stackedIconFieldPlateSize({
     iconSize: iconSizes.sm,
     s,
@@ -143,7 +145,10 @@ export function StackedIconField({
     fontScale,
   });
   const pinToPlate =
-    stackedIconFieldLayout.pinValueToIconBottom && !expand && stackedAlign === 'start';
+    showIcon &&
+    stackedIconFieldLayout.pinValueToIconBottom &&
+    !expand &&
+    stackedAlign === 'start';
   const centered = stackedAlign === 'center';
 
   return (
@@ -158,18 +163,20 @@ export function StackedIconField({
           borderColor: fieldBorderColor,
           paddingHorizontal: paddingHorizontal ?? spacing.md,
           paddingVertical: paddingVertical ?? spacing.sm,
-          gap: gap ?? spacing.sm,
+          gap: showIcon ? (gap ?? spacing.sm) : 0,
           backgroundColor: fieldBackground,
           overflow: 'hidden',
         }),
         style,
       ]}>
-      <FieldLeadingIcon
-        name={icon}
-        backgroundColor={iconBackground}
-        color={iconColor}
-        size={plate}
-      />
+      {showIcon ? (
+        <FieldLeadingIcon
+          name={icon!}
+          backgroundColor={iconBackground}
+          color={iconColor}
+          size={plate}
+        />
+      ) : null}
       <View
         style={[
           styles.copy,

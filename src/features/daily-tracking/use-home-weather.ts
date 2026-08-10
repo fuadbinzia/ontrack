@@ -1,190 +1,51 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-
 import type { AppIconName } from '@/design-system';
-import {
-  getDestinationCurrentWeather,
-  getTravelWeather,
-  weatherIconForCode,
-  type DestinationCurrentWeather,
-  type TemperatureUnit,
-  type TravelWeather,
-} from '@/features/travel/weather';
+import { temperatureUnitForDateFormat } from '@/features/travel/weather/temperature-unit';
+import { useCurrentPlaceLabel } from '@/hooks/use-current-place-label';
 import { usePreferences } from '@/store/preferences';
-import type { DateDisplayFormat } from '@/utils/date';
-import { addDays, todayKey } from '@/utils/date';
-import { getCurrentPlaceLabel } from '@/utils/device-location';
+import { todayKey } from '@/utils/date';
 
-import {
-  HOME_WEATHER_FORECAST_DAYS,
-  HOME_WEATHER_PAST_DAYS,
-  formatHomeWeatherTemperatureLabel,
-  homeWeatherHistoryFrom,
-  isHomeWeatherDateInWindow,
-  resolveHomeWeatherForDate,
-  unitSymbol,
-  type HomeWeatherSnapshot,
-} from './resolve-home-weather-day';
-
-function unitForDateFormat(format: DateDisplayFormat): TemperatureUnit {
-  return format === 'mdy' ? 'fahrenheit' : 'celsius';
-}
-
-export { formatHomeWeatherTemperatureLabel, unitSymbol };
-export type { HomeWeatherSnapshot };
+import { usePlaceWeather } from './use-place-weather';
 
 export function useHomeWeather(date?: string) {
   const homeLocation = usePreferences((state) => state.homeLocation);
+  const currentLocation = usePreferences((state) => state.currentLocation);
   const dateDisplayFormat = usePreferences((state) => state.dateDisplayFormat);
-  const setHomeLocation = usePreferences((state) => state.setHomeLocation);
-  const temperatureUnit = unitForDateFormat(dateDisplayFormat);
-  const trimmed = homeLocation.trim();
-  const hasLocation = trimmed.length > 0;
-  const deviceLookupStarted = useRef(false);
-
-  const [current, setCurrent] = useState<DestinationCurrentWeather>();
-  const [forecast, setForecast] = useState<TravelWeather>();
-  const [loading, setLoading] = useState(false);
-  const [detectingLocation, setDetectingLocation] = useState(false);
-  const [currentError, setCurrentError] = useState<string>();
-  const [forecastError, setForecastError] = useState<string>();
-
-  // When no home location is saved, try the device GPS once and persist the place label.
-  useEffect(() => {
-    if (hasLocation) {
-      deviceLookupStarted.current = false;
-      setDetectingLocation(false);
-      return;
-    }
-    if (deviceLookupStarted.current) return;
-    deviceLookupStarted.current = true;
-    let cancelled = false;
-    setDetectingLocation(true);
-    void getCurrentPlaceLabel().then((result) => {
-      if (cancelled) return;
-      setDetectingLocation(false);
-      if (result.status !== 'suggested') return;
-      if (usePreferences.getState().homeLocation.trim()) return;
-      setHomeLocation(result.label);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [hasLocation, setHomeLocation]);
-
-  useEffect(() => {
-    if (!hasLocation) {
-      setCurrent(undefined);
-      setForecast(undefined);
-      setLoading(false);
-      setCurrentError(undefined);
-      setForecastError(undefined);
-      return;
-    }
-
-    const controller = new AbortController();
-    let currentSettled = false;
-    let forecastSettled = false;
-    let nextCurrent: DestinationCurrentWeather | undefined;
-    let nextForecast: TravelWeather | undefined;
-    let nextCurrentError: string | undefined;
-    let nextForecastError: string | undefined;
-
-    const publish = () => {
-      if (controller.signal.aborted) return;
-      if (!currentSettled || !forecastSettled) return;
-      setCurrent(nextCurrent);
-      setForecast(nextForecast);
-      setCurrentError(nextCurrentError);
-      setForecastError(nextForecastError);
-      setLoading(false);
-    };
-
-    setLoading(true);
-    setCurrentError(undefined);
-    setForecastError(undefined);
-
-    const today = todayKey();
-    const forecastStart = homeWeatherHistoryFrom(today);
-    const forecastEnd = addDays(today, HOME_WEATHER_FORECAST_DAYS - 1);
-
-    void getDestinationCurrentWeather(trimmed, temperatureUnit, controller.signal)
-      .then((value) => {
-        nextCurrent = value;
-      })
-      .catch((reason: unknown) => {
-        if (controller.signal.aborted) return;
-        nextCurrentError =
-          reason instanceof Error ? reason.message : 'Weather is temporarily unavailable.';
-      })
-      .finally(() => {
-        currentSettled = true;
-        publish();
-      });
-
-    void getTravelWeather(
-      trimmed,
-      forecastStart,
-      forecastEnd,
-      temperatureUnit,
-      controller.signal,
-      { pastDays: HOME_WEATHER_PAST_DAYS },
-    )
-      .then((value) => {
-        nextForecast = value;
-      })
-      .catch((reason: unknown) => {
-        if (controller.signal.aborted) return;
-        nextForecastError =
-          reason instanceof Error ? reason.message : 'Weather is temporarily unavailable.';
-      })
-      .finally(() => {
-        forecastSettled = true;
-        publish();
-      });
-
-    return () => controller.abort();
-  }, [hasLocation, temperatureUnit, trimmed]);
-
-  const weather: HomeWeatherSnapshot | undefined = useMemo(() => {
-    if (!date) {
-      if (!current) return undefined;
-      const todayDay = forecast?.days.find((day) => day.date === todayKey());
-      return {
-        temperature: current.temperature,
-        temperatureHigh: todayDay?.temperatureMax,
-        temperatureLow: todayDay?.temperatureMin,
-        temperatureUnit: current.temperatureUnit,
-        condition: current.condition,
-        weatherCode: current.weatherCode,
-        locationLabel: current.locationLabel,
-        timezone: current.timezone,
-        isLive: true,
-      };
-    }
-    return resolveHomeWeatherForDate({ date, current, forecast });
-  }, [current, date, forecast]);
-
-  const inForecastWindow = !date || isHomeWeatherDateInWindow(date);
+  const temperatureUnit = temperatureUnitForDateFormat(dateDisplayFormat);
+  const savedHome = homeLocation.trim();
+  const savedCurrent = currentLocation.trim();
+  const hasSavedHome = savedHome.length > 0;
   const viewingToday = !date || date === todayKey();
-  const error = !inForecastWindow
-    ? undefined
-    : viewingToday
-      ? currentError ?? (!weather ? forecastError : undefined)
-      : forecastError ?? (!weather ? currentError : undefined);
 
-  const icon: AppIconName | undefined = weather
-    ? weatherIconForCode(weather.weatherCode)
-    : undefined;
+  // Live GPS only when Current has no user override — never writes home.
+  const needGps = viewingToday && !savedCurrent;
+  const currentPlace = useCurrentPlaceLabel(needGps);
+  const currentPlaceLabel =
+    currentPlace.status === 'suggested' ? currentPlace.label : '';
+  const currentQuery = viewingToday
+    ? savedCurrent || currentPlaceLabel
+    : '';
+
+  const home = usePlaceWeather(savedHome, temperatureUnit, date);
+  const current = usePlaceWeather(currentQuery, temperatureUnit, date);
+
+  // Primary banner: saved home when set, else Current (override or GPS).
+  const weather = hasSavedHome ? home.weather : current.weather;
+  const icon: AppIconName | undefined = hasSavedHome ? home.icon : current.icon;
+  const showWeather = Boolean(weather);
+
+  // Second tile whenever Home is set on Today and Current has a place to show
+  // (override or GPS). Keep both even when labels match — collapsing made it
+  // look like the side-by-side UI was “lost” after Current/Home edits.
+  const showCurrentWeather =
+    hasSavedHome && viewingToday && Boolean(currentQuery) && Boolean(current.weather);
 
   return {
-    hasLocation,
-    homeLocation: trimmed,
+    hasSavedHome,
     weather,
     icon,
-    loading: loading || detectingLocation,
-    detectingLocation,
-    error,
-    /** Only show the banner when we have real weather for this day — never empty/error chrome. */
-    showWeather: Boolean(weather),
+    showWeather,
+    currentWeather: showCurrentWeather ? current.weather : undefined,
+    currentIcon: showCurrentWeather ? current.icon : undefined,
+    showCurrentWeather,
   };
 }

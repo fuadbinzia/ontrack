@@ -3,12 +3,12 @@ import { asPositiveNumber, asString } from '@/utils/parse';
 import { normalizeCurrencyCode } from './expenses/format-money';
 import { normalizeFlightDetails } from './flight-details';
 import { withRoundTripFlightExpenseTitles } from './flight-expense-title';
+import { normalizeTravelItemShareMode } from './itinerary-visibility';
 import { normalizeRentalDetails } from './rental-details';
 import { normalizeStayDetails } from './stay-details';
 import { normalizeTransportDetails } from './transport-details';
 import { TRAVEL_PLAN_MODE_VALUES } from './travel-mode';
 import { normalizeTravelPhotoUris } from './travel-moment-media';
-import { normalizeTravelItemShareMode } from './itinerary-visibility';
 import type {
     TravelExpense,
     TravelExpenseCategory,
@@ -588,10 +588,22 @@ export function normalizeTravelPlan(value: unknown): TravelPlan | undefined {
         : plan.endDate,
     notes: asString(plan.notes),
     ...(() => {
-      const coverUri = normalizeTravelPhotoUris(
-        typeof plan.coverUri === 'string' ? [plan.coverUri] : undefined,
-      )?.[0];
-      return coverUri ? { coverUri } : {};
+      const rawCovers: string[] = [];
+      const pushCover = (value: string) => {
+        const trimmed = value.trim();
+        if (!trimmed) return;
+        if (rawCovers.some((entry) => entry === trimmed)) return;
+        rawCovers.push(trimmed);
+      };
+      if (Array.isArray(plan.coverUris)) {
+        for (const entry of plan.coverUris) {
+          if (typeof entry === 'string') pushCover(entry);
+        }
+      }
+      if (typeof plan.coverUri === 'string') pushCover(plan.coverUri);
+      const coverUris = normalizeTravelPhotoUris(rawCovers)?.slice(0, 3);
+      if (!coverUris?.length) return {};
+      return { coverUris, coverUri: coverUris[0] };
     })(),
     itinerary,
     participants,

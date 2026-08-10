@@ -25,8 +25,10 @@ describe('glass plate contract', () => {
     expect(plate).toContain(': 0');
     // BlurView is a direct sibling underlay (not nested in another absoluteFill —
     // nested absolute BlurView has escaped bounds and stolen hits on iOS).
+    // Clip radius mirrors the plate style so frost doesn't paint square corners.
+    expect(plate).toContain('glassClipRadius');
     expect(plate).toMatch(
-      /<BlurView[\s\S]*?pointerEvents="none"[\s\S]*?style=\{StyleSheet\.absoluteFill\}/,
+      /<BlurView[\s\S]*?pointerEvents="none"[\s\S]*?style=\{\[StyleSheet\.absoluteFill, underlayClip\]\}/,
     );
   });
 
@@ -136,18 +138,29 @@ describe('glass plate contract', () => {
     expect(bootLoader).toContain('allowsLoopMotion');
   });
 
-  it('keeps Home location sheet and Add Event assistant on glass atmosphere', () => {
-    const home = read('src/features/daily-tracking/home-location-sheet.tsx');
+  it('keeps Profile location prefs and Add Event assistant on glass atmosphere', () => {
+    const home = read('src/features/account/profile-location-preferences.tsx');
     const avatar = read('src/features/account/profile-avatar-editor-sheet.tsx');
     const activity = read('src/app/activity-form.tsx');
     const layout = read('src/app/_layout.tsx');
     const scaffold = read('src/components/primitives/sheet-scaffold.tsx');
-    expect(home).toContain('SheetScaffold');
-    expect(home).toContain("surface=\"glass\"");
-    expect(home).toContain('GlassPrimaryAction');
-    expect(home).toContain('glassFieldBackground');
+    expect(home).toContain('SettingsGroup');
+    expect(home).toContain('CityAutofindSettingsRow');
+    expect(home).not.toContain('GlassPrimaryAction');
+    expect(home).not.toContain('photon');
     expect(home).not.toContain('presentationStyle="pageSheet"');
     expect(home).not.toContain('backgroundColor: theme.backgroundPrimary');
+    const cityRow = read('src/features/account/city-autofind-settings-row.tsx');
+    const cityMenu = read('src/features/account/city-autofind-suggestion-menu.tsx');
+    const cityHook = read('src/features/account/use-city-autofind-suggestions.ts');
+    expect(cityMenu).toContain('GlassPlate');
+    expect(cityHook).toContain('searchCities');
+    expect(cityRow).not.toContain('photon');
+    expect(cityMenu).not.toContain('photon');
+    expect(cityHook).not.toContain('photon');
+    const cityLookup = read('src/utils/city-lookup.ts');
+    expect(cityLookup).toContain('geocoding-api.open-meteo.com');
+    expect(cityLookup).not.toContain('photon');
     expect(avatar).toContain('SheetScaffold');
     expect(avatar).toContain("surface=\"glass\"");
     expect(avatar).toContain('GlassPrimaryAction');
@@ -191,6 +204,8 @@ describe('glass plate contract', () => {
     expect(plate).toContain('glassMistWashStyle');
     expect(glass).toContain('mistLightSolid');
     expect(plate).toContain('androidTintInvertedAiry');
+    // Inverted CTAs stay dark-fill on dark theme (white ink must not sit on milk).
+    expect(plate).toContain('inverted || theme.name === \'dark\'');
     // Nested mist never mounts BlurView — clipped parents paint white milk on iOS.
     expect(plate).toMatch(/if \(mist\) \{[\s\S]*?mistTintLight/);
     expect(plate).toContain('never mounts BlurView');
@@ -276,6 +291,43 @@ describe('glass plate contract', () => {
     expect(card).toContain('airy');
   });
 
+  it('keeps travel group chat bubbles and banner on GlassPlate', () => {
+    const screen = read('src/features/travel/travel-chat-screen.tsx');
+    const alerts = read('src/features/travel/travel-chat-alerts.tsx');
+    const row = read('src/features/travel/travel-chat-message-row.tsx');
+    const composer = read('src/features/travel/travel-chat-composer.tsx');
+    const menu = read('src/features/travel/travel-chat-message-menu.tsx');
+    const chrome = read('src/features/travel/travel-chat-chrome.tsx');
+    expect(alerts).toContain('GlassPlate');
+    expect(screen).toContain('ScreenAtmosphere');
+    expect(screen).toContain('useSafeAreaChrome');
+    expect(screen).toContain('useSafeAreaChromeOverlay');
+    expect(row).toContain('GlassPlate');
+    expect(row).toContain('intensity={48}');
+    expect(row).toContain('tintColor={mine && !deleted ? theme.accentPrimary');
+    expect(composer).toContain('GlassPlate');
+    expect(composer).toContain('intensity={56}');
+    expect(menu).toContain('GlassPlate');
+    expect(menu).toContain('intensity={56}');
+    expect(menu).toContain('reactionTop');
+    expect(menu).toContain('actionsTop');
+    // In-tree overlay so BlurView frosts chat (no RN <Modal>).
+    expect(menu).not.toContain('<Modal');
+    expect(menu).not.toContain('presentationStyle');
+    expect(menu).not.toContain('fontWeight: \'600\'');
+    expect(menu).not.toContain("rgba(255,255,255,0.06)");
+    expect(screen).not.toContain('appPrompt.actionSheet');
+    expect(screen).not.toContain('bubbleMine');
+    expect(screen).not.toContain('bubbleTheirs');
+    expect(screen).not.toContain('backgroundColor: palette.bubble');
+    expect(chrome).toContain('ProfileAvatar');
+    expect(chrome).toContain('GlassMetaChip');
+    expect(chrome).not.toContain('TravelChatComposerSparkle');
+    expect(chrome).not.toContain("backgroundColor: '#FFFCFA'");
+    expect(chrome).not.toContain('bubbleMine:');
+    expect(chrome).not.toContain('composerBg:');
+  });
+
   it('keeps itinerary board chrome on shared Glass* primitives', () => {
     const node = read('src/features/travel/travel-timeline-node.tsx');
     const nodeChrome = read('src/features/travel/travel-timeline-node-chrome.tsx');
@@ -346,9 +398,10 @@ describe('glass plate contract', () => {
 
   it('keeps Today weather/empty CTA/FAB on frosted glass', () => {
     const header = read('src/features/daily-tracking/day-header.tsx');
+    const weatherBar = read('src/features/daily-tracking/day-weather-bar.tsx');
     const dayView = read('src/features/daily-tracking/day-view.tsx');
     const empty = read('src/components/primitives/empty-state.tsx');
-    expect(header).toContain('airy');
+    expect(weatherBar).toContain('airy');
     expect(header).toContain("'transparent'");
     expect(header).not.toContain('background="transparent"');
     expect(empty).toContain('GlassPlate');

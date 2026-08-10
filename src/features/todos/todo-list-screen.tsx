@@ -213,6 +213,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
               visibleTasks.length === 0 && styles.listEmptyContent,
             ]}
             contentInsetAdjustmentBehavior="never"
+            automaticallyAdjustKeyboardInsets
             data={visibleTasks}
             refreshControl={refreshControl}
             dragItemOverflow={false}

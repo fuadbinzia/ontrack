@@ -1,43 +1,32 @@
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { AppText, Symbol } from '@/components/primitives';
+import { AppText, GlassMetaChip } from '@/components/primitives';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
-import type { ProfileAvatarMeta } from '@/features/account/profile-avatar-model';
 import { travelDialogPalette } from '@/features/travel/travel-dialog-chrome';
+import type { TravelChatMember } from '@/features/travel/chat';
+import { glassMaterials } from '@/design-system/glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 
-export type TravelChatMember = {
-  id: string;
-  name: string;
-  isSelf?: boolean;
-  userId?: string;
-  avatar?: ProfileAvatarMeta;
-};
+export type { TravelChatMember } from '@/features/travel/chat';
 
-/** Soft editorial palette for the group-chat surface. */
+/** Ink + accent tokens for the group-chat surface (chrome is GlassPlate). */
 export function travelChatPalette(theme: ReturnType<typeof useTheme>) {
   const dialog = travelDialogPalette(theme);
   const light = dialog.light;
   return {
     ...dialog,
-    bubbleMine: light ? '#F5EDE0' : dialog.chrome.fieldBg,
-    bubbleTheirs: light ? '#FFFCFA' : dialog.chrome.fieldBg,
-    bubbleBorder: light ? 'rgba(180, 140, 90, 0.28)' : dialog.outlineBorder,
-    bubbleShadow: light
-      ? '0 4px 14px rgba(51, 39, 28, 0.08)'
-      : '0 4px 16px rgba(0, 0, 0, 0.35)',
     timestamp: light ? '#B5986E' : dialog.chrome.subtitle,
     senderName: light ? '#2D1C13' : dialog.chrome.title,
-    composerBg: light ? '#FFFCFA' : dialog.chrome.fieldBg,
-    composerBorder: light ? 'rgba(180, 140, 90, 0.42)' : dialog.outlineBorder,
-    sparkleRing: light ? 'rgba(180, 140, 90, 0.45)' : dialog.outlineBorder,
-    sendShadow: light
-      ? '0 4px 16px rgba(180, 140, 90, 0.45)'
-      : '0 4px 16px rgba(0, 0, 0, 0.4)',
     stamp: light ? '#C4A882' : dialog.chrome.subtitle,
   };
+}
+
+export function travelChatPlateBorder(theme: ReturnType<typeof useTheme>): string {
+  return theme.name === 'dark'
+    ? glassMaterials.border.darkStrong
+    : glassMaterials.border.lightStrong;
 }
 
 /** Overlapping member discs with a thin gold rim (header under subtitle). */
@@ -115,21 +104,24 @@ export function TravelChatDateSeparator({ label }: { label: string }) {
           },
         ]}
       />
-      <AppText
-        variant="caption"
-        fit
-        numberOfLines={1}
-        style={[
-          styles.dateLabel,
-          {
-            color: palette.timestamp,
-            fontSize: Math.max(12, s(13)),
-            flexShrink: 1,
-            minWidth: 0,
-          },
-        ]}>
-        {label}
-      </AppText>
+      <GlassMetaChip style={styles.dateChip}>
+        <AppText
+          variant="caption"
+          fit
+          numberOfLines={1}
+          style={[
+            styles.dateLabel,
+            {
+              color: palette.timestamp,
+              fontSize: Math.max(12, s(13)),
+              flexShrink: 1,
+              minWidth: 0,
+              zIndex: 1,
+            },
+          ]}>
+          {label}
+        </AppText>
+      </GlassMetaChip>
       <View
         style={[
           styles.diamond,
@@ -229,82 +221,55 @@ export function TravelChatLandscape({ color }: { color: string }) {
         <Path
           d="M0 280 C48 250 78 190 120 205 C162 220 186 150 230 170 C274 190 298 120 340 145 C368 160 380 200 390 220 L390 420 L0 420 Z"
           fill={color}
-          opacity={0.08}
+          opacity={0.18}
         />
         <Path
           d="M0 300 C42 270 70 220 112 230 C156 242 178 180 222 198 C266 216 292 150 336 175 C360 188 378 215 390 235"
           stroke={color}
           strokeWidth={1.15}
           fill="none"
-          opacity={0.26}
+          opacity={0.38}
         />
         <Path
           d="M0 330 C46 300 74 255 118 268 C160 280 186 225 230 245 C274 265 300 210 344 235 C366 248 380 275 390 295"
           stroke={color}
           strokeWidth={1}
           fill="none"
-          opacity={0.18}
+          opacity={0.28}
         />
         <Path
           d="M18 250 C54 210 82 155 120 175 C158 195 180 130 224 155 C268 180 292 115 336 145 C360 160 376 195 390 215"
           stroke={color}
           strokeWidth={0.95}
           fill="none"
-          opacity={0.16}
+          opacity={0.24}
         />
         <Path
           d="M168 340 C182 300 192 255 198 210 C204 255 214 300 228 340"
           stroke={color}
           strokeWidth={0.9}
           fill="none"
-          opacity={0.2}
+          opacity={0.3}
         />
         <Path
           d="M286 310 L298 250 L310 310 Z"
           fill={color}
-          opacity={0.14}
+          opacity={0.22}
         />
         <Path
           d="M292 278 L306 278"
           stroke={color}
           strokeWidth={0.8}
-          opacity={0.18}
+          opacity={0.28}
         />
         <Path
           d="M40 360 C90 348 140 352 190 360 C240 368 290 355 340 360 C360 362 375 365 390 368"
           stroke={color}
           strokeWidth={0.85}
           fill="none"
-          opacity={0.12}
+          opacity={0.2}
         />
       </Svg>
-    </View>
-  );
-}
-
-/** Leading sparkle plate inside the message composer pill. */
-export function TravelChatComposerSparkle({
-  color,
-  ring,
-}: {
-  color: string;
-  ring: string;
-}) {
-  const { s } = useResponsive();
-  const size = Math.max(28, s(30));
-
-  return (
-    <View
-      style={[
-        styles.sparkle,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderColor: ring,
-        },
-      ]}>
-      <Symbol name="smart" size={Math.max(14, s(15))} color={color} />
     </View>
   );
 }
@@ -321,7 +286,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1.5,
     overflow: 'hidden',
-    backgroundColor: '#FFFCFA',
   },
   dateRow: {
     flexDirection: 'row',
@@ -337,6 +301,11 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
     borderRadius: 1,
     flexShrink: 0,
+  },
+  dateChip: {
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '56%',
   },
   dateLabel: {
     textAlign: 'center',
@@ -372,11 +341,5 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 0,
-  },
-  sparkle: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth * 2,
-    flexShrink: 0,
   },
 });

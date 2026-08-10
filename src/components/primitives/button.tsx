@@ -29,6 +29,8 @@ interface ButtonProps extends PropsWithChildren {
   shape?: 'pill' | 'rounded';
   icon?: AppIconName;
   leading?: ReactNode;
+  /** Far-right glyph (e.g. chevron); stretches the label row with space-between. */
+  trailing?: AppIconName;
   /** Replaces the leading icon with a spinner while work is in flight. */
   loading?: boolean;
   disabled?: boolean;
@@ -51,6 +53,7 @@ export function Button({
   shape = 'pill',
   icon,
   leading,
+  trailing,
   loading = false,
   disabled,
   appearance = 'glass',
@@ -80,6 +83,8 @@ export function Button({
     glassAccentInk ??
     (solidOnAccent ? theme.textOnAccent : theme.textPrimary);
   const isDisabled = disabled || loading;
+  const hasTrailing = Boolean(trailing);
+  const centerWithTrailing = hasTrailing && !loading && !leading && !icon;
   const labelText =
     typeof children === 'string'
       ? fieldTitleCase(children)
@@ -103,14 +108,26 @@ export function Button({
   });
 
   const radius = shape === 'rounded' ? radii.md : radii.pill;
+  const padHorizontal = size === 'sm' ? spacing.md : spacing.xl;
   const padStyle = {
     gap: spacing.sm,
     minHeight: layout.minTapTarget,
-    paddingHorizontal: size === 'sm' ? spacing.md : spacing.xl,
+    paddingHorizontal: padHorizontal,
     paddingVertical: size === 'lg' ? spacing.lg : size === 'sm' ? spacing.sm : spacing.md,
     borderRadius: radius,
     borderCurve: 'continuous' as const,
   };
+  const trailingGlyph = trailing ? (
+    <View
+      pointerEvents="none"
+      style={
+        centerWithTrailing
+          ? [styles.trailingAbsolute, { right: padHorizontal }]
+          : undefined
+      }>
+      <Symbol name={trailing} size="sm" color={resolvedIconColor} />
+    </View>
+  ) : null;
   const label = (
     <>
       {loading ? (
@@ -124,14 +141,22 @@ export function Button({
         <AppText
           variant={size === 'lg' ? 'subheading' : size === 'sm' ? 'caption' : 'callout'}
           color={resolvedTextColor}
+          fit={hasTrailing}
+          align={centerWithTrailing ? 'center' : undefined}
           numberOfLines={1}
           style={[
+            centerWithTrailing
+              ? [styles.centeredTrailingLabel, { paddingHorizontal: iconSizes.sm + spacing.sm }]
+              : hasTrailing
+                ? styles.trailingLabel
+                : null,
             textStyle,
             glassAccentInk ? { color: glassAccentInk } : null,
           ]}>
           {labelText}
         </AppText>
       ) : null}
+      {trailingGlyph}
     </>
   );
 
@@ -170,7 +195,7 @@ export function Button({
         ]}>
         <GlassPlate
           inverted={variant === 'primary' || variant === 'danger'}
-          style={[styles.base, padStyle, tinted]}>
+          style={[styles.base, hasTrailing ? styles.withTrailing : null, padStyle, tinted]}>
           {label}
         </GlassPlate>
       </Pressable>
@@ -189,6 +214,7 @@ export function Button({
       onPress={handlePress}
       style={({ pressed }) => [
         styles.base,
+        hasTrailing ? styles.withTrailing : null,
         padStyle,
         {
           opacity: isDisabled && !loading ? 0.4 : pressed ? 0.75 : 1,
@@ -342,6 +368,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
+  },
+  withTrailing: {
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  trailingLabel: {
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  centeredTrailingLabel: {
+    width: '100%',
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  trailingAbsolute: {
+    position: 'absolute',
   },
   iconButton: {
     alignItems: 'center',

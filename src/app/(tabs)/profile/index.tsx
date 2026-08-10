@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ADDONS } from '@/addons/registry';
 import type { AddonId } from '@/addons/types';
@@ -27,7 +27,10 @@ import { ProfileAvatarEditorSheet } from '@/features/account/profile-avatar-edit
 import { getAppBuild, getAppVersion } from '@/features/account/release-notes';
 import { resolveSelfDisplayName } from '@/features/account/self-display-name';
 import { useAuthSession } from '@/features/auth/auth-provider';
-import { HomeLocationSheet } from '@/features/daily-tracking/home-location-sheet';
+import {
+  ProfileLocationPreferences,
+  type ProfileLocationReveal,
+} from '@/features/account/profile-location-preferences';
 import { deleteAllVisionBoardImages } from '@/features/vision-board/media';
 import { useResponsive } from '@/hooks/use-responsive';
 import { deletePlant } from '@/services/plants/schedule';
@@ -45,6 +48,45 @@ import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
 import { openHttpsUrl } from '@/utils/safe-url';
 
+const REVEAL_EDGE_PAD = 24;
+
+function scrollAnchorIntoScreen(
+  scrollView: ScrollView | null,
+  anchor: View | null,
+  offsetY: number,
+) {
+  if (!scrollView || !anchor) return;
+  const viewport = scrollView as ScrollView & {
+    measureInWindow?: View['measureInWindow'];
+  };
+  if (typeof viewport.measureInWindow !== 'function') return;
+  anchor.measureInWindow((ax, ay, _aw, ah) => {
+    viewport.measureInWindow?.((_sx, sy, _sw, sh) => {
+      if (
+        ![ay, ah, sy, sh, offsetY].every(
+          (n) => typeof n === 'number' && Number.isFinite(n),
+        )
+      ) {
+        return;
+      }
+      const visibleTop = sy + REVEAL_EDGE_PAD;
+      const visibleBottom = sy + sh - REVEAL_EDGE_PAD;
+      const targetBottom = ay + ah;
+      let delta = 0;
+      if (targetBottom > visibleBottom) {
+        delta = targetBottom - visibleBottom;
+      } else if (ay < visibleTop) {
+        delta = ay - visibleTop;
+      }
+      if (Math.abs(delta) < 1) return;
+      scrollView.scrollTo({
+        y: Math.max(0, offsetY + delta),
+        animated: true,
+      });
+    });
+  });
+}
+
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'System' },
   { value: 'light', label: 'Light' },
@@ -54,14 +96,48 @@ const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
 /** Primary carousel section for account and app preferences. */
 export default function ProfileSettingsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    focus?: ProfileLocationReveal | string;
+    reveal?: ProfileLocationReveal | string;
+  }>();
+  const revealParam =
+    typeof params.reveal === 'string'
+      ? params.reveal
+      : typeof params.focus === 'string'
+        ? params.focus
+        : undefined;
   const { s, spacing: rs } = useResponsive();
   const { user, isGuest, deleteAccount } = useAuthSession();
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollOffsetY = useRef(0);
+  const homeAnchorRef = useRef<View | null>(null);
+  const currentAnchorRef = useRef<View | null>(null);
+
+  // Today weather deep-link: scroll the row into view — never open edit/keyboard.
+  useEffect(() => {
+    if (revealParam !== 'homeLocation' && revealParam !== 'currentLocation') {
+      return;
+    }
+    const timer = setTimeout(() => {
+      const anchor =
+        revealParam === 'currentLocation'
+          ? currentAnchorRef.current
+          : homeAnchorRef.current;
+      scrollAnchorIntoScreen(
+        scrollRef.current,
+        anchor,
+        scrollOffsetY.current,
+      );
+      router.setParams({ focus: undefined, reveal: undefined } as never);
+    }, 220);
+    return () => clearTimeout(timer);
+  }, [revealParam, router]);
+
   /** Profile → Developer: only when `account_flags.developer_tools` is granted server-side. */
   const showDeveloperSection = useCanUseDeveloperTools();
   const showDeleteAccount = !isGuest && Boolean(user);
   const name = usePreferences((state) => state.name);
   const goal = usePreferences((state) => state.goal);
-  const homeLocation = usePreferences((state) => state.homeLocation);
   const themePreference = usePreferences((state) => state.themePreference);
   const aiEnabled = usePreferences((state) => state.aiEnabled);
   const hapticsEnabled = usePreferences((state) => state.hapticsEnabled);
@@ -84,7 +160,6 @@ export default function ProfileSettingsScreen() {
   const resetTodos = useTodos((state) => state.reset);
   const resetVisionBoard = useVisionBoard((state) => state.reset);
   const resetHealth = useHealth((state) => state.reset);
-  const [locationOpen, setLocationOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
 
   const displayName = resolveSelfDisplayName({ preferencesName: name, user });
@@ -169,7 +244,12 @@ export default function ProfileSettingsScreen() {
   );
 
   return (
-    <Screen contentStyle={{ gap: rs.lg }}>
+    <Screen
+      scrollRef={scrollRef}
+      onScroll={(event) => {
+        scrollOffsetY.current = event.nativeEvent.contentOffset.y;
+      }}
+      contentStyle={{ gap: rs.lg }}>
       <Pressable
         ref={avatarAgent.ref}
         accessibilityRole="button"
@@ -250,38 +330,36 @@ export default function ProfileSettingsScreen() {
         title="Preferences"
         defaultExpanded
         testID={AgentUiIds.profile.section.preferences}>
-        <SettingsGroup>
-          <SettingsActionRow
-            label="Home location"
-            detail={homeLocation.trim() || 'Phone location'}
-            icon="location"
-            testID={AgentUiIds.profile.homeLocation}
-            onPress={() => setLocationOpen(true)}
-            accessibilityLabel="Set home location for weather"
+        <View style={{ gap: rs.md }}>
+          <ProfileLocationPreferences
+            homeAnchorRef={homeAnchorRef}
+            currentAnchorRef={currentAnchorRef}
           />
-          <SettingsToggleRow
-            label="AI Summaries"
-            detail="Daily insights, meals, and plants"
-            icon="smart"
-            value={aiEnabled}
-            onValueChange={setAiEnabled}
-          />
-          <SettingsToggleRow
-            label="Usage Analytics"
-            detail="Screen time to improve the product"
-            icon="insights"
-            value={usageAnalyticsEnabled}
-            onValueChange={setUsageAnalyticsEnabled}
-            testID={AgentUiIds.profile.usageAnalytics}
-          />
-          <SettingsToggleRow
-            label="Haptic Feedback"
-            detail="Subtle taps on key actions"
-            icon="settings"
-            value={hapticsEnabled}
-            onValueChange={setHapticsEnabled}
-          />
-        </SettingsGroup>
+          <SettingsGroup>
+            <SettingsToggleRow
+              label="AI Summaries"
+              detail="Daily insights, meals, and plants"
+              icon="smart"
+              value={aiEnabled}
+              onValueChange={setAiEnabled}
+            />
+            <SettingsToggleRow
+              label="Usage Analytics"
+              detail="Screen time to improve the product"
+              icon="insights"
+              value={usageAnalyticsEnabled}
+              onValueChange={setUsageAnalyticsEnabled}
+              testID={AgentUiIds.profile.usageAnalytics}
+            />
+            <SettingsToggleRow
+              label="Haptic Feedback"
+              detail="Subtle taps on key actions"
+              icon="settings"
+              value={hapticsEnabled}
+              onValueChange={setHapticsEnabled}
+            />
+          </SettingsGroup>
+        </View>
       </CollapsibleSection>
 
       <CollapsibleSection
@@ -426,7 +504,6 @@ export default function ProfileSettingsScreen() {
         </SettingsGroup>
       </AgentTestId>
 
-      <HomeLocationSheet visible={locationOpen} onClose={() => setLocationOpen(false)} />
       <ProfileAvatarEditorSheet visible={avatarOpen} onClose={() => setAvatarOpen(false)} />
     </Screen>
   );

@@ -27,9 +27,12 @@ describe('travel home kit contract', () => {
     expect(source).toContain('collapsable={false}');
     expect(source).toContain('heroPageSlots');
     expect(source).toContain('scrollEnabled={scrollInteractive}');
-    // Page ticks bind to this carousel’s visibleUris once remotes paint
-    // (not a lagged parent count; never advertise paging before swipe works).
+    // Page ticks bind to uploaded visibleUris once they paint (placeholders
+    // never become pages; never advertise paging before swipe works).
     expect(source).toContain('TravelHomeCarouselStepper');
+    expect(source).toContain('uploadedTripCoverUris');
+    expect(source).toContain('fetchDestinationCoverUri');
+    expect(source).not.toContain('fetchDestinationHeroUris');
     expect(source).toContain(
       'count={hasPaintedRemote ? visibleUris.length : 0}',
     );

@@ -108,15 +108,14 @@ export const TravelHomeTripCard = memo(function TravelHomeTripCard({
   const footerPadV = Math.max(10, travelHomeTokens.spacing.cardBottom);
   const paper = dark ? theme.backgroundSunken : '#FFFFFF';
   /** Remount iOS BlurView when the live hero URI arrives / changes. */
-  const [frostBlurKey, setFrostBlurKey] = useState(
-    () =>
-      (typeof plan.coverUri === 'string' && plan.coverUri.trim()) || plan.id,
-  );
+  const coverIdentity =
+    (Array.isArray(plan.coverUris) && plan.coverUris.filter(Boolean).join('|')) ||
+    (typeof plan.coverUri === 'string' && plan.coverUri.trim()) ||
+    plan.id;
+  const [frostBlurKey, setFrostBlurKey] = useState(() => coverIdentity);
   useEffect(() => {
-    setFrostBlurKey(
-      (typeof plan.coverUri === 'string' && plan.coverUri.trim()) || plan.id,
-    );
-  }, [plan.id, plan.coverUri]);
+    setFrostBlurKey(coverIdentity);
+  }, [coverIdentity]);
   useEffect(() => {
     setFrostBandHeight(minBodyOverlap);
   }, [plan.id, plan.title, plan.destination, minBodyOverlap]);

@@ -194,9 +194,13 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-export function formatDateLong(key: string): string {
+export function formatDateLong(
+  key: string,
+  options?: { year?: boolean },
+): string {
   const d = fromDateKey(key);
-  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  const base = `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  return options?.year ? `${base}, ${d.getFullYear()}` : base;
 }
 
 /** Plant watering / care due chip: Overdue, Due today, or Due {date}. */

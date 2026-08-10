@@ -1,8 +1,7 @@
 import type { ComponentProps } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
     BackHandler,
-    Keyboard,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -10,7 +9,6 @@ import {
     StyleSheet,
     useWindowDimensions,
     View,
-    type KeyboardEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,6 +20,7 @@ import {
 import { ItinerarySheetSubmitButton } from '@/features/travel/travel-itinerary-sheet-fields';
 import { TravelSheetHeader } from '@/features/travel/travel-sheet';
 import type { TravelItemKind } from '@/features/travel/types';
+import { useDockedKeyboardInset } from '@/hooks/use-docked-keyboard-inset';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -81,10 +80,14 @@ export function TravelItineraryAddSheet({
   const theme = useTheme();
   const { allowsBlur } = usePerformanceTier();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const { height: windowHeight } = useWindowDimensions();
   const { spacing: rs, layout } = useResponsive();
   const measuredTabBarHeight = useUI((state) => state.tabBarHeight);
-  const [keyboardInset, setKeyboardInset] = useState(0);
+  // In-tree overlay — Android adjustResize owns the lift (inset 0).
+  const { keyboardInset, keyboardOpen } = useDockedKeyboardInset({
+    enabled: visible,
+    androidMode: 'resize',
+  });
   const dark = theme.name === 'dark';
   const kindLabel =
     ITEM_KINDS.find((entry) => entry.value === kind)?.label ?? 'Item';
@@ -109,7 +112,8 @@ export function TravelItineraryAddSheet({
     measuredTabBarHeight > 0
       ? measuredTabBarHeight
       : layout.bottomNavBarBaseHeight + insets.bottom;
-  const sheetBottom = keyboardInset > 0 ? keyboardInset : tabBarHeight;
+  const sheetBottom =
+    keyboardInset > 0 ? keyboardInset : keyboardOpen ? rs.sm : tabBarHeight;
   // Keep room for the status bar + docked IME / tab bar.
   const sheetMaxHeight = Math.max(
     320,
@@ -124,38 +128,6 @@ export function TravelItineraryAddSheet({
     });
     return () => sub.remove();
   }, [visible, onClose]);
-
-  useEffect(() => {
-    if (!visible) {
-      setKeyboardInset(0);
-      return;
-    }
-    const showEvent =
-      Platform.OS === 'ios' ? 'keyboardWillChangeFrame' : 'keyboardDidShow';
-    const hideEvent =
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const updateInset = (event: KeyboardEvent) => {
-      Keyboard.scheduleLayoutAnimation(event);
-      const { height: kbHeight, screenY, width: kbWidth } = event.endCoordinates;
-      // Floating / side IMEs should not lift the sheet; docked IMEs must.
-      const fullWidth = kbWidth >= windowWidth * 0.8;
-      if (!fullWidth) {
-        setKeyboardInset(0);
-        return;
-      }
-      const fromScreenY = Math.max(0, windowHeight - screenY - insets.bottom);
-      const fromHeight = Math.max(0, kbHeight - insets.bottom);
-      setKeyboardInset(fromScreenY > 0 ? fromScreenY : fromHeight);
-    };
-    const showSubscription = Keyboard.addListener(showEvent, updateInset);
-    const hideSubscription = Keyboard.addListener(hideEvent, () => {
-      setKeyboardInset(0);
-    });
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, [visible, insets.bottom, windowHeight, windowWidth]);
 
   if (!visible) return null;
 

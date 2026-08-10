@@ -16,6 +16,23 @@ import {
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useTheme } from '@/hooks/use-theme';
 
+/** BlurView absoluteFill ignores parent radius unless the underlay is clipped too. */
+function glassClipRadius(style?: StyleProp<ViewStyle>): number | undefined {
+  const flat = StyleSheet.flatten(style);
+  if (!flat) return undefined;
+  if (typeof flat.borderRadius === 'number') return flat.borderRadius;
+  const corners = [
+    flat.borderTopLeftRadius,
+    flat.borderTopRightRadius,
+    flat.borderBottomLeftRadius,
+    flat.borderBottomRightRadius,
+  ].filter((value): value is number => typeof value === 'number');
+  if (corners.length === 4 && corners.every((value) => value === corners[0])) {
+    return corners[0];
+  }
+  return undefined;
+}
+
 export type GlassPlateProps = ViewProps & {
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -90,10 +107,10 @@ export function GlassPlate({
   const theme = useTheme();
   const { allowsBlur } = usePerformanceTier();
   const g = glassMaterials;
-  const darkPlate = inverted
-    ? theme.name !== 'dark'
-    : theme.name === 'dark';
-  const invertedDark = inverted && darkPlate;
+  // `inverted` = dark plate for white ink (primary/danger CTAs) on any theme.
+  // Never flip to a light fill in dark mode — white label + milk wash = invisible.
+  const darkPlate = inverted || theme.name === 'dark';
+  const invertedDark = inverted;
   // Android (and blur-gated tiers) paint fill-only glass — never pass blur
   // alphas when there is no BlurView frost, or artwork reads sharp through plates.
   const frostedFill = Platform.OS === 'ios' && allowsBlur;
@@ -173,6 +190,11 @@ export function GlassPlate({
   }
 
   if (Platform.OS === 'android') {
+    const androidClipRadius = glassClipRadius(style);
+    const androidUnderlayClip =
+      androidClipRadius != null
+        ? { borderRadius: androidClipRadius }
+        : undefined;
     if (dynamicTint) {
       return (
         <View
@@ -190,6 +212,7 @@ export function GlassPlate({
             pointerEvents="none"
             style={[
               StyleSheet.absoluteFill,
+              androidUnderlayClip,
               { zIndex: 0, backgroundColor: dynamicTint.fill },
             ]}
           />
@@ -232,7 +255,12 @@ export function GlassPlate({
         ]}>
         <View
           pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { zIndex: 0 }, androidTint]}
+          style={[
+            StyleSheet.absoluteFill,
+            androidUnderlayClip,
+            { zIndex: 0 },
+            androidTint,
+          ]}
         />
         {children}
       </View>
@@ -264,6 +292,9 @@ export function GlassPlate({
   const greenFill = allowsBlur ? greenFillBlur : greenFillSolid;
   const useDarkBlur =
     Boolean(dynamicTint?.darkMaterial) || greenGlass || darkPlate;
+  const clipRadius = glassClipRadius(style);
+  const underlayClip =
+    clipRadius != null ? { borderRadius: clipRadius } : undefined;
 
   return (
     <View
@@ -308,12 +339,13 @@ export function GlassPlate({
         }
         tint={useDarkBlur ? 'dark' : 'light'}
         pointerEvents="none"
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, underlayClip]}
       />
       <View
         pointerEvents="none"
         style={[
           StyleSheet.absoluteFill,
+          underlayClip,
           {
             backgroundColor: dynamicTint
               ? dynamicTint.fill

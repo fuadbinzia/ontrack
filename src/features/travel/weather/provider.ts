@@ -1,6 +1,7 @@
 import type { AppIconName } from '@/design-system';
 import { fetchWithTimeout } from '@/services/http/fetch-with-timeout';
 import { addDays, todayKey } from '@/utils/date';
+import { formatOpenMeteoPlaceLabel } from '@/utils/open-meteo-place-label';
 
 import type {
     DestinationCurrentWeather,
@@ -148,11 +149,14 @@ export function weatherIconForCode(code: number): AppIconName {
 }
 
 function locationLabel(result: GeocodingResult, fallback: string): string {
-  const parts = [result.name, result.admin1, result.country].filter(
-    (value, index, values): value is string =>
-      typeof value === 'string' && value.length > 0 && values.indexOf(value) === index,
+  return formatOpenMeteoPlaceLabel(
+    [
+      typeof result.name === 'string' ? result.name : undefined,
+      typeof result.admin1 === 'string' ? result.admin1 : undefined,
+      typeof result.country === 'string' ? result.country : undefined,
+    ],
+    fallback,
   );
-  return parts.join(', ') || fallback;
 }
 
 /**

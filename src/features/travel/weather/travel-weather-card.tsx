@@ -24,7 +24,8 @@ import type { DateDisplayFormat } from '@/utils/date';
 import { formatDateKey } from '@/utils/date';
 
 import { getDestinationCurrentWeather, getTravelWeather, weatherIconForCode } from './provider';
-import type { DestinationCurrentWeather, TemperatureUnit, TravelWeather } from './types';
+import { temperatureUnitForDateFormat, unitSymbol } from './temperature-unit';
+import type { DestinationCurrentWeather, TravelWeather } from './types';
 
 interface TravelWeatherCardProps {
   destination: string;
@@ -32,14 +33,6 @@ interface TravelWeatherCardProps {
   endDate: string;
   dateDisplayFormat: DateDisplayFormat;
   compact?: boolean;
-}
-
-function unitForDateFormat(format: DateDisplayFormat): TemperatureUnit {
-  return format === 'mdy' ? 'fahrenheit' : 'celsius';
-}
-
-function unitSymbol(unit: TemperatureUnit): string {
-  return unit === 'fahrenheit' ? '°F' : '°C';
 }
 
 export function TravelWeatherCard({
@@ -53,7 +46,7 @@ export function TravelWeatherCard({
   const chrome = itinerarySheetChrome(theme);
   const { s, spacing: rs } = useResponsive();
   const light = theme.name === 'light';
-  const temperatureUnit = unitForDateFormat(dateDisplayFormat);
+  const temperatureUnit = temperatureUnitForDateFormat(dateDisplayFormat);
   const [requestVersion, setRequestVersion] = useState(0);
   const requestKey = [
     destination,

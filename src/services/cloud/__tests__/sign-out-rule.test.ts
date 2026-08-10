@@ -47,8 +47,11 @@ describe('current-device sign-out invariants', () => {
     expect(cleanup).toContain('hasOnboarded: true');
   });
 
-  it('preserves device-only preference fields when applying remote account state', () => {
+  it('syncs home/current locations in preferences and keeps avatar device-only', () => {
     expect(sync).toContain("domain.name !== 'preferences'");
-    expect(sync).toContain('homeLocation / avatar');
+    expect(sync).toContain('homeLocation: state.homeLocation');
+    expect(sync).toContain('currentLocation: state.currentLocation');
+    expect(sync).toContain('avatar stays device-only');
   });
 });
+

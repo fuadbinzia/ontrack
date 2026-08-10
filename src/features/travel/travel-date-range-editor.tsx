@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import {
-  AppText,
-  DateFieldCalendar,
-  ErrorMessage,
+    AppText,
+    DateFieldCalendar,
+    ErrorMessage,
 } from '@/components/primitives';
 import { stackedFieldMinHeight } from '@/components/primitives/field-leading-icon-style';
 import { StackedIconField } from '@/components/primitives/stacked-icon-field';
 import { validateTravelDateRange } from '@/features/travel/date-range';
 import {
-  itinerarySheetChrome,
-  itinerarySheetFieldProps,
+    itinerarySheetChrome,
+    itinerarySheetFieldProps,
 } from '@/features/travel/travel-itinerary-sheet-chrome';
 import { TravelSheetPrimaryAction } from '@/features/travel/travel-list-actions';
 import { TravelSheetModal } from '@/features/travel/travel-sheet';
@@ -20,12 +20,12 @@ import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';
 import { useAgentUiTarget } from '@/utils/agent-ui';
 import {
-  formatDateKey,
-  fromDateKey,
-  isDateKey,
-  toDateKey,
-  todayKey,
-  type DateDisplayFormat,
+    formatDateKey,
+    fromDateKey,
+    isDateKey,
+    toDateKey,
+    todayKey,
+    type DateDisplayFormat,
 } from '@/utils/date';
 import { haptics } from '@/utils/haptics';
 
@@ -171,7 +171,7 @@ export function TravelDateRangeEditor({
         accessibilityRole="button"
         accessibilityLabel="Dates"
         accessibilityHint="Opens a calendar to choose the trip date range"
-        accessibilityValue={{ text: displayValue || 'Select dates' }}
+        accessibilityValue={{ text: displayValue || 'Select Dates' }}
         onPress={openModal}
         style={({ pressed }) => ({ opacity: pressed ? 0.72 : 1 })}>
         <StackedIconField
@@ -193,7 +193,7 @@ export function TravelDateRangeEditor({
               minWidth: 0,
               color: hasRange ? theme.textPrimary : field.placeholderColor,
             }}>
-            {hasRange ? displayValue : 'Select dates'}
+            {hasRange ? displayValue : 'Select Dates'}
           </AppText>
         </StackedIconField>
       </Pressable>

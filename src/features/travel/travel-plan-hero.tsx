@@ -61,7 +61,7 @@ function TravelHeroGlassIconButton({
   label,
   labelStyle,
 }: {
-  icon: 'back' | 'add';
+  icon: 'back' | 'add' | 'chat';
   size: number;
   accessibilityLabel: string;
   testID?: string;
@@ -324,15 +324,29 @@ export function TravelPlanHero({
               ) : null}
             </View>
           </TravelHeaderFlourish>
-          {onAddPress ? (
+          <View style={[styles.headerActions, { gap: rs.sm }]}>
             <TravelHeroGlassIconButton
-              icon="add"
+              icon="chat"
               size={backSize}
-              accessibilityLabel="Add to Timeline"
-              testID={AgentUiIds.travel.planDetail.addToTimeline}
-              onPress={onAddPress}
+              accessibilityLabel={`Open Group Chat for ${plan.title}`}
+              testID={AgentUiIds.travel.planDetail.groupChat}
+              onPress={() => {
+                router.push({
+                  pathname: '/travel/[id]/chat',
+                  params: { id: plan.id },
+                } as never);
+              }}
             />
-          ) : null}
+            {onAddPress ? (
+              <TravelHeroGlassIconButton
+                icon="add"
+                size={backSize}
+                accessibilityLabel="Add to Timeline"
+                testID={AgentUiIds.travel.planDetail.addToTimeline}
+                onPress={onAddPress}
+              />
+            ) : null}
+          </View>
         </View>
       </View>
 
@@ -383,6 +397,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     overflow: 'visible',
     paddingTop: 0,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 0,
   },
   headerCopy: {
     flex: 1,

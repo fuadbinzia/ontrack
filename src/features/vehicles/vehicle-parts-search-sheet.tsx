@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -17,6 +18,7 @@ import {
 } from '@/components/primitives';
 import type { Vehicle, VehiclePart } from '@/features/vehicles/types';
 import { vehicleFitmentLabel } from '@/features/vehicles/types';
+import { useDockedKeyboardInset } from '@/hooks/use-docked-keyboard-inset';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -40,6 +42,10 @@ export function VehiclePartsSearchSheet({
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { spacing: gap } = useResponsive();
+  const { keyboardInset } = useDockedKeyboardInset({
+    enabled: visible,
+    androidMode: 'modal',
+  });
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PartsSearchItem[]>([]);
   const [busy, setBusy] = useState(false);
@@ -103,7 +109,7 @@ export function VehiclePartsSearchSheet({
           {
             backgroundColor: theme.backgroundPrimary,
             paddingTop: insets.top + gap.sm,
-            paddingBottom: insets.bottom + gap.md,
+            paddingBottom: insets.bottom + gap.md + keyboardInset,
             paddingHorizontal: gap.lg,
           },
         ]}>
@@ -119,16 +125,17 @@ export function VehiclePartsSearchSheet({
           <IconButton icon="close" accessibilityLabel="Close" onPress={onClose} />
         </View>
 
-        <Input
-          label="Search"
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Brake pads, oil filter…"
-        />
-
         <ScrollView
-          style={{ flex: 1, marginTop: gap.md }}
+          style={{ flex: 1 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           contentContainerStyle={{ gap: gap.md, paddingBottom: gap.xl }}>
+          <Input
+            label="Search"
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Brake pads, oil filter…"
+          />
           <SectionHeader title={busy ? 'Searching…' : 'Retailer links'} />
           {error ? (
             <AppText variant="caption" color="danger">

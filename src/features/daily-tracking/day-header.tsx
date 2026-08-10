@@ -1,28 +1,23 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import {
-    AppText,
-    Card,
-    IconButton,
-    ProgressRing,
-    Symbol,
-    useSafeAreaChrome,
+  AppText,
+  IconButton,
+  ProgressRing,
+  useSafeAreaChrome,
 } from '@/components/primitives';
 import {
-    hexWithAlpha,
-    layout,
-    radii,
-    spacing,
-    timeOfDayGradient,
-    timeOfDaySafeAreaBackground,
+  hexWithAlpha,
+  layout,
+  spacing,
+  timeOfDayGradient,
+  timeOfDaySafeAreaBackground,
 } from '@/design-system';
-import { HomeLocationSheet } from '@/features/daily-tracking/home-location-sheet';
+import { DayWeatherBar } from '@/features/daily-tracking/day-weather-bar';
 import {
-    formatHomeWeatherPrimaryLabel,
-    formatHomeWeatherRangeLabel,
-    formatHomeWeatherTemperatureLabel,
+  formatHomeWeatherTemperatureLabel,
 } from '@/features/daily-tracking/resolve-home-weather-day';
 import { useHomeWeather } from '@/features/daily-tracking/use-home-weather';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -49,23 +44,43 @@ export function DayHeader({
   topInset,
 }: DayHeaderProps) {
   const theme = useTheme();
-  const { s, spacing: rs } = useResponsive();
+  const { spacing: rs } = useResponsive();
   const hour = isToday(date) ? new Date().getHours() : 12;
   const gradient = timeOfDayGradient(theme, hour);
   useSafeAreaChrome(timeOfDaySafeAreaBackground(theme, hour));
+  const router = useRouter();
   const viewingToday = isToday(date);
-  const { weather, icon, showWeather } = useHomeWeather(date);
-  const [locationOpen, setLocationOpen] = useState(false);
-  const openWeather = viewingToday ? () => setLocationOpen(true) : undefined;
-  const primaryLabel = weather ? formatHomeWeatherPrimaryLabel(weather) : '';
-  const rangeLabel = weather ? formatHomeWeatherRangeLabel(weather) : undefined;
+  const {
+    weather,
+    icon,
+    showWeather,
+    hasSavedHome,
+    showCurrentWeather,
+    currentWeather,
+    currentIcon,
+  } = useHomeWeather(date);
+  const openProfileHomeLocation = viewingToday
+    ? () => router.push('/(tabs)/profile?reveal=homeLocation' as never)
+    : undefined;
+  const openProfileCurrentLocation = viewingToday
+    ? () => router.push('/(tabs)/profile?reveal=currentLocation' as never)
+    : undefined;
+  const dualBars = hasSavedHome && showCurrentWeather && Boolean(currentWeather);
   const weatherAccessibilityLabel = weather
     ? viewingToday
-      ? `${formatHomeWeatherTemperatureLabel(weather)} in ${weather.locationLabel}. Edit home location.`
+      ? `${formatHomeWeatherTemperatureLabel(weather)} in ${weather.locationLabel}. Open Profile to edit home location.`
       : `${formatHomeWeatherTemperatureLabel(weather)} in ${weather.locationLabel}.`
     : viewingToday
-      ? 'Edit home location for weather'
+      ? 'Open Profile to edit home location'
       : undefined;
+  const currentAccessibilityLabel = currentWeather
+    ? viewingToday
+      ? `${formatHomeWeatherTemperatureLabel(currentWeather)} in ${currentWeather.locationLabel}. Open Profile to edit current location.`
+      : `${formatHomeWeatherTemperatureLabel(currentWeather)} in ${currentWeather.locationLabel}.`
+    : viewingToday
+      ? 'Open Profile to edit current location'
+      : undefined;
+
   return (
     <View style={[styles.container, { paddingTop: topInset + spacing.md }]}>
       {/*
@@ -107,68 +122,49 @@ export function DayHeader({
         />
       </View>
 
-      {showWeather && weather ? (
-        <Card
-          airy
-          padded={false}
-          testID={AgentUiIds.today.weather}
-          accessibilityLabel={weatherAccessibilityLabel}
-          onPress={openWeather}
-          style={[
-            styles.weatherCard,
-            {
-              minHeight: Math.max(48, s(48)),
-              paddingHorizontal: rs.xl,
-              paddingVertical: rs.md,
-              gap: rs.sm,
-              borderRadius: radii.lg,
-            },
-          ]}>
-          <View style={[styles.weatherStack, { gap: rs.xs }]}>
-            <View style={styles.weatherPrimaryRow}>
-              <Symbol
-                name={icon ?? 'weather'}
-                size="md"
-                color={theme.accentPrimary}
-              />
-              <AppText
-                variant="callout"
-                color="accent"
-                align="center"
-                fit
-                numberOfLines={1}
-                style={styles.weatherPrimaryText}>
-                {/* Same ` · ` break + spacing as temp · condition in the label. */}
-                {` · ${primaryLabel}`}
-              </AppText>
-            </View>
-            {rangeLabel ? (
-              <AppText
-                variant="caption"
-                color="secondary"
-                align="center"
-                fit
-                numberOfLines={1}>
-                {rangeLabel}
-              </AppText>
-            ) : null}
-            <AppText
-              variant="caption"
-              color="tertiary"
-              align="center"
-              fit
-              numberOfLines={1}>
-              {weather.locationLabel}
-            </AppText>
+      {showWeather && weather && weatherAccessibilityLabel ? (
+        dualBars && currentWeather ? (
+          <View style={[styles.weatherRow, { gap: rs.sm }]}>
+            <DayWeatherBar
+              weather={weather}
+              icon={icon}
+              compact
+              testID={AgentUiIds.today.weather}
+              accessibilityLabel={weatherAccessibilityLabel}
+              onPress={openProfileHomeLocation}
+            />
+            <DayWeatherBar
+              weather={currentWeather}
+              icon={currentIcon}
+              compact
+              testID={AgentUiIds.today.currentLocation}
+              accessibilityLabel={
+                currentAccessibilityLabel ?? 'Current location'
+              }
+              onPress={openProfileCurrentLocation}
+            />
           </View>
-          {viewingToday ? (
-            <View
-              style={[styles.weatherChevron, { right: rs.md }]}
-              pointerEvents="none">
-              <Symbol name="chevron-right" size="sm" color={theme.textTertiary} />
-            </View>
-          ) : null}
-        </Card>
+        ) : (
+          <DayWeatherBar
+            weather={weather}
+            icon={icon}
+            testID={
+              hasSavedHome
+                ? AgentUiIds.today.weather
+                : AgentUiIds.today.currentLocation
+            }
+            accessibilityLabel={
+              hasSavedHome
+                ? weatherAccessibilityLabel
+                : (currentAccessibilityLabel ?? weatherAccessibilityLabel)
+            }
+            onPress={
+              hasSavedHome
+                ? openProfileHomeLocation
+                : openProfileCurrentLocation
+            }
+          />
+        )
       ) : null}
 
       {completion > 0 || nowLine || summaryLine ? (
@@ -199,11 +195,6 @@ export function DayHeader({
           ) : null}
         </View>
       ) : null}
-
-      <HomeLocationSheet
-        visible={locationOpen}
-        onClose={() => setLocationOpen(false)}
-      />
     </View>
   );
 }
@@ -223,32 +214,11 @@ const styles = StyleSheet.create({
   titleBlock: {
     gap: spacing.xxs,
   },
-  weatherCard: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  weatherStack: {
-    width: '100%',
-    alignItems: 'center',
-    minWidth: 0,
-    paddingHorizontal: spacing.lg,
-  },
-  weatherPrimaryRow: {
+  weatherRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    maxWidth: '100%',
+    alignItems: 'stretch',
+    width: '100%',
     minWidth: 0,
-  },
-  weatherPrimaryText: {
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  weatherChevron: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
   },
   progressRow: {
     flexDirection: 'row',

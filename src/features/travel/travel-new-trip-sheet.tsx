@@ -77,7 +77,7 @@ export function TravelNewTripSheet({
           stackedLabel="Trip Name"
           value={title}
           onChangeText={onTitleChange}
-          placeholder="Birthday in Lisbon"
+          placeholder="Fun in the Sun!"
           accessibilityLabel="Trip Name"
           {...itinerarySheetFieldProps(chrome, 'flight')}
         />
@@ -87,7 +87,7 @@ export function TravelNewTripSheet({
           stackedLabel="Destination"
           value={destination}
           onChange={onDestinationChange}
-          placeholder="Lisbon, Portugal"
+          placeholder="Anywhere Sunny"
           accessibilityLabel="Destination"
           {...itinerarySheetFieldProps(chrome, 'location')}
         />
@@ -112,7 +112,7 @@ export function TravelNewTripSheet({
           accessibilityLabel="Notes"
           {...itinerarySheetFieldProps(chrome, 'note')}
         />
-        {error ? <ErrorMessage message={error} /> : null}
+        {error ? <ErrorMessage message={error} align="center" /> : null}
       </View>
     </TravelSheetModal>
   );

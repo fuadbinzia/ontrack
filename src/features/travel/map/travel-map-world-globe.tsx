@@ -1,0 +1,334 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
+import Svg, {
+  Circle,
+  Defs,
+  LinearGradient,
+  Path,
+  Pattern,
+  RadialGradient,
+  Rect,
+  Stop,
+} from 'react-native-svg';
+
+import {
+  useLiveFxReady,
+  usePerformanceTier,
+} from '@/hooks/use-performance-tier';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
+import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+
+import {
+  TRAVEL_MAP_INK,
+  TRAVEL_MAP_LAND_COLORS,
+  TRAVEL_MAP_OCEAN_BOTTOM,
+  TRAVEL_MAP_OCEAN_MIDDLE,
+} from './country-data';
+import {
+  createTravelGlobeSnapshot,
+  normalizeTravelGlobeRotation,
+  travelGlobeCameraForLayout,
+  TRAVEL_GLOBE_INITIAL_ROTATION,
+  type TravelGlobeRotation,
+} from './globe-projection';
+import type { TravelMapCountryCluster } from './model';
+import { TravelMapPinButton } from './travel-map-pin-button';
+
+type Layout = { width: number; height: number };
+
+export const TRAVEL_MAP_WORLD_BACKDROP_TOP = '#071426';
+
+export function TravelMapWorldGlobe({
+  autoRotate,
+  clusters,
+  onCountryPress,
+  onInteract,
+}: {
+  autoRotate: boolean;
+  clusters: TravelMapCountryCluster[];
+  onCountryPress: (countryCode: string) => void;
+  onInteract: () => void;
+}) {
+  const [layout, setLayout] = useState<Layout>({ width: 1, height: 1 });
+  const [rotation, setRotation] = useState<TravelGlobeRotation>(
+    TRAVEL_GLOBE_INITIAL_ROTATION,
+  );
+  const rotationRef = useRef(rotation);
+  const dragStartRef = useRef(rotation);
+  const lastGestureFrameRef = useRef(0);
+  const idleUntilRef = useRef(0);
+  const { allowsLoopMotion } = usePerformanceTier();
+  const routeIsActive = useRouteIsActive();
+  const idleMotionReady = useLiveFxReady(routeIsActive && allowsLoopMotion);
+
+  const zoom = useSharedValue(1);
+  const zoomStart = useSharedValue(1);
+  const camera = useMemo(() => travelGlobeCameraForLayout(layout), [layout]);
+  const snapshot = useMemo(
+    () => createTravelGlobeSnapshot(rotation, camera),
+    [camera, rotation],
+  );
+  const clusterByCountry = useMemo(
+    () => new Map(clusters.map((cluster) => [cluster.countryCode, cluster])),
+    [clusters],
+  );
+
+  const commitRotation = useCallback((next: readonly number[]) => {
+    const normalized = normalizeTravelGlobeRotation(next);
+    rotationRef.current = normalized;
+    setRotation(normalized);
+  }, []);
+
+  const stopIdleRotation = useCallback(() => {
+    idleUntilRef.current = Number.POSITIVE_INFINITY;
+    onInteract();
+  }, [onInteract]);
+
+  const beginRotation = useCallback(() => {
+    dragStartRef.current = rotationRef.current;
+    stopIdleRotation();
+  }, [stopIdleRotation]);
+
+  const updateRotation = useCallback(
+    (translationX: number, translationY: number) => {
+      const now = Date.now();
+      if (now - lastGestureFrameRef.current < 24) return;
+      lastGestureFrameRef.current = now;
+      commitRotation([
+        dragStartRef.current[0] + translationX * 0.28,
+        dragStartRef.current[1] - translationY * 0.22,
+        0,
+      ]);
+    },
+    [commitRotation],
+  );
+
+  const finishRotation = useCallback(
+    (translationX: number, translationY: number) => {
+      commitRotation([
+        dragStartRef.current[0] + translationX * 0.28,
+        dragStartRef.current[1] - translationY * 0.22,
+        0,
+      ]);
+    },
+    [commitRotation],
+  );
+
+  useEffect(() => {
+    if (!autoRotate || !idleMotionReady) return;
+    idleUntilRef.current = Date.now() + 1000;
+    const interval = setInterval(() => {
+      if (Date.now() < idleUntilRef.current) return;
+      commitRotation([
+        rotationRef.current[0] + 0.22,
+        rotationRef.current[1],
+        0,
+      ]);
+    }, 120);
+    return () => clearInterval(interval);
+  }, [autoRotate, commitRotation, idleMotionReady]);
+
+  const selectCountry = useCallback(
+    (countryCode: string) => {
+      stopIdleRotation();
+      onCountryPress(countryCode);
+    },
+    [onCountryPress, stopIdleRotation],
+  );
+
+  const rotateGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .minDistance(4)
+        .runOnJS(true)
+        .onBegin(beginRotation)
+        .onUpdate((event) =>
+          updateRotation(event.translationX, event.translationY),
+        )
+        .onFinalize((event) =>
+          finishRotation(event.translationX, event.translationY),
+        ),
+    [beginRotation, finishRotation, updateRotation],
+  );
+  const pinchGesture = useMemo(
+    () =>
+      Gesture.Pinch()
+        .onBegin(() => {
+          zoomStart.value = zoom.value;
+          runOnJS(stopIdleRotation)();
+        })
+        .onUpdate((event) => {
+          zoom.value = Math.max(
+            0.92,
+            Math.min(1.42, zoomStart.value * event.scale),
+          );
+        }),
+    [stopIdleRotation, zoom, zoomStart],
+  );
+  const globeGesture = useMemo(
+    () => Gesture.Simultaneous(rotateGesture, pinchGesture),
+    [pinchGesture, rotateGesture],
+  );
+  const globeStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: zoom.value }],
+  }));
+
+  const updateLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    if (width > 0 && height > 0) setLayout({ width, height });
+  };
+
+  return (
+    <AgentTestId
+      testID={AgentUiIds.travel.map.globe}
+      label="Rotating world globe"
+      style={styles.root}
+    >
+      <GestureDetector gesture={globeGesture}>
+        <Animated.View
+          style={[StyleSheet.absoluteFill, globeStyle]}
+          onLayout={updateLayout}
+        >
+          <Svg
+            width="100%"
+            height="100%"
+            viewBox={`0 0 ${camera.width} ${camera.height}`}
+            preserveAspectRatio="none"
+          >
+            <Defs>
+              <LinearGradient id="globeBackdrop" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={TRAVEL_MAP_WORLD_BACKDROP_TOP} />
+                <Stop offset="0.56" stopColor="#0D1A31" />
+                <Stop offset="1" stopColor="#03070F" />
+              </LinearGradient>
+              <RadialGradient id="spaceNebula" cx="26%" cy="18%" r="84%">
+                <Stop offset="0" stopColor="#3D719B" stopOpacity="0.5" />
+                <Stop offset="0.42" stopColor="#1B3154" stopOpacity="0.26" />
+                <Stop offset="1" stopColor="#03070F" stopOpacity="0" />
+              </RadialGradient>
+              <RadialGradient id="globeOcean" cx="34%" cy="25%" r="76%">
+                <Stop offset="0" stopColor="#B9F0F2" />
+                <Stop offset="0.48" stopColor={TRAVEL_MAP_OCEAN_MIDDLE} />
+                <Stop offset="0.82" stopColor={TRAVEL_MAP_OCEAN_BOTTOM} />
+                <Stop offset="1" stopColor="#0D5E86" />
+              </RadialGradient>
+              <Pattern
+                id="spaceStars"
+                width="74"
+                height="74"
+                patternUnits="userSpaceOnUse"
+              >
+                <Circle cx="9" cy="13" r="0.7" fill="#FFFFFF" opacity="0.84" />
+                <Circle cx="38" cy="8" r="0.4" fill="#D9E8FF" opacity="0.66" />
+                <Circle cx="62" cy="27" r="1.05" fill="#F8FBFF" opacity="0.9" />
+                <Circle cx="24" cy="49" r="0.5" fill="#BBD4F1" opacity="0.7" />
+                <Circle
+                  cx="54"
+                  cy="65"
+                  r="0.65"
+                  fill="#FFFFFF"
+                  opacity="0.76"
+                />
+              </Pattern>
+            </Defs>
+            <Rect
+              width={camera.width}
+              height={camera.height}
+              fill="url(#globeBackdrop)"
+            />
+            <Rect
+              width={camera.width}
+              height={camera.height}
+              fill="url(#spaceNebula)"
+            />
+            <Rect
+              width={camera.width}
+              height={camera.height}
+              fill="url(#spaceStars)"
+            />
+            <Path
+              d={snapshot.spherePath}
+              fill="#000000"
+              opacity="0.42"
+              transform="translate(0 8)"
+              pointerEvents="none"
+            />
+            <Path d={snapshot.spherePath} fill="url(#globeOcean)" />
+            <Path
+              d={snapshot.graticulePath}
+              fill="none"
+              stroke="rgba(236,253,250,0.3)"
+              strokeWidth="0.8"
+              pointerEvents="none"
+            />
+            {snapshot.countries.map(({ country, path }, index) =>
+              path ? (
+                <Path
+                  key={country.code}
+                  d={path}
+                  fill={
+                    TRAVEL_MAP_LAND_COLORS[
+                      index % TRAVEL_MAP_LAND_COLORS.length
+                    ]
+                  }
+                  stroke={TRAVEL_MAP_INK}
+                  strokeOpacity="0.72"
+                  strokeWidth="1.1"
+                  strokeLinejoin="round"
+                  onPress={() => selectCountry(country.code)}
+                />
+              ) : null,
+            )}
+            <Path
+              d={snapshot.spherePath}
+              fill="none"
+              stroke="rgba(239,253,248,0.88)"
+              strokeWidth="5"
+              pointerEvents="none"
+            />
+          </Svg>
+
+          <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+            {snapshot.countries.map(({ country, center }) => {
+              const cluster = clusterByCountry.get(country.code);
+              if (!cluster || !center) return null;
+              return (
+                <TravelMapPinButton
+                  key={cluster.countryCode}
+                  testID={AgentUiIds.travel.map.countryCluster(
+                    cluster.countryCode,
+                  )}
+                  label={`${cluster.countryName}, ${cluster.visits.length} trip${
+                    cluster.visits.length === 1 ? '' : 's'
+                  }`}
+                  colors={cluster.colors}
+                  left={center[0]}
+                  top={center[1]}
+                  onPress={() => selectCountry(cluster.countryCode)}
+                />
+              );
+            })}
+          </View>
+        </Animated.View>
+      </GestureDetector>
+    </AgentTestId>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    overflow: 'hidden',
+    backgroundColor: TRAVEL_MAP_WORLD_BACKDROP_TOP,
+  },
+});

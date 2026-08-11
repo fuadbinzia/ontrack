@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 
+import {
+  beginRuntimeOperation,
+  removeRuntimeActivity,
+  setRuntimeActivity,
+} from '@/features/performance/runtime-activity';
 import { isDevModeEnabled } from '@/store/dev-mode';
 import { useUI } from '@/store/ui';
 
@@ -131,6 +136,13 @@ const SYNC_INTERACTION_COOLDOWN_MS = 1800;
 export function startSubscriptions(userId: string, email?: string) {
   syncRuntime.stopSubscriptions?.();
   const timers = new Map<SyncDomainName, ReturnType<typeof setTimeout>>();
+  setRuntimeActivity(
+    { id: 'sync.cloud', label: 'Cloud state sync', category: 'sync' },
+    {
+      status: isCloudSyncPushPaused() ? 'paused' : 'running',
+      detail: `${domains.length} domain watchers`,
+    },
+  );
 
   const armPush = (domain: SyncDomain) => {
     if (isCloudSyncPushPaused()) return;
@@ -149,8 +161,13 @@ export function startSubscriptions(userId: string, email?: string) {
           armPush(domain);
           return;
         }
+        const finishActivity = beginRuntimeOperation(
+          { id: 'sync.cloud', label: 'Cloud state sync', category: 'sync' },
+          { detail: `Uploading ${domain.name}` },
+        );
         void enqueueDomainPush(userId, domain)
           .then(() => {
+            finishActivity();
             if (syncRuntime.activeUserId !== userId) return;
             useCloudSyncStatus.setState({
               state: 'synced',
@@ -160,6 +177,7 @@ export function startSubscriptions(userId: string, email?: string) {
             });
           })
           .catch((error: unknown) => {
+            finishActivity({ error: true });
             if (syncRuntime.activeUserId !== userId) return;
             useCloudSyncStatus.setState({
               state: 'error',
@@ -177,6 +195,7 @@ export function startSubscriptions(userId: string, email?: string) {
   syncRuntime.stopSubscriptions = () => {
     timers.forEach(clearTimeout);
     unsubscribers.forEach((unsubscribe) => unsubscribe());
+    removeRuntimeActivity('sync.cloud');
   };
 }
 

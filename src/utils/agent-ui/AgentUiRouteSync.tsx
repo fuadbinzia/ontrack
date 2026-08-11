@@ -2,7 +2,12 @@ import { File, Paths } from 'expo-file-system';
 import { usePathname, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 
-import { handleAgentUiRequest, type AgentUiRequest } from './handle-agent-ui-url';
+import { useAppIsActive } from '@/hooks/use-app-activity';
+
+import {
+  handleAgentUiRequest,
+  type AgentUiRequest,
+} from './handle-agent-ui-url';
 import {
   fetchAgentUiCommand,
   probeAgentUiHttp,
@@ -44,9 +49,10 @@ async function runCommand(request: AgentUiRequest): Promise<void> {
 export function AgentUiRouteSync() {
   const pathname = usePathname();
   const router = useRouter();
+  const appIsActive = useAppIsActive();
 
   useEffect(() => {
-    if (!isAgentUiEnabled()) return;
+    if (!isAgentUiEnabled() || !appIsActive) return;
     setAgentUiRoute(pathname || '/');
     setAgentUiNavigator((href) => {
       router.replace(href as never);
@@ -54,10 +60,10 @@ export function AgentUiRouteSync() {
     return () => {
       setAgentUiNavigator(null);
     };
-  }, [pathname, router]);
+  }, [appIsActive, pathname, router]);
 
   useEffect(() => {
-    if (!isAgentUiEnabled()) return;
+    if (!isAgentUiEnabled() || !appIsActive) return;
 
     let cancelled = false;
     let processing = false;
@@ -109,17 +115,12 @@ export function AgentUiRouteSync() {
       void drain();
     };
 
-    // File fallback for hosts that skip the daemon (slower when HTTP is up).
-    const fileTimer = setInterval(() => {
-      if (cancelled) return;
-      const request = takeFileCommand();
-      if (request) accept(request);
-    }, 50);
-
     const httpLoop = async () => {
       httpEnabled = await probeAgentUiHttp();
       while (!cancelled) {
         if (!httpEnabled) {
+          const request = takeFileCommand();
+          if (request) accept(request);
           await new Promise((r) => setTimeout(r, 250));
           httpEnabled = await probeAgentUiHttp();
           continue;
@@ -148,13 +149,12 @@ export function AgentUiRouteSync() {
 
     return () => {
       cancelled = true;
-      clearInterval(fileTimer);
       const dropped = pending.splice(0, pending.length);
       for (const request of dropped) {
         void requeueAgentUiCommand(request);
       }
     };
-  }, []);
+  }, [appIsActive]);
 
   return null;
 }

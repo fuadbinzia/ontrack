@@ -4,34 +4,38 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
-    AppText,
-    Button,
-    ErrorMessage,
-    LoadingBlock,
-    Screen,
-    Symbol,
+  AppText,
+  Button,
+  ErrorMessage,
+  LoadingBlock,
+  Screen,
+  Symbol,
 } from '@/components/primitives';
 import { spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { travelCalendarDrafts } from '@/features/travel/calendar';
 import {
-    buildOpenJoinMemberPlan,
-    findExistingOpenJoinPlan,
-    mergeResolvedTravelOpenJoinPlan,
+  buildOpenJoinMemberPlan,
+  findExistingOpenJoinPlan,
+  mergeResolvedTravelOpenJoinPlan,
 } from '@/features/travel/open-join-plan';
 import {
-    createInstalledTravelOpenJoinUrl,
-    isOpenTravelJoinCode,
-    loadTravelOpenJoinStatus,
-    ONTRACK_APP_STORE_URL,
-    previewTravelOpenJoin,
-    requestTravelOpenJoin,
-    resolveTravelOpenJoin,
+  createInstalledTravelOpenJoinUrl,
+  isOpenTravelJoinCode,
+  loadTravelOpenJoinStatus,
+  ONTRACK_APP_STORE_URL,
+  previewTravelOpenJoin,
+  requestTravelOpenJoin,
+  resolveTravelOpenJoin,
 } from '@/features/travel/share';
 import { travelOverlineStyle } from '@/features/travel/travel-chrome';
 import { TravelSurfaceCard } from '@/features/travel/travel-surface';
 import { listTravelTripRoster } from '@/features/travel/trip-roster';
-import type { TravelOpenJoinPreview, TravelOpenJoinStatus } from '@/features/travel/types';
+import type {
+  TravelOpenJoinPreview,
+  TravelOpenJoinStatus,
+} from '@/features/travel/types';
 import { pullTravelTripItinerary } from '@/services/travel/itinerary-collaboration';
 import { useAddons } from '@/store/addons';
 import { usePreferences } from '@/store/preferences';
@@ -41,10 +45,13 @@ import { formatDateLong } from '@/utils/date';
 
 export function TravelOpenJoinLanding({ code }: { code?: string }) {
   const router = useRouter();
+  const routeIsActive = useRouteIsActive();
   const { user, continueWithProvider, workingProvider } = useAuthSession();
   const hasOnboarded = usePreferences((state) => state.hasOnboarded);
   const savePlan = useTravel((state) => state.savePlan);
-  const replaceTravelActivities = useSchedule((state) => state.replaceTravelActivities);
+  const replaceTravelActivities = useSchedule(
+    (state) => state.replaceTravelActivities,
+  );
   const setAddonEnabled = useAddons((state) => state.setEnabled);
   const isWeb = process.env.EXPO_OS === 'web';
   const validCode = Boolean(code && isOpenTravelJoinCode(code));
@@ -57,7 +64,9 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
   const [loadingPreview, setLoadingPreview] = useState(validCode);
   const openedApproved = useRef(false);
   const previewMessage =
-    !validCode || !code ? 'This join link is invalid or incomplete.' : previewError;
+    !validCode || !code
+      ? 'This join link is invalid or incomplete.'
+      : previewError;
 
   const openApprovedTrip = useCallback(async () => {
     if (!code || openedApproved.current) return;
@@ -78,8 +87,9 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
       if (status === 'approved') {
         try {
           const roster = await listTravelTripRoster(resolved.tripId);
-          hostDisplayName = roster.find((person) => person.role === 'host')
-            ?.displayName;
+          hostDisplayName = roster.find(
+            (person) => person.role === 'host',
+          )?.displayName;
         } catch {
           // Roster is best-effort; chat access + hostTripId still unlock the trip.
         }
@@ -110,7 +120,10 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
         router.replace(
           hasOnboarded
             ? (`/travel/${merged.id}` as never)
-            : ({ pathname: '/welcome', params: { returnTo: '/travel' } } as never),
+            : ({
+                pathname: '/welcome',
+                params: { returnTo: '/travel' },
+              } as never),
         );
         return;
       }
@@ -121,7 +134,10 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
         router.replace(
           hasOnboarded
             ? (`/travel/${resolved.tripId}` as never)
-            : ({ pathname: '/welcome', params: { returnTo: '/travel' } } as never),
+            : ({
+                pathname: '/welcome',
+                params: { returnTo: '/travel' },
+              } as never),
         );
         return;
       }
@@ -140,7 +156,10 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
       router.replace(
         hasOnboarded
           ? (`/travel/${plan.id}` as never)
-          : ({ pathname: '/welcome', params: { returnTo: '/travel' } } as never),
+          : ({
+              pathname: '/welcome',
+              params: { returnTo: '/travel' },
+            } as never),
       );
     } catch (error) {
       openedApproved.current = false;
@@ -207,7 +226,9 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
       .catch((error: unknown) => {
         if (!active) return;
         setActionError(
-          error instanceof Error ? error.message : 'Join status could not be loaded.',
+          error instanceof Error
+            ? error.message
+            : 'Join status could not be loaded.',
         );
       });
     return () => {
@@ -216,7 +237,8 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
   }, [code, isWeb, openApprovedTrip, user, validCode]);
 
   useEffect(() => {
-    if (isWeb || !user || status !== 'pending' || !code) return;
+    if (!routeIsActive || isWeb || !user || status !== 'pending' || !code)
+      return;
     const timer = setInterval(() => {
       void loadTravelOpenJoinStatus(code)
         .then((result) => {
@@ -230,7 +252,7 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
         .catch(() => undefined);
     }, 4000);
     return () => clearInterval(timer);
-  }, [code, isWeb, openApprovedTrip, status, user]);
+  }, [code, isWeb, openApprovedTrip, routeIsActive, status, user]);
 
   const sendJoinRequest = async () => {
     if (!code || !validCode) return;
@@ -255,16 +277,23 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
   };
 
   if (isWeb) {
-    const customSchemeUrl = code ? createInstalledTravelOpenJoinUrl(code) : 'ontrack:///travel';
+    const customSchemeUrl = code
+      ? createInstalledTravelOpenJoinUrl(code)
+      : 'ontrack:///travel';
     return (
       <Screen contentStyle={styles.webPage} bottomInset={false}>
         <View style={styles.brand}>
-          <AppText variant="overline" color="accent" style={travelOverlineStyle}>
+          <AppText
+            variant="overline"
+            color="accent"
+            style={travelOverlineStyle}
+          >
             onTrack Travel
           </AppText>
           <AppText variant="display">Join This Trip ✈️</AppText>
           <AppText variant="body" color="secondary">
-            Anyone with this link can request to join. The trip host approves each new friend.
+            Anyone with this link can request to join. The trip host approves
+            each new friend.
           </AppText>
         </View>
 
@@ -280,14 +309,21 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
                 {preview.destination}
               </AppText>
               <AppText variant="callout" color="secondary">
-                {formatDateLong(preview.startDate)} – {formatDateLong(preview.endDate)}
+                {formatDateLong(preview.startDate)} –{' '}
+                {formatDateLong(preview.endDate)}
               </AppText>
               <AppText variant="caption" color="tertiary">
-                Open in onTrack to request access. If you don’t have the app yet, download it first.
+                Open in onTrack to request access. If you don’t have the app
+                yet, download it first.
               </AppText>
             </>
           ) : (
-            <ErrorMessage message={previewMessage ?? 'This join link is invalid or incomplete.'} variant="body" />
+            <ErrorMessage
+              message={
+                previewMessage ?? 'This join link is invalid or incomplete.'
+              }
+              variant="body"
+            />
           )}
         </TravelSurfaceCard>
 
@@ -295,20 +331,22 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
           <View style={styles.buttons}>
             <Button
               icon="open-external"
-              onPress={() => void Linking.openURL(customSchemeUrl)}>
+              onPress={() => void Linking.openURL(customSchemeUrl)}
+            >
               Open in onTrack
             </Button>
             <Button
               variant="secondary"
               icon="download"
-              onPress={() => void Linking.openURL(ONTRACK_APP_STORE_URL)}>
+              onPress={() => void Linking.openURL(ONTRACK_APP_STORE_URL)}
+            >
               Download from the App Store
             </Button>
           </View>
         ) : null}
         <AppText variant="caption" color="secondary" align="center">
-          New here? Install onTrack, return to this link, then tap Open in onTrack. The host still
-          needs to approve your request.
+          New here? Install onTrack, return to this link, then tap Open in
+          onTrack. The host still needs to approve your request.
         </AppText>
       </Screen>
     );
@@ -323,7 +361,9 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
           variant="heading"
           align="center"
         />
-        <Button onPress={() => router.replace('/' as never)}>Go to onTrack</Button>
+        <Button onPress={() => router.replace('/' as never)}>
+          Go to onTrack
+        </Button>
       </Screen>
     );
   }
@@ -342,19 +382,25 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
           </AppText>
         ) : null}
         <AppText variant="body" color="secondary" align="center">
-          Sign in to request to join. The trip host will approve new friends before you can open the
-          itinerary.
+          Sign in to request to join. The trip host will approve new friends
+          before you can open the itinerary.
         </AppText>
         <Button
           disabled={Boolean(workingProvider)}
-          onPress={() => void continueWithProvider('apple', returnTo)}>
-          {workingProvider === 'apple' ? 'Opening Apple…' : 'Continue with Apple'}
+          onPress={() => void continueWithProvider('apple', returnTo)}
+        >
+          {workingProvider === 'apple'
+            ? 'Opening Apple…'
+            : 'Continue with Apple'}
         </Button>
         <Button
           variant="secondary"
           disabled={Boolean(workingProvider)}
-          onPress={() => void continueWithProvider('google', returnTo)}>
-          {workingProvider === 'google' ? 'Opening Google…' : 'Continue with Google'}
+          onPress={() => void continueWithProvider('google', returnTo)}
+        >
+          {workingProvider === 'google'
+            ? 'Opening Google…'
+            : 'Continue with Google'}
         </Button>
       </Screen>
     );
@@ -375,7 +421,9 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
         <AppText variant="heading" align="center">
           Opening your trip…
         </AppText>
-        {actionError ? <ErrorMessage message={actionError} align="center" /> : null}
+        {actionError ? (
+          <ErrorMessage message={actionError} align="center" />
+        ) : null}
       </Screen>
     );
   }
@@ -395,7 +443,8 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
             {preview.destination}
           </AppText>
           <AppText variant="callout" color="secondary" align="center">
-            {formatDateLong(preview.startDate)} – {formatDateLong(preview.endDate)}
+            {formatDateLong(preview.startDate)} –{' '}
+            {formatDateLong(preview.endDate)}
           </AppText>
         </View>
       ) : null}
@@ -415,7 +464,10 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
                   if (!result) return;
                   setStatus(result.status);
                   setGrantedInviteCode(result.grantedInviteCode);
-                  if (result.status === 'approved' || result.status === 'host') {
+                  if (
+                    result.status === 'approved' ||
+                    result.status === 'host'
+                  ) {
                     void openApprovedTrip();
                   }
                 })
@@ -426,7 +478,8 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
                       : 'Join status could not be loaded.',
                   );
                 });
-            }}>
+            }}
+          >
             Check Again
           </Button>
         </>
@@ -437,19 +490,24 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
             variant="body"
             align="center"
           />
-          <Button onPress={() => router.replace('/' as never)}>Go to onTrack</Button>
+          <Button onPress={() => router.replace('/' as never)}>
+            Go to onTrack
+          </Button>
         </>
       ) : (
         <>
           <AppText variant="body" color="secondary" align="center">
-            Request to join. The host approves each new friend before the itinerary opens.
+            Request to join. The host approves each new friend before the
+            itinerary opens.
           </AppText>
           <Button disabled={busy} onPress={() => void sendJoinRequest()}>
             {busy ? 'Sending…' : 'Request to Join'}
           </Button>
         </>
       )}
-      {actionError ? <ErrorMessage message={actionError} align="center" /> : null}
+      {actionError ? (
+        <ErrorMessage message={actionError} align="center" />
+      ) : null}
     </Screen>
   );
 }

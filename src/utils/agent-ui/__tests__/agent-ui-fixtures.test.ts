@@ -279,6 +279,19 @@ describe('agent-ui fixtures', () => {
       op: 'seed',
       to: 'travel-home',
     });
+    expect(resolveAgentUiFlow('travel-home-search')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'seed', to: 'travel-home' }),
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.travel.list.search',
+        }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.travel.list.searchMinimize',
+        }),
+      ]),
+    );
     expect(resolveAgentUiFlow('travel-home-iceland')).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ op: 'seed', to: 'travel-home' }),
@@ -481,4 +494,3 @@ describe('agent-ui stable createId', () => {
     ).toBe('random');
   });
 });
-

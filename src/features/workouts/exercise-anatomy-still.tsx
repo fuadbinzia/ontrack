@@ -14,10 +14,14 @@ import Animated, {
 import { AppText, Symbol } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useTheme } from '@/hooks/use-theme';
 import { ANATOMY_BEIGE } from './anatomy-art';
 import type { MovementPattern } from './exercise-motion';
-import { formStepsForExercise, type ExerciseFormStep } from './exercise-form-steps';
+import {
+  formStepsForExercise,
+  type ExerciseFormStep,
+} from './exercise-form-steps';
 import {
   highlightImageForMuscle,
   MUSCLE_HIGHLIGHT_VIEW,
@@ -69,14 +73,19 @@ export function ExerciseAnatomyStill({
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
   const { allowsLoopMotion } = usePerformanceTier();
-  const stillPose = reduceMotion || !allowsLoopMotion;
+  const routeIsActive = useRouteIsActive();
+  const stillPose = reduceMotion || !allowsLoopMotion || !routeIsActive;
   const progress = useSharedValue(0);
   const steps = formStepsForExercise(exercise, primaryTarget);
   const [index, setIndex] = useState(0);
   const step: ExerciseFormStep = steps[index] ?? steps[0];
 
   const bodyView = MUSCLE_HIGHLIGHT_VIEW[primaryTarget.id] ?? 'front';
-  const source = highlightImageForMuscle(primaryTarget.id, bodyView, anatomySex);
+  const source = highlightImageForMuscle(
+    primaryTarget.id,
+    bodyView,
+    anatomySex,
+  );
 
   useEffect(() => {
     cancelAnimation(progress);
@@ -139,7 +148,8 @@ export function ExerciseAnatomyStill({
               backgroundColor: theme.backgroundElevated,
               opacity: index === 0 ? 0.35 : 1,
             },
-          ]}>
+          ]}
+        >
           <Symbol name="chevron-left" size="sm" color={theme.textPrimary} />
         </Pressable>
 
@@ -156,7 +166,8 @@ export function ExerciseAnatomyStill({
               backgroundColor: theme.backgroundElevated,
               opacity: index === steps.length - 1 ? 0.35 : 1,
             },
-          ]}>
+          ]}
+        >
           <Symbol name="chevron-right" size="sm" color={theme.textPrimary} />
         </Pressable>
       </View>
@@ -183,7 +194,8 @@ export function ExerciseAnatomyStill({
               style={[
                 styles.dot,
                 {
-                  backgroundColor: dotIndex === index ? '#C75B46' : theme.separator,
+                  backgroundColor:
+                    dotIndex === index ? '#C75B46' : theme.separator,
                   width: dotIndex === index ? 18 : 7,
                 },
               ]}

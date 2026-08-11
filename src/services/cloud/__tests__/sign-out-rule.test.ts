@@ -21,6 +21,7 @@ describe('current-device sign-out invariants', () => {
   // the session listener that reacts to an unexpected SIGNED_OUT.
   const provider = [
     readFileSync(join(process.cwd(), 'src/features/auth/auth-provider.tsx'), 'utf8'),
+    readFileSync(join(process.cwd(), 'src/features/auth/auth-provider-effects.ts'), 'utf8'),
     readFileSync(join(process.cwd(), 'src/features/auth/auth-account-exit.ts'), 'utf8'),
   ].join('\n');
   const account = readFileSync(join(process.cwd(), 'src/services/cloud/account.ts'), 'utf8');
@@ -35,7 +36,7 @@ describe('current-device sign-out invariants', () => {
 
   it('clears account-owned local data when the session expires unexpectedly', () => {
     expect(provider).toContain("event === 'SIGNED_OUT' && !explicitSignOutRef.current");
-    expect(provider).toContain('void clearLocalAccountData()');
+    expect(provider).toContain('scheduleDropLocalAccountState({');
     expect(provider).toContain('useAuthAccess.getState().resetAccess()');
   });
 

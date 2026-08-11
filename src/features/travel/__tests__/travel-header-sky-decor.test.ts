@@ -14,6 +14,14 @@ describe('travel header sky décor', () => {
     join(process.cwd(), 'src/features/travel/travel-sky-day.tsx'),
     'utf8',
   );
+  const dayFx = readFileSync(
+    join(process.cwd(), 'src/features/travel/travel-sky-day-fx.tsx'),
+    'utf8',
+  );
+  const nightFx = readFileSync(
+    join(process.cwd(), 'src/features/travel/travel-sky-night-fx.tsx'),
+    'utf8',
+  );
   const weather = readFileSync(
     join(process.cwd(), 'src/features/travel/travel-sky-weather-fx.tsx'),
     'utf8',
@@ -53,7 +61,7 @@ describe('travel header sky décor', () => {
     expect(plate).toContain('celestialDiscHostStyle');
     expect(plate).toContain('aspectRatio: 1');
     expect(phaseMoon).toContain('celestialDiscHostStyle');
-    expect(day).toContain('celestialDiscHostStyle');
+    expect(dayFx).toContain('celestialDiscHostStyle');
   });
 
   it('renders an itinerary phase moon with always-visible disc and dark-side craters', () => {
@@ -92,7 +100,7 @@ describe('travel header sky décor', () => {
 
   it('animates birds, sun rays, meteors, and destination accents', () => {
     expect(day).toContain('FlyingBird');
-    expect(day).toContain('SunRays');
+    expect(dayFx).toContain('SunRays');
     expect(day).toContain('HeatShimmer');
     expect(day).toContain('FogWisps');
     expect(day).toContain('accents.tropical');
@@ -107,29 +115,29 @@ describe('travel header sky décor', () => {
     expect(night).toContain('motion.energy');
     expect(night).toContain('TwinklingStar');
     expect(night).toContain('useStarTwinkleClock');
-    expect(night).toContain('unitFlash');
+    expect(nightFx).toContain('unitFlash');
     // Cool blue-white stellar fills (not warm cream).
-    expect(night).toContain("STAR_FIELD = '#D8E4FF'");
-    expect(night).toContain("STAR_BRIGHT = '#EAF1FF'");
-    expect(night).not.toContain('#F7F3E8');
-    expect(night).not.toContain('#FFF8E8');
-    expect(night).not.toContain('PulsingStar');
+    expect(nightFx).toContain("STAR_FIELD = '#D8E4FF'");
+    expect(nightFx).toContain("STAR_BRIGHT = '#EAF1FF'");
+    expect(nightFx).not.toContain('#F7F3E8');
+    expect(nightFx).not.toContain('#FFF8E8');
+    expect(nightFx).not.toContain('PulsingStar');
     // Fabric-safe View twinkles + shared clock — not animated SVG props.
-    expect(night).not.toContain('useAnimatedProps');
-    expect(day).not.toContain('useAnimatedProps');
-    expect(night).not.toContain('Animated.createAnimatedComponent');
-    expect(day).not.toContain('Animated.createAnimatedComponent');
-    expect(night).toContain('starSeedUnit');
+    expect(nightFx).not.toContain('useAnimatedProps');
+    expect(dayFx).not.toContain('useAnimatedProps');
+    expect(nightFx).not.toContain('Animated.createAnimatedComponent');
+    expect(dayFx).not.toContain('Animated.createAnimatedComponent');
+    expect(nightFx).toContain('starSeedUnit');
     // Keep flash amplitude readable — do not regress to high rest floor
     // or the over-amped halo bloom pass.
-    expect(night).not.toContain('0.78 + flash * peak');
-    expect(night).not.toContain('baseOpacity * (0.78');
-    expect(night).not.toContain('haloStyle');
-    expect(night).not.toContain('haloSize');
-    expect(night).toContain('duration: 5800');
-    expect(night).toContain('const rest = 0.28');
+    expect(nightFx).not.toContain('0.78 + flash * peak');
+    expect(nightFx).not.toContain('baseOpacity * (0.78');
+    expect(nightFx).not.toContain('haloStyle');
+    expect(nightFx).not.toContain('haloSize');
+    expect(nightFx).toContain('duration: 5800');
+    expect(nightFx).toContain('const rest = 0.28');
     expect(night).toContain('staticDimStars');
-    expect(night).not.toContain('r * (0.92');
+    expect(nightFx).not.toContain('r * (0.92');
     expect(day).toContain('MotionLayer');
     expect(day).toContain('motion.energy');
     const motion = readFileSync(

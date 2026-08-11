@@ -56,4 +56,24 @@ describe('confirmDestructiveAction', () => {
       ],
     );
   });
+
+  it('keeps confirmation prompts in the requested orientation', () => {
+    const onConfirm = jest.fn();
+    confirmDestructiveAction({
+      title: 'Unpin this place?',
+      actionLabel: 'Unpin',
+      supportedOrientations: ['landscape-left', 'landscape-right'],
+      onConfirm,
+    });
+
+    expect(appPrompt.alert).toHaveBeenCalledWith(
+      'Unpin this place?',
+      undefined,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Unpin', style: 'destructive', onPress: onConfirm },
+      ],
+      { supportedOrientations: ['landscape-left', 'landscape-right'] },
+    );
+  });
 });

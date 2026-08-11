@@ -188,7 +188,13 @@ describe('canonical design-system contract', () => {
 
   it('uses a single blue-to-neutral background across Travel routes', () => {
     const surface = read('src/features/travel/travel-surface.tsx');
-    const travelTab = read('src/app/(tabs)/travel/index.tsx');
+    const travelTab = read(
+      'src/features/travel/travel-home-screen-content.tsx',
+    );
+    const travelScreen = read('src/features/travel/use-travel-home-screen.ts');
+    const atmosphereChrome = read(
+      'src/features/travel/use-travel-home-atmosphere-chrome.tsx',
+    );
     const travelLayout = read('src/app/(tabs)/travel/_layout.tsx');
     const rootLayout = read('src/app/_layout.tsx');
     const safeAreaChrome = read('src/components/primitives/safe-area-chrome.tsx');
@@ -199,15 +205,15 @@ describe('canonical design-system contract', () => {
     expect(surface).toContain('experimental_backgroundImage');
     expect(surface).not.toContain('radial-gradient');
     expect(travelTab).toContain('style={travelStyle}');
-    expect(travelTab).toContain('useTravelPageStyle(theme)');
-    expect(travelTab).toContain('useSafeAreaChrome(');
-    expect(travelTab).toContain('useSafeAreaChromeOverlay(');
-    expect(travelTab).toContain('TravelHomeAtmosphereScrim');
+    expect(travelScreen).toContain('useTravelPageStyle(theme)');
+    expect(atmosphereChrome).toContain('useSafeAreaChrome(');
+    expect(atmosphereChrome).toContain('useSafeAreaChromeOverlay(');
+    expect(atmosphereChrome).toContain('TravelHomeAtmosphereScrim');
     expect(travelTab).toContain('TravelHomeBackground');
-    expect(travelTab).toContain('atmosphereImage.skyColor');
-    expect(travelTab).toContain('backgroundImage: atmosphereImage.source');
+    expect(atmosphereChrome).toContain('atmosphereImage.skyColor');
+    expect(atmosphereChrome).toContain('backgroundImage: atmosphereImage.source');
     // Leaf atmosphere must outrank the travel stack layout wash.
-    expect(travelTab).toContain('priority: 1');
+    expect(atmosphereChrome).toContain('priority: 1');
     expect(travelLayout).toContain('useSafeAreaChrome(travelSafeAreaBackground(theme))');
     // Stack must stay clear of travelPageStyle's opaque CSS gradient wash.
     expect(travelLayout).toContain("contentStyle: { backgroundColor: 'transparent' }");

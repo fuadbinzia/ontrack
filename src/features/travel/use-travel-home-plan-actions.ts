@@ -14,12 +14,14 @@ import {
   validateTravelPlanDetails,
 } from '@/features/travel/travel-plan-details';
 import type { TravelPlan, TravelPlanMode } from '@/features/travel/types';
+import type { TravelDestinationLocation } from '@/features/travel/map/types';
 import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 import { newId } from '@/utils/id';
 
 type Args = {
   title: string;
   destination: string;
+  destinationLocation?: TravelDestinationLocation;
   startDate: string;
   endDate: string;
   notes: string;
@@ -30,6 +32,7 @@ type Args = {
   setTitle: (v: string) => void;
   setMode: (v: TravelPlanMode) => void;
   setDestination: (v: string) => void;
+  setDestinationLocation: (v: TravelDestinationLocation | undefined) => void;
   setStartDate: (v: string) => void;
   setEndDate: (v: string) => void;
   setNotes: (v: string) => void;
@@ -37,6 +40,7 @@ type Args = {
   setEditingDetailsPlanId: (v: string | undefined) => void;
   setEditTitle: (v: string) => void;
   setEditDestination: (v: string) => void;
+  setEditDestinationLocation: (v: TravelDestinationLocation | undefined) => void;
   setEditNotes: (v: string) => void;
   setEditStartDate: (v: string) => void;
   setEditEndDate: (v: string) => void;
@@ -44,6 +48,7 @@ type Args = {
   setDetailsError: (v: string | undefined) => void;
   editTitle: string;
   editDestination: string;
+  editDestinationLocation?: TravelDestinationLocation;
   editNotes: string;
   editStartDate: string;
   editEndDate: string;
@@ -64,6 +69,7 @@ export function useTravelHomePlanActions(args: Args) {
   const {
     title,
     destination,
+    destinationLocation,
     startDate,
     endDate,
     notes,
@@ -74,6 +80,7 @@ export function useTravelHomePlanActions(args: Args) {
     setTitle,
     setMode,
     setDestination,
+    setDestinationLocation,
     setStartDate,
     setEndDate,
     setNotes,
@@ -81,6 +88,7 @@ export function useTravelHomePlanActions(args: Args) {
     setEditingDetailsPlanId,
     setEditTitle,
     setEditDestination,
+    setEditDestinationLocation,
     setEditNotes,
     setEditStartDate,
     setEditEndDate,
@@ -88,6 +96,7 @@ export function useTravelHomePlanActions(args: Args) {
     setDetailsError,
     editTitle,
     editDestination,
+    editDestinationLocation,
     editNotes,
     editStartDate,
     editEndDate,
@@ -121,6 +130,7 @@ export function useTravelHomePlanActions(args: Args) {
     const basePlan: TravelPlan = {
       id: planId,
       ...detailsValidation.value,
+      ...(destinationLocation ? { destinationLocation } : {}),
       mode,
       startDate,
       endDate,
@@ -143,6 +153,7 @@ export function useTravelHomePlanActions(args: Args) {
     setTitle('');
     setMode('flight');
     setDestination('');
+    setDestinationLocation(undefined);
     setStartDate('');
     setEndDate('');
     setNotes('');
@@ -156,6 +167,7 @@ export function useTravelHomePlanActions(args: Args) {
     setEditingDetailsPlanId(plan.id);
     setEditTitle(plan.title);
     setEditDestination(plan.destination);
+    setEditDestinationLocation(plan.destinationLocation);
     setEditNotes(plan.notes ?? '');
     setEditStartDate(plan.startDate);
     setEditEndDate(plan.endDate);
@@ -205,6 +217,8 @@ export function useTravelHomePlanActions(args: Args) {
     const next: TravelPlan = {
       ...stripTripCoverUploads(plan),
       ...validation.value,
+      // Explicit undefined clears coordinates when destination copy was typed manually.
+      destinationLocation: editDestinationLocation,
       startDate: editStartDate,
       endDate: editEndDate,
       updatedAt: new Date().toISOString(),

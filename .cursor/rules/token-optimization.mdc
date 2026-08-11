@@ -9,6 +9,6 @@ alwaysApply: true
 - Open the smallest feature entry first; domain maps live in `.cursor/skills/<domain>/`.
 - Touched screen >700 lines + non-trivial UI → extract a colocated panel.
 - UI changes: [`responsive-layout.mdc`](./responsive-layout.mdc) + agent-ui skill for verify.
-- After substantive edits: `npm run typecheck` + focused tests; dual-platform verify for app UI.
+- After substantive edits: `npm run typecheck` + focused tests. Device/simulator verification is opt-in only and requires an explicit request in the current task.
 
 Do not reintroduce: personal identifiers, raw `Alert`, ad-hoc IDs, hard-coded chrome `fontSize`, interactive controls without `ontrack.*` testIDs, screenshot-coordinate taps.

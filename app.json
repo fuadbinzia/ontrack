@@ -2,8 +2,8 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.44",
-    "orientation": "portrait",
+    "version": "1.0.45",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
     "userInterfaceStyle": "automatic",

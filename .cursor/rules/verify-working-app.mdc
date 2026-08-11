@@ -1,5 +1,5 @@
 ---
-description: Dual iOS+Android verify after app changes; keep Metro; assert then stop
+description: Device verification only when explicitly requested; keep Metro; assert then stop
 globs:
   - src/**/*.{ts,tsx}
   - scripts/agent-ui*
@@ -11,14 +11,16 @@ alwaysApply: false
 
 **Full procedure:** [`.cursor/skills/agent-ui/SKILL.md`](../skills/agent-ui/SKILL.md).
 
-After app-affecting Expo changes, prove the surface on **both** iOS (`onTrack iPhone 17 Pro`, latest iOS runtime) and Android (Galaxy_S26). **Default close-out** (`verify-both` runs platforms in parallel):
+Device, simulator, emulator, and dual-platform UI testing are **opt-in only**. Do not boot, open, or use a device unless the user explicitly requests device testing in the current task. The default close-out is typecheck plus focused tests.
+
+When the user explicitly requests dual-platform device verification, prove the surface on both iOS and Android with `verify-both`:
 
 ```bash
 # Already on route → omit --flow; otherwise pass a named flow (travel-demo, …)
 ./scripts/agent-ui-verify-both.sh --route <path> [--flow <name>] --exists <id> …
 ```
 
-Paste both assert outputs. One verify-both per close-out — don’t grind retries / `SKIP_LEASE`. Exceptions: pure docs/rules, host-only scripts, or user scoped one platform.
+Paste both assert outputs. One verify-both per requested close-out — don’t grind retries / `SKIP_LEASE`.
 
 - Prefer named `--flow` / seeds over hand-built `--goto` / `--wait` chains.
 - Pin `AGENT_UI_PLATFORM=android` for Android; clear before iOS (sticky pin breaks default). `verify-both` does this.

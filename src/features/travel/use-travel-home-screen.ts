@@ -57,6 +57,7 @@ import {
 import { TravelPlanDetailsEditor } from '@/features/travel/travel-plan-details-editor';
 import { useTravelPageStyle } from '@/features/travel/travel-surface';
 import type { TravelPlan, TravelPlanMode } from '@/features/travel/types';
+import type { TravelDestinationLocation } from '@/features/travel/map/types';
 import { useTravelHomeAtmosphereChrome } from '@/features/travel/use-travel-home-atmosphere-chrome';
 import { useTravelHomePlanActions } from '@/features/travel/use-travel-home-plan-actions';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -110,6 +111,8 @@ export function useTravelHomeScreen() {
   const [title, setTitle] = useState('');
   const [mode, setMode] = useState<TravelPlanMode>('flight');
   const [destination, setDestination] = useState('');
+  const [destinationLocation, setDestinationLocation] =
+    useState<TravelDestinationLocation>();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [notes, setNotes] = useState('');
@@ -117,6 +120,8 @@ export function useTravelHomeScreen() {
   const [editingDetailsPlanId, setEditingDetailsPlanId] = useState<string>();
   const [editTitle, setEditTitle] = useState('');
   const [editDestination, setEditDestination] = useState('');
+  const [editDestinationLocation, setEditDestinationLocation] =
+    useState<TravelDestinationLocation>();
   const [editNotes, setEditNotes] = useState('');
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
@@ -358,6 +363,7 @@ export function useTravelHomeScreen() {
   } = useTravelHomePlanActions({
     title,
     destination,
+    destinationLocation,
     startDate,
     endDate,
     notes,
@@ -368,6 +374,7 @@ export function useTravelHomeScreen() {
     setTitle,
     setMode,
     setDestination,
+    setDestinationLocation,
     setStartDate,
     setEndDate,
     setNotes,
@@ -375,6 +382,7 @@ export function useTravelHomeScreen() {
     setEditingDetailsPlanId,
     setEditTitle,
     setEditDestination,
+    setEditDestinationLocation,
     setEditNotes,
     setEditStartDate,
     setEditEndDate,
@@ -382,6 +390,7 @@ export function useTravelHomeScreen() {
     setDetailsError,
     editTitle,
     editDestination,
+    editDestinationLocation,
     editNotes,
     editStartDate,
     editEndDate,
@@ -417,6 +426,8 @@ export function useTravelHomeScreen() {
     setMode,
     destination,
     setDestination,
+    destinationLocation,
+    setDestinationLocation,
     startDate,
     setStartDate,
     endDate,
@@ -431,6 +442,8 @@ export function useTravelHomeScreen() {
     setEditTitle,
     editDestination,
     setEditDestination,
+    editDestinationLocation,
+    setEditDestinationLocation,
     editNotes,
     setEditNotes,
     editStartDate,

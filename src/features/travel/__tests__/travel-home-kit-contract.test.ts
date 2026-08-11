@@ -258,7 +258,10 @@ describe('travel home kit contract', () => {
       'utf8',
     );
     const screen = readFileSync(
-      join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
+      join(
+        process.cwd(),
+        'src/features/travel/travel-home-screen-content.tsx',
+      ),
       'utf8',
     );
     expect(card).toContain('soloAtmosphereShadow');
@@ -282,47 +285,101 @@ describe('travel home kit contract', () => {
     );
     expect(yourTrips).toContain('useFocusEffect');
     expect(yourTrips).toContain('entranceKey');
-    expect(yourTrips).toContain('key={entranceKey}');
+    expect(yourTrips).toContain('key={`${entranceKey}-');
     expect(card).toContain('FadeInDown');
     expect(card).toContain('springify()');
   });
 
-  it('keeps atmosphere as a top hero band (not full-page)', () => {
+  it('keeps search results on static card geometry', () => {
+    const yourTrips = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-home-your-trips.tsx'),
+      'utf8',
+    );
+    const card = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-home-trip-card.tsx'),
+      'utf8',
+    );
+    expect(yourTrips).toContain("searchActive ? 'search' : 'browse'");
+    expect(yourTrips).toContain('animateEntrance={!searchActive}');
+    expect(card).toContain('animateEntrance = true');
+    expect(card).toMatch(/animateEntrance[\s\S]*?FadeInDown[\s\S]*?: undefined/);
+  });
+
+  it('keeps the travel map full-page, including the status bar', () => {
     const windowHeight = 852;
     const topInset = 59;
     const band = travelHomeAtmosphereHeight(windowHeight, topInset);
-    expect(band).toBe(Math.round(windowHeight * 0.34) + topInset);
-    expect(band).toBeLessThan(windowHeight);
-    expect(band / windowHeight).toBeLessThan(0.5);
+    expect(band).toBe(windowHeight);
     const emptyBand = travelHomeAtmosphereHeight(windowHeight, topInset, {
       empty: true,
     });
-    expect(emptyBand).toBe(Math.round(windowHeight * 0.44) + topInset);
-    expect(emptyBand).toBeGreaterThan(band);
-    expect(emptyBand / windowHeight).toBeLessThan(0.6);
+    expect(emptyBand).toBe(windowHeight);
     const travelTab = readFileSync(
-      join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
+      join(
+        process.cwd(),
+        'src/features/travel/travel-home-screen-content.tsx',
+      ),
       'utf8',
     );
-    // 1.0.9 chrome plate + fade/paper underlay (not an in-flow photo band).
+    const atmosphereChrome = readFileSync(
+      join(
+        process.cwd(),
+        'src/features/travel/use-travel-home-atmosphere-chrome.tsx',
+      ),
+      'utf8',
+    );
+    const background = readFileSync(
+      join(
+        process.cwd(),
+        'src/features/travel/travel-home-background.tsx',
+      ),
+      'utf8',
+    );
+    // AppSafeArea owns the full-window map so it continues under the status bar.
     expect(travelTab).toContain('TravelHomeBackground');
     expect(travelTab).toContain('empty={hasNoTrips}');
     expect(travelTab).toContain('TravelHomeEmpty');
-    expect(travelTab).toContain('backgroundImage: atmosphereImage.source');
-    expect(travelTab).toContain('priority: 1');
-    expect(travelTab).toContain("style={styles.transparentScreen}");
+    expect(atmosphereChrome).toContain('backgroundImage: atmosphereImage.source');
+    expect(atmosphereChrome).toContain('TRAVEL_HOME_MAP_BACKGROUND');
+    expect(background).toContain('travel-home-map-full-v2.png');
+    expect(background).not.toContain('LinearGradient');
+    expect(atmosphereChrome).toContain('priority: 1');
+    expect(travelTab).toContain('style={styles.transparentScreen}');
   });
 
   it('does not auto-open New Trip over the zero-trip welcome', () => {
-    const travelTab = readFileSync(
-      join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
+    const screenHook = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-screen.ts'),
       'utf8',
     );
-    expect(travelTab).toContain('const [showForm, setShowForm] = useState(false)');
-    expect(travelTab).not.toContain('useState(plans.length === 0)');
+    expect(screenHook).toContain('const [showForm, setShowForm] = useState(false)');
+    expect(screenHook).not.toContain('useState(plans.length === 0)');
+  });
+
+  it('uses one glass primary action for the zero-trip departure card', () => {
+    const empty = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-home-empty.tsx'),
+      'utf8',
+    );
+    const screen = readFileSync(
+      join(
+        process.cwd(),
+        'src/features/travel/travel-home-screen-content.tsx',
+      ),
+      'utf8',
+    );
+    expect(empty).toContain('<TravelHomeGlass');
+    expect(empty).toContain('<TravelHomeRouteIcon');
+    expect(empty).toContain('Your next adventure starts here.');
+    expect(empty).toContain('Add Your First Trip');
+    expect(screen).toContain(
+      'onAddTrip={!showForm && !hasNoTrips ? openCreateTrip : undefined}',
+    );
   });
 
   it('keeps layout tokens aligned with design/travel', () => {
+    expect(travelHomeTokens.spacing.headerToSection).toBe(12);
+    expect(travelHomeTokens.spacing.sectionGap).toBe(8);
     expect(travelHomeTokenContract()).toEqual({
       screenHorizontal: 20,
       cardGap: 14,

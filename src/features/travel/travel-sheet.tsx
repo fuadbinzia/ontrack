@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { ModalProps, StyleProp, ViewStyle } from 'react-native';
 
 import { ScreenHeader, SheetHeader, SheetScaffold } from '@/components/primitives';
 import type { AppIconName } from '@/design-system';
@@ -84,6 +84,7 @@ type TravelSheetModalProps = PropsWithChildren<{
   minHeight?: number;
   lockHeight?: boolean;
   scrollKey?: string | number;
+  supportedOrientations?: ModalProps['supportedOrientations'];
 }>;
 
 /** Every Travel sheet inherits the app-wide grabber, body, and footer contract. */
@@ -102,6 +103,7 @@ export function TravelSheetModal({
   minHeight,
   lockHeight,
   scrollKey,
+  supportedOrientations,
   children,
 }: TravelSheetModalProps) {
   return (
@@ -120,6 +122,7 @@ export function TravelSheetModal({
       minHeight={minHeight}
       lockHeight={lockHeight}
       scrollKey={scrollKey}
+      supportedOrientations={supportedOrientations}
       surface="glass">
       {children}
     </SheetScaffold>

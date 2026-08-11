@@ -7,6 +7,7 @@ import {
     ScrollView,
     StyleSheet,
     View,
+    type ModalProps,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { create } from 'zustand';
@@ -49,6 +50,7 @@ interface PromptRequest {
   cancelable: boolean;
   theme?: Theme;
   onDismiss?: () => void;
+  supportedOrientations?: ModalProps['supportedOrientations'];
 }
 
 interface PromptState {
@@ -64,6 +66,7 @@ interface AppAlertOptions {
   cancelable?: boolean;
   theme?: Theme;
   onDismiss?: () => void;
+  supportedOrientations?: ModalProps['supportedOrientations'];
 }
 
 interface AppActionSheetOptions {
@@ -119,6 +122,7 @@ export const appPrompt = {
         resolvedActions.some((action) => action.style === 'cancel'),
       theme: options?.theme,
       onDismiss: options?.onDismiss,
+      supportedOrientations: options?.supportedOrientations,
     });
   },
 
@@ -356,6 +360,7 @@ export function AppPromptHost({ embedded = false }: { embedded?: boolean }) {
       animationType="fade"
       presentationStyle="overFullScreen"
       statusBarTranslucent
+      supportedOrientations={request.supportedOrientations}
       onRequestClose={cancel}>
       {content}
     </Modal>

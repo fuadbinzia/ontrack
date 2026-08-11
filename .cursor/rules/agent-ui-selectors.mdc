@@ -28,7 +28,7 @@ Coordinates are not an alternative. Screenshot bugs → [`screenshot-triage.mdc`
 
 0. Stuck → [`stuck-check-config.mdc`](./stuck-check-config.mdc)
 1. App up via `once`/`verify`/`flow` (or `ensure-packager.sh --start`)
-2. App-affecting close-out → `./scripts/agent-ui-verify-both.sh --route … [--flow <name>] --exists …`
+2. User explicitly requested device testing in the current task → `./scripts/agent-ui-verify-both.sh --route … [--flow <name>] --exists …`; otherwise skip simulator/emulator/device testing
 3. Already on route → `./scripts/agent-ui.sh verify --route …` (or verify-both without re-flow)
 4. Else named flow → `once --flow` / `agent-ui-flow.sh` / `agent-ui-open.sh` / known `agent-ui-tap.sh`
 5. Unknown id → **one** dump, then **retire it** (stamp id/map and/or named flow/seed) so the next run never dumps for that gap; re-prove with assert/tap — no second dump

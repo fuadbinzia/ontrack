@@ -4,53 +4,64 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { View } from 'react-native';
 
 import {
-    ActionChipRow,
-    AppText,
-    Button,
-    Card,
-    CollapsibleSection,
-    FormSection,
-    HeaderBackButton,
-    Input,
-    MetaList,
-    PanelTitle,
-    Screen,
-    ScreenHeader,
-    SettingsActionRow,
-    SettingsGroup,
-    SettingsToggleRow,
+  ActionChipRow,
+  AppText,
+  Button,
+  Card,
+  CollapsibleSection,
+  FormSection,
+  HeaderBackButton,
+  Input,
+  MetaList,
+  PanelTitle,
+  Screen,
+  ScreenHeader,
+  SettingsActionRow,
+  SettingsGroup,
+  SettingsToggleRow,
 } from '@/components/primitives';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { useResponsive } from '@/hooks/use-responsive';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useCloudSyncStatus } from '@/services/cloud/sync';
 import { apiRequest } from '@/services/http/api-client';
 import { resolveExpoApiUrl } from '@/services/http/api-url';
 import { useDevMode } from '@/store/dev-mode';
 import { AgentUiIds, getAgentUiRoute } from '@/utils/agent-ui';
 import {
-    AGENT_UI_FIXTURE_NAMES,
-    seedAgentUiFixture,
-    type AgentUiFixtureName,
+  AGENT_UI_FIXTURE_NAMES,
+  seedAgentUiFixture,
+  type AgentUiFixtureName,
 } from '@/utils/agent-ui/fixtures';
 import {
-    isAgentUiOverlayEnabled,
-    setAgentUiOverlayEnabled,
-    subscribeAgentUiOverlay,
+  isAgentUiOverlayEnabled,
+  setAgentUiOverlayEnabled,
+  subscribeAgentUiOverlay,
 } from '@/utils/agent-ui/overlay';
-import { agentUiNavigate, resolveAgentUiDestination } from '@/utils/agent-ui/route';
+import {
+  agentUiNavigate,
+  resolveAgentUiDestination,
+} from '@/utils/agent-ui/route';
 import { deferUntilIdle } from '@/utils/defer-until-idle';
 
 import { setDevModeEnabled } from './dev-mode-controller';
 import { DeveloperInsightsPanel } from './developer-insights-panel';
 import { DeveloperReleaseNotesPanel } from './developer-release-notes-panel';
-import { formatBytes, listLocalStorageSizes, type StorageSizeRow } from './developer-storage';
+import {
+  formatBytes,
+  listLocalStorageSizes,
+  type StorageSizeRow,
+} from './developer-storage';
 
 /**
  * Loaded automatically when Dev Mode turns on, so the tabs a sandbox is most
  * often opened for are populated without hunting for a chip. Everything here is
  * purged again on exit.
  */
-const DEV_MODE_AUTO_SEEDS: readonly AgentUiFixtureName[] = ['travel-home', 'food-demo'];
+const DEV_MODE_AUTO_SEEDS: readonly AgentUiFixtureName[] = [
+  'travel-home',
+  'food-demo',
+];
 
 function useOverlayEnabled() {
   return useSyncExternalStore(
@@ -62,6 +73,7 @@ function useOverlayEnabled() {
 
 export function DeveloperHub() {
   const router = useRouter();
+  const routeIsActive = useRouteIsActive();
   const { spacing } = useResponsive();
   const overlayOn = useOverlayEnabled();
   const sync = useCloudSyncStatus();
@@ -72,7 +84,9 @@ export function DeveloperHub() {
   const [routeAlias, setRouteAlias] = useState('travel');
   const [seedMessage, setSeedMessage] = useState<string | undefined>();
   const [storageRows, setStorageRows] = useState<StorageSizeRow[]>([]);
-  const [rateLimitMessage, setRateLimitMessage] = useState<string | undefined>();
+  const [rateLimitMessage, setRateLimitMessage] = useState<
+    string | undefined
+  >();
   const [currentRoute, setCurrentRoute] = useState(getAgentUiRoute() ?? '—');
 
   const refreshRoute = useCallback(() => {
@@ -84,11 +98,12 @@ export function DeveloperHub() {
   }, []);
 
   useEffect(() => {
+    if (!routeIsActive) return;
     refreshStorage();
     refreshRoute();
     const timer = setInterval(refreshRoute, 2000);
     return () => clearInterval(timer);
-  }, [refreshRoute, refreshStorage]);
+  }, [refreshRoute, refreshStorage, routeIsActive]);
 
   const runSeed = (name: AgentUiFixtureName) => {
     if (!devModeEnabled) {
@@ -124,13 +139,17 @@ export function DeveloperHub() {
     // Yield so the Switch + Demo seeds chrome paint before fixture work.
     deferUntilIdle(() => {
       if (!useDevMode.getState().enabled) return;
-      const seeded = DEV_MODE_AUTO_SEEDS.filter((name) => seedAgentUiFixture(name));
+      const seeded = DEV_MODE_AUTO_SEEDS.filter((name) =>
+        seedAgentUiFixture(name),
+      );
       if (seeded.length === 0) {
         setSeedMessage('Dev Mode on — tap a Demo seed below to load fixtures.');
         return;
       }
       // Stay on Developer Tools so Demo seeds appear under the toggle.
-      setSeedMessage(`Seeded ${seeded.join(' + ')} — open Travel or Food to browse.`);
+      setSeedMessage(
+        `Seeded ${seeded.join(' + ')} — open Travel or Food to browse.`,
+      );
     });
   };
 
@@ -139,7 +158,8 @@ export function DeveloperHub() {
     try {
       const url = resolveExpoApiUrl('/api/usage/reset', {
         configuredBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
-        createNotConfiguredError: () => new Error('API host is not configured.'),
+        createNotConfiguredError: () =>
+          new Error('API host is not configured.'),
       });
       await apiRequest<{ ok: boolean; subject: string }, Error>({
         url,
@@ -151,12 +171,15 @@ export function DeveloperHub() {
       });
       setRateLimitMessage('Cleared this subject’s app rate-limit buckets.');
     } catch (reason) {
-      setRateLimitMessage(reason instanceof Error ? reason.message : 'Reset failed.');
+      setRateLimitMessage(
+        reason instanceof Error ? reason.message : 'Reset failed.',
+      );
     }
   };
 
   const hostUri = Constants.expoConfig?.hostUri ?? '—';
-  const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || '(Metro host)';
+  const apiBase =
+    process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || '(Metro host)';
   const appEnv = process.env.EXPO_PUBLIC_APP_ENV?.trim() || 'development';
 
   return (
@@ -181,7 +204,8 @@ export function DeveloperHub() {
         <CollapsibleSection
           title="Navigate"
           description="Dev Mode sandbox, demo seeds, and design screens"
-          testID={AgentUiIds.developer.section.navigate}>
+          testID={AgentUiIds.developer.section.navigate}
+        >
           <SettingsGroup>
             <SettingsToggleRow
               label="Dev Mode"
@@ -213,10 +237,15 @@ export function DeveloperHub() {
             />
           </SettingsGroup>
           {devModeEnabled ? (
-            <Card airy style={{ gap: spacing.sm }} testID={AgentUiIds.developer.seeds}>
+            <Card
+              airy
+              style={{ gap: spacing.sm }}
+              testID={AgentUiIds.developer.seeds}
+            >
               <PanelTitle>Demo seeds</PanelTitle>
               <AppText variant="caption" color="secondary">
-                Loads stable fixtures (same as agent-ui-seed). Restored when you leave Dev Mode.
+                Loads stable fixtures (same as agent-ui-seed). Restored when you
+                leave Dev Mode.
               </AppText>
               <ActionChipRow
                 items={AGENT_UI_FIXTURE_NAMES.map((name) => ({
@@ -238,13 +267,25 @@ export function DeveloperHub() {
               label="Design System"
               detail="Components, accents, icons"
               testID={AgentUiIds.developer.designSystem}
-              onPress={() => router.push('/(tabs)/profile/design-system' as never)}
+              onPress={() =>
+                router.push('/(tabs)/profile/design-system' as never)
+              }
             />
             <SettingsActionRow
               label="Integrations"
               detail="Third-party health and quotas"
               testID={AgentUiIds.developer.apiUsage}
-              onPress={() => router.push('/(tabs)/profile/integrations' as never)}
+              onPress={() =>
+                router.push('/(tabs)/profile/integrations' as never)
+              }
+            />
+            <SettingsActionRow
+              label="Performance Monitor"
+              detail="Live CPU, memory, battery, runtime work, and 30-day trends"
+              testID={AgentUiIds.developer.performance}
+              onPress={() =>
+                router.push('/(tabs)/profile/performance' as never)
+              }
             />
           </SettingsGroup>
         </CollapsibleSection>
@@ -254,8 +295,13 @@ export function DeveloperHub() {
         <CollapsibleSection
           title="Runtime"
           description="Environment, Metro host, API base, and current route"
-          testID={AgentUiIds.developer.section.runtime}>
-          <Card airy style={{ gap: spacing.sm }} testID={AgentUiIds.developer.env}>
+          testID={AgentUiIds.developer.section.runtime}
+        >
+          <Card
+            airy
+            style={{ gap: spacing.sm }}
+            testID={AgentUiIds.developer.env}
+          >
             <PanelTitle>Environment</PanelTitle>
             <MetaList
               items={[
@@ -277,7 +323,8 @@ export function DeveloperHub() {
         <CollapsibleSection
           title="Diagnostics"
           description="Agent overlay, cloud sync status, and local storage"
-          testID={AgentUiIds.developer.section.diagnostics}>
+          testID={AgentUiIds.developer.section.diagnostics}
+        >
           <SettingsGroup>
             <SettingsToggleRow
               label="Overlay"
@@ -288,13 +335,19 @@ export function DeveloperHub() {
               testID={AgentUiIds.developer.overlay}
             />
           </SettingsGroup>
-          <Card airy style={{ gap: spacing.sm }} testID={AgentUiIds.developer.sync}>
+          <Card
+            airy
+            style={{ gap: spacing.sm }}
+            testID={AgentUiIds.developer.sync}
+          >
             <PanelTitle>Cloud sync</PanelTitle>
             <MetaList
               items={[
                 {
                   label: 'State',
-                  value: sync.email ? `${sync.state} · ${sync.email}` : sync.state,
+                  value: sync.email
+                    ? `${sync.state} · ${sync.email}`
+                    : sync.state,
                 },
                 {
                   label: 'Last synced',
@@ -302,11 +355,17 @@ export function DeveloperHub() {
                     ? new Date(sync.lastSyncedAt).toLocaleString()
                     : '—',
                 },
-                ...(sync.message ? [{ label: 'Message', value: sync.message }] : []),
+                ...(sync.message
+                  ? [{ label: 'Message', value: sync.message }]
+                  : []),
               ]}
             />
           </Card>
-          <Card airy style={{ gap: spacing.sm }} testID={AgentUiIds.developer.storage}>
+          <Card
+            airy
+            style={{ gap: spacing.sm }}
+            testID={AgentUiIds.developer.storage}
+          >
             <PanelTitle>Local storage</PanelTitle>
             {storageRows.length === 0 ? (
               <AppText variant="caption" color="secondary">
@@ -325,7 +384,8 @@ export function DeveloperHub() {
               variant="ghost"
               testID={AgentUiIds.developer.storageRefresh}
               accessibilityLabel="Refresh storage sizes"
-              onPress={refreshStorage}>
+              onPress={refreshStorage}
+            >
               Refresh sizes
             </Button>
           </Card>
@@ -334,9 +394,13 @@ export function DeveloperHub() {
         <CollapsibleSection
           title="Tools"
           description="Open routes by alias and reset API rate limits"
-          testID={AgentUiIds.developer.section.tools}>
+          testID={AgentUiIds.developer.section.tools}
+        >
           <Card airy style={{ gap: spacing.sm }}>
-            <FormSection title="Open route" description="Alias or path from agent-routes.">
+            <FormSection
+              title="Open route"
+              description="Alias or path from agent-routes."
+            >
               <Input
                 label="Alias or path"
                 value={routeAlias}
@@ -351,7 +415,8 @@ export function DeveloperHub() {
                 onPress={() => {
                   const href = resolveAgentUiDestination(routeAlias.trim());
                   if (href) agentUiNavigate(href);
-                }}>
+                }}
+              >
                 Go
               </Button>
             </FormSection>
@@ -363,7 +428,8 @@ export function DeveloperHub() {
               variant="secondary"
               testID={AgentUiIds.developer.rateLimitReset}
               accessibilityLabel="Reset app rate limits"
-              onPress={() => void resetRateLimits()}>
+              onPress={() => void resetRateLimits()}
+            >
               Reset app rate-limit buckets
             </Button>
             {rateLimitMessage ? (

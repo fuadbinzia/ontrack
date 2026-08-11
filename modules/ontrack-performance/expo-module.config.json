@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["OnTrackPerformanceModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.ontrackperformance.OnTrackPerformanceModule"]
+  }
+}

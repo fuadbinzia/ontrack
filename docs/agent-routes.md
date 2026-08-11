@@ -80,6 +80,7 @@ Pin is required when iOS Simulator and Android Emulator are both running — oth
 
 # Named flow — seed + navigate + settle in one round trip
 ./scripts/agent-ui-flow.sh travel-demo
+./scripts/agent-ui-flow.sh travel-map-demo
 ./scripts/agent-ui-flow.sh travel-demo-add-flight
 ./scripts/agent-ui-flow.sh travel-demo-add-activity
 ./scripts/agent-ui-flow.sh open-new-trip
@@ -136,9 +137,11 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | Flow | What it does |
 |------|----------------|
 | `travel-demo` | Seed demo trip → open plan detail |
+| `travel-map-demo` | Seed Iceland + Antigua pins → open `/travel-map`; dual verification restores portrait afterward |
 | `travel-punta-cana` | Seed Airbnb Punta Cana stay mock → open plan detail (`trip-agent-ui-punta-cana`) |
 | `travel-demo-list` | Seed → travel list with demo itinerary button |
 | `travel-home` | Seed Iceland/Antigua visual fixtures → Travel Home list. Smoke: `verify-both --route /travel --flow travel-home --exists travel.list.section.yourTrips` (H18 — bare goto fails empty guest) |
+| `travel-home-search` | Seed Travel Home, expand Your Trips search, and settle the static search-results card layout. |
 | `travel-home-empty` | Clear trips → Travel Home zero-trip welcome (`travel.list.empty.create`) |
 | `travel-home-iceland` | Seed travel-home → open Iceland itinerary (`skyDecor`) |
 | `travel-demo-add-flight` | Seed → add-flight sheet |
@@ -301,6 +304,7 @@ Tap/goto no longer rewrite the dump by default.
 | `designSystem` / `design-system` | `/design-system` | `ontrack:///design-system` |
 | `integrations` / `apiUsage` / `api-usage` | `/integrations` | `ontrack:///integrations` |
 | `developer` / `developer-tools` | `/developer` | `ontrack:///developer` |
+| `performance` / `performance-monitor` | `/(tabs)/profile/performance` | `ontrack:///(tabs)/profile/performance` |
 | `nutrition` | `/nutrition-profile` | `ontrack:///nutrition-profile` |
 | `activityForm` / `activity` | `/activity-form` | `ontrack:///activity-form` |
 | `privacy` | `/privacy` | `ontrack:///privacy` |

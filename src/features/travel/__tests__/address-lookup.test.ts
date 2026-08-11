@@ -15,11 +15,16 @@ describe('address lookup', () => {
         postcode: '105',
         city: 'Reykjavik',
         country: 'Iceland',
-      }),
+        countrycode: 'is',
+      }, [-21.9426, 64.1466]),
     ).toEqual({
       id: 'W:1:Centerhotel Midgardur, 120 Laugavegur',
       label: 'Centerhotel Midgardur, 120 Laugavegur',
       secondary: '105, Reykjavik, Iceland',
+      countryName: 'Iceland',
+      countryCode: 'IS',
+      latitude: 64.1466,
+      longitude: -21.9426,
     });
   });
 
@@ -35,6 +40,7 @@ describe('address lookup', () => {
       id: 'N:2:Reykjavik',
       label: 'Reykjavik',
       secondary: 'Iceland',
+      countryName: 'Iceland',
     });
   });
 
@@ -69,5 +75,6 @@ describe('address lookup', () => {
     expect(results).toHaveLength(1);
     expect(results[0]?.label).toBe('10 Main Street');
     expect(results[0]?.secondary).toBe('Boston, Massachusetts, United States');
+    expect(results[0]?.countryName).toBe('United States');
   });
 });

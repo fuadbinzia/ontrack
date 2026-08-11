@@ -7,15 +7,15 @@ describe('social tab registration', () => {
       join(process.cwd(), 'src/app/(tabs)/_layout.tsx'),
       'utf8',
     );
-    const tabBar = readFileSync(
-      join(process.cwd(), 'src/components/navigation/bottom-nav-bar.tsx'),
+    const tabMeta = readFileSync(
+      join(process.cwd(), 'src/components/navigation/bottom-nav-tab-meta.ts'),
       'utf8',
     );
 
     expect(tabsLayout).toContain('name="social"');
-    expect(tabBar).toContain("social: {");
-    expect(tabBar).toContain("label: 'Social'");
-    expect(tabBar).toContain("icon: 'people'");
-    expect(tabBar).toContain("href: '/(tabs)/social'");
+    expect(tabMeta).toContain('social: {');
+    expect(tabMeta).toContain("label: 'Social'");
+    expect(tabMeta).toContain("icon: 'people'");
+    expect(tabMeta).toContain("href: '/(tabs)/social'");
   });
 });

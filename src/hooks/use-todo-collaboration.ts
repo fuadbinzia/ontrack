@@ -2,17 +2,20 @@ import { useEffect, useMemo } from 'react';
 import { AppState } from 'react-native';
 
 import {
-    flushTodoMutations,
-    loadAllSharedTodoLists,
-    loadTodoListSnapshot,
-    subscribeToTodoList,
-    TodoCollaborationError,
+  removeRuntimeActivity,
+  setRuntimeActivity,
+} from '@/features/performance/runtime-activity';
+import {
+  flushTodoMutations,
+  loadAllSharedTodoLists,
+  loadTodoListSnapshot,
+  subscribeToTodoList,
+  TodoCollaborationError,
 } from '@/services/todos/collaboration';
 import { useTodos } from '@/store/todos';
 
 function isRevokedSharedListError(error: unknown): boolean {
-  const message =
-    error instanceof Error ? error.message : String(error ?? '');
+  const message = error instanceof Error ? error.message : String(error ?? '');
   // Match the RPC access denial only — not generic refresh/network failures.
   return /no longer have access to this list/i.test(message);
 }
@@ -25,9 +28,26 @@ export function useTodoCollaboration(enabled: boolean) {
   );
   const pendingCount = useTodos((state) => state.pendingMutations.length);
   const sharedKey = useMemo(
-    () => sharedLists.map((list) => list.id).sort().join(','),
+    () =>
+      sharedLists
+        .map((list) => list.id)
+        .sort()
+        .join(','),
     [sharedLists],
   );
+
+  useEffect(() => {
+    if (!enabled) return;
+    setRuntimeActivity(
+      { id: 'sync.todos', label: 'Shared checklist sync', category: 'sync' },
+      {
+        status: 'running',
+        pending: pendingCount,
+        detail: `${sharedLists.length} shared lists`,
+      },
+    );
+    return () => removeRuntimeActivity('sync.todos');
+  }, [enabled, pendingCount, sharedLists.length]);
 
   useEffect(() => {
     if (!enabled) return;

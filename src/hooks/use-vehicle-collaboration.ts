@@ -2,6 +2,10 @@ import { useEffect, useMemo } from 'react';
 import { AppState } from 'react-native';
 
 import {
+  removeRuntimeActivity,
+  setRuntimeActivity,
+} from '@/features/performance/runtime-activity';
+import {
   flushVehicleMutations,
   loadAllSharedVehicles,
   loadVehicleSnapshot,
@@ -17,9 +21,26 @@ export function useVehicleCollaboration(enabled: boolean) {
   );
   const pendingCount = useVehicles((state) => state.pendingMutations.length);
   const sharedKey = useMemo(
-    () => sharedVehicles.map((vehicle) => vehicle.id).sort().join(','),
+    () =>
+      sharedVehicles
+        .map((vehicle) => vehicle.id)
+        .sort()
+        .join(','),
     [sharedVehicles],
   );
+
+  useEffect(() => {
+    if (!enabled) return;
+    setRuntimeActivity(
+      { id: 'sync.vehicles', label: 'Shared vehicle sync', category: 'sync' },
+      {
+        status: 'running',
+        pending: pendingCount,
+        detail: `${sharedVehicles.length} shared vehicles`,
+      },
+    );
+    return () => removeRuntimeActivity('sync.vehicles');
+  }, [enabled, pendingCount, sharedVehicles.length]);
 
   useEffect(() => {
     if (!enabled) return;

@@ -68,22 +68,12 @@ export function TravelHomeYourTrips({
     }, []),
   );
   const searchActive = isTravelHomeTripSearchActive(searchOpen, searchQuery);
-  const peekHeight = Math.max(
-    0,
-    s(travelHomeTokens.spacing.headerToSection) -
-      travelHomeTokens.spacing.cardGap,
-  );
+  const peekHeight = s(travelHomeTokens.spacing.headerToSection);
   const showEmptySearch = plans.length === 0 && Boolean(searchQuery.trim());
 
   return (
-    <>
-      <View
-        style={{
-          // May be negative so section→card can sit tighter than Screen cardGap.
-          marginBottom:
-            s(travelHomeTokens.spacing.sectionGap) -
-            travelHomeTokens.spacing.cardGap,
-        }}>
+    <View style={{ gap: s(travelHomeTokens.spacing.sectionGap) }}>
+      <View>
         {searchActive ? (
           <AgentTestId
             testID={AgentUiIds.travel.list.searchDismiss}
@@ -126,7 +116,10 @@ export function TravelHomeYourTrips({
 
       {entranceKey > 0 ? (
         <View
-          key={entranceKey}
+          // Search gets a clean, non-animated tree. Reanimated entrance
+          // transforms do not participate in Yoga layout and can otherwise
+          // let later cards paint over earlier card bodies while filtering.
+          key={`${entranceKey}-${searchActive ? 'search' : 'browse'}`}
           style={{ gap: travelHomeTokens.spacing.cardGap }}
           onTouchStart={searchActive ? onDismissSearch : undefined}>
           {plans.map((plan, index) => (
@@ -134,6 +127,7 @@ export function TravelHomeYourTrips({
               key={plan.id}
               plan={plan}
               index={index}
+              animateEntrance={!searchActive}
               soloAtmosphereShadow={plans.length === 1}
               atmosphereAverageColor={atmosphereAverageColor}
               travelers={resolveTravelCoTravelerPeople(plan, selfDisplayName)}
@@ -146,6 +140,6 @@ export function TravelHomeYourTrips({
           ))}
         </View>
       ) : null}
-    </>
+    </View>
   );
 }

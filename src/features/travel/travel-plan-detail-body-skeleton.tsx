@@ -24,6 +24,7 @@ import {
   useTravelItineraryShellProps,
 } from '@/features/travel/use-travel-itinerary-glass';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -41,10 +42,12 @@ function SkeletonBone({
 }) {
   const mistProps = useTravelItineraryMistProps();
   const { allowsLoopMotion } = usePerformanceTier();
-  const pulse = useSharedValue(allowsLoopMotion ? 0.55 : 0.72);
+  const routeIsActive = useRouteIsActive();
+  const animatePulse = allowsLoopMotion && routeIsActive;
+  const pulse = useSharedValue(animatePulse ? 0.55 : 0.72);
 
   useEffect(() => {
-    if (!allowsLoopMotion) {
+    if (!animatePulse) {
       cancelAnimation(pulse);
       pulse.value = 0.72;
       return;
@@ -56,7 +59,7 @@ function SkeletonBone({
       true,
     );
     return () => cancelAnimation(pulse);
-  }, [allowsLoopMotion, pulse]);
+  }, [animatePulse, pulse]);
 
   const pulseStyle = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
@@ -101,7 +104,8 @@ function SkeletonSection({
           borderRadius: Math.max(14, s(16)),
           borderCurve: 'continuous',
         },
-      ]}>
+      ]}
+    >
       <View
         style={[
           styles.sectionHeader,
@@ -111,7 +115,8 @@ function SkeletonSection({
             paddingVertical: Math.max(6, s(6)),
             gap: TRAVEL_TITLE_ICON_GAP,
           },
-        ]}>
+        ]}
+      >
         <Symbol name={icon} size="sm" color={accent} />
         <AppText
           variant="subheading"
@@ -119,7 +124,8 @@ function SkeletonSection({
           style={[
             travelEditorialTextStyle,
             { color: primaryInk, flexShrink: 1, minWidth: 0 },
-          ]}>
+          ]}
+        >
           {title}
         </AppText>
       </View>
@@ -128,7 +134,8 @@ function SkeletonSection({
           paddingHorizontal: spacing.sm,
           paddingBottom: spacing.sm,
           gap: spacing.xs,
-        }}>
+        }}
+      >
         {children}
       </View>
     </TravelHomeGlass>
@@ -153,11 +160,13 @@ export function TravelPlanDetailBodySkeleton({
   return (
     <AgentTestId
       testID={AgentUiIds.travel.planDetail.bodyLoading}
-      label="Loading itinerary">
+      label="Loading itinerary"
+    >
       <View
         accessibilityLabel="Loading itinerary"
         accessibilityState={{ busy: true }}
-        style={{ gap: Math.max(rs.md, s(20)) }}>
+        style={{ gap: Math.max(rs.md, s(20)) }}
+      >
         <SkeletonSection title="Transportation, Stays & Events" icon="suitcase">
           {Array.from({ length: Math.min(2, cards) }, (_, i) => (
             <SkeletonBone key={`transport-${i}`} height={cardH} />

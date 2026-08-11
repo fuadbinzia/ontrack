@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, TextInput, View, type ModalProps } from 'react-native';
 
 import {
   AppText,
@@ -22,6 +22,8 @@ export function PeoplePicker({
   excludeIds = [],
   title = 'Choose Friends',
   confirmLabel = 'Add',
+  headerContent,
+  supportedOrientations,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -30,6 +32,8 @@ export function PeoplePicker({
   excludeIds?: string[];
   title?: string;
   confirmLabel?: string;
+  headerContent?: ReactNode;
+  supportedOrientations?: ModalProps['supportedOrientations'];
 }) {
   const theme = useTheme();
   const { spacing, s, typography } = useResponsive();
@@ -88,6 +92,7 @@ export function PeoplePicker({
       onClose={onClose}
       closeAccessibilityLabel="Close"
       closeTestID={AgentUiIds.peoplePicker.close}
+      supportedOrientations={supportedOrientations}
       surface="glass"
       contentContainerStyle={{ gap: spacing.sm }}
       footer={
@@ -98,6 +103,7 @@ export function PeoplePicker({
           testID={AgentUiIds.peoplePicker.confirm}
         />
       }>
+      {headerContent}
       <GlassPlate
         airy
         style={[

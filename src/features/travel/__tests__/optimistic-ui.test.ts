@@ -4,7 +4,7 @@ import path from 'node:path';
 describe('optimistic network actions', () => {
   it('renders a trip message before sending and restores the draft on failure', () => {
     const source = fs.readFileSync(
-      path.join(process.cwd(), 'src/features/travel/travel-chat-screen.tsx'),
+      path.join(process.cwd(), 'src/features/travel/use-travel-chat-actions.ts'),
       'utf8',
     );
     const optimisticUpdate = source.indexOf(
@@ -23,7 +23,7 @@ describe('optimistic network actions', () => {
 
   it('removes shared lists before the request and rolls back failed removals', () => {
     const source = fs.readFileSync(
-      path.join(process.cwd(), 'src/services/todos/collaboration.ts'),
+      path.join(process.cwd(), 'src/services/todos/collaboration-members.ts'),
       'utf8',
     );
     for (const functionName of ['leaveTodoList', 'deleteSharedTodoList']) {
@@ -33,7 +33,7 @@ describe('optimistic network actions', () => {
       expect(implementation.indexOf('removeSharedList(listId)')).toBeLessThan(
         implementation.indexOf('await authenticatedClient()'),
       );
-      expect(implementation).toContain('replaceSharedSnapshot(rollback)');
+      expect(implementation).toContain('restoreSharedListRollback(listId, rollback');
     }
   });
 
@@ -47,4 +47,3 @@ describe('optimistic network actions', () => {
     expect(source).toContain('stopAddItem();\n      form.setError(');
   });
 });
-

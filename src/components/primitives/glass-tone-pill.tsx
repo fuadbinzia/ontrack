@@ -14,12 +14,15 @@ import { GlassPlate } from './glass-plate';
 export function GlassTonePill({
   label,
   toneColor,
+  textColor,
   showDot = true,
   testID,
   style,
 }: {
   label: string;
   toneColor: string;
+  /** Optional contrast-safe label ink when the semantic dot sits on dark glass. */
+  textColor?: string;
   showDot?: boolean;
   testID?: string;
   style?: StyleProp<ViewStyle>;
@@ -54,7 +57,12 @@ export function GlassTonePill({
         variant="caption"
         align="center"
         numberOfLines={1}
-        style={{ color: toneColor, flexShrink: 1, minWidth: 0, textAlign: 'center' }}>
+        style={{
+          color: textColor ?? toneColor,
+          flexShrink: 1,
+          minWidth: 0,
+          textAlign: 'center',
+        }}>
         {title}
       </AppText>
     </GlassPlate>

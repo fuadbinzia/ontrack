@@ -25,6 +25,7 @@ import type {
   TravelItineraryItem,
   TravelPlan,
 } from './types';
+import type { TravelDestinationLocation } from './map/types';
 
 export { isDuplicateItineraryItem } from './normalize-duplicates';
 export {
@@ -44,6 +45,37 @@ const ITEM_KINDS = new Set([
   'event',
 ]);
 const DEFAULT_MOMENT_DURATION_MINUTES = 15;
+
+function normalizeDestinationLocation(value: unknown): TravelDestinationLocation | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const location = value as Partial<TravelDestinationLocation>;
+  const label = asString(location.label)?.trim();
+  const countryName = asString(location.countryName)?.trim();
+  const countryCode = asString(location.countryCode)?.trim().toUpperCase();
+  if (
+    !label ||
+    !countryName ||
+    !countryCode ||
+    !/^[A-Z]{2}$/.test(countryCode) ||
+    typeof location.latitude !== 'number' ||
+    !Number.isFinite(location.latitude) ||
+    location.latitude < -90 ||
+    location.latitude > 90 ||
+    typeof location.longitude !== 'number' ||
+    !Number.isFinite(location.longitude) ||
+    location.longitude < -180 ||
+    location.longitude > 180
+  ) {
+    return undefined;
+  }
+  return {
+    label,
+    countryName,
+    countryCode,
+    latitude: location.latitude,
+    longitude: location.longitude,
+  };
+}
 
 export function normalizeTravelItineraryItem(
   value: unknown,
@@ -226,6 +258,10 @@ export function normalizeTravelPlan(value: unknown): TravelPlan | undefined {
       ? { origin: asString(plan.origin)!.trim() }
       : {}),
     destination: plan.destination,
+    ...(() => {
+      const destinationLocation = normalizeDestinationLocation(plan.destinationLocation);
+      return destinationLocation ? { destinationLocation } : {};
+    })(),
     startDate: plan.startDate,
     endDate:
       repairedImport.correctedEndDate &&

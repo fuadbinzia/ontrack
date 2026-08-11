@@ -6,6 +6,7 @@ import {
   StyleSheet,
   useWindowDimensions,
   View,
+  type ModalProps,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -76,6 +77,8 @@ export type DropdownProps<T extends string = string> = {
   fieldBackground?: string;
   labelColor?: string;
   fieldStyle?: StyleProp<ViewStyle>;
+  /** Orientations supported by the native menu modal (iOS). */
+  supportedOrientations?: ModalProps['supportedOrientations'];
   /** Custom trigger — menu still overlays via Modal. */
   renderTrigger?: (props: DropdownTriggerRenderProps) => ReactNode;
 };
@@ -151,6 +154,7 @@ export function Dropdown<T extends string = string>({
   fieldBackground,
   labelColor,
   fieldStyle,
+  supportedOrientations,
   renderTrigger,
 }: DropdownProps<T>) {
   const theme = useTheme();
@@ -379,6 +383,7 @@ export function Dropdown<T extends string = string>({
         animationType="fade"
         onRequestClose={() => setOpen(false)}
         presentationStyle="overFullScreen"
+        supportedOrientations={supportedOrientations}
         statusBarTranslucent
         transparent
         visible={Boolean(isOpen && anchor && placement)}>
@@ -450,6 +455,7 @@ const styles = StyleSheet.create({
   },
   fieldInner: {
     zIndex: 1,
+    gap: spacing.sm,
   },
   fieldCopy: {
     flex: 1,

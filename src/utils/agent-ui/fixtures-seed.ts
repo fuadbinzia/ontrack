@@ -44,6 +44,7 @@ export function seedAgentUiFixture(
 
   if (
     fixture === 'travel-demo' ||
+    fixture === 'travel-map-demo' ||
     fixture === 'travel-punta-cana' ||
     fixture === 'travel-home' ||
     fixture === 'travel-home-empty'
@@ -66,6 +67,9 @@ export function normalizeFixtureName(
     key === 'trip-agent-ui-demo'
   ) {
     return 'travel-demo';
+  }
+  if (key === 'travel-map-demo' || key === 'travel-map' || key === 'atlas-demo') {
+    return 'travel-map-demo';
   }
   if (
     key === 'travel-punta-cana' ||

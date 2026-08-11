@@ -12,6 +12,7 @@ import {
     useWindowDimensions,
     View,
     type StyleProp,
+    type ModalProps,
     type ViewStyle,
 } from 'react-native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -108,6 +109,8 @@ export interface SheetScaffoldProps extends PropsWithChildren {
   /** Tap dimmed area outside the card to dismiss (default on). Grabber still works. */
   dismissOnBackdropPress?: boolean;
   backdropTestID?: string;
+  /** Orientations supported by the native modal host (iOS). */
+  supportedOrientations?: ModalProps['supportedOrientations'];
   /**
    * `glass` = frosted translucent plate (app default).
    * Pass `solid` for dense editors that need opaque elevated paper.
@@ -135,6 +138,7 @@ export function SheetScaffold({
   scrollEnabled = true,
   dismissOnBackdropPress = true,
   backdropTestID,
+  supportedOrientations,
   surface = 'glass',
   children,
 }: SheetScaffoldProps) {
@@ -186,6 +190,7 @@ export function SheetScaffold({
       animationType="none"
       onRequestClose={close}
       presentationStyle="overFullScreen"
+      supportedOrientations={supportedOrientations}
       statusBarTranslucent
       navigationBarTranslucent
       transparent

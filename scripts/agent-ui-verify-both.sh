@@ -250,13 +250,24 @@ run_android() {
 # long work; mid-run edits shift offsets and produce bogus `syntax error near fi`.
 release_agent_devmode() {
   local platform="$1"
+  local current_route=""
   echo "verify-both: releasing agent Dev Mode on ${platform}" >&2
   if [[ "${platform}" == "android" ]]; then
+    current_route="$(AGENT_UI_PLATFORM=android AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" AGENT_UI_LOCK_ACQUIRED=0 "${ROOT}/scripts/agent-ui-route.sh" 2>/dev/null || true)"
+    if [[ "${current_route}" == "/travel-map" ]]; then
+      echo "verify-both: leaving atlas to restore Android portrait" >&2
+      AGENT_UI_PLATFORM=android AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" AGENT_UI_LOCK_ACQUIRED=0 "${ROOT}/scripts/agent-ui-goto.sh" travel >/dev/null 2>&1 || true
+    fi
     AGENT_UI_PLATFORM=android \
       AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
       AGENT_UI_LOCK_ACQUIRED=0 \
       "${ROOT}/scripts/agent-ui-devmode.sh" release >/dev/null 2>&1 || true
   else
+    current_route="$(env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE AGENT_UI_PLATFORM=ios AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" AGENT_UI_LOCK_ACQUIRED=0 "${ROOT}/scripts/agent-ui-route.sh" 2>/dev/null || true)"
+    if [[ "${current_route}" == "/travel-map" ]]; then
+      echo "verify-both: leaving atlas to restore iOS portrait" >&2
+      env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE AGENT_UI_PLATFORM=ios AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" AGENT_UI_LOCK_ACQUIRED=0 "${ROOT}/scripts/agent-ui-goto.sh" travel >/dev/null 2>&1 || true
+    fi
     env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
       AGENT_UI_PLATFORM=ios \
       AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \

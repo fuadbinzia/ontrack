@@ -13,6 +13,7 @@ import Animated, {
 
 import { radii } from '@/design-system';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { ANATOMY_BEIGE } from './anatomy-art';
 import type { AnatomySex, MuscleKey } from './muscle-data';
 
@@ -39,7 +40,8 @@ export function FrontPlankAnimation({
   const progress = useSharedValue(0);
   const reduceMotion = useReducedMotion();
   const { allowsLoopMotion } = usePerformanceTier();
-  const stillPose = reduceMotion || !allowsLoopMotion;
+  const routeIsActive = useRouteIsActive();
+  const stillPose = reduceMotion || !allowsLoopMotion || !routeIsActive;
   const source = anatomySex === 'female' ? FEMALE_PLANK : MALE_PLANK;
 
   useEffect(() => {
@@ -79,7 +81,10 @@ export function FrontPlankAnimation({
     const p = smoothStep(progress.value);
     return {
       opacity: 0.12 + 0.07 * (1 - p),
-      transform: [{ scaleX: 0.95 + 0.05 * (1 - p) }, { scaleY: 0.88 + 0.12 * p }],
+      transform: [
+        { scaleX: 0.95 + 0.05 * (1 - p) },
+        { scaleY: 0.88 + 0.12 * p },
+      ],
     };
   });
 
@@ -94,7 +99,8 @@ export function FrontPlankAnimation({
     <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={styles.stage}>
+      style={styles.stage}
+    >
       <View style={styles.scene}>
         <View style={styles.floorLine} />
         <Animated.View style={[styles.contactShadow, shadowMotion]} />

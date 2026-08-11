@@ -61,7 +61,7 @@ export async function restoreTravelPlansFromDocuments(): Promise<AgentUiSeedResu
 export function seedTravelAgentUiFixture(
   fixture: Extract<
     AgentUiFixtureName,
-    'travel-demo' | 'travel-punta-cana' | 'travel-home' | 'travel-home-empty'
+    'travel-demo' | 'travel-map-demo' | 'travel-punta-cana' | 'travel-home' | 'travel-home-empty'
   >,
 ): AgentUiSeedResult | null {
   if (fixture === 'travel-demo') {
@@ -78,6 +78,45 @@ export function seedTravelAgentUiFixture(
       planId: plan.id,
       flightItemId: AGENT_UI_DEMO_FLIGHT_ID,
     };
+  }
+
+  if (fixture === 'travel-map-demo') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTravel } = require('@/store/travel') as typeof import('@/store/travel');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTravelMap } = require('@/store/travel-map') as typeof import('@/store/travel-map');
+    const plans = buildTravelHomeVisualTrips();
+    for (const plan of plans) {
+      if (!useTravel.getState().savePlan(plan)) return null;
+    }
+    const iceland = plans.find((plan) => plan.destination.toLowerCase().includes('iceland')) ?? plans[0]!;
+    const antigua = plans.find((plan) => plan.destination.toLowerCase().includes('antigua')) ?? plans[1]!;
+    const now = '2026-08-11T12:00:00.000Z';
+    useTravelMap.getState().replaceVisits([
+      {
+        id: '11111111-1111-4111-8111-111111111111',
+        tripId: iceland.id,
+        canonicalTripId: iceland.id,
+        countryCode: 'IS',
+        countryName: 'Iceland',
+        places: [{ id: '21111111-1111-4111-8111-111111111111', label: 'Reykjavík', latitude: 64.1466, longitude: -21.9426, createdAt: now, updatedAt: now }],
+        tripSummary: { title: iceland.title, destination: iceland.destination, startDate: iceland.startDate, endDate: iceland.endDate },
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: '12222222-2222-4222-8222-222222222222',
+        tripId: antigua.id,
+        canonicalTripId: antigua.id,
+        countryCode: 'AG',
+        countryName: 'Antigua and Barbuda',
+        places: [{ id: '22222222-2222-4222-8222-222222222222', label: "St. John's", latitude: 17.1274, longitude: -61.8468, createdAt: now, updatedAt: now }],
+        tripSummary: { title: antigua.title, destination: antigua.destination, startDate: antigua.startDate, endDate: antigua.endDate },
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+    return { fixture, primaryId: iceland.id, planId: iceland.id };
   }
 
   if (fixture === 'travel-punta-cana') {

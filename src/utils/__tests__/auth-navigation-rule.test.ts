@@ -7,6 +7,19 @@ describe('authentication navigation invariants', () => {
     join(process.cwd(), 'src/app/(tabs)/_layout.tsx'),
     'utf8',
   );
+  const authProvider = readFileSync(
+    join(process.cwd(), 'src/features/auth/auth-provider.tsx'),
+    'utf8',
+  );
+  const authEffects = readFileSync(
+    join(process.cwd(), 'src/features/auth/auth-provider-effects.ts'),
+    'utf8',
+  );
+  const authSnapshot = readFileSync(
+    join(process.cwd(), 'src/features/auth/auth-session-snapshot.ts'),
+    'utf8',
+  );
+  const authSources = `${authProvider}\n${authEffects}\n${authSnapshot}`;
 
   it('keeps the OAuth callback outside protected route groups', () => {
     expect(rootLayout).toContain('name="auth/callback"');
@@ -69,7 +82,7 @@ describe('authentication navigation invariants', () => {
 
   it('holds the static loading shell until hydration and account resolution finish', () => {
     expect(rootLayout).toContain("if (!hydrated || phase === 'loading')");
-    expect(rootLayout).toContain('LoadingBlock');
+    expect(rootLayout).toContain('AppBootLoader');
     expect(rootLayout).toContain('SplashScreen');
     expect(rootLayout.indexOf("if (!hydrated || phase === 'loading')")).toBeLessThan(
       rootLayout.indexOf('<Stack'),
@@ -102,34 +115,24 @@ describe('authentication navigation invariants', () => {
 
   it('restores the selected section after a Fast Refresh stack remount', () => {
     expect(rootLayout).toContain('NavigationSessionSync');
-    const authProvider = readFileSync(
-      join(process.cwd(), 'src/features/auth/auth-provider.tsx'),
-      'utf8',
-    );
-    expect(authProvider).toContain('sessionAuthSnapshot');
-    expect(authProvider).toContain("sessionAuthSnapshot?.phase ?? 'loading'");
+    expect(authSources).toContain('getSessionAuthSnapshot');
+    expect(authSources).toContain("phase: snap?.phase ?? 'loading'");
   });
 
   it('does not demote sticky auth phases on getSession timeout', () => {
-    const authProvider = readFileSync(
-      join(process.cwd(), 'src/features/auth/auth-provider.tsx'),
-      'utf8',
+    expect(authEffects).toContain("current === 'resolving-data'");
+    expect(authSnapshot).toContain(
+      "phase === 'guest' || phase === 'authenticated' || phase === 'resolving-data'",
     );
-    expect(authProvider).toContain("current === 'resolving-data'");
-    expect(authProvider).toContain("phase === 'guest' || phase === 'authenticated' || phase === 'resolving-data'");
   });
 
   it('keeps guest dirty tracking through auth-upgrade phases', () => {
-    const authProvider = readFileSync(
-      join(process.cwd(), 'src/features/auth/auth-provider.tsx'),
-      'utf8',
-    );
     const guestDirty = readFileSync(
       join(process.cwd(), 'src/features/auth/auth-guest-dirty.ts'),
       'utf8',
     );
-    expect(authProvider).toContain("!guestEnabled || phase === 'authenticated' || phase === 'welcome'");
-    expect(authProvider).toContain('subscribeGuestDirtyStores()');
+    expect(authEffects).toContain("!guestEnabled || phase === 'authenticated' || phase === 'welcome'");
+    expect(authEffects).toContain('subscribeGuestDirtyStores()');
     expect(guestDirty).toContain('useVehicles.subscribe(mark)');
     expect(guestDirty).toContain('useRecipes.subscribe(mark)');
     expect(guestDirty).toContain('useFoodProfile.subscribe(mark)');

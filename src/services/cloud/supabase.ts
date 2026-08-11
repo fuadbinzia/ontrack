@@ -1,10 +1,41 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 
+const developmentAuthStorage = new Map<string, string>();
+
+function isMissingDevelopmentEntitlement(error: unknown): boolean {
+  return (
+    __DEV__ &&
+    error instanceof Error &&
+    /required entitlement isn't present|errSecMissingEntitlement/i.test(error.message)
+  );
+}
+
 const secureStorage = {
-  getItem: (key: string) => SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+  getItem: async (key: string) => {
+    try {
+      return await SecureStore.getItemAsync(key);
+    } catch (error) {
+      if (!isMissingDevelopmentEntitlement(error)) throw error;
+      return developmentAuthStorage.get(key) ?? null;
+    }
+  },
+  setItem: async (key: string, value: string) => {
+    try {
+      await SecureStore.setItemAsync(key, value);
+    } catch (error) {
+      if (!isMissingDevelopmentEntitlement(error)) throw error;
+      developmentAuthStorage.set(key, value);
+    }
+  },
+  removeItem: async (key: string) => {
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch (error) {
+      if (!isMissingDevelopmentEntitlement(error)) throw error;
+      developmentAuthStorage.delete(key);
+    }
+  },
 };
 
 /**

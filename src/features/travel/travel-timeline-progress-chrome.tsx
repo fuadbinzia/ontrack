@@ -3,7 +3,6 @@ import { Animated, StyleSheet, View } from 'react-native';
 
 import {
   AppText,
-  GlassIconWell,
   GlassTonePill,
   Symbol,
   fieldTitleCase,
@@ -11,11 +10,16 @@ import {
   type StatusBadgeTone,
 } from '@/components/primitives';
 import { glassMaterials, radii } from '@/design-system';
-import { travelItineraryInk } from '@/features/travel/travel-surface';
+import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import type {
   JourneyTraveler,
   TimelineProgressSummary,
 } from '@/features/travel/travel-timeline-progress';
+import {
+  useTravelItineraryInk,
+  useTravelItineraryMistProps,
+  useTravelItineraryOnGlass,
+} from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -31,9 +35,13 @@ export function TimelineProgressStrip({
 }) {
   const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
-  const secondaryInk = travelItineraryInk(theme, 'secondary');
-  const trackFill =
-    theme.name === 'dark'
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
+  const mistProps = useTravelItineraryMistProps();
+  const onGlass = useTravelItineraryOnGlass();
+  const trackFill = onGlass
+    ? primaryInk
+    : theme.name === 'dark'
       ? glassMaterials.border.dark
       : glassMaterials.border.mistLight;
   const tone: StatusBadgeTone =
@@ -94,7 +102,8 @@ export function TimelineProgressStrip({
             label={summary.label}>
             <GlassTonePill
               label={summary.label}
-              toneColor={badgeColor}
+              toneColor={onGlass ? primaryInk : badgeColor}
+              textColor={onGlass ? primaryInk : undefined}
               showDot
             />
           </AgentTestId>
@@ -156,12 +165,14 @@ export function TimelineProgressStrip({
                 marginTop: -chipSize / 2,
               },
             ]}>
-            <GlassIconWell
-              size={chipSize}
-              borderRadius={chipSize / 2}
+            <TravelHomeGlass
+              {...mistProps}
               style={{
-                borderColor: accent,
-                borderWidth: Math.max(1.5, s(1.5)),
+                width: chipSize,
+                height: chipSize,
+                borderRadius: chipSize / 2,
+                borderCurve: 'continuous',
+                overflow: 'hidden',
               }}>
               <AgentTestId
                 testID={AgentUiIds.travel.timeline.traveler}
@@ -172,10 +183,10 @@ export function TimelineProgressStrip({
                     { width: chipSize, height: chipSize },
                   ]}
                   accessibilityLabel={traveler.accessibilityLabel}>
-                  <Symbol name={traveler.icon} size="sm" color={accent} />
+                  <Symbol name={traveler.icon} size="sm" color="#000000" />
                 </View>
               </AgentTestId>
-            </GlassIconWell>
+            </TravelHomeGlass>
           </Animated.View>
         </View>
       </AgentTestId>
@@ -193,7 +204,7 @@ export function TimelineNowMarker({
 }) {
   const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
-  const primaryInk = travelItineraryInk(theme);
+  const primaryInk = useTravelItineraryInk();
   const rim =
     theme.name === 'dark' ? 'rgba(255,255,255,0.55)' : 'rgba(17, 74, 110, 0.22)';
   const dot = Math.max(8, s(8));

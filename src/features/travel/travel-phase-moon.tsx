@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
   Easing,
+  cancelAnimation,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
@@ -28,6 +29,7 @@ import {
   moonTerminatorPath,
 } from '@/features/travel/travel-sky-astronomy';
 import { celestialDiscHostStyle } from '@/features/travel/travel-sky-plate';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 
 /** Fixed lunar-surface features, positioned as fractions of the moon radius. */
 const MOON_MARIA = [
@@ -80,9 +82,15 @@ export function PhaseMoon({
   const shadow = moonPhaseShadowPath(cycle, cx, cy, r, southern);
   const litPath = moonTerminatorPath(cycle, cx, cy, r, southern);
   const illumination = moonIlluminationFromCycle(cycle);
+  const routeIsActive = useRouteIsActive();
 
   const idle = useSharedValue(0.9);
   useEffect(() => {
+    cancelAnimation(idle);
+    if (!routeIsActive) {
+      idle.value = 0.9;
+      return;
+    }
     idle.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 2800, easing: Easing.inOut(Easing.sin) }),
@@ -91,7 +99,8 @@ export function PhaseMoon({
       -1,
       false,
     );
-  }, [idle]);
+    return () => cancelAnimation(idle);
+  }, [idle, routeIsActive]);
 
   const style = useAnimatedStyle(() => {
     const energy = motion?.energy.value ?? 0;
@@ -99,10 +108,7 @@ export function PhaseMoon({
     const tiltY = motion?.tiltY.value ?? 0;
     return {
       opacity: interpolate(energy, [0, 1], [idle.value, 1]),
-      transform: [
-        { translateX: tiltX * 3 },
-        { translateY: tiltY * 2 },
-      ],
+      transform: [{ translateX: tiltX * 3 }, { translateY: tiltY * 2 }],
     };
   });
 
@@ -123,15 +129,12 @@ export function PhaseMoon({
           height="100%"
           viewBox={`${cx - pad} ${cy - pad} ${box} ${box}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ backgroundColor: 'transparent' }}>
+          style={{ backgroundColor: 'transparent' }}
+        >
           <Defs>
             <RadialGradient id={glowGrad} cx="50%" cy="50%" r="50%">
               {/* stopOpacity — rgba alpha in stopColor is ignored on RN SVG. */}
-              <Stop
-                offset="0%"
-                stopColor="#E8EEF8"
-                stopOpacity={glowOpacity}
-              />
+              <Stop offset="0%" stopColor="#E8EEF8" stopOpacity={glowOpacity} />
               <Stop offset="100%" stopColor="#E8EEF8" stopOpacity={0} />
             </RadialGradient>
             <RadialGradient
@@ -139,7 +142,8 @@ export function PhaseMoon({
               gradientUnits="userSpaceOnUse"
               cx={cx - r * 0.28}
               cy={cy - r * 0.32}
-              r={r * 1.6}>
+              r={r * 1.6}
+            >
               <Stop offset="0%" stopColor="#F4F7FB" />
               <Stop offset="55%" stopColor="#DCE3EC" />
               <Stop offset="100%" stopColor="#B7C2D0" />

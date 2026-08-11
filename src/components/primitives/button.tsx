@@ -141,7 +141,6 @@ export function Button({
         <AppText
           variant={size === 'lg' ? 'subheading' : size === 'sm' ? 'caption' : 'callout'}
           color={resolvedTextColor}
-          fit={hasTrailing}
           align={centerWithTrailing ? 'center' : undefined}
           numberOfLines={1}
           style={[

@@ -8,9 +8,8 @@ describe('Input layout contract', () => {
       'utf8',
     );
 
-    expect(source).toMatch(
-      /height:\s*multiline\s*\?\s*undefined\s*:\s*stacked\s*\?\s*undefined\s*:\s*minHeight/,
-    );
+    expect(source).toContain('height: multiline ? undefined : minHeight');
+    expect(source).toContain('minHeight: stackedMinHeight');
     expect(source).not.toContain('multiline && hasValue');
     expect(source).toContain('multiline ? styles.stackedMultilineInput : null');
     expect(source).toMatch(

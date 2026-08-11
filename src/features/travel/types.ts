@@ -266,6 +266,8 @@ export interface TravelPlan {
   /** Optional starting city/place shared by flight and transport prefills. */
   origin?: string;
   destination: string;
+  /** High-confidence location selected from destination lookup; map pins remain explicit. */
+  destinationLocation?: import('./map/types').TravelDestinationLocation;
   startDate: string;
   endDate: string;
   notes?: string;

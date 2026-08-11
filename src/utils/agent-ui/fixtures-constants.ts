@@ -98,6 +98,7 @@ export function createIdFromAgentUiItemIds(
 
 export type AgentUiFixtureName =
   | 'travel-demo'
+  | 'travel-map-demo'
   | 'travel-punta-cana'
   | 'travel-home'
   | 'travel-home-empty'
@@ -152,6 +153,7 @@ export function fixtureNameForReservedTripId(
 
 export const AGENT_UI_FIXTURE_NAMES = [
   'travel-demo',
+  'travel-map-demo',
   'travel-punta-cana',
   'travel-home',
   'checklist-demo',

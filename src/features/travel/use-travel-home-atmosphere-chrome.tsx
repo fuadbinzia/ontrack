@@ -11,17 +11,31 @@ import {
   TravelHomeAtmosphereScrim,
   travelHomeAtmosphereScrimHeight,
 } from '@/features/travel/travel-home-atmosphere-scrim';
-import { travelHomeAtmosphereHeight } from '@/features/travel/travel-home-background';
+import {
+  TRAVEL_HOME_MAP_AVERAGE_COLOR,
+  TRAVEL_HOME_MAP_BACKGROUND,
+  TRAVEL_HOME_MAP_SKY_COLOR,
+  travelHomeAtmosphereHeight,
+} from '@/features/travel/travel-home-background';
 import { travelHomeTokens } from '@/features/travel/travel-home-tokens';
 import type { TravelPlan } from '@/features/travel/types';
-import { useTravelHomeAtmosphereImage } from '@/features/travel/use-travel-home-atmosphere-image';
 import { useTheme } from '@/hooks/use-theme';
+
+const TRAVEL_HOME_MAP_IMAGE = {
+  source: TRAVEL_HOME_MAP_BACKGROUND,
+  skyColor: TRAVEL_HOME_MAP_SKY_COLOR,
+  origin: 'curated',
+  label: undefined,
+  headerInk: 'dark',
+  averageColor: TRAVEL_HOME_MAP_AVERAGE_COLOR,
+  timeOfDay: 'day',
+} as const;
 
 export function useTravelHomeAtmosphereChrome(args: {
   sortedPlans: TravelPlan[];
   launcherPlans: TravelPlan[];
 }): {
-  atmosphereImage: ReturnType<typeof useTravelHomeAtmosphereImage>;
+  atmosphereImage: typeof TRAVEL_HOME_MAP_IMAGE;
   hasNoTrips: boolean;
   atmosphereHeight: number;
   atmosphereHeaderInk: 'light' | 'dark';
@@ -31,20 +45,8 @@ export function useTravelHomeAtmosphereChrome(args: {
   const theme = useTheme();
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { sortedPlans, launcherPlans } = args;
-
-  const atmosphereDestinations = useMemo(
-    () =>
-      sortedPlans
-        .map((plan) => plan.destination?.trim() || plan.title?.trim() || '')
-        .filter((label) => label.length >= 2),
-    [sortedPlans],
-  );
-
-  const atmosphereImage = useTravelHomeAtmosphereImage({
-    enabled: true,
-    tripDestinations: atmosphereDestinations,
-  });
+  const { launcherPlans } = args;
+  const atmosphereImage = TRAVEL_HOME_MAP_IMAGE;
 
   const hasNoTrips = launcherPlans.length === 0;
   const atmosphereHeight = travelHomeAtmosphereHeight(windowHeight, insets.top, {
@@ -71,9 +73,9 @@ export function useTravelHomeAtmosphereChrome(args: {
   }, [atmosphereHeaderInk, atmosphereImage.averageColor]);
   const atmosphereScrimHeight = travelHomeAtmosphereScrimHeight(insets.top);
 
-  // Paint atmosphere on the app-shell chrome so it fills the status-bar band
+  // Paint the map on app-shell chrome so it fills the status-bar band
   // (in-screen absolute layers are clipped by SafeAreaView and can't).
-  // Hero band only — mock fades into paper before Your Trips (not full-page).
+  // Full-window atlas — including the status bar and content below the cards.
   // priority: 1 — nested travel stack layout also registers chrome at 0 and
   // would otherwise stomp this image after the child focus effect.
   useSafeAreaChrome(atmosphereImage.skyColor, {

@@ -26,6 +26,7 @@ import type {
 import { shareTravelPlan } from '@/features/travel/share';
 import type { TravelPlan } from '@/features/travel/types';
 import { useResponsive } from '@/hooks/use-responsive';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useFriendsRealtime } from '@/hooks/use-friends-realtime';
 import {
   createFriendInviteUrl,
@@ -65,7 +66,8 @@ export function SocialHubScreen() {
   const savePlan = useTravel((state) => state.savePlan);
 
   const [friendsModalVisible, setFriendsModalVisible] = useState(false);
-  const [friendsModalMode, setFriendsModalMode] = useState<SocialFriendsModalMode>('add');
+  const [friendsModalMode, setFriendsModalMode] =
+    useState<SocialFriendsModalMode>('add');
   const [email, setEmail] = useState('');
   const [working, setWorking] = useState<string>();
   const [localError, setLocalError] = useState<string>();
@@ -75,7 +77,8 @@ export function SocialHubScreen() {
   const [placeholderPrimary, setPlaceholderPrimary] = useState<() => void>();
 
   const signedIn = Boolean(user) && !isGuest;
-  useFriendsRealtime(signedIn ? user?.id : undefined);
+  const routeIsActive = useRouteIsActive();
+  useFriendsRealtime(signedIn ? user?.id : undefined, routeIsActive);
   const shareBase =
     process.env.EXPO_PUBLIC_FRIEND_SHARE_BASE_URL ??
     process.env.EXPO_PUBLIC_TODO_SHARE_BASE_URL;
@@ -122,7 +125,15 @@ export function SocialHubScreen() {
       void hydrate({ email: user?.email ?? undefined });
     }
     if (!invite) void loadInvite().catch(() => undefined);
-  }, [hydrate, invite, lastLoadedAt, loadInvite, loading, signedIn, user?.email]);
+  }, [
+    hydrate,
+    invite,
+    lastLoadedAt,
+    loadInvite,
+    loading,
+    signedIn,
+    user?.email,
+  ]);
 
   const refreshSocial = useCallback(async () => {
     if (!signedIn) return;
@@ -149,7 +160,10 @@ export function SocialHubScreen() {
 
   const openPlan = useCallback(
     (plan: TravelPlan) => {
-      router.navigate({ pathname: '/(tabs)/travel', params: { tripId: plan.id } } as never);
+      router.navigate({
+        pathname: '/(tabs)/travel',
+        params: { tripId: plan.id },
+      } as never);
     },
     [router],
   );
@@ -211,17 +225,21 @@ export function SocialHubScreen() {
   const chooseTripForFriend = useCallback(
     (friend: FriendProfile) => {
       if (plans.length === 0) {
-        appPrompt.alert('No Trips Yet', 'Create a trip first, then invite friends from here.', [
-          {
-            text: 'Go to Travel',
-            onPress: () => {
-              setFriendsModalVisible(false);
-              closePlaceholder();
-              router.push('/(tabs)/travel' as never);
+        appPrompt.alert(
+          'No Trips Yet',
+          'Create a trip first, then invite friends from here.',
+          [
+            {
+              text: 'Go to Travel',
+              onPress: () => {
+                setFriendsModalVisible(false);
+                closePlaceholder();
+                router.push('/(tabs)/travel' as never);
+              },
             },
-          },
-          { text: 'Not Now', style: 'cancel' },
-        ]);
+            { text: 'Not Now', style: 'cancel' },
+          ],
+        );
         return;
       }
       const options = [...plans.map((plan) => plan.title), 'Cancel'];
@@ -253,12 +271,20 @@ export function SocialHubScreen() {
   const openFriendProfile = useCallback(
     (friend: FriendProfile) => {
       const memberships = socialTripMemberships(friend, plans);
-      const sharedTrips = memberships.filter((membership) => membership.status === 'member');
-      const pendingTrips = memberships.filter((membership) => membership.status === 'invited');
+      const sharedTrips = memberships.filter(
+        (membership) => membership.status === 'member',
+      );
+      const pendingTrips = memberships.filter(
+        (membership) => membership.status === 'invited',
+      );
       const firstShared = sharedTrips[0]?.plan;
       const firstPending = pendingTrips[0]?.plan;
-      const sharedTripNames = sharedTrips.map(({ plan }) => plan.title).join(', ');
-      const pendingTripNames = pendingTrips.map(({ plan }) => plan.title).join(', ');
+      const sharedTripNames = sharedTrips
+        .map(({ plan }) => plan.title)
+        .join(', ');
+      const pendingTripNames = pendingTrips
+        .map(({ plan }) => plan.title)
+        .join(', ');
 
       if (firstShared) {
         const sharedCount = sharedTrips.length;
@@ -270,7 +296,10 @@ export function SocialHubScreen() {
             icon: 'people',
             statusTitle: `${sharedCount} shared ${sharedCount === 1 ? 'trip' : 'trips'}`,
             statusMessage: sharedTripNames,
-            primaryLabel: sharedCount === 1 ? `Open ${firstShared.title}` : 'View Shared Trips',
+            primaryLabel:
+              sharedCount === 1
+                ? `Open ${firstShared.title}`
+                : 'View Shared Trips',
           },
           () => {
             closePlaceholder();
@@ -308,7 +337,8 @@ export function SocialHubScreen() {
           icon: 'people',
           primaryLabel: 'Invite to a Trip',
           statusTitle: 'Connected',
-          statusMessage: 'Invite this friend into a trip or shared plan whenever you’re ready.',
+          statusMessage:
+            'Invite this friend into a trip or shared plan whenever you’re ready.',
         },
         () => {
           closePlaceholder();
@@ -316,7 +346,14 @@ export function SocialHubScreen() {
         },
       );
     },
-    [chooseTripForFriend, closePlaceholder, openPlan, plans, router, showPlaceholder],
+    [
+      chooseTripForFriend,
+      closePlaceholder,
+      openPlan,
+      plans,
+      router,
+      showPlaceholder,
+    ],
   );
 
   const openMessages = useCallback(() => {
@@ -324,14 +361,18 @@ export function SocialHubScreen() {
       (plan) => plan.participants.length > 0 || Boolean(plan.chatAccessCode),
     );
     if (chatPlan) {
-      router.push({ pathname: '/travel/[id]/chat', params: { id: chatPlan.id } } as never);
+      router.push({
+        pathname: '/travel/[id]/chat',
+        params: { id: chatPlan.id },
+      } as never);
       return;
     }
     showPlaceholder(
       {
         id: 'messages',
         title: 'Messages',
-        message: 'No conversations yet. Invite friends to a trip to open your first shared group chat.',
+        message:
+          'No conversations yet. Invite friends to a trip to open your first shared group chat.',
         icon: 'chat',
         primaryLabel: 'Open Travel',
       },
@@ -366,30 +407,39 @@ export function SocialHubScreen() {
       if (action === 'share-photos') {
         const plan = plans[0];
         if (plan) {
-          router.push({ pathname: '/travel/[id]', params: { id: plan.id } } as never);
+          router.push({
+            pathname: '/travel/[id]',
+            params: { id: plan.id },
+          } as never);
         } else {
           router.push('/(tabs)/travel' as never);
         }
         return;
       }
 
-      const placeholders: Record<'share-story' | 'poll' | 'create-group', SocialPlaceholder> = {
+      const placeholders: Record<
+        'share-story' | 'poll' | 'create-group',
+        SocialPlaceholder
+      > = {
         'share-story': {
           id: 'story',
           title: 'Share a Story',
-          message: 'No story is live right now. Story creation is ready for temporary photos and moments from your circle.',
+          message:
+            'No story is live right now. Story creation is ready for temporary photos and moments from your circle.',
           icon: 'plus-circle',
         },
         poll: {
           id: 'poll',
           title: 'Poll / Vote',
-          message: 'No polls are waiting for your vote. New group polls will appear here and in the activity feed.',
+          message:
+            'No polls are waiting for your vote. New group polls will appear here and in the activity feed.',
           icon: 'insights',
         },
         'create-group': {
           id: 'group',
           title: 'Create a Group',
-          message: 'You have no standalone groups yet. Shared trip groups and their chats already work through Travel.',
+          message:
+            'You have no standalone groups yet. Shared trip groups and their chats already work through Travel.',
           icon: 'people',
           primaryLabel: 'Open Travel',
         },
@@ -405,25 +455,48 @@ export function SocialHubScreen() {
           : undefined,
       );
     },
-    [closePlaceholder, openFriends, openMessages, plans, router, showPlaceholder],
+    [
+      closePlaceholder,
+      openFriends,
+      openMessages,
+      plans,
+      router,
+      showPlaceholder,
+    ],
   );
 
   const openFeedItem = useCallback(
     (item: SocialFeedItem) => {
       if (item.kind === 'trip' || item.kind === 'photos') {
-        router.push({ pathname: '/travel/[id]', params: { id: item.tripId } } as never);
+        router.push({
+          pathname: '/travel/[id]',
+          params: { id: item.tripId },
+        } as never);
         return;
       }
       if (item.kind === 'connection') {
-        const friend = friends.find((entry) => entry.userId === item.actor.userId);
+        const friend = friends.find(
+          (entry) => entry.userId === item.actor.userId,
+        );
         if (friend) openFriendProfile(friend);
         return;
       }
       showPlaceholder({
         id: `feed-${item.id}`,
-        title: item.kind === 'workout' ? item.workoutTitle : item.kind === 'story' ? 'Story' : 'Poll',
-        message: 'This shared update is ready to open once its social service is connected.',
-        icon: item.kind === 'workout' ? 'gym' : item.kind === 'story' ? 'photo' : 'insights',
+        title:
+          item.kind === 'workout'
+            ? item.workoutTitle
+            : item.kind === 'story'
+              ? 'Story'
+              : 'Poll',
+        message:
+          'This shared update is ready to open once its social service is connected.',
+        icon:
+          item.kind === 'workout'
+            ? 'gym'
+            : item.kind === 'story'
+              ? 'photo'
+              : 'insights',
       });
     },
     [friends, openFriendProfile, router, showPlaceholder],
@@ -436,7 +509,9 @@ export function SocialHubScreen() {
         message: `${friend.displayName} will be removed from your friends list. Shared trips and lists stay as they are.`,
         actionLabel: 'Remove',
         onConfirm: () =>
-          void run(`remove-${friend.userId}`, () => removeFriend(friend.userId)),
+          void run(`remove-${friend.userId}`, () =>
+            removeFriend(friend.userId),
+          ),
       });
     },
     [removeFriend, run],
@@ -463,14 +538,20 @@ export function SocialHubScreen() {
 
   return (
     <>
-      <Screen refresh={signedIn} onRefresh={refreshSocial} contentStyle={{ gap: spacing.xl }}>
+      <Screen
+        refresh={signedIn}
+        onRefresh={refreshSocial}
+        contentStyle={{ gap: spacing.xl }}
+      >
         <SocialHeader
           pendingCount={incoming.length}
           onAddFriend={() => openFriends('add')}
           onMessages={openMessages}
         />
 
-        {localError || error ? <ErrorMessage message={localError ?? error ?? ''} /> : null}
+        {localError || error ? (
+          <ErrorMessage message={localError ?? error ?? ''} />
+        ) : null}
 
         <SocialFriendsCard
           friends={friends}
@@ -510,12 +591,17 @@ export function SocialHubScreen() {
         onClose={() => setFriendsModalVisible(false)}
         onSignIn={goToSignIn}
         onEmailChange={setEmail}
-        onSlugChange={(value) => setSlugDraft(value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+        onSlugChange={(value) =>
+          setSlugDraft(value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+        }
         onSendRequest={() =>
           void run('send', async () => {
             await sendRequest(email);
             setEmail('');
-            appPrompt.alert('Request Sent', 'They will see it in Social when they sign in.');
+            appPrompt.alert(
+              'Request Sent',
+              'They will see it in Social when they sign in.',
+            );
           })
         }
         onSaveSlug={() =>

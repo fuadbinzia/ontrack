@@ -6,7 +6,7 @@ describe('flight confirmation add-sheet import', () => {
     const source = readFileSync(
       join(
         process.cwd(),
-        'src/features/travel/use-travel-plan-confirmation-imports.ts',
+        'src/features/travel/travel-plan-confirmation-import-flight.ts',
       ),
       'utf8',
     );

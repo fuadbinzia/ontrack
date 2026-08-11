@@ -1,5 +1,6 @@
 import { fetch } from 'expo/fetch';
 
+import { beginRuntimeOperation } from '@/features/performance/runtime-activity';
 import { authHeader } from '@/services/cloud/access-token';
 
 export type ApiErrorBody = {
@@ -53,6 +54,11 @@ export async function apiRequest<T, TError extends Error>(
   const onExternalAbort = () => controller?.abort();
   signal?.addEventListener('abort', onExternalAbort, { once: true });
   const requestSignal = controller?.signal ?? signal;
+  const serializedBody = body === undefined ? undefined : JSON.stringify(body);
+  const finishActivity = beginRuntimeOperation(
+    { id: 'network.api', label: 'API requests', category: 'network' },
+    { sentBytes: serializedBody?.length ?? 0, detail: method },
+  );
 
   let response: Response;
   try {
@@ -64,10 +70,11 @@ export async function apiRequest<T, TError extends Error>(
         ...auth,
         ...headers,
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: serializedBody,
       signal: requestSignal,
     });
   } catch (error) {
+    finishActivity({ error: true });
     if (error instanceof Error && error.name === 'AbortError') throw error;
     throw createError(
       offlineMessage,
@@ -82,6 +89,10 @@ export async function apiRequest<T, TError extends Error>(
     const parsed = (await response.json().catch(() => undefined)) as
       | ApiErrorBody
       | undefined;
+    finishActivity({
+      error: true,
+      receivedBytes: Number(response.headers.get('content-length')) || 0,
+    });
     throw createError(
       parsed?.error ?? unavailableMessage,
       parsed?.code ?? defaultErrorCode,
@@ -89,5 +100,6 @@ export async function apiRequest<T, TError extends Error>(
     );
   }
 
+  finishActivity({ receivedBytes: Number(response.headers.get('content-length')) || 0 });
   return response.json() as Promise<T>;
 }

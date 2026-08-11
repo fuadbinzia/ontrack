@@ -2,6 +2,7 @@ import { usePathname } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
+import { removeRuntimeActivity, setRuntimeActivity } from '@/features/performance/runtime-activity';
 import {
   resolveAnalyticsSurface,
   type AnalyticsSurface,
@@ -26,6 +27,15 @@ export function UsageAnalyticsTracker() {
   useEffect(() => {
     useUsageAnalytics.getState().ensureInstallId();
   }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+    setRuntimeActivity(
+      { id: 'system.usageAnalytics', label: 'Usage analytics', category: 'system' },
+      { status: 'running', detail: 'Local surface timing' },
+    );
+    return () => removeRuntimeActivity('system.usageAnalytics');
+  }, [enabled]);
 
   useEffect(() => {
     if (!enabled) {

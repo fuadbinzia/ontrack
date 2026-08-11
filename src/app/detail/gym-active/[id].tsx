@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText, Button, Card } from '@/components/primitives';
 import { spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useSchedule } from '@/store/schedule';
 import type { WorkoutExercise } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -13,16 +14,23 @@ import { haptics } from '@/utils/haptics';
 
 export default function ActiveWorkoutScreen() {
   const theme = useTheme();
+  const routeIsActive = useRouteIsActive();
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
   const activityId = params.id;
 
-  const activity = useSchedule((s) => s.activities.find((a) => a.id === activityId));
-  const storedWorkout = useSchedule((s) => s.workouts.find((w) => w.activityId === activityId));
+  const activity = useSchedule((s) =>
+    s.activities.find((a) => a.id === activityId),
+  );
+  const storedWorkout = useSchedule((s) =>
+    s.workouts.find((w) => w.activityId === activityId),
+  );
   const setStatus = useSchedule((s) => s.setStatus);
   const upsertWorkout = useSchedule((s) => s.upsertWorkout);
 
-  const [exercises, setExercises] = useState<WorkoutExercise[]>(() => storedWorkout?.exercises ?? []);
+  const [exercises, setExercises] = useState<WorkoutExercise[]>(
+    () => storedWorkout?.exercises ?? [],
+  );
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [setIndex, setSetIndex] = useState(0);
   const [restSeconds, setRestSeconds] = useState(0);
@@ -45,15 +53,19 @@ export default function ActiveWorkoutScreen() {
   const currentSet = current?.sets[setIndex];
 
   useEffect(() => {
+    if (!routeIsActive) return;
     const timer = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [routeIsActive]);
 
   useEffect(() => {
-    if (restSeconds <= 0) return;
-    const timer = setInterval(() => setRestSeconds((s) => Math.max(0, s - 1)), 1000);
+    if (!routeIsActive || restSeconds <= 0) return;
+    const timer = setInterval(
+      () => setRestSeconds((s) => Math.max(0, s - 1)),
+      1000,
+    );
     return () => clearInterval(timer);
-  }, [restSeconds]);
+  }, [restSeconds, routeIsActive]);
 
   const finish = (status: 'completed' | 'partial' = 'completed') => {
     if (activity) setStatus(activity.id, status);
@@ -74,7 +86,9 @@ export default function ActiveWorkoutScreen() {
       if (ei !== exerciseIndex) return exercise;
       return {
         ...exercise,
-        sets: exercise.sets.map((set, si) => (si === setIndex ? { ...set, done: true } : set)),
+        sets: exercise.sets.map((set, si) =>
+          si === setIndex ? { ...set, done: true } : set,
+        ),
       };
     });
     persistExercises(nextExercises);
@@ -102,7 +116,10 @@ export default function ActiveWorkoutScreen() {
 
   if (!activity || !storedWorkout || !current || !currentSet) {
     return (
-      <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.fill, { backgroundColor: theme.backgroundPrimary }]}>
+      <SafeAreaView
+        edges={['left', 'right', 'bottom']}
+        style={[styles.fill, { backgroundColor: theme.backgroundPrimary }]}
+      >
         <AppText variant="title">Workout Not Found</AppText>
         <Button onPress={() => router.back()} accessibilityLabel="Go Back">
           Go Back
@@ -112,7 +129,10 @@ export default function ActiveWorkoutScreen() {
   }
 
   return (
-    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.fill, { backgroundColor: theme.backgroundPrimary }]}>
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      style={[styles.fill, { backgroundColor: theme.backgroundPrimary }]}
+    >
       <View style={styles.header}>
         <AppText variant="overline" color="tertiary">
           Active workout · {elapsedLabel}
@@ -148,14 +168,16 @@ export default function ActiveWorkoutScreen() {
           size="lg"
           testID={AgentUiIds.workouts.gym.completeSet}
           onPress={completeSet}
-          accessibilityLabel="Complete set">
+          accessibilityLabel="Complete set"
+        >
           Complete set
         </Button>
         <Button
           variant="ghost"
           testID={AgentUiIds.workouts.gym.finish}
           onPress={() => finish('partial')}
-          accessibilityLabel="Finish workout">
+          accessibilityLabel="Finish workout"
+        >
           Finish workout
         </Button>
       </View>

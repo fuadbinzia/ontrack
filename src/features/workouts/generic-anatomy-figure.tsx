@@ -12,6 +12,7 @@ import Animated, {
 
 import { radii } from '@/design-system';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import type { MovementPattern } from './exercise-motion';
 import type { MuscleKey } from './muscle-data';
 
@@ -37,8 +38,9 @@ export function GenericAnatomyFigure({
   const progress = useSharedValue(0);
   const reduceMotion = useReducedMotion();
   const { allowsLoopMotion } = usePerformanceTier();
+  const routeIsActive = useRouteIsActive();
   const hitSet = new Set(hits);
-  const stillPose = reduceMotion || !allowsLoopMotion;
+  const stillPose = reduceMotion || !allowsLoopMotion || !routeIsActive;
 
   useEffect(() => {
     cancelAnimation(progress);
@@ -78,48 +80,65 @@ export function GenericAnatomyFigure({
       return { transform: [{ translateY: -12 * p }] };
     }
     if (pattern === 'carry') {
-      return { transform: [{ translateX: -4 + 8 * p }, { translateY: -3 * p }] };
+      return {
+        transform: [{ translateX: -4 + 8 * p }, { translateY: -3 * p }],
+      };
     }
     return { transform: [{ translateY: -2 * p }] };
   });
 
   const leftUpperArmMotion = useAnimatedStyle(() => {
     const p = smoothStep(progress.value);
-    if (pattern === 'vertical-press') return { transform: [{ rotate: `${150 * p}deg` }] };
-    if (pattern === 'vertical-pull') return { transform: [{ rotate: `${150 * (1 - p)}deg` }] };
-    if (pattern === 'horizontal-push') return { transform: [{ rotate: `${-55 + 28 * p}deg` }] };
+    if (pattern === 'vertical-press')
+      return { transform: [{ rotate: `${150 * p}deg` }] };
+    if (pattern === 'vertical-pull')
+      return { transform: [{ rotate: `${150 * (1 - p)}deg` }] };
+    if (pattern === 'horizontal-push')
+      return { transform: [{ rotate: `${-55 + 28 * p}deg` }] };
     if (pattern === 'row') return { transform: [{ rotate: `${32 * p}deg` }] };
-    if (pattern === 'triceps-extension') return { transform: [{ rotate: '150deg' }] };
+    if (pattern === 'triceps-extension')
+      return { transform: [{ rotate: '150deg' }] };
     return { transform: [{ rotate: '6deg' }] };
   });
 
   const rightUpperArmMotion = useAnimatedStyle(() => {
     const p = smoothStep(progress.value);
-    if (pattern === 'vertical-press') return { transform: [{ rotate: `${-150 * p}deg` }] };
-    if (pattern === 'vertical-pull') return { transform: [{ rotate: `${-150 * (1 - p)}deg` }] };
-    if (pattern === 'horizontal-push') return { transform: [{ rotate: `${55 - 28 * p}deg` }] };
+    if (pattern === 'vertical-press')
+      return { transform: [{ rotate: `${-150 * p}deg` }] };
+    if (pattern === 'vertical-pull')
+      return { transform: [{ rotate: `${-150 * (1 - p)}deg` }] };
+    if (pattern === 'horizontal-push')
+      return { transform: [{ rotate: `${55 - 28 * p}deg` }] };
     if (pattern === 'row') return { transform: [{ rotate: `${-32 * p}deg` }] };
-    if (pattern === 'triceps-extension') return { transform: [{ rotate: '-150deg' }] };
+    if (pattern === 'triceps-extension')
+      return { transform: [{ rotate: '-150deg' }] };
     return { transform: [{ rotate: '-6deg' }] };
   });
 
   const leftForearmMotion = useAnimatedStyle(() => {
     const p = smoothStep(progress.value);
-    if (pattern === 'curl') return { transform: [{ rotate: `${-112 * p}deg` }] };
-    if (pattern === 'vertical-press') return { transform: [{ rotate: `${-72 * (1 - p)}deg` }] };
-    if (pattern === 'vertical-pull') return { transform: [{ rotate: `${-92 * p}deg` }] };
+    if (pattern === 'curl')
+      return { transform: [{ rotate: `${-112 * p}deg` }] };
+    if (pattern === 'vertical-press')
+      return { transform: [{ rotate: `${-72 * (1 - p)}deg` }] };
+    if (pattern === 'vertical-pull')
+      return { transform: [{ rotate: `${-92 * p}deg` }] };
     if (pattern === 'row') return { transform: [{ rotate: `${-88 * p}deg` }] };
-    if (pattern === 'triceps-extension') return { transform: [{ rotate: `${-105 * (1 - p)}deg` }] };
+    if (pattern === 'triceps-extension')
+      return { transform: [{ rotate: `${-105 * (1 - p)}deg` }] };
     return { transform: [{ rotate: '0deg' }] };
   });
 
   const rightForearmMotion = useAnimatedStyle(() => {
     const p = smoothStep(progress.value);
     if (pattern === 'curl') return { transform: [{ rotate: `${112 * p}deg` }] };
-    if (pattern === 'vertical-press') return { transform: [{ rotate: `${72 * (1 - p)}deg` }] };
-    if (pattern === 'vertical-pull') return { transform: [{ rotate: `${92 * p}deg` }] };
+    if (pattern === 'vertical-press')
+      return { transform: [{ rotate: `${72 * (1 - p)}deg` }] };
+    if (pattern === 'vertical-pull')
+      return { transform: [{ rotate: `${92 * p}deg` }] };
     if (pattern === 'row') return { transform: [{ rotate: `${88 * p}deg` }] };
-    if (pattern === 'triceps-extension') return { transform: [{ rotate: `${105 * (1 - p)}deg` }] };
+    if (pattern === 'triceps-extension')
+      return { transform: [{ rotate: `${105 * (1 - p)}deg` }] };
     return { transform: [{ rotate: '0deg' }] };
   });
 
@@ -128,7 +147,8 @@ export function GenericAnatomyFigure({
     if (pattern === 'squat' || pattern === 'knee-extension') {
       return { transform: [{ rotate: `${20 * p}deg` }] };
     }
-    if (pattern === 'hip-abduction') return { transform: [{ rotate: `${25 * p}deg` }] };
+    if (pattern === 'hip-abduction')
+      return { transform: [{ rotate: `${25 * p}deg` }] };
     return { transform: [{ rotate: '2deg' }] };
   });
 
@@ -137,23 +157,29 @@ export function GenericAnatomyFigure({
     if (pattern === 'squat' || pattern === 'knee-extension') {
       return { transform: [{ rotate: `${-20 * p}deg` }] };
     }
-    if (pattern === 'hip-abduction') return { transform: [{ rotate: `${-25 * p}deg` }] };
+    if (pattern === 'hip-abduction')
+      return { transform: [{ rotate: `${-25 * p}deg` }] };
     return { transform: [{ rotate: '-2deg' }] };
   });
 
   const leftCalfMotion = useAnimatedStyle(() => {
     const p = smoothStep(progress.value);
-    if (pattern === 'squat') return { transform: [{ rotate: `${-34 * p}deg` }] };
-    if (pattern === 'knee-flexion') return { transform: [{ rotate: `${-92 * p}deg` }] };
-    if (pattern === 'knee-extension') return { transform: [{ rotate: `${-70 * (1 - p)}deg` }] };
+    if (pattern === 'squat')
+      return { transform: [{ rotate: `${-34 * p}deg` }] };
+    if (pattern === 'knee-flexion')
+      return { transform: [{ rotate: `${-92 * p}deg` }] };
+    if (pattern === 'knee-extension')
+      return { transform: [{ rotate: `${-70 * (1 - p)}deg` }] };
     return { transform: [{ rotate: '0deg' }] };
   });
 
   const rightCalfMotion = useAnimatedStyle(() => {
     const p = smoothStep(progress.value);
     if (pattern === 'squat') return { transform: [{ rotate: `${34 * p}deg` }] };
-    if (pattern === 'knee-flexion') return { transform: [{ rotate: `${92 * p}deg` }] };
-    if (pattern === 'knee-extension') return { transform: [{ rotate: `${70 * (1 - p)}deg` }] };
+    if (pattern === 'knee-flexion')
+      return { transform: [{ rotate: `${92 * p}deg` }] };
+    if (pattern === 'knee-extension')
+      return { transform: [{ rotate: `${70 * (1 - p)}deg` }] };
     return { transform: [{ rotate: '0deg' }] };
   });
 
@@ -171,7 +197,11 @@ export function GenericAnatomyFigure({
     hitSet.has('upper-back') || hitSet.has('lats') || hitSet.has('lower-back');
 
   return (
-    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.figureStage}>
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={styles.figureStage}
+    >
       <View style={styles.motionArcOne} />
       <View style={styles.motionArcTwo} />
       <Animated.View style={[styles.figure, bodyMotion]}>
@@ -230,7 +260,13 @@ export function GenericAnatomyFigure({
           ]}
         />
 
-        <Animated.View style={[styles.upperArmAnchor, styles.leftUpperArm, leftUpperArmMotion]}>
+        <Animated.View
+          style={[
+            styles.upperArmAnchor,
+            styles.leftUpperArm,
+            leftUpperArmMotion,
+          ]}
+        >
           <Animated.View
             style={[
               styles.upperArmSegment,
@@ -250,7 +286,13 @@ export function GenericAnatomyFigure({
           </Animated.View>
         </Animated.View>
 
-        <Animated.View style={[styles.upperArmAnchor, styles.rightUpperArm, rightUpperArmMotion]}>
+        <Animated.View
+          style={[
+            styles.upperArmAnchor,
+            styles.rightUpperArm,
+            rightUpperArmMotion,
+          ]}
+        >
           <Animated.View
             style={[
               styles.upperArmSegment,
@@ -278,7 +320,9 @@ export function GenericAnatomyFigure({
           ]}
         />
 
-        <Animated.View style={[styles.thighAnchor, styles.leftThigh, leftThighMotion]}>
+        <Animated.View
+          style={[styles.thighAnchor, styles.leftThigh, leftThighMotion]}
+        >
           <Animated.View
             style={[
               styles.thighSegment,
@@ -298,7 +342,9 @@ export function GenericAnatomyFigure({
           </Animated.View>
         </Animated.View>
 
-        <Animated.View style={[styles.thighAnchor, styles.rightThigh, rightThighMotion]}>
+        <Animated.View
+          style={[styles.thighAnchor, styles.rightThigh, rightThighMotion]}
+        >
           <Animated.View
             style={[
               styles.thighSegment,
@@ -322,9 +368,8 @@ export function GenericAnatomyFigure({
   );
 }
 
-
 const styles = StyleSheet.create({
-    figureStage: {
+  figureStage: {
     height: 340,
     alignItems: 'center',
     justifyContent: 'center',
@@ -332,7 +377,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     backgroundColor: '#231916',
   },
-    motionArcOne: {
+  motionArcOne: {
     position: 'absolute',
     width: 250,
     height: 250,
@@ -340,7 +385,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 198, 156, 0.12)',
     borderRadius: 125,
   },
-    motionArcTwo: {
+  motionArcTwo: {
     position: 'absolute',
     width: 190,
     height: 190,
@@ -348,12 +393,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 198, 156, 0.08)',
     borderRadius: 95,
   },
-    figure: {
+  figure: {
     width: 150,
     height: 282,
     position: 'relative',
   },
-    head: {
+  head: {
     position: 'absolute',
     top: 0,
     left: 57,
@@ -365,12 +410,12 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: RESTING_MUSCLE,
   },
-    headLine: {
+  headLine: {
     width: 1,
     height: 40,
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
-    neck: {
+  neck: {
     position: 'absolute',
     top: 36,
     left: 67,
@@ -379,7 +424,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: RESTING_MUSCLE_DARK,
   },
-    torso: {
+  torso: {
     position: 'absolute',
     top: 48,
     left: 40,
@@ -391,7 +436,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: RESTING_MUSCLE_DARK,
   },
-    backPlate: {
+  backPlate: {
     position: 'absolute',
     top: 6,
     left: 9,
@@ -400,20 +445,20 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: RESTING_MUSCLE_DARK,
   },
-    chestRow: {
+  chestRow: {
     position: 'absolute',
     top: 7,
     left: 7,
     flexDirection: 'row',
     gap: 2,
   },
-    chestMuscle: {
+  chestMuscle: {
     width: 27,
     height: 23,
     borderRadius: 11,
     backgroundColor: RESTING_MUSCLE,
   },
-    coreMuscle: {
+  coreMuscle: {
     position: 'absolute',
     top: 34,
     left: 25,
@@ -422,7 +467,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: RESTING_MUSCLE,
   },
-    shoulderMuscle: {
+  shoulderMuscle: {
     position: 'absolute',
     top: 46,
     width: 27,
@@ -430,9 +475,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: RESTING_MUSCLE,
   },
-    leftShoulder: { left: 27 },
-    rightShoulder: { right: 27 },
-    upperArmAnchor: {
+  leftShoulder: { left: 27 },
+  rightShoulder: { right: 27 },
+  upperArmAnchor: {
     position: 'absolute',
     top: 61,
     width: 20,
@@ -440,15 +485,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     transformOrigin: '50% 0%',
   },
-    leftUpperArm: { left: 28 },
-    rightUpperArm: { right: 28 },
-    upperArmSegment: {
+  leftUpperArm: { left: 28 },
+  rightUpperArm: { right: 28 },
+  upperArmSegment: {
     width: 18,
     height: 62,
     borderRadius: 9,
     backgroundColor: RESTING_MUSCLE,
   },
-    forearmAnchor: {
+  forearmAnchor: {
     position: 'absolute',
     top: 58,
     left: 2,
@@ -457,19 +502,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     transformOrigin: '50% 0%',
   },
-    forearmSegment: {
+  forearmSegment: {
     width: 15,
     height: 58,
     borderRadius: 8,
     backgroundColor: RESTING_MUSCLE_DARK,
   },
-    hand: {
+  hand: {
     width: 17,
     height: 17,
     borderRadius: 7,
     backgroundColor: '#C4A297',
   },
-    pelvis: {
+  pelvis: {
     position: 'absolute',
     top: 124,
     left: 47,
@@ -478,7 +523,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: RESTING_MUSCLE_DARK,
   },
-    thighAnchor: {
+  thighAnchor: {
     position: 'absolute',
     top: 145,
     width: 28,
@@ -486,15 +531,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     transformOrigin: '50% 0%',
   },
-    leftThigh: { left: 46 },
-    rightThigh: { right: 46 },
-    thighSegment: {
+  leftThigh: { left: 46 },
+  rightThigh: { right: 46 },
+  thighSegment: {
     width: 27,
     height: 68,
     borderRadius: 14,
     backgroundColor: RESTING_MUSCLE,
   },
-    calfAnchor: {
+  calfAnchor: {
     position: 'absolute',
     top: 63,
     left: 5,
@@ -503,18 +548,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     transformOrigin: '50% 0%',
   },
-    calfSegment: {
+  calfSegment: {
     width: 17,
     height: 63,
     borderRadius: 9,
     backgroundColor: RESTING_MUSCLE_DARK,
   },
-    foot: {
+  foot: {
     width: 25,
     height: 12,
     borderRadius: 6,
     backgroundColor: '#C4A297',
   },
-    activeMuscle: { backgroundColor: ACTIVE_MUSCLE },
-    activeMuscleLight: { backgroundColor: ACTIVE_MUSCLE_LIGHT },
+  activeMuscle: { backgroundColor: ACTIVE_MUSCLE },
+  activeMuscleLight: { backgroundColor: ACTIVE_MUSCLE_LIGHT },
 });

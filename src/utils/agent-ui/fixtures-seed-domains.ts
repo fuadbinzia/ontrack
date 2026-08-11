@@ -21,6 +21,7 @@ import { buildAgentUiDemoChecklist, buildAgentUiDemoGrocery, upsertTodoFixtureLi
 type DomainFixtureName = Exclude<
   AgentUiFixtureName,
   | 'travel-demo'
+  | 'travel-map-demo'
   | 'travel-punta-cana'
   | 'travel-home'
   | 'travel-home-empty'

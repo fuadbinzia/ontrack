@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
+import { removeRuntimeActivity, setRuntimeActivity } from '@/features/performance/runtime-activity';
 import { getNotificationsModule } from '@/services/notifications/runtime';
 import { configurePlantNotifications } from '@/services/plants/notifications';
 import { reconcilePlantSchedules } from '@/services/plants/schedule';
@@ -73,6 +74,10 @@ export function useRootStartupEffects({
     };
     const cancelIdle = deferUntilIdle(() => {
       if (!active) return;
+      setRuntimeActivity(
+        { id: 'system.notifications', label: 'Notifications', category: 'system' },
+        { status: 'running', detail: 'Plant schedules and response listener' },
+      );
       void configurePlantNotifications().catch(() => undefined).then(reconcilePlantSchedules);
       if (Platform.OS === 'web') return;
       void getNotificationsModule().then((notifications) => {
@@ -85,6 +90,7 @@ export function useRootStartupEffects({
       active = false;
       cancelIdle();
       subscription?.remove();
+      removeRuntimeActivity('system.notifications');
     };
   }, [appAccess, hydrated, router]);
 

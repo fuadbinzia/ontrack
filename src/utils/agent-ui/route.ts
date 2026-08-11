@@ -36,6 +36,8 @@ export const AGENT_UI_ROUTE_ALIASES = {
   integrations: '/integrations',
   developer: '/developer',
   'developer-tools': '/developer',
+  performance: '/(tabs)/profile/performance',
+  'performance-monitor': '/(tabs)/profile/performance',
   nutrition: '/nutrition-profile',
   activityForm: '/activity-form',
   activity: '/activity-form',

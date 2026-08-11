@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText, Button, GlassPlate } from '@/components/primitives';
 import { layout, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { haptics } from '@/utils/haptics';
 import { goBackOrReplace } from '@/utils/navigation';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -18,6 +19,7 @@ import type { GamePhase, LevelConfig } from './types';
 
 export function BalloonPopScreen() {
   const theme = useTheme();
+  const routeIsActive = useRouteIsActive();
   const router = useRouter();
   const [levelNumber, setLevelNumber] = useState(1);
   const [level, setLevel] = useState<LevelConfig>(() => getLevelConfig(1));
@@ -45,7 +47,7 @@ export function BalloonPopScreen() {
   }, []);
 
   useEffect(() => {
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' || !routeIsActive) return;
 
     const id = setInterval(() => {
       if (phaseRef.current !== 'playing') return;
@@ -60,7 +62,7 @@ export function BalloonPopScreen() {
     }, 100);
 
     return () => clearInterval(id);
-  }, [phase, level.level]);
+  }, [phase, level.level, routeIsActive]);
 
   const onPopTarget = useCallback(() => {
     haptics.tap();
@@ -70,7 +72,10 @@ export function BalloonPopScreen() {
 
   const onPopWrong = useCallback(() => {
     haptics.warning();
-    const next = applyTimePenalty(remainingRef.current, level.wrongPopPenaltySec);
+    const next = applyTimePenalty(
+      remainingRef.current,
+      level.wrongPopPenaltySec,
+    );
     remainingRef.current = next;
     setRemainingSec(next);
     setTimerFlash(true);
@@ -89,12 +94,12 @@ export function BalloonPopScreen() {
   }, []);
 
   useEffect(() => {
-    if (phase !== 'won') return;
+    if (phase !== 'won' || !routeIsActive) return;
     const id = setTimeout(() => {
       startLevel(levelNumber + 1, true);
     }, 1200);
     return () => clearTimeout(id);
-  }, [phase, levelNumber, startLevel]);
+  }, [phase, levelNumber, routeIsActive, startLevel]);
 
   const leave = () => goBackOrReplace(router, '/(tabs)/games');
 
@@ -102,7 +107,8 @@ export function BalloonPopScreen() {
   return (
     <SafeAreaView
       edges={['left', 'right', 'bottom']}
-      style={[styles.fill, { backgroundColor: theme.backgroundPrimary }]}>
+      style={[styles.fill, { backgroundColor: theme.backgroundPrimary }]}
+    >
       <View style={styles.content}>
         <BalloonPopHud
           level={level.level}
@@ -118,7 +124,7 @@ export function BalloonPopScreen() {
           <BalloonPopStage
             key={`${level.level}-${phase === 'ready' ? 'ready' : 'run'}-${levelNumber}`}
             level={level}
-            playing={phase === 'playing'}
+            playing={phase === 'playing' && routeIsActive}
             onPopTarget={onPopTarget}
             onPopWrong={onPopWrong}
             onTargetsCleared={onTargetsCleared}
@@ -126,18 +132,29 @@ export function BalloonPopScreen() {
         </View>
 
         {phase === 'ready' ? (
-          <View style={[styles.overlay, { backgroundColor: theme.overlayScrim }]}>
+          <View
+            style={[styles.overlay, { backgroundColor: theme.overlayScrim }]}
+          >
             <GlassPlate style={styles.panel}>
               <View style={styles.panelInner}>
                 <AppText variant="heading" align="center">
                   Balloon Pop
                 </AppText>
-                <AppText variant="body" color="secondary" align="center" style={styles.blurb}>
-                  Pop every {balloonColor(level.targetColorId).label.toLowerCase()} balloon before
-                  time runs out. Wrong colors cost time. Fans push balloons harder as you climb
-                  levels.
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  align="center"
+                  style={styles.blurb}
+                >
+                  Pop every{' '}
+                  {balloonColor(level.targetColorId).label.toLowerCase()}{' '}
+                  balloon before time runs out. Wrong colors cost time. Fans
+                  push balloons harder as you climb levels.
                 </AppText>
-                <Button testID={AgentUiIds.games.balloonPopPlay} onPress={() => startLevel(1, false)}>
+                <Button
+                  testID={AgentUiIds.games.balloonPopPlay}
+                  onPress={() => startLevel(1, false)}
+                >
                   Play
                 </Button>
               </View>
@@ -154,25 +171,34 @@ export function BalloonPopScreen() {
         ) : null}
 
         {phase === 'lost' ? (
-          <View style={[styles.overlay, { backgroundColor: theme.overlayScrim }]}>
+          <View
+            style={[styles.overlay, { backgroundColor: theme.overlayScrim }]}
+          >
             <GlassPlate style={styles.panel}>
               <View style={styles.panelInner}>
                 <AppText variant="heading" align="center">
                   Time’s up
                 </AppText>
-                <AppText variant="body" color="secondary" align="center" style={styles.blurb}>
+                <AppText
+                  variant="body"
+                  color="secondary"
+                  align="center"
+                  style={styles.blurb}
+                >
                   Score {score} · reached level {level.level}
                 </AppText>
                 <View style={styles.actions}>
                   <Button
                     testID={AgentUiIds.games.balloonPopRetry}
-                    onPress={() => startLevel(level.level, false)}>
+                    onPress={() => startLevel(level.level, false)}
+                  >
                     Retry
                   </Button>
                   <Button
                     variant="secondary"
                     testID={AgentUiIds.games.balloonPopBack}
-                    onPress={leave}>
+                    onPress={leave}
+                  >
                     Back to Games
                   </Button>
                 </View>

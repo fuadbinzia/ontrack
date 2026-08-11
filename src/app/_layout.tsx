@@ -1,33 +1,45 @@
 import { Stack, usePathname, useRouter } from 'expo-router';
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from 'expo-router/react-navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
 
 import { NavigationSessionSync } from '@/components/navigation/navigation-session-sync';
 import {
-    AppPromptHost,
-    AppSafeArea,
-    HeaderBackButton,
-    RouteErrorBoundary,
-    ScreenAtmosphere,
+  AppPromptHost,
+  AppSafeArea,
+  HeaderBackButton,
+  RouteErrorBoundary,
+  ScreenAtmosphere,
 } from '@/components/primitives';
 import { motion, spacing } from '@/design-system';
 import { UsageAnalyticsTracker } from '@/features/analytics/usage-analytics-tracker';
 import { AppBootLoader } from '@/features/auth/app-boot-loader';
-import { AuthSessionProvider, useAuthSession } from '@/features/auth/auth-provider';
+import {
+  AuthSessionProvider,
+  useAuthSession,
+} from '@/features/auth/auth-provider';
 import { withoutGuestDirtyTracking } from '@/features/auth/guest-dirty-tracking';
 import { useShouldShowWelcome } from '@/features/auth/welcome-preview';
 import { seedFoodIfNeeded } from '@/features/food/food-seed';
+import { PerformanceMonitorProvider } from '@/features/performance/performance-monitor-provider';
 import {
-    TravelAtmosphereProvider,
-    useTravelRouteAtmosphere,
+  TravelAtmosphereProvider,
+  useTravelRouteAtmosphere,
 } from '@/features/travel/travel-atmosphere';
 import { selectTravelAtmospherePlan } from '@/features/travel/travel-atmosphere-model';
 import { useApplyOtaUpdate } from '@/hooks/use-apply-ota-update';
+import { useAppIsActive } from '@/hooks/use-app-activity';
 import { useHydrated } from '@/hooks/use-hydrated';
 import { useMealPhotoMigration } from '@/hooks/use-meal-photo-migration';
 import { useRootStartupEffects } from '@/hooks/use-root-startup-effects';
@@ -38,7 +50,11 @@ import { useAuthAccess } from '@/store/auth-access';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { useTravel } from '@/store/travel';
-import { AgentUiFabRestoreHost, AgentUiOverlay, AgentUiRouteSync } from '@/utils/agent-ui';
+import {
+  AgentUiFabRestoreHost,
+  AgentUiOverlay,
+  AgentUiRouteSync,
+} from '@/utils/agent-ui';
 import { todayKey } from '@/utils/date';
 import { ThemeToggleFab, ThemeToggleFabHost } from '@/utils/dev-theme-toggle';
 
@@ -49,17 +65,22 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
   useApplyOtaUpdate();
+  const appIsActive = useAppIsActive();
   const theme = useTheme();
   const hydrated = useHydrated();
   const pathname = usePathname();
   const travelRoute = pathname === '/travel' || pathname.startsWith('/travel/');
   const plans = useTravel((state) => state.plans);
   const dateDisplayFormat = usePreferences((state) => state.dateDisplayFormat);
-  const atmospherePlan = selectTravelAtmospherePlan(plans, pathname, todayKey());
+  const atmospherePlan = selectTravelAtmospherePlan(
+    plans,
+    pathname,
+    todayKey(),
+  );
   const atmosphere = useTravelRouteAtmosphere(
     atmospherePlan?.destination,
     dateDisplayFormat,
-    travelRoute && hydrated,
+    travelRoute && hydrated && appIsActive,
   );
 
   // Keep navigator chrome transparent so AppSafeArea washes (Travel atmosphere,
@@ -84,7 +105,8 @@ export default function RootLayout() {
           <TravelAtmosphereProvider atmosphere={atmosphere}>
             <AppSafeArea>
               <AuthSessionProvider hydrated={hydrated}>
-                <RootNavigator hydrated={hydrated} />
+                <PerformanceMonitorProvider />
+                <RootNavigator hydrated={hydrated} pathname={pathname} />
                 <AppPromptHost />
               </AuthSessionProvider>
             </AppSafeArea>
@@ -116,7 +138,19 @@ function legalDocumentScreenOptions(title: string) {
   };
 }
 
-function RootNavigator({ hydrated }: { hydrated: boolean }) {
+function pathIsWithin(pathname: string, roots: readonly string[]): boolean {
+  return roots.some(
+    (root) => pathname === root || pathname.startsWith(`${root}/`),
+  );
+}
+
+function RootNavigator({
+  hydrated,
+  pathname,
+}: {
+  hydrated: boolean;
+  pathname: string;
+}) {
   const theme = useTheme();
   const router = useRouter();
   const { phase } = useAuthSession();
@@ -129,14 +163,27 @@ function RootNavigator({ hydrated }: { hydrated: boolean }) {
   // `locked` is the cold-start sign-in gate: same route, re-authentication copy.
   // First-run canvas covers signed-out + guest/auth who still need name/goal.
   const showWelcome = useShouldShowWelcome(hasOnboarded);
+  const appIsActive = useAppIsActive();
   const welcomeAccess =
     phase === 'welcome' ||
     phase === 'authenticating' ||
     phase === 'error' ||
     phase === 'locked' ||
     ((phase === 'guest' || phase === 'authenticated') && showWelcome);
-  useTodoCollaboration(hydrated && phase === 'authenticated');
-  useVehicleCollaboration(hydrated && phase === 'authenticated');
+  const collaborationReady =
+    hydrated && phase === 'authenticated' && appIsActive;
+  useTodoCollaboration(
+    collaborationReady &&
+      pathIsWithin(pathname, [
+        '/to-do',
+        '/todos',
+        '/todo-collaborators',
+        '/todo-invites',
+      ]),
+  );
+  useVehicleCollaboration(
+    collaborationReady && pathIsWithin(pathname, ['/vehicles', '/v']),
+  );
   useRootStartupEffects({
     hydrated,
     appAccess,
@@ -170,172 +217,218 @@ function RootNavigator({ hydrated }: { hydrated: boolean }) {
 
   return (
     <View style={{ flex: 1 }}>
-        <AgentUiRouteSync />
-        <NavigationSessionSync />
-        <UsageAnalyticsTracker />
-        <AgentUiFabRestoreHost>
+      <AgentUiRouteSync />
+      <NavigationSessionSync />
+      <UsageAnalyticsTracker />
+      <AgentUiFabRestoreHost>
         <ThemeToggleFabHost>
-        <Stack
-          screenOptions={{
-            headerShown: true,
-            headerTitle: '',
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: theme.backgroundPrimary },
-            // Prefer continuous native push over hard cuts; Android fades in
-            // from below so material transitions don’t snap.
-            animation: process.env.EXPO_OS === 'android' ? 'fade_from_bottom' : 'default',
-            animationDuration: motion.page,
-            ...(process.env.EXPO_OS === 'ios'
-              ? {
-                  unstable_headerLeftItems: () => [
-                    {
-                      type: 'custom' as const,
-                      element: <HeaderBackButton />,
-                      hidesSharedBackground: true,
-                    },
-                  ],
-                }
-              : { headerLeft: () => <HeaderBackButton /> }),
-            contentStyle: {
-              backgroundColor: theme.backgroundPrimary,
-              paddingTop: spacing.md,
-            },
-          }}>
-      <Stack.Protected guard={welcomeAccess}>
-        <Stack.Screen
-          name="welcome"
-          options={{
-            animation: 'fade',
-            headerShown: false,
-            contentStyle: { backgroundColor: 'transparent' },
-          }}
-        />
-      </Stack.Protected>
-      <Stack.Protected guard={phase === 'resolving-data'}>
-        <Stack.Screen
-          name="auth/data-choice"
-          options={{
-            animation: 'fade',
-            headerShown: false,
-            gestureEnabled: false,
-            contentStyle: { backgroundColor: 'transparent' },
-          }}
-        />
-      </Stack.Protected>
-      <Stack.Protected guard={appAccess}>
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-            // Tab carousel is the app root — iOS edge-swipe must not dispatch
-            // GO_BACK (empty stack → LogBox toast on Travel / other tabs).
-            gestureEnabled: false,
-            // Transparent so Travel’s AppSafeArea chrome atmosphere can paint
-            // continuously under the status bar without a seam at the inset.
-            // Tab screens still fill with their own Screen backgrounds.
-            contentStyle: { backgroundColor: 'transparent' },
-          }}
-        />
-        <Stack.Screen
-          name="onboarding"
-          options={{
-            animation: 'fade',
-            headerShown: false,
-            contentStyle: { backgroundColor: 'transparent' },
-          }}
-        />
-        <Stack.Screen
-          name="account"
-          options={{
-            headerShown: false,
-            contentStyle: { backgroundColor: 'transparent' },
-          }}
-        />
-        <Stack.Screen
-          name="vision-board/category-editor"
-          options={{ presentation: 'modal' }}
-        />
-        <Stack.Screen
-          name="vision-board/item-editor"
-          options={{ presentation: 'modal' }}
-        />
-        {/* Legacy path redirects → nested tab stacks (bottom nav persists). */}
-        <Stack.Screen name="agents" options={{ headerShown: false }} />
-        <Stack.Screen name="design-system" options={{ headerShown: false }} />
-        <Stack.Screen name="api-usage" options={{ headerShown: false }} />
-        <Stack.Screen name="integrations" options={{ headerShown: false }} />
-        <Stack.Screen name="developer" options={{ headerShown: false }} />
-        <Stack.Screen name="nutrition-profile" options={{ headerShown: false }} />
-        <Stack.Screen name="todos/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="todos/[id]/settings" options={{ headerShown: false }} />
-        <Stack.Screen name="todos/[id]/recipe-import" options={{ headerShown: false }} />
-        <Stack.Screen name="todo-collaborators" />
-        <Stack.Screen name="todo-invites" />
-        <Stack.Screen name="invite/travel" />
-        <Stack.Screen
-          name="activity-form"
-          options={{
-            presentation: 'modal',
-            // In-content swipe grabber — hide native header so it can't
-            // sit under the full-bleed ScrollView and eat taps / chrome.
-            headerShown: false,
-            contentStyle: { backgroundColor: 'transparent', paddingTop: 0 },
-          }}
-        />
-        <Stack.Screen
-          name="detail/gym-active/[id]"
-          options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="games/balloon-pop"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_bottom',
-            contentStyle: { backgroundColor: 'transparent' },
-          }}
-        />
-      </Stack.Protected>
-      <Stack.Protected guard={appAccess && hasOnboarded}>
-        <Stack.Screen
-          name="share-import"
-          options={{ gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="share-event"
-          options={{ gestureEnabled: false }}
-        />
-      </Stack.Protected>
-      <Stack.Screen
-        name="auth/callback"
-        options={{
-          animation: 'fade',
-          headerShown: false,
-          contentStyle: { backgroundColor: 'transparent' },
-        }}
-      />
-      <Stack.Screen name="i/[code]" />
-      <Stack.Screen name="j/[code]" />
-      <Stack.Screen name="f/[code]" />
-      <Stack.Screen name="l/[code]" />
-      <Stack.Screen name="c/[code]" />
-      <Stack.Screen name="v/[code]" />
-      <Stack.Screen name="privacy" options={legalDocumentScreenOptions('Privacy Policy')} />
-      <Stack.Screen name="terms" options={legalDocumentScreenOptions('Terms of Use')} />
-      <Stack.Screen
-        name="agent/ui"
-        options={{
-          headerShown: false,
-          animation: 'none',
-          gestureEnabled: false,
-          contentStyle: { backgroundColor: 'transparent' },
-        }}
-      />
-    </Stack>
+          <Stack
+            screenOptions={{
+              orientation: 'portrait',
+              headerShown: true,
+              headerTitle: '',
+              headerShadowVisible: false,
+              headerStyle: { backgroundColor: theme.backgroundPrimary },
+              // Prefer continuous native push over hard cuts; Android fades in
+              // from below so material transitions don’t snap.
+              animation:
+                process.env.EXPO_OS === 'android'
+                  ? 'fade_from_bottom'
+                  : 'default',
+              animationDuration: motion.page,
+              ...(process.env.EXPO_OS === 'ios'
+                ? {
+                    unstable_headerLeftItems: () => [
+                      {
+                        type: 'custom' as const,
+                        element: <HeaderBackButton />,
+                        hidesSharedBackground: true,
+                      },
+                    ],
+                  }
+                : { headerLeft: () => <HeaderBackButton /> }),
+              contentStyle: {
+                backgroundColor: theme.backgroundPrimary,
+                paddingTop: spacing.md,
+              },
+            }}
+          >
+            <Stack.Protected guard={welcomeAccess}>
+              <Stack.Screen
+                name="welcome"
+                options={{
+                  animation: 'fade',
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+            </Stack.Protected>
+            <Stack.Protected guard={phase === 'resolving-data'}>
+              <Stack.Screen
+                name="auth/data-choice"
+                options={{
+                  animation: 'fade',
+                  headerShown: false,
+                  gestureEnabled: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+            </Stack.Protected>
+            <Stack.Protected guard={appAccess}>
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  headerShown: false,
+                  // Tab carousel is the app root — iOS edge-swipe must not dispatch
+                  // GO_BACK (empty stack → LogBox toast on Travel / other tabs).
+                  gestureEnabled: false,
+                  // Transparent so Travel’s AppSafeArea chrome atmosphere can paint
+                  // continuously under the status bar without a seam at the inset.
+                  // Tab screens still fill with their own Screen backgrounds.
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+              <Stack.Screen
+                name="onboarding"
+                options={{
+                  animation: 'fade',
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+              <Stack.Screen
+                name="account"
+                options={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+              <Stack.Screen
+                name="travel-map"
+                options={{
+                  headerShown: false,
+                  orientation: 'all',
+                  contentStyle: {
+                    backgroundColor: 'transparent',
+                    paddingTop: 0,
+                  },
+                }}
+              />
+              <Stack.Screen
+                name="vision-board/category-editor"
+                options={{ presentation: 'modal' }}
+              />
+              <Stack.Screen
+                name="vision-board/item-editor"
+                options={{ presentation: 'modal' }}
+              />
+              {/* Legacy path redirects → nested tab stacks (bottom nav persists). */}
+              <Stack.Screen name="agents" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="design-system"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="api-usage" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="integrations"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="developer" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="nutrition-profile"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="todos/[id]"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="todos/[id]/settings"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="todos/[id]/recipe-import"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="todo-collaborators" />
+              <Stack.Screen name="todo-invites" />
+              <Stack.Screen name="invite/travel" />
+              <Stack.Screen
+                name="activity-form"
+                options={{
+                  presentation: 'modal',
+                  // In-content swipe grabber — hide native header so it can't
+                  // sit under the full-bleed ScrollView and eat taps / chrome.
+                  headerShown: false,
+                  contentStyle: {
+                    backgroundColor: 'transparent',
+                    paddingTop: 0,
+                  },
+                }}
+              />
+              <Stack.Screen
+                name="detail/gym-active/[id]"
+                options={{
+                  presentation: 'fullScreenModal',
+                  gestureEnabled: false,
+                }}
+              />
+              <Stack.Screen
+                name="games/balloon-pop"
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_bottom',
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+            </Stack.Protected>
+            <Stack.Protected guard={appAccess && hasOnboarded}>
+              <Stack.Screen
+                name="share-import"
+                options={{ gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="share-event"
+                options={{ gestureEnabled: false }}
+              />
+            </Stack.Protected>
+            <Stack.Screen
+              name="auth/callback"
+              options={{
+                animation: 'fade',
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
+            <Stack.Screen name="i/[code]" />
+            <Stack.Screen name="j/[code]" />
+            <Stack.Screen name="f/[code]" />
+            <Stack.Screen name="l/[code]" />
+            <Stack.Screen name="c/[code]" />
+            <Stack.Screen name="v/[code]" />
+            <Stack.Screen
+              name="privacy"
+              options={legalDocumentScreenOptions('Privacy Policy')}
+            />
+            <Stack.Screen
+              name="terms"
+              options={legalDocumentScreenOptions('Terms of Use')}
+            />
+            <Stack.Screen
+              name="agent/ui"
+              options={{
+                headerShown: false,
+                animation: 'none',
+                gestureEnabled: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
+          </Stack>
         </ThemeToggleFabHost>
-        </AgentUiFabRestoreHost>
-        {/* After Stack inside flex:1 so absolute overlay covers the window. */}
-        <AgentUiOverlay />
-        <ThemeToggleFab />
+      </AgentUiFabRestoreHost>
+      {/* After Stack inside flex:1 so absolute overlay covers the window. */}
+      <AgentUiOverlay />
+      <ThemeToggleFab />
     </View>
   );
 }

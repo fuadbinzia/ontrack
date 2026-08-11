@@ -721,6 +721,39 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 | `ontrack.travel.list.groupChat.<tripId>`         | Open Group Chat (**plan detail tools**)                   |
 | `ontrack.travel.list.notesSection.<tripId>`      | Legacy notes section (unused on launcher cards)           |
 
+### Interactive Travel Atlas (`/travel-map`, flow `travel-map-demo`)
+
+The atlas is a root full-screen route. The named flow seeds Iceland and Antigua
+pins, opens the world view, and verification cleanup returns devices to a
+portrait Travel screen.
+
+| testID | Control |
+| --- | --- |
+| `ontrack.travel.map.open` / `.close` | Travel Home globe entry / close atlas (left on world, right in country view) |
+| `ontrack.travel.map.section.world` / `.country` | World and drilled country canvas anchors |
+| `ontrack.travel.map.section.globe` | Interactive orthographic world globe anchor |
+| `ontrack.travel.map.section.flatWorld` | Landscape edge-to-edge flat world map anchor |
+| `ontrack.travel.map.layout.portrait` / `.landscape` | Orientation-specific layout anchors |
+| `ontrack.travel.map.countryPicker.open` | Searchable country picker |
+| `ontrack.travel.map.country.<ISO>` | Country picker option |
+| `ontrack.travel.map.cluster.<ISO>` | Visited-country aggregate marker |
+| `ontrack.travel.map.backToWorld` | Country-view top-left back chevron; return to the world map |
+| `ontrack.travel.map.pinPlace.open` / `.close` | Start / dismiss Pin a Place |
+| `ontrack.travel.map.pinPlace.trip` / `.trip.none` | Optional trip picker / explicit no-trip option |
+| `ontrack.travel.map.pinPlace.search` | Country-filtered online place search |
+| `ontrack.travel.map.pinPlace.searchResult.<index>` | Place search result |
+| `ontrack.travel.map.pinPlace.onMap` | Enter offline-capable map placement |
+| `ontrack.travel.map.pinPlace.mapTarget` | Country-map tap target; opens Pin a Place with that coordinate |
+| `ontrack.travel.map.pinPlace.label` / `.save` | Manual place name / save pin |
+| `ontrack.travel.map.place.<pinId>` | Place pin that opens its preview |
+| `ontrack.travel.map.preview` | Portrait bottom card / landscape right rail |
+| `ontrack.travel.map.preview.openTrip` / `.close` | Authorized full-trip action / close preview |
+| `ontrack.travel.map.preview.unpin` / `.unpin.confirm` | Owner-only unpin action / destructive confirmation |
+| `ontrack.travel.map.people.open` | Open friend overlay picker |
+| `ontrack.travel.map.person.<userId>` | Colored avatar-ring layer control |
+| `ontrack.travel.map.share.toggle` | Owner friend-sharing opt-in inside the friend-overlay sheet |
+| `ontrack.travel.map.suggestion.confirm` / `.skip` | Review or dismiss an inferred existing-trip pin |
+
 ### Travel trip hub (`/travel/<id>/hub`) — redirects to plan detail
 
 | testID                                      | Control                          |
@@ -871,6 +904,7 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 | `ontrack.developer.lockSession` | Show the sign-in gate without signing out |
 | `ontrack.developer.designSystem` | Open Design System |
 | `ontrack.developer.apiUsage` | Open Integrations |
+| `ontrack.developer.performance` | Open Performance Monitor |
 | `ontrack.developer.env` | Runtime env card |
 | `ontrack.developer.overlay` | Agent-ui overlay toggle |
 | `ontrack.developer.sync` | Cloud sync status |
@@ -881,6 +915,23 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 | `ontrack.developer.storage` | Local storage sizes |
 | `ontrack.developer.storageRefresh` | Refresh storage sizes |
 | `ontrack.developer.rateLimitReset` | Reset app rate limits |
+
+### Performance Monitor (`/(tabs)/profile/performance`, `developer_tools` only)
+
+| testID | Purpose |
+|---|---|
+| `ontrack.performance.back` | Return to Developer Tools |
+| `ontrack.performance.section.live` | Live process metrics and memory breakdown |
+| `ontrack.performance.processDetails` | Process, pressure, and heap detail card |
+| `ontrack.performance.section.warnings` | Active drain-indicator warnings |
+| `ontrack.performance.section.activities` | Logical runtime work list |
+| `ontrack.performance.filter.<category>` | Runtime category filter |
+| `ontrack.performance.activity.<id>` | Runtime activity row |
+| `ontrack.performance.section.history` | Device-local hourly rollups |
+| `ontrack.performance.copy` | Copy local diagnostics report |
+| `ontrack.performance.settings` | Open operating-system app settings |
+| `ontrack.performance.clear` | Open clear-history confirmation |
+| `ontrack.performance.clear.confirm` | Confirm clearing session and stored history |
 
 ### Integrations (`/integrations`, `__DEV__` only)
 

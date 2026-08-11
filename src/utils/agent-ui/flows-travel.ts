@@ -9,6 +9,16 @@ import {
 import { AGENT_UI_WAIT_TIMEOUT_MS } from './flows-waits';
 
 export const AGENT_UI_TRAVEL_FLOWS = {
+  'travel-map-demo': [
+    { op: 'dismiss', prefix: 'ontrack.travel.' },
+    { op: 'seed', to: 'travel-map-demo' },
+    { op: 'goto', to: 'travel-map' },
+    {
+      op: 'wait',
+      id: 'ontrack.travel.map.section.world',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   'travel-list': [
     // Clear leftover travel sheets so list taps are not swallowed.
     { op: 'dismiss', prefix: 'ontrack.travel.' },
@@ -66,6 +76,23 @@ export const AGENT_UI_TRAVEL_FLOWS = {
       id: 'ontrack.travel.list.itinerary.trip-travel-home-iceland',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
+  ],
+  'travel-home-search': [
+    { op: 'dismiss', prefix: 'ontrack.travel.' },
+    { op: 'seed', to: 'travel-home' },
+    { op: 'goto', to: 'travel' },
+    {
+      op: 'wait',
+      id: 'ontrack.travel.list.search',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.travel.list.search' },
+    {
+      op: 'wait',
+      id: 'ontrack.travel.list.searchMinimize',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'wait', ms: 350 },
   ],
   'travel-home-empty': [
     { op: 'dismiss', prefix: 'ontrack.travel.' },

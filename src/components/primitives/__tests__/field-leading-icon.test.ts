@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import {
   fieldLeadingIconRowStyle,
   stackedFieldMinHeight,
@@ -38,6 +41,16 @@ describe('fieldLeadingIconRowStyle', () => {
 
     expect(style.alignItems).toBe('center');
     expect(style.flexDirection).toBe('row');
+  });
+});
+
+describe('dropdown leading icon spacing', () => {
+  it('applies the shared gap to the interactive glass field row', () => {
+    const dropdown = readFileSync(
+      join(process.cwd(), 'src/components/primitives/dropdown.tsx'),
+      'utf8',
+    );
+    expect(dropdown).toMatch(/fieldInner:\s*\{[^}]*gap:\s*spacing\.sm/s);
   });
 });
 

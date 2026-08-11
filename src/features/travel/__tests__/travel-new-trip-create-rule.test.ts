@@ -3,8 +3,8 @@ import { join } from 'node:path';
 
 describe('new trip creation feedback', () => {
   it('keeps the form open and renders an inline error when storage rejects a trip', () => {
-    const travelTab = readFileSync(
-      join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
+    const planActions = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-plan-actions.ts'),
       'utf8',
     );
     const newTripSheet = readFileSync(
@@ -12,9 +12,9 @@ describe('new trip creation feedback', () => {
       'utf8',
     );
 
-    expect(travelTab).toMatch(/const saved = savePlan\(/);
-    expect(travelTab).toContain('creatingPlanRef');
-    expect(travelTab).toMatch(
+    expect(planActions).toMatch(/const saved = savePlan\(/);
+    expect(planActions).toContain('creatingPlanRef');
+    expect(planActions).toMatch(
       /if \(!saved\) \{\s*creatingPlanRef\.current = false;\s*setError\([\s\S]*?\);\s*return;\s*\}/,
     );
     expect(newTripSheet).toContain(
@@ -23,35 +23,49 @@ describe('new trip creation feedback', () => {
   });
 
   it('disables pull-to-refresh while the form is open and targets the saved card', () => {
-    const travelTab = readFileSync(
-      join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
+    const screen = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-home-screen-content.tsx'),
       'utf8',
     );
 
-    expect(travelTab).toContain('refresh={!showForm}');
-    expect(travelTab).toContain('setPendingCreatedTripId(planId)');
-    expect(travelTab).toContain('tripOffsets.current[scrollTargetTripId]');
+    const screenHook = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-screen.ts'),
+      'utf8',
+    );
+    const planActions = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-plan-actions.ts'),
+      'utf8',
+    );
+
+    expect(screen).toContain('refresh={!showForm}');
+    expect(planActions).toContain('setPendingCreatedTripId(planId)');
+    expect(screenHook).toContain('tripOffsets.current[scrollTargetTripId]');
   });
 
   it('starts each new trip with empty departure and return dates', () => {
-    const travelTab = readFileSync(
-      join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
+    const screenHook = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-screen.ts'),
       'utf8',
     );
 
-    expect(travelTab).toContain("const [startDate, setStartDate] = useState('')");
-    expect(travelTab).toContain("const [endDate, setEndDate] = useState('')");
-    expect(travelTab).toMatch(
-      /setDestination\(''\);\s*setStartDate\(''\);\s*setEndDate\(''\);\s*setNotes\(''\);/,
+    const planActions = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-plan-actions.ts'),
+      'utf8',
     );
-    expect(travelTab).toMatch(
+
+    expect(screenHook).toContain("const [startDate, setStartDate] = useState('')");
+    expect(screenHook).toContain("const [endDate, setEndDate] = useState('')");
+    expect(planActions).toMatch(
+      /setDestination\(''\);\s*setDestinationLocation\(undefined\);\s*setStartDate\(''\);\s*setEndDate\(''\);\s*setNotes\(''\);/,
+    );
+    expect(screenHook).toMatch(
       /useEffect\(\(\) => \{\s*if \(!showForm\) return;\s*setStartDate\(''\);\s*setEndDate\(''\);\s*\}, \[showForm\]\);/,
     );
   });
 
   it('opens Start a New Trip as a canonical travel bottom sheet', () => {
-    const travelTab = readFileSync(
-      join(process.cwd(), 'src/app/(tabs)/travel/index.tsx'),
+    const screen = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-home-screen-content.tsx'),
       'utf8',
     );
     const newTripSheet = readFileSync(
@@ -67,8 +81,8 @@ describe('new trip creation feedback', () => {
       'utf8',
     );
 
-    expect(travelTab).toContain('<TravelNewTripSheet');
-    expect(travelTab).toContain('visible={showForm}');
+    expect(screen).toContain('<TravelNewTripSheet');
+    expect(screen).toContain('visible={showForm}');
     expect(newTripSheet).toContain('<TravelSheetModal');
     expect(newTripSheet).toContain('title="Start a New Trip"');
     expect(newTripSheet).not.toContain('eyebrow=');

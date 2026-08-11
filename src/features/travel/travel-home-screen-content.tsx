@@ -44,7 +44,6 @@ import {
 import { TravelHomeEmpty } from '@/features/travel/travel-home-empty';
 import { TravelHomeHeader } from '@/features/travel/travel-home-header';
 import { filterTravelPlansByQuery } from '@/features/travel/travel-home-plan-search';
-import { travelHomeTokens } from '@/features/travel/travel-home-tokens';
 import {
     TravelHomeYourTrips,
     isTravelHomeTripSearchActive,
@@ -80,6 +79,8 @@ export function TravelScreenContent() {
     title,
     mode,
     destination,
+    destinationLocation,
+    setDestinationLocation,
     startDate,
     endDate,
     notes,
@@ -91,6 +92,8 @@ export function TravelScreenContent() {
     setEditTitle,
     editDestination,
     setEditDestination,
+    editDestinationLocation,
+    setEditDestinationLocation,
     editNotes,
     setEditNotes,
     editStartDate,
@@ -189,7 +192,26 @@ export function TravelScreenContent() {
           error={detailsError}
           initialCoverPickerOpen={openCoverPickerOnEdit}
           onTitleChange={setEditTitle}
-          onDestinationChange={setEditDestination}
+          onDestinationChange={(value) => {
+            setEditDestination(value);
+            setEditDestinationLocation(undefined);
+          }}
+          onDestinationSuggestionSelect={(suggestion) => {
+            if (
+              suggestion.countryName &&
+              suggestion.countryCode &&
+              suggestion.latitude !== undefined &&
+              suggestion.longitude !== undefined
+            ) {
+              setEditDestinationLocation({
+                label: [suggestion.label, suggestion.secondary].filter(Boolean).join(', '),
+                countryName: suggestion.countryName,
+                countryCode: suggestion.countryCode,
+                latitude: suggestion.latitude,
+                longitude: suggestion.longitude,
+              });
+            }
+          }}
           onStartDateChange={setEditStartDate}
           onEndDateChange={setEditEndDate}
           onCoverUrisChange={setEditCoverUris}
@@ -213,12 +235,14 @@ export function TravelScreenContent() {
         refresh={!showForm}
         onScroll={updateActiveTripFromScroll}
         contentStyle={{
-          gap: travelHomeTokens.spacing.cardGap,
+          // The trips section begins immediately after the Travel title/subtitle.
+          gap: 0,
           // Sit the Travel header flush under the safe-area chrome (no cream gap).
           paddingTop: 0,
         }}>
         <TravelHomeHeader
-          onAddTrip={!showForm ? openCreateTrip : undefined}
+          onOpenMap={() => router.push('/travel-map' as never)}
+          onAddTrip={!showForm && !hasNoTrips ? openCreateTrip : undefined}
           locationLabel={atmosphereImage.label}
           headerInk={atmosphereImage.headerInk}
           onPressAway={tripSearchActive ? collapseTripSearch : undefined}
@@ -265,7 +289,26 @@ export function TravelScreenContent() {
         notes={notes}
         error={error}
         onTitleChange={setTitle}
-        onDestinationChange={setDestination}
+        onDestinationChange={(value) => {
+          setDestination(value);
+          setDestinationLocation(undefined);
+        }}
+        onDestinationSuggestionSelect={(suggestion) => {
+          if (
+            suggestion.countryName &&
+            suggestion.countryCode &&
+            suggestion.latitude !== undefined &&
+            suggestion.longitude !== undefined
+          ) {
+            setDestinationLocation({
+              label: [suggestion.label, suggestion.secondary].filter(Boolean).join(', '),
+              countryName: suggestion.countryName,
+              countryCode: suggestion.countryCode,
+              latitude: suggestion.latitude,
+              longitude: suggestion.longitude,
+            });
+          }
+        }}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
         onNotesChange={setNotes}
@@ -284,5 +327,3 @@ export default function TravelHomeScreen() {
     </FeatureThemeProvider>
   );
 }
-
-

@@ -37,6 +37,7 @@ const MENU_PADDING = spacing.xs;
 interface AddressAutofindFieldProps {
   value: string;
   onChange: (value: string) => void;
+  onSuggestionSelect?: (suggestion: AddressSuggestion) => void;
   testID?: string;
   placeholder?: string;
   stackedLabel?: string;
@@ -65,6 +66,7 @@ function approxHeightForText(text: string, minHeight: number, lineHeight: number
 export function AddressAutofindField({
   value,
   onChange,
+  onSuggestionSelect,
   testID,
   placeholder = 'Address',
   stackedLabel,
@@ -210,6 +212,7 @@ export function AddressAutofindField({
     clearSuggestions();
     setHeight(approxHeightForText(next, minHeight, lineHeight));
     onChange(next);
+    onSuggestionSelect?.(suggestion);
     Keyboard.dismiss();
   };
 

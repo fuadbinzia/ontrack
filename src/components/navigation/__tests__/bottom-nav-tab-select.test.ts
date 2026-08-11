@@ -27,8 +27,8 @@ describe('bottom nav fixed slots', () => {
     expect(source).toContain('lastPinRouteRef');
   });
 
-  it('preloads bar slots after settle and optimistically selects on tap', () => {
-    expect(source).toContain('navigation.preload');
+  it('avoids eager preload work and optimistically selects on tap', () => {
+    expect(source).not.toContain('navigation.preload');
     expect(source).toContain('deferAfterPageLoad');
     expect(source).toContain('setPendingRouteName');
     expect(source).toContain('pendingRouteName');

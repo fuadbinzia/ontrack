@@ -8,6 +8,10 @@ export interface AddressSuggestion {
   id: string;
   label: string;
   secondary?: string;
+  countryName?: string;
+  countryCode?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface PhotonProperties {
@@ -25,11 +29,13 @@ interface PhotonProperties {
   county?: unknown;
   state?: unknown;
   country?: unknown;
+  countrycode?: unknown;
   type?: unknown;
 }
 
 interface PhotonFeature {
   properties?: PhotonProperties;
+  geometry?: { coordinates?: unknown };
 }
 
 interface PhotonResponse {
@@ -56,7 +62,10 @@ function uniqueParts(parts: Array<string | undefined>): string[] {
 }
 
 /** Build a readable street-first label from Photon properties. */
-export function formatAddressSuggestion(properties: PhotonProperties): AddressSuggestion | undefined {
+export function formatAddressSuggestion(
+  properties: PhotonProperties,
+  coordinates?: unknown,
+): AddressSuggestion | undefined {
   const name = asTrimmed(properties.name);
   const housenumber = asTrimmed(properties.housenumber);
   const street = asTrimmed(properties.street);
@@ -69,6 +78,12 @@ export function formatAddressSuggestion(properties: PhotonProperties): AddressSu
     asTrimmed(properties.district);
   const state = asTrimmed(properties.state) ?? asTrimmed(properties.county);
   const country = asTrimmed(properties.country);
+  const countryCode = asTrimmed(properties.countrycode)?.toUpperCase();
+  const point = Array.isArray(coordinates) ? coordinates : [];
+  const longitude =
+    typeof point[0] === 'number' && Number.isFinite(point[0]) ? point[0] : undefined;
+  const latitude =
+    typeof point[1] === 'number' && Number.isFinite(point[1]) ? point[1] : undefined;
 
   const streetLine =
     housenumber && street
@@ -99,6 +114,12 @@ export function formatAddressSuggestion(properties: PhotonProperties): AddressSu
     id: `${osmType}:${osmId}:${primary}`,
     label: primary,
     ...(secondary ? { secondary } : {}),
+    ...(country ? { countryName: country } : {}),
+    ...(countryCode && /^[A-Z]{2}$/.test(countryCode) ? { countryCode } : {}),
+    ...(latitude !== undefined && latitude >= -90 && latitude <= 90 ? { latitude } : {}),
+    ...(longitude !== undefined && longitude >= -180 && longitude <= 180
+      ? { longitude }
+      : {}),
   };
 }
 
@@ -111,8 +132,10 @@ export function normalizeAddressSuggestions(body: unknown): AddressSuggestion[] 
   const results: AddressSuggestion[] = [];
   for (const feature of features) {
     if (!feature || typeof feature !== 'object') continue;
+    const photonFeature = feature as PhotonFeature;
     const suggestion = formatAddressSuggestion(
-      ((feature as PhotonFeature).properties ?? {}) as PhotonProperties,
+      (photonFeature.properties ?? {}) as PhotonProperties,
+      photonFeature.geometry?.coordinates,
     );
     if (!suggestion) continue;
     const key = `${suggestion.label}|${suggestion.secondary ?? ''}`.toLocaleLowerCase();
@@ -143,6 +166,36 @@ export async function searchAddresses(query: string): Promise<AddressSuggestion[
     return normalizeAddressSuggestions(await response.json());
   } catch {
     return [];
+  }
+}
+
+export async function searchAddressesInCountry(
+  query: string,
+  countryName: string,
+  countryCode: string,
+): Promise<AddressSuggestion[]> {
+  const results = await searchAddresses(`${query.trim()}, ${countryName.trim()}`);
+  const expected = countryCode.trim().toUpperCase();
+  return results.filter((result) => result.countryCode === expected);
+}
+
+export async function reverseGeocodeAddress(
+  latitude: number,
+  longitude: number,
+): Promise<AddressSuggestion | undefined> {
+  const url = new URL('https://photon.komoot.io/reverse');
+  url.searchParams.set('lat', String(latitude));
+  url.searchParams.set('lon', String(longitude));
+  try {
+    const response = await fetchWithTimeout(
+      url.toString(),
+      { headers: { Accept: 'application/json' } },
+      LOOKUP_TIMEOUT_MS,
+    );
+    if (!response.ok) return undefined;
+    return normalizeAddressSuggestions(await response.json())[0];
+  } catch {
+    return undefined;
   }
 }
 

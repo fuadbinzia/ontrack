@@ -2,7 +2,12 @@
 
 iOS-first, local-first daily-life Expo app (schedule, food, fitness, plants, travel, todos, vision board). Add-ons toggle without deleting data.
 
-**Token mandate:** keep always-on context slim; put domain depth in `.cursor/skills/<domain>/`; prefer Shared patterns over copies; extract when a touched file would stay **>700 lines**. Session essentials: `.cursor/rules/ontrack-core.mdc`. App UI / simulator: **read `.cursor/skills/agent-ui/SKILL.md` before verifying**.
+**Token mandate:** keep always-on context slim; put domain depth in `.cursor/skills/<domain>/`; prefer Shared patterns over copies; extract when a touched file would stay **>700 lines**. Session essentials: `.cursor/rules/ontrack-core.mdc`. Device/simulator testing is **opt-in only**: never run it unless the user explicitly asks in the current task. When requested, read `.cursor/skills/agent-ui/SKILL.md` before verifying.
+
+## Cursor compatibility
+
+- Treat `.cursor/rules/*.mdc` and inherited `../.cursor/rules/*.mdc` as Codex project instructions: read `ontrack-core.mdc` plus every rule with `alwaysApply: true` at task start, then read every rule whose `globs` match files you inspect or change. The rule body is authoritative; do not rely only on this summary.
+- Cursor skills are exposed to Codex through `.agents/skills/`. Load the matching skill before domain work, and follow its linked references when relevant.
 
 ## Stack
 
@@ -25,12 +30,12 @@ iOS-first, local-first daily-life Expo app (schedule, food, fitness, plants, tra
 
 ## Commands (agents)
 
-- Metro / Android / APK / `push` / dual verify → `package.json` scripts + **agent-ui** / **android-release-apk** skills. **Never** `npm start` in agent shells. Node 24 (`.nvmrc`).
+- Metro / Android / APK / `push` / user-requested dual verify → `package.json` scripts + **agent-ui** / **android-release-apk** skills. **Never** `npm start` in agent shells. Node 24 (`.nvmrc`).
 - `npm run typecheck` · `npm test` · `npm run lint` — prefer leaving Metro up for Fast Refresh.
 
 ## Agent close-out
 
-App-affecting → typecheck/tests + dual verify (**agent-ui** skill). Stamp `ontrack.*` testIDs. Migrations → `supabase db push` same turn.
+App-affecting → typecheck/tests. Do **not** run device, simulator, emulator, or dual-platform UI verification unless the user explicitly requests it in the current task. Stamp `ontrack.*` testIDs. Migrations → `supabase db push` same turn.
 
 ## Non-negotiable UI
 

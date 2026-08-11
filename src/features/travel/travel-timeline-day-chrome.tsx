@@ -6,10 +6,9 @@ import {
   travelEditorialTextStyle,
   travelOverlineStyle,
 } from '@/features/travel/travel-chrome';
-import { travelItineraryInk } from '@/features/travel/travel-surface';
 import type { TimelineDayPhase } from '@/features/travel/travel-timeline-progress';
+import { useTravelItineraryInk } from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
-import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { fromDateKey } from '@/utils/date';
 
@@ -130,10 +129,9 @@ export function TimelineDayHeader({
   onToggleDay: (date: string) => void;
   titleLabel?: string;
 }) {
-  const theme = useTheme();
   const { spacing: rs } = useResponsive();
-  const primaryInk = travelItineraryInk(theme);
-  const secondaryInk = travelItineraryInk(theme, 'secondary');
+  const primaryInk = useTravelItineraryInk();
+  const secondaryInk = useTravelItineraryInk('secondary');
   // Pre-trip / Post Trip use `titleLabel` — no phase pill (Done / Today / N Stops).
   const chipLabel = titleLabel
     ? undefined

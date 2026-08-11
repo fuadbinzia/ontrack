@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { Symbol } from '@/components/primitives';
+
 import {
   atmosphereHeaderInkColors,
   type TravelAtmosphereHeaderInk,
@@ -23,6 +25,7 @@ import { haptics } from '@/utils/haptics';
 
 type TravelHomeHeaderProps = {
   onAddTrip?: () => void;
+  onOpenMap?: () => void;
   /** Atmosphere plate place caption when known. */
   locationLabel?: string;
   /** Plate-aware header ink (`light` = white over dark washes). */
@@ -35,6 +38,7 @@ type TravelHomeHeaderProps = {
 /** Compact Travel Home header — title, tagline, route motif, FAB +. */
 export function TravelHomeHeader({
   onAddTrip,
+  onOpenMap,
   locationLabel,
   headerInk = 'light',
   onPressAway,
@@ -49,6 +53,8 @@ export function TravelHomeHeader({
   const brand = dark ? theme.accentPrimary : travelHomeTokens.colors.brandBlue;
   const addVisual = Math.max(44, s(travelHomeTokens.sizes.addButton));
   const addHit = Math.max(travelHomeTokens.sizes.touchTargetMin, addVisual);
+  const mapVisual = Math.max(42, s(44));
+  const mapHit = Math.max(travelHomeTokens.sizes.touchTargetMin, mapVisual);
   const titleSize = Math.max(42, s(travelHomeTokens.sizes.displayTitle));
   const taglineSize = Math.max(13, s(travelHomeTokens.type.heroTagline));
   const locationSize = Math.max(12, s(12));
@@ -121,7 +127,7 @@ export function TravelHomeHeader({
             {
               height: flourishHeight,
               marginLeft: titlePlaneGap,
-              marginRight: onAddTrip ? trailButtonGap : 0,
+              marginRight: onAddTrip || onOpenMap ? trailButtonGap : 0,
             },
           ]}>
           {flourishWidth > 0 ? (
@@ -133,6 +139,48 @@ export function TravelHomeHeader({
             />
           ) : null}
         </View>
+
+        {onOpenMap ? (
+          <AgentTestId
+            testID={AgentUiIds.travel.map.open}
+            label="Open travel atlas"
+            onPress={() => {
+              haptics.tap();
+              onOpenMap();
+            }}
+            style={[styles.addWrap, { width: mapHit, height: mapHit, marginRight: 6 }]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open travel atlas"
+              onPress={() => {
+                haptics.tap();
+                onOpenMap();
+              }}
+              hitSlop={4}
+              style={({ pressed }) => [
+                styles.addButton,
+                {
+                  width: mapVisual,
+                  height: mapVisual,
+                  borderRadius: mapVisual / 2,
+                  opacity: pressed ? 0.84 : 1,
+                },
+              ]}>
+              <TravelHomeGlass
+                intensity={dark ? 44 : 56}
+                style={{
+                  width: mapVisual,
+                  height: mapVisual,
+                  borderRadius: mapVisual / 2,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: dark ? undefined : travelHomeTokens.colors.circleFabShadow,
+                }}>
+                <Symbol name="atlas" size={Math.max(19, s(21))} color={dark ? brand : travelHomeTokens.colors.ink} />
+              </TravelHomeGlass>
+            </Pressable>
+          </AgentTestId>
+        ) : null}
 
         {onAddTrip ? (
           <AgentTestId

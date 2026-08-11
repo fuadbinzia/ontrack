@@ -1,6 +1,6 @@
 /** First-run / welcome gates before seed and flow ops. */
 
-import { Platform } from 'react-native';
+import { usePreferences } from '@/store/preferences';
 
 import { AgentUiIds } from './ids';
 import { getAgentUiTarget, tapAgentUiTarget } from './registry';
@@ -26,8 +26,12 @@ async function ensurePastWelcomeGate(): Promise<boolean> {
   }
   const skipId = AgentUiIds.onboarding.skip;
   const guestId = AgentUiIds.auth.guest;
-  const deadline = Date.now() + (Platform.OS === 'android' ? 12000 : 8000);
+  // Cold guest entry may need to inspect and clear a stale Supabase session.
+  // Keep the warm path instant while giving disposable test devices enough
+  // time to settle after a reset or native reinstall.
+  const deadline = Date.now() + 20000;
   let tapped = false;
+  let resetStaleOnboarding = false;
   while (Date.now() < deadline) {
     const current = getAgentUiRoute() || '';
     if (current && !isWelcomeRoute(current) && !isOnboardingRoute(current)) {
@@ -42,6 +46,13 @@ async function ensurePastWelcomeGate(): Promise<boolean> {
       if (id) {
         if (!tapAgentUiTarget(id)) return false;
         tapped = true;
+      } else if (!resetStaleOnboarding) {
+        // A disposable agent device can retain the post-onboarding signed-out
+        // welcome while having no configured test-account credentials. Restore
+        // first-run locally so the documented guest skip can render and flows
+        // remain deterministic; this bridge is unavailable outside agent UI.
+        usePreferences.getState().resetAll();
+        resetStaleOnboarding = true;
       }
     }
     await sleep(50);

@@ -19,7 +19,7 @@ describe('native date-field invariant', () => {
     for (const file of files) {
       const source = readFileSync(file, 'utf8');
       expect(source).not.toMatch(
-        /<Input[^>]*label=["'](?:Date|Departure|Return|Date of Birth|Last Watered)[^"']*["']/i,
+        /<Input[^>]*\slabel=["'](?:Date|Departure|Return|Date of Birth|Last Watered)[^"']*["']/i,
       );
       expect(source).not.toMatch(/placeholder=["'](?:YYYY-MM-DD|MM\/DD\/YYYY)["']/);
     }

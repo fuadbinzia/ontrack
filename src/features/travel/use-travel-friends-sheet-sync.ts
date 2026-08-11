@@ -1,21 +1,22 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
 
 import {
-    ensureTravelOpenJoinLink,
-    loadTravelInviteStatuses,
+  ensureTravelOpenJoinLink,
+  loadTravelInviteStatuses,
 } from '@/features/travel/share';
 import {
-    canonicalTravelTripId,
-    isTravelMemberPlan,
+  canonicalTravelTripId,
+  isTravelMemberPlan,
 } from '@/features/travel/trip-roster';
 import type {
-    TravelPlan,
-    TravelTripRosterPerson,
+  TravelPlan,
+  TravelTripRosterPerson,
 } from '@/features/travel/types';
 import { TRAVEL_EXPENSE_HOST_ID } from '@/features/travel/types';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import {
-    publishTravelTripExpenses,
-    travelExpenseMemberId,
+  publishTravelTripExpenses,
+  travelExpenseMemberId,
 } from '@/services/travel/expense-collaboration';
 import { useTravel } from '@/store/travel';
 import { newId } from '@/utils/id';
@@ -65,19 +66,28 @@ export function useTravelFriendsSheetSync({
   setCopiedCode: SetOptStr;
   setDecidingRequestId: SetOptStr;
   refreshJoinRequests: (tripId: string) => Promise<void>;
-  refreshRoster: (tripId: string) => Promise<TravelTripRosterPerson[] | null | undefined>;
+  refreshRoster: (
+    tripId: string,
+  ) => Promise<TravelTripRosterPerson[] | null | undefined>;
 }) {
+  const routeIsActive = useRouteIsActive();
   const ensuredOpenJoinForPlanRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || !routeIsActive) return;
     if (plan.openJoinCode && plan.openJoinCode !== openJoinCode) {
       setOpenJoinCode(plan.openJoinCode);
     }
-  }, [visible, plan.openJoinCode, openJoinCode, setOpenJoinCode]);
+  }, [
+    visible,
+    routeIsActive,
+    plan.openJoinCode,
+    openJoinCode,
+    setOpenJoinCode,
+  ]);
 
   useEffect(() => {
-    if (!visible) {
+    if (!visible || !routeIsActive) {
       setEditingInvite(false);
       setInviteName('');
       setInviteEmail('');
@@ -101,7 +111,8 @@ export function useTravelFriendsSheetSync({
 
     const syncRosterIntoPlan = (people: TravelTripRosterPerson[]) => {
       const current =
-        useTravel.getState().plans.find((item) => item.id === plan.id) ?? latest;
+        useTravel.getState().plans.find((item) => item.id === plan.id) ??
+        latest;
       const host = people.find((person) => person.role === 'host');
       let next = current;
       let changed = false;
@@ -170,7 +181,8 @@ export function useTravelFriendsSheetSync({
                 person.email &&
                 member.email.toLowerCase() === person.email.toLowerCase())),
         );
-        if (!match?.displayName || match.displayName === person.name) return person;
+        if (!match?.displayName || match.displayName === person.name)
+          return person;
         changed = true;
         return { ...person, name: match.displayName };
       });
@@ -336,6 +348,7 @@ export function useTravelFriendsSheetSync({
     };
   }, [
     visible,
+    routeIsActive,
     plan,
     onSavePlan,
     selfUserId,

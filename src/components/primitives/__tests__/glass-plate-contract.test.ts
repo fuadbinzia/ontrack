@@ -359,7 +359,7 @@ describe('glass plate contract', () => {
     expect(collapsible).toContain('GlassTonePill');
     expect(collapsible).not.toContain('backgroundColor: accent');
     expect(progress).toContain('GlassTonePill');
-    expect(progress).toContain('GlassIconWell');
+    expect(progress).toContain('TravelHomeGlass');
     expect(day).toContain('GlassMetaChip');
     expect(day).not.toContain('chipBackground');
     expect(dates).toContain('GlassMetaChip');

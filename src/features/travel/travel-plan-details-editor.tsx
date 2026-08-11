@@ -34,6 +34,7 @@ import { AgentUiIds } from '@/utils/agent-ui';
 
 import { TravelPlanCoverField } from './travel-plan-cover-field';
 import type { TravelPlan } from './types';
+import type { AddressSuggestion } from './address-lookup';
 
 interface TravelPlanDetailsEditorProps {
   plan: TravelPlan;
@@ -46,6 +47,7 @@ interface TravelPlanDetailsEditorProps {
   error?: string;
   onTitleChange: (value: string) => void;
   onDestinationChange: (value: string) => void;
+  onDestinationSuggestionSelect?: (suggestion: AddressSuggestion) => void;
   onNotesChange: (value: string) => void;
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
@@ -68,6 +70,7 @@ export function TravelPlanDetailsEditor({
   error,
   onTitleChange,
   onDestinationChange,
+  onDestinationSuggestionSelect,
   onNotesChange,
   onStartDateChange,
   onEndDateChange,
@@ -138,6 +141,7 @@ export function TravelPlanDetailsEditor({
               testID={AgentUiIds.travel.editTrip.destination}
               value={destination}
               onChange={onDestinationChange}
+              onSuggestionSelect={onDestinationSuggestionSelect}
               icon="location"
               stackedLabel="Destination"
               placeholder={TRIP_DESTINATION_PLACEHOLDER}

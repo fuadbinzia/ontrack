@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   addons: 'ontrack/addons/v1',
   agents: 'ontrack/agents/v1',
   travel: 'ontrack/travel/v1',
+  travelMap: 'ontrack/travel-map/v1',
   /** Device-local expand/collapse chrome for trip detail (not cloud-synced). */
   travelPlanUi: 'ontrack/travel-plan-ui/v1',
   todos: 'ontrack/todos/v1',
@@ -25,6 +26,8 @@ export const STORAGE_KEYS = {
   foodMealPlan: 'ontrack/food-meal-plan/v1',
   flightParserMemory: 'ontrack/travel-flight-parser-memory/v1',
   usageAnalytics: 'ontrack/usage-analytics/v1',
+  /** Developer-only, device-local hourly process performance rollups. */
+  performanceHistory: 'ontrack/performance-history/v1',
   /** Floating tab carousel order by last focus (device-local). */
   tabRecency: 'ontrack/tab-recency/v1',
   /** Pinned bottom-nav trackers + Trackers page order (device-local). */

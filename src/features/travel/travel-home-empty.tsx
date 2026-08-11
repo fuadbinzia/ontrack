@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 import { AppText, GlassIconWell, Symbol } from '@/components/primitives';
 import { fieldTitleCase } from '@/components/primitives/field-title-case';
 import { radii } from '@/design-system';
+import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
+import { TravelHomeRouteIcon } from '@/features/travel/travel-home-icons';
 import {
   travelHomeFontFamily,
   travelHomeTokens,
@@ -20,8 +22,7 @@ type TravelHomeEmptyProps = {
 };
 
 /**
- * Zero-trips welcome — soft plane mark, serif invitation, text CTA.
- * Matches the Travel Home empty reference (hero fade + calm paper).
+ * Zero-trips welcome — one frosted departure card crossing the hero fade.
  */
 export function TravelHomeEmpty({ onAddTrip }: TravelHomeEmptyProps) {
   const theme = useTheme();
@@ -45,11 +46,13 @@ export function TravelHomeEmpty({ onAddTrip }: TravelHomeEmptyProps) {
     onPress: handleAction,
   });
 
-  const iconWell = Math.max(76, s(84));
-  const planeSize = Math.max(34, s(38));
-  const titleSize = Math.max(22, s(24));
+  const iconWell = Math.max(56, s(60));
+  const planeSize = Math.max(26, s(28));
+  const titleSize = Math.max(23, s(25));
   const messageSize = Math.max(15, s(16));
-  const actionSize = Math.max(17, s(18));
+  const actionSize = Math.max(16, s(17));
+  const actionHeight = Math.max(layout.minTapTarget, s(52));
+  const cardRadius = Math.max(travelHomeTokens.radius.tripCard, s(28));
   const brand = dark ? theme.accentPrimary : travelHomeTokens.colors.brandBlue;
   const titleColor = dark ? theme.textPrimary : travelHomeTokens.colors.ink;
   const messageColor = dark
@@ -61,87 +64,113 @@ export function TravelHomeEmpty({ onAddTrip }: TravelHomeEmptyProps) {
       style={[
         styles.root,
         {
-          gap: spacing.md,
-          paddingTop: Math.max(spacing.lg, s(20)),
+          paddingTop: Math.max(spacing.md, s(16)),
           paddingBottom: spacing.xxxl,
-          paddingHorizontal: spacing.xl,
         },
       ]}>
-      <GlassIconWell
-        size={iconWell}
-        borderRadius={radii.pill}
-        variant="mist">
-        <Symbol name="flight" size={planeSize} color={brand} />
-      </GlassIconWell>
-
-      <AppText
-        align="center"
-        numberOfLines={2}
-        adjustsFontSizeToFit
-        style={{
-          fontFamily: travelHomeFontFamily,
-          fontSize: titleSize,
-          lineHeight: Math.round(titleSize * 1.22),
-          fontWeight: '600',
-          color: titleColor,
-        }}>
-        Your next adventure starts here.
-      </AppText>
-
-      <AppText
-        align="center"
-        numberOfLines={4}
-        style={{
-          fontFamily: travelHomeFontFamily,
-          fontSize: messageSize,
-          lineHeight: Math.round(messageSize * 1.4),
-          color: messageColor,
-          maxWidth: s(320),
-        }}>
-        Add a trip to organize your itinerary, stays, activities, friends, and
-        memories.
-      </AppText>
-
-      <Pressable
-        ref={agent.ref}
-        testID={AgentUiIds.travel.list.emptyCreate}
-        onLayout={agent.onLayout}
-        accessibilityRole="button"
-        accessibilityLabel={actionLabel}
-        onPress={handleAction}
-        hitSlop={8}
-        style={({ pressed }) => [
-          styles.actionHit,
+      <TravelHomeGlass
+        intensity={dark ? 50 : 64}
+        style={[
+          styles.card,
           {
-            minHeight: layout.minTapTarget,
-            marginTop: spacing.sm,
-            opacity: pressed ? 0.72 : 1,
-            justifyContent: 'center',
+            borderRadius: cardRadius,
+            gap: spacing.lg,
+            padding: Math.max(spacing.lg, s(20)),
+            boxShadow: dark
+              ? travelHomeTokens.colors.cardShadowDark
+              : travelHomeTokens.colors.cardShadow,
           },
         ]}>
-        {/* Editorial text CTA (mock) — not a glass pill; + FAB stays the chrome add. */}
+        <View style={[styles.headingRow, { gap: spacing.md }]}>
+          <GlassIconWell size={iconWell} borderRadius={radii.pill} variant="mist">
+            <Symbol name="flight" size={planeSize} color={brand} />
+          </GlassIconWell>
+
+          <View style={styles.titleWrap}>
+            <AppText
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              style={{
+                fontFamily: travelHomeFontFamily,
+                fontSize: titleSize,
+                lineHeight: Math.round(titleSize * 1.2),
+                fontWeight: '600',
+                color: titleColor,
+              }}>
+              Your next adventure starts here.
+            </AppText>
+          </View>
+        </View>
+
         <AppText
-          align="center"
-          numberOfLines={1}
+          numberOfLines={4}
           style={{
             fontFamily: travelHomeFontFamily,
-            fontSize: actionSize,
-            lineHeight: Math.round(actionSize * 1.25),
-            fontWeight: '700',
-            color: titleColor,
+            fontSize: messageSize,
+            lineHeight: Math.round(messageSize * 1.42),
+            color: messageColor,
           }}>
-          {actionLabel}
+          Add a trip to organize your itinerary, stays, activities, friends,
+          and memories.
         </AppText>
-      </Pressable>
+
+        <Pressable
+          ref={agent.ref}
+          testID={AgentUiIds.travel.list.emptyCreate}
+          onLayout={agent.onLayout}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+          onPress={handleAction}
+          hitSlop={8}
+          style={({ pressed }) => [styles.actionHit, { opacity: pressed ? 0.84 : 1 }]}>
+          <TravelHomeGlass
+            inverted
+            intensity={dark ? 48 : 58}
+            style={[
+              styles.action,
+              {
+                minHeight: actionHeight,
+                borderRadius: Math.max(
+                  travelHomeTokens.radius.button,
+                  s(travelHomeTokens.radius.button),
+                ),
+                gap: spacing.sm,
+                paddingHorizontal: spacing.lg,
+              },
+            ]}>
+            <TravelHomeRouteIcon size={Math.max(22, s(24))} color="#FFFFFF" />
+            <View style={styles.actionLabelWrap}>
+              <AppText
+                fit
+                align="center"
+                numberOfLines={1}
+                style={{
+                  fontFamily: travelHomeFontFamily,
+                  fontSize: actionSize,
+                  lineHeight: Math.round(actionSize * 1.25),
+                  fontWeight: '700',
+                  color: '#FFFFFF',
+                }}>
+                {actionLabel}
+              </AppText>
+            </View>
+          </TravelHomeGlass>
+        </Pressable>
+      </TravelHomeGlass>
     </View>
   );
 
   return (
-    <AgentTestId testID={AgentUiIds.travel.list.sectionEmpty}>
+    <AgentTestId
+      testID={AgentUiIds.travel.list.sectionEmpty}
+      style={styles.fill}>
       {entranceKey > 0 ? (
         <Animated.View
           key={entranceKey}
-          entering={FadeInDown.springify().damping(18)}>
+          style={styles.fill}
+          entering={FadeInDown.springify()
+            .damping(18)
+            .reduceMotion(ReduceMotion.System)}>
           {body}
         </Animated.View>
       ) : (
@@ -152,11 +181,38 @@ export function TravelHomeEmpty({ onAddTrip }: TravelHomeEmptyProps) {
 }
 
 const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+  },
   root: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  card: {
+    width: '100%',
+    borderCurve: 'continuous',
+  },
+  headingRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
+  titleWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
   actionHit: {
-    alignSelf: 'center',
+    width: '100%',
+  },
+  action: {
+    width: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    borderCurve: 'continuous',
+  },
+  actionLabelWrap: {
+    minWidth: 0,
+    flexShrink: 1,
   },
 });

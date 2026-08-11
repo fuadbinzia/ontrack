@@ -30,7 +30,11 @@ import {
   canonicalTravelTripId,
   listTravelTripRoster,
 } from '@/features/travel/trip-roster';
-import type { TravelPlan, TravelTripRosterPerson } from '@/features/travel/types';
+import type {
+  TravelPlan,
+  TravelTripRosterPerson,
+} from '@/features/travel/types';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useTravel } from '@/store/travel';
 
 export function useTravelChatSession(input: {
@@ -40,6 +44,7 @@ export function useTravelChatSession(input: {
   senderName: string;
   savePlan: (plan: TravelPlan) => void;
 }) {
+  const routeIsActive = useRouteIsActive();
   const { planId, plan, userId, senderName, savePlan } = input;
   const localAccessCode = plan ? travelChatAccessCode(plan) : undefined;
   const [roster, setRoster] = useState<TravelTripRosterPerson[]>([]);
@@ -85,7 +90,8 @@ export function useTravelChatSession(input: {
 
   const memberSubtitle = useMemo(() => {
     if (!plan) return 'Plan Together · Stay Connected';
-    if (plan.id === ALL_ACCOUNTS_TEST_TRIP.id) return 'Shared Test Chat · Plan Together';
+    if (plan.id === ALL_ACCOUNTS_TEST_TRIP.id)
+      return 'Shared Test Chat · Plan Together';
     const count = Math.max(members.length, plan.participants.length + 1);
     return `${count} ${count === 1 ? 'Trip Member' : 'Trip Members'} · Plan Together`;
   }, [members.length, plan]);
@@ -98,10 +104,16 @@ export function useTravelChatSession(input: {
       setError(undefined);
       const newest = next[next.length - 1];
       if (newest) {
-        void markTravelChatRead(accessCode, newest.createdAt).catch(() => undefined);
+        void markTravelChatRead(accessCode, newest.createdAt).catch(
+          () => undefined,
+        );
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Messages could not be loaded.');
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : 'Messages could not be loaded.',
+      );
     }
   }, [accessCode]);
 
@@ -117,7 +129,9 @@ export function useTravelChatSession(input: {
     setRosterReady(false);
 
     const recoverChat = async () => {
-      const latest = useTravel.getState().plans.find((item) => item.id === planId);
+      const latest = useTravel
+        .getState()
+        .plans.find((item) => item.id === planId);
       if (!latest || !active) return;
 
       let working = latest;
@@ -221,7 +235,7 @@ export function useTravelChatSession(input: {
   }, [accessCode, refresh, rosterReady]);
 
   useEffect(() => {
-    if (!accessCode || !canonicalTripId) return;
+    if (!routeIsActive || !accessCode || !canonicalTripId) return;
     const channel = subscribeToTravelChat(canonicalTripId, {
       onChanged: (payload) => {
         if (payload.type === 'read' && payload.user_id !== userId) {
@@ -239,7 +253,8 @@ export function useTravelChatSession(input: {
       onTyping: (payload) => {
         if (!payload.userId || payload.userId === userId) return;
         setPeerTypingName(payload.name?.trim() || 'Someone');
-        if (peerTypingClearRef.current) clearTimeout(peerTypingClearRef.current);
+        if (peerTypingClearRef.current)
+          clearTimeout(peerTypingClearRef.current);
         peerTypingClearRef.current = setTimeout(() => {
           setPeerTypingName(undefined);
         }, 2800);
@@ -258,7 +273,7 @@ export function useTravelChatSession(input: {
       }
       if (peerTypingClearRef.current) clearTimeout(peerTypingClearRef.current);
     };
-  }, [accessCode, canonicalTripId, refresh, userId]);
+  }, [accessCode, canonicalTripId, refresh, routeIsActive, userId]);
 
   useEffect(() => {
     let active = true;

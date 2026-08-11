@@ -13,6 +13,7 @@ import type { TravelPlan } from '@/features/travel/types';
 import { useDevMode } from '@/store/dev-mode';
 import { useSchedule } from '@/store/schedule';
 import { useTravelPlanUi } from '@/store/travel-plan-ui';
+import { useTravelMap } from '@/store/travel-map';
 
 /** Prevent Dev Mode exit / agent settle from resurrecting a deleted trip. */
 function forgetPlanInDevModeSnapshot(planId: string) {
@@ -84,6 +85,7 @@ export const useTravel = create<TravelState>()(
             ],
           };
         });
+        useTravelMap.getState().syncTripSummary(normalized);
         return true;
       },
       removePlan: (id) => {
@@ -96,6 +98,7 @@ export const useTravel = create<TravelState>()(
         if (!keepPlan) {
           useSchedule.getState().removeTravelActivities([id]);
           useTravelPlanUi.getState().clearPlanUi(id);
+          useTravelMap.getState().removeTrip(id);
           // Dev Mode restore merges snapshot∪sandbox adds — without this, a
           // deleted live trip comes back on exit / agent cold-start settle.
           forgetPlanInDevModeSnapshot(id);
@@ -115,6 +118,8 @@ export const useTravel = create<TravelState>()(
         }));
         useSchedule.getState().removeTravelActivities(droppedIds);
         useTravelPlanUi.getState().retainPlanIds([...nextIds]);
+        for (const plan of nextPlans) useTravelMap.getState().syncTripSummary(plan);
+        for (const id of droppedIds) useTravelMap.getState().removeTrip(id);
       },
       reset: () => {
         set({ plans: withAllAccountsTestTrip([]), recentPlanIds: [] });
@@ -123,6 +128,7 @@ export const useTravel = create<TravelState>()(
           .retainPlanIds(
             withAllAccountsTestTrip([]).map((plan) => plan.id),
           );
+        useTravelMap.getState().reset();
       },
     }),
     {

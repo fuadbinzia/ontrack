@@ -5,13 +5,16 @@ import {
     DEFAULT_TAB_ORDER,
     orderRoutesByRecency,
 } from '../tab-recency';
+import { MORE_TAB_ROUTE } from '../tab-pins';
 
 describe('tab-recency', () => {
   // A tab missing here never records focus, so it can never center in the rail.
   it('covers every carousel tab', () => {
     const ordered = new Set<string>(DEFAULT_TAB_ORDER);
     expect(
-      Object.keys(TAB_META).filter((name) => !ordered.has(name)),
+      Object.keys(TAB_META).filter(
+        (name) => name !== MORE_TAB_ROUTE && !ordered.has(name),
+      ),
     ).toEqual([]);
   });
 

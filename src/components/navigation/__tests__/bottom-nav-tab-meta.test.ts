@@ -1,12 +1,4 @@
-import {
-  eagerBottomNavRouteNames,
-  isTrackerRouteEnabled,
-} from '../bottom-nav-tab-meta';
-import {
-  DEFAULT_TRACKER_ORDER,
-  MORE_TAB_ROUTE,
-  NAV_PIN_LIMIT,
-} from '../tab-pins';
+import { isTrackerRouteEnabled } from '../bottom-nav-tab-meta';
 
 describe('bottom-nav-tab-meta eager routes', () => {
   const addonsOff = {
@@ -26,18 +18,5 @@ describe('bottom-nav-tab-meta eager routes', () => {
     expect(isTrackerRouteEnabled('(today)', addonsOff)).toBe(true);
     expect(isTrackerRouteEnabled('to-do', addonsOff)).toBe(true);
     expect(isTrackerRouteEnabled('travel', addonsOff)).toBe(false);
-  });
-
-  it('eager-mounts current bar pins plus More only', () => {
-    const eager = eagerBottomNavRouteNames(
-      DEFAULT_TRACKER_ORDER,
-      NAV_PIN_LIMIT,
-      addonsOff,
-    );
-    expect([...eager].sort()).toEqual(
-      ['(today)', 'calendar', 'profile', 'to-do', MORE_TAB_ROUTE].sort(),
-    );
-    expect(eager.has('travel')).toBe(false);
-    expect(eager.has('social')).toBe(false);
   });
 });

@@ -2,11 +2,7 @@ import type { Href } from 'expo-router';
 
 import type { AppIconName } from '@/design-system';
 
-import {
-  DEFAULT_TRACKER_ORDER,
-  MORE_TAB_ROUTE,
-  splitTrackerOrder,
-} from './tab-pins';
+import { MORE_TAB_ROUTE } from './tab-pins';
 
 /** Route name → label / icon / href for the bottom bar + Trackers catalog. */
 export const TAB_META: Record<
@@ -95,26 +91,4 @@ export function isTrackerRouteEnabled(
     return process.env.EXPO_OS === 'ios' && !!enabledAddons.health;
   }
   return routeName in TAB_META && routeName !== MORE_TAB_ROUTE;
-}
-
-/**
- * Bar pin routes (+ More) that should mount eagerly so tab hops stay warm.
- * Catalog tabs outside the bar stay lazy until opened from More.
- */
-export function eagerBottomNavRouteNames(
-  trackerOrder: readonly string[],
-  pinnedCount: number,
-  enabledAddons: Record<string, boolean>,
-): Set<string> {
-  const enabledNames = new Set(
-    DEFAULT_TRACKER_ORDER.filter((name) =>
-      isTrackerRouteEnabled(name, enabledAddons),
-    ),
-  );
-  const { inNav } = splitTrackerOrder(
-    trackerOrder,
-    enabledNames,
-    pinnedCount,
-  );
-  return new Set([...inNav, MORE_TAB_ROUTE]);
 }

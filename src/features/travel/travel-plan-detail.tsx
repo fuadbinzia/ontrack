@@ -1,7 +1,6 @@
 import { useIsFocused, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AppState,
   StyleSheet,
   View,
   type NativeScrollEvent,
@@ -11,45 +10,40 @@ import {
 
 import { EmptyState, Screen } from '@/components/primitives';
 import { useAuthSession } from '@/features/auth/auth-provider';
+import { useAppIsActive } from '@/hooks/use-app-activity';
 import type { StayBookingOpen } from '@/features/travel/booking-open';
 import {
-    isTravelPlanOnCalendar,
-    travelCalendarDrafts,
+  isTravelPlanOnCalendar,
+  travelCalendarDrafts,
 } from '@/features/travel/calendar';
+import { type ExpenseFormState } from '@/features/travel/expenses/expense-form';
 import {
-    type ExpenseFormState,
-} from '@/features/travel/expenses/expense-form';
-import {
-    stampOwnedItineraryDefaults,
-    visibleItineraryForViewer,
+  stampOwnedItineraryDefaults,
+  visibleItineraryForViewer,
 } from '@/features/travel/itinerary-visibility';
-import {
-    TravelImportResult,
-} from '@/features/travel/travel-import-result-modal';
+import { TravelImportResult } from '@/features/travel/travel-import-result-modal';
 import { TravelPlanDetailBody } from '@/features/travel/travel-plan-detail-body';
-import {
-    useTravelPlanDetailExpenseImport,
-} from '@/features/travel/travel-plan-detail-expense-import';
+import { useTravelPlanDetailExpenseImport } from '@/features/travel/travel-plan-detail-expense-import';
 import { TravelPlanDetailOverlays } from '@/features/travel/travel-plan-detail-overlays';
 import {
-    type DetailSectionKey,
-    sectionDefaultExpanded,
+  type DetailSectionKey,
+  sectionDefaultExpanded,
 } from '@/features/travel/travel-plan-detail-sections';
 import {
-    buildRevealItineraryUiPatch,
-    type RevealItineraryTarget,
+  buildRevealItineraryUiPatch,
+  type RevealItineraryTarget,
 } from '@/features/travel/travel-reveal-itinerary-item';
 import { useTravelPageStyle } from '@/features/travel/travel-surface';
 import { expandTimelineEntries } from '@/features/travel/travel-timeline-entries';
 import {
-    autoCollapsedTimelineDates,
-    resolveCollapsedTimelineDates,
-    timelineDaysFromItems,
+  autoCollapsedTimelineDates,
+  resolveCollapsedTimelineDates,
+  timelineDaysFromItems,
 } from '@/features/travel/travel-timeline-progress';
 import type {
-    TravelItemKind,
-    TravelItineraryItem,
-    TravelPlan,
+  TravelItemKind,
+  TravelItineraryItem,
+  TravelPlan,
 } from '@/features/travel/types';
 import { useRecoverReservedTravelPlan } from '@/features/travel/use-recover-reserved-travel-plan';
 import { useTravelPlanConfirmationImports } from '@/features/travel/use-travel-plan-confirmation-imports';
@@ -61,8 +55,8 @@ import { useTravelPlanItemDetailsEdit } from '@/features/travel/use-travel-plan-
 import { useTravelPlanItemMedia } from '@/features/travel/use-travel-plan-item-media';
 import { useTheme } from '@/hooks/use-theme';
 import {
-    publishTravelTripItinerary,
-    shouldSyncTravelItinerary,
+  publishTravelTripItinerary,
+  shouldSyncTravelItinerary,
 } from '@/services/travel/itinerary-collaboration';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
@@ -107,6 +101,7 @@ export function TravelPlanDetail(props: TravelPlanDetailProps) {
   // Entrance→Loaded swaps remounted ExpoFabricView (LinearGradient) and raced
   // AppContext ("The app context has been lost"). Heavy body waits for settle.
   const isFocused = useIsFocused();
+  const appIsActive = useAppIsActive();
   const [transitionSettled, setTransitionSettled] = useState(false);
   useEffect(() => {
     if (!isFocused || transitionSettled) return;
@@ -133,6 +128,7 @@ export function TravelPlanDetail(props: TravelPlanDetailProps) {
       planId={planId}
       plan={plan}
       bodyReady={transitionSettled}
+      active={isFocused && appIsActive}
     />
   );
 }
@@ -141,6 +137,7 @@ function TravelPlanDetailLoaded({
   planId,
   plan,
   bodyReady,
+  active,
   initialAddKind,
   initialOpenAddPicker = false,
   autoOpenStayBooking = false,
@@ -148,7 +145,11 @@ function TravelPlanDetailLoaded({
   initialOpenExpenses = false,
   initialImportResult,
   initialFlightImportFixture,
-}: TravelPlanDetailProps & { plan: TravelPlan; bodyReady: boolean }) {
+}: TravelPlanDetailProps & {
+  plan: TravelPlan;
+  bodyReady: boolean;
+  active: boolean;
+}) {
   const theme = useTheme();
   const travelStyle = useTravelPageStyle(theme);
   const savePlan = useTravel((state) => state.savePlan);
@@ -164,13 +165,13 @@ function TravelPlanDetailLoaded({
 
   // Warm trip-tool routes after the itinerary settles (staggered, max 3).
   useEffect(() => {
-    if (!bodyReady) return;
+    if (!bodyReady || !active) return;
     return warmHrefsAfterTransition([
       { pathname: '/travel/[id]/stays', params: { id: planId } },
       { pathname: '/travel/[id]/flights', params: { id: planId } },
       { pathname: '/travel/[id]/chat', params: { id: planId } },
     ] as never);
-  }, [bodyReady, planId]);
+  }, [active, bodyReady, planId]);
 
   const updatePlan = (next: TravelPlan) => {
     const stamped = stampOwnedItineraryDefaults(next, localUserId);
@@ -207,7 +208,11 @@ function TravelPlanDetailLoaded({
     setDevBookingOpen,
   });
 
-  const itemEdit = useTravelPlanItemDetailsEdit({ plan, itinerary, updatePlan });
+  const itemEdit = useTravelPlanItemDetailsEdit({
+    plan,
+    itinerary,
+    updatePlan,
+  });
   const itemMedia = useTravelPlanItemMedia({
     planId,
     plan,
@@ -347,23 +352,22 @@ function TravelPlanDetailLoaded({
   }, [timelineDays, timelineNow, persistedCollapsedDays, dayCollapseTouched]);
 
   useEffect(() => {
+    if (!active) return;
     const tick = () => setTimelineNow(new Date());
     const interval = setInterval(tick, 60_000);
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') tick();
-    });
-    return () => {
-      clearInterval(interval);
-      sub.remove();
-    };
-  }, []);
+    tick();
+    return () => clearInterval(interval);
+  }, [active]);
 
   // Keep persisted day collapse in sync with clock-driven auto-collapse for
   // untouched days so remounts don't flash a stale open/closed set.
   useEffect(() => {
     const next = [...collapsedDayDates].sort();
     const current = [...persistedCollapsedDays].sort();
-    if (next.length === current.length && next.every((date, i) => date === current[i])) {
+    if (
+      next.length === current.length &&
+      next.every((date, i) => date === current[i])
+    ) {
       return;
     }
     patchPlanUi(planId, { collapsedDayDates: next });
@@ -382,7 +386,9 @@ function TravelPlanDetailLoaded({
     patchPlanUi(planId, {
       sectionExpanded: {
         ...sectionExpanded,
-        [key]: !(sectionExpanded[key] ?? sectionDefaultExpanded(key, transportCounts)),
+        [key]: !(
+          sectionExpanded[key] ?? sectionDefaultExpanded(key, transportCounts)
+        ),
       },
     });
   };

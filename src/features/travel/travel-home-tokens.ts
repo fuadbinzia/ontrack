@@ -99,11 +99,8 @@ export const travelHomeTokens = {
   },
   spacing: {
     screenHorizontal: 20,
-    /**
-     * Tagline → “Your Trips” — atmosphere peeks through this band.
-     * Do not collapse to cardGap.
-     */
-    headerToSection: 118,
+    /** Small breath between the Travel subtitle and “Your Trips” search. */
+    headerToSection: 12,
     /** Modest gap between “Your Trips” and the first trip card. */
     sectionGap: 8,
     cardHorizontal: 18,

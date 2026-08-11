@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { motion } from '@/design-system';
+import { useAppIsActive } from '@/hooks/use-app-activity';
 import {
   degradePerformanceTier,
   minPerformanceTier,
@@ -16,6 +17,7 @@ import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 
 /** Session floor shared across features — only ever steps down. */
 let sessionFloor: PerformanceTier | null = null;
+let pressureCap: PerformanceTier | null = null;
 let floorVersion = 0;
 const floorListeners = new Set<() => void>();
 let fpsSampleArmed = false;
@@ -32,9 +34,7 @@ function getFloorVersion(): number {
 }
 
 function publishSessionFloor(next: PerformanceTier): void {
-  const merged = sessionFloor
-    ? minPerformanceTier(sessionFloor, next)
-    : next;
+  const merged = sessionFloor ? minPerformanceTier(sessionFloor, next) : next;
   if (merged === sessionFloor) return;
   sessionFloor = merged;
   floorVersion += 1;
@@ -44,9 +44,32 @@ function publishSessionFloor(next: PerformanceTier): void {
 /** Test helper — reset session degradation between cases. */
 export function resetPerformanceTierSessionForTests(): void {
   sessionFloor = null;
+  pressureCap = null;
   fpsSampleArmed = false;
   floorVersion += 1;
   floorListeners.forEach((listener) => listener());
+}
+
+/** Reversible device-pressure cap. Unlike the session floor, this may recover. */
+export function setPerformancePressureCap(next: PerformanceTier | null): void {
+  if (pressureCap === next) return;
+  pressureCap = next;
+  floorVersion += 1;
+  floorListeners.forEach((listener) => listener());
+}
+
+/** Persistent-for-session degradation after an OS memory warning. */
+export function degradePerformanceTierSession(): void {
+  publishSessionFloor(degradePerformanceTier(sessionFloor ?? 'full'));
+}
+
+export function resolvePerformancePressureCap(input: {
+  lowPowerMode: boolean;
+  thermalState: 'nominal' | 'fair' | 'serious' | 'critical' | 'unknown';
+}): PerformanceTier | null {
+  if (input.thermalState === 'critical') return 'static';
+  if (input.lowPowerMode || input.thermalState === 'serious') return 'minimal';
+  return null;
 }
 
 export type PerformanceTierState = PerformanceGates & {
@@ -61,6 +84,7 @@ export type PerformanceTierState = PerformanceGates & {
  * shared session floor that can step down after FPS stutter (or manually).
  */
 export function usePerformanceTier(): PerformanceTierState {
+  const appIsActive = useAppIsActive();
   const reduceMotion = useReducedMotion();
   useSyncExternalStore(subscribeFloor, getFloorVersion, getFloorVersion);
 
@@ -80,18 +104,31 @@ export function usePerformanceTier(): PerformanceTierState {
     publishSessionFloor(capability);
   }, [capability]);
 
-  const tier = minPerformanceTier(sessionFloor ?? capability, capability);
-  const gates = performanceGatesFor(tier, Platform.OS);
+  const sessionTier = minPerformanceTier(
+    sessionFloor ?? capability,
+    capability,
+  );
+  const tier = pressureCap
+    ? minPerformanceTier(sessionTier, pressureCap)
+    : sessionTier;
+  const baseGates = performanceGatesFor(tier, Platform.OS);
+  const gates = appIsActive
+    ? baseGates
+    : {
+        ...baseGates,
+        allowsLoopMotion: false,
+        allowsSensors: false,
+        particleScale: 0,
+        allowsAnimatedSvgProps: false,
+      };
 
   const degrade = () => {
-    publishSessionFloor(
-      degradePerformanceTier(sessionFloor ?? capability),
-    );
+    publishSessionFloor(degradePerformanceTier(sessionFloor ?? capability));
   };
 
   // One short FPS sample per session while loops are still allowed.
   useEffect(() => {
-    if (fpsSampleArmed) return;
+    if (!appIsActive || fpsSampleArmed) return;
     if (tier === 'static' || tier === 'minimal') return;
     fpsSampleArmed = true;
 
@@ -135,7 +172,7 @@ export function usePerformanceTier(): PerformanceTierState {
       cancelStart();
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [capability, tier]);
+  }, [appIsActive, capability, tier]);
 
   return {
     ...gates,

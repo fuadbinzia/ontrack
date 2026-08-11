@@ -20,6 +20,7 @@ import { TravelSheetModal } from '@/features/travel/travel-sheet';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
+import type { AddressSuggestion } from '@/features/travel/address-lookup';
 
 interface TravelNewTripSheetProps {
   visible: boolean;
@@ -31,6 +32,7 @@ interface TravelNewTripSheetProps {
   error?: string;
   onTitleChange: (value: string) => void;
   onDestinationChange: (value: string) => void;
+  onDestinationSuggestionSelect?: (suggestion: AddressSuggestion) => void;
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
   onNotesChange: (value: string) => void;
@@ -48,6 +50,7 @@ export function TravelNewTripSheet({
   error,
   onTitleChange,
   onDestinationChange,
+  onDestinationSuggestionSelect,
   onStartDateChange,
   onEndDateChange,
   onNotesChange,
@@ -91,6 +94,7 @@ export function TravelNewTripSheet({
           stackedLabel="Destination"
           value={destination}
           onChange={onDestinationChange}
+          onSuggestionSelect={onDestinationSuggestionSelect}
           placeholder={TRIP_DESTINATION_PLACEHOLDER}
           accessibilityLabel="Destination"
           {...itinerarySheetFieldProps(chrome, 'location')}

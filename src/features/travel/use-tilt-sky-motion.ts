@@ -1,6 +1,5 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 import { useEffect } from 'react';
-import { AppState } from 'react-native';
 import {
   useReducedMotion,
   useSharedValue,
@@ -44,7 +43,6 @@ export function useTiltSkyMotion(enabled = true): TiltSkyMotion {
 
     let subscription: { remove: () => void } | undefined;
     let cancelled = false;
-    let active = AppState.currentState === 'active';
 
     const start = async () => {
       try {
@@ -55,9 +53,8 @@ export function useTiltSkyMotion(enabled = true): TiltSkyMotion {
         // directly (never the Pedometer barrel).
         if (!requireOptionalNativeModule('ExponentDeviceMotion')) return;
 
-        const { default: DeviceMotion } = await import(
-          'expo-sensors/build/DeviceMotion.js'
-        );
+        const { default: DeviceMotion } =
+          await import('expo-sensors/build/DeviceMotion.js');
         const available = await DeviceMotion.isAvailableAsync();
         if (!available || cancelled) return;
 
@@ -70,7 +67,7 @@ export function useTiltSkyMotion(enabled = true): TiltSkyMotion {
         // ~15 Hz is enough for parallax; higher rates burn JS during itinerary paint.
         DeviceMotion.setUpdateInterval(66);
         subscription = DeviceMotion.addListener((sample) => {
-          if (!active || cancelled) return;
+          if (cancelled) return;
 
           const gamma = sample.rotation?.gamma ?? 0;
           const beta = sample.rotation?.beta ?? 0;
@@ -84,9 +81,7 @@ export function useTiltSkyMotion(enabled = true): TiltSkyMotion {
             Math.abs(rate?.beta ?? 0) +
             Math.abs(rate?.gamma ?? 0);
           const accel = sample.acceleration;
-          const jolt = accel
-            ? Math.hypot(accel.x, accel.y, accel.z)
-            : 0;
+          const jolt = accel ? Math.hypot(accel.x, accel.y, accel.z) : 0;
           const burst = clamp(spin / 140 + jolt / 5.5, 0, 1);
 
           // Light exponential smoothing — responsive, not jittery.
@@ -105,18 +100,10 @@ export function useTiltSkyMotion(enabled = true): TiltSkyMotion {
       void start();
     });
 
-    const appSub = AppState.addEventListener('change', (state) => {
-      active = state === 'active';
-      if (!active) {
-        energy.value = energy.value * 0.35;
-      }
-    });
-
     return () => {
       cancelled = true;
       cancelIdle();
       subscription?.remove();
-      appSub.remove();
     };
   }, [enabled, energy, reduceMotion, tiltX, tiltY]);
 

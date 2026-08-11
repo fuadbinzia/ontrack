@@ -36,6 +36,8 @@ export type TravelHomeTripCardProps = {
   onLayoutY?: (tripId: string, y: number) => void;
   /** Stagger entrance like Today activity cards. */
   index?: number;
+  /** Disable transform-based entrance while filtering so card slots stay stable. */
+  animateEntrance?: boolean;
   /**
    * Only trip on the launcher — stronger bottom lift tinted by the
    * Travel home atmosphere plate so the card grounds on empty paper.
@@ -56,6 +58,7 @@ export const TravelHomeTripCard = memo(function TravelHomeTripCard({
   onActiveImageChange,
   onLayoutY,
   index = 0,
+  animateEntrance = true,
   soloAtmosphereShadow = false,
   atmosphereAverageColor,
 }: TravelHomeTripCardProps) {
@@ -283,7 +286,11 @@ export const TravelHomeTripCard = memo(function TravelHomeTripCard({
     // Shadow and overflow:hidden cannot share one view on iOS — split so the
     // large mock corner radii actually clip the destination hero.
     <Animated.View
-      entering={FadeInDown.delay(Math.min(index, 8) * 40).springify().damping(18)}
+      entering={
+        animateEntrance
+          ? FadeInDown.delay(Math.min(index, 8) * 40).springify().damping(18)
+          : undefined
+      }
       onLayout={(event) => {
         const { width, y } = event.nativeEvent.layout;
         if (width > 0 && Math.abs(width - cardWidth) > 1) setCardWidth(width);

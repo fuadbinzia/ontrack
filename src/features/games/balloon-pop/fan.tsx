@@ -13,6 +13,7 @@ import Animated, {
 import { AppText, GlassPlate } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useTheme } from '@/hooks/use-theme';
 
 import type { FanSide } from './types';
@@ -28,8 +29,9 @@ export function EdgeFan({ side, strength }: FanProps) {
   const theme = useTheme();
   const reducedMotion = useReducedMotion();
   const { allowsLoopMotion } = usePerformanceTier();
+  const routeIsActive = useRouteIsActive();
   const spin = useSharedValue(0);
-  const still = reducedMotion || !allowsLoopMotion;
+  const still = reducedMotion || !allowsLoopMotion || !routeIsActive;
 
   useEffect(() => {
     if (still) {
@@ -52,13 +54,29 @@ export function EdgeFan({ side, strength }: FanProps) {
   const positionStyle = (() => {
     switch (side) {
       case 'left':
-        return { left: spacing.xs, top: '50%' as const, marginTop: -FAN_SIZE / 2 };
+        return {
+          left: spacing.xs,
+          top: '50%' as const,
+          marginTop: -FAN_SIZE / 2,
+        };
       case 'right':
-        return { right: spacing.xs, top: '50%' as const, marginTop: -FAN_SIZE / 2 };
+        return {
+          right: spacing.xs,
+          top: '50%' as const,
+          marginTop: -FAN_SIZE / 2,
+        };
       case 'top':
-        return { top: spacing.xs, left: '50%' as const, marginLeft: -FAN_SIZE / 2 };
+        return {
+          top: spacing.xs,
+          left: '50%' as const,
+          marginLeft: -FAN_SIZE / 2,
+        };
       case 'bottom':
-        return { bottom: spacing.xs, left: '50%' as const, marginLeft: -FAN_SIZE / 2 };
+        return {
+          bottom: spacing.xs,
+          left: '50%' as const,
+          marginLeft: -FAN_SIZE / 2,
+        };
     }
   })();
 
@@ -70,7 +88,9 @@ export function EdgeFan({ side, strength }: FanProps) {
       <Animated.View style={[styles.housingWrap, bladeStyle]}>
         <GlassPlate airy style={styles.housing}>
           <View style={styles.housingInner}>
-            <View style={[styles.blade, { backgroundColor: theme.accentPrimary }]} />
+            <View
+              style={[styles.blade, { backgroundColor: theme.accentPrimary }]}
+            />
             <View
               style={[
                 styles.blade,

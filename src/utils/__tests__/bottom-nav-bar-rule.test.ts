@@ -15,17 +15,24 @@ describe('bottom nav bar background invariant', () => {
     expect(tabsLayout).toMatch(/tabBarBackground:\s*\(\)\s*=>\s*null/);
   });
 
-  it('keeps bar tab hops attached and eager so switches stay instant', () => {
+  it('suspends inactive tabs so hidden sections do not consume battery', () => {
     const tabsLayout = readFileSync(
       join(process.cwd(), 'src/app/(tabs)/_layout.tsx'),
       'utf8',
     );
 
-    expect(tabsLayout).toContain('detachInactiveScreens={false}');
-    expect(tabsLayout).toContain('eagerBottomNavRouteNames');
-    expect(tabsLayout).toContain('lazy: !eagerRoutes.has(route.name)');
+    expect(tabsLayout).toContain('detachInactiveScreens');
+    expect(tabsLayout).not.toContain('eagerBottomNavRouteNames');
+    expect(tabsLayout).toContain('lazy: true');
     expect(tabsLayout).toContain("animation: 'none'");
-    expect(tabsLayout).toContain('freezeOnBlur: false');
+    expect(tabsLayout).toContain('freezeOnBlur: true');
+    expect(tabsLayout).not.toContain('preload(');
+
+    const navBar = readFileSync(
+      join(process.cwd(), 'src/components/navigation/bottom-nav-bar.tsx'),
+      'utf8',
+    );
+    expect(navBar).not.toContain('navigation.preload');
   });
 
   it('frosts the dock over page atmosphere and clears Android system nav', () => {

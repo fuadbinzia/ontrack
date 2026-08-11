@@ -33,7 +33,7 @@ describe('canonical travel sheet design', () => {
       expect({ path, source }).toEqual(
         expect.objectContaining({
           source: expect.stringMatching(
-            /@\/features\/travel\/travel-sheet|@\/components\/primitives/,
+            /@\/features\/travel\/travel-sheet|@\/components\/primitives|-sheet-content/,
           ),
         }),
       );

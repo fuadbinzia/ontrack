@@ -150,14 +150,21 @@ describe('transport board section header', () => {
 });
 
 describe('timeline progress + dense rows on glass', () => {
-  it('keeps progress badge on GlassTonePill (tone color for pill, itinerary ink elsewhere)', () => {
+  it('uses artwork-aware itinerary ink for progress text on dark glass', () => {
     const progress = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-timeline-progress-chrome.tsx'),
       'utf8',
     );
-    expect(progress).toContain('travelItineraryInk(theme)');
+    expect(progress).toContain('useTravelItineraryInk()');
+    expect(progress).toContain("useTravelItineraryInk('secondary')");
+    expect(progress).toContain('useTravelItineraryOnGlass()');
     expect(progress).toContain('GlassTonePill');
-    expect(progress).toContain('toneColor={badgeColor}');
+    expect(progress).toContain('toneColor={onGlass ? primaryInk : badgeColor}');
+    expect(progress).toContain('textColor={onGlass ? primaryInk : undefined}');
+    expect(progress).toContain('const trackFill = onGlass');
+    expect(progress).toContain('useTravelItineraryMistProps()');
+    expect(progress).toContain('<TravelHomeGlass');
+    expect(progress).toContain('color="#000000"');
     expect(progress).toContain('color: primaryInk');
     expect(progress).not.toContain('style={{ color: badgeColor');
   });
@@ -184,17 +191,27 @@ describe('timeline progress + dense rows on glass', () => {
       'utf8',
     );
     const timeline = readFileSync(
-      join(process.cwd(), 'src/features/travel/travel-itinerary-timeline.tsx'),
+      join(process.cwd(), 'src/features/travel/travel-itinerary-timeline-days.tsx'),
       'utf8',
     );
     expect(node).toContain('denseChromeLineHeight');
-    expect(node).toContain('denseCopy');
-    expect(node).toMatch(/itemHeader:\s*\{\s*flexDirection:\s*'row',\s*alignItems:\s*'center'/);
-    expect(node).toMatch(
+    expect(chrome).toContain('denseTitleStack');
+    const nodeBody = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-timeline-node-body.tsx'),
+      'utf8',
+    );
+    const nodeStyles = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-timeline-node-styles.ts'),
+      'utf8',
+    );
+    expect(nodeStyles).toContain('denseCopy');
+    expect(nodeStyles).toMatch(
+      /itemHeader:\s*\{\s*flexDirection:\s*'row',\s*alignItems:\s*'center'/,
+    );
+    expect(nodeBody).toMatch(
       /dense && !isExpanded && photos\.length === 0\s*\?\s*0/,
     );
     expect(chrome).toContain('denseLine');
-    expect(chrome).toContain('denseTitleStack');
     expect(timeline).toContain('paddingVertical: Math.max(8, s(8))');
     expect(timeline).toContain('justifyContent: \'center\'');
   });

@@ -15,6 +15,9 @@ import {
 describe('travel atlas country geometry', () => {
   it('bundles interactive Natural Earth country paths and ISO lookup', () => {
     expect(ATLAS_COUNTRIES.length).toBeGreaterThan(230);
+    expect(new Set(ATLAS_COUNTRIES.map((country) => country.code)).size).toBe(
+      ATLAS_COUNTRIES.length,
+    );
     expect(atlasCountryByCode('IS')).toMatchObject({ code: 'IS', name: 'Iceland' });
     expect(atlasCountryByCode('AG')).toMatchObject({
       code: 'AG',
@@ -23,6 +26,11 @@ describe('travel atlas country geometry', () => {
     expect(atlasCountryAtCoordinate(64.1466, -21.9426)?.code).toBe('IS');
     expect(atlasCountryContainsCoordinate('IS', 64.1466, -21.9426)).toBe(true);
     expect(atlasCountryContainsCoordinate('unknown', 64.1466, -21.9426)).toBe(false);
+  });
+
+  it('keeps the primary country geometry when an atlas repeats an ISO code', () => {
+    expect(ATLAS_COUNTRIES.filter((country) => country.code === 'AU')).toHaveLength(1);
+    expect(atlasCountryContainsCoordinate('AU', -33.8688, 151.2093)).toBe(true);
   });
 
   it('round-trips projected travel coordinates', () => {

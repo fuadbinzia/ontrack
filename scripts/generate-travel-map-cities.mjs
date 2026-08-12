@@ -8,6 +8,12 @@ const OUTPUT_URL = new URL(
   import.meta.url,
 );
 const MAX_CITIES_PER_COUNTRY = 24;
+const EXCLUDED_COUNTRY_CODES = new Set([
+  // Natural Earth represents Antarctic research facilities with the operating
+  // nation as their place name. Antarctica has no cities, so those labels do
+  // not belong in the Travel Atlas city layer.
+  'AQ',
+]);
 
 const response = await fetch(SOURCE_URL);
 if (!response.ok) {
@@ -25,7 +31,12 @@ for (const feature of collection.features) {
   const countryCode = String(properties.iso_a2 ?? '').trim().toUpperCase();
   const name = String(properties.namepar || properties.name || '').trim();
   const coordinates = feature?.geometry?.coordinates;
-  if (!/^[A-Z]{2}$/.test(countryCode) || !name || !Array.isArray(coordinates)) continue;
+  if (
+    !/^[A-Z]{2}$/.test(countryCode)
+    || EXCLUDED_COUNTRY_CODES.has(countryCode)
+    || !name
+    || !Array.isArray(coordinates)
+  ) continue;
 
   const longitude = Number(properties.longitude ?? coordinates[0]);
   const latitude = Number(properties.latitude ?? coordinates[1]);

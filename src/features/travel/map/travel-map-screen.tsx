@@ -279,6 +279,7 @@ export function TravelMapScreen() {
             selectedCountryCode={countryCode}
             selectedPinId={selected?.pin.id}
             placing={placingPin}
+            worldMotionPaused={countryPickerOpen}
             onCountryPress={(code) => {
               setCountryCode(code);
               setSelected(undefined);

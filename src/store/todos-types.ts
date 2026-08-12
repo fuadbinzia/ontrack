@@ -18,6 +18,15 @@ export interface TodoList {
   updatedAt: string;
 }
 
+export interface TodoCategory {
+  id: string;
+  listId: string;
+  name: string;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TodoRecipe {
   id: string;
   listId: string;
@@ -58,6 +67,7 @@ export interface TodoTask {
   id: string;
   listId: string;
   position?: number;
+  categoryId?: string;
   recipeId?: string;
   ingredientPosition?: number;
   ingredientName?: string;
@@ -100,6 +110,9 @@ export interface TodoInvite {
 export type TodoMutationOperation =
   | 'rename_list'
   | 'set_list_kind'
+  | 'add_category'
+  | 'delete_category'
+  | 'set_task_category'
   | 'add_task'
   | 'add_recipe'
   | 'update_recipe'
@@ -126,6 +139,7 @@ export interface PendingTodoMutation {
 export interface TodoPersistedState {
   groceryMigrationVersion: 1;
   lists: TodoList[];
+  categories: TodoCategory[];
   tasks: TodoTask[];
   recipes: TodoRecipe[];
   members: TodoMember[];
@@ -135,8 +149,8 @@ export interface TodoPersistedState {
 
 export interface TodoSharedSnapshot {
   list: TodoList;
+  categories?: TodoCategory[];
   tasks: TodoTask[];
   recipes?: TodoRecipe[];
   members: TodoMember[];
 }
-

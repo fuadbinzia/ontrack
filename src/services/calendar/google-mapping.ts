@@ -1,0 +1,59 @@
+import type { Activity } from '@/types/models';
+
+import type { GoogleCalendarEvent, GoogleCalendarLinkRow } from './google-types';
+
+export function zonedDateParts(date: Date, timeZone: string) {
+  const values: Record<string, string> = {};
+  for (const part of new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)) values[part.type] = part.value;
+  return { date: `${values.year}-${values.month}-${values.day}`, minutes: Number(values.hour) * 60 + Number(values.minute) };
+}
+
+export function eventToActivity(event: GoogleCalendarEvent, existing: Activity | undefined, link: GoogleCalendarLinkRow, timeZone: string, syncedAt: string): Activity {
+  const allDay = event.start?.date;
+  const start = allDay ? { date: allDay, minutes: 0 } : zonedDateParts(new Date(event.start?.dateTime || syncedAt), timeZone);
+  const duration = event.start?.dateTime && event.end?.dateTime
+    ? Math.max(5, Math.round((new Date(event.end.dateTime).getTime() - new Date(event.start.dateTime).getTime()) / 60_000))
+    : 24 * 60;
+  return {
+    id: link.activity_id,
+    title: event.summary?.trim() || 'Untitled event',
+    notes: event.description?.trim() || undefined,
+    date: start.date,
+    startMinutes: start.minutes,
+    durationMinutes: duration,
+    categoryId: existing?.categoryId ?? 'personal',
+    status: existing?.status ?? 'upcoming',
+    createdAt: existing?.createdAt ?? syncedAt,
+    updatedAt: event.updated ?? syncedAt,
+    googleCalendar: { calendarId: link.calendar_id, eventId: link.google_event_id, origin: link.origin, lastSyncedAt: syncedAt },
+  };
+}
+
+export function activityBody(activity: Activity, timeZone: string, eventId?: string) {
+  const hours = Math.floor(activity.startMinutes / 60).toString().padStart(2, '0');
+  const minutes = (activity.startMinutes % 60).toString().padStart(2, '0');
+  const start = `${activity.date}T${hours}:${minutes}:00`;
+  const endDate = new Date(`${start}Z`);
+  endDate.setUTCMinutes(endDate.getUTCMinutes() + activity.durationMinutes);
+  const end = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}T${String(endDate.getUTCHours()).padStart(2, '0')}:${String(endDate.getUTCMinutes()).padStart(2, '0')}:00`;
+  return { ...(eventId ? { id: eventId } : {}), status: 'confirmed', summary: activity.title, description: activity.notes, start: { dateTime: start, timeZone }, end: { dateTime: end, timeZone }, extendedProperties: { private: { ontrackActivityId: activity.id } } };
+}
+
+const GOOGLE_EVENT_ID_ALPHABET = '0123456789abcdefghijklmnopqrstuv';
+
+export async function googleEventIdForActivity(userId: string, activityId: string) {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${userId}:${activityId}`)));
+  let bits = 0;
+  let value = 0;
+  let encoded = '';
+  for (const byte of digest) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      encoded += GOOGLE_EVENT_ID_ALPHABET[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) encoded += GOOGLE_EVENT_ID_ALPHABET[(value << (5 - bits)) & 31];
+  return `ontrack${encoded}`;
+}

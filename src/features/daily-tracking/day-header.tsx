@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
   AppText,
@@ -22,8 +22,9 @@ import {
 import { useHomeWeather } from '@/features/daily-tracking/use-home-weather';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { addDays, formatDateLong, formatWeekday, isToday } from '@/utils/date';
+import { haptics } from '@/utils/haptics';
 
 interface DayHeaderProps {
   date: string;
@@ -81,6 +82,16 @@ export function DayHeader({
       ? 'Open Profile to edit current location'
       : undefined;
 
+  const openCalendarLabel = `Open calendar for ${formatDateLong(date)}`;
+  const openCalendar = () => {
+    haptics.select();
+    router.navigate('/(tabs)/calendar');
+  };
+  const openCalendarAgent = useAgentUiTarget(AgentUiIds.today.openCalendar, {
+    label: openCalendarLabel,
+    onPress: openCalendar,
+  });
+
   return (
     <View style={[styles.container, { paddingTop: topInset + spacing.md }]}>
       {/*
@@ -106,14 +117,25 @@ export function DayHeader({
           testID={AgentUiIds.today.prevDay}
           onPress={() => onChangeDate(addDays(date, -1))}
         />
-        <View style={styles.titleBlock}>
-          <AppText variant="overline" color="tertiary" align="center">
+        <Pressable
+          ref={openCalendarAgent.ref}
+          testID={AgentUiIds.today.openCalendar}
+          onLayout={openCalendarAgent.onLayout}
+          accessibilityRole="button"
+          accessibilityLabel={openCalendarLabel}
+          onPress={openCalendar}
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.titleBlock,
+            pressed ? styles.titleBlockPressed : null,
+          ]}>
+          <AppText variant="overline" color="tertiary" align="center" fit>
             {viewingToday ? 'Today' : formatWeekday(date)}
           </AppText>
-          <AppText variant="title" align="center">
+          <AppText variant="title" align="center" fit>
             {formatDateLong(date)}
           </AppText>
-        </View>
+        </Pressable>
         <IconButton
           icon="chevron-right"
           accessibilityLabel="Next day"
@@ -212,7 +234,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   titleBlock: {
+    flex: 1,
+    minWidth: 0,
     gap: spacing.xxs,
+  },
+  titleBlockPressed: {
+    opacity: 0.72,
   },
   weatherRow: {
     flexDirection: 'row',

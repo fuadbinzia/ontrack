@@ -99,6 +99,7 @@ export function mergeDomainPayload(
       return {
         ...cloud,
         lists: mergeEntityArrays(cloud.lists, device.lists),
+        categories: mergeEntityArrays(cloud.categories, device.categories),
         tasks: mergeEntityArrays(cloud.tasks, device.tasks),
         recipes: mergeEntityArrays(cloud.recipes, device.recipes),
       };

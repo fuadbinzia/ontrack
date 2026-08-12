@@ -59,6 +59,102 @@ describe('to-do store', () => {
     ).toEqual(['Replace air filter']);
   });
 
+  it('creates categories, assigns items, and uncategorizes on removal', () => {
+    const list = useTodos.getState().createList('Projects');
+    const category = useTodos.getState().addCategory(list!.id, 'Finance');
+    const task = useTodos.getState().addTask(list!.id, 'Review budget', category!.id);
+
+    expect(task?.categoryId).toBe(category?.id);
+    expect(useTodos.getState().categories).toEqual([category]);
+
+    useTodos.getState().deleteCategory(category!.id);
+
+    expect(useTodos.getState().categories).toEqual([]);
+    expect(useTodos.getState().tasks.find((item) => item.id === task?.id)?.categoryId)
+      .toBeUndefined();
+  });
+
+  it('normalizes category assignments only within known categories', () => {
+    const normalized = normalizeTodoState({
+      groceryMigrationVersion: 1,
+      lists: [{
+        id: 'list-1',
+        name: 'Projects',
+        kind: 'checklist',
+        mode: 'private',
+        role: 'owner',
+        createdAt: '2026-08-12T00:00:00.000Z',
+        updatedAt: '2026-08-12T00:00:00.000Z',
+      }],
+      categories: [{
+        id: 'category-1',
+        listId: 'list-1',
+        name: 'Finance',
+        position: 0,
+        createdAt: '2026-08-12T00:00:00.000Z',
+        updatedAt: '2026-08-12T00:00:00.000Z',
+      }],
+      tasks: [
+        { id: 'task-1', listId: 'list-1', title: 'Budget', categoryId: 'category-1' },
+        { id: 'task-2', listId: 'list-1', title: 'Orphan', categoryId: 'missing' },
+      ],
+    });
+
+    expect(normalized.tasks.find((task) => task.id === 'task-1')?.categoryId)
+      .toBe('category-1');
+    expect(normalized.tasks.find((task) => task.id === 'task-2')?.categoryId)
+      .toBeUndefined();
+  });
+
+  it('queues shared task creation before its category assignment', () => {
+    const list = useTodos.getState().lists[0];
+    useTodos.setState((state) => ({
+      lists: state.lists.map((item) =>
+        item.id === list.id ? { ...item, mode: 'shared', role: 'owner' } : item,
+      ),
+    }));
+    const category = useTodos.getState().addCategory(list.id, 'Finance')!;
+    useTodos.getState().addTask(list.id, 'Review budget', category.id);
+
+    expect(useTodos.getState().pendingMutations.map((mutation) => mutation.operation))
+      .toEqual(['add_category', 'add_task', 'set_task_category']);
+  });
+
+  it('preserves shared categories when a legacy snapshot omits the field', () => {
+    const initial = useTodos.getState();
+    const list = {
+      ...initial.lists[0],
+      mode: 'shared' as const,
+      role: 'owner' as const,
+    };
+    const category = {
+      id: 'category-finance',
+      listId: list.id,
+      name: 'Finance',
+      position: 0,
+      createdAt: list.createdAt,
+      updatedAt: list.updatedAt,
+    };
+    const task = {
+      ...initial.addTask(list.id, 'Review budget')!,
+      categoryId: category.id,
+    };
+    useTodos.getState().replaceSharedSnapshot({
+      list,
+      categories: [category],
+      tasks: [task],
+      members: [],
+    });
+
+    useTodos.getState().replaceSharedSnapshot({
+      list: { ...list, updatedAt: '2026-08-12T12:00:00.000Z' },
+      tasks: [{ ...task, title: 'Review updated budget' }],
+      members: [],
+    });
+
+    expect(useTodos.getState().categories).toEqual([category]);
+  });
+
   it('renames a checklist and normalizes its name', () => {
     const list = useTodos.getState().lists[0];
 

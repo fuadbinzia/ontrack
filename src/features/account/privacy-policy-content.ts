@@ -47,6 +47,14 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
     ],
   },
   {
+    title: 'Google Calendar',
+    paragraphs: [
+      'When you choose to connect Google Calendar, onTrack reads and writes calendar events so titles, notes, dates, times, updates, and deletions can sync in both directions. Google Calendar access is optional and is separate from signing in with Google.',
+      'Google OAuth refresh credentials are encrypted and stored server-side. onTrack does not use Google Calendar data for advertising or AI training.',
+      'You can disconnect while keeping existing events, or disconnect and remove Google events imported into onTrack and onTrack events exported to Google. Deleting your onTrack account also removes the stored connection credential.',
+    ],
+  },
+  {
     title: 'Collaboration and sharing',
     paragraphs: [
       'When you share a trip, checklist, vehicle, or invite link, recipients you authorize can see the shared content needed to collaborate.',

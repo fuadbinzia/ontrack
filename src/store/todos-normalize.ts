@@ -1,5 +1,6 @@
 import {
   type PendingTodoMutation,
+  type TodoCategory,
   type TodoIngredientInput,
   type TodoInvite,
   type TodoList,
@@ -136,6 +137,26 @@ export function normalizeRecipe(value: unknown): TodoRecipe | undefined {
   };
 }
 
+export function normalizeCategory(value: unknown): TodoCategory | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const candidate = value as Partial<TodoCategory>;
+  const id = asNonEmptyString(candidate.id);
+  const listId = asNonEmptyString(candidate.listId);
+  const name = typeof candidate.name === 'string'
+    ? cleanName(candidate.name).slice(0, 40)
+    : '';
+  if (!id || !listId || !name) return undefined;
+  const createdAt = asNonEmptyString(candidate.createdAt) ?? nowIso();
+  return {
+    id,
+    listId,
+    name,
+    position: asFiniteNonNegative(candidate.position) ?? 0,
+    createdAt,
+    updatedAt: asNonEmptyString(candidate.updatedAt) ?? createdAt,
+  };
+}
+
 export function normalizeTask(value: unknown, fallbackListId?: string): TodoTask | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const candidate = value as Partial<TodoTask>;
@@ -151,6 +172,7 @@ export function normalizeTask(value: unknown, fallbackListId?: string): TodoTask
   return {
     id: asNonEmptyString(candidate.id) ?? newUuid(),
     listId,
+    categoryId: asNonEmptyString(candidate.categoryId),
     position:
       typeof candidate.position === 'number' && Number.isFinite(candidate.position)
         ? candidate.position
@@ -248,6 +270,9 @@ export function normalizeMutation(value: unknown): PendingTodoMutation | undefin
   const operations: TodoMutationOperation[] = [
     'rename_list',
     'set_list_kind',
+    'add_category',
+    'delete_category',
+    'set_task_category',
     'add_task',
     'add_recipe',
     'update_recipe',
@@ -330,6 +355,13 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
   }
 
   const listIds = new Set(lists.map((list) => list.id));
+  const categories = Array.isArray(source.categories)
+    ? source.categories.flatMap((item) => {
+        const category = normalizeCategory(item);
+        return category && listIds.has(category.listId) ? [category] : [];
+      })
+    : [];
+  const categoryIds = new Set(categories.map((category) => category.id));
   const recipes = Array.isArray(source.recipes)
     ? source.recipes.flatMap((item) => {
         const recipe = normalizeRecipe(item);
@@ -363,7 +395,13 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
                 confidence: undefined,
               }
             : task;
-        return [{ ...normalizedTask, id: legacyTasks ? newUuid() : task.id }];
+        return [{
+          ...normalizedTask,
+          categoryId: task.categoryId && categoryIds.has(task.categoryId)
+            ? task.categoryId
+            : undefined,
+          id: legacyTasks ? newUuid() : task.id,
+        }];
       })
     : [];
 
@@ -388,6 +426,13 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
   return {
     groceryMigrationVersion: 1,
     lists: [...dedupedLists.values()],
+    categories: [
+      ...new Map(
+        categories
+          .filter((category) => validListIds.has(category.listId))
+          .map((category) => [category.id, category]),
+      ).values(),
+    ],
     tasks: [...new Map(tasks.map((task) => [task.id, task])).values()],
     recipes: [
       ...new Map(
@@ -420,4 +465,3 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
 export function normalizeTodoTasks(value: unknown): TodoTask[] {
   return normalizeTodoState({ tasks: value }).tasks;
 }
-

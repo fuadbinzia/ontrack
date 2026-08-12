@@ -58,7 +58,7 @@ export function TodoListCard({
   const nameInputRef = useRef<TextInput>(null);
   const icon = todoListIcon(list.name, list.kind);
   const iconBox = Math.max(44, s(48));
-  // Match caption name height — chip was oversized vs the label beside it.
+  // Keep the compact avatar stack visually subordinate to the checklist title.
   const collaboratorChip = Math.max(14, Math.round(typography.caption.lineHeight));
   const collaboratorRing = 1;
   const openAgent = useAgentUiTarget(editMode ? undefined : testID, {
@@ -126,40 +126,32 @@ export function TodoListCard({
           </>
         )}
         {collaborators?.length ? (
-          <View style={styles.collaborators}>
-            <View style={styles.collaboratorAvatars}>
-              {collaborators.slice(0, 2).map((person, index) => (
-                <View
-                  key={`${person.userId ?? person.displayName}-${index}`}
-                  style={[
-                    index > 0 && styles.collaboratorAvatarOverlap,
-                    {
-                      // Slight ring so stacked chips separate on the card surface.
-                      borderRadius: collaboratorChip / 2,
-                      borderWidth: collaboratorRing,
-                      borderColor: dark
-                        ? glassMaterials.border.dark
-                        : glassMaterials.border.light,
-                    },
-                  ]}>
-                  <ProfileAvatar
-                    displayName={person.displayName}
-                    userId={person.userId}
-                    isSelf={person.isSelf}
-                    size={collaboratorChip - collaboratorRing * 2}
-                  />
-                </View>
-              ))}
-            </View>
-            <AppText
-              variant="caption"
-              color="secondary"
-              numberOfLines={1}
-              style={{ flexShrink: 1, minWidth: 0 }}>
-              {collaborators.length > 2
-                ? `${collaboratorNames!.slice(0, 2).join(', ')} +${collaborators.length - 2}`
-                : collaboratorLabel}
-            </AppText>
+          <View
+            accessible
+            accessibilityLabel={`Shared with ${collaboratorLabel}`}
+            style={styles.collaboratorAvatars}>
+            {collaborators.slice(0, 3).map((person, index) => (
+              <View
+                key={`${person.userId ?? person.displayName}-${index}`}
+                style={[
+                  index > 0 && styles.collaboratorAvatarOverlap,
+                  {
+                    // Slight ring so stacked chips separate on the card surface.
+                    borderRadius: collaboratorChip / 2,
+                    borderWidth: collaboratorRing,
+                    borderColor: dark
+                      ? glassMaterials.border.dark
+                      : glassMaterials.border.light,
+                  },
+                ]}>
+                <ProfileAvatar
+                  displayName={person.displayName}
+                  userId={person.userId}
+                  isSelf={person.isSelf}
+                  size={collaboratorChip - collaboratorRing * 2}
+                />
+              </View>
+            ))}
           </View>
         ) : null}
       </View>
@@ -308,12 +300,6 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   nameInputAgent: { flex: 1, minWidth: 0 },
-  collaborators: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    minWidth: 0,
-  },
   collaboratorAvatars: {
     flexDirection: 'row',
     alignItems: 'center',

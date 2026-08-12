@@ -2,12 +2,14 @@ import { persist } from 'zustand/middleware';
 import { createWithEqualityFn as create } from 'zustand/traditional';
 
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
+import { createTodoCategoryActions } from './todos-category-actions';
 import { createTodoListActions } from './todos-list-actions';
 import { normalizeTodoState } from './todos-normalize';
 import { createTodoRecipeActions } from './todos-recipe-actions';
 import { createTodoSyncActions } from './todos-sync-actions';
 import { createTodoTaskActions } from './todos-task-actions';
 import type {
+  TodoCategory,
   TodoIngredientInput,
   TodoInvite,
   TodoList,
@@ -35,6 +37,7 @@ export {
 
 export type {
   PendingTodoMutation,
+  TodoCategory,
   TodoIngredientInput,
   TodoInvite,
   TodoList,
@@ -60,7 +63,10 @@ interface TodoState extends TodoPersistedState {
   renameList: (id: string, name: string) => void;
   setListKind: (id: string, kind: TodoListKind) => boolean;
   deleteList: (id: string) => void;
-  addTask: (listId: string, title?: string) => TodoTask | undefined;
+  addCategory: (listId: string, name: string) => TodoCategory | undefined;
+  deleteCategory: (id: string) => void;
+  setTaskCategory: (taskId: string, categoryId?: string) => void;
+  addTask: (listId: string, title?: string, categoryId?: string) => TodoTask | undefined;
   addRecipe: (listId: string, input: TodoRecipeInput) => TodoRecipe | undefined;
   updateRecipe: (
     id: string,
@@ -100,6 +106,7 @@ export const useTodos = create<TodoState>()(
       ...initialState,
       syncError: undefined,
       ...createTodoListActions(set, get),
+      ...createTodoCategoryActions(set, get),
       ...createTodoTaskActions(set, get),
       ...createTodoRecipeActions(set, get),
       ...createTodoSyncActions(set),
@@ -117,6 +124,7 @@ export const useTodos = create<TodoState>()(
         ({
           groceryMigrationVersion: state.groceryMigrationVersion,
           lists: state.lists,
+          categories: state.categories,
           tasks: state.tasks,
           recipes: state.recipes,
           members: state.members,

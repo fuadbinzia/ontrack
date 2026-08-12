@@ -64,12 +64,18 @@ export type DropdownProps<T extends string = string> = {
   value: T;
   options: readonly DropdownOption<T>[];
   onChange: (value: T) => void;
+  /** Optional action when the already-selected option is pressed again. */
+  onReselect?: (value: T) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   testID?: string;
   accessibilityLabel?: string;
   accessibilityHint?: string;
   menuMaxHeight?: number;
+  /** Optional interactive content rendered after the selectable menu rows. */
+  menuFooter?: ReactNode;
+  /** Estimated footer height used to keep overlay placement within the viewport. */
+  menuFooterHeight?: number;
   matchTriggerWidth?: boolean;
   icon?: AppIconName;
   iconBackground?: string;
@@ -141,12 +147,15 @@ export function Dropdown<T extends string = string>({
   value,
   options,
   onChange,
+  onReselect,
   open: openProp,
   onOpenChange,
   testID,
   accessibilityLabel,
   accessibilityHint = 'Opens a dropdown to choose another option',
   menuMaxHeight = MENU_MAX_HEIGHT,
+  menuFooter,
+  menuFooterHeight = ITEM_HEIGHT,
   matchTriggerWidth = true,
   icon,
   iconBackground,
@@ -209,11 +218,15 @@ export function Dropdown<T extends string = string>({
   };
 
   const choose = (next: T) => {
-    if (next !== value) onChange(next);
+    if (next === value) onReselect?.(next);
+    else onChange(next);
     setOpen(false);
   };
 
-  const contentHeight = options.length * ITEM_HEIGHT + MENU_PADDING * 2;
+  const contentHeight =
+    options.length * ITEM_HEIGHT +
+    (menuFooter ? menuFooterHeight : 0) +
+    MENU_PADDING * 2;
   const placement =
     anchor &&
     placeDropdownMenu({
@@ -433,6 +446,15 @@ export function Dropdown<T extends string = string>({
                     onSelect={() => choose(option.value)}
                   />
                 ))}
+                {menuFooter ? (
+                  <View
+                    style={[
+                      styles.menuFooter,
+                      { borderTopColor: theme.separator },
+                    ]}>
+                    {menuFooter}
+                  </View>
+                ) : null}
               </ScrollView>
             </Animated.View>
           ) : null}
@@ -486,5 +508,10 @@ const styles = StyleSheet.create({
   optionLabel: {
     flex: 1,
     minWidth: 0,
+  },
+  menuFooter: {
+    gap: spacing.xs,
+    padding: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
 });

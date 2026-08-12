@@ -27,7 +27,8 @@ export function buildAgentUiDemoChecklist(nowIso = new Date().toISOString()): {
     {
       id: AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID,
       listId: list.id,
-      title: 'Plan the weekend',
+      title:
+        'Finance section (bill management, property tax tracker, insurance tracker, car, cc’s. Etc)',
       completed: false,
       important: true,
       position: 0,
@@ -138,4 +139,3 @@ export function upsertTodoFixtureLists(input: {
     ],
   }));
 }
-

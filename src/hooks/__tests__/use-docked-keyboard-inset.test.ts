@@ -52,4 +52,26 @@ describe('dockedKeyboardInsetFromEvent', () => {
     );
     expect(next).toEqual({ keyboardOpen: false, keyboardInset: 0 });
   });
+
+  it('ignores hardware-keyboard assistant slivers (non-occluding frames)', () => {
+    // Sim/device with hardware keyboard: willChangeFrame parks a ~23pt bar at
+    // the bottom and never fires willHide — sheets must not float on it.
+    const next = dockedKeyboardInsetFromEvent(
+      {
+        endCoordinates: { height: 23.33, screenY: 776.67, width: 390 },
+      } as never,
+      { ...window, platform: 'ios' },
+    );
+    expect(next).toEqual({ keyboardOpen: false, keyboardInset: 0 });
+  });
+
+  it('treats off-screen iOS frames as hidden (no fromHeight fallback)', () => {
+    const next = dockedKeyboardInsetFromEvent(
+      {
+        endCoordinates: { height: 336, screenY: 800, width: 390 },
+      } as never,
+      { ...window, platform: 'ios' },
+    );
+    expect(next).toEqual({ keyboardOpen: false, keyboardInset: 0 });
+  });
 });

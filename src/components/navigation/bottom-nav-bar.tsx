@@ -79,6 +79,9 @@ export function BottomNavBar({
   const { width } = useWindowDimensions();
   const { spacing, layout, s } = useResponsive();
   const setTabBarHeight = useUI((store) => store.setTabBarHeight);
+  // Hide under open modal sheets — labels bleeding through frosted sheet glass
+  // read as a fake gap. The sheet scrim fully occludes the flip (no visible pop).
+  const modalSheetOpen = useUI((store) => store.modalSheetCount > 0);
   const onTabBarHeightChange = useContext(BottomTabBarHeightCallbackContext);
   const enabledAddons = useAddons((store) => store.enabled);
   const trackerOrder = useTabPins((store) => store.trackerOrder);
@@ -202,8 +205,8 @@ export function BottomNavBar({
 
   return (
     <View
-      pointerEvents="box-none"
-      style={[styles.bar, { height: barHeight }]}
+      pointerEvents={modalSheetOpen ? 'none' : 'box-none'}
+      style={[styles.bar, { height: barHeight, opacity: modalSheetOpen ? 0 : 1 }]}
       onLayout={(event) => reportBarHeight(event.nativeEvent.layout.height)}
     >
       <AgentTestId testID={AgentUiIds.tabs.dock} style={styles.barFill}>

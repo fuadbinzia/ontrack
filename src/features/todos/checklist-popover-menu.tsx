@@ -9,7 +9,14 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeOutUp, ReduceMotion } from 'react-native-reanimated';
 
-import { AppText, GlassPlate, IconButton, Symbol } from '@/components/primitives';
+import {
+  AppText,
+  GlassPlate,
+  IconButton,
+  SheetScaffold,
+  Symbol,
+} from '@/components/primitives';
+import { clampNumber } from '@/components/primitives/dropdown-layout';
 import {
   fontFamilies,
   glassMaterials,
@@ -24,15 +31,12 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 
-export interface ChecklistPopoverItem {
-  id: string;
-  title: string;
-  description?: string;
-  icon: AppIconName;
-  selected?: boolean;
-  destructive?: boolean;
-  dividerBefore?: boolean;
-}
+import {
+  ChecklistPopoverItems,
+  type ChecklistPopoverItem,
+} from './checklist-popover-items';
+
+export type { ChecklistPopoverItem };
 
 interface ChecklistPopoverMenuProps {
   title: string;
@@ -41,6 +45,10 @@ interface ChecklistPopoverMenuProps {
   items: ChecklistPopoverItem[];
   onSelect: (id: string) => void;
   testID?: string;
+  presentation?: 'popover' | 'sheet';
+  sheetSubtitle?: string;
+  closeTestID?: string;
+  itemTestID?: (id: string) => string;
 }
 
 interface Anchor {
@@ -55,10 +63,6 @@ const PANEL_PADDING = spacing.sm;
 const PANEL_HEADER_HEIGHT = 66;
 const ITEM_HEIGHT = 64;
 
-function clamp(value: number, minimum: number, maximum: number) {
-  return Math.min(Math.max(value, minimum), maximum);
-}
-
 export function ChecklistPopoverMenu({
   title,
   accessibilityLabel,
@@ -66,6 +70,10 @@ export function ChecklistPopoverMenu({
   items,
   onSelect,
   testID,
+  presentation = 'popover',
+  sheetSubtitle,
+  closeTestID,
+  itemTestID,
 }: ChecklistPopoverMenuProps) {
   const theme = useTheme();
   const { s } = useResponsive();
@@ -94,7 +102,7 @@ export function ChecklistPopoverMenu({
     windowWidth - insets.right - spacing.lg - panelWidth,
   );
   const panelLeft = anchor
-    ? clamp(
+    ? clampNumber(
         anchor.x + anchor.width - panelWidth,
         minimumLeft,
         maximumLeft,
@@ -117,6 +125,10 @@ export function ChecklistPopoverMenu({
 
   const open = () => {
     haptics.select();
+    if (presentation === 'sheet') {
+      setVisible(true);
+      return;
+    }
     triggerRef.current?.measureInWindow((x, y, width, height) => {
       setAnchor({ x, y, width, height });
       setVisible(true);
@@ -125,6 +137,10 @@ export function ChecklistPopoverMenu({
   openRef.current = open;
 
   const close = () => setVisible(false);
+  const selectItem = (id: string) => {
+    close();
+    onSelect(id);
+  };
 
   return (
     <>
@@ -157,186 +173,108 @@ export function ChecklistPopoverMenu({
         </GlassPlate>
       </Pressable>
 
-      <Modal
-        animationType="fade"
-        onRequestClose={close}
-        presentationStyle="overFullScreen"
-        statusBarTranslucent
-        transparent
-        visible={visible}>
-        <View
-          style={[
-            styles.modalRoot,
-            {
-              paddingTop: insets.top,
-              paddingRight: insets.right,
-              paddingBottom: insets.bottom,
-              paddingLeft: insets.left,
-            },
-          ]}>
-          <Pressable
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            onPress={close}
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: theme.overlayScrim },
-            ]}
+      {presentation === 'sheet' ? (
+        <SheetScaffold
+          visible={visible}
+          eyebrow="Checklist"
+          title={title}
+          subtitle={sheetSubtitle}
+          closeAccessibilityLabel="Close list actions"
+          closeTestID={closeTestID}
+          onClose={close}
+          contentContainerStyle={styles.sheetContent}>
+          <ChecklistPopoverItems
+            items={items}
+            density="sheet"
+            itemTestID={itemTestID}
+            onSelect={selectItem}
           />
-          <Animated.View
-            accessibilityLabel={`${title} menu`}
-            accessibilityViewIsModal
-            entering={FadeInDown.duration(motion.fade).reduceMotion(
-              ReduceMotion.System,
-            )}
-            exiting={FadeOutUp.duration(motion.fade).reduceMotion(
-              ReduceMotion.System,
-            )}
+        </SheetScaffold>
+      ) : (
+        <Modal
+          animationType="fade"
+          onRequestClose={close}
+          presentationStyle="overFullScreen"
+          statusBarTranslucent
+          transparent
+          visible={visible}>
+          <View
             style={[
-              styles.panelShell,
-              shadows.overlay,
+              styles.modalRoot,
               {
-                width: panelWidth,
-                left: panelLeft,
-                top: panelTop,
+                paddingTop: insets.top,
+                paddingRight: insets.right,
+                paddingBottom: insets.bottom,
+                paddingLeft: insets.left,
               },
             ]}>
-            <GlassPlate
+            <Pressable
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              onPress={close}
               style={[
-                styles.panel,
-                { borderColor: plateBorder },
+                StyleSheet.absoluteFill,
+                { backgroundColor: theme.overlayScrim },
+              ]}
+            />
+            <Animated.View
+              accessibilityLabel={`${title} menu`}
+              accessibilityViewIsModal
+              entering={FadeInDown.duration(motion.fade).reduceMotion(
+                ReduceMotion.System,
+              )}
+              exiting={FadeOutUp.duration(motion.fade).reduceMotion(
+                ReduceMotion.System,
+              )}
+              style={[
+                styles.panelShell,
+                shadows.overlay,
+                {
+                  width: panelWidth,
+                  left: panelLeft,
+                  top: panelTop,
+                },
               ]}>
-            <View style={styles.panelContent}>
-            <View style={styles.panelHeader}>
-              <View style={styles.panelCopy}>
-                <AppText variant="overline" color="accent">
-                  Checklist
-                </AppText>
-                <AppText
-                  variant="subheading"
-                  style={[
-                    styles.panelTitle,
-                    { fontSize: s(21), lineHeight: s(25) },
-                  ]}>
-                  {title}
-                </AppText>
-              </View>
-              <IconButton
-                icon="close"
-                size={36}
-                accessibilityLabel="Close menu"
-                onPress={close}
-              />
-            </View>
-
-            <View style={styles.items}>
-              {items.map((item) => {
-                const itemColor = item.destructive
-                  ? theme.danger
-                  : item.selected
-                    ? theme.textOnAccent
-                    : theme.textPrimary;
-
-                return (
-                  <View key={item.id}>
-                    {item.dividerBefore ? (
-                      <View
+              <GlassPlate
+                style={[
+                  styles.panel,
+                  { borderColor: plateBorder },
+                ]}>
+                <View style={styles.panelContent}>
+                  <View style={styles.panelHeader}>
+                    <View style={styles.panelCopy}>
+                      <AppText variant="overline" color="accent">
+                        Checklist
+                      </AppText>
+                      <AppText
+                        variant="subheading"
                         style={[
-                          styles.divider,
-                          { backgroundColor: theme.separator },
-                        ]}
-                      />
-                    ) : null}
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={item.title}
-                      accessibilityHint={item.description}
-                      accessibilityState={{ selected: item.selected }}
-                      onPress={() => {
-                        close();
-                        onSelect(item.id);
-                      }}
-                      style={({ pressed }) => [
-                        styles.item,
-                        {
-                          backgroundColor:
-                            item.selected || pressed
-                              ? theme.accentFaint
-                              : 'transparent',
-                          opacity: pressed ? 0.76 : 1,
-                        },
-                      ]}>
-                      {item.destructive ? (
-                        <View
-                          style={[
-                            styles.itemIcon,
-                            { backgroundColor: `${theme.danger}18` },
-                          ]}>
-                          <Symbol
-                            name={item.icon}
-                            size={17}
-                            color={itemColor}
-                          />
-                        </View>
-                      ) : item.selected ? (
-                        <View
-                          style={[
-                            styles.itemIcon,
-                            { backgroundColor: theme.accentPrimary },
-                          ]}>
-                          <Symbol
-                            name={item.icon}
-                            size={17}
-                            color={itemColor}
-                          />
-                        </View>
-                      ) : (
-                        <GlassPlate airy style={styles.itemIcon}>
-                          <Symbol
-                            name={item.icon}
-                            size={17}
-                            color={itemColor}
-                          />
-                        </GlassPlate>
-                      )}
-                      <View style={styles.itemCopy}>
-                        <AppText
-                          variant="callout"
-                          color={item.destructive ? 'danger' : 'primary'}>
-                          {item.title}
-                        </AppText>
-                        {item.description ? (
-                          <AppText
-                            variant="caption"
-                            color="secondary"
-                            numberOfLines={1}>
-                            {item.description}
-                          </AppText>
-                        ) : null}
-                      </View>
-                      {item.selected ? (
-                        <View
-                          style={[
-                            styles.selection,
-                            { backgroundColor: theme.accentPrimary },
-                          ]}>
-                          <Symbol
-                            name="check"
-                            size={12}
-                            color={theme.textOnAccent}
-                          />
-                        </View>
-                      ) : null}
-                    </Pressable>
+                          styles.panelTitle,
+                          { fontSize: s(21), lineHeight: s(25) },
+                        ]}>
+                        {title}
+                      </AppText>
+                    </View>
+                    <IconButton
+                      icon="close"
+                      size={36}
+                      accessibilityLabel="Close menu"
+                      onPress={close}
+                    />
                   </View>
-                );
-              })}
-            </View>
-            </View>
-            </GlassPlate>
-          </Animated.View>
-        </View>
-      </Modal>
+
+                  <ChecklistPopoverItems
+                    items={items}
+                    density="compact"
+                    itemTestID={itemTestID}
+                    onSelect={selectItem}
+                  />
+                </View>
+              </GlassPlate>
+            </Animated.View>
+          </View>
+        </Modal>
+      )}
     </>
   );
 }
@@ -366,6 +304,7 @@ const styles = StyleSheet.create({
   panelContent: {
     zIndex: 1,
     padding: PANEL_PADDING,
+    gap: spacing.xxs,
   },
   panelHeader: {
     minHeight: PANEL_HEADER_HEIGHT,
@@ -384,39 +323,7 @@ const styles = StyleSheet.create({
   panelTitle: {
     fontFamily: fontFamilies.serif,
   },
-  items: {
-    gap: spacing.xxs,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.sm,
-  },
-  item: {
-    minHeight: ITEM_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.lg,
-  },
-  itemIcon: {
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.md,
-  },
-  itemCopy: {
-    flex: 1,
-    gap: spacing.xxs,
-  },
-  selection: {
-    width: 22,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.pill,
+  sheetContent: {
+    paddingTop: 0,
   },
 });

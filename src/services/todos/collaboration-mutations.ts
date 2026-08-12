@@ -68,6 +68,7 @@ export async function publishTodoList(listId: string): Promise<TodoSharedSnapsho
   }
   const client = await authenticatedClient();
   const recipes = state.recipes.filter((recipe) => recipe.listId === list.id);
+  const categories = state.categories.filter((category) => category.listId === list.id);
   // Publish first so storage RLS recognizes list ownership, then upload images.
   const { error } = await client.rpc('publish_todo_list', {
     list_payload: {
@@ -86,6 +87,21 @@ export async function publishTodoList(listId: string): Promise<TodoSharedSnapsho
     throw new TodoCollaborationError(
       messageFrom(error, 'The list could not be shared.'),
     );
+  }
+
+  if (categories.length) {
+    const { error: categoryError } = await client.rpc('set_todo_categories', {
+      requested_list_id: list.id,
+      categories_payload: categories,
+      assignments_payload: state.tasks
+        .filter((task) => task.listId === list.id && task.categoryId)
+        .map((task) => ({ taskId: task.id, categoryId: task.categoryId })),
+    });
+    if (categoryError) {
+      throw new TodoCollaborationError(
+        messageFrom(categoryError, 'Checklist categories could not be shared.'),
+      );
+    }
   }
 
   const needingUpload = recipes.filter(
@@ -153,7 +169,7 @@ export async function publishTodoList(listId: string): Promise<TodoSharedSnapsho
 }
 
 function permanentMutationError(message: string) {
-  return /no longer have access|only the list owner|only an editor or owner|assigned to someone else|not a member|Recipes can only be added to Grocery lists/i.test(
+  return /no longer have access|only the list owner|only an editor or owner|assigned to someone else|not a member|Recipes can only be added to Grocery lists|todo_categories_list_name_idx/i.test(
     message,
   );
 }
@@ -163,6 +179,11 @@ function permanentMediaPrepError(message: string) {
 }
 
 const TODO_MUTATION_BATCH_SIZE = 50;
+const CATEGORY_MUTATIONS = new Set<PendingTodoMutation['operation']>([
+  'add_category',
+  'delete_category',
+  'set_task_category',
+]);
 
 export async function flushTodoMutations(): Promise<void> {
   const client = await authenticatedClient();
@@ -232,15 +253,30 @@ export async function flushTodoMutations(): Promise<void> {
       return;
     }
 
-    const { data, error } = await client.rpc('apply_todo_mutations', {
-      mutations: ready.map((mutation) => ({
+    const rpcPayload = (mutations: PendingTodoMutation[]) => mutations.map((mutation) => ({
         id: mutation.id,
         listId: mutation.listId,
         operation: mutation.operation,
         payload: mutation.payload,
-      })),
-    });
-    if (error || !Array.isArray(data)) return;
+      }));
+    const categoryReady = ready.filter((mutation) => CATEGORY_MUTATIONS.has(mutation.operation));
+    const regularReady = ready.filter((mutation) => !CATEGORY_MUTATIONS.has(mutation.operation));
+    // Apply task creation before category assignment when both are queued in
+    // the same offline batch. Category mutations retain their original order.
+    const regularResult = regularReady.length
+      ? await client.rpc('apply_todo_mutations', { mutations: rpcPayload(regularReady) })
+      : { data: [], error: null };
+    if (regularResult.error || !Array.isArray(regularResult.data)) return;
+    const categoryResult = categoryReady.length
+      ? await client.rpc('apply_todo_category_mutations', { mutations: rpcPayload(categoryReady) })
+      : { data: [], error: null };
+    if (
+      regularResult.error ||
+      categoryResult.error ||
+      !Array.isArray(regularResult.data) ||
+      !Array.isArray(categoryResult.data)
+    ) return;
+    const data = [...regularResult.data, ...categoryResult.data];
 
     const results = new Map<string, { ok: boolean; error?: string }>();
     for (const value of data) {

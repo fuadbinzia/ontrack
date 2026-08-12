@@ -40,3 +40,77 @@ index 00dbd94..ae3054c 100644
  }
  
  @end
+diff --git a/node_modules/expo-modules-core/ios/Fabric/ExpoFabricView.swift b/node_modules/expo-modules-core/ios/Fabric/ExpoFabricView.swift
+index ab29f5d..ae2f1fc 100644
+--- a/node_modules/expo-modules-core/ios/Fabric/ExpoFabricView.swift
++++ b/node_modules/expo-modules-core/ios/Fabric/ExpoFabricView.swift
+@@ -173 +173,2 @@
+-  internal static var viewClassesRegistry = [String: AnyClass]()
++  private final class ViewClassAppContextHolder {
++    private let appContext: Mutex<AppContext>
+@@ -174,0 +176,20 @@
++    init(appContext: AppContext) {
++      self.appContext = Mutex(appContext)
++    }
++
++    func replace(with appContext: AppContext) {
++      self.appContext.withLock { $0 = appContext }
++    }
++
++    func current() -> AppContext {
++      return appContext.withLock { $0 }
++    }
++  }
++
++  private struct ViewClassRegistration {
++    let viewClass: AnyClass
++    let appContextHolder: ViewClassAppContextHolder
++  }
++
++  private static let viewClassesRegistry = Mutex<[String: ViewClassRegistration]>([:])
++
+@@ -183 +204,10 @@
+-    if let viewClass = viewClassesRegistry[className] {
++    return viewClassesRegistry.withLock { registry in
++      if let registration = registry[className] {
++        registration.appContextHolder.replace(with: appContext)
++        inject(appContext: appContext)
++        return registration.viewClass
++      }
++      guard let viewClass = objc_allocateClassPair(ExpoFabricView.self, className, 0) else {
++        fatalError("Cannot allocate a Fabric view class for '\(className)'")
++      }
++      let appContextHolder = ViewClassAppContextHolder(appContext: appContext)
+@@ -185,8 +215 @@
+-      injectInitializer(appContext: appContext, moduleName: moduleName, viewName: viewName, toViewClass: viewClass)
+-      return viewClass
+-    }
+-    guard let viewClass = objc_allocateClassPair(ExpoFabricView.self, className, 0) else {
+-      fatalError("Cannot allocate a Fabric view class for '\(className)'")
+-    }
+-    inject(appContext: appContext)
+-    injectInitializer(appContext: appContext, moduleName: moduleName, viewName: viewName, toViewClass: viewClass)
++      injectInitializer(appContextHolder: appContextHolder, moduleName: moduleName, viewName: viewName, toViewClass: viewClass)
+@@ -194,2 +217,7 @@
+-    // Save the allocated view class in the registry for the later use (e.g. when the app is reloaded).
+-    viewClassesRegistry[className] = viewClass
++      // Save the allocated view class and its reload-safe context holder. The
++      // initializer is installed once; later runtimes atomically replace the
++      // holder's context before Fabric can instantiate the cached class.
++      registry[className] = ViewClassRegistration(
++        viewClass: viewClass,
++        appContextHolder: appContextHolder
++      )
+@@ -197 +225,2 @@
+-    return viewClass
++      return viewClass
++    }
+@@ -208 +237 @@
+-  internal static func injectInitializer(appContext: AppContext, moduleName: String, viewName: String, toViewClass viewClass: AnyClass) {
++  private static func injectInitializer(appContextHolder: ViewClassAppContextHolder, moduleName: String, viewName: String, toViewClass viewClass: AnyClass) {
+@@ -210,2 +239,3 @@
+-    let newBlock: @convention(block) () -> Any = {[weak appContext] in
+-      guard let appContext, let moduleHolder = appContext.moduleRegistry.get(moduleHolderForName: moduleName) else {
++    let newBlock: @convention(block) () -> Any = {
++      let appContext = appContextHolder.current()
++      guard let moduleHolder = appContext.moduleRegistry.get(moduleHolderForName: moduleName) else {

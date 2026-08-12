@@ -1,4 +1,5 @@
 import { syncGoogleCalendarServer } from '@/services/calendar/google-server';
+import type { GoogleCalendarDeletion } from '@/services/calendar/google-types';
 import { googleCalendarApiOptions, withGoogleCalendarApiAuth } from '@/services/calendar/google-api-route';
 import { apiCorsHeaders } from '@/services/http/cors';
 import type { Activity } from '@/types/models';
@@ -13,12 +14,15 @@ export async function POST(request: Request) {
     unauthorizedMessage: 'Sign in to sync calendars.',
     errorFallback: 'Calendar sync failed.',
   }, async (request, userId) => {
-    const body = await request.json() as { activities?: Activity[]; timeZone?: string; phase?: 'pull' | 'push' };
+    const body = await request.json() as { activities?: Activity[]; deletions?: GoogleCalendarDeletion[]; timeZone?: string; phase?: 'pull' | 'push' };
     if (!Array.isArray(body.activities) || body.activities.length > 10_000) {
       return Response.json({ error: 'Calendar payload is invalid.' }, { status: 400, headers: apiCorsHeaders(request, METHODS) });
     }
+    if (body.deletions !== undefined && (!Array.isArray(body.deletions) || body.deletions.length > 10_000)) {
+      return Response.json({ error: 'Calendar deletion payload is invalid.' }, { status: 400, headers: apiCorsHeaders(request, METHODS) });
+    }
     const timeZone = typeof body.timeZone === 'string' && body.timeZone.length < 80 ? body.timeZone : 'UTC';
     const phase = body.phase === 'push' ? 'push' : 'pull';
-    return syncGoogleCalendarServer(userId, body.activities, timeZone, phase);
+    return syncGoogleCalendarServer(userId, body.activities, body.deletions ?? [], timeZone, phase);
   });
 }

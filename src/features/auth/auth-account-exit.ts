@@ -3,10 +3,15 @@ import type { Session } from '@supabase/supabase-js';
 import {
     accessibleAuthError,
     deleteOwnCloudAccount,
+    resetOwnCloudData,
     signOutLocalSession,
 } from '@/services/cloud/account';
 import { getSupabaseClient } from '@/services/cloud/supabase';
-import { clearLocalAccountData, flushCloudSync } from '@/services/cloud/sync';
+import {
+    clearLocalAccountData,
+    flushCloudSync,
+    resumeCloudSyncAfterReset,
+} from '@/services/cloud/sync';
 import { useAuthAccess } from '@/store/auth-access';
 import { useFriends } from '@/store/friends';
 
@@ -22,6 +27,11 @@ export interface DeleteAccountResult {
   message?: string;
 }
 
+export interface ResetAccountDataResult {
+  status: 'reset' | 'failed';
+  message?: string;
+}
+
 /** Provider plumbing the exit flows drive: React state plus init bookkeeping. */
 export interface AuthExitControls {
   setPhase: (phase: AuthPhase) => void;
@@ -34,10 +44,41 @@ export interface AuthExitControls {
 }
 
 /** Account-owned local stores must never outlive the account on this device. */
-export async function dropLocalAccountState(): Promise<void> {
-  await clearLocalAccountData();
+export async function dropLocalAccountState(options?: {
+  markSignedOut?: boolean;
+  preserveAccountAccess?: boolean;
+  preserveAccountFlags?: boolean;
+}): Promise<void> {
+  await clearLocalAccountData(options);
   useFriends.getState().clear();
-  useAuthAccess.getState().resetAccess();
+  if (!options?.preserveAccountAccess) useAuthAccess.getState().resetAccess();
+}
+
+export async function resetAccountDataFlow(
+  session: Session | null,
+  controls: AuthExitControls,
+): Promise<ResetAccountDataResult> {
+  controls.clearLock();
+  controls.setPhase('loading');
+  try {
+    if (session) await resetOwnCloudData();
+    await dropLocalAccountState({
+      markSignedOut: false,
+      preserveAccountAccess: Boolean(session),
+      preserveAccountFlags: Boolean(session),
+    });
+    if (session) {
+      resumeCloudSyncAfterReset(session.user.id, session.user.email ?? undefined);
+    }
+    controls.setError(undefined);
+    controls.setPhase(session ? 'authenticated' : 'welcome');
+    return { status: 'reset' };
+  } catch (resetError) {
+    const message = accessibleAuthError(resetError);
+    controls.setError(message);
+    controls.setPhase(session ? 'authenticated' : 'welcome');
+    return { status: 'failed', message };
+  }
 }
 
 /**

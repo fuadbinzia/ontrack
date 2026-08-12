@@ -2,12 +2,22 @@ import { Directory, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 
 import { deleteAllVisionBoardImages } from '@/features/vision-board/media';
+import { clearFlightConfirmationAIMemory } from '@/services/travel/flight-confirmation-ai-memory';
+import { removePersistedStorageItems, STORAGE_KEYS } from '@/services/storage';
 import { deletePlant } from '@/services/plants/schedule';
 import { useAccountFlags } from '@/store/account-flags';
+import { useFoodProfile } from '@/store/food-profile';
+import { useMealPlan } from '@/store/food-meal-plan';
+import { usePantry } from '@/store/food-pantry';
+import { useRecipes } from '@/store/food-recipes';
 import { useHealth } from '@/store/health';
 import { useNutrition } from '@/store/nutrition';
 import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
+import { useThemeOverrides } from '@/store/theme-overrides';
+import { useTravelMap } from '@/store/travel-map';
+import { useTravelPlanUi } from '@/store/travel-plan-ui';
+import { useUsageAnalytics } from '@/store/usage-analytics';
 
 import { getSupabaseClient } from './supabase';
 import { domains } from './sync-domains';
@@ -18,6 +28,7 @@ export async function deleteAppOwnedMedia(options?: {
   visionBoard?: boolean;
   mealImages?: boolean;
 }) {
+  const clearEveryDirectory = options == null;
   const clearPlants = options?.plants ?? true;
   const clearVisionBoard = options?.visionBoard ?? true;
   const clearMealImages = options?.mealImages ?? clearPlants;
@@ -30,6 +41,11 @@ export async function deleteAppOwnedMedia(options?: {
   const directories = [
     ...(clearPlants ? ['plants'] : []),
     ...(clearMealImages ? ['meal-images'] : []),
+    ...(clearEveryDirectory ? ['recipe-images'] : []),
+    ...(clearEveryDirectory ? ['profile-avatars'] : []),
+    ...(clearEveryDirectory ? ['travel-confirmations'] : []),
+    ...(clearEveryDirectory ? ['travel-moments'] : []),
+    ...(clearEveryDirectory ? ['finance-docs'] : []),
   ];
   for (const name of directories) {
     const directory = new Directory(Paths.document, name);
@@ -52,22 +68,63 @@ export async function resetLocalDomains() {
   // Device-only Health stays off cloud sync, but must not leak across accounts
   // on the same device after sign-out / delete / unexpected session expiry.
   useHealth.getState().reset();
+  useFoodProfile.getState().reset();
+  usePantry.getState().reset();
+  useRecipes.getState().reset();
+  useMealPlan.getState().reset();
+  useTravelMap.getState().reset();
+  useTravelPlanUi.getState().reset();
+  useThemeOverrides.getState().resetAll();
+  useThemeOverrides.getState().clearHistory();
+  useUsageAnalytics.getState().resetLocal();
+  await clearFlightConfirmationAIMemory();
+
+  // Removing the backing values as well as resetting live stores prevents an
+  // interrupted reset or a stale hydration from resurrecting account data.
+  await removePersistedStorageItems([
+    STORAGE_KEYS.schedule,
+    STORAGE_KEYS.plants,
+    STORAGE_KEYS.addons,
+    STORAGE_KEYS.agents,
+    STORAGE_KEYS.travel,
+    STORAGE_KEYS.travelMap,
+    STORAGE_KEYS.travelPlanUi,
+    STORAGE_KEYS.todos,
+    STORAGE_KEYS.visionBoard,
+    STORAGE_KEYS.vehicles,
+    STORAGE_KEYS.finance,
+    STORAGE_KEYS.foodProfile,
+    STORAGE_KEYS.foodPantry,
+    STORAGE_KEYS.foodRecipes,
+    STORAGE_KEYS.foodMealPlan,
+    STORAGE_KEYS.themeOverrides,
+    STORAGE_KEYS.usageAnalytics,
+  ]);
+  await removePersistedStorageItems(
+    [STORAGE_KEYS.health, STORAGE_KEYS.flightParserMemory],
+    { sensitive: true },
+  );
 }
 
-export async function clearLocalAccountData() {
+export async function clearLocalAccountData(options?: {
+  markSignedOut?: boolean;
+  preserveAccountFlags?: boolean;
+}) {
   // First-run completion is device chrome, not account graph: wiping it on
   // sign-out forced the name/goal welcome canvas even when force-preview is off.
   const hadOnboarded = usePreferences.getState().hasOnboarded;
   syncRuntime.pendingRemote = undefined;
   stopCloudSync();
   await resetLocalDomains();
-  useAccountFlags.getState().reset();
-  useCloudSyncStatus.setState({
-    state: getSupabaseClient() ? 'signed-out' : 'disabled',
-    email: undefined,
-    lastSyncedAt: undefined,
-    message: undefined,
-  });
+  if (!options?.preserveAccountFlags) useAccountFlags.getState().reset();
+  if (options?.markSignedOut ?? true) {
+    useCloudSyncStatus.setState({
+      state: getSupabaseClient() ? 'signed-out' : 'disabled',
+      email: undefined,
+      lastSyncedAt: undefined,
+      message: undefined,
+    });
+  }
   if (hadOnboarded) {
     usePreferences.setState({ hasOnboarded: true });
   }

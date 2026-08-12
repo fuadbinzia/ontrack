@@ -73,7 +73,7 @@ export function CloudAccountCard() {
               Guest mode
             </AppText>
             <AppText variant="caption" color="secondary" numberOfLines={2}>
-              Your edits won't get saved until you create an account with us
+              Your edits won’t get saved until you create an account with us
             </AppText>
           </View>
           <Button

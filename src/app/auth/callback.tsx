@@ -6,7 +6,10 @@ import { StyleSheet, View } from 'react-native';
 import { AppText, Button, ErrorMessage, LoadingBlock, Screen } from '@/components/primitives';
 import { spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
-import { accessibleAuthError } from '@/services/cloud/account';
+import {
+  accessibleAuthError,
+  isOAuthCallbackUrl,
+} from '@/services/cloud/account';
 
 /** Android Custom Tabs often open this route before Linking.useURL() is set. */
 const MISSING_URL_GRACE_MS = 2500;
@@ -16,21 +19,25 @@ export default function OAuthCallbackScreen() {
   const linkingUrl = Linking.useURL();
   const { phase, error, isGuest, completeOAuthCallback, clearError } = useAuthSession();
   const attempted = useRef(false);
-  const [resolvedUrl, setResolvedUrl] = useState<string | null>(linkingUrl);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(() =>
+    linkingUrl && isOAuthCallbackUrl(linkingUrl) ? linkingUrl : null,
+  );
   const [localError, setLocalError] = useState<string>();
   const [waitedForUrl, setWaitedForUrl] = useState(false);
 
   useEffect(() => {
-    if (linkingUrl) setResolvedUrl(linkingUrl);
+    if (linkingUrl && isOAuthCallbackUrl(linkingUrl)) setResolvedUrl(linkingUrl);
   }, [linkingUrl]);
 
   useEffect(() => {
     let active = true;
     void Linking.getInitialURL().then((url) => {
-      if (active && url) setResolvedUrl((current) => current ?? url);
+      if (active && url && isOAuthCallbackUrl(url)) {
+        setResolvedUrl((current) => current ?? url);
+      }
     });
     const sub = Linking.addEventListener('url', ({ url }) => {
-      if (url) setResolvedUrl(url);
+      if (url && isOAuthCallbackUrl(url)) setResolvedUrl(url);
     });
     const timer = setTimeout(() => {
       if (active) setWaitedForUrl(true);

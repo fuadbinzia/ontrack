@@ -676,6 +676,17 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.createOrSignIn`                    | Create or Sign In (guest)           |
 | `ontrack.profile.deleteAccount`                     | Delete Account (signed-in)          |
 | `ontrack.profile.resetData`                         | Reset All Data                      |
+| `ontrack.nutritionProfile.addDependent`             | Create and immediately edit a dependent profile |
+| `ontrack.nutritionProfile.profile.<id>`              | Select a nutrition profile          |
+| `ontrack.nutritionProfile.name`                      | Nutrition profile name              |
+| `ontrack.nutritionProfile.dateOfBirth`               | Nutrition profile birth date        |
+| `ontrack.nutritionProfile.heightCm` / `.weightKg`    | Nutrition body measurements         |
+| `ontrack.nutritionProfile.preferences` / `.allergies` | Nutrition preference fields        |
+| `ontrack.nutritionProfile.<equationSex\|activity\|goal>.<value>` | Nutrition choice chip |
+| `ontrack.nutritionProfile.guardianAcknowledgment`    | Toggle guardian acknowledgment      |
+| `ontrack.nutritionProfile.calculate`                 | Calculate starting targets          |
+| `ontrack.nutritionProfile.target.<name>`             | Edit a calculated nutrition target  |
+| `ontrack.nutritionProfile.saveTargets`               | Save the current target version      |
 
 ## Welcome / first-run (`/welcome`)
 
@@ -1063,7 +1074,7 @@ Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flow `finance`
 | `ontrack.finance.bills.*` | Bills & subscriptions |
 | `ontrack.finance.buckets.*` | Savings buckets |
 | `ontrack.finance.entities.*` | Personal / business / property |
-| `ontrack.finance.accounts.*` | Manual accounts, Plaid Link (bank + investments), sync, HYSA APR |
+| `ontrack.finance.accounts.*` | Manual accounts, hosted Plaid Link, whole-Item sync/disconnect confirmations, HYSA APR |
 | `ontrack.finance.credit.*` | Credit score card, edit sheet, free-provider links |
 | `ontrack.finance.tax.*` | Tax prep, doc vault, entity scope, export, File elsewhere |
 

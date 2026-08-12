@@ -1,231 +1,141 @@
-function json(request: Request, body: unknown, status = 200) {
-  const origin = request.headers.get('origin') ?? '*';
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    },
-  });
+import {
+  loadPlaidAccounts,
+  loadPlaidHoldings,
+  syncPlaidTransactionChanges,
+} from '@/services/finance/plaid-data';
+import {
+  deletePlaidLinkSession,
+  PlaidServerError,
+  plaidApiOptions,
+  plaidRequest,
+  requirePlaidLinkSession,
+  savePlaidItem,
+  updatePlaidCursor,
+  withPlaidApiAuth,
+} from '@/services/finance/plaid-server';
+import { apiCorsHeaders } from '@/services/http/cors';
+
+const METHODS = 'POST, OPTIONS';
+
+type LinkSessionResult = {
+  public_token?: string;
+  institution?: { institution_id?: string; name?: string };
+};
+
+type LinkTokenGetBody = {
+  link_sessions?: {
+    finished_at?: string | null;
+    results?: { item_add_results?: LinkSessionResult[] };
+    on_success?: {
+      public_token?: string;
+      metadata?: { institution?: { institution_id?: string; name?: string } };
+    };
+  }[];
+};
+
+function completedLinkResult(body: LinkTokenGetBody): LinkSessionResult | undefined {
+  const sessions = [...(body.link_sessions ?? [])].reverse();
+  for (const session of sessions) {
+    if (!session.finished_at) continue;
+    const current = session.results?.item_add_results?.[0];
+    if (current?.public_token) return current;
+    if (session.on_success?.public_token) {
+      return {
+        public_token: session.on_success.public_token,
+        institution: session.on_success.metadata?.institution,
+      };
+    }
+  }
+  return undefined;
 }
 
 export function OPTIONS(request: Request) {
-  return json(request, {});
+  return plaidApiOptions(request, METHODS);
 }
 
-function plaidConfigured() {
-  return Boolean(process.env.PLAID_CLIENT_ID && process.env.PLAID_SECRET);
-}
-
-function hostForEnv(env: string): string {
-  if (env === 'production') return 'production.plaid.com';
-  if (env === 'development') return 'development.plaid.com';
-  return 'sandbox.plaid.com';
-}
-
-/**
- * Exchanges a Plaid public_token for an item + recent transactions.
- * Access tokens stay server-side only (not returned to the client).
- */
 export async function POST(request: Request) {
-  if (!plaidConfigured()) {
-    return json(
-      request,
-      {
-        configured: false,
-        error: 'Plaid is not configured on the server.',
-      },
-      503,
-    );
-  }
-
-  let body: { public_token?: string; purpose?: string } = {};
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    return json(request, { error: 'Invalid JSON body.' }, 400);
-  }
-  const publicToken = body.public_token?.trim();
-  if (!publicToken) {
-    return json(request, { error: 'public_token is required.' }, 400);
-  }
-  const purpose = body.purpose === 'investments' ? 'investments' : 'transactions';
-
-  const env = process.env.PLAID_ENV ?? process.env.EXPO_PUBLIC_PLAID_ENV ?? 'sandbox';
-  const clientId = process.env.PLAID_CLIENT_ID!;
-  const secret = process.env.PLAID_SECRET!;
-  const host = hostForEnv(env);
-
-  try {
-    const exchangeRes = await fetch(`https://${host}/item/public_token/exchange`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: clientId,
-        secret,
-        public_token: publicToken,
-      }),
+  return withPlaidApiAuth(request, async (request, userId) => {
+    const body = await request.json().catch(() => ({})) as { link_token?: string };
+    const linkToken = body.link_token?.trim();
+    if (!linkToken) {
+      return Response.json(
+        { error: 'link_token is required.' },
+        { status: 400, headers: apiCorsHeaders(request, METHODS) },
+      );
+    }
+    const { purpose } = await requirePlaidLinkSession(linkToken, userId);
+    const link = await plaidRequest<LinkTokenGetBody>('/link/token/get', {
+      link_token: linkToken,
     });
-    const exchange = (await exchangeRes.json()) as {
-      access_token?: string;
-      item_id?: string;
-      error_message?: string;
-    };
-    if (!exchangeRes.ok || !exchange.access_token || !exchange.item_id) {
-      return json(
-        request,
-        {
-          configured: true,
-          error: exchange.error_message ?? 'Token exchange failed',
-        },
-        502,
+    const completed = completedLinkResult(link);
+    if (!completed?.public_token) {
+      throw new PlaidServerError(
+        'Plaid Link is still completing. Try again in a moment.',
+        'LINK_PENDING',
+        409,
       );
     }
 
-    const accessToken = exchange.access_token;
-    const itemId = exchange.item_id;
-
-    const accountsRes = await fetch(`https://${host}/accounts/get`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: clientId,
-        secret,
-        access_token: accessToken,
-      }),
-    });
-    const accountsBody = (await accountsRes.json()) as {
-      accounts?: {
-        account_id?: string;
-        name?: string;
-        official_name?: string;
-        mask?: string;
-        type?: string;
-        subtype?: string;
-        balances?: { current?: number; iso_currency_code?: string };
-      }[];
-      item?: { institution_id?: string };
-    };
-
-    const asOf = new Date().toISOString().slice(0, 10);
-    let holdings: {
-      account_id?: string;
-      security_id?: string;
-      quantity?: number;
-      institution_value?: number;
-      iso_currency_code?: string;
-    }[] = [];
-    let securities: {
-      security_id?: string;
-      ticker_symbol?: string;
-      name?: string;
-    }[] = [];
-
-    if (purpose === 'investments') {
-      const holdRes = await fetch(`https://${host}/investments/holdings/get`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: clientId,
-          secret,
-          access_token: accessToken,
-        }),
-      });
-      if (holdRes.ok) {
-        const holdBody = (await holdRes.json()) as {
-          holdings?: typeof holdings;
-          securities?: typeof securities;
-          accounts?: typeof accountsBody.accounts;
-        };
-        holdings = holdBody.holdings ?? [];
-        securities = holdBody.securities ?? [];
-        if (holdBody.accounts?.length) {
-          accountsBody.accounts = holdBody.accounts;
-        }
-      }
-    }
-
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - 30);
-    const startKey = start.toISOString().slice(0, 10);
-    const endKey = end.toISOString().slice(0, 10);
-
-    let transactions: {
-      transaction_id?: string;
-      amount?: number;
-      date?: string;
-      name?: string;
-      merchant_name?: string;
-      category?: string[];
-    }[] = [];
-
-    if (purpose === 'transactions') {
-      const txRes = await fetch(`https://${host}/transactions/get`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: clientId,
-          secret,
-          access_token: accessToken,
-          start_date: startKey,
-          end_date: endKey,
-        }),
-      });
-      const txBody = (await txRes.json()) as { transactions?: typeof transactions };
-      transactions = txBody.transactions ?? [];
-    }
-
-    return json(request, {
-      configured: true,
-      item_id: itemId,
-      // Returned once for device SecureStore so later sync can refresh txns.
-      // Prefer a server vault in production when available.
-      access_token: accessToken,
-      institution_name: accountsBody.item?.institution_id,
-      purpose,
-      accounts: (accountsBody.accounts ?? []).map((account) => ({
-        account_id: account.account_id,
-        name: account.official_name || account.name || 'Account',
-        mask: account.mask,
-        type: account.type,
-        subtype: account.subtype,
-        balance: account.balances?.current,
-        currency: account.balances?.iso_currency_code,
-      })),
-      holdings: holdings
-        .filter((h) => typeof h.institution_value === 'number')
-        .map((h) => {
-          const security = securities.find((s) => s.security_id === h.security_id);
-          return {
-            account_id: h.account_id,
-            external_id: `${h.account_id ?? 'acct'}:${h.security_id ?? 'sec'}`,
-            symbol: security?.ticker_symbol,
-            name: security?.name || security?.ticker_symbol || 'Holding',
-            quantity: h.quantity,
-            value: h.institution_value,
-            currency: h.iso_currency_code || 'USD',
-            as_of: asOf,
-          };
-        }),
-      transactions: transactions
-        .filter((t) => t.transaction_id && t.date && typeof t.amount === 'number')
-        .map((t) => ({
-          external_id: t.transaction_id,
-          // Plaid: positive amount = money out for depository; keep as spend magnitude.
-          amount: Math.abs(t.amount ?? 0),
-          date: t.date,
-          merchant: t.merchant_name || t.name || 'Transaction',
-          category_hint: t.category?.[0],
-        })),
-    });
-  } catch {
-    return json(
-      request,
-      { configured: true, error: 'Plaid exchange failed' },
-      502,
+    const exchange = await plaidRequest<{ access_token?: string; item_id?: string }>(
+      '/item/public_token/exchange',
+      { public_token: completed.public_token },
     );
-  }
+    if (!exchange.access_token || !exchange.item_id) {
+      throw new PlaidServerError('Plaid token exchange was incomplete.', 'INVALID_RESPONSE');
+    }
+    const institutionId = completed.institution?.institution_id;
+    const institutionName = completed.institution?.name;
+    await savePlaidItem({
+      userId,
+      itemId: exchange.item_id,
+      accessToken: exchange.access_token,
+      purpose,
+      institutionId,
+      institutionName,
+      cursor: null,
+    });
+
+    let accounts: Awaited<ReturnType<typeof loadPlaidAccounts>> = [];
+    let holdings: Awaited<ReturnType<typeof loadPlaidHoldings>>['holdings'] = [];
+    let transactions: Awaited<ReturnType<typeof syncPlaidTransactionChanges>>['transactions'] = [];
+    let removedExternalIds: string[] = [];
+    let syncStatus: 'ready' | 'pending' | 'error' = 'ready';
+    let syncError: string | undefined;
+
+    try {
+      if (purpose === 'investments') {
+        const investmentData = await loadPlaidHoldings(exchange.access_token);
+        accounts = investmentData.accounts;
+        holdings = investmentData.holdings;
+      } else {
+        const [linkedAccounts, changes] = await Promise.all([
+          loadPlaidAccounts(exchange.access_token),
+          syncPlaidTransactionChanges(exchange.access_token, null),
+        ]);
+        accounts = linkedAccounts;
+        transactions = changes.transactions;
+        removedExternalIds = changes.removedExternalIds;
+        syncStatus = changes.pending ? 'pending' : 'ready';
+        await updatePlaidCursor(userId, exchange.item_id, changes.cursor);
+      }
+    } catch (error) {
+      syncStatus = 'error';
+      syncError = error instanceof Error ? error.message : 'Initial Plaid sync failed.';
+    }
+
+    await deletePlaidLinkSession(linkToken);
+    return {
+      configured: true,
+      item_id: exchange.item_id,
+      institution_id: institutionId,
+      institution_name: institutionName,
+      purpose,
+      accounts,
+      holdings,
+      transactions,
+      removed_external_ids: removedExternalIds,
+      sync_status: syncStatus,
+      sync_error: syncError,
+    };
+  });
 }

@@ -49,7 +49,10 @@ describe('keyboard scrolling invariant', () => {
     expect(hook).not.toContain('insets.bottom');
     expect(chatScreen).toContain('useDockedKeyboardInset');
     // Absolute dock: IME lifts via `bottom`, not margin (flush under tab bar).
-    expect(chatScreen).toContain('bottom: keyboardInset');
+    expect(chatScreen).toContain('bottom: composerLift');
+    expect(chatScreen).toMatch(
+      /const composerLift = keyboardOpen[\s\S]*?keyboardInset[\s\S]*?tabBarHeight/,
+    );
     expect(chatScreen).not.toContain('<KeyboardAvoidingView');
     expect(scaffold).toContain('useDockedKeyboardInset');
     expect(scaffold).toContain("androidMode: 'modal'");

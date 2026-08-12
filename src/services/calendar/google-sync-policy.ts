@@ -34,4 +34,8 @@ export const googleCalendarSyncPolicy = {
     direction === 'from_google' || (direction === 'two_way' && origin === 'google'),
   pushesToGoogle: (direction: GoogleCalendarSyncDirection) => direction !== 'from_google',
   cleansRemoteDuplicates: (direction: GoogleCalendarSyncDirection) => direction !== 'from_google',
+  hasLocalChanges: (activity: Pick<Activity, 'updatedAt'>, link: Pick<GoogleCalendarLinkRow, 'local_updated_at'> | undefined) =>
+    !link || new Date(activity.updatedAt).getTime() > new Date(link.local_updated_at ?? 0).getTime(),
+  isExplicitDeletion: (link: Pick<GoogleCalendarLinkRow, 'activity_id'>, deletedActivityIds: ReadonlySet<string>) =>
+    deletedActivityIds.has(link.activity_id),
 };

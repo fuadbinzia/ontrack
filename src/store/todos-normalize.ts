@@ -379,7 +379,9 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
         return category && listIds.has(category.listId) ? [category] : [];
       })
     : [];
-  const categoryIds = new Set(categories.map((category) => category.id));
+  const categoryListIds = new Map(
+    categories.map((category) => [category.id, category.listId]),
+  );
   const recipes = Array.isArray(source.recipes)
     ? source.recipes.flatMap((item) => {
         const recipe = normalizeRecipe(item);
@@ -415,7 +417,9 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
             : task;
         return [{
           ...normalizedTask,
-          categoryId: task.categoryId && categoryIds.has(task.categoryId)
+          categoryId:
+            task.categoryId &&
+            categoryListIds.get(task.categoryId) === task.listId
             ? task.categoryId
             : undefined,
           id: legacyTasks ? newUuid() : task.id,

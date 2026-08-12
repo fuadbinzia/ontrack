@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { fetchGoogleApi } from './google-fetch';
+
 const DEFAULT_GOOGLE_CALENDAR_CALLBACK_URI = 'https://ontrack.expo.app/api/calendar/google/callback';
 const GOOGLE_CALENDAR_EVENTS_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
 const GOOGLE_CALENDAR_FULL_SCOPE = 'https://www.googleapis.com/auth/calendar';
@@ -18,6 +20,18 @@ export function hasGoogleCalendarWriteScope(scope: string | undefined) {
 
 export function googleCalendarCallbackUri() {
   return process.env.GOOGLE_CALENDAR_REDIRECT_URI?.trim() || DEFAULT_GOOGLE_CALENDAR_CALLBACK_URI;
+}
+
+export function googleCalendarReturnUri(requestUrl: string, native: boolean) {
+  return native ? 'ontrack://calendar/google' : `${new URL(requestUrl).origin}/profile/calendar-sync`;
+}
+
+export function googleCalendarAccountChanged(currentEmail: string | null | undefined, nextEmail: string | undefined) {
+  return Boolean(
+    currentEmail?.trim()
+    && nextEmail?.trim()
+    && currentEmail.trim().toLocaleLowerCase() !== nextEmail.trim().toLocaleLowerCase(),
+  );
 }
 
 export function googleCalendarErrorMessage(error: unknown, fallback: string) {
@@ -104,16 +118,26 @@ export function googleOAuthUrl(state: string, redirectUri: string) {
 }
 
 export async function exchangeGoogleCalendarCode(userId: string, code: string, redirectUri: string) {
-  const response = await fetch('https://oauth2.googleapis.com/token', {
+  const response = await fetchGoogleApi('https://oauth2.googleapis.com/token', {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ code, client_id: required('GOOGLE_CALENDAR_CLIENT_ID'), client_secret: required('GOOGLE_CALENDAR_CLIENT_SECRET'), redirect_uri: redirectUri, grant_type: 'authorization_code' }),
   });
   const tokens = await response.json() as { access_token?: string; refresh_token?: string; scope?: string; error_description?: string };
   if (!response.ok || !tokens.access_token || !tokens.refresh_token) throw new Error(tokens.error_description || 'Google did not return offline calendar access.');
   if (!hasGoogleCalendarWriteScope(tokens.scope)) throw new Error('Google did not grant Calendar event access. Choose Allow for Google Calendar and try again.');
-  const identityResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${tokens.access_token}` } });
+  const identityResponse = await fetchGoogleApi('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${tokens.access_token}` } });
   const identity = identityResponse.ok ? await identityResponse.json() as { email?: string } : {};
-  const { error } = await googleCalendarAdmin().from('google_calendar_connections').upsert({
+  const db = googleCalendarAdmin();
+  const { data: currentConnection, error: connectionError } = await db.from('google_calendar_connections')
+    .select('google_email')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (connectionError) throw connectionError;
+  if (googleCalendarAccountChanged(currentConnection?.google_email, identity.email)) {
+    const { error: linksError } = await db.from('google_calendar_event_links').delete().eq('user_id', userId);
+    if (linksError) throw linksError;
+  }
+  const { error } = await db.from('google_calendar_connections').upsert({
     user_id: userId,
     google_email: identity.email ?? null,
     refresh_token_ciphertext: await encryptToken(tokens.refresh_token),
@@ -125,7 +149,7 @@ export async function exchangeGoogleCalendarCode(userId: string, code: string, r
 }
 
 export async function googleCalendarAccessToken(refreshTokenCiphertext: string) {
-  const response = await fetch('https://oauth2.googleapis.com/token', {
+  const response = await fetchGoogleApi('https://oauth2.googleapis.com/token', {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ client_id: required('GOOGLE_CALENDAR_CLIENT_ID'), client_secret: required('GOOGLE_CALENDAR_CLIENT_SECRET'), refresh_token: await decryptGoogleCalendarToken(refreshTokenCiphertext), grant_type: 'refresh_token' }),
   });
@@ -136,5 +160,5 @@ export async function googleCalendarAccessToken(refreshTokenCiphertext: string) 
 }
 
 export async function revokeGoogleCalendarToken(refreshToken: string) {
-  await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(refreshToken)}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).catch(() => undefined);
+  await fetchGoogleApi(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(refreshToken)}`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).catch(() => undefined);
 }

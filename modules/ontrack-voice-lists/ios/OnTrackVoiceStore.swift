@@ -99,10 +99,22 @@ enum OnTrackVoiceStore {
     defer { lock.unlock() }
     let lists = readLists()
     if lists.isEmpty { return "You don't have a list in onTrack yet." }
-    let match = matchList(lists, hint: listName, kindHint: kindHint) ?? lists[0]
+    guard let match = matchList(lists, hint: listName, kindHint: kindHint) else {
+      return missingListMessage(listName: listName, kindHint: kindHint)
+    }
     let titles = match.openTitles
     if titles.isEmpty { return "\(match.name) has no open items." }
     return "\(match.name): \(spokenList(titles))."
+  }
+
+  private static func missingListMessage(listName: String?, kindHint: String?) -> String {
+    if let query = nameQuery(listName) {
+      return "You don't have a \(query) list in onTrack yet."
+    }
+    if kindHint == "grocery" || isGrocery(listName) {
+      return "You don't have a grocery list in onTrack yet."
+    }
+    return "You don't have a checklist in onTrack yet."
   }
 
   private static func matchList(_ lists: [ListItem], hint: String?, kindHint: String?) -> ListItem? {

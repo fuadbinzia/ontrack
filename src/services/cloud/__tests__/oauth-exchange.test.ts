@@ -21,6 +21,7 @@ import {
   beginBrowserSignIn,
   CloudAccountError,
   exchangeOAuthCallback,
+  isOAuthCallbackUrl,
   ProviderCancelledError,
   resetOAuthCallbackExchangeForTests,
 } from '@/services/cloud/account';
@@ -79,5 +80,12 @@ describe('OAuth code exchange', () => {
     });
 
     await expect(exchangeOAuthCallback(url)).rejects.toThrow(/establish a session/i);
+  });
+
+  it('recognizes only the OAuth callback route before consuming a pending sign-in', () => {
+    expect(isOAuthCallbackUrl(`${redirect}?code=ready`)).toBe(true);
+    expect(isOAuthCallbackUrl('ontrack:///auth/callback?code=ready')).toBe(true);
+    expect(isOAuthCallbackUrl('ontrack://l/invite-code')).toBe(false);
+    expect(isOAuthCallbackUrl('not a url')).toBe(false);
   });
 });

@@ -15,14 +15,16 @@ export function useVoiceListsSync(enabled: boolean) {
     let active = true;
 
     const sync = () => {
-      void applyVoicePendingOps().then(() => {
-        if (active) return publishVoiceSnapshot();
-      });
+      void applyVoicePendingOps()
+        .then(() => {
+          if (active) return publishVoiceSnapshot();
+        })
+        .catch(() => undefined);
     };
 
     sync();
     const unsubscribe = useTodos.subscribe(() => {
-      if (active) void publishVoiceSnapshot();
+      if (active) void publishVoiceSnapshot().catch(() => undefined);
     });
     const appState = AppState.addEventListener('change', (state) => {
       if (state === 'active') sync();

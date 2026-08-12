@@ -97,6 +97,18 @@ export function oauthCallbackRouteKey(url: string) {
   return `${parsed.protocol}//${path.replace(/^\//, '')}`;
 }
 
+/** Ignore stale/unrelated deep links while the OAuth callback route is mounting. */
+export function isOAuthCallbackUrl(
+  url: string,
+  expectedRedirect = oauthRedirectUrl(),
+): boolean {
+  try {
+    return oauthCallbackRouteKey(url) === oauthCallbackRouteKey(expectedRedirect);
+  } catch {
+    return false;
+  }
+}
+
 export function oauthCodeFromUrl(url: string, expectedRedirect = oauthRedirectUrl()) {
   let callback: URL;
   try {
@@ -226,12 +238,36 @@ export async function signOutLocalSession() {
   if (error) throw new CloudAccountError(error.message);
 }
 
+const STORAGE_REMOVE_BATCH_SIZE = 1_000;
+
+async function deleteOwnCloudMedia() {
+  const client = requireClient();
+  const { data, error } = await client.rpc('list_own_storage_objects');
+  if (error) throw new CloudAccountError(error.message);
+  const byBucket = new Map<string, string[]>();
+  for (const row of data ?? []) {
+    if (!row || typeof row.bucket_id !== 'string' || typeof row.name !== 'string') continue;
+    const names = byBucket.get(row.bucket_id) ?? [];
+    names.push(row.name);
+    byBucket.set(row.bucket_id, names);
+  }
+  for (const [bucket, names] of byBucket) {
+    for (let start = 0; start < names.length; start += STORAGE_REMOVE_BATCH_SIZE) {
+      const { error: removeError } = await client.storage
+        .from(bucket)
+        .remove(names.slice(start, start + STORAGE_REMOVE_BATCH_SIZE));
+      if (removeError) throw new CloudAccountError(removeError.message);
+    }
+  }
+}
+
 /**
  * Permanently deletes the signed-in auth user and cascaded cloud data.
  * Call while a session is still active; local tokens are cleared afterward
  * so a relaunch cannot resurrect a zombie session for the deleted user.
  */
 export async function deleteOwnCloudAccount() {
+  await deleteOwnCloudMedia();
   const { error } = await requireClient().rpc('delete_own_account');
   if (error) {
     throw new CloudAccountError(
@@ -242,5 +278,16 @@ export async function deleteOwnCloudAccount() {
     await signOutLocalSession();
   } catch {
     // Server already deleted the user; local sign-out may report an error.
+  }
+}
+
+/** Deletes every cloud record owned by the caller while retaining auth. */
+export async function resetOwnCloudData() {
+  await deleteOwnCloudMedia();
+  const { error } = await requireClient().rpc('reset_own_data');
+  if (error) {
+    throw new CloudAccountError(
+      error.message || 'Your data could not be reset. Try again in a moment.',
+    );
   }
 }

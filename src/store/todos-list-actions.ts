@@ -68,20 +68,46 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
     reorderTasks: (listId, orderedIds) => {
       const list = get().lists.find((item) => item.id === listId);
       if (!list || !canEditTodoContent(list)) return;
-      const positions = new Map(orderedIds.map((id, index) => [id, index]));
-      if (positions.size === 0) return;
+      const currentOrder = get()
+        .tasks.filter((task) => task.listId === listId)
+        .sort(
+          (left, right) =>
+            (left.position ?? Number.MAX_SAFE_INTEGER) -
+              (right.position ?? Number.MAX_SAFE_INTEGER) ||
+            right.createdAt.localeCompare(left.createdAt) ||
+            left.id.localeCompare(right.id),
+        );
+      const tasksById = new Map(currentOrder.map((task) => [task.id, task]));
+      const reorderedIdSet = new Set<string>();
+      const reorderedIds = orderedIds.filter((id) => {
+        if (!tasksById.has(id) || reorderedIdSet.has(id)) return false;
+        reorderedIdSet.add(id);
+        return true;
+      });
+      if (reorderedIds.length === 0) return;
+      let reorderedIndex = 0;
+      const completeOrder = currentOrder.map((task) =>
+        reorderedIdSet.has(task.id)
+          ? reorderedIds[reorderedIndex++]
+          : task.id,
+      );
+      const positions = new Map(completeOrder.map((id, index) => [id, index]));
+      const updatedAt = nowIso();
       markGuestEdit();
       set((state) => ({
         tasks: state.tasks.map((task) => {
           const position = positions.get(task.id);
           return task.listId === listId && position !== undefined
-            ? { ...task, position }
+            ? { ...task, position, updatedAt }
             : task;
         }),
+        lists: state.lists.map((item) =>
+          item.id === listId ? { ...item, updatedAt } : item,
+        ),
         pendingMutations: [
           ...state.pendingMutations,
           ...queuedMutation(list, 'reorder_tasks', {
-            orderedIds: [...positions.keys()],
+            orderedIds: completeOrder,
           }),
         ],
       }));

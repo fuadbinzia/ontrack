@@ -81,6 +81,8 @@ export const agentUiIdsFinance = {
       save: 'ontrack.finance.accounts.save',
       savingsApr: 'ontrack.finance.accounts.savingsApr',
       sync: (id: string) => `ontrack.finance.accounts.sync.${id}`,
+      disconnect: (id: string) => `ontrack.finance.accounts.disconnect.${id}`,
+      confirmDisconnect: (id: string) => `ontrack.finance.accounts.confirmDisconnect.${id}`,
       linkInvestments: 'ontrack.finance.accounts.linkInvestments',
       balance: 'ontrack.finance.accounts.balance',
     },

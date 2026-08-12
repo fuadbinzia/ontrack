@@ -25,6 +25,31 @@ export type ApiRequestOptions<TError extends Error> = {
   authenticate?: boolean;
 };
 
+function abortError(): Error {
+  const error = new Error('The request was aborted.');
+  error.name = 'AbortError';
+  return error;
+}
+
+function waitWithSignal<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(abortError());
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(abortError());
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener('abort', onAbort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(error);
+      },
+    );
+  });
+}
+
 /**
  * Authenticated JSON fetch with AbortError passthrough and offline/error mapping.
  * Resolve the URL before calling so domain NotConfigured errors stay outside this catch.
@@ -53,6 +78,7 @@ export async function apiRequest<T, TError extends Error>(
       : undefined;
   const onExternalAbort = () => controller?.abort();
   signal?.addEventListener('abort', onExternalAbort, { once: true });
+  if (signal?.aborted) controller?.abort();
   const requestSignal = controller?.signal ?? signal;
   const serializedBody = body === undefined ? undefined : JSON.stringify(body);
   const finishActivity = beginRuntimeOperation(
@@ -62,7 +88,9 @@ export async function apiRequest<T, TError extends Error>(
 
   let response: Response;
   try {
-    const auth = authenticate ? await authHeader() : {};
+    const auth = authenticate
+      ? await waitWithSignal(authHeader(), requestSignal)
+      : {};
     response = await fetch(url, {
       method,
       headers: {

@@ -42,6 +42,20 @@ describe('new trip creation feedback', () => {
     expect(screenHook).toContain('tripOffsets.current[scrollTargetTripId]');
   });
 
+  it('consumes a social or deep-link trip focus after scrolling once', () => {
+    const screenHook = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-screen.ts'),
+      'utf8',
+    );
+
+    expect(screenHook).toContain('pendingFocusedTripId');
+    expect(screenHook).toContain('router.setParams({ tripId: undefined }');
+    expect(screenHook).toContain('setPendingFocusedTripId(undefined)');
+    expect(screenHook).not.toMatch(
+      /pendingCreatedTripId \?\? pendingFollowTripId \?\? focusedTripId/,
+    );
+  });
+
   it('starts each new trip with empty departure and return dates', () => {
     const screenHook = readFileSync(
       join(process.cwd(), 'src/features/travel/use-travel-home-screen.ts'),

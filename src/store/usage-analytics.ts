@@ -138,7 +138,7 @@ export const useUsageAnalytics = create<UsageAnalyticsState>()(
           };
         });
       },
-      resetLocal: () => set({ days: {}, lastSyncedAt: undefined }),
+      resetLocal: () => set({ installId: '', days: {}, lastSyncedAt: undefined }),
     }),
     {
       name: STORAGE_KEYS.usageAnalytics,

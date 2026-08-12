@@ -555,7 +555,8 @@ describe('metro launch command contract', () => {
     const pkg = JSON.parse(read('package.json'));
     expect(pkg.scripts['android:travel-demo']).toContain('agent-ui-android-travel-demo.sh');
     const dropdown = read('src/components/primitives/dropdown.tsx');
-    expect(dropdown).toContain('value: String(value');
+    expect(dropdown).toContain("selectedValues.join(',')");
+    expect(dropdown).toContain('value: String(');
   });
 
   it('daemon BridgeState FIFO + status-by-nonce isolate platforms', () => {

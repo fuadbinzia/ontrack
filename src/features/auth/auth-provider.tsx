@@ -27,10 +27,12 @@ import { useFriends } from '@/store/friends';
 import {
     deleteAccountFlow,
     dropLocalAccountState,
+    resetAccountDataFlow,
     scheduleDropLocalAccountState,
     signOutCurrentDeviceFlow,
     type AuthExitControls,
     type DeleteAccountResult,
+    type ResetAccountDataResult,
     type SignOutResult,
 } from './auth-account-exit';
 import { AuthContext, type DataResolution } from './auth-context';
@@ -44,7 +46,11 @@ import { armSessionLock, requiresSessionUnlock } from './session-lock';
 
 import type { AuthPhase } from './auth-phase';
 
-export type { DeleteAccountResult, SignOutResult } from './auth-account-exit';
+export type {
+  DeleteAccountResult,
+  ResetAccountDataResult,
+  SignOutResult,
+} from './auth-account-exit';
 export { useAuthSession } from './auth-context';
 export type { AuthContextValue, DataChoiceVariant, DataResolution } from './auth-context';
 export type { AuthPhase } from './auth-phase';
@@ -367,6 +373,11 @@ export function AuthSessionProvider({
     [exitControls],
   );
 
+  const resetAccountData = useCallback(
+    (): Promise<ResetAccountDataResult> => resetAccountDataFlow(session, exitControls),
+    [exitControls, session],
+  );
+
   /**
    * Developer Tools: re-arm the cold-start gate without signing out, so the
    * locked screen can be exercised on any device.
@@ -425,6 +436,7 @@ export function AuthSessionProvider({
         completeOAuthCallback,
         resolveDataConflict,
         signOutCurrentDevice,
+        resetAccountData,
         deleteAccount,
         lockSession,
         clearError,

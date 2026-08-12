@@ -64,7 +64,6 @@ export function TravelTripNotesCard({
   const expanded = expandedProp ?? uncontrolled;
   const trimmed = notes.trim();
   const canEdit = Boolean(onEdit);
-  if (!trimmed && !canEdit) return null;
 
   // Match Transportation compact card title scale (subheading), not caption.
   const iconBox = Math.max(28, s(30));
@@ -100,6 +99,8 @@ export function TravelTripNotesCard({
     label: bodyLabel,
     onPress: canEdit ? openEdit : undefined,
   });
+  if (!trimmed && !canEdit) return null;
+
   const radius = Math.max(12, s(14));
 
   return (

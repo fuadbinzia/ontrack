@@ -86,6 +86,34 @@ describe('voice lists', () => {
     ).toEqual(['Eggs', 'Milk']);
   });
 
+  it('groups open tasks by list and preserves their position order', () => {
+    const first = useTodos.getState().createList('First', 'checklist')!;
+    const second = useTodos.getState().createList('Second', 'checklist')!;
+    useTodos.getState().addTask(first.id, 'Later');
+    useTodos.getState().addTask(first.id, 'Sooner');
+    useTodos.getState().addTask(second.id, 'Elsewhere');
+
+    const firstTasks = useTodos.getState().tasks.filter((task) => task.listId === first.id);
+    const later = firstTasks.find((task) => task.title === 'Later')!;
+    const sooner = firstTasks.find((task) => task.title === 'Sooner')!;
+    useTodos.setState((state) => ({
+      tasks: state.tasks.map((task) => {
+        if (task.id === later.id) return { ...task, position: 2 };
+        if (task.id === sooner.id) return { ...task, position: 1 };
+        return task;
+      }),
+    }));
+    useTodos.getState().toggleTask(later.id);
+
+    const snapshot = buildVoiceSnapshot(useTodos.getState());
+    expect(snapshot.lists.find((list) => list.id === first.id)?.openTitles).toEqual([
+      'Sooner',
+    ]);
+    expect(snapshot.lists.find((list) => list.id === second.id)?.openTitles).toEqual([
+      'Elsewhere',
+    ]);
+  });
+
   it('creates To Do when no list exists yet', () => {
     useTodos.setState({
       lists: [],

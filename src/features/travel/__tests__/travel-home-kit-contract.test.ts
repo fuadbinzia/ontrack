@@ -235,6 +235,8 @@ describe('travel home kit contract', () => {
     expect(header).toContain('onTextLayout');
     expect(header).toContain('setSearchOpen(true)');
     expect(header).toContain('collapseSearch');
+    // A populated query must not override an explicit minimize/blur/submit.
+    expect(header).not.toMatch(/if \(hasQuery\) setSearchOpen\(true\)/);
     expect(header).toContain('searchMinimize');
     expect(header).toContain('{title}');
     // Theme-native plate/scoop; count badge stays inverted + white ink.
@@ -272,22 +274,17 @@ describe('travel home kit contract', () => {
     );
   });
 
-  it('replays trip-card FadeInDown on every Travel focus (tab land bounce)', () => {
-    // FadeInDown is mount-only; tab stays mounted (and preload can mount
-    // off-screen) — entranceKey + useFocusEffect remounts the list each land.
+  it('replays trip-card motion on every Travel focus without remounting cards', () => {
     const yourTrips = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-home-your-trips.tsx'),
       'utf8',
     );
-    const card = readFileSync(
-      join(process.cwd(), 'src/features/travel/travel-home-trip-card.tsx'),
-      'utf8',
-    );
     expect(yourTrips).toContain('useFocusEffect');
-    expect(yourTrips).toContain('entranceKey');
-    expect(yourTrips).toContain('key={`${entranceKey}-');
-    expect(card).toContain('FadeInDown');
-    expect(card).toContain('springify()');
+    expect(yourTrips).toContain('focusEntranceStyle');
+    expect(yourTrips).toContain('withTiming(1');
+    expect(yourTrips).toContain('ReduceMotion.System');
+    expect(yourTrips).not.toContain('entranceKey');
+    expect(yourTrips).not.toMatch(/key=\{`\$\{entranceKey\}/);
   });
 
   it('keeps search results on static card geometry', () => {
@@ -299,8 +296,8 @@ describe('travel home kit contract', () => {
       join(process.cwd(), 'src/features/travel/travel-home-trip-card.tsx'),
       'utf8',
     );
-    expect(yourTrips).toContain("searchActive ? 'search' : 'browse'");
-    expect(yourTrips).toContain('animateEntrance={!searchActive}');
+    expect(yourTrips).not.toContain("searchActive ? 'search' : 'browse'");
+    expect(yourTrips).toContain('animateEntrance={false}');
     expect(card).toContain('animateEntrance = true');
     expect(card).toMatch(/animateEntrance[\s\S]*?FadeInDown[\s\S]*?: undefined/);
   });

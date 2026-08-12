@@ -3,6 +3,7 @@ import { createWithEqualityFn as create } from 'zustand/traditional';
 
 import { DEFAULT_CATEGORIES } from '@/constants/categories';
 import { buildSeedData } from '@/constants/seed';
+import type { GoogleCalendarDeletion } from '@/services/calendar/google-types';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import type {
     Activity,
@@ -17,6 +18,28 @@ import { isDateKey } from '@/utils/date';
 import { newId } from '@/utils/id';
 
 export { newId } from '@/utils/id';
+
+function calendarDeletion(activity: Activity): GoogleCalendarDeletion | undefined {
+  const metadata = activity.googleCalendar;
+  return metadata ? {
+    activityId: activity.id,
+    calendarId: metadata.calendarId,
+    eventId: metadata.eventId,
+    origin: metadata.origin,
+  } : undefined;
+}
+
+function appendCalendarDeletions(
+  current: GoogleCalendarDeletion[],
+  removed: Activity[],
+) {
+  const next = new Map(current.map((deletion) => [deletion.activityId, deletion]));
+  removed.forEach((activity) => {
+    const deletion = calendarDeletion(activity);
+    if (deletion) next.set(deletion.activityId, deletion);
+  });
+  return [...next.values()];
+}
 
 export interface ActivityDraft {
   date: string;
@@ -63,12 +86,14 @@ interface ScheduleState {
   workSessions: WorkSession[];
   movies: Movie[];
   categories: ActivityCategory[];
+  googleCalendarDeletions: GoogleCalendarDeletion[];
 
   seedIfNeeded: () => void;
   addActivity: (draft: ActivityDraft) => Activity;
   replaceTravelActivities: (travelPlanId: string, drafts: ActivityDraft[]) => Activity[];
   removeTravelActivities: (travelPlanIds: readonly string[]) => void;
   replaceGoogleCalendarActivities: (activities: Activity[]) => void;
+  clearGoogleCalendarDeletions: (activityIds?: string[]) => void;
   removeGoogleCalendarImports: () => void;
   importEvents: (drafts: ImportedEventDraft[]) => Activity[];
   saveEvent: (payload: EventSavePayload) => Activity;
@@ -95,6 +120,7 @@ export const useSchedule = create<ScheduleState>()(
       workSessions: [],
       movies: [],
       categories: DEFAULT_CATEGORIES,
+      googleCalendarDeletions: [],
 
       seedIfNeeded: () => {
         if (get().seeded) return;
@@ -132,12 +158,16 @@ export const useSchedule = create<ScheduleState>()(
           ...draft,
           travelPlanId,
         }));
-        set((state) => ({
-          activities: [
-            ...state.activities.filter((activity) => activity.travelPlanId !== travelPlanId),
-            ...activities,
-          ],
-        }));
+        set((state) => {
+          const removed = state.activities.filter((activity) => activity.travelPlanId === travelPlanId);
+          return {
+            activities: [
+              ...state.activities.filter((activity) => activity.travelPlanId !== travelPlanId),
+              ...activities,
+            ],
+            googleCalendarDeletions: appendCalendarDeletions(state.googleCalendarDeletions, removed),
+          };
+        });
         return activities;
       },
 
@@ -145,31 +175,67 @@ export const useSchedule = create<ScheduleState>()(
         const removed = new Set(travelPlanIds);
         if (removed.size === 0) return;
         set((state) => {
+          const removedActivities = state.activities.filter(
+            (activity) => activity.travelPlanId && removed.has(activity.travelPlanId),
+          );
           const activities = state.activities.filter(
             (activity) =>
               !activity.travelPlanId || !removed.has(activity.travelPlanId),
           );
           if (activities.length === state.activities.length) return state;
-          return { activities };
+          return {
+            activities,
+            googleCalendarDeletions: appendCalendarDeletions(state.googleCalendarDeletions, removedActivities),
+          };
         });
       },
 
       replaceGoogleCalendarActivities: (activities) =>
         set((state) => {
-          const incomingIds = new Set(activities.map((activity) => activity.id));
+          // A sync response can arrive after the user deleted a linked event.
+          // Keep that tombstone authoritative until the provider acknowledges it
+          // so a stale response cannot briefly resurrect the activity.
+          const pendingDeletionIds = new Set(
+            state.googleCalendarDeletions.map((deletion) => deletion.activityId),
+          );
+          const acceptedActivities = activities.filter(
+            (activity) => !pendingDeletionIds.has(activity.id),
+          );
+          const incomingIds = new Set(acceptedActivities.map((activity) => activity.id));
           const retained = state.activities.filter(
             (activity) => !activity.googleCalendar || incomingIds.has(activity.id),
           );
           const retainedIds = new Set(retained.map((activity) => activity.id));
+          const currentById = new Map(state.activities.map((activity) => [activity.id, activity]));
+          const reconciled = acceptedActivities.map((activity) => {
+            const current = currentById.get(activity.id);
+            if (!current || new Date(current.updatedAt).getTime() <= new Date(activity.updatedAt).getTime()) return activity;
+            return {
+              ...activity,
+              ...current,
+              googleCalendar: activity.googleCalendar ?? current.googleCalendar,
+            };
+          });
           return {
             activities: [
               ...retained.filter((activity) => !incomingIds.has(activity.id)),
-              ...activities,
+              ...reconciled,
             ],
             meals: state.meals.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
             workouts: state.workouts.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
             workSessions: state.workSessions.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
             movies: state.movies.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
+          };
+        }),
+
+      clearGoogleCalendarDeletions: (activityIds) =>
+        set((state) => {
+          if (!activityIds) return { googleCalendarDeletions: [] };
+          const cleared = new Set(activityIds);
+          return {
+            googleCalendarDeletions: state.googleCalendarDeletions.filter(
+              (deletion) => !cleared.has(deletion.activityId),
+            ),
           };
         }),
 
@@ -284,6 +350,7 @@ export const useSchedule = create<ScheduleState>()(
           createdAt: existing?.createdAt ?? now,
           updatedAt: now,
           ...payload.activity,
+          ...(existing?.googleCalendar ? { googleCalendar: existing.googleCalendar } : {}),
         };
 
         set((state) => ({
@@ -325,13 +392,20 @@ export const useSchedule = create<ScheduleState>()(
         })),
 
       deleteActivity: (id) =>
-        set((s) => ({
-          activities: s.activities.filter((a) => a.id !== id),
-          meals: s.meals.filter((m) => m.activityId !== id),
-          workouts: s.workouts.filter((w) => w.activityId !== id),
-          workSessions: s.workSessions.filter((w) => w.activityId !== id),
-          movies: s.movies.filter((movie) => movie.activityId !== id),
-        })),
+        set((s) => {
+          const deleted = s.activities.find((activity) => activity.id === id);
+          const deletion = deleted ? calendarDeletion(deleted) : undefined;
+          return {
+            activities: s.activities.filter((a) => a.id !== id),
+            meals: s.meals.filter((m) => m.activityId !== id),
+            workouts: s.workouts.filter((w) => w.activityId !== id),
+            workSessions: s.workSessions.filter((w) => w.activityId !== id),
+            movies: s.movies.filter((movie) => movie.activityId !== id),
+            googleCalendarDeletions: deletion && deleted
+              ? appendCalendarDeletions(s.googleCalendarDeletions, [deleted])
+              : s.googleCalendarDeletions,
+          };
+        }),
 
       setStatus: (id, status) => get().updateActivity(id, { status }),
 
@@ -344,10 +418,11 @@ export const useSchedule = create<ScheduleState>()(
         const workout = get().workouts.find((item) => item.activityId === id);
         const workSession = get().workSessions.find((item) => item.activityId === id);
         const movie = get().movies.find((item) => item.activityId === id);
+        const { googleCalendar: _googleCalendar, ...duplicateSource } = src;
         set((s) => ({
           activities: [
             ...s.activities,
-            { ...src, id: duplicateId, status: 'upcoming', createdAt: now, updatedAt: now },
+            { ...duplicateSource, id: duplicateId, status: 'upcoming', createdAt: now, updatedAt: now },
           ],
           meals: meal
             ? [
@@ -443,6 +518,7 @@ export const useSchedule = create<ScheduleState>()(
           workSessions: [],
           movies: [],
           categories: DEFAULT_CATEGORIES,
+          googleCalendarDeletions: [],
         }),
     }),
     {
@@ -456,6 +532,7 @@ export const useSchedule = create<ScheduleState>()(
           ...currentState,
           ...persisted,
           movies: persisted.movies ?? [],
+          googleCalendarDeletions: persisted.googleCalendarDeletions ?? [],
           categories: [
             ...DEFAULT_CATEGORIES,
             ...savedCategories.filter((category) => !defaultIds.has(category.id)),

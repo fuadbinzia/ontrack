@@ -42,9 +42,15 @@ function endpoint(path: string) {
   });
 }
 
-function request<T>(path: string, method: 'GET' | 'POST' = 'GET', body?: unknown, signal?: AbortSignal) {
+function request<T>(
+  path: string,
+  method: 'GET' | 'POST' = 'GET',
+  body?: unknown,
+  signal?: AbortSignal,
+  timeoutMs = 30_000,
+) {
   return apiRequest<T, GoogleCalendarError>({
-    url: endpoint(path), method, body, signal, timeoutMs: 30_000,
+    url: endpoint(path), method, body, signal, timeoutMs,
     offlineMessage: 'You appear to be offline. Reconnect and try again.',
     unavailableMessage: 'Google Calendar sync is temporarily unavailable.',
     createError: (message, code, status) => new GoogleCalendarError(message, code, status),
@@ -59,6 +65,21 @@ export function setGoogleCalendarDirection(direction: GoogleCalendarSyncDirectio
   return request<{ direction: GoogleCalendarSyncDirection }>('/api/calendar/google/direction', 'POST', { direction });
 }
 
+export function googleCalendarCallbackError(url: string | undefined) {
+  if (!url) return 'Google Calendar did not return to onTrack.';
+  try {
+    const callback = new URL(url);
+    const error = callback.searchParams.get('calendarError');
+    if (error) return error;
+    if (callback.searchParams.get('calendarConnected') !== '1') {
+      return 'Google Calendar did not finish connecting.';
+    }
+    return undefined;
+  } catch {
+    return 'Google Calendar returned an invalid callback.';
+  }
+}
+
 export async function connectGoogleCalendar() {
   const redirectUri = Platform.OS === 'web'
     ? Linking.createURL('/(tabs)/profile/calendar-sync')
@@ -68,7 +89,7 @@ export async function connectGoogleCalendar() {
   );
   if (Platform.OS === 'web') {
     window.location.assign(authorizationUrl);
-    return;
+    return new Promise<never>(() => undefined);
   }
   const result = await WebBrowser.openAuthSessionAsync(authorizationUrl, redirectUri);
   if (result.type === 'cancel' || result.type === 'dismiss') {
@@ -77,6 +98,8 @@ export async function connectGoogleCalendar() {
   if (result.type !== 'success') {
     throw new GoogleCalendarError('Google Calendar did not finish connecting.');
   }
+  const callbackError = googleCalendarCallbackError(result.url);
+  if (callbackError) throw new GoogleCalendarError(callbackError);
 }
 
 export type GoogleCalendarSyncProgress = { phase: 'pull' | 'push'; completedRequests: number; changedEvents: number };
@@ -117,10 +140,15 @@ export async function syncGoogleCalendar(onProgress?: (progress: GoogleCalendarS
       const state = useSchedule.getState();
       const result: GoogleCalendarSyncResult = await request<GoogleCalendarSyncResult>('/api/calendar/google/sync', 'POST', {
         activities: state.activities,
+        deletions: state.googleCalendarDeletions,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         phase,
-      }, controller.signal);
-      state.replaceGoogleCalendarActivities(result.activities);
+      }, controller.signal, 60_000);
+      // Clear only provider-acknowledged tombstones before reconciliation.
+      // Any deletion queued while this request was in flight remains present,
+      // allowing the store to reject the response's now-stale activity copy.
+      useSchedule.getState().clearGoogleCalendarDeletions(result.acknowledgedDeletionIds);
+      useSchedule.getState().replaceGoogleCalendarActivities(result.activities);
       totals.imported += result.imported;
       totals.exported += result.exported;
       totals.updated += result.updated;
@@ -207,7 +235,9 @@ export async function disconnectGoogleCalendar(options: {
 }) {
   let disconnected = false;
   for (let chunk = 0; chunk < 100 && !disconnected; chunk += 1) {
-    const result = await request<{ disconnected: boolean; hasMore: boolean }>('/api/calendar/google/disconnect', 'POST', options);
+    const result = await request<{ disconnected: boolean; hasMore: boolean }>(
+      '/api/calendar/google/disconnect', 'POST', options, undefined, 60_000,
+    );
     disconnected = result.disconnected;
   }
   if (!disconnected) throw new GoogleCalendarError('Calendar cleanup still has pending changes. Try disconnecting again.');
@@ -218,5 +248,6 @@ export async function disconnectGoogleCalendar(options: {
       const { googleCalendar: _googleCalendar, ...local } = activity;
       return local;
     }),
+    googleCalendarDeletions: [],
   }));
 }

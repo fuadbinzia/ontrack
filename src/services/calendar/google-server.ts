@@ -1,8 +1,10 @@
 export {
   createCalendarOAuthState,
   exchangeGoogleCalendarCode,
+  googleCalendarAccountChanged,
   googleCalendarCallbackUri,
   googleCalendarErrorMessage,
+  googleCalendarReturnUri,
   googleOAuthUrl,
   hasGoogleCalendarWriteScope,
   readCalendarOAuthState,

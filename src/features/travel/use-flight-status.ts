@@ -174,19 +174,17 @@ export function useFlightStatus(
       legs: cached ? [...cached] : [],
     };
   });
-  const [cooldownUntil, setCooldownUntil] = useState(() => {
-    const remaining = flightStatusSyncCooldownRemainingMs(requestKey);
-    return remaining > 0 ? Date.now() + remaining : 0;
-  });
+  const [cooldownRemainingMs, setCooldownRemainingMs] = useState(() =>
+    flightStatusSyncCooldownRemainingMs(requestKey),
+  );
   const available = requests.some(Boolean);
-  const cooldownRemainingMs = Math.max(0, cooldownUntil - Date.now());
   const canCheck = available && !state.loading && cooldownRemainingMs <= 0;
   const cooldownMinutesRemaining =
     flightStatusSyncCooldownMinutesRemaining(cooldownRemainingMs);
 
   useEffect(() => {
     const remaining = flightStatusSyncCooldownRemainingMs(requestKey);
-    setCooldownUntil(remaining > 0 ? Date.now() + remaining : 0);
+    setCooldownRemainingMs(remaining);
     const cached = requestKey ? lastLegsByKey.get(requestKey) : undefined;
     if (cached) {
       setState((current) =>
@@ -198,12 +196,12 @@ export function useFlightStatus(
   }, [requestKey]);
 
   useEffect(() => {
-    if (cooldownUntil <= Date.now()) return;
+    if (cooldownRemainingMs <= 0) return;
     const timer = setTimeout(() => {
-      setCooldownUntil(0);
-    }, cooldownUntil - Date.now());
+      setCooldownRemainingMs(0);
+    }, cooldownRemainingMs);
     return () => clearTimeout(timer);
-  }, [cooldownUntil]);
+  }, [cooldownRemainingMs]);
 
   const activeRequestKeyRef = useRef(requestKey);
   activeRequestKeyRef.current = requestKey;
@@ -253,7 +251,7 @@ export function useFlightStatus(
       const checkedAt = Date.now();
       lastSyncAtByKey.set(startedForKey, checkedAt);
       lastLegsByKey.set(startedForKey, settled);
-      setCooldownUntil(checkedAt + FLIGHT_STATUS_SYNC_COOLDOWN_MS);
+      setCooldownRemainingMs(FLIGHT_STATUS_SYNC_COOLDOWN_MS);
       setState({
         loading: false,
         checked: true,

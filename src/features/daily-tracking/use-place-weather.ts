@@ -39,6 +39,7 @@ export function usePlaceWeather(
 ) {
   const trimmed = place.trim();
   const hasLocation = trimmed.length > 0;
+  const requestDay = todayKey();
 
   const [current, setCurrent] = useState<DestinationCurrentWeather>();
   const [forecast, setForecast] = useState<TravelWeather>();
@@ -78,9 +79,8 @@ export function usePlaceWeather(
     setCurrentError(undefined);
     setForecastError(undefined);
 
-    const today = todayKey();
-    const forecastStart = homeWeatherHistoryFrom(today);
-    const forecastEnd = homeWeatherForecastThrough(today);
+    const forecastStart = homeWeatherHistoryFrom(requestDay);
+    const forecastEnd = homeWeatherForecastThrough(requestDay);
 
     void getDestinationCurrentWeather(trimmed, temperatureUnit, controller.signal)
       .then((value) => {
@@ -116,7 +116,7 @@ export function usePlaceWeather(
       });
 
     return () => controller.abort();
-  }, [hasLocation, temperatureUnit, trimmed]);
+  }, [hasLocation, requestDay, temperatureUnit, trimmed]);
 
   const weather: HomeWeatherSnapshot | undefined = useMemo(
     () =>
@@ -124,12 +124,13 @@ export function usePlaceWeather(
         date: date ?? todayKey(),
         current,
         forecast,
+        today: requestDay,
       }),
-    [current, date, forecast],
+    [current, date, forecast, requestDay],
   );
 
-  const inForecastWindow = !date || isHomeWeatherDateInWindow(date);
-  const viewingToday = !date || date === todayKey();
+  const inForecastWindow = !date || isHomeWeatherDateInWindow(date, requestDay);
+  const viewingToday = !date || date === requestDay;
   const error = !inForecastWindow
     ? undefined
     : viewingToday

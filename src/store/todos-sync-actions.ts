@@ -93,7 +93,7 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
       );
       if (!list) return;
       const tasks = snapshot.tasks.flatMap((item) => {
-        const task = normalizeTask(item, list.id);
+        const task = normalizeTask({ ...item, listId: list.id }, list.id);
         return task ? [task] : [];
       });
       const categories = (snapshot.categories ?? []).flatMap((item) => {
@@ -105,16 +105,10 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
         return recipe ? [recipe] : [];
       });
       const members = snapshot.members.flatMap((item) => {
-        const member = normalizeMember(item);
+        const member = normalizeMember({ ...item, listId: list.id });
         return member ? [member] : [];
       });
       set((state) => {
-        // Prefer server positions so collaborator reorders propagate. Pending
-        // local mutations skip snapshot apply until flushed.
-        const orderedTasks = tasks.map((task, index) => ({
-          ...task,
-          position: task.position ?? index,
-        }));
         const existingIndex = state.lists.findIndex((item) => item.id === list.id);
         const nextList = {
           ...list,
@@ -128,6 +122,19 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
         const nextCategories = snapshot.categories === undefined
           ? state.categories.filter((item) => item.listId === list.id)
           : categories;
+        const categoryIds = new Set(
+          nextCategories.map((category) => category.id),
+        );
+        // Prefer server positions so collaborator reorders propagate. Pending
+        // local mutations skip snapshot apply until flushed.
+        const orderedTasks = tasks.map((task, index) => ({
+          ...task,
+          categoryId:
+            task.categoryId && categoryIds.has(task.categoryId)
+              ? task.categoryId
+              : undefined,
+          position: task.position ?? index,
+        }));
         return {
           lists,
           tasks: [

@@ -12,13 +12,14 @@ const SWIFT_INTENT = 'OnTrackVoiceIntents.swift';
 const SWIFT_STORE = 'OnTrackVoiceStore.swift';
 const SHORTCUTS_FILE = 'ontrack_voice_shortcuts.xml';
 const GROUP_NAME = 'OnTrackVoice';
+const PLUGIN_ROOT = path.dirname(require.resolve('./with-ontrack-voice-lists'));
 
 function pluginDir() {
-  return path.join(__dirname, 'ontrack-voice-lists');
+  return path.join(PLUGIN_ROOT, 'ontrack-voice-lists');
 }
 
 function moduleIosDir() {
-  return path.join(__dirname, '..', 'modules', 'ontrack-voice-lists', 'ios');
+  return path.join(PLUGIN_ROOT, '..', 'modules', 'ontrack-voice-lists', 'ios');
 }
 
 function swiftSources() {

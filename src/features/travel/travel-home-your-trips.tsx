@@ -1,6 +1,14 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Pressable, View } from 'react-native';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/primitives';
 import { resolveTravelCoTravelerPeople } from '@/features/travel/travel-cotraveler-people';
@@ -57,15 +65,25 @@ export function TravelHomeYourTrips({
 }: TravelHomeYourTripsProps) {
   const { s } = useResponsive();
   /**
-   * Trip-card `FadeInDown` only runs on mount. Tab stays mounted (and
-   * neighbor `preload` can mount Travel off-screen), so bump a key on every
-   * focus to remount the list — same Today activity-card spring, every land.
+   * Replay the landing motion on the stable list shell. Remounting by key on
+   * every focus also remounted every hero carousel and restarted cover work.
    */
-  const [entranceKey, setEntranceKey] = useState(0);
+  const focusEntrance = useSharedValue(1);
+  const focusEntranceStyle = useAnimatedStyle(() => ({
+    opacity: focusEntrance.value,
+    transform: [{ translateY: (1 - focusEntrance.value) * 12 }],
+  }));
   useFocusEffect(
     useCallback(() => {
-      setEntranceKey((key) => key + 1);
-    }, []),
+      cancelAnimation(focusEntrance);
+      focusEntrance.value = 0;
+      focusEntrance.value = withTiming(1, {
+        duration: 240,
+        easing: Easing.out(Easing.cubic),
+        reduceMotion: ReduceMotion.System,
+      });
+      return () => cancelAnimation(focusEntrance);
+    }, [focusEntrance]),
   );
   const searchActive = isTravelHomeTripSearchActive(searchOpen, searchQuery);
   const peekHeight = s(travelHomeTokens.spacing.headerToSection);
@@ -114,32 +132,29 @@ export function TravelHomeYourTrips({
         </AgentTestId>
       ) : null}
 
-      {entranceKey > 0 ? (
-        <View
-          // Search gets a clean, non-animated tree. Reanimated entrance
-          // transforms do not participate in Yoga layout and can otherwise
-          // let later cards paint over earlier card bodies while filtering.
-          key={`${entranceKey}-${searchActive ? 'search' : 'browse'}`}
-          style={{ gap: travelHomeTokens.spacing.cardGap }}
-          onTouchStart={searchActive ? onDismissSearch : undefined}>
-          {plans.map((plan, index) => (
-            <TravelHomeTripCard
-              key={plan.id}
-              plan={plan}
-              index={index}
-              animateEntrance={!searchActive}
-              soloAtmosphereShadow={plans.length === 1}
-              atmosphereAverageColor={atmosphereAverageColor}
-              travelers={resolveTravelCoTravelerPeople(plan, selfDisplayName)}
-              onOpenTrip={onOpenTrip}
-              onViewItinerary={onOpenTrip}
-              onEditTrip={onEditTrip}
-              onViewTravelers={onViewTravelers}
-              onLayoutY={onLayoutY}
-            />
-          ))}
-        </View>
-      ) : null}
+      <Animated.View
+        style={[
+          { gap: travelHomeTokens.spacing.cardGap },
+          focusEntranceStyle,
+        ]}
+        onTouchStart={searchActive ? onDismissSearch : undefined}>
+        {plans.map((plan, index) => (
+          <TravelHomeTripCard
+            key={plan.id}
+            plan={plan}
+            index={index}
+            animateEntrance={false}
+            soloAtmosphereShadow={plans.length === 1}
+            atmosphereAverageColor={atmosphereAverageColor}
+            travelers={resolveTravelCoTravelerPeople(plan, selfDisplayName)}
+            onOpenTrip={onOpenTrip}
+            onViewItinerary={onOpenTrip}
+            onEditTrip={onEditTrip}
+            onViewTravelers={onViewTravelers}
+            onLayoutY={onLayoutY}
+          />
+        ))}
+      </Animated.View>
     </View>
   );
 }

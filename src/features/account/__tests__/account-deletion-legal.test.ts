@@ -8,8 +8,18 @@ import {
 } from '@/constants/legal';
 
 describe('account deletion and legal release gates', () => {
-  const migration = readFileSync(
-    join(process.cwd(), 'supabase/migrations/202608030001_delete_own_account.sql'),
+  const migration = [
+    '202608030001_delete_own_account.sql',
+    '202608120010_complete_account_data_purge.sql',
+  ]
+    .map((name) => readFileSync(join(process.cwd(), 'supabase/migrations', name), 'utf8'))
+    .join('\n');
+  const completePurgeMigration = readFileSync(
+    join(process.cwd(), 'supabase/migrations/202608120010_complete_account_data_purge.sql'),
+    'utf8',
+  );
+  const storageMigration = readFileSync(
+    join(process.cwd(), 'supabase/migrations/202608120011_storage_api_account_purge.sql'),
     'utf8',
   );
   const account = readFileSync(join(process.cwd(), 'src/services/cloud/account.ts'), 'utf8');
@@ -24,11 +34,29 @@ describe('account deletion and legal release gates', () => {
   );
   const profile = readFileSync(join(process.cwd(), 'src/app/(tabs)/profile/index.tsx'), 'utf8');
 
-  it('exposes a security-definer RPC that deletes storage and auth.users for the caller', () => {
+  it('exposes a security-definer RPC that purges data and auth.users for the caller', () => {
     expect(migration).toContain('create or replace function public.delete_own_account()');
     expect(migration).toContain('security definer');
     expect(migration).toContain('delete from auth.users where id = uid');
     expect(migration).toContain('grant execute on function public.delete_own_account() to authenticated');
+  });
+
+  it('deletes cloud media through the Storage API, never direct storage SQL', () => {
+    expect(storageMigration).toContain('list_own_storage_objects');
+    expect(completePurgeMigration).not.toContain('delete from storage.objects');
+    expect(account).toContain("rpc('list_own_storage_objects')");
+    expect(account).toContain('.remove(names.slice(');
+  });
+
+  it('uses the same exhaustive purge for data reset and account deletion', () => {
+    expect(migration).toContain('create or replace function public.purge_user_data');
+    expect(migration).toContain('create or replace function public.reset_own_data()');
+    expect(migration).toContain('perform public.purge_user_data(uid)');
+    expect(migration).toContain('delete from public.travel_chat_messages');
+    expect(migration).toContain('array_remove(assignee_user_ids, target_user_id)');
+    expect(migration).toContain('delete from public.app_state');
+    expect(account).toContain("rpc('reset_own_data')");
+    expect(provider).toContain('resetAccountDataFlow');
   });
 
   it('wires client deletion through auth session and profile UI', () => {

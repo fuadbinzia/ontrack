@@ -142,10 +142,6 @@ export function TravelHomeSectionHeader({
   }, [setSearchOpen]);
 
   useEffect(() => {
-    if (hasQuery) setSearchOpen(true);
-  }, [hasQuery, setSearchOpen]);
-
-  useEffect(() => {
     if (chipWidth > 0) collapsedW.value = chipWidth;
   }, [chipWidth, collapsedW]);
 

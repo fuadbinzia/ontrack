@@ -265,6 +265,23 @@ export default function ProfileSettingsScreen() {
       </AgentTestId>
 
       <AgentTestId
+        testID={AgentUiIds.profile.section.accountSyncing}
+        label="Account Syncing"
+        style={{ gap: rs.sm }}>
+        <SectionHeader title="Account Syncing" flush />
+        <SettingsGroup>
+          <SettingsActionRow
+            label="Calendar Sync"
+            detail={isGuest ? 'Sign in to connect Google Calendar' : 'Google Calendar direction and connection'}
+            icon="calendar"
+            testID={AgentUiIds.profile.calendarSync}
+            onPress={() => router.push('/(tabs)/profile/calendar-sync' as never)}
+            accessibilityLabel="Manage Google Calendar sync"
+          />
+        </SettingsGroup>
+      </AgentTestId>
+
+      <AgentTestId
         testID={AgentUiIds.profile.section.appearance}
         label="Appearance"
         style={{ gap: rs.sm }}>

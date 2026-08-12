@@ -33,6 +33,7 @@ export const agentUiIdsShellProfile = {
       `${fieldTestID}.suggestionsDismiss`,
     agents: 'ontrack.profile.agents',
     nutrition: 'ontrack.profile.nutrition',
+    calendarSync: 'ontrack.profile.calendarSync',
     designSystem: 'ontrack.profile.designSystem',
     apiUsage: 'ontrack.profile.apiUsage',
     developer: 'ontrack.profile.developer',
@@ -51,6 +52,7 @@ export const agentUiIdsShellProfile = {
     version: 'ontrack.profile.version',
     section: {
       account: 'ontrack.profile.section.account',
+      accountSyncing: 'ontrack.profile.section.accountSyncing',
       appearance: 'ontrack.profile.section.appearance',
       developer: 'ontrack.profile.section.developer',
       preferences: 'ontrack.profile.section.preferences',
@@ -61,6 +63,16 @@ export const agentUiIdsShellProfile = {
       disclaimers: 'ontrack.profile.section.disclaimers',
       appInformation: 'ontrack.profile.section.appInformation',
     },
+  },
+  calendarSync: {
+    screen: 'ontrack.calendarSync.screen',
+    connect: 'ontrack.calendarSync.connect',
+    reconnect: 'ontrack.calendarSync.reconnect',
+    sync: 'ontrack.calendarSync.sync',
+    disconnectKeep: 'ontrack.calendarSync.disconnectKeep',
+    disconnectRemove: 'ontrack.calendarSync.disconnectRemove',
+    confirmDisconnectRemove: 'ontrack.calendarSync.confirmDisconnectRemove',
+    direction: (direction: string) => `ontrack.calendarSync.direction.${direction}`,
   },
   /** Privacy Policy / Terms of Use document body (`/privacy`, `/terms`). */
   legal: {

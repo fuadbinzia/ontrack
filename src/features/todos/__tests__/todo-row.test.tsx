@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { TodoRow } from '@/features/todos/todo-row';
 import type { TodoTask } from '@/store/todos';
@@ -22,18 +22,16 @@ describe('TodoRow', () => {
         canComplete
         editMode={false}
         editing={false}
-        expanded={false}
         isActive={false}
         listOwner
         members={[]}
-        onCollapseTitle={jest.fn()}
+        showCategory={false}
         onDelete={jest.fn()}
         onDragStart={jest.fn()}
-        onCycleAssignee={jest.fn()}
+        onOpenDetails={jest.fn()}
         onStartEdit={jest.fn()}
         onEndEdit={jest.fn()}
         onToggle={jest.fn()}
-        onToggleExpanded={jest.fn()}
         onToggleImportant={jest.fn()}
         onUpdate={jest.fn()}
         testID="ontrack.checklists.detail.task.task-test-copy"
@@ -41,5 +39,118 @@ describe('TodoRow', () => {
     );
 
     expect(screen.getByText(task.title)).toHaveProp('selectable', true);
+  });
+
+  it('renders one metadata line and opens item details from the row', () => {
+    const onOpenDetails = jest.fn();
+    render(
+      <TodoRow
+        task={{ ...task, assigneeUserId: 'member' }}
+        canComplete
+        editMode={false}
+        editing={false}
+        isActive={false}
+        listOwner
+        members={[
+          {
+            listId: task.listId,
+            userId: 'owner',
+            displayName: 'Owner',
+            role: 'owner',
+            joinedAt: task.createdAt,
+          },
+          {
+            listId: task.listId,
+            userId: 'member',
+            displayName: 'Member',
+            role: 'member',
+            joinedAt: task.createdAt,
+          },
+        ]}
+        showCategory
+        categoryName="Finance"
+        onDelete={jest.fn()}
+        onDragStart={jest.fn()}
+        onOpenDetails={onOpenDetails}
+        onStartEdit={jest.fn()}
+        onEndEdit={jest.fn()}
+        onToggle={jest.fn()}
+        onToggleImportant={jest.fn()}
+        onUpdate={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Assigned to Member')).toBeTruthy();
+    expect(screen.queryByText('Member')).toBeNull();
+    expect(screen.getByText('Finance')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText(`Open details for ${task.title}`));
+    expect(onOpenDetails).toHaveBeenCalledTimes(1);
+  });
+
+  it('omits uncategorized metadata and its separator', () => {
+    render(
+      <TodoRow
+        task={task}
+        canComplete
+        editMode={false}
+        editing={false}
+        isActive={false}
+        listOwner
+        members={[
+          {
+            listId: task.listId,
+            userId: 'owner',
+            displayName: 'Owner',
+            role: 'owner',
+            joinedAt: task.createdAt,
+          },
+          {
+            listId: task.listId,
+            userId: 'member',
+            displayName: 'Member',
+            role: 'member',
+            joinedAt: task.createdAt,
+          },
+        ]}
+        showCategory
+        onDelete={jest.fn()}
+        onDragStart={jest.fn()}
+        onOpenDetails={jest.fn()}
+        onStartEdit={jest.fn()}
+        onEndEdit={jest.fn()}
+        onToggle={jest.fn()}
+        onToggleImportant={jest.fn()}
+        onUpdate={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/Anyone|Uncategorized/)).toBeNull();
+  });
+
+  it('shows a category without an Anyone placeholder', () => {
+    render(
+      <TodoRow
+        task={task}
+        canComplete
+        editMode={false}
+        editing={false}
+        isActive={false}
+        listOwner
+        members={[]}
+        showCategory
+        categoryName="Travel"
+        onDelete={jest.fn()}
+        onDragStart={jest.fn()}
+        onOpenDetails={jest.fn()}
+        onStartEdit={jest.fn()}
+        onEndEdit={jest.fn()}
+        onToggle={jest.fn()}
+        onToggleImportant={jest.fn()}
+        onUpdate={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Travel')).toBeTruthy();
+    expect(screen.queryByText(/Anyone/)).toBeNull();
   });
 });

@@ -85,6 +85,7 @@ function restoreSharedListRollback(
   rollback:
     | {
         list: TodoList;
+        categories: TodoSharedSnapshot['categories'];
         tasks: TodoSharedSnapshot['tasks'];
         recipes: TodoSharedSnapshot['recipes'];
         members: TodoSharedSnapshot['members'];
@@ -113,6 +114,7 @@ export async function leaveTodoList(listId: string) {
   const rollback = list
     ? {
         list,
+        categories: state.categories.filter((category) => category.listId === listId),
         tasks: state.tasks.filter((task) => task.listId === listId),
         recipes: state.recipes.filter((recipe) => recipe.listId === listId),
         members: state.members.filter((member) => member.listId === listId),
@@ -141,6 +143,7 @@ export async function deleteSharedTodoList(listId: string) {
   const rollback = list
     ? {
         list,
+        categories: state.categories.filter((category) => category.listId === listId),
         tasks: state.tasks.filter((task) => task.listId === listId),
         recipes: state.recipes.filter((recipe) => recipe.listId === listId),
         members: state.members.filter((member) => member.listId === listId),

@@ -4,10 +4,10 @@ import {
   canEditTodoContent,
   markGuestEdit,
   queuedMutation,
+  resolveListCategoryId,
 } from './todos-helpers';
 import { cleanTitle, nowIso } from './todos-normalize';
 import type {
-  TodoList,
   TodoPersistedState,
   TodoTask,
 } from './todos-types';
@@ -27,7 +27,7 @@ type TaskGet = () => TodoPersistedState & {
 };
 
 export type TodoTaskActions = {
-  addTask: (listId: string, title?: string) => TodoTask | undefined;
+  addTask: (listId: string, title?: string, categoryId?: string) => TodoTask | undefined;
   updateTask: (id: string, title: string) => void;
   setTaskCompletion: (id: string, completed: boolean, actorUserId?: string) => void;
   setTasksCompletion: (
@@ -44,11 +44,16 @@ export type TodoTaskActions = {
 
 export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActions {
   const actions: TodoTaskActions = {
-    addTask: (listId, maybeTitle) => {
+    addTask: (listId, maybeTitle, categoryId) => {
       const legacyCall = maybeTitle === undefined;
       const list = legacyCall ? get().lists[0] : get().lists.find((item) => item.id === listId);
       const clean = cleanTitle(legacyCall ? listId : maybeTitle);
       if (!list || !canEditTodoContent(list) || !clean) return undefined;
+      const resolvedCategoryId = resolveListCategoryId(
+        get().categories,
+        list.id,
+        categoryId,
+      );
       const now = nowIso();
       const positions = get().tasks
         .filter((task) => task.listId === list.id)
@@ -58,6 +63,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
       const task: TodoTask = {
         id: newUuid(),
         listId: list.id,
+        categoryId: resolvedCategoryId,
         position: positions.length ? Math.min(...positions) - 1 : 0,
         title: clean,
         completed: false,
@@ -75,6 +81,12 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
         pendingMutations: [
           ...state.pendingMutations,
           ...queuedMutation(list, 'add_task', { task }),
+          ...(resolvedCategoryId
+            ? queuedMutation(list, 'set_task_category', {
+                taskId: task.id,
+                categoryId: resolvedCategoryId,
+              })
+            : []),
         ],
       }));
       return task;

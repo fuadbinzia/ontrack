@@ -68,6 +68,8 @@ interface ScheduleState {
   addActivity: (draft: ActivityDraft) => Activity;
   replaceTravelActivities: (travelPlanId: string, drafts: ActivityDraft[]) => Activity[];
   removeTravelActivities: (travelPlanIds: readonly string[]) => void;
+  replaceGoogleCalendarActivities: (activities: Activity[]) => void;
+  removeGoogleCalendarImports: () => void;
   importEvents: (drafts: ImportedEventDraft[]) => Activity[];
   saveEvent: (payload: EventSavePayload) => Activity;
   updateActivity: (id: string, patch: Partial<Omit<Activity, 'id' | 'createdAt'>>) => void;
@@ -151,6 +153,43 @@ export const useSchedule = create<ScheduleState>()(
           return { activities };
         });
       },
+
+      replaceGoogleCalendarActivities: (activities) =>
+        set((state) => {
+          const incomingIds = new Set(activities.map((activity) => activity.id));
+          const retained = state.activities.filter(
+            (activity) => !activity.googleCalendar || incomingIds.has(activity.id),
+          );
+          const retainedIds = new Set(retained.map((activity) => activity.id));
+          return {
+            activities: [
+              ...retained.filter((activity) => !incomingIds.has(activity.id)),
+              ...activities,
+            ],
+            meals: state.meals.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
+            workouts: state.workouts.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
+            workSessions: state.workSessions.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
+            movies: state.movies.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
+          };
+        }),
+
+      removeGoogleCalendarImports: () =>
+        set((state) => {
+          const removedIds = new Set(
+            state.activities
+              .filter((activity) => activity.googleCalendar?.origin === 'google')
+              .map((activity) => activity.id),
+          );
+          return {
+            activities: state.activities.filter(
+              (activity) => activity.googleCalendar?.origin !== 'google',
+            ),
+            meals: state.meals.filter((item) => !removedIds.has(item.activityId)),
+            workouts: state.workouts.filter((item) => !removedIds.has(item.activityId)),
+            workSessions: state.workSessions.filter((item) => !removedIds.has(item.activityId)),
+            movies: state.movies.filter((item) => !removedIds.has(item.activityId)),
+          };
+        }),
 
       importEvents: (drafts) => {
         if (drafts.length === 0) throw new Error('Choose at least one event to import.');

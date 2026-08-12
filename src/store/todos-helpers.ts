@@ -4,11 +4,25 @@ import { newUuid } from '@/utils/id';
 import { nowIso } from './todos-normalize';
 import type {
   PendingTodoMutation,
+  TodoCategory,
   TodoList,
   TodoMutationOperation,
   TodoPersistedState,
   TodoTask,
 } from './todos-types';
+
+export function resolveListCategoryId(
+  categories: TodoCategory[],
+  listId: string,
+  categoryId?: string,
+): string | undefined {
+  if (!categoryId) return undefined;
+  return categories.some(
+    (category) => category.id === categoryId && category.listId === listId,
+  )
+    ? categoryId
+    : undefined;
+}
 
 export function markGuestEdit() {
   if (!isGuestDirtyTrackingSuppressed()) {
@@ -23,6 +37,7 @@ export function privateTodoPayload(state: TodoPersistedState) {
   return {
     groceryMigrationVersion: 1 as const,
     lists: state.lists.filter((list) => privateListIds.has(list.id)),
+    categories: state.categories.filter((category) => privateListIds.has(category.listId)),
     tasks: state.tasks.filter((task) => privateListIds.has(task.listId)),
     recipes: state.recipes.filter((recipe) => privateListIds.has(recipe.listId)),
   };

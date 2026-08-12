@@ -9,7 +9,9 @@ import {
     Card,
     EmptyState,
     GlassIconWell,
+    HeaderBackButton,
     Screen,
+    ScreenHeader,
     SectionHeader,
     SettingsToggleRow,
     Symbol,
@@ -28,11 +30,18 @@ export function AgentManager() {
 
   return (
     <Screen contentStyle={styles.screen}>
-      <AppText variant="title">Agents</AppText>
-      <AppText variant="body" color="secondary">
-        Agents are optional companions that connect to existing onTrack add-ons. You stay in
-        control of every permission, and removing one also removes its conversations.
-      </AppText>
+      <ScreenHeader
+        eyebrow="Profile"
+        title="Agents"
+        subtitle="Agents are optional companions that connect to existing onTrack add-ons. You stay in control of every permission, and removing one also removes its conversations."
+        leading={
+          <HeaderBackButton
+            compact
+            accessibilityLabel="Back to profile"
+            fallback="/(tabs)/profile"
+          />
+        }
+      />
 
       {AGENTS.length === 0 ? (
         <EmptyState

@@ -26,6 +26,7 @@ import {
 import { fontFamilies, glassMaterials, layout, radii, spacing, typography } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { EmptyChecklists } from '@/features/todos/empty-checklists';
+import { canShowChecklistCollaborator } from '@/features/todos/checklist-collaborator-visibility';
 import { TodoListCard } from '@/features/todos/todo-list-card';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -40,6 +41,7 @@ import {
     type TodoList,
     type TodoListKind,
 } from '@/store/todos';
+import { useFriends } from '@/store/friends';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
@@ -77,6 +79,7 @@ export function TodoListsOverview() {
     },
   );
   const members = useTodos((state) => state.members, listReferenceEquality);
+  const friends = useFriends((state) => state.friends);
   const invites = useTodos((state) => state.invites, listReferenceEquality);
   const createList = useTodos((state) => state.createList);
   const deletePrivateList = useTodos((state) => state.deleteList);
@@ -112,12 +115,17 @@ export function TodoListsOverview() {
     [insets.bottom],
   );
   const collaboratorsByList = useMemo(() => {
+    const friendUserIds = new Set(friends.map((friend) => friend.userId));
     const byList = new Map<
       string,
       { userId?: string; displayName: string; isSelf?: boolean }[]
     >();
     for (const member of members) {
-      if (member.userId === user?.id) continue;
+      if (!canShowChecklistCollaborator({
+        collaboratorUserId: member.userId,
+        viewerUserId: user?.id,
+        friendUserIds,
+      })) continue;
       const listPeople = byList.get(member.listId) ?? [];
       if (listPeople.some((person) => person.userId === member.userId)) continue;
       listPeople.push({
@@ -127,7 +135,7 @@ export function TodoListsOverview() {
       byList.set(member.listId, listPeople);
     }
     return byList;
-  }, [members, user?.id]);
+  }, [friends, members, user?.id]);
 
   const add = () => {
     const list = createList(draft, draftKind);

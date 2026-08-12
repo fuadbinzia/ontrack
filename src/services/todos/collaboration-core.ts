@@ -36,18 +36,24 @@ export function sharedSnapshot(value: unknown): TodoSharedSnapshot | undefined {
     tasks?: unknown;
     members?: unknown;
     recipes?: unknown;
+    categories?: unknown;
   };
+  const includesCategories = Array.isArray(candidate.categories);
   const normalized = normalizeTodoState({
     groceryMigrationVersion: 1,
     lists: candidate.list ? [candidate.list] : [],
     tasks: Array.isArray(candidate.tasks) ? candidate.tasks : [],
     recipes: Array.isArray(candidate.recipes) ? candidate.recipes : [],
+    categories: Array.isArray(candidate.categories) ? candidate.categories : [],
     members: Array.isArray(candidate.members) ? candidate.members : [],
   });
   const list = normalized.lists.find((item) => item.mode === 'shared');
   if (!list) return undefined;
   return {
     list,
+    categories: includesCategories
+      ? normalized.categories.filter((category) => category.listId === list.id)
+      : undefined,
     tasks: normalized.tasks.filter((task) => task.listId === list.id),
     recipes: normalized.recipes.filter((recipe) => recipe.listId === list.id),
     members: normalized.members.filter((member) => member.listId === list.id),

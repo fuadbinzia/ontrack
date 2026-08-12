@@ -14,6 +14,7 @@ import { layout, radii, spacing } from '@/design-system';
 import { CalendarShine } from '@/features/calendar/calendar-shine';
 import { MonthGrid } from '@/features/calendar/month-grid';
 import { useResponsive } from '@/hooks/use-responsive';
+import { syncGoogleCalendarIfConnected } from '@/services/calendar/google-client';
 import { useAddons } from '@/store/addons';
 import { useSchedule } from '@/store/schedule';
 import { useUI } from '@/store/ui';
@@ -53,6 +54,12 @@ export default function CalendarScreen() {
       return;
     }
     return deferAfterPageTransition(() => setShinePlay(true));
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (!isFocused) return;
+    // Calendar remains local-first; a failed provider refresh never blocks the tab.
+    void syncGoogleCalendarIfConnected().catch(() => undefined);
   }, [isFocused]);
 
   const today = todayKey();

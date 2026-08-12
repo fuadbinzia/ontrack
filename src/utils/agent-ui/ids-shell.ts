@@ -4,6 +4,10 @@ import { agentUiIdsShellDaily } from './ids-shell-daily';
 import { agentUiIdsShellProfile } from './ids-shell-profile';
 
 export const agentUiIdsShell = {
+  sheet: {
+    /** Layout anchor for the visible SheetScaffold plate (not tappable). */
+    plate: 'ontrack.sheet.plate',
+  },
   tabs: {
     today: 'ontrack.tabs.today',
     calendar: 'ontrack.tabs.calendar',
@@ -135,8 +139,29 @@ export const agentUiIdsShell = {
       addTask: 'ontrack.checklists.detail.addTask',
       sort: 'ontrack.checklists.detail.sort',
       actions: 'ontrack.checklists.detail.actions',
+      actionsClose: 'ontrack.checklists.detail.actionsClose',
+      action: (action: string) => `ontrack.checklists.detail.action.${action}`,
+      categoryTabs: 'ontrack.checklists.detail.categoryTabs',
+      category: (categoryId: string) => `ontrack.checklists.detail.category.${categoryId}`,
       editMode: 'ontrack.checklists.detail.editMode',
       task: (taskId: string) => `ontrack.checklists.detail.task.${taskId}`,
+    },
+    categories: {
+      name: 'ontrack.checklists.categories.name',
+      add: 'ontrack.checklists.categories.add',
+      close: 'ontrack.checklists.categories.close',
+      remove: (categoryId: string) => `ontrack.checklists.categories.remove.${categoryId}`,
+    },
+    itemDetails: {
+      close: 'ontrack.checklists.itemDetails.close',
+      title: 'ontrack.checklists.itemDetails.title',
+      saveTitle: 'ontrack.checklists.itemDetails.saveTitle',
+      assignee: 'ontrack.checklists.itemDetails.assignee',
+      assigneeOption: (userId: string) => `ontrack.checklists.itemDetails.assigneeOption.${userId}`,
+      category: 'ontrack.checklists.itemDetails.category',
+      categoryOption: (categoryId: string) => `ontrack.checklists.itemDetails.categoryOption.${categoryId}`,
+      newCategoryName: 'ontrack.checklists.itemDetails.newCategoryName',
+      createCategory: 'ontrack.checklists.itemDetails.createCategory',
     },
   },
   grocery: {

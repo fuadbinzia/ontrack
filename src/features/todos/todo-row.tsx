@@ -9,30 +9,29 @@ import {
 
 import { AppText, DragHandle, GlassPlate, Symbol } from '@/components/primitives';
 import { glassMaterials, layout, radii, spacing, typography } from '@/design-system';
+import { ProfileAvatar } from '@/features/account/profile-avatar';
+import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoMember, TodoTask } from '@/store/todos';
 import { AgentTestId } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
-
-const TITLE_COLLAPSED_LINES = 2;
 
 export function TodoRow({
   task,
   canComplete,
   editMode,
   editing,
-  expanded,
   isActive,
   listOwner,
   members,
-  onCollapseTitle,
+  showCategory,
+  categoryName,
   onDelete,
   onDragStart,
-  onCycleAssignee,
+  onOpenDetails,
   onStartEdit,
   onEndEdit,
   onToggle,
-  onToggleExpanded,
   onToggleImportant,
   onUpdate,
   testID,
@@ -41,58 +40,33 @@ export function TodoRow({
   canComplete: boolean;
   editMode: boolean;
   editing: boolean;
-  expanded: boolean;
   isActive: boolean;
   listOwner: boolean;
   members: TodoMember[];
-  onCollapseTitle: () => void;
+  showCategory: boolean;
+  categoryName?: string;
   onDelete: () => void;
   onDragStart: () => void;
-  onCycleAssignee: () => void;
+  onOpenDetails: () => void;
   onStartEdit: () => void;
   onEndEdit: () => void;
   onToggle: () => void;
-  onToggleExpanded: () => void;
   onToggleImportant: () => void;
   onUpdate: (title: string) => void;
   testID?: string;
 }) {
   const theme = useTheme();
+  const { s } = useResponsive();
   const dark = theme.name === 'dark';
+  const assigneeAvatarSize = Math.max(20, s(22));
   const [draft, setDraft] = useState(task.title);
-  const [lineCount, setLineCount] = useState(0);
-  const [measuredWhileExpanded, setMeasuredWhileExpanded] = useState(false);
 
   useEffect(() => {
     if (!editing) queueMicrotask(() => setDraft(task.title));
   }, [editing, task.title]);
 
-  useEffect(() => {
-    queueMicrotask(() => {
-      setLineCount(0);
-      setMeasuredWhileExpanded(false);
-    });
-  }, [task.title]);
-
-  useEffect(() => {
-    if (!expanded) queueMicrotask(() => setMeasuredWhileExpanded(false));
-  }, [expanded]);
-
-  // Short titles can toggle expanded state, but snap closed once measured.
-  useEffect(() => {
-    if (
-      expanded &&
-      measuredWhileExpanded &&
-      lineCount > 0 &&
-      lineCount <= TITLE_COLLAPSED_LINES
-    ) {
-      onCollapseTitle();
-    }
-  }, [expanded, measuredWhileExpanded, lineCount, onCollapseTitle]);
-
   const dismissChrome = () => {
     Keyboard.dismiss();
-    onCollapseTitle();
   };
 
   const commitEdit = () => {
@@ -101,6 +75,15 @@ export function TodoRow({
     else setDraft(task.title);
     onEndEdit();
   };
+
+  const assignee = task.assigneeUserId
+    ? members.find((member) => member.userId === task.assigneeUserId)
+    : undefined;
+  const assigneeLabel = task.assigneeUserId
+    ? assignee?.displayName ?? 'Member'
+    : undefined;
+  const categoryLabel = showCategory ? categoryName : undefined;
+  const showMetadata = Boolean(assigneeLabel || categoryLabel);
 
   const confirmDelete = () => {
     dismissChrome();
@@ -114,8 +97,7 @@ export function TodoRow({
 
   const pressRow = () => {
     Keyboard.dismiss();
-    if (editMode) onCollapseTitle();
-    else onToggleExpanded();
+    if (listOwner && !editMode) onOpenDetails();
   };
   const titleText = (
     <AppText
@@ -123,12 +105,7 @@ export function TodoRow({
       color={task.completed ? 'tertiary' : 'primary'}
       selectable
       selectionColor={theme.accentSoft}
-      numberOfLines={expanded ? undefined : TITLE_COLLAPSED_LINES}
-      onTextLayout={(event) => {
-        const next = event.nativeEvent.lines.length;
-        setLineCount((prev) => (prev === next ? prev : next));
-        if (expanded) setMeasuredWhileExpanded(true);
-      }}
+      numberOfLines={2}
       style={task.completed ? styles.completedTitle : undefined}
     >
       {task.title}
@@ -139,7 +116,7 @@ export function TodoRow({
     <AgentTestId
       testID={testID}
       label={task.title}
-      onPress={pressRow}
+      onPress={listOwner && !editMode ? pressRow : undefined}
       style={styles.taskRowAgent}>
       <GlassPlate
         style={[
@@ -244,35 +221,44 @@ export function TodoRow({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Edit ${task.title}`}
-            onPress={onStartEdit}
-          >
+            onPress={onStartEdit}>
             {titleText}
           </Pressable>
         ) : (
-          titleText
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Open details for ${task.title}`}
+            disabled={!listOwner}
+            onPress={pressRow}>
+            {titleText}
+          </Pressable>
         )}
         {task.important && !task.completed ? (
           <AppText variant="overline" color="accent">
             Focus
           </AppText>
         ) : null}
-        {members.length > 1 ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Assignment for ${task.title}`}
-            disabled={!listOwner || editMode}
-            onPress={() => {
-              dismissChrome();
-              onCycleAssignee();
-            }}>
-            <AppText variant="caption" color="secondary">
-              {task.assigneeUserId
-                ? members.find((member) => member.userId === task.assigneeUserId)
-                    ?.displayName ?? 'Member'
-                : 'Anyone'}
-              {listOwner && !editMode ? ' · tap to change' : ''}
-            </AppText>
-          </Pressable>
+        {showMetadata ? (
+          <View style={styles.taskMetaRow}>
+            {assigneeLabel && task.assigneeUserId ? (
+              <ProfileAvatar
+                accessibilityLabel={`Assigned to ${assigneeLabel}`}
+                displayName={assigneeLabel}
+                size={assigneeAvatarSize}
+                userId={task.assigneeUserId}
+              />
+            ) : null}
+            {assigneeLabel && categoryLabel ? (
+              <AppText variant="caption" color="secondary">
+                ·
+              </AppText>
+            ) : null}
+            {categoryLabel ? (
+              <AppText variant="caption" color="secondary" fit numberOfLines={1}>
+                {categoryLabel}
+              </AppText>
+            ) : null}
+          </View>
         ) : null}
       </View>
 
@@ -314,7 +300,6 @@ export function TodoRow({
             }}
             style={({ pressed }) => [
               styles.rowAction,
-              task.important && { backgroundColor: theme.accentFaint },
               pressed && styles.pressed,
             ]}>
             <Symbol
@@ -370,6 +355,12 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
   },
   taskCopy: { flex: 1, gap: spacing.xxs, minWidth: 0 },
+  taskMetaRow: {
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   completedTitle: { textDecorationLine: 'line-through' },
   editInput: {
     ...typography.bodyMedium,

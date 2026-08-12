@@ -130,6 +130,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.tabs.carousel.prev`                              | Previous tabs    | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.carousel.next`                              | Next tabs        | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.dock`                                       | Bottom nav       | Layout anchor — page-matching bottom nav fill (not tappable)                                          |
+| `ontrack.sheet.plate`                                     | Any modal sheet  | Layout anchor — visible `SheetScaffold` plate bounds (not tappable)                                   |
 | `ontrack.trackers.screen`                                 | Sections         | More hub — In nav / Others reorder                                                                  |
 | `ontrack.trackers.row.<route>`                            | Trackers         | Open a tracker from the list (`(today)` → `_today_`)                                                |
 | `ontrack.trackers.add.<route>`                            | Trackers         | Add tracker to nav (when under pin limit)                                                           |
@@ -409,6 +410,7 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | ----------------------------------- | ------------------------ |
 | `ontrack.today.prevDay`             | Previous day             |
 | `ontrack.today.nextDay`             | Next day                 |
+| `ontrack.today.openCalendar`        | Date title (weekday + long date) → Calendar tab |
 | `ontrack.today.weather`             | Home weather tile (full width when home≡current; else left half). Tap → Profile `?reveal=homeLocation` |
 | `ontrack.today.currentLocation`     | Current weather tile only when place ≠ home (right half). Tap → Profile `?reveal=currentLocation` |
 | `ontrack.today.progress`            | Day completion ring (hidden at 0%) |
@@ -471,9 +473,26 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.checklists.detail.newTask`       | New task field                        |
 | `ontrack.checklists.detail.addTask`       | Add task                              |
 | `ontrack.checklists.detail.sort`          | Sort menu                             |
-| `ontrack.checklists.detail.actions`       | List actions menu                     |
+| `ontrack.checklists.detail.actions`       | Open list actions sheet               |
+| `ontrack.checklists.detail.actionsClose`  | Close list actions sheet              |
+| `ontrack.checklists.detail.action.<action>` | Select a list action                |
+| `ontrack.checklists.detail.categoryTabs`  | Category tab rail                     |
+| `ontrack.checklists.detail.category.<id>` | Filter items by category              |
 | `ontrack.checklists.detail.editMode`      | Edit / Done tasks                     |
-| `ontrack.checklists.detail.task.<taskId>` | Task row                              |
+| `ontrack.checklists.detail.task.<taskId>` | Open item details sheet               |
+| `ontrack.checklists.categories.name`      | New category name                     |
+| `ontrack.checklists.categories.add`       | Add category                          |
+| `ontrack.checklists.categories.close`     | Close category manager                |
+| `ontrack.checklists.categories.remove.<id>` | Remove category                     |
+| `ontrack.checklists.itemDetails.close` | Close item details sheet             |
+| `ontrack.checklists.itemDetails.title` | Edit checklist item title            |
+| `ontrack.checklists.itemDetails.saveTitle` | Save checklist item title         |
+| `ontrack.checklists.itemDetails.assignee` | Open assignee dropdown              |
+| `ontrack.checklists.itemDetails.assigneeOption.<id>` | Choose assignee (`anyone` or user id) |
+| `ontrack.checklists.itemDetails.category` | Open category dropdown              |
+| `ontrack.checklists.itemDetails.categoryOption.<id>` | Choose category (`uncategorized` or category id) |
+| `ontrack.checklists.itemDetails.newCategoryName` | New category name in item details |
+| `ontrack.checklists.itemDetails.createCategory` | Create and assign a category      |
 
 Demo fixture: `list-agent-ui-demo-checklist` / `task-agent-ui-demo-plan` via `./scripts/agent-ui-seed.sh checklist-demo` or flow `checklist-demo`.
 
@@ -615,6 +634,7 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.identity.goal`                     | Blurb field in identity editor      |
 | `ontrack.profile.guestStatus`                       | (legacy) Guest caption — unused; Account card covers guest CTA |
 | `ontrack.profile.section.account`                   | Account section anchor              |
+| `ontrack.profile.section.accountSyncing`            | Account Syncing section anchor      |
 | `ontrack.profile.section.appearance`                | Appearance section anchor           |
 | `ontrack.profile.section.developer`                 | Developer section anchor            |
 | `ontrack.profile.section.preferences`               | Expand/collapse Preferences section |
@@ -633,6 +653,16 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.*.suggestionsDismiss`              | Dismiss city suggestions                |
 | `ontrack.profile.agents`                            | Manage Agents                       |
 | `ontrack.profile.nutrition`                         | Nutrition profiles                  |
+| `ontrack.profile.calendarSync`                      | Google Calendar sync settings       |
+| `ontrack.calendarSync.connect`                      | Connect Google Calendar             |
+| `ontrack.calendarSync.reconnect`                    | Renew Google Calendar permissions   |
+| `ontrack.calendarSync.sync`                         | Run two-way calendar sync           |
+| `ontrack.calendarSync.disconnectKeep`               | Disconnect and keep synced copies   |
+| `ontrack.calendarSync.disconnectRemove`             | Disconnect and remove synced copies |
+| `ontrack.calendarSync.confirmDisconnectRemove`      | Confirm removal of synced copies    |
+| `ontrack.calendarSync.direction.twoWay`             | Select two-way calendar sync        |
+| `ontrack.calendarSync.direction.toGoogle`           | Select one-way sync to Google       |
+| `ontrack.calendarSync.direction.fromGoogle`         | Select one-way sync from Google     |
 | `ontrack.profile.privacy`                           | Privacy Policy                      |
 | `ontrack.profile.terms`                             | Terms of Use                        |
 | `ontrack.legal.document`                            | Privacy / Terms document body       |

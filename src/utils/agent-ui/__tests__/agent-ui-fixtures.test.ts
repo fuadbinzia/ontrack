@@ -347,6 +347,7 @@ describe('agent-ui fixtures', () => {
     const checklist = buildAgentUiDemoChecklist();
     expect(checklist.list.id).toBe(AGENT_UI_DEMO_CHECKLIST_LIST_ID);
     expect(checklist.tasks[0]?.id).toBe(AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID);
+    expect(checklist.tasks[0]?.title).toContain('insurance tracker, car');
 
     const grocery = buildAgentUiDemoGrocery();
     expect(grocery.list.id).toBe(AGENT_UI_DEMO_GROCERY_LIST_ID);

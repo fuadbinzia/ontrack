@@ -21,6 +21,13 @@ interface UIState {
   tabBarHeight: number;
   setTabBarHeight: (height: number) => void;
   /**
+   * Open modal-sheet count (SheetScaffold). While > 0 the tab dock hides so
+   * its labels never bleed through translucent sheet glass near the bottom.
+   */
+  modalSheetCount: number;
+  beginModalSheet: () => void;
+  endModalSheet: () => void;
+  /**
    * Legacy collapse flag — nav stays locked open; kept so older callers /
    * fixtures that force-expand remain harmless no-ops when set false.
    */
@@ -44,6 +51,11 @@ export const useUI = create<UIState>((set) => ({
   carouselPendingRouteName: null,
   tabBarHeight: 0,
   setTabBarHeight: (tabBarHeight) => set({ tabBarHeight }),
+  modalSheetCount: 0,
+  beginModalSheet: () =>
+    set((state) => ({ modalSheetCount: state.modalSheetCount + 1 })),
+  endModalSheet: () =>
+    set((state) => ({ modalSheetCount: Math.max(0, state.modalSheetCount - 1) })),
   tabBarCollapsed: false,
   setTabBarCollapsed: (tabBarCollapsed) => set({ tabBarCollapsed }),
   lastPageInteractionAt: 0,

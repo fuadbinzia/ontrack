@@ -50,4 +50,26 @@ describe('mergeDomainPayload', () => {
       ],
     });
   });
+
+  it('keeps device-only checklist categories when merging todo data', () => {
+    expect(
+      mergeDomainPayload(
+        'todos',
+        {
+          lists: [{ id: 'list', name: 'Cloud list' }],
+          categories: [],
+          tasks: [{ id: 'task', title: 'Cloud task' }],
+          recipes: [],
+        },
+        {
+          lists: [{ id: 'list', name: 'Device list' }],
+          categories: [{ id: 'finance', listId: 'list', name: 'Finance' }],
+          tasks: [{ id: 'task', title: 'Device task' }],
+          recipes: [],
+        },
+      ),
+    ).toMatchObject({
+      categories: [{ id: 'finance', listId: 'list', name: 'Finance' }],
+    });
+  });
 });

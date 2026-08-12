@@ -43,16 +43,22 @@ describe('canonical design-system contract', () => {
     expect(sheet).toContain('GestureDetector');
     expect(sheet).toContain('useSheetDismissPan');
     expect(sheet).toContain('grabberInteractive={false}');
-    expect(read('src/components/primitives/use-sheet-dismiss-pan.ts')).toContain(
-      'Gesture.Exclusive',
+    expect(
+      read('src/components/primitives/use-sheet-dismiss-pan.ts'),
+    ).toContain('Gesture.Exclusive');
+    expect(
+      read('src/features/travel/travel-itinerary-add-sheet.tsx'),
+    ).toContain('useSheetDismissPan');
+    expect(read('src/features/travel/travel-sheet.tsx')).toContain(
+      'SheetHeader',
     );
-    expect(read('src/features/travel/travel-itinerary-add-sheet.tsx')).toContain(
-      'useSheetDismissPan',
-    );
-    expect(read('src/features/travel/travel-sheet.tsx')).toContain('SheetHeader');
     expect(read('src/app/activity-form.tsx')).toContain('SheetGrabber');
-    expect(read('src/features/social/social-friends-modal.tsx')).toContain('SheetGrabber');
-    expect(read('src/features/social/social-action-modal.tsx')).toContain('SheetGrabber');
+    expect(read('src/features/social/social-friends-modal.tsx')).toContain(
+      'SheetGrabber',
+    );
+    expect(read('src/features/social/social-action-modal.tsx')).toContain(
+      'SheetGrabber',
+    );
   });
 
   it('title-cases chrome titles in shared header and button primitives', () => {
@@ -131,6 +137,21 @@ describe('canonical design-system contract', () => {
     // Safe-area pad on footer/body — not sheet chrome — so glass paints flush.
     expect(scaffold).toContain('bottomPad');
     expect(scaffold).toContain('paddingBottom: bottomPad');
+    expect(scaffold).toContain('styles.fitContentBody');
+    expect(scaffold).toMatch(/fitContent \? \(\s*<View/);
+    expect(scaffold).not.toContain('styles.fitContent : null');
+    expect(scaffold).not.toContain('fitContentHeight');
+    expect(scaffold).not.toContain('fittedMaxHeight');
+    expect(scaffold).not.toContain('fitHeaderHeight');
+    // Absolute fill host — flex-end left a dock-sized gap under short plates.
+    expect(scaffold).toContain('StyleSheet.absoluteFill');
+    // Tab dock hides while sheets are open (labels bled through frost as a
+    // fake gap); plate stays measurable via the agent-ui anchor.
+    expect(scaffold).toContain('beginModalSheet');
+    expect(scaffold).toContain('AgentUiIds.sheet.plate');
+    expect(read('src/components/navigation/bottom-nav-bar.tsx')).toContain(
+      'modalSheetCount',
+    );
     expect(scaffold).not.toMatch(
       /styles\.sheet[\s\S]*paddingBottom:\s*Math\.max\(insets\.bottom/,
     );
@@ -149,9 +170,15 @@ describe('canonical design-system contract', () => {
     const sheet = read('src/features/travel/travel-sheet.tsx');
     const actions = read('src/features/travel/travel-list-actions.tsx');
     const photos = read('src/features/travel/travel-add-photos-modal.tsx');
-    const calendar = read('src/features/travel/travel-calendar-updated-modal.tsx');
-    const importResult = read('src/features/travel/travel-import-result-modal.tsx');
-    const removeConfirm = read('src/features/travel/travel-remove-confirm-modal.tsx');
+    const calendar = read(
+      'src/features/travel/travel-calendar-updated-modal.tsx',
+    );
+    const importResult = read(
+      'src/features/travel/travel-import-result-modal.tsx',
+    );
+    const removeConfirm = read(
+      'src/features/travel/travel-remove-confirm-modal.tsx',
+    );
     expect(sheet).toContain('SheetScaffold');
     expect(sheet).not.toMatch(/\bModal\b/);
     expect(actions).toContain('<Button');
@@ -197,7 +224,9 @@ describe('canonical design-system contract', () => {
     );
     const travelLayout = read('src/app/(tabs)/travel/_layout.tsx');
     const rootLayout = read('src/app/_layout.tsx');
-    const safeAreaChrome = read('src/components/primitives/safe-area-chrome.tsx');
+    const safeAreaChrome = read(
+      'src/components/primitives/safe-area-chrome.tsx',
+    );
     expect(surface).toContain('travelSafeAreaBackground');
     expect(surface).toContain('travelPagePaper');
     expect(surface).toContain('lightTravelTheme.backgroundPrimary');
@@ -211,12 +240,18 @@ describe('canonical design-system contract', () => {
     expect(atmosphereChrome).toContain('TravelHomeAtmosphereScrim');
     expect(travelTab).toContain('TravelHomeBackground');
     expect(atmosphereChrome).toContain('atmosphereImage.skyColor');
-    expect(atmosphereChrome).toContain('backgroundImage: atmosphereImage.source');
+    expect(atmosphereChrome).toContain(
+      'backgroundImage: atmosphereImage.source',
+    );
     // Leaf atmosphere must outrank the travel stack layout wash.
     expect(atmosphereChrome).toContain('priority: 1');
-    expect(travelLayout).toContain('useSafeAreaChrome(travelSafeAreaBackground(theme))');
+    expect(travelLayout).toContain(
+      'useSafeAreaChrome(travelSafeAreaBackground(theme))',
+    );
     // Stack must stay clear of travelPageStyle's opaque CSS gradient wash.
-    expect(travelLayout).toContain("contentStyle: { backgroundColor: 'transparent' }");
+    expect(travelLayout).toContain(
+      "contentStyle: { backgroundColor: 'transparent' }",
+    );
     expect(travelLayout).not.toContain('...travelStyle');
     expect(travelLayout).toContain("anchor: 'index'");
     expect(safeAreaChrome).toContain('useSafeAreaChrome');
@@ -231,7 +266,9 @@ describe('canonical design-system contract', () => {
     const dayHeader = read('src/features/daily-tracking/day-header.tsx');
     const themes = read('src/design-system/themes.ts');
     expect(themes).toContain('timeOfDaySafeAreaBackground');
-    expect(dayHeader).toContain('useSafeAreaChrome(timeOfDaySafeAreaBackground(theme, hour))');
+    expect(dayHeader).toContain(
+      'useSafeAreaChrome(timeOfDaySafeAreaBackground(theme, hour))',
+    );
   });
 
   it('extends Screen page fill into the status-bar shell and tab dock', () => {
@@ -247,7 +284,9 @@ describe('canonical design-system contract', () => {
     expect(screen).toContain('priority: -1');
     expect(screen).toContain('usePageSurfaceBackground(');
     expect(chrome).toContain('usePageSurfaceBackgroundColor');
-    expect(dayView).toContain('usePageSurfaceBackground(screenAtmosphereBottomColor(theme.name))');
+    expect(dayView).toContain(
+      'usePageSurfaceBackground(screenAtmosphereBottomColor(theme.name))',
+    );
     // In-tree wash would stop at the safe-area edge and reintroduce the seam.
     expect(screen).not.toMatch(/\{useAtmosphere \? <ScreenAtmosphere/);
   });
@@ -255,9 +294,13 @@ describe('canonical design-system contract', () => {
   it('keeps Privacy / Terms stack chrome transparent like Profile glass atmosphere', () => {
     const rootLayout = read('src/app/_layout.tsx');
     expect(rootLayout).toContain('legalDocumentScreenOptions');
-    expect(rootLayout).toContain("fallback=\"/(tabs)/profile\"");
-    expect(rootLayout).toMatch(/name="privacy"[^>]*legalDocumentScreenOptions\('Privacy Policy'\)/);
-    expect(rootLayout).toMatch(/name="terms"[^>]*legalDocumentScreenOptions\('Terms of Use'\)/);
+    expect(rootLayout).toContain('fallback="/(tabs)/profile"');
+    expect(rootLayout).toMatch(
+      /name="privacy"[^>]*legalDocumentScreenOptions\('Privacy Policy'\)/,
+    );
+    expect(rootLayout).toMatch(
+      /name="terms"[^>]*legalDocumentScreenOptions\('Terms of Use'\)/,
+    );
     const helper = rootLayout.match(
       /function legalDocumentScreenOptions[\s\S]*?\n\}/,
     )?.[0];
@@ -279,30 +322,30 @@ describe('canonical design-system contract', () => {
     for (const relative of files) {
       expect(read(relative)).not.toMatch(/>\s*Cancel\s*</);
     }
-    expect(read('src/features/travel/travel-remove-confirm-modal.tsx')).toContain(
-      'closeTestID={AgentUiIds.travel.removeConfirm.close}',
-    );
+    expect(
+      read('src/features/travel/travel-remove-confirm-modal.tsx'),
+    ).toContain('closeTestID={AgentUiIds.travel.removeConfirm.close}');
   });
 
   it('keeps destructive actions standardized and confirmed', () => {
-    expect(read('src/features/travel/travel-remove-confirm-modal.tsx')).toContain(
-      'variant="danger"',
-    );
+    expect(
+      read('src/features/travel/travel-remove-confirm-modal.tsx'),
+    ).toContain('variant="danger"');
     expect(read('src/features/travel/travel-add-photos-modal.tsx')).toContain(
       'confirmDestructiveAction',
     );
-    expect(read('src/features/travel/travel-plan-details-editor.tsx')).toContain(
-      'DestructiveSection',
-    );
-    expect(read('src/features/travel/travel-plan-details-editor.tsx')).toContain(
-      'DangerZone',
-    );
-    expect(read('src/features/travel/travel-plan-details-editor.tsx')).toContain(
-      'descriptionAlign="center"',
-    );
-    expect(read('src/features/travel/travel-plan-details-editor.tsx')).toContain(
-      'title={null}',
-    );
+    expect(
+      read('src/features/travel/travel-plan-details-editor.tsx'),
+    ).toContain('DestructiveSection');
+    expect(
+      read('src/features/travel/travel-plan-details-editor.tsx'),
+    ).toContain('DangerZone');
+    expect(
+      read('src/features/travel/travel-plan-details-editor.tsx'),
+    ).toContain('descriptionAlign="center"');
+    expect(
+      read('src/features/travel/travel-plan-details-editor.tsx'),
+    ).toContain('title={null}');
     expect(read('src/components/primitives/index.ts')).toContain('DangerZone');
     expect(read('src/app/(tabs)/profile/index.tsx')).toContain('DangerZone');
     expect(read('src/app/(tabs)/profile/index.tsx')).toContain('flush');
@@ -325,16 +368,20 @@ describe('canonical design-system contract', () => {
   });
 
   it('ships a development-only gallery and canonical guide', () => {
-    expect(read('src/app/(tabs)/profile/design-system.tsx')).toContain('DevAccessGate');
-    const gallery = read('src/features/design-system/design-system-gallery.tsx');
+    expect(read('src/app/(tabs)/profile/design-system.tsx')).toContain(
+      'DevAccessGate',
+    );
+    const gallery = read(
+      'src/features/design-system/design-system-gallery.tsx',
+    );
     expect(gallery).toContain('SheetScaffold');
     expect(gallery).toContain("value: 'elements'");
     expect(gallery).toContain("value: 'demos'");
     expect(gallery).not.toContain("value: 'catalog'");
     expect(gallery).not.toContain("value: 'components'");
-    expect(read('src/features/design-system/design-system-demos-panel.tsx')).toContain(
-      'DesignSystemComponentsPanel',
-    );
+    expect(
+      read('src/features/design-system/design-system-demos-panel.tsx'),
+    ).toContain('DesignSystemComponentsPanel');
     expect(read('src/features/account/developer-hub.tsx')).toContain(
       'AgentUiIds.developer.designSystem',
     );
@@ -345,7 +392,8 @@ describe('canonical design-system contract', () => {
   });
 
   it('keeps product UI on the UI font (no AppText mono outside design-system)', () => {
-    const { readdirSync, statSync } = require('node:fs') as typeof import('node:fs');
+    const { readdirSync, statSync } =
+      require('node:fs') as typeof import('node:fs');
     const { join } = require('node:path') as typeof import('node:path');
     const roots = ['src/features', 'src/app', 'src/components'];
     const skip = (relative: string) =>

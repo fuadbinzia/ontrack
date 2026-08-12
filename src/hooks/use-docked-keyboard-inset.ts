@@ -20,6 +20,14 @@ export type DockedKeyboardInsetOptions = {
 };
 
 /**
+ * Shortest real docked soft keyboard is ~180pt; hardware-keyboard assistant /
+ * minimized bars are ≤ ~72pt. iOS fires `keyboardWillChangeFrame` for those
+ * slivers with no `keyboardWillHide` after — treating them as an open IME
+ * strands sheets floating above the home indicator (visible gap under plate).
+ */
+const MIN_OCCLUDING_IME_HEIGHT = 100;
+
+/**
  * Pure inset from a keyboard event — shared by the hook + unit tests.
  * iOS / modal-Android: distance from window bottom to docked IME top.
  * Never subtracts safe-area (that under-lifts chrome into the keyboard).
@@ -40,15 +48,22 @@ export function dockedKeyboardInsetFromEvent(
   if (!fullWidth || kbHeight <= 0) {
     return { keyboardInset: 0, keyboardOpen: false };
   }
+  const fromScreenY = Math.max(0, options.windowHeight - screenY);
+  // iOS: screenY is authoritative — an off-screen frame (fromScreenY 0) is a
+  // hide-in-progress, not an open keyboard. Android didShow trusts height.
+  const inset =
+    platform === 'ios'
+      ? fromScreenY
+      : fromScreenY > 0
+        ? fromScreenY
+        : Math.max(0, kbHeight);
+  if (inset < MIN_OCCLUDING_IME_HEIGHT) {
+    return { keyboardInset: 0, keyboardOpen: false };
+  }
   if (platform === 'android' && androidMode === 'resize') {
     return { keyboardInset: 0, keyboardOpen: true };
   }
-  const fromScreenY = Math.max(0, options.windowHeight - screenY);
-  const fromHeight = Math.max(0, kbHeight);
-  return {
-    keyboardOpen: true,
-    keyboardInset: fromScreenY > 0 ? fromScreenY : fromHeight,
-  };
+  return { keyboardOpen: true, keyboardInset: inset };
 }
 
 /**

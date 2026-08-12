@@ -1,4 +1,5 @@
 import {
+  normalizeCategory,
   normalizeInvite,
   normalizeList,
   normalizeMember,
@@ -64,6 +65,14 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
             ),
             ...state.tasks.filter((task) => sharedIds.has(task.listId)),
           ],
+          categories: [
+            ...incoming.categories.filter((category) =>
+              incoming.lists.some(
+                (list) => list.id === category.listId && list.mode === 'private',
+              ),
+            ),
+            ...state.categories.filter((category) => sharedIds.has(category.listId)),
+          ],
           recipes: [
             ...incoming.recipes.filter((recipe) =>
               incoming.lists.some(
@@ -86,6 +95,10 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
       const tasks = snapshot.tasks.flatMap((item) => {
         const task = normalizeTask(item, list.id);
         return task ? [task] : [];
+      });
+      const categories = (snapshot.categories ?? []).flatMap((item) => {
+        const category = normalizeCategory({ ...item, listId: list.id });
+        return category ? [category] : [];
       });
       const recipes = (snapshot.recipes ?? []).flatMap((item) => {
         const recipe = normalizeRecipe({ ...item, listId: list.id });
@@ -112,11 +125,18 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
         const lists = [...state.lists];
         if (existingIndex >= 0) lists[existingIndex] = nextList;
         else lists.unshift(nextList);
+        const nextCategories = snapshot.categories === undefined
+          ? state.categories.filter((item) => item.listId === list.id)
+          : categories;
         return {
           lists,
           tasks: [
             ...orderedTasks,
             ...state.tasks.filter((item) => item.listId !== list.id),
+          ],
+          categories: [
+            ...nextCategories,
+            ...state.categories.filter((item) => item.listId !== list.id),
           ],
           recipes: [
             ...recipes,
@@ -133,6 +153,7 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
     removeSharedList: (listId) =>
       set((state) => ({
         lists: state.lists.filter((list) => list.id !== listId),
+        categories: state.categories.filter((category) => category.listId !== listId),
         tasks: state.tasks.filter((task) => task.listId !== listId),
         recipes: state.recipes.filter((recipe) => recipe.listId !== listId),
         members: state.members.filter((member) => member.listId !== listId),

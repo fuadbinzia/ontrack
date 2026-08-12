@@ -263,6 +263,7 @@ export function hasMeaningfulLocalData(): boolean {
   if (usePlants.getState().plants.length > 0) return true;
   const todoState = useTodos.getState();
   if (
+    todoState.categories.length > 0 ||
     todoState.tasks.length > 0 ||
     todoState.lists.some((list) => list.name !== 'To Do')
   ) return true;

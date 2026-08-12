@@ -46,6 +46,13 @@ export interface Activity {
   /** Links calendar entries generated from a travel plan back to that plan. */
   travelPlanId?: string;
   travelItemId?: string;
+  /** Stable ownership/link metadata for two-way Google Calendar sync. */
+  googleCalendar?: {
+    calendarId: string;
+    eventId: string;
+    origin: 'google' | 'ontrack';
+    lastSyncedAt: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

@@ -155,6 +155,7 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
       markGuestEdit();
       set((state) => ({
         lists: state.lists.filter((item) => item.id !== id),
+        categories: state.categories.filter((category) => category.listId !== id),
         tasks: state.tasks.filter((task) => task.listId !== id),
         recipes: state.recipes.filter((recipe) => recipe.listId !== id),
         members: state.members.filter((member) => member.listId !== id),

@@ -74,9 +74,8 @@ struct OnTrackVoiceShortcuts: AppShortcutsProvider {
     AppShortcut(
       intent: AddChecklistItemIntent(),
       phrases: [
-        "Add \(\.$title) to my checklist in \(.applicationName)",
-        "Add \(\.$title) to my to do list in \(.applicationName)",
-        "Add \(\.$title) to \(\.$listName) in \(.applicationName)",
+        "Add to my checklist in \(.applicationName)",
+        "Add to my to do list in \(.applicationName)",
       ],
       shortTitle: "Add checklist item",
       systemImageName: "checklist"
@@ -84,8 +83,8 @@ struct OnTrackVoiceShortcuts: AppShortcutsProvider {
     AppShortcut(
       intent: AddGroceryItemIntent(),
       phrases: [
-        "Add \(\.$title) to my grocery list in \(.applicationName)",
-        "Add \(\.$title) to my shopping list in \(.applicationName)",
+        "Add to my grocery list in \(.applicationName)",
+        "Add to my shopping list in \(.applicationName)",
       ],
       shortTitle: "Add grocery item",
       systemImageName: "cart"
@@ -95,7 +94,6 @@ struct OnTrackVoiceShortcuts: AppShortcutsProvider {
       phrases: [
         "What's on my checklist in \(.applicationName)",
         "Read my to do list in \(.applicationName)",
-        "What's on \(\.$listName) in \(.applicationName)",
       ],
       shortTitle: "Read checklist",
       systemImageName: "list.bullet"

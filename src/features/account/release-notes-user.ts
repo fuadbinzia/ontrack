@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.46',
+    date: '2026-08-11',
+    notes: [
+      'Fix tracker navigation, todo selection, and Google account chooser.',
+    ],
+  },
+  {
     version: '1.0.45',
     date: '2026-08-11',
     notes: [

@@ -1,5 +1,11 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useFocusEffect, useIsFocused, useNavigation } from 'expo-router';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import DraggableFlatList, {
   ScaleDecorator,
@@ -140,7 +146,8 @@ function TrackerRowBounce({
 
 export function TrackersScreen() {
   const theme = useTheme();
-  const router = useRouter();
+  const isFocused = useIsFocused();
+  const navigation = useNavigation();
   const { spacing, s, layout } = useResponsive();
   const enabledAddons = useAddons((store) => store.enabled);
   const trackerOrder = useTabPins((store) => store.trackerOrder);
@@ -200,7 +207,10 @@ export function TrackersScreen() {
     if (section === 'others') {
       promoteInMore(routeName);
     }
-    router.navigate(meta.href);
+    // This screen is a direct child of Tabs, so switch through that navigator.
+    // URL navigation can focus the destination while leaving this translucent
+    // catalog scene attached above it.
+    navigation.navigate(routeName as never);
   };
 
   const renderItem = ({
@@ -311,6 +321,10 @@ export function TrackersScreen() {
       </ScaleDecorator>
     );
   };
+
+  // The catalog is intentionally transparent. Never leave it mounted over the
+  // newly focused section if native screen detachment is delayed for a frame.
+  if (!isFocused) return null;
 
   return (
     <Screen scroll={false} bottomInset contentStyle={styles.screenContent}>

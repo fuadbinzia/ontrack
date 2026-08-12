@@ -20,4 +20,15 @@ describe('trackers screen contract', () => {
     expect(screen).toContain('splitTrackerOrder');
     expect(screen).toContain('NAV_PIN_LIMIT');
   });
+
+  it('dismisses Sections through the parent tab navigator', () => {
+    const screen = read('src/features/trackers/trackers-screen.tsx');
+    const layout = read('src/app/(tabs)/_layout.tsx');
+
+    expect(screen).toContain('useNavigation');
+    expect(screen).toContain('navigation.navigate(routeName as never)');
+    expect(screen).toContain('if (!isFocused) return null');
+    expect(screen).not.toContain('router.navigate(meta.href)');
+    expect(layout).toContain('freezeOnBlur: route.name !== MORE_TAB_ROUTE');
+  });
 });

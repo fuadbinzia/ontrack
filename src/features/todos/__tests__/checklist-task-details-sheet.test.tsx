@@ -59,15 +59,17 @@ jest.mock('@/components/primitives/dropdown', () => {
       options,
       onChange,
       onReselect,
+      multiple,
       open: openProp,
       onOpenChange,
       menuFooter,
     }: {
       accessibilityLabel: string;
-      value: string;
+      value: string | readonly string[];
       options: { value: string; label: string; leading?: React.ReactNode }[];
-      onChange: (value: string) => void;
+      onChange: (value: string | string[]) => void;
       onReselect?: (value: string) => void;
+      multiple?: boolean;
       open?: boolean;
       onOpenChange?: (open: boolean) => void;
       menuFooter?: React.ReactNode;
@@ -78,14 +80,19 @@ jest.mock('@/components/primitives/dropdown', () => {
         onOpenChange?.(next);
         if (openProp === undefined) setUncontrolledOpen(next);
       };
-      const selected = options.find((option) => option.value === value);
+      const selectedValues = multiple
+        ? ((value as readonly string[]) ?? [])
+        : [value as string];
+      const selectedLabels = options
+        .filter((option) => selectedValues.includes(option.value))
+        .map((option) => option.label);
       return React.createElement(
         View,
         null,
         React.createElement(
           Pressable,
           { accessibilityLabel, onPress: () => setOpen(!open) },
-          React.createElement(Text, null, selected?.label),
+          React.createElement(Text, null, selectedLabels.join(', ')),
         ),
         open
           ? React.createElement(
@@ -98,6 +105,14 @@ jest.mock('@/components/primitives/dropdown', () => {
                   accessibilityLabel: option.label,
                   testID: `${accessibilityLabel}-option-${options.indexOf(option)}`,
                   onPress: () => {
+                    if (multiple) {
+                      const current = selectedValues;
+                      const nextValues = current.includes(option.value)
+                        ? current.filter((item) => item !== option.value)
+                        : [...current, option.value];
+                      onChange(nextValues);
+                      return;
+                    }
                     if (option.value === value) onReselect?.(option.value);
                     else onChange(option.value);
                     setOpen(false);
@@ -146,17 +161,15 @@ const task: TodoTask = {
 };
 
 describe('ChecklistTaskDetailsSheet', () => {
-  it('keys the complete editor to the active task', () => {
+  it('keeps the sheet mounted across item hops', () => {
     const source = readFileSync(
       'src/features/todos/checklist-task-details-sheet.tsx',
       'utf8',
     );
-    expect(source).toContain(
-      "<ChecklistTaskDetailsSheet\n      key={task?.id ?? 'closed-item-details'}",
-    );
+    expect(source).not.toContain("key={task?.id ?? 'closed-item-details'}");
   });
 
-  it('remounts sheet layout when switching between items', () => {
+  it('resets title height when switching items without remounting the sheet', () => {
     const props = {
       members: [member],
       categories: [category],
@@ -173,6 +186,14 @@ describe('ChecklistTaskDetailsSheet', () => {
     );
     const firstInstance = screen.getByTestId('mock-sheet-scaffold').props
       .accessibilityLabel;
+    const titleInput = screen.getByLabelText('Item title');
+    fireEvent(titleInput, 'focus');
+    fireEvent(titleInput, 'contentSizeChange', {
+      nativeEvent: { contentSize: { width: 280, height: 72 } },
+    });
+    const grownHeight = StyleSheet.flatten(
+      screen.getByLabelText('Item title').props.style,
+    )?.minHeight;
 
     view.rerender(
       <SafeAreaProvider initialMetrics={metrics}>
@@ -184,16 +205,20 @@ describe('ChecklistTaskDetailsSheet', () => {
     );
     const secondInstance = screen.getByTestId('mock-sheet-scaffold').props
       .accessibilityLabel;
-    expect(secondInstance).not.toBe(firstInstance);
+    expect(secondInstance).toBe(firstInstance);
+    const petInput = screen.getByLabelText('Item title');
+    expect(petInput.props.value).toBe('Pet');
+    const petHeight = StyleSheet.flatten(petInput.props.style)?.minHeight;
+    expect(petHeight).toBeLessThan(grownHeight ?? Number.POSITIVE_INFINITY);
 
-    view.rerender(
-      <SafeAreaProvider initialMetrics={metrics}>
-        <ChecklistTaskDetailsSheet task={task} {...props} />
-      </SafeAreaProvider>,
-    );
+    // Unfocused iOS keyboard-prepare contentSize must not reinflate the field.
+    fireEvent(petInput, 'contentSizeChange', {
+      nativeEvent: { contentSize: { width: 280, height: 120 } },
+    });
     expect(
-      screen.getByTestId('mock-sheet-scaffold').props.accessibilityLabel,
-    ).not.toBe(secondInstance);
+      StyleSheet.flatten(screen.getByLabelText('Item title').props.style)
+        ?.minHeight,
+    ).toBe(petHeight);
   });
 
   it('reserves wrapped-line height for a long title before native measurement', () => {
@@ -243,6 +268,7 @@ describe('ChecklistTaskDetailsSheet', () => {
     const compactStyle = StyleSheet.flatten(titleInput.props.style);
     expect(titleInput.props.scrollEnabled).toBe(true);
 
+    fireEvent(titleInput, 'focus');
     fireEvent(titleInput, 'contentSizeChange', {
       nativeEvent: { contentSize: { width: 280, height: 72 } },
     });
@@ -282,7 +308,9 @@ describe('ChecklistTaskDetailsSheet', () => {
         ?.minHeight,
     ).toBeLessThan(multilineStyle?.minHeight ?? Number.POSITIVE_INFINITY);
 
-    fireEvent(screen.getByLabelText('Item title'), 'contentSizeChange', {
+    const expandedTitle = screen.getByLabelText('Item title');
+    fireEvent(expandedTitle, 'focus');
+    fireEvent(expandedTitle, 'contentSizeChange', {
       nativeEvent: { contentSize: { width: 280, height: 240 } },
     });
 
@@ -321,14 +349,45 @@ describe('ChecklistTaskDetailsSheet', () => {
     fireEvent.press(screen.getByLabelText('Assigned to'));
     expect(screen.getByLabelText(`${member.displayName} avatar`)).toBeTruthy();
     fireEvent.press(screen.getByLabelText(member.displayName));
+    fireEvent.press(screen.getByLabelText('Assigned to'));
     fireEvent.press(screen.getByLabelText('Category'));
     fireEvent.press(screen.getByLabelText(category.name));
     fireEvent.press(screen.getByLabelText('Close item details'));
 
     expect(onUpdateTitle).toHaveBeenCalledWith('Review taxes');
-    expect(onSetAssignee).toHaveBeenCalledWith(member.userId);
+    expect(onSetAssignee).toHaveBeenCalledWith([member.userId]);
     expect(onSetCategory).toHaveBeenCalledWith(category.id);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps Assigned to open after a selection and supports multi-assign', () => {
+    const onSetAssignee = jest.fn();
+    const alex: TodoMember = {
+      ...member,
+      userId: 'member-alex',
+      displayName: 'Alex Morgan',
+    };
+    render(
+      <SafeAreaProvider initialMetrics={metrics}>
+        <ChecklistTaskDetailsSheet
+          task={{ ...task, assigneeUserIds: [member.userId] }}
+          members={[member, alex]}
+          categories={[]}
+          onUpdateTitle={jest.fn()}
+          onSetAssignee={onSetAssignee}
+          onSetCategory={jest.fn()}
+          onCreateCategory={jest.fn()}
+          onClose={jest.fn()}
+        />
+      </SafeAreaProvider>,
+    );
+
+    fireEvent.press(screen.getByLabelText('Assigned to'));
+    fireEvent.press(screen.getByLabelText(alex.displayName));
+    expect(onSetAssignee).toHaveBeenLastCalledWith([member.userId, alex.userId]);
+    expect(screen.getByLabelText(member.displayName)).toBeTruthy();
+    fireEvent.press(screen.getByLabelText('Anyone'));
+    expect(onSetAssignee).toHaveBeenLastCalledWith(undefined);
   });
 
   it('creates a category and selects it without leaving the sheet', () => {
@@ -415,7 +474,7 @@ describe('ChecklistTaskDetailsSheet', () => {
         <ChecklistTaskDetailsSheet
           task={{
             ...task,
-            assigneeUserId: member.userId,
+            assigneeUserIds: [member.userId],
             categoryId: category.id,
           }}
           members={[zoe, member, alex]}

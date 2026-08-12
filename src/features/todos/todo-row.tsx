@@ -9,7 +9,7 @@ import {
 
 import { AppText, DragHandle, GlassPlate, Symbol } from '@/components/primitives';
 import { glassMaterials, layout, radii, spacing, typography } from '@/design-system';
-import { ProfileAvatar } from '@/features/account/profile-avatar';
+import { AvatarStack } from '@/features/food/components/avatar-stack';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoMember, TodoTask } from '@/store/todos';
@@ -76,12 +76,18 @@ export function TodoRow({
     onEndEdit();
   };
 
-  const assignee = task.assigneeUserId
-    ? members.find((member) => member.userId === task.assigneeUserId)
-    : undefined;
-  const assigneeLabel = task.assigneeUserId
-    ? assignee?.displayName ?? 'Member'
-    : undefined;
+  const assigneePeople = (task.assigneeUserIds ?? []).map((userId) => {
+    const member = members.find((item) => item.userId === userId);
+    return {
+      id: userId,
+      userId,
+      displayName: member?.displayName ?? 'Member',
+    };
+  });
+  const assigneeLabel =
+    assigneePeople.length === 0
+      ? undefined
+      : assigneePeople.map((person) => person.displayName).join(', ');
   const categoryLabel = showCategory ? categoryName : undefined;
   const showMetadata = Boolean(assigneeLabel || categoryLabel);
 
@@ -240,12 +246,12 @@ export function TodoRow({
         ) : null}
         {showMetadata ? (
           <View style={styles.taskMetaRow}>
-            {assigneeLabel && task.assigneeUserId ? (
-              <ProfileAvatar
+            {assigneePeople.length > 0 && assigneeLabel ? (
+              <AvatarStack
                 accessibilityLabel={`Assigned to ${assigneeLabel}`}
-                displayName={assigneeLabel}
+                people={assigneePeople}
+                maxVisible={2}
                 size={assigneeAvatarSize}
-                userId={task.assigneeUserId}
               />
             ) : null}
             {assigneeLabel && categoryLabel ? (

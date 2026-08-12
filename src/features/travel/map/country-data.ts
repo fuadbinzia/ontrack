@@ -1,5 +1,7 @@
 import { geoCentroid, geoContains, geoEquirectangular, geoPath } from 'd3-geo';
-import countries from 'i18n-iso-countries';
+// Use /index (browser entry). Package `main` is entry-node.js, which dynamically
+// requires every langs/*.json — Metro cannot resolve that and red-screens.
+import countries from 'i18n-iso-countries/index';
 import enLocale from 'i18n-iso-countries/langs/en.json';
 import { feature } from 'topojson-client';
 import type {

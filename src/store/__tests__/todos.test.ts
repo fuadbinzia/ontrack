@@ -341,10 +341,17 @@ describe('to-do store', () => {
 
     expect(canCompleteTodo(list, baseTask, 'member-a')).toBe(true);
     expect(
-      canCompleteTodo(list, { ...baseTask, assigneeUserId: 'member-a' }, 'member-a'),
+      canCompleteTodo(list, { ...baseTask, assigneeUserIds: ['member-a'] }, 'member-a'),
     ).toBe(true);
     expect(
-      canCompleteTodo(list, { ...baseTask, assigneeUserId: 'member-b' }, 'member-a'),
+      canCompleteTodo(
+        list,
+        { ...baseTask, assigneeUserIds: ['member-a', 'member-c'] },
+        'member-a',
+      ),
+    ).toBe(true);
+    expect(
+      canCompleteTodo(list, { ...baseTask, assigneeUserIds: ['member-b'] }, 'member-a'),
     ).toBe(false);
   });
 
@@ -362,7 +369,7 @@ describe('to-do store', () => {
       title: 'Task',
       completed: false,
       important: false,
-      assigneeUserId: 'someone-else',
+      assigneeUserIds: ['someone-else'],
       createdAt: '2026-07-01T10:00:00.000Z',
       updatedAt: '2026-07-01T10:00:00.000Z',
       version: 0,
@@ -473,7 +480,7 @@ describe('to-do store', () => {
       ),
       tasks: state.tasks.map((task) =>
         task.id === tasks[1].id
-          ? { ...task, assigneeUserId: 'someone-else' }
+          ? { ...task, assigneeUserIds: ['someone-else'] }
           : task,
       ),
     }));

@@ -60,13 +60,9 @@ export type DropdownTriggerRenderProps = {
   fieldRef: React.RefObject<View | null>;
 };
 
-export type DropdownProps<T extends string = string> = {
+type DropdownCommonProps<T extends string = string> = {
   label: string;
-  value: T;
   options: readonly DropdownOption<T>[];
-  onChange: (value: T) => void;
-  /** Optional action when the already-selected option is pressed again. */
-  onReselect?: (value: T) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   testID?: string;
@@ -89,6 +85,21 @@ export type DropdownProps<T extends string = string> = {
   /** Custom trigger — menu still overlays via Modal. */
   renderTrigger?: (props: DropdownTriggerRenderProps) => ReactNode;
 };
+
+export type DropdownProps<T extends string = string> =
+  | (DropdownCommonProps<T> & {
+      multiple?: false;
+      value: T;
+      onChange: (value: T) => void;
+      /** Optional action when the already-selected option is pressed again. */
+      onReselect?: (value: T) => void;
+    })
+  | (DropdownCommonProps<T> & {
+      multiple: true;
+      value: readonly T[];
+      onChange: (value: T[]) => void;
+      onReselect?: never;
+    });
 
 function DropdownOptionRow<T extends string>({
   option,
@@ -143,30 +154,34 @@ function DropdownOptionRow<T extends string>({
  * Field + overlay menu. The menu floats in a transparent Modal so opening it
  * never pushes sibling layout down.
  */
-export function Dropdown<T extends string = string>({
-  label,
-  value,
-  options,
-  onChange,
-  onReselect,
-  open: openProp,
-  onOpenChange,
-  testID,
-  accessibilityLabel,
-  accessibilityHint = 'Opens a dropdown to choose another option',
-  menuMaxHeight = MENU_MAX_HEIGHT,
-  menuFooter,
-  menuFooterHeight = ITEM_HEIGHT,
-  matchTriggerWidth = true,
-  icon,
-  iconBackground,
-  iconColor,
-  fieldBackground,
-  labelColor,
-  fieldStyle,
-  supportedOrientations,
-  renderTrigger,
-}: DropdownProps<T>) {
+export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
+  const {
+    label,
+    value,
+    options,
+    onChange,
+    onReselect,
+    open: openProp,
+    onOpenChange,
+    testID,
+    accessibilityLabel,
+    accessibilityHint = props.multiple
+      ? 'Opens a dropdown to choose one or more options'
+      : 'Opens a dropdown to choose another option',
+    menuMaxHeight = MENU_MAX_HEIGHT,
+    menuFooter,
+    menuFooterHeight = ITEM_HEIGHT,
+    matchTriggerWidth = true,
+    icon,
+    iconBackground,
+    iconColor,
+    fieldBackground,
+    labelColor,
+    fieldStyle,
+    supportedOrientations,
+    renderTrigger,
+  } = props;
+  const multiple = props.multiple === true;
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -182,9 +197,21 @@ export function Dropdown<T extends string = string>({
     androidMode: 'modal',
   });
 
+  const selectedValues = multiple
+    ? ((value as readonly T[]) ?? [])
+    : value !== undefined && value !== null
+      ? [value as T]
+      : [];
+  const selectedLabels = options
+    .filter((option) => selectedValues.includes(option.value))
+    .map((option) => option.label);
   const fieldLabel = fieldTitleCase(label);
   const selectedLabel = fieldTitleCase(
-    options.find((option) => option.value === value)?.label ?? value,
+    selectedLabels.length > 0
+      ? selectedLabels.join(', ')
+      : multiple
+        ? ''
+        : String(value ?? ''),
   );
   const a11yLabel = accessibilityLabel ?? `${fieldLabel}: ${selectedLabel}`;
 
@@ -229,8 +256,16 @@ export function Dropdown<T extends string = string>({
   };
 
   const choose = (next: T) => {
+    if (multiple) {
+      const current = selectedValues;
+      const nextValues = current.includes(next)
+        ? current.filter((item) => item !== next)
+        : [...current, next];
+      (onChange as (value: T[]) => void)(nextValues);
+      return;
+    }
     if (next === value) onReselect?.(next);
-    else onChange(next);
+    else (onChange as (value: T) => void)(next);
     setOpen(false);
   };
 
@@ -261,7 +296,11 @@ export function Dropdown<T extends string = string>({
   const triggerAgent = useAgentUiTarget(testID, {
     label: a11yLabel,
     // Registry value for --contains (selected option value / label).
-    value: String(value ?? selectedLabel ?? ''),
+    value: String(
+      multiple
+        ? selectedValues.join(',') || selectedLabel || ''
+        : (value ?? selectedLabel ?? ''),
+    ),
     onPress: toggle,
   });
 
@@ -458,7 +497,7 @@ export function Dropdown<T extends string = string>({
                   <DropdownOptionRow
                     key={`${listId}-${option.value}`}
                     option={option}
-                    selected={option.value === value}
+                    selected={selectedValues.includes(option.value)}
                     onSelect={() => choose(option.value)}
                   />
                 ))}

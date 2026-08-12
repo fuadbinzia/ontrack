@@ -1,4 +1,5 @@
 const http = require('http');
+const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 
 /** @type {import('expo/metro-config').MetroConfig} */
@@ -11,6 +12,23 @@ const config = getDefaultConfig(__dirname);
 // .watchmanconfig keeps node_modules ignored so Watchman does not flood FSEvents.
 // The patch forces Node crawl so expo-router/entry still resolves.
 config.resolver.useWatchman = null;
+
+// i18n-iso-countries `main` → entry-node.js dynamically requires langs/*.json.
+// Metro cannot map that context (and we only register `en`). Force browser entry.
+const i18nIsoCountriesIndex = path.resolve(
+  __dirname,
+  'node_modules/i18n-iso-countries/index.js',
+);
+const previousResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'i18n-iso-countries') {
+    return { type: 'sourceFile', filePath: i18nIsoCountriesIndex };
+  }
+  if (previousResolveRequest) {
+    return previousResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
 
 config.watcher.healthCheck = {
   ...(config.watcher.healthCheck ?? {}),

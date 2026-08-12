@@ -83,7 +83,7 @@ interface TodoState extends TodoPersistedState {
   ) => void;
   toggleTask: (id: string, actorUserId?: string) => void;
   toggleImportant: (id: string) => void;
-  setAssignee: (id: string, assigneeUserId?: string) => void;
+  setAssignee: (id: string, assigneeUserIds?: string[]) => void;
   deleteTask: (id: string) => void;
   clearCompleted: (listId?: string) => void;
   replacePrivateData: (value: unknown) => void;

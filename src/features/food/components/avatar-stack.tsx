@@ -20,6 +20,7 @@ export interface AvatarStackProps {
   maxVisible?: number;
   /** Explicit avatar diameter; defaults from the width class (30–34). */
   size?: number;
+  accessibilityLabel?: string;
   testID?: string;
   style?: StyleProp<ViewStyle>;
 }
@@ -53,6 +54,7 @@ export function AvatarStack({
   people,
   maxVisible = 4,
   size,
+  accessibilityLabel,
   testID,
   style,
 }: AvatarStackProps) {
@@ -68,9 +70,10 @@ export function AvatarStack({
       accessible
       accessibilityRole="text"
       accessibilityLabel={
-        people.length === 1
+        accessibilityLabel ??
+        (people.length === 1
           ? people[0]!.displayName
-          : `${people.length} people`
+          : `${people.length} people`)
       }
       style={[styles.row, style]}>
       {shown.map((person, index) => (

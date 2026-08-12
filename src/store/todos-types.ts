@@ -81,7 +81,8 @@ export interface TodoTask {
   title: string;
   completed: boolean;
   important: boolean;
-  assigneeUserId?: string;
+  /** Empty / omitted = Anyone. Multiple members may share a task. */
+  assigneeUserIds?: string[];
   completedByUserId?: string;
   createdAt: string;
   updatedAt: string;

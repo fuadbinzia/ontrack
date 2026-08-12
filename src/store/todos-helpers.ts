@@ -58,7 +58,11 @@ export function canCompleteTodo(
   actorUserId?: string,
 ): boolean {
   if (canEditTodoContent(list)) return true;
-  return Boolean(actorUserId && (!task.assigneeUserId || task.assigneeUserId === actorUserId));
+  const assignees = task.assigneeUserIds ?? [];
+  return Boolean(
+    actorUserId &&
+      (assignees.length === 0 || assignees.includes(actorUserId)),
+  );
 }
 
 export function queuedMutation(

@@ -37,7 +37,7 @@ export type TodoTaskActions = {
   ) => void;
   toggleTask: (id: string, actorUserId?: string) => void;
   toggleImportant: (id: string) => void;
-  setAssignee: (id: string, assigneeUserId?: string) => void;
+  setAssignee: (id: string, assigneeUserIds?: string[]) => void;
   deleteTask: (id: string) => void;
   clearCompleted: (listId?: string) => void;
 };
@@ -221,14 +221,28 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
       }));
     },
 
-    setAssignee: (id, assigneeUserId) => {
+    setAssignee: (id, assigneeUserIds) => {
       const task = get().tasks.find((item) => item.id === id);
       const list = task ? get().lists.find((item) => item.id === task.listId) : undefined;
       if (!task || !list || !canEditTodoContent(list)) return;
+      const nextAssignees = Array.from(
+        new Set(
+          (assigneeUserIds ?? []).filter(
+            (userId): userId is string => Boolean(userId),
+          ),
+        ),
+      );
       const updatedAt = nowIso();
       set((state) => ({
         tasks: state.tasks.map((item) =>
-          item.id === id ? { ...item, assigneeUserId, updatedAt } : item,
+          item.id === id
+            ? {
+                ...item,
+                assigneeUserIds:
+                  nextAssignees.length > 0 ? nextAssignees : undefined,
+                updatedAt,
+              }
+            : item,
         ),
         lists: state.lists.map((item) =>
           item.id === list.id ? { ...item, updatedAt } : item,
@@ -237,7 +251,9 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
           ...state.pendingMutations,
           ...queuedMutation(list, 'set_assignee', {
             taskId: id,
-            assigneeUserId: assigneeUserId ?? null,
+            assigneeUserIds: nextAssignees,
+            // Legacy single field for in-flight clients during rollout.
+            assigneeUserId: nextAssignees[0] ?? null,
           }),
         ],
       }));

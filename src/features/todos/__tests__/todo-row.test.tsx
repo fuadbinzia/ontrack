@@ -45,7 +45,7 @@ describe('TodoRow', () => {
     const onOpenDetails = jest.fn();
     render(
       <TodoRow
-        task={{ ...task, assigneeUserId: 'member' }}
+        task={{ ...task, assigneeUserIds: ['member'] }}
         canComplete
         editMode={false}
         editing={false}

@@ -101,6 +101,12 @@ describe('metro launch command contract', () => {
     expect(metroConfig).toMatch(/patch-expo-metro-watchman/);
     expect(metroConfig).toMatch(/healthCheck/);
     expect(metroConfig).toMatch(/enabled:\s*true/);
+    // Avoid entry-node dynamic langs/*.json (Metro red screen: unknown ./langs/br.json).
+    expect(metroConfig).toContain("moduleName === 'i18n-iso-countries'");
+    expect(metroConfig).toContain('i18n-iso-countries/index.js');
+    expect(read('src/features/travel/map/country-data.ts')).toContain(
+      "from 'i18n-iso-countries/index'",
+    );
 
     const watchmanConfig = JSON.parse(read('.watchmanconfig')) as {
       ignore_dirs?: string[];

@@ -28,6 +28,11 @@ export const appIcons = {
   'vision-board': { ios: 'square.grid.2x2.fill', android: 'dashboard', web: 'dashboard' },
   games: { ios: 'gamecontroller.fill', android: 'sports_esports', web: 'sports_esports' },
   vehicles: { ios: 'car.fill', android: 'directions_car', web: 'directions_car' },
+  finance: {
+    ios: 'dollarsign.circle.fill',
+    android: 'account_balance_wallet',
+    web: 'account_balance_wallet',
+  },
   tasks: { ios: 'checklist', android: 'checklist', web: 'checklist' },
   groceries: { ios: 'cart.fill', android: 'shopping_cart', web: 'shopping_cart' },
   maintenance: {
@@ -243,6 +248,7 @@ export const appIconSections = [
       'vision-board',
       'games',
       'vehicles',
+      'finance',
       'tasks',
       'groceries',
       'maintenance',

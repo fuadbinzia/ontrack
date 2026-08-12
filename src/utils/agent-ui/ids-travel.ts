@@ -148,6 +148,7 @@ export const agentUiIdsTravel = {
         `ontrack.travel.list.addTransport.${tripId}`,
       searchStays: (tripId: string) =>
         `ontrack.travel.list.searchStays.${tripId}`,
+      straiaway: (tripId: string) => `ontrack.travel.list.straiaway.${tripId}`,
       itinerary: (tripId: string) => `ontrack.travel.list.itinerary.${tripId}`,
       /** Layout anchor — trip-card footer date + weekday range. */
       dates: (tripId: string) => `ontrack.travel.list.dates.${tripId}`,

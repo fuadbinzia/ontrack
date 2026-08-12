@@ -44,6 +44,14 @@ const metrics = {
 };
 
 describe('ChecklistPopoverMenu', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('opens list actions as a bottom sheet and selects an action', () => {
     const onSelect = jest.fn();
     render(
@@ -73,7 +81,9 @@ describe('ChecklistPopoverMenu', () => {
     expect(screen.getByText('Finance')).toBeTruthy();
 
     fireEvent.press(screen.getByLabelText('Copy'));
-    expect(onSelect).toHaveBeenCalledWith('copy');
     expect(screen.queryByText('List Actions')).toBeNull();
+    expect(onSelect).not.toHaveBeenCalled();
+    jest.advanceTimersByTime(48);
+    expect(onSelect).toHaveBeenCalledWith('copy');
   });
 });

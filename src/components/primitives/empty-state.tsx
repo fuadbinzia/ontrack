@@ -40,6 +40,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   const theme = useTheme();
   const { spacing, layout } = useResponsive();
+  const titleText = fieldTitleCase(title);
   const actionTitle = actionLabel ? fieldTitleCase(actionLabel) : undefined;
   const handleAction = () => {
     if (!onAction) return;
@@ -68,7 +69,7 @@ export function EmptyState({
         numberOfLines={2}
         adjustsFontSizeToFit
         style={titleStyle}>
-        {title}
+        {titleText}
       </AppText>
       <AppText
         variant="callout"

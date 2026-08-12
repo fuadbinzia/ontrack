@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.55',
+    date: '2026-08-12',
+    notes: [
+      'Add Finance add-on and StraiAway partner stay import.',
+    ],
+  },
+  {
     version: '1.0.54',
     date: '2026-08-12',
     notes: [

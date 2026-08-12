@@ -67,6 +67,7 @@ describe('canonical design-system contract', () => {
       'src/components/primitives/section-header.tsx',
       'src/components/primitives/form-section.tsx',
       'src/components/primitives/panel-title.tsx',
+      'src/components/primitives/empty-state.tsx',
       'src/components/primitives/stacked-field-label.tsx',
       'src/components/primitives/settings-row.tsx',
       'src/components/primitives/button.tsx',

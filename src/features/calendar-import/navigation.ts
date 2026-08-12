@@ -1,5 +1,5 @@
 const SHARE_LINK_HOST = 'ontrack--links.expo.app';
-const SHARE_PATH_PREFIXES = ['/i/', '/j/', '/f/', '/c/', '/l/', '/v/'] as const;
+const SHARE_PATH_PREFIXES = ['/i/', '/j/', '/f/', '/c/', '/l/', '/v/', '/p/'] as const;
 
 function isSharePath(pathname: string): boolean {
   return (

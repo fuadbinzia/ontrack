@@ -20,6 +20,7 @@ export const STORAGE_KEYS = {
   visionBoard: 'ontrack/vision-board/v1',
   vehicles: 'ontrack/vehicles/v1',
   health: 'ontrack/health/v1',
+  finance: 'ontrack/finance/v1',
   foodProfile: 'ontrack/food-profile/v1',
   foodPantry: 'ontrack/food-pantry/v1',
   foodRecipes: 'ontrack/food-recipes/v1',

@@ -50,6 +50,7 @@ const AUTH_ORBIT_TABS: readonly {
   { tab: 'workouts' },
   { tab: 'food' },
   { tab: 'health', dropWhenCompact: true },
+  { tab: 'finance' },
   { tab: 'vehicles' },
   { tab: 'vision-board' },
   { tab: 'to-do' },

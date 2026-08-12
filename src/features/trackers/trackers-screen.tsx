@@ -65,6 +65,7 @@ function isEnabled(
   if (routeName === 'games') return !!enabledAddons.games;
   if (routeName === 'vehicles') return !!enabledAddons.vehicles;
   if (routeName === 'food') return !!enabledAddons.food;
+  if (routeName === 'finance') return !!enabledAddons.finance;
   if (routeName === 'health') {
     return process.env.EXPO_OS === 'ios' && !!enabledAddons.health;
   }

@@ -2,16 +2,13 @@ import { StyleSheet, View } from 'react-native';
 
 import {
   AppText,
-  GlassPlate,
   IconButton,
   Input,
 } from '@/components/primitives';
-import { radii } from '@/design-system';
 import {
   travelChatMessagePreview,
   type TravelChatMessage,
 } from '@/features/travel/chat';
-import { travelChatPlateBorder } from '@/features/travel/travel-chat-chrome';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -34,7 +31,7 @@ export function TravelChatComposer({
   onSendText: () => void;
   sending: boolean;
   deviceReady: boolean;
-  /** Tab-bar / IME clearance painted inside the glass dock (flush to nav). */
+  /** Clearance below the input (dock is lifted above the tab bar). */
   bottomInset?: number;
   replyTo?: TravelChatMessage;
   onCancelReply: () => void;
@@ -43,33 +40,26 @@ export function TravelChatComposer({
   onTyping: () => void;
 }) {
   const theme = useTheme();
-  const { layout: responsiveLayout, spacing: rs, s } = useResponsive();
+  const { spacing: rs, s } = useResponsive();
   // Nested inside the field pill — keep ≤ trailing pad so it doesn’t clip.
-  const sendSize = Math.max(32, s(34));
-  const plateBorder = travelChatPlateBorder(theme);
+  const sendSize = Math.max(30, s(32));
 
   return (
-    <GlassPlate
-      airy
-      intensity={56}
+    <View
       style={[
-        styles.composerDock,
+        styles.composer,
         {
-          minHeight: Math.max(56, s(58)),
-          paddingHorizontal: responsiveLayout.screenPadding,
-          paddingTop: rs.xs,
+          paddingHorizontal: rs.sm,
+          paddingTop: 0,
           paddingBottom: bottomInset,
           gap: rs.xs,
-          borderTopLeftRadius: radii.xl,
-          borderTopRightRadius: radii.xl,
-          borderColor: plateBorder,
         },
       ]}>
       {replyTo || editingId ? (
         <View
           style={[
             styles.quoteBar,
-            { gap: rs.sm, paddingBottom: rs.xs, zIndex: 1 },
+            { gap: rs.sm, paddingBottom: rs.xs },
           ]}>
           <View style={[styles.quoteCopy, { minWidth: 0, flex: 1 }]}>
             <AppText variant="caption" color="accent" fit>
@@ -93,7 +83,7 @@ export function TravelChatComposer({
         </View>
       ) : null}
 
-      <View style={[styles.composerDockInner, { zIndex: 1 }]}>
+      <View style={styles.composerInner}>
         <Input
           testID={AgentUiIds.travel.chat.composer}
           value={draft}
@@ -123,18 +113,15 @@ export function TravelChatComposer({
           }
         />
       </View>
-    </GlassPlate>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  composerDock: {
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderBottomWidth: 0,
-    borderCurve: 'continuous',
+  composer: {
+    width: '100%',
   },
-  composerDockInner: {
+  composerInner: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,

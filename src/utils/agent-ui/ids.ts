@@ -1,5 +1,6 @@
 /** Stable agent-facing testIDs. Convention: ontrack.<feature>.<surface>.<control> */
 
+import { agentUiIdsFinance } from './ids-finance';
 import { agentUiIdsFood } from './ids-food';
 import { agentUiIdsShell } from './ids-shell';
 import { agentUiIdsTravel } from './ids-travel';
@@ -8,6 +9,7 @@ export const AgentUiIds = {
   ...agentUiIdsShell,
   ...agentUiIdsFood,
   ...agentUiIdsTravel,
+  ...agentUiIdsFinance,
 } as const;
 
 export function tabTestIdForRoute(routeName: string): string | undefined {
@@ -39,6 +41,8 @@ export function tabTestIdForRoute(routeName: string): string | undefined {
       return AgentUiIds.tabs.vehicles;
     case 'health':
       return AgentUiIds.tabs.health;
+    case 'finance':
+      return AgentUiIds.tabs.finance;
     case 'food':
       return AgentUiIds.tabs.food;
     case 'trackers':

@@ -3,7 +3,15 @@
  * Bounds OpenAI/TMDB/Amadeus spend per authenticated subject on each instance.
  */
 
-export type PaidApiBucket = 'nutrition' | 'recipe' | 'food' | 'plant' | 'movies' | 'flights' | 'health';
+export type PaidApiBucket =
+  | 'nutrition'
+  | 'recipe'
+  | 'food'
+  | 'plant'
+  | 'movies'
+  | 'flights'
+  | 'health'
+  | 'finance';
 
 export const PAID_API_BUCKETS: readonly PaidApiBucket[] = [
   'nutrition',
@@ -13,6 +21,7 @@ export const PAID_API_BUCKETS: readonly PaidApiBucket[] = [
   'movies',
   'flights',
   'health',
+  'finance',
 ] as const;
 
 export const PAID_API_LIMITS: Record<PaidApiBucket, { max: number; windowMs: number }> = {
@@ -23,6 +32,7 @@ export const PAID_API_LIMITS: Record<PaidApiBucket, { max: number; windowMs: num
   movies: { max: 120, windowMs: 60 * 60 * 1000 },
   flights: { max: 40, windowMs: 60 * 60 * 1000 },
   health: { max: 20, windowMs: 60 * 60 * 1000 },
+  finance: { max: 30, windowMs: 60 * 60 * 1000 },
 };
 
 export type ApiRateLimitPeek = {

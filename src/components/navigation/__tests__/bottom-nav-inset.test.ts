@@ -1,4 +1,4 @@
-import { layout } from '@/design-system';
+import { layout, spacing } from '@/design-system';
 
 import { bottomNavBottomPad, bottomNavContentInset } from '../bottom-nav-inset';
 
@@ -21,15 +21,15 @@ describe('bottomNavBottomPad', () => {
 });
 
 describe('bottomNavContentInset', () => {
-  it('clears the full Android dock (bar + system nav)', () => {
+  it('clears the full Android dock (bar + system nav) with content air', () => {
     expect(bottomNavContentInset(48, 8, 'android')).toBe(
-      layout.bottomNavBarBaseHeight + 48,
+      layout.bottomNavBarBaseHeight + 48 + spacing.md,
     );
   });
 
-  it('clears the iOS dock with the small home-indicator pad', () => {
+  it('clears the iOS dock with the small home-indicator pad and content air', () => {
     expect(bottomNavContentInset(34, 8, 'ios')).toBe(
-      layout.bottomNavBarBaseHeight + 6,
+      layout.bottomNavBarBaseHeight + 6 + spacing.md,
     );
   });
 
@@ -39,5 +39,11 @@ describe('bottomNavContentInset', () => {
     const legacy = 48 + layout.tabBarInset;
     const next = bottomNavContentInset(48, 8, 'android');
     expect(next).toBeGreaterThan(legacy);
+  });
+
+  it('allows callers to override the content gap', () => {
+    expect(bottomNavContentInset(34, 8, 'ios', layout.bottomNavBarBaseHeight, 0)).toBe(
+      layout.bottomNavBarBaseHeight + 6,
+    );
   });
 });

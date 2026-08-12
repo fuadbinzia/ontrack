@@ -10,6 +10,7 @@ describe('bottom-nav-tab-meta eager routes', () => {
     vehicles: false,
     food: false,
     health: false,
+    finance: false,
   };
 
   it('treats core catalog routes as enabled without addons', () => {

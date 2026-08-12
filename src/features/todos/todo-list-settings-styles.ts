@@ -40,8 +40,4 @@ export const todoListSettingsStyles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
-  pendingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
 });

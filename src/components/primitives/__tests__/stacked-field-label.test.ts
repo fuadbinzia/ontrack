@@ -33,6 +33,8 @@ describe('fieldTitleCase', () => {
     expect(fieldTitleCase('Start a New Trip')).toBe('Start a New Trip');
     expect(fieldTitleCase('Start A New Trip')).toBe('Start a New Trip');
     expect(fieldTitleCase('A New Trip')).toBe('A New Trip');
+    expect(fieldTitleCase('Cards & accounts')).toBe('Cards & Accounts');
+    expect(fieldTitleCase('Cash vs debt rates')).toBe('Cash vs Debt Rates');
   });
 
   it('title-cases button labels', () => {

@@ -139,6 +139,12 @@ export function ChecklistPopoverMenu({
   const close = () => setVisible(false);
   const selectItem = (id: string) => {
     close();
+    // Sheet presentation uses a native Modal. Presenting another Modal in the
+    // same tick (categories / share settings) gets dropped on iOS — defer.
+    if (presentation === 'sheet') {
+      setTimeout(() => onSelect(id), 48);
+      return;
+    }
     onSelect(id);
   };
 

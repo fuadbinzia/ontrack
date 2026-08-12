@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { layout } from '@/design-system';
+import { layout, spacing } from '@/design-system';
 
 /**
  * Bottom padding for the app tab dock.
@@ -21,8 +21,9 @@ export function bottomNavBottomPad(
 }
 
 /**
- * Scroll/content bottom inset so the last row clears the tab dock.
- * Matches dock height: `bottomNavBarBaseHeight + bottomNavBottomPad`.
+ * Scroll/content bottom inset so the last row clears the tab dock with air
+ * above the glass bar (never flush against the nav).
+ * Matches dock height: `bottomNavBarBaseHeight + bottomNavBottomPad + gap`.
  * (Do not use the legacy `layout.tabBarInset` 44 — it undershoots the 58pt bar
  * and lets glass dock frost reveal section titles like Profile "Features".)
  */
@@ -31,6 +32,12 @@ export function bottomNavContentInset(
   spacingSm: number,
   platform: typeof Platform.OS = Platform.OS,
   barBaseHeight: number = layout.bottomNavBarBaseHeight,
+  /** Breathing room between last content and the top of the tab dock. */
+  contentGap: number = spacing.md,
 ): number {
-  return barBaseHeight + bottomNavBottomPad(insetsBottom, spacingSm, platform);
+  return (
+    barBaseHeight +
+    bottomNavBottomPad(insetsBottom, spacingSm, platform) +
+    contentGap
+  );
 }

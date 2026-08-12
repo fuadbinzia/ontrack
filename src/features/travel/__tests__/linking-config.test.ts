@@ -32,8 +32,8 @@ interface AssetLinksEntry {
   };
 }
 
-const SHARE_PATH_PREFIXES = ['/i/', '/j/', '/f/', '/c/', '/l/', '/v/'] as const;
-const SHARE_AASA_PATHS = ['/i/*', '/j/*', '/f/*', '/c/*', '/l/*', '/v/*'] as const;
+const SHARE_PATH_PREFIXES = ['/i/', '/j/', '/f/', '/c/', '/l/', '/v/', '/p/'] as const;
+const SHARE_AASA_PATHS = ['/i/*', '/j/*', '/f/*', '/c/*', '/l/*', '/v/*', '/p/*'] as const;
 const SHARE_HOST = 'ontrack--links.expo.app';
 const ANDROID_PACKAGE = 'com.imtihoss.ontracknow';
 

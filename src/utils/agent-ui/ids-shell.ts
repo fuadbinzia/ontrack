@@ -22,6 +22,7 @@ export const agentUiIdsShell = {
     games: 'ontrack.tabs.games',
     vehicles: 'ontrack.tabs.vehicles',
     health: 'ontrack.tabs.health',
+    finance: 'ontrack.tabs.finance',
     food: 'ontrack.tabs.food',
     /** More → Trackers (pin/reorder hub). */
     more: 'ontrack.tabs.more',
@@ -135,6 +136,7 @@ export const agentUiIdsShell = {
     listName: (listId: string) => `ontrack.checklists.listName.${listId}`,
     detail: {
       back: 'ontrack.checklists.detail.back',
+      title: 'ontrack.checklists.detail.title',
       newTask: 'ontrack.checklists.detail.newTask',
       addTask: 'ontrack.checklists.detail.addTask',
       sort: 'ontrack.checklists.detail.sort',
@@ -145,12 +147,6 @@ export const agentUiIdsShell = {
       category: (categoryId: string) => `ontrack.checklists.detail.category.${categoryId}`,
       editMode: 'ontrack.checklists.detail.editMode',
       task: (taskId: string) => `ontrack.checklists.detail.task.${taskId}`,
-    },
-    categories: {
-      name: 'ontrack.checklists.categories.name',
-      add: 'ontrack.checklists.categories.add',
-      close: 'ontrack.checklists.categories.close',
-      remove: (categoryId: string) => `ontrack.checklists.categories.remove.${categoryId}`,
     },
     itemDetails: {
       close: 'ontrack.checklists.itemDetails.close',
@@ -273,6 +269,7 @@ export const agentUiIdsShell = {
     itemClose: 'ontrack.vision.itemEditor.close',
   },
   listSettings: {
+    close: 'ontrack.listSettings.close',
     name: 'ontrack.listSettings.name',
     saveName: 'ontrack.listSettings.saveName',
     addEditors: 'ontrack.listSettings.addEditors',

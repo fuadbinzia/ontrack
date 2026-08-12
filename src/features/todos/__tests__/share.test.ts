@@ -52,7 +52,7 @@ function task(patch: Partial<TodoTask>): TodoTask {
     unit: patch.unit,
     preparation: patch.preparation,
     originalText: patch.originalText,
-    assigneeUserId: patch.assigneeUserId,
+    assigneeUserIds: patch.assigneeUserIds,
     createdAt: list.createdAt,
     updatedAt: list.updatedAt,
     version: 0,
@@ -66,7 +66,7 @@ describe('pretty to-do list text', () => {
         list,
         [
           task({ id: 'milk', title: 'Milk' }),
-          task({ id: 'battery', title: 'Batteries', important: true, assigneeUserId: 'alex' }),
+          task({ id: 'battery', title: 'Batteries', important: true, assigneeUserIds: ['alex'] }),
           task({ id: 'done', title: 'Already bought', completed: true }),
         ],
         members,

@@ -63,8 +63,16 @@ export const ChecklistTaskDetailsSheetHost = forwardRef<
   const updateTask = useTodos((state) => state.updateTask);
 
   useImperativeHandle(ref, () => ({
-    open: setTaskId,
-    close: () => setTaskId(null),
+    open: (nextTaskId: string) => {
+      // Keep the Modal mounted across item hops — remounting a focused
+      // multiline field makes iOS arm the keyboard and inflate contentSize.
+      Keyboard.dismiss();
+      setTaskId(nextTaskId);
+    },
+    close: () => {
+      Keyboard.dismiss();
+      setTaskId(null);
+    },
   }), []);
 
   useEffect(() => {
@@ -73,7 +81,6 @@ export const ChecklistTaskDetailsSheetHost = forwardRef<
 
   return (
     <ChecklistTaskDetailsSheet
-      key={task?.id ?? 'closed-item-details'}
       task={task}
       members={members}
       categories={categories}
@@ -83,9 +90,9 @@ export const ChecklistTaskDetailsSheetHost = forwardRef<
         updateTask(taskId, title);
         haptics.success();
       }}
-      onSetAssignee={(userId) => {
+      onSetAssignee={(userIds) => {
         if (!taskId) return;
-        setAssignee(taskId, userId);
+        setAssignee(taskId, userIds);
         haptics.select();
       }}
       onSetCategory={(categoryId) => {
@@ -93,22 +100,37 @@ export const ChecklistTaskDetailsSheetHost = forwardRef<
         setTaskCategory(taskId, categoryId);
         haptics.select();
       }}
-      onClose={() => setTaskId(null)}
+      onClose={() => {
+        Keyboard.dismiss();
+        setTaskId(null);
+      }}
     />
   );
 });
 
 function selectedFirstAlphabetically<
   T extends { value: string; label: string },
->(options: readonly T[], selectedValue: string): T[] {
+>(options: readonly T[], selectedValues: readonly string[]): T[] {
+  const selected = new Set(selectedValues);
   return [...options].sort((left, right) => {
-    if (left.value === selectedValue) return -1;
-    if (right.value === selectedValue) return 1;
+    const leftSelected = selected.has(left.value);
+    const rightSelected = selected.has(right.value);
+    if (leftSelected !== rightSelected) return leftSelected ? -1 : 1;
     return left.label.localeCompare(right.label, undefined, {
       sensitivity: 'base',
       numeric: true,
     });
   });
+}
+
+function nextAssigneeSelection(
+  previous: readonly string[],
+  next: readonly string[],
+): string[] | undefined {
+  const added = next.filter((value) => !previous.includes(value));
+  if (added.includes(ANYONE_ID) || next.length === 0) return undefined;
+  const people = next.filter((value) => value !== ANYONE_ID);
+  return people.length > 0 ? people : undefined;
 }
 
 export function ChecklistTaskDetailsSheet({
@@ -125,7 +147,7 @@ export function ChecklistTaskDetailsSheet({
   members: TodoMember[];
   categories: TodoCategory[];
   onUpdateTitle: (title: string) => void;
-  onSetAssignee: (userId?: string) => void;
+  onSetAssignee: (userIds?: string[]) => void;
   onSetCategory: (categoryId?: string) => void;
   onCreateCategory: (name: string) => TodoCategory | undefined;
   onClose: () => void;
@@ -138,6 +160,7 @@ export function ChecklistTaskDetailsSheet({
   const titleMaxLines = 4;
   const assigneeAvatarSize = Math.max(26, s(28));
   const [titleDraft, setTitleDraft] = useState(task?.title ?? '');
+  const [titleFocused, setTitleFocused] = useState(false);
   const [titleContentHeight, setTitleContentHeight] = useState<{
     key: string;
     height: number;
@@ -168,11 +191,14 @@ export function ChecklistTaskDetailsSheet({
     1,
     Math.ceil(titleDraft.length / estimatedCharactersPerLine),
   );
+  const estimatedTitleTextHeight = Math.ceil(
+    estimatedTitleLines * scaledTitleLineHeight,
+  );
   const estimatedTitleHeight = Math.min(
     titleMaxHeight,
     Math.max(
       titleMinHeight,
-      Math.ceil(estimatedTitleLines * scaledTitleLineHeight + titlePadY * 2),
+      Math.ceil(estimatedTitleTextHeight + titlePadY * 2),
     ),
   );
   const titleMeasurementKey = `${task?.id ?? ''}:${titleDraft}`;
@@ -182,7 +208,10 @@ export function ChecklistTaskDetailsSheet({
       : estimatedTitleHeight;
   const categoryFooterHeight = Math.max(64, s(68)) +
     (error ? Math.max(20, s(20)) : 0);
-  const selectedAssigneeId = task?.assigneeUserId ?? ANYONE_ID;
+  const selectedAssigneeIds =
+    task?.assigneeUserIds && task.assigneeUserIds.length > 0
+      ? task.assigneeUserIds
+      : [ANYONE_ID];
   const selectedCategoryId = task?.categoryId ?? UNCATEGORIZED_ID;
   const assigneeOptions = selectedFirstAlphabetically([
     {
@@ -206,7 +235,7 @@ export function ChecklistTaskDetailsSheet({
       ),
       testID: AgentUiIds.checklists.itemDetails.assigneeOption(member.userId),
     })),
-  ], selectedAssigneeId);
+  ], selectedAssigneeIds);
   const categoryOptions = selectedFirstAlphabetically([
     {
       value: UNCATEGORIZED_ID,
@@ -218,10 +247,12 @@ export function ChecklistTaskDetailsSheet({
       label: category.name,
       testID: AgentUiIds.checklists.itemDetails.categoryOption(category.id),
     })),
-  ], selectedCategoryId);
+  ], [selectedCategoryId]);
 
   useEffect(() => {
+    Keyboard.dismiss();
     setTitleDraft(task?.title ?? '');
+    setTitleFocused(false);
     setTitleContentHeight(undefined);
     setCategoryOpen(false);
     setDraft('');
@@ -241,11 +272,18 @@ export function ChecklistTaskDetailsSheet({
   ) => {
     // With scrollEnabled, contentSize stays on the text block (not the frame).
     // Adding pad once is enough; never set an explicit height from this or it loops.
+    const textHeight = Math.ceil(event.nativeEvent.contentSize.height);
+    // Unfocused iOS modals (and item-to-item hops) can report a tall bogus
+    // contentSize while preparing the keyboard. Keep the glyph estimate until
+    // the field is actually focused or the measure is no taller than estimate.
+    if (!titleFocused && textHeight > estimatedTitleTextHeight) {
+      return;
+    }
     const nextHeight = Math.min(
       titleMaxHeight,
       Math.max(
         titleMinHeight,
-        Math.ceil(event.nativeEvent.contentSize.height + titlePadY * 2),
+        Math.ceil(textHeight + titlePadY * 2),
       ),
     );
     setTitleContentHeight((current) =>
@@ -279,7 +317,6 @@ export function ChecklistTaskDetailsSheet({
 
   return (
     <SheetScaffold
-      key={task?.id ?? 'closed-item-details'}
       visible={Boolean(task)}
       eyebrow="Checklist item"
       title="Item Details"
@@ -289,7 +326,6 @@ export function ChecklistTaskDetailsSheet({
       closeTestID={AgentUiIds.checklists.itemDetails.close}
       onClose={onClose}>
       <Input
-        key={task?.id}
         accessibilityLabel="Item title"
         autoCapitalize="sentences"
         maxLength={160}
@@ -302,6 +338,8 @@ export function ChecklistTaskDetailsSheet({
         value={titleDraft}
         onChangeText={setTitleDraft}
         onContentSizeChange={resizeTitleFromContentSize}
+        onFocus={() => setTitleFocused(true)}
+        onBlur={() => setTitleFocused(false)}
         trailing={
           <IconButton
             accessibilityLabel="Save item title"
@@ -324,11 +362,12 @@ export function ChecklistTaskDetailsSheet({
       <Dropdown
         label="Assigned to"
         accessibilityLabel="Assigned to"
-        value={selectedAssigneeId}
+        multiple
+        value={selectedAssigneeIds}
         options={assigneeOptions}
         testID={AgentUiIds.checklists.itemDetails.assignee}
-        onChange={(userId) =>
-          onSetAssignee(userId === ANYONE_ID ? undefined : userId)
+        onChange={(nextIds) =>
+          onSetAssignee(nextAssigneeSelection(selectedAssigneeIds, nextIds))
         }
       />
 

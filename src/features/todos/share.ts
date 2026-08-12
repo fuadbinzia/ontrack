@@ -12,8 +12,13 @@ export const ONTRACK_LIST_SHARE_URL =
   process.env.EXPO_PUBLIC_TODO_SHARE_BASE_URL ?? 'https://ontrack--links.expo.app';
 
 function assigneeName(task: TodoTask, members: TodoMember[]): string | undefined {
-  if (!task.assigneeUserId) return 'Anyone';
-  return members.find((member) => member.userId === task.assigneeUserId)?.displayName;
+  const ids = task.assigneeUserIds ?? [];
+  if (ids.length === 0) return 'Anyone';
+  const names = ids.map(
+    (userId) =>
+      members.find((member) => member.userId === userId)?.displayName ?? 'Member',
+  );
+  return names.join(', ');
 }
 
 export function formatTodoListText(

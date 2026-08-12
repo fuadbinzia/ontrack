@@ -47,6 +47,21 @@ export function cleanHttpsUrl(value: unknown, limit = 2_000) {
   }
 }
 
+/** Prefer `assigneeUserIds`; migrate legacy single `assigneeUserId`. Empty = Anyone. */
+export function normalizeAssigneeUserIds(candidate: {
+  assigneeUserIds?: unknown;
+  assigneeUserId?: unknown;
+}): string[] | undefined {
+  const fromArray = Array.isArray(candidate.assigneeUserIds)
+    ? candidate.assigneeUserIds
+        .map((value) => asNonEmptyString(value))
+        .filter((value): value is string => Boolean(value))
+    : [];
+  if (fromArray.length > 0) return Array.from(new Set(fromArray));
+  const legacy = asNonEmptyString(candidate.assigneeUserId);
+  return legacy ? [legacy] : undefined;
+}
+
 export function isGroceryListName(name: string) {
   return /\b(grocer(?:y|ies)|supermarket)\b/i.test(name.trim());
 }
@@ -206,7 +221,7 @@ export function normalizeTask(value: unknown, fallbackListId?: string): TodoTask
     title,
     completed,
     important: candidate.important === true,
-    assigneeUserId: asNonEmptyString(candidate.assigneeUserId),
+    assigneeUserIds: normalizeAssigneeUserIds(candidate),
     completedByUserId: completed ? asNonEmptyString(candidate.completedByUserId) : undefined,
     createdAt,
     updatedAt: asNonEmptyString(candidate.updatedAt) ?? createdAt,

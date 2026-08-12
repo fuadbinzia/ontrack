@@ -52,11 +52,12 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
     reorderLists: (orderedIds) => {
       const listsById = new Map(get().lists.map((list) => [list.id, list]));
       const seen = new Set<string>();
-      const reordered = orderedIds.flatMap((id) => {
+      const now = Date.now();
+      const reordered = orderedIds.flatMap((id, index) => {
         const list = listsById.get(id);
         if (!list || seen.has(id)) return [];
         seen.add(id);
-        return [list];
+        return [{ ...list, updatedAt: new Date(now - index).toISOString() }];
       });
       const unchanged = get().lists.filter((list) => !seen.has(list.id));
       if (reordered.length === 0) return;

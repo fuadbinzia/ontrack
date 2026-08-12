@@ -6,11 +6,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { isActivityEnabled } from '@/addons/registry';
 import {
-    AppText,
     EmptyState,
     IconButton,
     ScreenAtmosphere,
     screenAtmosphereBottomColor,
+    SectionHeader,
     usePageSurfaceBackground,
 } from '@/components/primitives';
 import { ActivityCard } from '@/components/shared';
@@ -220,9 +220,7 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
                   onAction={() => router.push({ pathname: '/activity-form', params: { date } })}
                 />
               ) : (
-                <AppText variant="overline" color="tertiary" style={styles.timelineLabel}>
-                  Timeline
-                </AppText>
+                <SectionHeader title="Timeline" flush titleColor="tertiary" />
               )}
             </View>
           </View>
@@ -269,10 +267,8 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   timeline: {
     paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.lg,
-  },
-  timelineLabel: {
-    marginBottom: spacing.md,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.sm,
   },
   rowPad: {
     paddingHorizontal: layout.screenPadding,

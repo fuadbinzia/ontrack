@@ -58,6 +58,7 @@ Domain depth → `.cursor/skills/` (**travel**, **todos**, **workouts**, **visio
 | Grocery meals / combined | `features/todos/grocery-list-screen.tsx` |
 | Recipe import | `features/todos/recipe-import-screen.tsx` |
 | Todo store / normalize | `store/todos.ts`, `store/todos-normalize.ts` → **todos** |
+| Voice add/read (Siri / Assistant) | `features/todos/voice-lists.ts` + `modules/ontrack-voice-lists` |
 | Today / day timeline | `features/daily-tracking/day-view.tsx` |
 | Activity add/edit | `app/activity-form.tsx` |
 | Meal photo / link analysis | `app/detail/food/[id].tsx`, `services/nutrition/` |

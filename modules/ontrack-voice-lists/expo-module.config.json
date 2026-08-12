@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["OnTrackVoiceListsModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.ontrackvoicelists.OnTrackVoiceListsModule"]
+  }
+}

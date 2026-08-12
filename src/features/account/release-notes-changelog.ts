@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.56',
+    date: '2026-08-12',
+    notes: [
+      'Let Siri and Assistant add and read checklists, and keep lists ordered by recent edits.',
+      'Touched: features/daily-tracking, features/todos.',
+    ],
+  },
+  {
     version: '1.0.55',
     date: '2026-08-12',
     notes: [

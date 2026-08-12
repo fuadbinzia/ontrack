@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+  <capability android:name="actions.intent.CREATE_THING">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:targetClass="expo.modules.ontrackvoicelists.VoiceListActivity">
+      <url-template android:value="ontrack-voice://add?title={name}" />
+      <parameter
+        android:name="thing.name"
+        android:key="name"
+        android:required="true" />
+    </intent>
+  </capability>
+  <capability android:name="actions.intent.GET_THING">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:targetClass="expo.modules.ontrackvoicelists.VoiceListActivity">
+      <url-template android:value="ontrack-voice://read?query={name}" />
+      <parameter
+        android:name="thing.name"
+        android:key="name" />
+    </intent>
+  </capability>
+  <capability android:name="actions.intent.CREATE_ITEM_LIST">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:targetClass="expo.modules.ontrackvoicelists.VoiceListActivity">
+      <url-template android:value="ontrack-voice://add?title={item}&amp;list={list}" />
+      <parameter
+        android:name="itemList.item.name"
+        android:key="item"
+        android:required="true" />
+      <parameter
+        android:name="itemList.name"
+        android:key="list" />
+    </intent>
+  </capability>
+  <capability android:name="actions.intent.GET_ITEM_LIST">
+    <intent
+      android:action="android.intent.action.VIEW"
+      android:targetClass="expo.modules.ontrackvoicelists.VoiceListActivity">
+      <url-template android:value="ontrack-voice://read?list={list}" />
+      <parameter
+        android:name="itemList.name"
+        android:key="list" />
+    </intent>
+  </capability>
+</shortcuts>

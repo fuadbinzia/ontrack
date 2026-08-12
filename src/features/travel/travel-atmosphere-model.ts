@@ -1,4 +1,5 @@
 import type { Theme } from '@/design-system';
+import { getDateTimeFormatter } from '@/utils/intl-cache';
 
 import type { TravelPlan } from './types';
 
@@ -144,7 +145,7 @@ export function travelTimeOfDay(date: Date, timezone?: string): TravelTimeOfDay 
   let hour = date.getHours();
   if (timezone) {
     try {
-      const hourPart = new Intl.DateTimeFormat('en-US', {
+      const hourPart = getDateTimeFormatter('en-US', {
         hour: '2-digit',
         hourCycle: 'h23',
         timeZone: timezone,

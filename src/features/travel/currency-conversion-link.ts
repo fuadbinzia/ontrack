@@ -1,8 +1,13 @@
+import {
+  getDisplayNamesFormatter,
+  getIntlLocale,
+} from '@/utils/intl-cache';
+
 function regionCodeForLocale(locale: string): string | undefined {
   if (!locale || locale === 'system') return undefined;
 
   try {
-    return new Intl.Locale(locale.replace('_', '-')).maximize().region;
+    return getIntlLocale(locale.replace('_', '-')).maximize().region;
   } catch {
     return locale.match(/[-_]([A-Za-z]{2}|\d{3})(?:$|[-_])/)?.[1]?.toUpperCase();
   }
@@ -13,7 +18,7 @@ export function homeCountryForLocale(locale: string): string {
   if (!regionCode) return 'my home country';
 
   try {
-    return new Intl.DisplayNames(['en'], { type: 'region' }).of(regionCode) ?? regionCode;
+    return getDisplayNamesFormatter(['en'], { type: 'region' }).of(regionCode) ?? regionCode;
   } catch {
     return regionCode;
   }

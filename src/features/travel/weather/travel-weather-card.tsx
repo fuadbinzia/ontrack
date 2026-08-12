@@ -22,6 +22,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import type { DateDisplayFormat } from '@/utils/date';
 import { formatDateKey } from '@/utils/date';
+import { getDateTimeFormatter } from '@/utils/intl-cache';
 
 import {
     getDestinationCurrentWeather,
@@ -393,7 +394,7 @@ function TypicalWeatherBlock({
 
   let monthName = 'the month';
   try {
-    monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(
+    monthName = getDateTimeFormatter('en-US', { month: 'long' }).format(
       new Date(`${startDate}T12:00:00`),
     );
   } catch {

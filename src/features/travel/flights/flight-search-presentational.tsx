@@ -99,7 +99,7 @@ function formatDuration(value: string): string {
     .join(' ');
 }
 
-function formatDateTime(value: string, dateDisplayFormat: 'mdy' | 'iso'): string {
+function formatDateTime(value: string, dateDisplayFormat: string): string {
   const [date, rawTime = ''] = value.split('T');
   const time = rawTime.slice(0, 5);
   return `${formatDateKey(date, dateDisplayFormat)} · ${time}`;
@@ -113,7 +113,7 @@ export function FlightSearchLegSummary({
 }: {
   label: string;
   leg: FlightLeg;
-  dateDisplayFormat: 'mdy' | 'iso';
+  dateDisplayFormat: string;
   labelColor: string;
 }) {
   // Keep rendering compatible while a separately deployed API rolls forward.

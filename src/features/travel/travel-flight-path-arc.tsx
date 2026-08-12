@@ -1,5 +1,6 @@
+import { Image } from 'expo-image';
 import type { ReactNode } from 'react';
-import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useResponsive } from '@/hooks/use-responsive';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -25,7 +26,7 @@ export function TravelFlightPathArc() {
         style={[styles.host, { width, height }]}>
         <Image
           source={FLIGHT_PATH_FLOURISH}
-          resizeMode="contain"
+          contentFit="contain"
           style={styles.image}
         />
       </View>

@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';
 import { useAgentUiTarget } from '@/utils/agent-ui';
 import {
+    datePlaceholderForLocale,
     formatDateKey,
     formatDatePickerTitle,
     fromDateKey,
@@ -116,8 +117,8 @@ export function DateField({
   const hasValue = isDateKey(value);
   const displayValue = hasValue ? formatDateKey(value, dateDisplayFormat) : '';
   const resolvedPlaceholder =
-    placeholder === 'MM/DD/YY' && dateDisplayFormat === 'iso'
-      ? 'YY-MM-DD'
+    placeholder === 'MM/DD/YY'
+      ? datePlaceholderForLocale(dateDisplayFormat)
       : placeholder;
   const resolvedA11yLabel = accessibilityLabel ?? label ?? stackedLabel ?? 'Date';
   const pickerTitle = formatDatePickerTitle(resolvedA11yLabel);

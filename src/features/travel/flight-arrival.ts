@@ -9,6 +9,7 @@ import {
     minutesBetween,
     toDateKey,
 } from '@/utils/date';
+import { getDateTimeFormatter } from '@/utils/intl-cache';
 
 export type FlightArrival = {
   /** Arrival calendar day in the arrival airport's local zone (or departure zone if naive). */
@@ -34,7 +35,7 @@ function readPart(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPar
 }
 
 function getZonedParts(utcMs: number, timeZone: string): ZonedParts {
-  const parts = new Intl.DateTimeFormat('en-US', {
+  const parts = getDateTimeFormatter('en-US', {
     timeZone,
     year: 'numeric',
     month: '2-digit',

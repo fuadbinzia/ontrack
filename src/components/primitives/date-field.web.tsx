@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { radii, spacing, typography } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';
+import { datePlaceholderForLocale } from '@/utils/date';
 
 import { AppText } from './app-text';
 
@@ -34,8 +35,8 @@ export function DateField({
   const theme = useTheme();
   const dateDisplayFormat = usePreferences((state) => state.dateDisplayFormat);
   const resolvedPlaceholder =
-    placeholder === 'MM/DD/YY' && dateDisplayFormat === 'iso'
-      ? 'YY-MM-DD'
+    placeholder === 'MM/DD/YY'
+      ? datePlaceholderForLocale(dateDisplayFormat)
       : placeholder;
   const style: CSSProperties = {
     minHeight: 48,
@@ -61,7 +62,7 @@ export function DateField({
         'aria-label': accessibilityLabel ?? label ?? 'Date',
         'data-testid': testID,
         type: 'date',
-        lang: dateDisplayFormat === 'mdy' ? 'en-US' : 'en-CA',
+        lang: dateDisplayFormat === 'system' ? undefined : dateDisplayFormat,
         value,
         min: minimumDate,
         max: maximumDate,

@@ -52,6 +52,7 @@ interface PreferencesState {
   setAiEnabled: (enabled: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
   setUsageAnalyticsEnabled: (enabled: boolean) => void;
+  refreshDateLocale: () => void;
   resetAll: () => void;
 }
 
@@ -113,6 +114,13 @@ export const usePreferences = create<PreferencesState>()(
       setAiEnabled: (aiEnabled) => set({ aiEnabled }),
       setHapticsEnabled: (hapticsEnabled) => set({ hapticsEnabled }),
       setUsageAnalyticsEnabled: (usageAnalyticsEnabled) => set({ usageAnalyticsEnabled }),
+      refreshDateLocale: () => {
+        const dateLocale = deviceLocale();
+        set({
+          dateLocale,
+          dateDisplayFormat: dateDisplayFormatForLocale(dateLocale),
+        });
+      },
       resetAll: () =>
         set({
           hasOnboarded: false,
@@ -135,10 +143,7 @@ export const usePreferences = create<PreferencesState>()(
       storage: createPersistStorage(),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<PreferencesState>;
-        const dateLocale =
-          typeof persisted.dateLocale === 'string'
-            ? persisted.dateLocale
-            : currentState.dateLocale;
+        const dateLocale = deviceLocale();
         return {
           ...currentState,
           ...persisted,
@@ -148,11 +153,7 @@ export const usePreferences = create<PreferencesState>()(
               : currentState.name,
           avatar: normalizeAvatarMeta(persisted.avatar ?? currentState.avatar),
           dateLocale,
-          dateDisplayFormat:
-            persisted.dateDisplayFormat === 'mdy' ||
-            persisted.dateDisplayFormat === 'iso'
-              ? persisted.dateDisplayFormat
-              : dateDisplayFormatForLocale(dateLocale),
+          dateDisplayFormat: dateDisplayFormatForLocale(dateLocale),
         };
       },
     },

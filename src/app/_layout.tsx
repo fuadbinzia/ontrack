@@ -6,7 +6,7 @@ import {
 } from 'expo-router/react-navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -15,15 +15,13 @@ import {
 } from 'react-native-safe-area-context';
 
 import { NavigationSessionSync } from '@/components/navigation/navigation-session-sync';
-import {
-  AppPromptHost,
-  AppSafeArea,
-  HeaderBackButton,
-  RouteErrorBoundary,
-  ScreenAtmosphere,
-} from '@/components/primitives';
-import { motion, spacing } from '@/design-system';
-import { UsageAnalyticsTracker } from '@/features/analytics/usage-analytics-tracker';
+import { AppPromptHost } from '@/components/primitives/app-prompt';
+import { AppSafeArea } from '@/components/primitives/app-safe-area';
+import { HeaderBackButton } from '@/components/primitives/back-button';
+import { RouteErrorBoundary } from '@/components/primitives/route-error-boundary';
+import { ScreenAtmosphere } from '@/components/primitives/screen-atmosphere';
+import { motion } from '@/design-system/motion';
+import { spacing } from '@/design-system/spacing';
 import { AppBootLoader } from '@/features/auth/app-boot-loader';
 import {
   AuthSessionProvider,
@@ -31,8 +29,6 @@ import {
 } from '@/features/auth/auth-provider';
 import { withoutGuestDirtyTracking } from '@/features/auth/guest-dirty-tracking';
 import { useShouldShowWelcome } from '@/features/auth/welcome-preview';
-import { seedFoodIfNeeded } from '@/features/food/food-seed';
-import { PerformanceMonitorProvider } from '@/features/performance/performance-monitor-provider';
 import {
   TravelAtmosphereProvider,
   useTravelRouteAtmosphere,
@@ -47,14 +43,13 @@ import { useTheme } from '@/hooks/use-theme';
 import { useTodoCollaboration } from '@/hooks/use-todo-collaboration';
 import { useVehicleCollaboration } from '@/hooks/use-vehicle-collaboration';
 import { useAuthAccess } from '@/store/auth-access';
+import { useAccountFlags } from '@/store/account-flags';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { useTravel } from '@/store/travel';
-import {
-  AgentUiFabRestoreHost,
-  AgentUiOverlay,
-  AgentUiRouteSync,
-} from '@/utils/agent-ui';
+import { AgentUiFabRestoreHost } from '@/utils/agent-ui/AgentUiFabRestoreHost';
+import { AgentUiOverlay } from '@/utils/agent-ui/AgentUiOverlay';
+import { AgentUiRouteSync } from '@/utils/agent-ui/AgentUiRouteSync';
 import { todayKey } from '@/utils/date';
 import { ThemeToggleFab, ThemeToggleFabHost } from '@/utils/dev-theme-toggle';
 
@@ -62,6 +57,27 @@ import { ThemeToggleFab, ThemeToggleFabHost } from '@/utils/dev-theme-toggle';
 export { RouteErrorBoundary as ErrorBoundary };
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+const LazyPerformanceMonitorProvider = lazy(() =>
+  import('@/features/performance/performance-monitor-provider').then(
+    (module) => ({ default: module.PerformanceMonitorProvider }),
+  ),
+);
+const LazyUsageAnalyticsTracker = lazy(() =>
+  import('@/features/analytics/usage-analytics-tracker').then((module) => ({
+    default: module.UsageAnalyticsTracker,
+  })),
+);
+
+function PerformanceMonitorMount() {
+  const enabled = useAccountFlags((state) => state.developerTools);
+  if (!enabled) return null;
+  return (
+    <Suspense fallback={null}>
+      <LazyPerformanceMonitorProvider />
+    </Suspense>
+  );
+}
 
 export default function RootLayout() {
   useApplyOtaUpdate();
@@ -72,6 +88,10 @@ export default function RootLayout() {
   const travelRoute = pathname === '/travel' || pathname.startsWith('/travel/');
   const plans = useTravel((state) => state.plans);
   const dateDisplayFormat = usePreferences((state) => state.dateDisplayFormat);
+  const refreshDateLocale = usePreferences((state) => state.refreshDateLocale);
+  useEffect(() => {
+    if (appIsActive) refreshDateLocale();
+  }, [appIsActive, refreshDateLocale]);
   const atmospherePlan = selectTravelAtmospherePlan(
     plans,
     pathname,
@@ -105,7 +125,7 @@ export default function RootLayout() {
           <TravelAtmosphereProvider atmosphere={atmosphere}>
             <AppSafeArea>
               <AuthSessionProvider hydrated={hydrated}>
-                <PerformanceMonitorProvider />
+                <PerformanceMonitorMount />
                 <RootNavigator hydrated={hydrated} pathname={pathname} />
                 <AppPromptHost />
               </AuthSessionProvider>
@@ -201,7 +221,9 @@ function RootNavigator({
   useEffect(() => {
     if (!hydrated || !appAccess) return;
     withoutGuestDirtyTracking(seedIfNeeded);
-    withoutGuestDirtyTracking(seedFoodIfNeeded);
+    void import('@/features/food/food-seed').then(({ seedFoodIfNeeded }) => {
+      withoutGuestDirtyTracking(seedFoodIfNeeded);
+    });
   }, [appAccess, hydrated, seedIfNeeded]);
 
   useMealPhotoMigration(hydrated && appAccess && aiEnabled);
@@ -219,7 +241,9 @@ function RootNavigator({
     <View style={{ flex: 1 }}>
       <AgentUiRouteSync />
       <NavigationSessionSync />
-      <UsageAnalyticsTracker />
+      <Suspense fallback={null}>
+        <LazyUsageAnalyticsTracker />
+      </Suspense>
       <AgentUiFabRestoreHost>
         <ThemeToggleFabHost>
           <Stack

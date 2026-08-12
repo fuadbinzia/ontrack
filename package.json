@@ -1,7 +1,7 @@
 {
   "name": "ontrack",
   "main": "expo-router/entry",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -78,6 +78,7 @@
     "jest-expo": "~57.0.3",
     "patch-package": "^8.0.1",
     "react-test-renderer": "^19.2.3",
+    "sharp": "^0.34.5",
     "typescript": "~6.0.3"
   },
   "engines": {
@@ -91,7 +92,9 @@
     "android": "bash ./scripts/start-metro.sh --android",
     "ios": "bash ./scripts/start-metro.sh --ios",
     "web": "bash ./scripts/start-metro.sh --web",
-    "optimize": "npx expo-optimize",
+    "optimize": "node ./scripts/performance-audit.mjs --fix && npm run optimize:assets && node ./scripts/performance-audit.mjs",
+    "optimize:audit": "node ./scripts/performance-audit.mjs",
+    "optimize:assets": "node ./scripts/optimize-assets.mjs",
     "lint": "npm run lint:tokens && npm run lint:code",
     "lint:code": "eslint .",
     "lint:tokens": "npm run test:token-budget",

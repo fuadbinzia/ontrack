@@ -1,5 +1,6 @@
 import {
     dateDisplayFormatForLocale,
+    datePlaceholderForLocale,
     formatDateKey,
     formatDateKeyMedium,
     formatDateKeyShort,
@@ -26,18 +27,26 @@ describe('date keys', () => {
     expect(isDateKey('07/26/2026')).toBe(false);
   });
 
-  it('uses month-first display only for locales that prefer it', () => {
-    expect(dateDisplayFormatForLocale('en-US')).toBe('mdy');
-    expect(dateDisplayFormatForLocale('en-PH')).toBe('mdy');
-    expect(dateDisplayFormatForLocale('en-CA')).toBe('iso');
-    expect(dateDisplayFormatForLocale('en-GB')).toBe('iso');
+  it('resolves the locale used to display dates', () => {
+    expect(dateDisplayFormatForLocale('en-US')).toBe('en-US');
+    expect(dateDisplayFormatForLocale('en-GB')).toBe('en-GB');
   });
 
-  it('changes presentation without changing the stored date key', () => {
+  it('uses each locale ordering and separators without changing the stored date key', () => {
     const stored = '2026-07-26';
-    expect(formatDateKey(stored, 'mdy')).toBe('7/26/26');
-    expect(formatDateKey(stored, 'iso')).toBe('26-07-26');
+    expect(formatDateKey(stored, 'en-US')).toBe('7/26/2026');
+    expect(formatDateKey(stored, 'en-GB')).toBe('26/07/2026');
+    expect(formatDateKey(stored, 'en-CA')).toBe('2026-07-26');
+    expect(formatDateKey(stored, 'de-DE')).toBe('26.7.2026');
+    expect(formatDateKey(stored, 'ja-JP')).toBe('2026/7/26');
     expect(stored).toBe('2026-07-26');
+  });
+
+  it('builds a placeholder with the locale ordering and separators', () => {
+    expect(datePlaceholderForLocale('en-US')).toBe('MM/DD/YYYY');
+    expect(datePlaceholderForLocale('en-GB')).toBe('DD/MM/YYYY');
+    expect(datePlaceholderForLocale('en-CA')).toBe('YYYY-MM-DD');
+    expect(datePlaceholderForLocale('de-DE')).toBe('DD.MM.YYYY');
   });
 
   it('keeps the full year in calendar picker month titles', () => {
@@ -50,9 +59,9 @@ describe('date keys', () => {
   });
 
   it('formats short timeline dates without year or leading zeros', () => {
-    expect(formatDateKeyShort('2026-09-08', 'mdy')).toBe('9/8');
-    expect(formatDateKeyShort('2026-09-08', 'iso')).toBe('8/9');
-    expect(formatDateKeyShort('2026-12-31', 'mdy')).toBe('12/31');
+    expect(formatDateKeyShort('2026-09-08', 'en-US')).toBe('9/8');
+    expect(formatDateKeyShort('2026-09-08', 'en-GB')).toBe('08/09');
+    expect(formatDateKeyShort('2026-12-31', 'en-US')).toBe('12/31');
   });
 
   it('formats medium and trip-range chrome dates', () => {

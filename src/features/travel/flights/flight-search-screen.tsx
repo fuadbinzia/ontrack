@@ -39,6 +39,7 @@ import { usePreferences } from '@/store/preferences';
 import { useTravel } from '@/store/travel';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
+import { getNumberFormatter } from '@/utils/intl-cache';
 import { goBackOrReplace } from '@/utils/navigation';
 
 import { FlightSearchError, searchFlights } from './client';
@@ -64,7 +65,7 @@ function formatPrice(value: string, currency: string): string {
   const amount = Number(value);
   if (!Number.isFinite(amount)) return `${currency} ${value}`;
   try {
-    return new Intl.NumberFormat(undefined, {
+    return getNumberFormatter(undefined, {
       style: 'currency',
       currency,
       maximumFractionDigits: 0,

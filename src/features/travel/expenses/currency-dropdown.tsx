@@ -1,4 +1,5 @@
 import { Dropdown, type DropdownProps } from '@/components/primitives';
+import { getNumberFormatter } from '@/utils/intl-cache';
 
 import { normalizeCurrencyCode } from './format-money';
 
@@ -124,7 +125,7 @@ export function currencyNarrowSymbol(code: string): string {
   const normalized = normalizeCurrencyCode(code);
   if (CURRENCY_NARROW_SYMBOL[normalized]) return CURRENCY_NARROW_SYMBOL[normalized];
   try {
-    const part = new Intl.NumberFormat('en', {
+    const part = getNumberFormatter('en', {
       style: 'currency',
       currency: normalized,
       currencyDisplay: 'narrowSymbol',

@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.47',
+    date: '2026-08-12',
+    notes: [
+      'Improve app performance and date formatting.',
+    ],
+  },
+  {
     version: '1.0.46',
     date: '2026-08-11',
     notes: [

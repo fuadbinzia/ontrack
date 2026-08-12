@@ -21,6 +21,9 @@ describe('incoming share navigation', () => {
     expect(
       redirectIncomingSystemPath('https://ontrack--links.expo.app/invite/travel?invite=s.x'),
     ).toBe('/invite/travel?invite=s.x');
+    expect(redirectIncomingSystemPath('https://ontrack--links.expo.app/p/straiaway?connected=1')).toBe(
+      '/p/straiaway?connected=1',
+    );
   });
 
   it('leaves unrelated https URLs unchanged', () => {

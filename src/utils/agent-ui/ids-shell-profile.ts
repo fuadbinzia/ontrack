@@ -34,6 +34,7 @@ export const agentUiIdsShellProfile = {
     agents: 'ontrack.profile.agents',
     nutrition: 'ontrack.profile.nutrition',
     calendarSync: 'ontrack.profile.calendarSync',
+    straiaway: 'ontrack.profile.straiaway',
     designSystem: 'ontrack.profile.designSystem',
     apiUsage: 'ontrack.profile.apiUsage',
     developer: 'ontrack.profile.developer',
@@ -73,6 +74,14 @@ export const agentUiIdsShellProfile = {
     disconnectRemove: 'ontrack.calendarSync.disconnectRemove',
     confirmDisconnectRemove: 'ontrack.calendarSync.confirmDisconnectRemove',
     direction: (direction: string) => `ontrack.calendarSync.direction.${direction}`,
+  },
+  straiaway: {
+    screen: 'ontrack.straiaway.screen',
+    connect: 'ontrack.straiaway.connect',
+    disconnect: 'ontrack.straiaway.disconnect',
+    open: 'ontrack.straiaway.open',
+    landing: 'ontrack.straiaway.landing',
+    openOntrack: 'ontrack.straiaway.openOntrack',
   },
   /** Privacy Policy / Terms of Use document body (`/privacy`, `/terms`). */
   legal: {

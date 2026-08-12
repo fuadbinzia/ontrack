@@ -22,6 +22,7 @@ const TITLE_SMALL_WORDS = new Set([
   'the',
   'to',
   'via',
+  'vs',
   'with',
 ]);
 

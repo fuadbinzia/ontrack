@@ -34,6 +34,10 @@
           {
             "/": "/v/*",
             "comment": "Open onTrack vehicle collaboration invites."
+          },
+          {
+            "/": "/p/*",
+            "comment": "Open onTrack partner connect links (StraiAway)."
           }
         ]
       }

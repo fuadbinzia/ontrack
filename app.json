@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.54",
+    "version": "1.0.55",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -26,7 +26,10 @@
         "NSCameraUsageDescription": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos.",
         "NSPhotoLibraryUsageDescription": "onTrack accesses your photo library so you can attach meal, activity, plant-care, and vision-board photos.",
         "NSMotionUsageDescription": "onTrack uses device motion for activity features and so the travel sky can twinkle and shimmer as you move your phone.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": [
+          "straiaway"
+        ]
       },
       "appleTeamId": "F5HRXF5795"
     },
@@ -66,6 +69,11 @@
               "scheme": "https",
               "host": "ontrack--links.expo.app",
               "pathPrefix": "/v/"
+            },
+            {
+              "scheme": "https",
+              "host": "ontrack--links.expo.app",
+              "pathPrefix": "/p/"
             }
           ],
           "category": [

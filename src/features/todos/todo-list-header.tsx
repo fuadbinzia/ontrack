@@ -17,7 +17,7 @@ import type { TodoFilter, TodoSort } from '@/features/todos/todo-sort';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoCategory, TodoList, TodoMember, TodoTask } from '@/store/todos';
-import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
 type AgentUiTargetApi = ReturnType<typeof useAgentUiTarget>;
 
@@ -29,7 +29,6 @@ export function TodoListHeader({
   members,
   owner,
   canEdit,
-  dateLabel,
   heroCopy,
   completedCount,
   progress,
@@ -37,6 +36,7 @@ export function TodoListHeader({
   filter,
   sort,
   editMode,
+  nameDraft,
   openTasksCount,
   closedTasksCount,
   syncError,
@@ -46,6 +46,8 @@ export function TodoListHeader({
   editModeAgent,
   onDismissChrome,
   onDraftChange,
+  onNameChange,
+  onNameSubmit,
   onAdd,
   onClearSyncError,
   onFilterToggle,
@@ -53,7 +55,8 @@ export function TodoListHeader({
   onSortChange,
   onClearDone,
   onCategorySelect,
-  onManageCategories,
+  onManageSettings,
+  onRemoveList,
 }: {
   list: TodoList;
   tasks: TodoTask[];
@@ -62,7 +65,6 @@ export function TodoListHeader({
   members: TodoMember[];
   owner: boolean;
   canEdit: boolean;
-  dateLabel: string;
   heroCopy: string;
   completedCount: number;
   progress: number;
@@ -70,6 +72,7 @@ export function TodoListHeader({
   filter: TodoFilter;
   sort: TodoSort;
   editMode: boolean;
+  nameDraft: string;
   openTasksCount: number;
   closedTasksCount: number;
   syncError?: string;
@@ -79,6 +82,8 @@ export function TodoListHeader({
   editModeAgent: AgentUiTargetApi;
   onDismissChrome: () => void;
   onDraftChange: (value: string) => void;
+  onNameChange: (value: string) => void;
+  onNameSubmit: () => void;
   onAdd: () => void;
   onClearSyncError: () => void;
   onFilterToggle: () => void;
@@ -86,11 +91,17 @@ export function TodoListHeader({
   onSortChange: (sort: TodoSort) => void;
   onClearDone: () => void;
   onCategorySelect: (id: string) => void;
-  onManageCategories: () => void;
+  onManageSettings: () => void;
+  onRemoveList: () => void;
 }) {
   const router = useRouter();
   const theme = useTheme();
   const { s } = useResponsive();
+  const titleEditing = editMode && owner;
+  const titleStyle = [
+    styles.title,
+    { fontSize: s(34), lineHeight: s(41), color: theme.textPrimary },
+  ];
 
   return (
     <Pressable
@@ -101,7 +112,7 @@ export function TodoListHeader({
         <View style={styles.headingCopy}>
           <HeaderBackButton
             compact
-            label={dateLabel}
+            label="Checklists"
             accessibilityLabel="Back to checklists"
             testID={AgentUiIds.checklists.detail.back}
             onPress={() => {
@@ -109,13 +120,29 @@ export function TodoListHeader({
               else router.replace('/(tabs)/to-do' as never);
             }}
           />
-          <AppText
-            style={[
-              styles.title,
-              { fontSize: s(34), lineHeight: s(41) },
-            ]}>
-            {list.name}
-          </AppText>
+          {titleEditing ? (
+            <AgentTestId
+              testID={AgentUiIds.checklists.detail.title}
+              label="Edit checklist title"
+              style={styles.titleEditor}>
+              <TextInput
+                accessibilityLabel="Checklist title"
+                maxLength={80}
+                onChangeText={onNameChange}
+                onSubmitEditing={onNameSubmit}
+                placeholder="Checklist name"
+                placeholderTextColor={theme.textTertiary}
+                returnKeyType="done"
+                selectTextOnFocus
+                selectionColor={theme.accentPrimary}
+                underlineColorAndroid="transparent"
+                style={titleStyle}
+                value={nameDraft}
+              />
+            </AgentTestId>
+          ) : (
+            <AppText style={titleStyle}>{list.name}</AppText>
+          )}
         </View>
       </View>
 
@@ -271,7 +298,8 @@ export function TodoListHeader({
         onToggleEditMode={onToggleEditMode}
         onSortChange={onSortChange}
         onClearDone={onClearDone}
-        onManageCategories={onManageCategories}
+        onManageSettings={onManageSettings}
+        onRemoveList={onRemoveList}
       />
     </Pressable>
   );
@@ -313,6 +341,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   headingCopy: { flex: 1, minWidth: 0, gap: spacing.xs },
+  titleEditor: {
+    minHeight: 44,
+    justifyContent: 'center',
+  },
   hero: {
     minHeight: 84,
     flexDirection: 'row',

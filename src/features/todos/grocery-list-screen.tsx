@@ -36,6 +36,7 @@ import {
     OtherItems,
 } from '@/features/todos/grocery-rows';
 import { copyTodoListText, shareTodoListText } from '@/features/todos/share';
+import { TodoListSettingsSheet } from '@/features/todos/todo-list-settings-screen';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -115,9 +116,10 @@ export function GroceryListScreen({ listId }: { listId: string }) {
     new Set(),
   );
   const [draft, setDraft] = useState('');
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const settingsAgent = useAgentUiTarget(AgentUiIds.grocery.settings, {
     label: 'Grocery list settings',
-    onPress: () => router.push(`/todos/${listId}/settings` as never),
+    onPress: () => setSettingsVisible(true),
   });
   const shareAgent = useAgentUiTarget(AgentUiIds.grocery.share, {
     label: 'Share grocery list',
@@ -455,9 +457,15 @@ export function GroceryListScreen({ listId }: { listId: string }) {
             shareAgent={shareAgent}
             mealViewAgent={mealViewAgent}
             combinedViewAgent={combinedViewAgent}
+            onOpenSettings={() => setSettingsVisible(true)}
           />
         }
         renderItem={renderItem}
+      />
+      <TodoListSettingsSheet
+        listId={listId}
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
       />
     </Screen>
   );

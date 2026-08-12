@@ -1,15 +1,12 @@
 import { Stack } from 'expo-router';
 
 import { motion } from '@/design-system';
-import { useTheme } from '@/hooks/use-theme';
 
 export const unstable_settings = {
   anchor: 'index',
 };
 
 export default function TodoTabLayout() {
-  const theme = useTheme();
-
   return (
     <Stack
       screenOptions={{

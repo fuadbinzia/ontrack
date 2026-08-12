@@ -25,6 +25,7 @@ interface TravelTripActionGridProps {
   onSearchFlights: () => void;
   onAddTransport: () => void;
   onSearchStays: () => void;
+  onOpenStraiaway: () => void;
   onOpenWeather: () => void;
   onOpenCurrency: () => void;
   onOpenExpenses: () => void;
@@ -74,6 +75,7 @@ export function TravelTripActionGrid({
   onSearchFlights,
   onAddTransport,
   onSearchStays,
+  onOpenStraiaway,
   onOpenWeather,
   onOpenCurrency,
   onOpenExpenses,
@@ -135,6 +137,14 @@ export function TravelTripActionGrid({
           testID={AgentUiIds.travel.list.searchStays(tripId)}
           onPress={onSearchStays}
           accessibilityLabel={`Search Stays for ${tripTitle}`}
+        />
+        <TravelSheetAction
+          label="StraiAway"
+          icon="link"
+          tone="link"
+          testID={AgentUiIds.travel.list.straiaway(tripId)}
+          onPress={onOpenStraiaway}
+          accessibilityLabel={`Send or open stays in StraiAway for ${tripTitle}`}
         />
         <TravelSheetAction
           label="Expenses"

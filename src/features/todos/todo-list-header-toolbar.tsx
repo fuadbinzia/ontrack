@@ -1,10 +1,9 @@
-import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, GlassPlate } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
 import { ChecklistPopoverMenu } from '@/features/todos/checklist-popover-menu';
-import { copyTodoListText, shareTodoListText } from '@/features/todos/share';
+import { copyTodoListText } from '@/features/todos/share';
 import type { TodoFilter, TodoSort } from '@/features/todos/todo-sort';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -69,7 +68,8 @@ export function TodoListHeaderToolbar({
   onToggleEditMode,
   onSortChange,
   onClearDone,
-  onManageCategories,
+  onManageSettings,
+  onRemoveList,
 }: {
   list: TodoList;
   tasks: TodoTask[];
@@ -87,9 +87,9 @@ export function TodoListHeaderToolbar({
   onToggleEditMode: () => void;
   onSortChange: (sort: TodoSort) => void;
   onClearDone: () => void;
-  onManageCategories: () => void;
+  onManageSettings: () => void;
+  onRemoveList: () => void;
 }) {
-  const router = useRouter();
   const theme = useTheme();
   const { s } = useResponsive();
 
@@ -143,7 +143,7 @@ export function TodoListHeaderToolbar({
         </GlassPlate>
       </Pressable>
       <View style={styles.toolbarMenus}>
-        {canEdit && tasks.length > 0 ? (
+        {owner || (canEdit && tasks.length > 0) ? (
           <Pressable
             ref={editModeAgent.ref}
             accessibilityRole="button"
@@ -194,16 +194,6 @@ export function TodoListHeaderToolbar({
           closeTestID={AgentUiIds.checklists.detail.actionsClose}
           itemTestID={AgentUiIds.checklists.detail.action}
           items={[
-            ...(canEdit
-              ? [
-                  {
-                    id: 'categories',
-                    title: 'Categories',
-                    description: 'Add or remove checklist tabs',
-                    icon: 'list' as const,
-                  },
-                ]
-              : []),
             {
               id: 'copy',
               title: 'Copy',
@@ -212,17 +202,11 @@ export function TodoListHeaderToolbar({
             },
             {
               id: 'share',
-              title: 'Share',
-              description: 'Send open items to another app',
-              icon: 'share',
-            },
-            {
-              id: 'manage',
-              title: owner ? 'Manage' : 'Members',
+              title: owner ? 'Share' : 'Members',
               description: owner
-                ? 'Sharing, members, and list settings'
+                ? 'Invite friends, join links, and list settings'
                 : 'View people with access',
-              icon: 'settings',
+              icon: owner ? 'share' : 'people',
             },
             ...(canEdit && completedCount > 0
               ? [
@@ -236,21 +220,28 @@ export function TodoListHeaderToolbar({
                   },
                 ]
               : []),
+            {
+              id: 'remove',
+              title: owner ? 'Delete List' : 'Leave List',
+              description: owner
+                ? 'Permanently delete this list for everyone'
+                : 'Remove this list from your account',
+              icon: 'delete' as const,
+              destructive: true,
+              dividerBefore: !(canEdit && completedCount > 0),
+            },
           ]}
           onSelect={(action) => {
-            if (action === 'categories') onManageCategories();
             if (action === 'copy') {
               void copyTodoListText(list, tasks, members).then((copied) => {
                 if (copied) haptics.success();
               });
             }
             if (action === 'share') {
-              void shareTodoListText(list, tasks, members);
-            }
-            if (action === 'manage') {
-              router.push(`/todos/${list.id}/settings` as never);
+              onManageSettings();
             }
             if (action === 'clear') onClearDone();
+            if (action === 'remove') onRemoveList();
           }}
         />
       </View>

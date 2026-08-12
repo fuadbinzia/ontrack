@@ -71,6 +71,13 @@ export const ADDONS = [
     categoryIds: [],
     tabRoute: 'health',
   },
+  {
+    id: 'finance',
+    name: 'Finance',
+    description: 'Spending, bills, savings buckets, businesses/properties, and tax prep.',
+    categoryIds: [],
+    tabRoute: 'finance',
+  },
 ] as const satisfies readonly AddonDefinition[];
 
 export const DEFAULT_ADDON_STATE: AddonEnabledState = {
@@ -82,6 +89,7 @@ export const DEFAULT_ADDON_STATE: AddonEnabledState = {
   games: true,
   vehicles: true,
   health: true,
+  finance: true,
 };
 
 /** Beta default. Paid access can later replace this from server-owned rows. */
@@ -94,6 +102,7 @@ export const DEFAULT_ADDON_ENTITLEMENTS: AddonEntitlementState = {
   games: { active: true, source: 'included' },
   vehicles: { active: true, source: 'included' },
   health: { active: true, source: 'included' },
+  finance: { active: true, source: 'included' },
 };
 
 const ADDON_BY_ID = new Map<AddonId, AddonDefinition>(ADDONS.map((addon) => [addon.id, addon]));

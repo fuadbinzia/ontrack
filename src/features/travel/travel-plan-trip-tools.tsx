@@ -3,7 +3,9 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { appPrompt } from '@/components/primitives';
+import { useAuthSession } from '@/features/auth/auth-provider';
 import { isTravelPlanOnCalendar, travelCalendarDrafts } from '@/features/travel/calendar';
+import { applyStayPackagesToPlan, stayPackagesFromPlan } from '@/features/travel/stay-package';
 import { TravelCollapsibleSection } from '@/features/travel/travel-collapsible-section';
 import {
   TravelCalendarUpdatedModal,
@@ -17,6 +19,12 @@ import type { TravelPlan } from '@/features/travel/types';
 import { TravelWeatherSheet } from '@/features/travel/weather/travel-weather-sheet';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
+import {
+  getStraiawayStatus,
+  openStraiawayStay,
+  pullStraiawayStays,
+  pushStraiawayStays,
+} from '@/services/partner/straiaway';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { useTravel } from '@/store/travel';
@@ -45,6 +53,8 @@ export function TravelPlanTripTools({
   onAddTransport,
 }: TravelPlanTripToolsProps) {
   const router = useRouter();
+  const { user } = useAuthSession();
+  const guestName = usePreferences((state) => state.name);
   const theme = useTheme();
   const { spacing: rs } = useResponsive();
   const savePlan = useTravel((state) => state.savePlan);
@@ -118,6 +128,57 @@ export function TravelPlanTripTools({
                 params: { id: plan.id },
               } as never);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
+            }}
+            onOpenStraiaway={() => {
+              deferAfterPageTransition(() => recordPlanInteraction(plan.id));
+              void (async () => {
+                try {
+                  const status = await getStraiawayStatus();
+                  if (!status.connected) {
+                    router.push('/(tabs)/profile/straiaway' as never);
+                    return;
+                  }
+                  appPrompt.alert(
+                    'StraiAway',
+                    'Send this trip’s stays, import stays from StraiAway, or open the other app.',
+                    [
+                      {
+                        text: 'Send stays',
+                        onPress: () => {
+                          void pushStraiawayStays(stayPackagesFromPlan(plan, guestName || user?.email || undefined)).then(
+                            (result) => {
+                              appPrompt.alert('Sent to StraiAway', `${result.pushed} stay${result.pushed === 1 ? '' : 's'} handed off.`);
+                            },
+                          ).catch((caught) => {
+                            appPrompt.alert('StraiAway', caught instanceof Error ? caught.message : 'Stay handoff failed.');
+                          });
+                        },
+                      },
+                      {
+                        text: 'Import stays',
+                        onPress: () => {
+                          void pullStraiawayStays().then(({ stays }) => {
+                            const next = applyStayPackagesToPlan(plan, stays);
+                            if (next) savePlan(next);
+                            appPrompt.alert('Imported from StraiAway', stays.length ? `${stays.length} stay${stays.length === 1 ? '' : 's'} updated.` : 'No stays to import.');
+                          }).catch((caught) => {
+                            appPrompt.alert('StraiAway', caught instanceof Error ? caught.message : 'Stay import failed.');
+                          });
+                        },
+                      },
+                      {
+                        text: 'Open StraiAway',
+                        onPress: () => {
+                          const reservation = plan.itinerary.find((item) => item.kind === 'stay')?.stay?.straiawayReservationId;
+                          void openStraiawayStay(reservation);
+                        },
+                      },
+                    ],
+                  );
+                } catch {
+                  router.push('/(tabs)/profile/straiaway' as never);
+                }
+              })();
             }}
             onOpenWeather={() => {
               setWeatherVisible(true);

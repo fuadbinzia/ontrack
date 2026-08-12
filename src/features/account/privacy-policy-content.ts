@@ -55,6 +55,13 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
     ],
   },
   {
+    title: 'StraiAway',
+    paragraphs: [
+      'When you choose to connect StraiAway, onTrack links your accounts and can send or import stay details you choose: property name, address, check-in and check-out, confirmation code, guest display name, booking link, and notes.',
+      'Flights, expenses, trip chat, and StraiAway host operations are not shared. Partner tokens are stored server-side. You can disconnect at any time; existing stays remain in each app.',
+    ],
+  },
+  {
     title: 'Collaboration and sharing',
     paragraphs: [
       'When you share a trip, checklist, vehicle, or invite link, recipients you authorize can see the shared content needed to collaborate.',

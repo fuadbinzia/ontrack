@@ -469,7 +469,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.checklists.newListKind.<kind>`   | Select checklist or grocery-list mode |
 | `ontrack.checklists.createList`           | Create list                           |
 | `ontrack.checklists.list.<listId>`        | Open list card                        |
-| `ontrack.checklists.detail.back`          | Back to lists (chevron + eyebrow)     |
+| `ontrack.checklists.detail.back`          | Back to Checklists (chevron + label)  |
+| `ontrack.checklists.detail.title`         | Edit checklist title (Edit mode)      |
 | `ontrack.checklists.detail.newTask`       | New task field                        |
 | `ontrack.checklists.detail.addTask`       | Add task                              |
 | `ontrack.checklists.detail.sort`          | Sort menu                             |
@@ -480,10 +481,6 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.checklists.detail.category.<id>` | Filter items by category              |
 | `ontrack.checklists.detail.editMode`      | Edit / Done tasks                     |
 | `ontrack.checklists.detail.task.<taskId>` | Open item details sheet               |
-| `ontrack.checklists.categories.name`      | New category name                     |
-| `ontrack.checklists.categories.add`       | Add category                          |
-| `ontrack.checklists.categories.close`     | Close category manager                |
-| `ontrack.checklists.categories.remove.<id>` | Remove category                     |
 | `ontrack.checklists.itemDetails.close` | Close item details sheet             |
 | `ontrack.checklists.itemDetails.title` | Edit checklist item title            |
 | `ontrack.checklists.itemDetails.saveTitle` | Save checklist item title         |
@@ -513,12 +510,13 @@ Demo fixture: `list-agent-ui-demo-checklist` / `task-agent-ui-demo-plan` via `./
 
 Demo fixture: `list-agent-ui-demo-grocery` / `recipe-agent-ui-demo-pasta` via `./scripts/agent-ui-seed.sh grocery-demo` or flow `grocery-demo`. Settings: `grocery-demo-settings` → `ontrack.listSettings.name`.
 
-## List settings (`/todos/<listId>/settings`)
+## List settings (`/todos/<listId>/settings` — bottom sheet)
 
 | testID                         | Control      |
 | ------------------------------ | ------------ |
+| `ontrack.listSettings.close`   | Grabber / dismiss |
 | `ontrack.listSettings.name`    | List name    |
-| `ontrack.listSettings.saveName`| Save name    |
+| `ontrack.listSettings.saveName`| Save name (trailing check) |
 | `ontrack.listSettings.addEditors` | Add editors from friends |
 | `ontrack.listSettings.makeEditor.<userId>` | Promote member to editor |
 | `ontrack.listSettings.makeMember.<userId>` | Demote editor to member |
@@ -654,6 +652,12 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.agents`                            | Manage Agents                       |
 | `ontrack.profile.nutrition`                         | Nutrition profiles                  |
 | `ontrack.profile.calendarSync`                      | Google Calendar sync settings       |
+| `ontrack.profile.straiaway`                         | StraiAway partner connect settings  |
+| `ontrack.straiaway.connect`                         | Connect StraiAway                   |
+| `ontrack.straiaway.disconnect`                      | Disconnect StraiAway                |
+| `ontrack.straiaway.open`                            | Open StraiAway                      |
+| `ontrack.straiaway.landing`                         | Partner connect landing             |
+| `ontrack.straiaway.openOntrack`                     | Open partner link in onTrack        |
 | `ontrack.calendarSync.connect`                      | Connect Google Calendar             |
 | `ontrack.calendarSync.reconnect`                    | Renew Google Calendar permissions   |
 | `ontrack.calendarSync.sync`                         | Run two-way calendar sync           |
@@ -745,6 +749,7 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 | `ontrack.travel.list.calendar.<tripId>`          | Add trip to Calendar (**plan detail tools**)              |
 | `ontrack.travel.list.searchFlights.<tripId>`     | Search Flights (**plan detail tools**)                    |
 | `ontrack.travel.list.searchStays.<tripId>`       | Search Stays (**plan detail tools**)                      |
+| `ontrack.travel.list.straiaway.<tripId>`         | Send / import / open stays in StraiAway                   |
 | `ontrack.travel.list.tripWeather.<tripId>`       | Trip Weather (**plan detail tools**)                      |
 | `ontrack.travel.list.currency.<tripId>`          | Open Currency Calculator (**plan detail tools**)          |
 | `ontrack.travel.list.expenses.<tripId>`          | Open Expenses (**plan detail tools**)                     |
@@ -1039,6 +1044,28 @@ Deep link: `ontrack://health` / Expo route `/(tabs)/health`
 | `ontrack.profile.addon.health`                         | Toggle the iPhone Health add-on     |
 
 Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scripts/agent-ui-seed.sh health-demo` or flow `health-demo`.
+
+## Finance
+
+Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flow `finance`
+
+| testID | Control |
+| --- | --- |
+| `ontrack.tabs.finance` | Open Finance tab |
+| `ontrack.finance.hub` | Finance hub |
+| `ontrack.finance.back` | Eyebrow back on Finance nested screens |
+| `ontrack.finance.hub.addExpense` | Add expense |
+| `ontrack.finance.hub.transactions` / `.bills` / `.buckets` / `.entities` / `.accounts` / `.tax` | Hub navigation |
+| `ontrack.finance.hub.billPaid.<id>` | Mark bill paid from hub |
+| `ontrack.finance.coach.<id>` | Money coach insight card |
+| `ontrack.finance.expense.*` | Expense form (`form` + fields / save / cancel) |
+| `ontrack.finance.transactions.*` | Transactions list |
+| `ontrack.finance.bills.*` | Bills & subscriptions |
+| `ontrack.finance.buckets.*` | Savings buckets |
+| `ontrack.finance.entities.*` | Personal / business / property |
+| `ontrack.finance.accounts.*` | Manual accounts, Plaid Link (bank + investments), sync, HYSA APR |
+| `ontrack.finance.credit.*` | Credit score card, edit sheet, free-provider links |
+| `ontrack.finance.tax.*` | Tax prep, doc vault, entity scope, export, File elsewhere |
 
 ## Travel plan detail
 

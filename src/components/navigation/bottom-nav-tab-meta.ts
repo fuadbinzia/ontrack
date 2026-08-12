@@ -63,6 +63,11 @@ export const TAB_META: Record<
     icon: 'health',
     href: '/(tabs)/health',
   },
+  finance: {
+    label: 'Finance',
+    icon: 'finance',
+    href: '/(tabs)/finance',
+  },
   food: {
     label: 'Food',
     icon: 'food',
@@ -87,6 +92,7 @@ export function isTrackerRouteEnabled(
   if (routeName === 'games') return !!enabledAddons.games;
   if (routeName === 'vehicles') return !!enabledAddons.vehicles;
   if (routeName === 'food') return !!enabledAddons.food;
+  if (routeName === 'finance') return !!enabledAddons.finance;
   if (routeName === 'health') {
     return process.env.EXPO_OS === 'ios' && !!enabledAddons.health;
   }

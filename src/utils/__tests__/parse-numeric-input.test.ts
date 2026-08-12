@@ -1,6 +1,9 @@
 import {
+  asOneOf,
   formatNumericInput,
   numericOnChangeText,
+  parseFiniteNumber,
+  parsePositiveNumber,
   sanitizeNumericInput,
 } from '@/utils/parse';
 
@@ -33,5 +36,20 @@ describe('sanitizeNumericInput', () => {
     const onChange = numericOnChangeText((text) => received.push(text));
     onChange?.('9x9.1abc');
     expect(received).toEqual(['99.1']);
+  });
+});
+
+describe('parseFiniteNumber', () => {
+  it('parses decimals and comma separators', () => {
+    expect(parseFiniteNumber('12,5')).toBe(12.5);
+    expect(parseFiniteNumber(' 8 ')).toBe(8);
+    expect(parseFiniteNumber('')).toBeUndefined();
+    expect(parsePositiveNumber('0')).toBeUndefined();
+    expect(parsePositiveNumber('4.2')).toBe(4.2);
+  });
+
+  it('picks allowed enum values', () => {
+    expect(asOneOf('bank', ['bank', 'card'] as const)).toBe('bank');
+    expect(asOneOf('nope', ['bank', 'card'] as const)).toBeUndefined();
   });
 });

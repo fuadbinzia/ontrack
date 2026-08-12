@@ -12,6 +12,7 @@ const CONSTELLATION_TABS = [
   'workouts',
   'food',
   'health',
+  'finance',
   'games',
   'to-do',
   'vision-board',

@@ -52,7 +52,8 @@ type SyncDomainName =
   | 'travel'
   | 'todos'
   | 'vision-board'
-  | 'vehicles';
+  | 'vehicles'
+  | 'finance';
 
 /**
  * Merge one domain: `cloud` is the applied account payload (or current after
@@ -113,6 +114,18 @@ export function mergeDomainPayload(
       return {
         ...cloud,
         vehicles: mergeEntityArrays(cloud.vehicles, device.vehicles),
+      };
+    case 'finance':
+      return {
+        ...cloud,
+        entities: mergeEntityArrays(cloud.entities, device.entities),
+        accounts: mergeEntityArrays(cloud.accounts, device.accounts),
+        holdings: mergeEntityArrays(cloud.holdings, device.holdings),
+        transactions: mergeEntityArrays(cloud.transactions, device.transactions),
+        bills: mergeEntityArrays(cloud.bills, device.bills),
+        buckets: mergeEntityArrays(cloud.buckets, device.buckets),
+        taxYears: mergeEntityArrays(cloud.taxYears, device.taxYears),
+        documents: mergeEntityArrays(cloud.documents, device.documents),
       };
     default:
       return cloud;

@@ -54,6 +54,9 @@ export function agentUiOverlayRoutePrefixes(route: string | null | undefined): s
       return ['developer'];
     case 'integrations':
       return ['integrations', 'apiUsage', 'developer'];
+    case 'p':
+    case 'partner':
+      return ['straiaway', 'profile'];
     case 'travel':
     case 'calendar':
     case 'social':
@@ -62,6 +65,7 @@ export function agentUiOverlayRoutePrefixes(route: string | null | undefined): s
     case 'plants':
     case 'vehicles':
     case 'health':
+    case 'finance':
     case 'games':
     case 'agents':
     case 'privacy':

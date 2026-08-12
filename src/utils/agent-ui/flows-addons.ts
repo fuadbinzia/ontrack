@@ -103,6 +103,14 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'vehicles' },
     { op: 'wait', prefix: 'ontrack.vehicles.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
+  finance: [
+    { op: 'goto', to: 'finance' },
+    { op: 'wait', id: 'ontrack.finance.hub', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
+  'finance-tax': [
+    { op: 'goto', to: 'finance/tax' },
+    { op: 'wait', id: 'ontrack.finance.tax', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
   'vehicles-new': [
     { op: 'goto', to: 'vehicles/new' },
     {

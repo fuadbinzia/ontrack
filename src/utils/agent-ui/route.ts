@@ -28,6 +28,7 @@ export const AGENT_UI_ROUTE_ALIASES = {
   games: '/games',
   vehicles: '/vehicles',
   health: '/health',
+  finance: '/finance',
   agents: '/agents',
   designSystem: '/design-system',
   'design-system': '/design-system',
@@ -43,6 +44,8 @@ export const AGENT_UI_ROUTE_ALIASES = {
   activity: '/activity-form',
   privacy: '/privacy',
   terms: '/terms',
+  straiaway: '/(tabs)/profile/straiaway',
+  'straiaway-connect': '/(tabs)/profile/straiaway',
 } as const;
 
 export type AgentUiRouteAlias = keyof typeof AGENT_UI_ROUTE_ALIASES;

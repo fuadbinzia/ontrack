@@ -108,6 +108,8 @@ export function normalizeStayDetails(input: unknown): TravelStayDetails | undefi
     notes: optionalText(value.notes),
     price,
     currency: price !== undefined && currency ? currency : undefined,
+    straiawayPropertyId: optionalText(value.straiawayPropertyId),
+    straiawayReservationId: optionalText(value.straiawayReservationId),
     ...(confirmationUris ? { confirmationUris } : {}),
   };
   if (
@@ -117,7 +119,9 @@ export function normalizeStayDetails(input: unknown): TravelStayDetails | undefi
     next.checkoutMinutes === undefined &&
     !next.notes &&
     next.price === undefined &&
-    !next.confirmationUris?.length
+    !next.confirmationUris?.length &&
+    !next.straiawayPropertyId &&
+    !next.straiawayReservationId
   ) {
     return undefined;
   }

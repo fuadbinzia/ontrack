@@ -141,6 +141,10 @@ export interface TravelStayDetails {
   confirmationUris?: string[];
   /** Freeform stay notes (wifi, door codes, parking, etc.). */
   notes?: string;
+  /** Linked StraiAway property id when this stay was handed off. */
+  straiawayPropertyId?: string;
+  /** Linked StraiAway reservation id when this stay was handed off. */
+  straiawayReservationId?: string;
   /** Total price for the stay. */
   price?: number;
   /** Currency code for the stay price, e.g. USD. */

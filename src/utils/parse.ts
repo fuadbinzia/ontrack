@@ -17,6 +17,29 @@ export function asFiniteNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
+/** First matching string in `allowed`, otherwise undefined. */
+export function asOneOf<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+): T | undefined {
+  return typeof value === 'string' && (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : undefined;
+}
+
+/** Parse a typed/pasted decimal; accepts `,` as the decimal separator. */
+export function parseFiniteNumber(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = Number.parseFloat(trimmed.replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+export function parsePositiveNumber(value: string): number | undefined {
+  const parsed = parseFiniteNumber(value);
+  return parsed !== undefined && parsed > 0 ? parsed : undefined;
+}
+
 export function asFiniteNonNegative(value: unknown): number | undefined {
   const number = asFiniteNumber(value);
   return number !== undefined && number >= 0 ? number : undefined;

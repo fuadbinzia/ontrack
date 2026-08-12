@@ -12,14 +12,24 @@ export type AddonId =
   | 'vision-board'
   | 'games'
   | 'vehicles'
-  | 'health';
+  | 'health'
+  | 'finance';
 
 export interface AddonDefinition {
   id: AddonId;
   name: string;
   description: string;
   categoryIds: readonly string[];
-  tabRoute?: 'workouts' | 'plants' | 'travel' | 'vision-board' | 'games' | 'vehicles' | 'health' | 'food';
+  tabRoute?:
+    | 'workouts'
+    | 'plants'
+    | 'travel'
+    | 'vision-board'
+    | 'games'
+    | 'vehicles'
+    | 'health'
+    | 'food'
+    | 'finance';
 }
 
 export type AddonEnabledState = Record<AddonId, boolean>;

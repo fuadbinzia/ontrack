@@ -206,8 +206,16 @@ export function TodoListsOverview() {
       const title = leaving
         ? `Leave “${list.name}”?`
         : `Delete “${list.name}”?`;
+      const sharedOwnerDelete =
+        !leaving &&
+        list.mode === 'shared' &&
+        useTodos.getState().members.some(
+          (member) => member.listId === list.id && member.role !== 'owner',
+        );
       const message = leaving
-          ? 'This checklist will be removed from your account. The owner and other collaborators will keep it.'
+        ? 'This checklist will be removed from your account. The owner and other collaborators will keep it.'
+        : sharedOwnerDelete
+          ? 'This permanently deletes the checklist for you and every collaborator. It only stays available if you make someone else the owner first.'
           : 'The checklist and every item in it will be permanently deleted.';
       const remove = () => {
         if (list.mode === 'private') {

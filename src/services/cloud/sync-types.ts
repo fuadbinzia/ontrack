@@ -9,7 +9,8 @@ export type SyncDomainName =
   | 'travel'
   | 'todos'
   | 'vision-board'
-  | 'vehicles';
+  | 'vehicles'
+  | 'finance';
 export type InitialSyncResult = 'ready' | 'conflict';
 /** Choices on `/auth/data-choice` after a dirty guest upgrade (not cancel). */
 export type AccountSyncResolution = 'merge' | 'discard-device' | 'keep-device' | 'start-fresh';

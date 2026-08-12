@@ -15,6 +15,7 @@ import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { privateTodoPayload, useTodos } from '@/store/todos';
 import { useTravel } from '@/store/travel';
+import { privateFinancePayload, useFinance } from '@/store/finance';
 import { privateVehiclePayload, useVehicles } from '@/store/vehicles';
 import { useVisionBoard } from '@/store/vision-board';
 import type { Plant } from '@/types/models';
@@ -247,6 +248,34 @@ export const domains: SyncDomain[] = [
     reset: () => useVehicles.getState().reset(),
     subscribe: (onChange) => useVehicles.subscribe(onChange),
   },
+  {
+    name: 'finance',
+    read: () => {
+      const state = useFinance.getState();
+      return privateFinancePayload({
+        entities: state.entities,
+        accounts: state.accounts,
+        holdings: state.holdings,
+        transactions: state.transactions,
+        bills: state.bills,
+        buckets: state.buckets,
+        taxYears: state.taxYears,
+        documents: state.documents,
+        creditScore: state.creditScore,
+        customHandoffUrl: state.customHandoffUrl,
+        referenceSavingsApr: state.referenceSavingsApr,
+        baseCurrency: state.baseCurrency,
+        updatedAt: state.updatedAt,
+      }) as unknown as JsonObject;
+    },
+    write: (payload) => {
+      useFinance.getState().replaceFinanceData(
+        payload as unknown as import('@/features/finance/types').FinanceStateSnapshot,
+      );
+    },
+    reset: () => useFinance.getState().reset(),
+    subscribe: (onChange) => useFinance.subscribe(onChange),
+  },
 ];
 
 export function snapshotLocalDomains(): Map<SyncDomainName, JsonObject> {
@@ -271,6 +300,18 @@ export function hasMeaningfulLocalData(): boolean {
   if (Object.keys(useAgents.getState().conversations).length > 0) return true;
   if (useTravel.getState().plans.some((plan) => plan.id !== ALL_ACCOUNTS_TEST_TRIP.id)) return true;
   if (useVehicles.getState().vehicles.length > 0) return true;
+  const finance = useFinance.getState();
+  if (
+    finance.transactions.length > 0 ||
+    finance.bills.length > 0 ||
+    finance.buckets.length > 0 ||
+    finance.accounts.length > 0 ||
+    finance.holdings.length > 0 ||
+    finance.creditScore?.current != null ||
+    finance.entities.some((e) => e.kind !== 'personal')
+  ) {
+    return true;
+  }
   const visionBoard = useVisionBoard.getState();
   if (
     hasCustomizedVisionBoardItems(visionBoard.items) ||

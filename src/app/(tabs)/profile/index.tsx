@@ -278,6 +278,14 @@ export default function ProfileSettingsScreen() {
             onPress={() => router.push('/(tabs)/profile/calendar-sync' as never)}
             accessibilityLabel="Manage Google Calendar sync"
           />
+          <SettingsActionRow
+            label="StraiAway"
+            detail={isGuest ? 'Sign in to connect StraiAway' : 'Link accounts and send stays'}
+            icon="lodging"
+            testID={AgentUiIds.profile.straiaway}
+            onPress={() => router.push('/(tabs)/profile/straiaway' as never)}
+            accessibilityLabel="Manage StraiAway connection"
+          />
         </SettingsGroup>
       </AgentTestId>
 

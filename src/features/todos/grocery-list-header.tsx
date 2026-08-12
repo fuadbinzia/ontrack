@@ -43,6 +43,7 @@ export type GroceryListHeaderProps = {
   shareAgent: AgentUiTarget;
   mealViewAgent: AgentUiTarget;
   combinedViewAgent: AgentUiTarget;
+  onOpenSettings: () => void;
 };
 
 export function GroceryListHeader(props: GroceryListHeaderProps) {
@@ -68,6 +69,7 @@ export function GroceryListHeader(props: GroceryListHeaderProps) {
     shareAgent,
     mealViewAgent,
     combinedViewAgent,
+    onOpenSettings,
   } = props;
 
   return (
@@ -130,7 +132,7 @@ export function GroceryListHeader(props: GroceryListHeaderProps) {
                 onLayout={settingsAgent.onLayout}
                 accessibilityLabel="Grocery list settings"
                 accessibilityRole="button"
-                onPress={() => router.push(`/todos/${listId}/settings` as never)}
+                onPress={onOpenSettings}
                 style={({ pressed }) => [
                   styles.iconButtonWrap,
                   { opacity: pressed ? 0.72 : 1 },

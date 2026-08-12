@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
-import { AppText, GlassPlate } from '@/components/primitives';
+import { AppText, GlassPlate, fieldTitleCase } from '@/components/primitives';
 import { borders, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId } from '@/utils/agent-ui';
@@ -43,7 +43,7 @@ export function ChipRow<T extends string>({
         key={option.value}
         testID={testID}
         accessibilityRole="button"
-        accessibilityLabel={option.label}
+        accessibilityLabel={fieldTitleCase(option.label)}
         accessibilityState={{ selected: active }}
         onPress={select}
         style={styles.chipPressable}>
@@ -57,7 +57,7 @@ export function ChipRow<T extends string>({
             },
           ]}>
           <AppText variant="callout" color={active ? 'accent' : 'secondary'} fit>
-            {option.label}
+            {fieldTitleCase(option.label)}
           </AppText>
         </GlassPlate>
       </Pressable>

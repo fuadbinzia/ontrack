@@ -127,14 +127,18 @@ export function TravelChatScreen({ planId }: { planId: string }) {
   });
 
   const listItems = buildTravelChatListItems(session.messages);
-  const composerBottomPad = keyboardOpen
-    ? Math.max(rs.sm, spacing.sm)
-    : tabBarHeight;
-  const estimatedComposerChrome = Math.max(56, s(58)) + rs.xs;
-  const estimatedDockHeight = estimatedComposerChrome + composerBottomPad;
+  // Float the composer just above the tab dock — tight air, not flush.
+  const composerDockGap = rs.xs;
+  const composerInnerPad = rs.xs;
+  const composerLift = keyboardOpen
+    ? keyboardInset
+    : tabBarHeight + composerDockGap;
+  const estimatedComposerChrome = Math.max(44, s(48)) + rs.xs;
+  const estimatedDockHeight = estimatedComposerChrome + composerInnerPad;
   const dockHeight =
     composerDockHeight > 0 ? composerDockHeight : estimatedDockHeight;
-  const listBottomPad = dockHeight + keyboardInset + rs.md;
+  // Keep last bubbles / empty state clear of the floating composer + tab dock.
+  const listBottomPad = dockHeight + composerLift + rs.lg;
 
   const scrollToLatest = useCallback((animated = false) => {
     if (listItems.length === 0) return;
@@ -256,9 +260,8 @@ export function TravelChatScreen({ planId }: { planId: string }) {
           contentInsetAdjustmentBehavior="never"
           contentContainerStyle={[
             styles.messages,
-            listItems.length === 0
-              ? styles.emptyMessages
-              : { paddingBottom: listBottomPad },
+            listItems.length === 0 ? styles.emptyMessages : null,
+            { paddingBottom: listBottomPad },
           ]}
           style={styles.list}
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
@@ -306,7 +309,7 @@ export function TravelChatScreen({ planId }: { planId: string }) {
         style={[
           styles.composerArea,
           {
-            bottom: keyboardInset,
+            bottom: composerLift,
             zIndex: 2,
           },
         ]}>
@@ -316,7 +319,7 @@ export function TravelChatScreen({ planId }: { planId: string }) {
           onSendText={() => void actions.sendText()}
           sending={actions.sending}
           deviceReady={Boolean(session.deviceId)}
-          bottomInset={composerBottomPad}
+          bottomInset={composerInnerPad}
           replyTo={actions.replyTo}
           onCancelReply={() => actions.setReplyTo(undefined)}
           editingId={actions.editingId}
@@ -332,7 +335,9 @@ export function TravelChatScreen({ planId }: { planId: string }) {
         message={actions.menuMessage}
         anchor={actions.menuAnchor}
         identity={{ userId: user?.id, deviceId: session.deviceId }}
-        bottomChrome={keyboardInset > 0 ? keyboardInset : tabBarHeight}
+        bottomChrome={
+          keyboardInset > 0 ? keyboardInset : tabBarHeight + composerDockGap
+        }
         onClose={actions.closeMessageMenu}
         onAction={actions.handleMessageMenuAction}
       />

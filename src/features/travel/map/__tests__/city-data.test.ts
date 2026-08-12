@@ -12,6 +12,7 @@ describe('travel atlas city data', () => {
     );
     expect(atlasCitiesForCountry('IS').length).toBeGreaterThanOrEqual(8);
     expect(atlasCitiesForCountry('US').length).toBeGreaterThanOrEqual(20);
+    expect(atlasCitiesForCountry('AQ')).toEqual([]);
     expect(atlasCitiesForCountry(undefined)).toEqual([]);
   });
 

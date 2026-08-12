@@ -136,12 +136,16 @@ const OVERVIEW_BY_NUMERIC_CODE = new Map(
     country,
   ] as const),
 );
-const DETAIL_GEOMETRY_BY_NUMERIC_CODE = new Map(
-  countryAtlas.objects.countries.geometries.map((geometry) => [
-    String(geometry.id).padStart(3, '0'),
-    geometry,
-  ] as const),
-);
+const DETAIL_GEOMETRY_BY_NUMERIC_CODE = new Map<
+  string,
+  TopologyGeometry<{ name?: string }>
+>();
+for (const geometry of countryAtlas.objects.countries.geometries) {
+  const numericCode = String(geometry.id).padStart(3, '0');
+  if (!DETAIL_GEOMETRY_BY_NUMERIC_CODE.has(numericCode)) {
+    DETAIL_GEOMETRY_BY_NUMERIC_CODE.set(numericCode, geometry);
+  }
+}
 const DETAIL_CACHE = new Map<string, AtlasCountryDetail>();
 
 function topologyFeature(
@@ -182,9 +186,12 @@ function detailForNumericCode(
   return detail;
 }
 
+const atlasNumericCodes = new Set<string>();
+
 export const ATLAS_COUNTRIES: AtlasCountry[] = detailAtlas.objects.countries.geometries.flatMap((geometry) => {
   const numericCode = String(geometry.id).padStart(3, '0');
   const code = alpha2ForNumericCode(numericCode);
+  if (!code || atlasNumericCodes.has(numericCode)) return [];
   const overviewFeature = OVERVIEW_BY_NUMERIC_CODE.get(numericCode);
   const country = overviewFeature ?? topologyFeature(detailAtlas, geometry);
   const detailProperties = geometry.properties as { name?: string } | undefined;
@@ -192,7 +199,8 @@ export const ATLAS_COUNTRIES: AtlasCountry[] = detailAtlas.objects.countries.geo
   const d = path(country);
   const centerGeo = geoCentroid(country);
   const center = projection(centerGeo);
-  if (!code || !name || !d || !center) return [];
+  if (!name || !d || !center) return [];
+  atlasNumericCodes.add(numericCode);
   return [
     {
       code,

@@ -84,6 +84,7 @@ type TravelSheetModalProps = PropsWithChildren<{
   minHeight?: number;
   lockHeight?: boolean;
   scrollKey?: string | number;
+  bodyScrollMode?: 'scaffold' | 'external';
   supportedOrientations?: ModalProps['supportedOrientations'];
 }>;
 
@@ -103,6 +104,7 @@ export function TravelSheetModal({
   minHeight,
   lockHeight,
   scrollKey,
+  bodyScrollMode,
   supportedOrientations,
   children,
 }: TravelSheetModalProps) {
@@ -122,6 +124,7 @@ export function TravelSheetModal({
       minHeight={minHeight}
       lockHeight={lockHeight}
       scrollKey={scrollKey}
+      bodyScrollMode={bodyScrollMode}
       supportedOrientations={supportedOrientations}
       surface="glass">
       {children}

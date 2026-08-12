@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.49',
+    date: '2026-08-12',
+    notes: [
+      'Improve travel map performance and country accuracy.',
+      'Touched: features/travel.',
+    ],
+  },
+  {
     version: '1.0.48',
     date: '2026-08-12',
     notes: [

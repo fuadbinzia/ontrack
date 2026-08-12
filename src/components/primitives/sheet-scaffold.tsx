@@ -104,6 +104,11 @@ export interface SheetScaffoldProps extends PropsWithChildren {
   minHeight?: number;
   lockHeight?: boolean;
   scrollKey?: string | number;
+  /**
+   * `scaffold` wraps children in the canonical ScrollView.
+   * `external` gives children a bounded, full-height body for virtualized lists.
+   */
+  bodyScrollMode?: 'scaffold' | 'external';
   /** Disable body scroll while nested gestures (e.g. color picker) are active. */
   scrollEnabled?: boolean;
   /** Tap dimmed area outside the card to dismiss (default on). Grabber still works. */
@@ -135,6 +140,7 @@ export function SheetScaffold({
   minHeight,
   lockHeight = false,
   scrollKey,
+  bodyScrollMode = 'scaffold',
   scrollEnabled = true,
   dismissOnBackdropPress = true,
   backdropTestID,
@@ -269,7 +275,12 @@ export function SheetScaffold({
                   : 'transparent',
                 maxHeight: sheetMaxHeight,
                 minHeight: sheetMinHeight,
-                height: lockHeight ? lockedHeight : undefined,
+                height:
+                  bodyScrollMode === 'external'
+                    ? sheetMaxHeight
+                    : lockHeight
+                      ? lockedHeight
+                      : undefined,
                 paddingHorizontal: layout.screenPadding,
                 // Lift flush-bottom sheet above docked IME (chat / add-sheet pattern).
                 bottom: keyboardInset,
@@ -344,30 +355,44 @@ export function SheetScaffold({
               the tab dock / home indicator.
             */}
             <View style={styles.body}>
-              <ScrollView
-                key={scrollKey ?? 'sheet'}
-                ref={scrollRef}
-                scrollEnabled={scrollEnabled}
-                // Sheet lifts via keyboardInset — extra scroll insets would double-pad.
-                automaticallyAdjustKeyboardInsets={false}
-                contentInsetAdjustmentBehavior="never"
-                keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                style={styles.scroll}
-                contentContainerStyle={[
-                  styles.content,
-                  {
-                    gap: spacing.lg,
-                    paddingBottom: bottomPad,
-                  },
-                  contentContainerStyle,
-                ]}>
-                {children}
-                {footer ? (
-                  <View style={{ paddingTop: spacing.xs }}>{footer}</View>
-                ) : null}
-              </ScrollView>
+              {bodyScrollMode === 'external' ? (
+                <View
+                  style={[
+                    styles.externalContent,
+                    { paddingBottom: bottomPad },
+                    contentContainerStyle,
+                  ]}>
+                  {children}
+                  {footer ? (
+                    <View style={{ paddingTop: spacing.xs }}>{footer}</View>
+                  ) : null}
+                </View>
+              ) : (
+                <ScrollView
+                  key={scrollKey ?? 'sheet'}
+                  ref={scrollRef}
+                  scrollEnabled={scrollEnabled}
+                  // Sheet lifts via keyboardInset — extra scroll insets would double-pad.
+                  automaticallyAdjustKeyboardInsets={false}
+                  contentInsetAdjustmentBehavior="never"
+                  keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  style={styles.scroll}
+                  contentContainerStyle={[
+                    styles.content,
+                    {
+                      gap: spacing.lg,
+                      paddingBottom: bottomPad,
+                    },
+                    contentContainerStyle,
+                  ]}>
+                  {children}
+                  {footer ? (
+                    <View style={{ paddingTop: spacing.xs }}>{footer}</View>
+                  ) : null}
+                </ScrollView>
+              )}
             </View>
           </Animated.View>
         </KeyboardAvoidingView>
@@ -432,5 +457,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     minHeight: 0,
   },
+  externalContent: { flex: 1, minHeight: 0 },
   content: { flexGrow: 1 },
 });

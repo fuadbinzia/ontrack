@@ -67,6 +67,7 @@ type Props = {
   selectedCountryCode?: string;
   selectedPinId?: string;
   placing?: boolean;
+  worldMotionPaused?: boolean;
   onCountryPress: (countryCode: string) => void;
   onPlacePress: (selection: TravelMapPlaceSelection) => void;
   onCoordinatePress?: (coordinate: { latitude: number; longitude: number }) => void;
@@ -115,6 +116,7 @@ export function TravelMapCanvas({
   selectedCountryCode,
   selectedPinId,
   placing = false,
+  worldMotionPaused = false,
   onCountryPress,
   onPlacePress,
   onCoordinatePress,
@@ -377,7 +379,7 @@ export function TravelMapCanvas({
         />
       ) : (
         <TravelMapWorldGlobe
-          autoRotate={worldAutoRotate}
+          autoRotate={worldAutoRotate && !worldMotionPaused}
           clusters={clusters}
           onCountryPress={onCountryPress}
           onInteract={stopWorldAutoRotation}

@@ -25,6 +25,7 @@ import {
   spacing,
   type AppIconName,
 } from '@/design-system';
+import { useDockedKeyboardInset } from '@/hooks/use-docked-keyboard-inset';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { useAgentUiTarget } from '@/utils/agent-ui';
@@ -175,6 +176,11 @@ export function Dropdown<T extends string = string>({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [anchor, setAnchor] = useState<DropdownAnchor>();
   const isOpen = openProp ?? uncontrolledOpen;
+  // RN Modal ignores soft-input — lift/re-place like SheetScaffold.
+  const { keyboardInset } = useDockedKeyboardInset({
+    enabled: isOpen,
+    androidMode: 'modal',
+  });
 
   const fieldLabel = fieldTitleCase(label);
   const selectedLabel = fieldTitleCase(
@@ -182,17 +188,22 @@ export function Dropdown<T extends string = string>({
   );
   const a11yLabel = accessibilityLabel ?? `${fieldLabel}: ${selectedLabel}`;
 
+  const measureAnchor = () => {
+    fieldRef.current?.measureInWindow((x, y, width, height) => {
+      if (width <= 0 || height <= 0) return;
+      setAnchor({ x, y, width, height });
+    });
+  };
+
   useEffect(() => {
     if (!isOpen) {
       setAnchor(undefined);
       return;
     }
-    if (anchor) return;
-    fieldRef.current?.measureInWindow((x, y, width, height) => {
-      if (width <= 0 || height <= 0) return;
-      setAnchor({ x, y, width, height });
-    });
-  }, [isOpen, anchor]);
+    // Remeasure when the IME opens — parent sheets lift and stale anchors
+    // leave menuFooter inputs under the keyboard.
+    measureAnchor();
+  }, [isOpen, keyboardInset]);
 
   const setOpen = (next: boolean) => {
     onOpenChange?.(next);
@@ -223,10 +234,9 @@ export function Dropdown<T extends string = string>({
     setOpen(false);
   };
 
+  const footerHeight = menuFooter ? menuFooterHeight : 0;
   const contentHeight =
-    options.length * ITEM_HEIGHT +
-    (menuFooter ? menuFooterHeight : 0) +
-    MENU_PADDING * 2;
+    options.length * ITEM_HEIGHT + footerHeight + MENU_PADDING * 2;
   const placement =
     anchor &&
     placeDropdownMenu({
@@ -242,7 +252,11 @@ export function Dropdown<T extends string = string>({
       gutter: spacing.md,
       gap: spacing.xs,
       matchTriggerWidth,
+      keyboardInset,
     });
+  const listMaxHeight = placement
+    ? Math.max(ITEM_HEIGHT, placement.maxHeight - MENU_PADDING * 2 - footerHeight)
+    : menuMaxHeight;
 
   const triggerAgent = useAgentUiTarget(testID, {
     label: a11yLabel,
@@ -430,13 +444,15 @@ export function Dropdown<T extends string = string>({
               ]}>
               <GlassPlate style={StyleSheet.absoluteFill} />
               <ScrollView
-                bounces={contentHeight > menuMaxHeight}
+                bounces={options.length * ITEM_HEIGHT > listMaxHeight}
                 keyboardShouldPersistTaps="handled"
                 nestedScrollEnabled
-                showsVerticalScrollIndicator={contentHeight > menuMaxHeight}
+                showsVerticalScrollIndicator={
+                  options.length * ITEM_HEIGHT > listMaxHeight
+                }
                 style={{
                   zIndex: 1,
-                  maxHeight: placement.maxHeight - MENU_PADDING * 2,
+                  maxHeight: listMaxHeight,
                 }}>
                 {options.map((option) => (
                   <DropdownOptionRow
@@ -446,16 +462,16 @@ export function Dropdown<T extends string = string>({
                     onSelect={() => choose(option.value)}
                   />
                 ))}
-                {menuFooter ? (
-                  <View
-                    style={[
-                      styles.menuFooter,
-                      { borderTopColor: theme.separator },
-                    ]}>
-                    {menuFooter}
-                  </View>
-                ) : null}
               </ScrollView>
+              {menuFooter ? (
+                <View
+                  style={[
+                    styles.menuFooter,
+                    { borderTopColor: theme.separator, zIndex: 1 },
+                  ]}>
+                  {menuFooter}
+                </View>
+              ) : null}
             </Animated.View>
           ) : null}
         </View>

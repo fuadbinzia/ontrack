@@ -32,6 +32,12 @@ export function placeDropdownMenu(input: {
   gap: number;
   minWidth?: number;
   matchTriggerWidth?: boolean;
+  /**
+   * Docked soft-keyboard height from the window bottom (RN Modal overlays).
+   * Takes precedence over safe-area insetBottom when larger so footers /
+   * create-inputs stay above the IME.
+   */
+  keyboardInset?: number;
 }): DropdownMenuPlacement {
   const {
     anchor,
@@ -47,6 +53,7 @@ export function placeDropdownMenu(input: {
     gap,
     minWidth = 160,
     matchTriggerWidth = true,
+    keyboardInset = 0,
   } = input;
 
   const maxHeight = Math.min(menuMaxHeight, contentHeight);
@@ -59,7 +66,10 @@ export function placeDropdownMenu(input: {
   const maximumLeft = Math.max(minimumLeft, windowWidth - insetRight - gutter - width);
   const left = clampNumber(anchor.x, minimumLeft, maximumLeft);
 
-  const spaceBelow = windowHeight - insetBottom - gutter - (anchor.y + anchor.height);
+  // IME occlusion wins over home-indicator inset when the soft keyboard is up.
+  const bottomClearance = Math.max(insetBottom, keyboardInset);
+  const spaceBelow =
+    windowHeight - bottomClearance - gutter - (anchor.y + anchor.height);
   const spaceAbove = anchor.y - insetTop - gutter;
   const openDown =
     spaceBelow >= Math.min(maxHeight, 160) + gap || spaceBelow >= spaceAbove;

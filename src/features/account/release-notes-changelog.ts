@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.53',
+    date: '2026-08-12',
+    notes: [
+      'Keep checklist new-category input above the iOS keyboard.',
+      'Ship via ship:push (TestFlight + device OTA).',
+    ],
+  },
+  {
     version: '1.0.52',
     date: '2026-08-12',
     notes: [

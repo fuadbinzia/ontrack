@@ -162,9 +162,8 @@ describe('timeline progress + dense rows on glass', () => {
     expect(progress).toContain('toneColor={onGlass ? primaryInk : badgeColor}');
     expect(progress).toContain('textColor={onGlass ? primaryInk : undefined}');
     expect(progress).toContain('const trackFill = onGlass');
-    expect(progress).toContain('useTravelItineraryMistProps()');
-    expect(progress).toContain('<TravelHomeGlass');
-    expect(progress).toContain('color="#000000"');
+    expect(progress).toContain("backgroundColor: '#FFFFFF'");
+    expect(progress).toContain('color={accent}');
     expect(progress).toContain('color: primaryInk');
     expect(progress).not.toContain('style={{ color: badgeColor');
   });

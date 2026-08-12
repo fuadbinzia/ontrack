@@ -10,14 +10,12 @@ import {
   type StatusBadgeTone,
 } from '@/components/primitives';
 import { glassMaterials, radii } from '@/design-system';
-import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import type {
   JourneyTraveler,
   TimelineProgressSummary,
 } from '@/features/travel/travel-timeline-progress';
 import {
   useTravelItineraryInk,
-  useTravelItineraryMistProps,
   useTravelItineraryOnGlass,
 } from '@/features/travel/use-travel-itinerary-glass';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -37,7 +35,6 @@ export function TimelineProgressStrip({
   const { s, spacing: rs } = useResponsive();
   const primaryInk = useTravelItineraryInk();
   const secondaryInk = useTravelItineraryInk('secondary');
-  const mistProps = useTravelItineraryMistProps();
   const onGlass = useTravelItineraryOnGlass();
   const trackFill = onGlass
     ? primaryInk
@@ -165,13 +162,13 @@ export function TimelineProgressStrip({
                 marginTop: -chipSize / 2,
               },
             ]}>
-            <TravelHomeGlass
-              {...mistProps}
+            <View
               style={{
                 width: chipSize,
                 height: chipSize,
                 borderRadius: chipSize / 2,
                 borderCurve: 'continuous',
+                backgroundColor: '#FFFFFF',
                 overflow: 'hidden',
               }}>
               <AgentTestId
@@ -183,10 +180,10 @@ export function TimelineProgressStrip({
                     { width: chipSize, height: chipSize },
                   ]}
                   accessibilityLabel={traveler.accessibilityLabel}>
-                  <Symbol name={traveler.icon} size="sm" color="#000000" />
+                  <Symbol name={traveler.icon} size="sm" color={accent} />
                 </View>
               </AgentTestId>
-            </TravelHomeGlass>
+            </View>
           </Animated.View>
         </View>
       </AgentTestId>

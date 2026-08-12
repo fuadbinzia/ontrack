@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.57',
+    date: '2026-08-12',
+    notes: [
+      'Share one voice store with Siri and Assistant, and peel the checklists overview.',
+    ],
+  },
+  {
     version: '1.0.56',
     date: '2026-08-12',
     notes: [

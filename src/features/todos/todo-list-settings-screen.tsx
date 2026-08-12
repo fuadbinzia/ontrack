@@ -23,20 +23,19 @@ import { useAuthSession } from '@/features/auth/auth-provider';
 import { PeoplePicker } from '@/features/social/people-picker';
 import { shareTodoInvite } from '@/features/todos/share';
 import { TodoListSettingsSharing } from '@/features/todos/todo-list-settings-sharing';
+import { performTodoListRemoval } from '@/features/todos/todo-list-remove';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { FriendProfile } from '@/services/friends';
 import {
   addTodoFriendEditors,
   createTodoShareLink,
-  deleteSharedTodoList,
   leaveTodoList,
   publishTodoList,
   removeTodoMember,
   setTodoMemberRole,
   transferTodoListOwnership,
 } from '@/services/todos/collaboration';
-import { deletePersistedRecipeImage } from '@/services/recipes';
 import { useFriends } from '@/store/friends';
 import { useTodos, type TodoMember } from '@/store/todos';
 import { AgentUiIds, AgentTestId } from '@/utils/agent-ui';
@@ -88,7 +87,6 @@ export function TodoListSettingsSheet({
     (state) =>
       state.recipes.filter((recipe) => recipe.listId === listId).length,
   );
-  const deletePrivateList = useTodos((state) => state.deleteList);
   const [name, setName] = useState(list?.name ?? '');
   const [working, setWorking] = useState<string>();
   const [error, setError] = useState<string>();
@@ -245,16 +243,7 @@ export function TodoListSettingsSheet({
         : 'The list and every item in it will be permanently deleted.',
       onConfirm: () => {
         void run('delete', async () => {
-          if (list.mode === 'private') {
-            useTodos
-              .getState()
-              .recipes.filter((recipe) => recipe.listId === list.id)
-              .forEach((recipe) =>
-                deletePersistedRecipeImage(recipe.sourceImageUri),
-              );
-          }
-          if (list.mode === 'shared') await deleteSharedTodoList(list.id);
-          else deletePrivateList(list.id);
+          await performTodoListRemoval(list, false);
           onClose();
           router.replace('/(tabs)/to-do' as never);
         });

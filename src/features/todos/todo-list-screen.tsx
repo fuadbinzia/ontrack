@@ -18,7 +18,6 @@ import Animated, {
 
 import {
     AppText,
-    appPrompt,
     Screen,
     Symbol,
 } from '@/components/primitives';
@@ -36,16 +35,12 @@ import {
   type ChecklistTaskDetailsSheetHandle,
 } from '@/features/todos/checklist-task-details-sheet';
 import { TodoEmptyState } from '@/features/todos/todo-empty-state';
+import { confirmRemoveTodoList } from '@/features/todos/todo-list-remove';
 import { TodoListSettingsSheet } from '@/features/todos/todo-list-settings-screen';
 import { ChecklistItemSeparator, TodoRow } from '@/features/todos/todo-row';
 import { sortTodoTasks, type TodoFilter, type TodoSort } from '@/features/todos/todo-sort';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useTheme } from '@/hooks/use-theme';
-import { deletePersistedRecipeImage } from '@/services/recipes';
-import {
-  deleteSharedTodoList,
-  leaveTodoList,
-} from '@/services/todos/collaboration';
 import {
     canCompleteTodo,
     canEditTodoContent,
@@ -88,7 +83,6 @@ export function TodoListScreen({ listId }: { listId: string }) {
   const deleteTask = useTodos((state) => state.deleteTask);
   const reorderTasks = useTodos((state) => state.reorderTasks);
   const clearCompleted = useTodos((state) => state.clearCompleted);
-  const deletePrivateList = useTodos((state) => state.deleteList);
   const renameList = useTodos((state) => state.renameList);
   const syncError = useTodos((state) => state.syncError);
   const clearSyncError = useTodos((state) => state.clearSyncError);
@@ -222,46 +216,8 @@ export function TodoListScreen({ listId }: { listId: string }) {
 
   const removeList = () => {
     if (!list) return;
-    const leaving = list.mode === 'shared' && list.role !== 'owner';
-    const sharedOwnerDelete =
-      !leaving &&
-      list.mode === 'shared' &&
-      members.some((member) => member.role !== 'owner');
-    confirmDestructiveAction({
-      title: leaving ? `Leave “${list.name}”?` : `Delete “${list.name}”?`,
-      message: leaving
-        ? 'This checklist will be removed from your account. The owner and other collaborators will keep it.'
-        : sharedOwnerDelete
-          ? 'This permanently deletes the checklist for you and every collaborator. It only stays available if you make someone else the owner first.'
-          : 'The checklist and every item in it will be permanently deleted.',
-      actionLabel: leaving ? 'Leave' : 'Delete',
-      onConfirm: () => {
-        if (list.mode === 'private') {
-          useTodos
-            .getState()
-            .recipes.filter((recipe) => recipe.listId === list.id)
-            .forEach((recipe) =>
-              deletePersistedRecipeImage(recipe.sourceImageUri),
-            );
-        }
-        const action =
-          list.mode === 'private'
-            ? Promise.resolve(deletePrivateList(list.id))
-            : leaving
-              ? leaveTodoList(list.id)
-              : deleteSharedTodoList(list.id);
-        void action
-          .then(() => {
-            haptics.warning();
-            router.replace('/(tabs)/to-do' as never);
-          })
-          .catch((caught: unknown) => {
-            appPrompt.alert(
-              leaving ? 'Could not leave checklist' : 'Could not delete checklist',
-              caught instanceof Error ? caught.message : 'Please try again.',
-            );
-          });
-      },
+    confirmRemoveTodoList(list, {
+      afterRemoved: () => router.replace('/(tabs)/to-do' as never),
     });
   };
 

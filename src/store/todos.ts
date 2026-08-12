@@ -22,6 +22,8 @@ import type {
 } from './todos-types';
 
 export {
+  DEFAULT_CHECKLIST_NAME,
+  DEFAULT_GROCERY_LIST_NAME,
   canonicalIngredientKey,
   formatIngredientTitle,
   isGroceryListName,

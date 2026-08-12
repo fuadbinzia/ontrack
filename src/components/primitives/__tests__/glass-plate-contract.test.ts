@@ -115,10 +115,12 @@ describe('glass plate contract', () => {
   it('keeps checklist hub cards and composer on GlassPlate', () => {
     const card = read('src/features/todos/todo-list-card.tsx');
     const overview = read('src/features/todos/todo-lists-overview.tsx');
+    const header = read('src/features/todos/todo-lists-overview-header.tsx');
     expect(card).toContain('GlassPlate');
     expect(card).not.toContain('backgroundColor: theme.backgroundElevated');
-    expect(overview).toContain('GlassPlate');
+    expect(header).toContain('GlassPlate');
     expect(overview).not.toContain('backgroundColor: theme.backgroundSunken');
+    expect(header).not.toContain('backgroundColor: theme.backgroundSunken');
   });
 
   it('keeps app launch Loading onTrack shell on glass atmosphere', () => {
@@ -313,8 +315,8 @@ describe('glass plate contract', () => {
     expect(row).toContain('GlassPlate');
     expect(row).toContain('intensity={48}');
     expect(row).toContain('tintColor={mine && !deleted ? theme.accentPrimary');
-    expect(composer).toContain('GlassPlate');
-    expect(composer).toContain('intensity={56}');
+    expect(composer).toContain('Input');
+    expect(composer).not.toContain('backgroundColor: theme.backgroundSunken');
     expect(menu).toContain('GlassPlate');
     expect(menu).toContain('intensity={56}');
     expect(menu).toContain('reactionTop');

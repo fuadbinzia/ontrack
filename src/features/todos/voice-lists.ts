@@ -1,4 +1,9 @@
-import { canEditTodoContent, useTodos } from '@/store/todos';
+import {
+  canEditTodoContent,
+  DEFAULT_CHECKLIST_NAME,
+  DEFAULT_GROCERY_LIST_NAME,
+  useTodos,
+} from '@/store/todos';
 import type { TodoList, TodoListKind, TodoPersistedState } from '@/store/todos';
 import OnTrackVoiceLists from '../../../modules/ontrack-voice-lists';
 import type {
@@ -8,8 +13,6 @@ import type {
   VoicePendingOp,
 } from '../../../modules/ontrack-voice-lists';
 
-const INBOX_NAME = 'Inbox';
-const GROCERIES_NAME = 'Groceries';
 const GENERIC_NAME_RE =
   /^(my\s+)?((grocery|groceries|shopping|supermarket|to-?do|todo|checklist|task|tasks)(\s+list)?|list)$/i;
 const GROCERY_RE = /\b(grocer(?:y|ies)|shopping|supermarket)\b/i;
@@ -72,13 +75,9 @@ export function buildVoiceSnapshot(state: TodoPersistedState): VoiceListSnapshot
   return { lists };
 }
 
-function toSnapshotItems(state: TodoPersistedState): VoiceListSnapshotItem[] {
-  return buildVoiceSnapshot(state).lists;
-}
-
 function ensureVoiceList(op: VoicePendingOp): TodoList | undefined {
   const state = useTodos.getState();
-  const match = matchVoiceList(toSnapshotItems(state), op.listName, op.kindHint);
+  const match = matchVoiceList(buildVoiceSnapshot(state).lists, op.listName, op.kindHint);
   if (match?.canEdit) {
     return state.lists.find((list) => list.id === match.id);
   }
@@ -86,7 +85,7 @@ function ensureVoiceList(op: VoicePendingOp): TodoList | undefined {
   const kind: TodoListKind = op.kindHint === 'grocery' ? 'grocery' : 'checklist';
   const name =
     voiceListNameQuery(op.listName) ??
-    (kind === 'grocery' ? GROCERIES_NAME : INBOX_NAME);
+    (kind === 'grocery' ? DEFAULT_GROCERY_LIST_NAME : DEFAULT_CHECKLIST_NAME);
   return useTodos.getState().createList(name, kind);
 }
 

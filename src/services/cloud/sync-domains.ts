@@ -13,7 +13,7 @@ import { useAgents } from '@/store/agents';
 import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
-import { privateTodoPayload, useTodos } from '@/store/todos';
+import { DEFAULT_CHECKLIST_NAME, privateTodoPayload, useTodos } from '@/store/todos';
 import { useTravel } from '@/store/travel';
 import { privateFinancePayload, useFinance } from '@/store/finance';
 import { privateVehiclePayload, useVehicles } from '@/store/vehicles';
@@ -294,7 +294,7 @@ export function hasMeaningfulLocalData(): boolean {
   if (
     todoState.categories.length > 0 ||
     todoState.tasks.length > 0 ||
-    todoState.lists.some((list) => list.name !== 'To Do')
+    todoState.lists.some((list) => list.name !== DEFAULT_CHECKLIST_NAME)
   ) return true;
   if (Object.keys(useAgents.getState().installations).length > 0) return true;
   if (Object.keys(useAgents.getState().conversations).length > 0) return true;

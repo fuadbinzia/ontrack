@@ -10,5 +10,5 @@ Pod::Spec.new do |s|
   s.static_framework = true
   s.dependency 'ExpoModulesCore'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
-  s.source_files = 'OnTrackVoiceListsModule.swift'
+  s.source_files = '*.swift'
 end

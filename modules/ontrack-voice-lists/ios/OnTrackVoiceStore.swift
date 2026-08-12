@@ -29,6 +29,21 @@ enum OnTrackVoiceStore {
     let spoken: String
   }
 
+  static func publishSnapshot(_ json: String) {
+    lock.lock()
+    defer { lock.unlock() }
+    let parsed = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any] ?? [:]
+    writeJSON(mergePending(into: parsed, pending: readPending()), to: snapshotURL)
+  }
+
+  static func takePending() -> [[String: Any]] {
+    lock.lock()
+    defer { lock.unlock() }
+    let ops = readPending()
+    writeJSON(["ops": []], to: pendingURL)
+    return ops
+  }
+
   static func addItem(title rawTitle: String, listName: String?, kindHint: String?) -> AddResult {
     let title = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
     if title.isEmpty { return AddResult(spoken: "What should I add?") }
@@ -36,7 +51,7 @@ enum OnTrackVoiceStore {
     lock.lock()
     defer { lock.unlock() }
 
-    let lists = readLists()
+    var lists = readLists()
     var match = matchList(lists, hint: listName, kindHint: kindHint)
     if match?.canEdit != true { match = nil }
 
@@ -140,7 +155,7 @@ enum OnTrackVoiceStore {
   private static func displayName(listName: String?, kindHint: String?) -> String {
     if let query = nameQuery(listName) { return query }
     if kindHint == "grocery" || isGrocery(listName) { return "Groceries" }
-    return "Inbox"
+    return "To Do"
   }
 
   private static func spokenList(_ titles: [String]) -> String {
@@ -156,6 +171,42 @@ enum OnTrackVoiceStore {
     }
     if extra > 0 { return "\(joined), and \(extra) more" }
     return joined
+  }
+
+  private static func mergePending(into snapshot: [String: Any], pending: [[String: Any]]) -> [String: Any] {
+    var lists = (snapshot["lists"] as? [[String: Any]]) ?? []
+    for op in pending {
+      let title = (op["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+      guard !title.isEmpty else { continue }
+      let listId = op["listId"] as? String
+      let listName = op["listName"] as? String
+      let kindHint = op["kindHint"] as? String
+      let index = lists.firstIndex { list in
+        if let listId, (list["id"] as? String) == listId { return true }
+        if let listName, (list["name"] as? String)?.caseInsensitiveCompare(listName) == .orderedSame {
+          return true
+        }
+        if let kindHint, (list["kind"] as? String) == kindHint { return true }
+        return false
+      }
+      if let index {
+        var titles = (lists[index]["openTitles"] as? [String]) ?? []
+        if !titles.contains(where: { $0.caseInsensitiveCompare(title) == .orderedSame }) {
+          titles.insert(title, at: 0)
+          lists[index]["openTitles"] = titles
+        }
+      } else {
+        lists.insert([
+          "id": "voice-inbox",
+          "name": kindHint == "grocery" ? "Groceries" : "To Do",
+          "kind": kindHint == "grocery" ? "grocery" : "checklist",
+          "canEdit": true,
+          "updatedAt": iso.string(from: Date()),
+          "openTitles": [title],
+        ], at: 0)
+      }
+    }
+    return ["lists": lists]
   }
 
   private static func readLists() -> [ListItem] {

@@ -86,6 +86,25 @@ describe('voice lists', () => {
     ).toEqual(['Eggs', 'Milk']);
   });
 
+  it('creates To Do when no list exists yet', () => {
+    useTodos.setState({
+      lists: [],
+      tasks: [],
+      categories: [],
+      recipes: [],
+      members: [],
+    });
+    expect(
+      applyVoicePendingToStore([
+        { id: 'op-empty', title: 'Pack charger', createdAt: updatedAt },
+      ]),
+    ).toBe(1);
+    expect(useTodos.getState().lists[0]).toMatchObject({
+      name: 'To Do',
+      kind: 'checklist',
+    });
+  });
+
   it('adds unnamed items to the default To Do list', () => {
     expect(
       applyVoicePendingToStore([

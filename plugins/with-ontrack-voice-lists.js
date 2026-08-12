@@ -7,12 +7,24 @@ const {
   withXcodeProject,
 } = require('expo/config-plugins');
 
-const SWIFT_FILES = ['OnTrackVoiceStore.swift', 'OnTrackVoiceIntents.swift'];
+const SWIFT_INTENT = 'OnTrackVoiceIntents.swift';
+const SWIFT_STORE = 'OnTrackVoiceStore.swift';
 const SHORTCUTS_FILE = 'ontrack_voice_shortcuts.xml';
 const GROUP_NAME = 'OnTrackVoice';
 
 function pluginDir() {
   return path.join(__dirname, 'ontrack-voice-lists');
+}
+
+function moduleIosDir() {
+  return path.join(__dirname, '..', 'modules', 'ontrack-voice-lists', 'ios');
+}
+
+function swiftSources() {
+  return [
+    { name: SWIFT_STORE, from: path.join(moduleIosDir(), SWIFT_STORE) },
+    { name: SWIFT_INTENT, from: path.join(pluginDir(), SWIFT_INTENT) },
+  ];
 }
 
 function copySwiftIntoIosProject(config) {
@@ -27,11 +39,8 @@ function copySwiftIntoIosProject(config) {
         GROUP_NAME,
       );
       fs.mkdirSync(targetDir, { recursive: true });
-      for (const fileName of SWIFT_FILES) {
-        fs.copyFileSync(
-          path.join(pluginDir(), fileName),
-          path.join(targetDir, fileName),
-        );
+      for (const file of swiftSources()) {
+        fs.copyFileSync(file.from, path.join(targetDir, file.name));
       }
       return mod;
     },
@@ -53,9 +62,9 @@ function addSwiftToXcode(config) {
     if (!projectName || !targetUuid) return mod;
 
     const groupPath = `${projectName}/${GROUP_NAME}`;
-    for (const fileName of SWIFT_FILES) {
-      if (fileAlreadyInProject(project, fileName)) continue;
-      project.addSourceFile(`${groupPath}/${fileName}`, { target: targetUuid });
+    for (const file of swiftSources()) {
+      if (fileAlreadyInProject(project, file.name)) continue;
+      project.addSourceFile(`${groupPath}/${file.name}`, { target: targetUuid });
     }
     return mod;
   });

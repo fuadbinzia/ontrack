@@ -46,47 +46,11 @@ import { useTravel } from '@/store/travel';
 import { useVisionBoard } from '@/store/vision-board';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
+import { deferAfterPageLoad } from '@/utils/defer-after-page-load';
 import { haptics } from '@/utils/haptics';
 import { openHttpsUrl } from '@/utils/safe-url';
 
 const REVEAL_EDGE_PAD = 24;
-
-function scrollAnchorIntoScreen(
-  scrollView: ScrollView | null,
-  anchor: View | null,
-  offsetY: number,
-) {
-  if (!scrollView || !anchor) return;
-  const viewport = scrollView as ScrollView & {
-    measureInWindow?: View['measureInWindow'];
-  };
-  if (typeof viewport.measureInWindow !== 'function') return;
-  anchor.measureInWindow((ax, ay, _aw, ah) => {
-    viewport.measureInWindow?.((_sx, sy, _sw, sh) => {
-      if (
-        ![ay, ah, sy, sh, offsetY].every(
-          (n) => typeof n === 'number' && Number.isFinite(n),
-        )
-      ) {
-        return;
-      }
-      const visibleTop = sy + REVEAL_EDGE_PAD;
-      const visibleBottom = sy + sh - REVEAL_EDGE_PAD;
-      const targetBottom = ay + ah;
-      let delta = 0;
-      if (targetBottom > visibleBottom) {
-        delta = targetBottom - visibleBottom;
-      } else if (ay < visibleTop) {
-        delta = ay - visibleTop;
-      }
-      if (Math.abs(delta) < 1) return;
-      scrollView.scrollTo({
-        y: Math.max(0, offsetY + delta),
-        animated: true,
-      });
-    });
-  });
-}
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -110,29 +74,23 @@ export default function ProfileSettingsScreen() {
   const { s, spacing: rs } = useResponsive();
   const { user, isGuest, deleteAccount } = useAuthSession();
   const scrollRef = useRef<ScrollView>(null);
-  const scrollOffsetY = useRef(0);
-  const homeAnchorRef = useRef<View | null>(null);
-  const currentAnchorRef = useRef<View | null>(null);
+  const [locationSectionY, setLocationSectionY] = useState<number>();
 
-  // Today weather deep-link: scroll the row into view — never open edit/keyboard.
+  // Today weather deep-link: wait for the direct ScrollView child to lay out,
+  // then land on the location inputs without opening the keyboard.
   useEffect(() => {
     if (revealParam !== 'homeLocation' && revealParam !== 'currentLocation') {
       return;
     }
-    const timer = setTimeout(() => {
-      const anchor =
-        revealParam === 'currentLocation'
-          ? currentAnchorRef.current
-          : homeAnchorRef.current;
-      scrollAnchorIntoScreen(
-        scrollRef.current,
-        anchor,
-        scrollOffsetY.current,
-      );
+    if (locationSectionY === undefined) return;
+    return deferAfterPageLoad(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, locationSectionY - REVEAL_EDGE_PAD),
+        animated: true,
+      });
       router.setParams({ focus: undefined, reveal: undefined } as never);
-    }, 220);
-    return () => clearTimeout(timer);
-  }, [revealParam, router]);
+    });
+  }, [locationSectionY, revealParam, router]);
 
   /** Profile → Developer: only when `account_flags.developer_tools` is granted server-side. */
   const showDeveloperSection = useCanUseDeveloperTools();
@@ -261,9 +219,6 @@ export default function ProfileSettingsScreen() {
   return (
     <Screen
       scrollRef={scrollRef}
-      onScroll={(event) => {
-        scrollOffsetY.current = event.nativeEvent.contentOffset.y;
-      }}
       contentStyle={{ gap: rs.lg }}>
       <View style={[styles.hero, { gap: rs.sm }]}>
         <Pressable
@@ -345,41 +300,41 @@ export default function ProfileSettingsScreen() {
         </AgentTestId>
       ) : null}
 
-      <CollapsibleSection
-        title="Preferences"
-        defaultExpanded
-        testID={AgentUiIds.profile.section.preferences}>
-        <View style={{ gap: rs.md }}>
-          <ProfileLocationPreferences
-            homeAnchorRef={homeAnchorRef}
-            currentAnchorRef={currentAnchorRef}
-          />
-          <SettingsGroup>
-            <SettingsToggleRow
-              label="AI Summaries"
-              detail="Daily insights, meals, and plants"
-              icon="smart"
-              value={aiEnabled}
-              onValueChange={setAiEnabled}
-            />
-            <SettingsToggleRow
-              label="Usage Analytics"
-              detail="Screen time to improve the product"
-              icon="insights"
-              value={usageAnalyticsEnabled}
-              onValueChange={setUsageAnalyticsEnabled}
-              testID={AgentUiIds.profile.usageAnalytics}
-            />
-            <SettingsToggleRow
-              label="Haptic Feedback"
-              detail="Subtle taps on key actions"
-              icon="settings"
-              value={hapticsEnabled}
-              onValueChange={setHapticsEnabled}
-            />
-          </SettingsGroup>
-        </View>
-      </CollapsibleSection>
+      <View
+        onLayout={(event) => setLocationSectionY(event.nativeEvent.layout.y)}>
+        <CollapsibleSection
+          title="Preferences"
+          defaultExpanded
+          testID={AgentUiIds.profile.section.preferences}>
+          <View style={{ gap: rs.md }}>
+            <ProfileLocationPreferences />
+            <SettingsGroup>
+              <SettingsToggleRow
+                label="AI Summaries"
+                detail="Daily insights, meals, and plants"
+                icon="smart"
+                value={aiEnabled}
+                onValueChange={setAiEnabled}
+              />
+              <SettingsToggleRow
+                label="Usage Analytics"
+                detail="Screen time to improve the product"
+                icon="insights"
+                value={usageAnalyticsEnabled}
+                onValueChange={setUsageAnalyticsEnabled}
+                testID={AgentUiIds.profile.usageAnalytics}
+              />
+              <SettingsToggleRow
+                label="Haptic Feedback"
+                detail="Subtle taps on key actions"
+                icon="settings"
+                value={hapticsEnabled}
+                onValueChange={setHapticsEnabled}
+              />
+            </SettingsGroup>
+          </View>
+        </CollapsibleSection>
+      </View>
 
       <CollapsibleSection
         title="Features"

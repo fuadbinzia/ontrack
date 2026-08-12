@@ -1,4 +1,4 @@
-import { useId, useRef, type ReactNode, type RefObject } from 'react';
+import { useId, useRef, type ReactNode } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText, LoadingSpinner } from '@/components/primitives';
@@ -25,8 +25,6 @@ type CityAutofindSettingsRowProps = {
   accessibilityLabel: string;
   editable?: boolean;
   grouped?: boolean;
-  /** Outer row node for scroll-into-view (no keyboard focus). */
-  anchorRef?: RefObject<View | null>;
   /** Far-right control (e.g. locate). Rendered after the field. */
   trailing?: ReactNode;
 };
@@ -48,7 +46,6 @@ export function CityAutofindSettingsRow({
   accessibilityLabel,
   editable = true,
   grouped = false,
-  anchorRef,
   trailing,
 }: CityAutofindSettingsRowProps) {
   const theme = useTheme();
@@ -56,10 +53,6 @@ export function CityAutofindSettingsRow({
   const listId = useId();
   const fieldRef = useRef<View | null>(null);
   const inputRef = useRef<TextInput>(null);
-  const setFieldRef = (node: View | null) => {
-    fieldRef.current = node;
-    if (anchorRef) anchorRef.current = node;
-  };
 
   const {
     suggestions,
@@ -85,7 +78,7 @@ export function CityAutofindSettingsRow({
   });
 
   return (
-    <View ref={setFieldRef} collapsable={false}>
+    <View ref={fieldRef} collapsable={false}>
       <View
         ref={agent.ref}
         testID={testID}

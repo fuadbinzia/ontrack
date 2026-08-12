@@ -1,9 +1,8 @@
 import {
-    useEffect,
-    useRef,
-    useState,
-    type MutableRefObject,
-    type RefObject,
+  useEffect,
+  useRef,
+  useState,
+  type MutableRefObject,
 } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -27,11 +26,6 @@ import { getCurrentPlaceLabel } from '@/utils/device-location';
 import { haptics } from '@/utils/haptics';
 
 export type ProfileLocationReveal = 'homeLocation' | 'currentLocation';
-
-type ProfileLocationPreferencesProps = {
-  homeAnchorRef?: RefObject<View | null>;
-  currentAnchorRef?: RefObject<View | null>;
-};
 
 /**
  * Persist first, then optionally normalize via Open-Meteo.
@@ -92,10 +86,7 @@ async function persistPlaceLabel(input: {
 }
 
 /** Home + Current location rows with Open-Meteo city autocomplete. */
-export function ProfileLocationPreferences({
-  homeAnchorRef,
-  currentAnchorRef,
-}: ProfileLocationPreferencesProps = {}) {
+export function ProfileLocationPreferences() {
   const theme = useTheme();
   const { s, layout } = useResponsive();
   const homeLocation = usePreferences((state) => state.homeLocation);
@@ -250,7 +241,6 @@ export function ProfileLocationPreferences({
           editable={!busy}
           testID={AgentUiIds.profile.homeLocation}
           accessibilityLabel="Home location"
-          anchorRef={homeAnchorRef}
         />
         <CityAutofindSettingsRow
           label="Current location"
@@ -268,7 +258,6 @@ export function ProfileLocationPreferences({
           editable={!busy}
           testID={AgentUiIds.profile.currentLocation}
           accessibilityLabel="Current location"
-          anchorRef={currentAnchorRef}
           trailing={
             <Pressable
               ref={locateAgent.ref}

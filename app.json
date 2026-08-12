@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.47",
+    "version": "1.0.48",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -176,7 +176,7 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": false
     },
     "extra": {
       "router": {},

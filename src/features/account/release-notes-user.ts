@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.53',
+    date: '2026-08-12',
+    notes: [
+      'Keep checklist new-category input above the iOS keyboard.',
+    ],
+  },
+  {
     version: '1.0.52',
     date: '2026-08-12',
     notes: [

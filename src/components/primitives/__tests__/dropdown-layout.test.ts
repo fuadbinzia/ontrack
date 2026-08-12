@@ -44,4 +44,24 @@ describe('placeDropdownMenu', () => {
     expect(placement.openDown).toBe(false);
     expect(placement.top).toBeLessThan(700);
   });
+
+  it('keeps the menu above a docked soft keyboard', () => {
+    const placement = placeDropdownMenu({
+      anchor: { x: 20, y: 420, width: 200, height: 48 },
+      windowWidth: 400,
+      windowHeight: 800,
+      insetTop: 50,
+      insetBottom: 34,
+      insetLeft: 0,
+      insetRight: 0,
+      contentHeight: 220,
+      menuMaxHeight: 280,
+      gutter: 16,
+      gap: 8,
+      keyboardInset: 300,
+    });
+    // Without keyboardInset, space below (~332) would open down into the IME.
+    expect(placement.openDown).toBe(false);
+    expect(placement.top + placement.maxHeight).toBeLessThanOrEqual(420);
+  });
 });

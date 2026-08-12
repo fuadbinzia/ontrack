@@ -115,4 +115,21 @@ describe('keyboard scrolling invariant', () => {
     expect(sheet).toContain("androidMode: 'modal'");
     expect(sheet).toContain('keyboardInset');
   });
+
+  it('re-places dropdown overlay menus above the soft keyboard', () => {
+    const dropdown = readFileSync(
+      join(process.cwd(), 'src/components/primitives/dropdown.tsx'),
+      'utf8',
+    );
+    const layout = readFileSync(
+      join(process.cwd(), 'src/components/primitives/dropdown-layout.ts'),
+      'utf8',
+    );
+    expect(dropdown).toContain('useDockedKeyboardInset');
+    expect(dropdown).toContain("androidMode: 'modal'");
+    expect(dropdown).toContain('keyboardInset');
+    expect(dropdown).toContain('measureAnchor');
+    expect(layout).toContain('keyboardInset');
+    expect(layout).toContain('bottomClearance');
+  });
 });

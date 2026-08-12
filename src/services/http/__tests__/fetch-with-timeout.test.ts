@@ -36,4 +36,23 @@ describe('fetchWithTimeout', () => {
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
   });
+
+  it('preserves an external abort that happened before the request starts', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    jest.spyOn(global, 'fetch').mockImplementation((_url, init) => {
+      expect(init?.signal?.aborted).toBe(true);
+      const error = new Error('Aborted');
+      error.name = 'AbortError';
+      return Promise.reject(error);
+    });
+
+    await expect(
+      fetchWithTimeout(
+        'https://example.com/already-cancelled',
+        { signal: controller.signal },
+        10_000,
+      ),
+    ).rejects.toMatchObject({ name: 'AbortError' });
+  });
 });

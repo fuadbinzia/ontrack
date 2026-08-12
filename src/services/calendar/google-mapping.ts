@@ -1,4 +1,5 @@
 import type { Activity } from '@/types/models';
+import { isDateKey } from '@/utils/date';
 
 import type { GoogleCalendarEvent, GoogleCalendarLinkRow } from './google-types';
 
@@ -8,12 +9,27 @@ export function zonedDateParts(date: Date, timeZone: string) {
   return { date: `${values.year}-${values.month}-${values.day}`, minutes: Number(values.hour) * 60 + Number(values.minute) };
 }
 
+function allDayDurationMinutes(startDate: string, endDate: string | undefined) {
+  if (!isDateKey(startDate) || !endDate || !isDateKey(endDate)) return 24 * 60;
+  const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+  const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+  const calendarDays = Math.round(
+    (Date.UTC(endYear, endMonth - 1, endDay) - Date.UTC(startYear, startMonth - 1, startDay))
+      / 86_400_000,
+  );
+  // Google all-day end dates are exclusive. Malformed/reversed ranges still
+  // degrade to one day instead of producing a zero or negative duration.
+  return Math.max(1, calendarDays) * 24 * 60;
+}
+
 export function eventToActivity(event: GoogleCalendarEvent, existing: Activity | undefined, link: GoogleCalendarLinkRow, timeZone: string, syncedAt: string): Activity {
   const allDay = event.start?.date;
   const start = allDay ? { date: allDay, minutes: 0 } : zonedDateParts(new Date(event.start?.dateTime || syncedAt), timeZone);
-  const duration = event.start?.dateTime && event.end?.dateTime
-    ? Math.max(5, Math.round((new Date(event.end.dateTime).getTime() - new Date(event.start.dateTime).getTime()) / 60_000))
-    : 24 * 60;
+  const duration = allDay
+    ? allDayDurationMinutes(allDay, event.end?.date)
+    : event.start?.dateTime && event.end?.dateTime
+      ? Math.max(5, Math.round((new Date(event.end.dateTime).getTime() - new Date(event.start.dateTime).getTime()) / 60_000))
+      : 24 * 60;
   return {
     id: link.activity_id,
     title: event.summary?.trim() || 'Untitled event',

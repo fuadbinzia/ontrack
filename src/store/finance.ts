@@ -40,12 +40,18 @@ type FinanceState = FinanceStateSnapshot & {
   removeEntity: (id: string) => void;
   saveAccount: (account: FinanceAccount) => void;
   removeAccount: (id: string) => void;
+  removePlaidItem: (itemId: string) => void;
   saveHolding: (holding: FinanceHolding) => void;
   removeHolding: (id: string) => void;
   upsertHoldings: (holdings: FinanceHolding[]) => void;
+  replacePlaidHoldings: (accountIds: string[], holdings: FinanceHolding[]) => void;
   saveTransaction: (transaction: FinanceTransaction) => void;
   removeTransaction: (id: string) => void;
   upsertPlaidTransactions: (transactions: FinanceTransaction[]) => void;
+  reconcilePlaidTransactions: (
+    transactions: FinanceTransaction[],
+    removedExternalIds: string[],
+  ) => void;
   saveBill: (bill: FinanceRecurringBill) => void;
   removeBill: (id: string) => void;
   markBillPaid: (id: string, paidOn?: string) => void;
@@ -126,6 +132,21 @@ export const useFinance = create<FinanceState>()(
           holdings: get().holdings.filter((h) => h.accountId !== id),
           updatedAt: touchUpdatedAt(),
         }),
+      removePlaidItem: (itemId) => {
+        const accountIds = new Set(
+          get().accounts.filter((account) => account.plaidItemId === itemId).map((account) => account.id),
+        );
+        set({
+          accounts: get().accounts.filter((account) => account.plaidItemId !== itemId),
+          holdings: get().holdings.filter((holding) => !accountIds.has(holding.accountId)),
+          transactions: get().transactions.flatMap((transaction) => {
+            if (!transaction.accountId || !accountIds.has(transaction.accountId)) return [transaction];
+            if (transaction.source === 'plaid') return [];
+            return [{ ...transaction, accountId: undefined, updatedAt: touchUpdatedAt() }];
+          }),
+          updatedAt: touchUpdatedAt(),
+        });
+      },
       saveHolding: (holding) => {
         const now = touchUpdatedAt();
         set({
@@ -161,6 +182,31 @@ export const useFinance = create<FinanceState>()(
         }
         set({ holdings: next, updatedAt: now });
       },
+      replacePlaidHoldings: (accountIds, incoming) => {
+        const now = touchUpdatedAt();
+        const scopedAccountIds = new Set(accountIds);
+        const existingByExternal = new Map(
+          get()
+            .holdings.filter((holding) => holding.externalId)
+            .map((holding) => [holding.externalId!, holding]),
+        );
+        const retained = get().holdings.filter(
+          (holding) => !scopedAccountIds.has(holding.accountId),
+        );
+        const replaced = incoming.map((holding) => {
+          const existing = holding.externalId
+            ? existingByExternal.get(holding.externalId)
+            : undefined;
+          return {
+            ...existing,
+            ...holding,
+            id: existing?.id ?? holding.id,
+            createdAt: existing?.createdAt ?? holding.createdAt,
+            updatedAt: now,
+          };
+        });
+        set({ holdings: [...retained, ...replaced], updatedAt: now });
+      },
       saveTransaction: (transaction) => {
         const now = touchUpdatedAt();
         set({
@@ -192,6 +238,31 @@ export const useFinance = create<FinanceState>()(
           }
         }
         set({ transactions: next, updatedAt: touchUpdatedAt() });
+      },
+      reconcilePlaidTransactions: (incoming, removedExternalIds) => {
+        const now = touchUpdatedAt();
+        const removed = new Set(removedExternalIds);
+        let next = get().transactions.filter(
+          (transaction) => !transaction.externalId || !removed.has(transaction.externalId),
+        );
+        const byExternal = new Map(
+          next
+            .filter((transaction) => transaction.externalId)
+            .map((transaction) => [transaction.externalId!, transaction]),
+        );
+        for (const transaction of incoming) {
+          const existing = transaction.externalId
+            ? byExternal.get(transaction.externalId)
+            : undefined;
+          next = upsertById(next, {
+            ...existing,
+            ...transaction,
+            id: existing?.id ?? transaction.id,
+            createdAt: existing?.createdAt ?? transaction.createdAt,
+            updatedAt: now,
+          });
+        }
+        set({ transactions: next, updatedAt: now });
       },
       saveBill: (bill) => {
         const now = touchUpdatedAt();

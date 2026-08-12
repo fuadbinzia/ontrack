@@ -18,6 +18,7 @@ type TravelPlanUiState = {
   patchPlanUi: (planId: string, patch: Partial<TravelPlanUiPrefs>) => void;
   clearPlanUi: (planId: string) => void;
   retainPlanIds: (planIds: readonly string[]) => void;
+  reset: () => void;
 };
 
 const DETAIL_SECTION_KEYS = new Set<DetailSectionKey>([
@@ -122,6 +123,7 @@ export const useTravelPlanUi = create<TravelPlanUiState>()(
           return changed ? { byPlanId } : state;
         });
       },
+      reset: () => set({ byPlanId: {} }),
     }),
     {
       name: STORAGE_KEYS.travelPlanUi,

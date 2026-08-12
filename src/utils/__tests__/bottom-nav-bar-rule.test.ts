@@ -25,7 +25,7 @@ describe('bottom nav bar background invariant', () => {
     expect(tabsLayout).not.toContain('eagerBottomNavRouteNames');
     expect(tabsLayout).toContain('lazy: true');
     expect(tabsLayout).toContain("animation: 'none'");
-    expect(tabsLayout).toContain('freezeOnBlur: true');
+    expect(tabsLayout).toContain('freezeOnBlur: route.name !== MORE_TAB_ROUTE');
     expect(tabsLayout).not.toContain('preload(');
 
     const navBar = readFileSync(

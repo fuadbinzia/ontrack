@@ -290,6 +290,19 @@ export function stopCloudSync() {
   syncRuntime.activeEmail = undefined;
 }
 
+/** Resume watching empty domains after an in-session destructive reset. */
+export function resumeCloudSyncAfterReset(userId: string, email?: string) {
+  syncRuntime.activeUserId = userId;
+  syncRuntime.activeEmail = email;
+  startSubscriptions(userId, email);
+  useCloudSyncStatus.setState({
+    state: 'synced',
+    email,
+    lastSyncedAt: new Date().toISOString(),
+    message: undefined,
+  });
+}
+
 /** Backward-compatible cleanup for callers mounted by older navigation shells. */
 export function startCloudSync(): () => void {
   return () => stopCloudSync();

@@ -131,7 +131,6 @@ export function TravelScreenContent() {
     scrollRef,
     editScrollRef,
     tripOffsets,
-    focusedTripId,
     scrollTargetTripId,
     sortedPlans,
     currentPlans,

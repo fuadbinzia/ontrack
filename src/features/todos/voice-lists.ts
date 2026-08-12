@@ -57,18 +57,32 @@ export function matchVoiceList(
     if (partial) return partial;
   }
 
-  return [...candidates].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+  return candidates.reduce<VoiceListSnapshotItem | undefined>(
+    (mostRecent, candidate) =>
+      !mostRecent || candidate.updatedAt > mostRecent.updatedAt ? candidate : mostRecent,
+    undefined,
+  );
 }
 
 export function buildVoiceSnapshot(state: TodoPersistedState): VoiceListSnapshot {
+  const openTasksByList = new Map<string, typeof state.tasks>();
+  for (const task of state.tasks) {
+    if (task.completed) continue;
+    const listTasks = openTasksByList.get(task.listId);
+    if (listTasks) {
+      listTasks.push(task);
+    } else {
+      openTasksByList.set(task.listId, [task]);
+    }
+  }
+
   const lists: VoiceListSnapshotItem[] = state.lists.map((list) => ({
     id: list.id,
     name: list.name,
     kind: list.kind,
     canEdit: canEditTodoContent(list),
     updatedAt: list.updatedAt,
-    openTitles: state.tasks
-      .filter((task) => task.listId === list.id && !task.completed)
+    openTitles: (openTasksByList.get(list.id) ?? [])
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       .map((task) => task.title),
   }));

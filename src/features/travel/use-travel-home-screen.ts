@@ -136,9 +136,18 @@ export function useTravelHomeScreen() {
   const [pendingFollowTripId, setPendingFollowTripId] = useState<string>();
   const [scrollTargetOffset, setScrollTargetOffset] = useState<number>();
   const [activeTripId, setActiveTripId] = useState<string>();
-  const focusedTripId = typeof tripId === 'string' ? tripId : undefined;
+  const routeTripId = typeof tripId === 'string' ? tripId : undefined;
+  const [pendingFocusedTripId, setPendingFocusedTripId] = useState<string>();
   const scrollTargetTripId =
-    pendingCreatedTripId ?? pendingFollowTripId ?? focusedTripId;
+    pendingCreatedTripId ?? pendingFollowTripId ?? pendingFocusedTripId;
+
+  useEffect(() => {
+    if (!routeTripId) return;
+    setPendingFocusedTripId(routeTripId);
+    // Social/deep-link focus is one-shot. Leaving the param in the tab route
+    // makes it reclaim the scroll target after every later trip interaction.
+    router.setParams({ tripId: undefined } as never);
+  }, [routeTripId, router]);
 
   const sortedPlans = useMemo(
     () => orderTravelPlansByRecency(plans, recentPlanIds),
@@ -211,10 +220,11 @@ export function useTravelHomeScreen() {
   }, [user?.id, plans.length, savePlan]);
 
   useEffect(() => {
-    if (
-      !scrollTargetTripId ||
-      !sortedPlans.some((plan) => plan.id === scrollTargetTripId)
-    ) {
+    if (!scrollTargetTripId) return;
+    if (!sortedPlans.some((plan) => plan.id === scrollTargetTripId)) {
+      if (pendingFocusedTripId === scrollTargetTripId) {
+        setPendingFocusedTripId(undefined);
+      }
       return;
     }
 
@@ -241,10 +251,14 @@ export function useTravelHomeScreen() {
       if (pendingFollowTripId === scrollTargetTripId) {
         setPendingFollowTripId(undefined);
       }
+      if (pendingFocusedTripId === scrollTargetTripId) {
+        setPendingFocusedTripId(undefined);
+      }
     });
     return () => cancelAnimationFrame(frame);
   }, [
     pendingCreatedTripId,
+    pendingFocusedTripId,
     pendingFollowTripId,
     recordPlanInteraction,
     rs.sm,
@@ -488,7 +502,6 @@ export function useTravelHomeScreen() {
     scrollRef,
     editScrollRef,
     tripOffsets,
-    focusedTripId,
     scrollTargetTripId,
     sortedPlans,
     currentPlans,

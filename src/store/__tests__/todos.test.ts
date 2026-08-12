@@ -7,12 +7,14 @@ import {
     privateTodoPayload,
     useTodos,
 } from '@/store/todos';
+import { useAuthAccess } from '@/store/auth-access';
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
 describe('to-do store', () => {
   beforeEach(() => {
     useTodos.getState().reset();
+    useAuthAccess.getState().resetAccess();
   });
 
   it('captures, edits, prioritizes, and completes a task', () => {
@@ -106,6 +108,48 @@ describe('to-do store', () => {
       .toBeUndefined();
   });
 
+  it('drops category assignments that belong to another checklist', () => {
+    const normalized = normalizeTodoState({
+      groceryMigrationVersion: 1,
+      lists: [
+        {
+          id: 'list-1',
+          name: 'Projects',
+          kind: 'checklist',
+          mode: 'private',
+          role: 'owner',
+          createdAt: '2026-08-12T00:00:00.000Z',
+          updatedAt: '2026-08-12T00:00:00.000Z',
+        },
+        {
+          id: 'list-2',
+          name: 'Home',
+          kind: 'checklist',
+          mode: 'private',
+          role: 'owner',
+          createdAt: '2026-08-12T00:00:00.000Z',
+          updatedAt: '2026-08-12T00:00:00.000Z',
+        },
+      ],
+      categories: [{
+        id: 'category-home',
+        listId: 'list-2',
+        name: 'Repairs',
+        position: 0,
+        createdAt: '2026-08-12T00:00:00.000Z',
+        updatedAt: '2026-08-12T00:00:00.000Z',
+      }],
+      tasks: [{
+        id: 'task-project',
+        listId: 'list-1',
+        title: 'Review proposal',
+        categoryId: 'category-home',
+      }],
+    });
+
+    expect(normalized.tasks[0].categoryId).toBeUndefined();
+  });
+
   it('queues shared task creation before its category assignment', () => {
     const list = useTodos.getState().lists[0];
     useTodos.setState((state) => ({
@@ -155,6 +199,48 @@ describe('to-do store', () => {
     expect(useTodos.getState().categories).toEqual([category]);
   });
 
+  it('keeps shared snapshot tasks and members inside their checklist', () => {
+    const state = useTodos.getState();
+    const privateList = state.lists[0];
+    const sharedList = {
+      ...privateList,
+      id: '9a21f566-3bc6-43df-a125-03e4c4541963',
+      name: 'Shared projects',
+      mode: 'shared' as const,
+    };
+    const privateCategory = state.addCategory(privateList.id, 'Private')!;
+
+    useTodos.getState().replaceSharedSnapshot({
+      list: sharedList,
+      tasks: [{
+        id: 'task-shared',
+        listId: privateList.id,
+        title: 'Review shared plan',
+        categoryId: privateCategory.id,
+        completed: false,
+        important: false,
+        createdAt: '2026-08-12T00:00:00.000Z',
+        updatedAt: '2026-08-12T00:00:00.000Z',
+        version: 0,
+      }],
+      members: [{
+        listId: privateList.id,
+        userId: 'member-a',
+        displayName: 'Alex Rivera',
+        role: 'member',
+        joinedAt: '2026-08-12T00:00:00.000Z',
+      }],
+    });
+
+    expect(useTodos.getState().tasks.find((task) => task.id === 'task-shared'))
+      .toMatchObject({ listId: sharedList.id, categoryId: undefined });
+    expect(useTodos.getState().members.find((member) => member.userId === 'member-a'))
+      .toMatchObject({ listId: sharedList.id });
+    expect(
+      useTodos.getState().categories.find((category) => category.id === privateCategory.id),
+    ).toMatchObject({ listId: privateList.id });
+  });
+
   it('renames a checklist and normalizes its name', () => {
     const list = useTodos.getState().lists[0];
 
@@ -181,6 +267,44 @@ describe('to-do store', () => {
         .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
         .map((task) => task.title),
     ).toEqual(['First', 'Third', 'Second']);
+  });
+
+  it('preserves hidden task slots when reordering a filtered checklist', () => {
+    const list = useTodos.getState().lists[0];
+    const first = useTodos.getState().addTask(list.id, 'First')!;
+    const hidden = useTodos.getState().addTask(list.id, 'Hidden')!;
+    const third = useTodos.getState().addTask(list.id, 'Third')!;
+    useTodos.getState().reorderTasks(list.id, [first.id, hidden.id, third.id]);
+    useTodos.setState((state) => ({
+      lists: state.lists.map((item) =>
+        item.id === list.id ? { ...item, mode: 'shared' } : item,
+      ),
+      pendingMutations: [],
+    }));
+
+    useTodos.getState().reorderTasks(list.id, [third.id, first.id]);
+
+    const ordered = [...useTodos.getState().tasks]
+      .filter((task) => task.listId === list.id)
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    expect(ordered.map((task) => task.title)).toEqual(['Third', 'Hidden', 'First']);
+    expect(ordered.map((task) => task.position)).toEqual([0, 1, 2]);
+    expect(useTodos.getState().pendingMutations).toHaveLength(1);
+    expect(useTodos.getState().pendingMutations[0]).toMatchObject({
+      operation: 'reorder_tasks',
+      payload: { orderedIds: [third.id, hidden.id, first.id] },
+    });
+  });
+
+  it('marks guest checklist data dirty when assignees change', () => {
+    useAuthAccess.getState().enterGuest();
+    const list = useTodos.getState().lists[0];
+    const task = useTodos.getState().addTask(list.id, 'Review plans')!;
+    useAuthAccess.getState().enterGuest();
+
+    useTodos.getState().setAssignee(task.id, ['member-a']);
+
+    expect(useAuthAccess.getState().guestDataDirty).toBe(true);
   });
 
   it('persists an explicit list order without changing list contents', () => {

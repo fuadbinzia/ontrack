@@ -1,93 +1,65 @@
-function json(request: Request, body: unknown, status = 200) {
-  const origin = request.headers.get('origin') ?? '*';
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    },
-  });
-}
+import {
+  PlaidServerError,
+  plaidApiOptions,
+  plaidRequest,
+  storePlaidLinkSession,
+  withPlaidApiAuth,
+} from '@/services/finance/plaid-server';
+
+const METHODS = 'POST, OPTIONS';
+const NATIVE_COMPLETION_URI = 'ontrack://plaid/complete';
+const DEFAULT_OAUTH_REDIRECT_URI = 'https://ontrack--links.expo.app/p/plaid';
 
 export function OPTIONS(request: Request) {
-  return json(request, {});
+  return plaidApiOptions(request, METHODS);
 }
 
-function plaidConfigured() {
-  return Boolean(process.env.PLAID_CLIENT_ID && process.env.PLAID_SECRET);
-}
-
-/**
- * Creates a Plaid Link token when PLAID_CLIENT_ID / PLAID_SECRET are set.
- * Without credentials, returns configured:false so the app can fall back to manual accounts.
- */
 export async function POST(request: Request) {
-  if (!plaidConfigured()) {
-    return json(
-      request,
-      {
-        configured: false,
-        error:
-          'Plaid is not configured. Add PLAID_CLIENT_ID and PLAID_SECRET, or add accounts manually.',
-      },
-      503,
-    );
-  }
-
-  const env = process.env.PLAID_ENV ?? process.env.EXPO_PUBLIC_PLAID_ENV ?? 'sandbox';
-  const clientId = process.env.PLAID_CLIENT_ID!;
-  const secret = process.env.PLAID_SECRET!;
-
-  let purpose: 'transactions' | 'investments' = 'transactions';
-  try {
-    const body = (await request.json()) as { purpose?: string };
-    if (body.purpose === 'investments') purpose = 'investments';
-  } catch {
-    // Empty body is fine — default to transactions.
-  }
-
-  try {
-    const response = await fetch('https://' + hostForEnv(env) + '/link/token/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: clientId,
-        secret,
-        client_name: 'onTrack',
-        language: 'en',
-        country_codes: ['US'],
-        user: { client_user_id: 'ontrack-user' },
-        products: purpose === 'investments' ? ['investments'] : ['transactions'],
-      }),
-    });
-    const data = (await response.json()) as {
-      link_token?: string;
-      error_message?: string;
+  return withPlaidApiAuth(request, async (request, userId) => {
+    const body = await request.json().catch(() => ({})) as {
+      purpose?: string;
+      native?: boolean;
     };
-    if (!response.ok || !data.link_token) {
-      return json(
-        request,
-        {
-          configured: true,
-          error: data.error_message ?? 'Could not create Plaid link token',
-        },
-        502,
-      );
-    }
-    return json(request, { configured: true, link_token: data.link_token });
-  } catch {
-    return json(
-      request,
-      { configured: true, error: 'Plaid link token request failed' },
-      502,
-    );
-  }
-}
+    const purpose = body.purpose === 'investments' ? 'investments' : 'transactions';
+    const completionRedirectUri = body.native === false
+      ? process.env.PLAID_WEB_COMPLETION_REDIRECT_URI?.trim() ||
+        `${new URL(request.url).origin}/finance/accounts?plaid=complete`
+      : NATIVE_COMPLETION_URI;
+    const redirectUri =
+      process.env.PLAID_REDIRECT_URI?.trim() || DEFAULT_OAUTH_REDIRECT_URI;
 
-function hostForEnv(env: string): string {
-  if (env === 'production') return 'production.plaid.com';
-  if (env === 'development') return 'development.plaid.com';
-  return 'sandbox.plaid.com';
+    const result = await plaidRequest<{
+      link_token?: string;
+      hosted_link_url?: string;
+      expiration?: string;
+    }>('/link/token/create', {
+      client_name: 'onTrack',
+      language: 'en',
+      country_codes: ['US'],
+      user: { client_user_id: userId },
+      products: [purpose],
+      redirect_uri: redirectUri,
+      hosted_link: {
+        completion_redirect_uri: completionRedirectUri,
+        is_mobile_app: body.native !== false,
+        url_lifetime_seconds: 30 * 60,
+      },
+      ...(purpose === 'transactions' ? { transactions: { days_requested: 30 } } : {}),
+    });
+    if (!result.link_token || !result.hosted_link_url || !result.expiration) {
+      throw new PlaidServerError('Plaid did not return a Hosted Link session.', 'INVALID_RESPONSE');
+    }
+    await storePlaidLinkSession({
+      linkToken: result.link_token,
+      userId,
+      purpose,
+      expiration: result.expiration,
+    });
+    return {
+      configured: true,
+      link_token: result.link_token,
+      hosted_link_url: result.hosted_link_url,
+      completion_redirect_uri: completionRedirectUri,
+    };
+  });
 }

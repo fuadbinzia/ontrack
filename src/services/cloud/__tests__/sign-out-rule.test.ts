@@ -40,15 +40,38 @@ describe('current-device sign-out invariants', () => {
     expect(provider).toContain('useAuthAccess.getState().resetAccess()');
   });
 
-  it('cleans every synced domain, nutrition memory, health, notifications, and app-owned media', () => {
+  it('cleans every persisted user domain, sensitive memory, and app-owned media', () => {
     for (const domain of ['addons', 'agents', 'preferences', 'schedule', 'plants', 'travel', 'todos']) {
       expect(sync).toContain(`name: '${domain}'`);
     }
     expect(sync).toContain('useNutrition.getState().reset()');
     expect(sync).toContain('useHealth.getState().reset()');
+    for (const store of [
+      'useFoodProfile',
+      'usePantry',
+      'useRecipes',
+      'useMealPlan',
+      'useTravelMap',
+      'useTravelPlanUi',
+      'useThemeOverrides',
+      'useUsageAnalytics',
+    ]) {
+      expect(sync).toContain(`${store}.getState()`);
+    }
+    expect(sync).toContain('clearFlightConfirmationAIMemory()');
+    expect(sync).toContain('removePersistedStorageItems([');
     expect(sync).toContain('deletePlant(plant.id)');
-    expect(sync).toContain("'plants'");
-    expect(sync).toContain("'meal-images'");
+    for (const directory of [
+      'plants',
+      'meal-images',
+      'recipe-images',
+      'profile-avatars',
+      'travel-confirmations',
+      'travel-moments',
+      'finance-docs',
+    ]) {
+      expect(sync).toContain(`'${directory}'`);
+    }
   });
 
   it('does not delete cloud rows or system photo-library originals during sign-out cleanup', () => {

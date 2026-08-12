@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,6 +16,7 @@ import {
 import { ActivityCard } from '@/components/shared';
 import { findCategory } from '@/constants/categories';
 import { layout, spacing } from '@/design-system';
+import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useTheme } from '@/hooks/use-theme';
 import { aiProvider } from '@/services/ai';
@@ -27,8 +28,10 @@ import { useUI } from '@/store/ui';
 import type { Activity } from '@/types/models';
 import { confirmDeleteActivity, showActivityActions, type ActivityAction } from '@/utils/activity-actions';
 import { AgentUiIds } from '@/utils/agent-ui';
-import { addDays, isToday, nowMinutes, todayKey } from '@/utils/date';
+import { addDays, toDateKey, todayKey } from '@/utils/date';
 import { listReferenceEquality } from '@/utils/list-equality';
+
+import { emptyDayTitle, resolveDayTimeState } from './day-view-model';
 
 interface DayViewProps {
   date: string;
@@ -40,18 +43,6 @@ interface DayViewProps {
     summaryLine?: string;
     topInset: number;
   }) => React.ReactNode;
-}
-
-function computeNowLine(activities: Activity[], date: string): string | undefined {
-  if (!isToday(date)) return undefined;
-  const now = nowMinutes();
-  const current = activities.find(
-    (a) => a.status === 'upcoming' && a.startMinutes <= now && now < a.startMinutes + a.durationMinutes,
-  );
-  if (current) return `Now · ${current.title}`;
-  const next = activities.find((a) => a.status === 'upcoming' && a.startMinutes > now);
-  if (next) return `Next · ${next.title}`;
-  return undefined;
 }
 
 export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
@@ -68,6 +59,25 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
   const enabledAddons = useAddons((s) => s.enabled);
   const notifyPageInteraction = useUI((state) => state.notifyPageInteraction);
   const { refreshControl } = usePullToRefresh();
+  const routeIsActive = useRouteIsActive();
+  const [clock, setClock] = useState(() => new Date());
+  const lastTodayKey = useRef(todayKey());
+
+  useEffect(() => {
+    if (!routeIsActive) return;
+    const tick = () => {
+      const nextClock = new Date();
+      const nextTodayKey = toDateKey(nextClock);
+      if (nextTodayKey !== lastTodayKey.current) {
+        if (date === lastTodayKey.current) onChangeDate(nextTodayKey);
+        lastTodayKey.current = nextTodayKey;
+      }
+      setClock(nextClock);
+    };
+    const interval = setInterval(tick, 60_000);
+    tick();
+    return () => clearInterval(interval);
+  }, [date, onChangeDate, routeIsActive]);
 
   const dayActivities = useSchedule(
     (s) => s.activities.filter((activity) => activity.date === date),
@@ -98,40 +108,44 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
   }, [activities]);
 
   const completedCount = activities.filter((a) => a.status === 'completed').length;
-  const skippedTitles = activities.filter((a) => a.status === 'skipped').map((a) => a.title);
-  const nowLine = computeNowLine(activities, date);
+  const countedTotal = activities.filter((a) => a.status !== 'skipped').length;
+  const skippedTitles = useMemo(
+    () => activities.filter((a) => a.status === 'skipped').map((a) => a.title),
+    [activities],
+  );
+  const { currentId, nowLine } = useMemo(
+    () => resolveDayTimeState(activities, date, clock),
+    [activities, clock, date],
+  );
 
   const [summary, setSummary] = useState<{ date: string; line: string } | undefined>();
   const canSummarize =
     aiEnabled && activities.length > 0 && date <= todayKey();
   useEffect(() => {
     let cancelled = false;
-    if (!canSummarize) return;
-    aiProvider
+    if (!canSummarize) {
+      setSummary(undefined);
+      return;
+    }
+    void aiProvider
       .summarizeDay({
         dateKey: date,
         completed: completedCount,
-        total: activities.filter((a) => a.status !== 'skipped').length,
+        total: countedTotal,
         skippedTitles,
       })
       .then((s) => {
         if (!cancelled) setSummary({ date, line: `${s.headline} ${s.body}` });
+      })
+      .catch(() => {
+        if (!cancelled) setSummary(undefined);
       });
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date, completedCount, skippedTitles.length, canSummarize]);
+  }, [canSummarize, completedCount, countedTotal, date, skippedTitles]);
 
   const summaryLine = canSummarize && summary?.date === date ? summary.line : undefined;
-
-  const now = nowMinutes();
-  const currentId = isToday(date)
-    ? activities.find(
-        (a) =>
-          a.status === 'upcoming' && a.startMinutes <= now && now < a.startMinutes + a.durationMinutes,
-      )?.id
-    : undefined;
 
   const handleActivityAction = (activity: Activity, action: ActivityAction) => {
     switch (action) {
@@ -213,7 +227,7 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
               {activities.length === 0 ? (
                 <EmptyState
                   icon="today"
-                  title="Today is wide open."
+                  title={emptyDayTitle(date)}
                   message="Nothing on the books yet — add a workout, a meal, or whatever sounds good and the day starts to feel like yours."
                   actionLabel="Add Activity"
                   actionTestID={AgentUiIds.today.emptyAddActivity}

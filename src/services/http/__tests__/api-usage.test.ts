@@ -1,8 +1,9 @@
 import {
-    checkApiRateLimit,
-    peekAllApiRateLimits,
-    peekApiRateLimit,
-    resetApiRateLimitsForTests,
+  checkApiRateLimit,
+  PAID_API_BUCKETS,
+  peekAllApiRateLimits,
+  peekApiRateLimit,
+  resetApiRateLimitsForTests,
 } from '../api-rate-limit';
 import { buildApiUsageSnapshot } from '../api-usage';
 import { API_USAGE_CATALOG } from '../api-usage-catalog';
@@ -30,15 +31,7 @@ describe('peekApiRateLimit', () => {
 
   it('returns peeks for every paid bucket', () => {
     const peeks = peekAllApiRateLimits('dev-user');
-    expect(Object.keys(peeks).sort()).toEqual([
-      'flights',
-      'food',
-      'health',
-      'movies',
-      'nutrition',
-      'plant',
-      'recipe',
-    ]);
+    expect(Object.keys(peeks).sort()).toEqual([...PAID_API_BUCKETS].sort());
   });
 });
 
@@ -74,4 +67,3 @@ describe('buildApiUsageSnapshot', () => {
     expect(nutrition?.healthLabel).toBeTruthy();
   });
 });
-

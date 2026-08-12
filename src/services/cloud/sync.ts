@@ -28,6 +28,7 @@ export {
   flushCloudSyncPayloads,
   isCloudSyncPushPaused,
   restoreSyncedDomains,
+  resumeCloudSyncAfterReset,
   setCloudSyncPushPaused,
   snapshotSyncedDomains,
   startCloudSync,

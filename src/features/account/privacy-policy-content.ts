@@ -27,7 +27,7 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
     title: 'Photos, camera, and media',
     paragraphs: [
       'Camera and photo library access are used only when you choose to capture or attach images (for example meals, plants, vision board, or avatars).',
-      'App-owned copies of images may be stored on your device and, when you are signed in, in private cloud storage tied to your account. System photo-library originals are not deleted when you sign out or reset local data.',
+      'App-owned copies of images may be stored on your device and, when you are signed in, in private cloud storage tied to your account. System photo-library originals are never deleted by onTrack.',
     ],
   },
   {
@@ -84,7 +84,7 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
   {
     title: 'Retention and deletion',
     paragraphs: [
-      'You can reset local data on a device from Profile. Signing out of a device removes account-owned local copies on that device; it does not delete your cloud account.',
+      'You can use Reset All Data from Profile to permanently remove app data and app-owned files from the device. When signed in, the same action also removes synced cloud data while retaining your account. Signing out removes account-owned local copies from that device but does not delete cloud data.',
       'Signed-in users can permanently delete their account from Profile. Account deletion removes your cloud account, synced app data, and app-owned cloud media associated with that account, subject to short-term backups and legal retention where required.',
       'Shared resources you own (such as a checklist or trip you host) are removed or become unavailable to collaborators when your account is deleted.',
     ],

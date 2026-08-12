@@ -1,0 +1,19 @@
+---
+description: Every bug fix must include a regression test that protects the corrected behavior
+alwaysApply: true
+---
+
+# Bug fixes require regression tests
+
+Every bug fix must add or update automated regression tests in the same change: one that directly reproduces the bug and additional tests around the affected behavior.
+
+## Required
+
+1. Add a direct regression test that reproduces the reported failure at the closest reliable layer, then asserts the corrected behavior.
+2. Add surrounding coverage for the affected behavior: relevant boundary values, neighboring states or branches, success and failure paths, and the most likely recurrence cases. Use judgment and keep the cases focused, but never stop at only the exact reported input.
+3. Prefer behavior tests over implementation-detail assertions. For build configuration, native plugins, or layout invariants that cannot run in Jest, add focused source/config contract tests for both the defect and its surrounding invariants.
+4. Name tests after the failure or user-visible behavior they prevent.
+5. Run the direct and surrounding regression tests before close-out, plus the normal typecheck/test checks required by `AGENTS.md`.
+6. When touching an older bug fix that lacks direct or surrounding coverage, add the missing tests in the same change.
+
+Do not close a bug fix with only manual verification, a screenshot, one happy-path assertion, or an explanation that the change is too small to test. Extract a testable helper or use narrow contract tests when direct execution is impractical.

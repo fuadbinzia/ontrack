@@ -225,6 +225,15 @@ export function createSensitivePersistStorage<T>() {
   return createJSONStorage<T>(() => storage);
 }
 
+/** Remove persisted values without reaching into a backend-specific API. */
+export async function removePersistedStorageItems(
+  keys: readonly string[],
+  options?: { sensitive?: boolean },
+): Promise<void> {
+  const backend = options?.sensitive ? await getSensitiveBackend() : await getBackend();
+  await Promise.all(keys.map((key) => backend.removeItem(key)));
+}
+
 /** Test helper — reset cached backend between suites. */
 export function resetPersistBackendForTests() {
   backendPromise = undefined;

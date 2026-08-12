@@ -12,6 +12,7 @@ export async function fetchWithTimeout(
   const external = init?.signal;
   const onExternalAbort = () => controller.abort();
   external?.addEventListener('abort', onExternalAbort, { once: true });
+  if (external?.aborted) controller.abort();
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } finally {

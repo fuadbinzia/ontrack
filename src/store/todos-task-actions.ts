@@ -233,6 +233,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
         ),
       );
       const updatedAt = nowIso();
+      markGuestEdit();
       set((state) => ({
         tasks: state.tasks.map((item) =>
           item.id === id

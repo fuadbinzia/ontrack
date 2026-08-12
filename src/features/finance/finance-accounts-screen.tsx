@@ -14,29 +14,43 @@ import { ChipRow } from '@/components/shared';
 import { formatMoney } from '@/features/travel/expenses/format-money';
 import { useResponsive } from '@/hooks/use-responsive';
 import {
+  completePlaidLink,
   createPlaidLinkToken,
-  deletePlaidAccessToken,
-  exchangePlaidPublicToken,
-  loadPlaidAccessToken,
-  syncPlaidTransactions,
+  disconnectPlaidItem,
+  FinanceServiceError,
+  openPlaidHostedLink,
+  syncPlaidItem,
   type PlaidLinkPurpose,
 } from '@/services/finance';
-import { createFinanceTransaction, useFinance } from '@/store/finance';
+import { useFinance } from '@/store/finance';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { todayKey } from '@/utils/date';
 import { parseFiniteNumber } from '@/utils/parse';
 
-import { applyPlaidExchangeResult } from './apply-plaid-link';
-import { createFinanceAccount, createFinanceHolding, personalEntityId } from './create';
-import { FinancePlaidLinkSheet } from './finance-plaid-link-sheet';
+import { applyPlaidExchangeResult, applyPlaidSyncResult } from './apply-plaid-link';
+import { createFinanceAccount, personalEntityId } from './create';
 import { FinanceSubpageHeader } from './finance-subpage-header';
 import {
   FINANCE_ACCOUNT_KIND_LABEL,
   FINANCE_ACCOUNT_KINDS,
-  isFinanceInvestmentKind,
   type FinanceAccount,
   type FinanceAccountKind,
 } from './types';
+
+function plaidLinkResultMessage(
+  result: Extract<Awaited<ReturnType<typeof completePlaidLink>>, { ok: true }>,
+): string {
+  if (result.syncStatus === 'pending') {
+    return 'The connection is ready. Plaid is still preparing the first data sync.';
+  }
+  if (result.syncStatus === 'error') {
+    return `The connection is ready, but the first sync needs another try. ${result.syncError ?? ''}`.trim();
+  }
+  return result.purpose === 'investments'
+    ? 'Holdings and balances were imported from Plaid.'
+    : 'Recent spending was imported from Plaid.';
+}
 
 export function FinanceAccountsScreen() {
   const { spacing: gap } = useResponsive();
@@ -47,8 +61,7 @@ export function FinanceAccountsScreen() {
   const referenceSavingsApr = useFinance((s) => s.referenceSavingsApr);
   const saveAccount = useFinance((s) => s.saveAccount);
   const removeAccount = useFinance((s) => s.removeAccount);
-  const upsertPlaidTransactions = useFinance((s) => s.upsertPlaidTransactions);
-  const upsertHoldings = useFinance((s) => s.upsertHoldings);
+  const removePlaidItem = useFinance((s) => s.removePlaidItem);
   const setReferenceSavingsApr = useFinance((s) => s.setReferenceSavingsApr);
   const personalId = personalEntityId(entities);
 
@@ -63,9 +76,6 @@ export function FinanceAccountsScreen() {
   );
   const [linking, setLinking] = useState(false);
   const [syncingId, setSyncingId] = useState<string>();
-  const [linkToken, setLinkToken] = useState<string>();
-  const [linkPurpose, setLinkPurpose] = useState<PlaidLinkPurpose>('transactions');
-  const [linkOpen, setLinkOpen] = useState(false);
   const [error, setError] = useState<string>();
 
   const saveManual = () => {
@@ -95,11 +105,8 @@ export function FinanceAccountsScreen() {
     setError(undefined);
   };
 
-  const finishPublicToken = async (
-    publicToken: string,
-    purpose: PlaidLinkPurpose,
-  ) => {
-    const exchanged = await exchangePlaidPublicToken(publicToken, purpose);
+  const finishLink = async (linkToken: string) => {
+    const exchanged = await completePlaidLink(linkToken);
     if (!exchanged.ok || !personalId) {
       appPrompt.alert(
         'Link failed',
@@ -107,12 +114,10 @@ export function FinanceAccountsScreen() {
       );
       return;
     }
-    await applyPlaidExchangeResult(exchanged, personalId, baseCurrency);
+    applyPlaidExchangeResult(exchanged, personalId, baseCurrency);
     appPrompt.alert(
-      purpose === 'investments' ? 'Investments linked' : 'Accounts linked',
-      purpose === 'investments'
-        ? 'Holdings and balances were imported from Plaid.'
-        : 'Recent transactions were imported from Plaid.',
+      exchanged.purpose === 'investments' ? 'Investments linked' : 'Accounts linked',
+      plaidLinkResultMessage(exchanged),
     );
   };
 
@@ -121,11 +126,6 @@ export function FinanceAccountsScreen() {
     try {
       const tokenResult = await createPlaidLinkToken(purpose);
       if (!tokenResult.ok) {
-        const sandbox = process.env.EXPO_PUBLIC_PLAID_SANDBOX_PUBLIC_TOKEN?.trim();
-        if (sandbox) {
-          await finishPublicToken(sandbox, purpose);
-          return;
-        }
         appPrompt.alert(
           purpose === 'investments' ? 'Investment linking unavailable' : 'Bank linking unavailable',
           tokenResult.configured
@@ -134,9 +134,14 @@ export function FinanceAccountsScreen() {
         );
         return;
       }
-      setLinkPurpose(purpose);
-      setLinkToken(tokenResult.linkToken);
-      setLinkOpen(true);
+      await openPlaidHostedLink(tokenResult);
+      await finishLink(tokenResult.linkToken);
+    } catch (linkError) {
+      if (linkError instanceof FinanceServiceError && linkError.code === 'CANCELLED') return;
+      appPrompt.alert(
+        'Link failed',
+        linkError instanceof Error ? linkError.message : 'Plaid Link did not finish.',
+      );
     } finally {
       setLinking(false);
     }
@@ -144,78 +149,44 @@ export function FinanceAccountsScreen() {
 
   const syncAccount = async (account: FinanceAccount) => {
     if (!account.plaidItemId || !personalId) return;
-    setSyncingId(account.id);
-    const purpose: PlaidLinkPurpose = isFinanceInvestmentKind(account.kind)
-      ? 'investments'
-      : 'transactions';
+    setSyncingId(account.plaidItemId);
     try {
-      const token = await loadPlaidAccessToken(account.plaidItemId);
-      if (!token) {
-        appPrompt.alert(
-          'Re-link required',
-          'No stored Plaid token for this account. Link again to refresh.',
-        );
-        return;
-      }
-      const synced = await syncPlaidTransactions(token, 30, purpose);
+      const synced = await syncPlaidItem(account.plaidItemId);
       if (!synced.ok) {
         appPrompt.alert('Sync failed', synced.error);
         return;
       }
-      if (purpose === 'investments') {
-        const row = synced.accounts.find((a) => a.accountId === account.plaidAccountId);
-        if (typeof row?.balance === 'number') {
-          saveAccount({
-            ...account,
-            balance: row.balance,
-            balanceAsOf: todayKey(),
-          });
-        }
-        upsertHoldings(
-          synced.holdings
-            .filter((h) => !h.accountId || h.accountId === account.plaidAccountId)
-            .map((h) =>
-              createFinanceHolding({
-                accountId: account.id,
-                symbol: h.symbol,
-                name: h.name,
-                quantity: h.quantity,
-                value: h.value,
-                currency: h.currency || baseCurrency,
-                asOf: h.asOf,
-                externalId: h.externalId,
-              }),
-            ),
-        );
-        appPrompt.alert('Synced', `Imported ${synced.holdings.length} holdings.`);
-        return;
-      }
-      upsertPlaidTransactions(
-        synced.transactions.map((t) =>
-          createFinanceTransaction({
-            amount: t.amount,
-            currency: baseCurrency,
-            date: t.date,
-            merchant: t.merchant,
-            categoryId: 'other',
-            entityId: personalId,
-            accountId: account.id,
-            source: 'plaid',
-            externalId: t.externalId,
-          }),
-        ),
+      applyPlaidSyncResult(account.plaidItemId, synced, personalId, baseCurrency);
+      const count = synced.purpose === 'investments'
+        ? synced.holdings.length
+        : synced.transactions.length;
+      appPrompt.alert(
+        synced.syncStatus === 'pending' ? 'Sync pending' : 'Synced',
+        synced.syncStatus === 'pending'
+          ? 'Plaid is still preparing this connection. Try Sync again shortly.'
+          : `Reconciled ${count} ${synced.purpose === 'investments' ? 'holdings' : 'spending updates'}.`,
       );
-      appPrompt.alert('Synced', `Imported ${synced.transactions.length} recent transactions.`);
     } finally {
       setSyncingId(undefined);
     }
   };
 
   const disconnect = async (account: FinanceAccount) => {
-    if (account.plaidItemId) {
-      await deletePlaidAccessToken(account.plaidItemId);
+    if (!account.plaidItemId) {
+      removeAccount(account.id);
+      return;
     }
-    removeAccount(account.id);
+    try {
+      await disconnectPlaidItem(account.plaidItemId);
+      removePlaidItem(account.plaidItemId);
+    } catch (disconnectError) {
+      appPrompt.alert(
+        'Disconnect failed',
+        disconnectError instanceof Error
+          ? disconnectError.message
+          : 'Plaid access could not be revoked.',
+      );
+    }
   };
 
   return (
@@ -344,21 +315,39 @@ export function FinanceAccountsScreen() {
                         : ''}
                     </AppText>
                     <View style={{ flexDirection: 'row', gap: gap.sm, flexWrap: 'wrap' }}>
-                      {account.linkStatus === 'linked' && account.plaidItemId ? (
+                      {account.linkStatus !== 'manual' && account.plaidItemId ? (
                         <Button
                           size="sm"
                           variant="secondary"
-                          disabled={syncingId === account.id}
+                          disabled={syncingId === account.plaidItemId}
                           onPress={() => void syncAccount(account)}
                           testID={AgentUiIds.finance.accounts.sync(account.id)}>
-                          {syncingId === account.id ? 'Syncing…' : 'Sync'}
+                          {syncingId === account.plaidItemId ? 'Syncing…' : 'Sync'}
                         </Button>
                       ) : null}
                       <Button
                         size="sm"
                         variant="ghost"
-                        onPress={() => void disconnect(account)}>
-                        {account.linkStatus === 'linked' ? 'Disconnect' : 'Delete'}
+                        onPress={() => {
+                          if (account.plaidItemId) {
+                            confirmDestructiveAction({
+                              title: 'Disconnect this institution?',
+                              message: 'This revokes Plaid access and removes every account, imported transaction, and holding from this connection.',
+                              actionLabel: 'Disconnect',
+                              confirmTestID: AgentUiIds.finance.accounts.confirmDisconnect(account.plaidItemId),
+                              onConfirm: () => void disconnect(account),
+                            });
+                            return;
+                          }
+                          confirmDestructiveAction({
+                            title: 'Delete this account?',
+                            actionLabel: 'Delete',
+                            confirmTestID: AgentUiIds.finance.accounts.confirmDisconnect(account.id),
+                            onConfirm: () => void disconnect(account),
+                          });
+                        }}
+                        testID={AgentUiIds.finance.accounts.disconnect(account.id)}>
+                        {account.plaidItemId ? 'Disconnect' : 'Delete'}
                       </Button>
                     </View>
                   </View>
@@ -375,17 +364,6 @@ export function FinanceAccountsScreen() {
         </View>
       </AgentTestId>
 
-      <FinancePlaidLinkSheet
-        visible={linkOpen}
-        linkToken={linkToken}
-        onClose={() => {
-          setLinkOpen(false);
-          setLinkToken(undefined);
-        }}
-        onSuccess={(publicToken) => {
-          void finishPublicToken(publicToken, linkPurpose);
-        }}
-      />
     </Screen>
   );
 }

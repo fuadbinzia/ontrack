@@ -99,7 +99,6 @@ export function ProfileLocationPreferences() {
 
   const [homeDraft, setHomeDraft] = useState(homeLocation);
   const [currentDraft, setCurrentDraft] = useState(currentLocation);
-  const [currentDirty, setCurrentDirty] = useState(false);
   const [savingHome, setSavingHome] = useState(false);
   const [savingCurrent, setSavingCurrent] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -107,7 +106,7 @@ export function ProfileLocationPreferences() {
 
   const homeDraftRef = useRef(homeDraft);
   const currentDraftRef = useRef(currentDraft);
-  const currentDirtyRef = useRef(currentDirty);
+  const currentDirtyRef = useRef(false);
   const homeSaveGen = useRef(0);
   const currentSaveGen = useRef(0);
 
@@ -119,7 +118,6 @@ export function ProfileLocationPreferences() {
     currentDraftRef.current = text;
     currentDirtyRef.current = dirty;
     setCurrentDraft(text);
-    setCurrentDirty(dirty);
   };
 
   useEffect(() => {
@@ -188,18 +186,18 @@ export function ProfileLocationPreferences() {
     if (locating || savingCurrent) return;
     setLocating(true);
     setError(undefined);
-    setCurrentDirty(true);
+    writeCurrentDraft(currentDraftRef.current, true);
     haptics.tap();
     void getCurrentPlaceLabel()
       .then(async (result) => {
         if (result.status === 'denied') {
           setError('Location permission is off. Enable it in Settings.');
-          setCurrentDirty(false);
+          writeCurrentDraft(currentDraftRef.current, false);
           return;
         }
         if (result.status !== 'suggested' || !result.label.trim()) {
           setError('Could not determine your current place.');
-          setCurrentDirty(false);
+          writeCurrentDraft(currentDraftRef.current, false);
           return;
         }
         // Snapshot GPS into Current override (still never writes Home).

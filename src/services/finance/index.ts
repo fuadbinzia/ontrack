@@ -1,12 +1,10 @@
 export { requestFinanceCoachPolish } from './coach-client';
 export {
+  completePlaidLink,
   createPlaidLinkToken,
-  exchangePlaidPublicToken,
-  syncPlaidTransactions,
+  disconnectPlaidItem,
+  FinanceServiceError,
+  openPlaidHostedLink,
+  syncPlaidItem,
   type PlaidLinkPurpose,
 } from './plaid';
-export {
-  deletePlaidAccessToken,
-  loadPlaidAccessToken,
-  savePlaidAccessToken,
-} from './plaid-secure';

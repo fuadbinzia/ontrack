@@ -7,7 +7,11 @@ import type {
     DataChoiceVariant,
 } from '@/services/cloud/sync';
 
-import type { DeleteAccountResult, SignOutResult } from './auth-account-exit';
+import type {
+    DeleteAccountResult,
+    ResetAccountDataResult,
+    SignOutResult,
+} from './auth-account-exit';
 import type { AuthPhase } from './auth-phase';
 
 export type DataResolution = AccountSyncResolution | 'cancel';
@@ -29,6 +33,7 @@ export interface AuthContextValue {
   completeOAuthCallback: (url: string) => Promise<void>;
   resolveDataConflict: (choice: DataResolution) => Promise<void>;
   signOutCurrentDevice: (force?: boolean) => Promise<SignOutResult>;
+  resetAccountData: () => Promise<ResetAccountDataResult>;
   deleteAccount: () => Promise<DeleteAccountResult>;
   lockSession: () => void;
   clearError: () => void;

@@ -17,6 +17,7 @@ export interface GoogleCalendarStatus {
 
 export interface GoogleCalendarSyncResult {
   activities: Activity[];
+  acknowledgedDeletionIds: string[];
   imported: number;
   exported: number;
   updated: number;
@@ -25,6 +26,13 @@ export interface GoogleCalendarSyncResult {
   hasMore: boolean;
   nextPhase?: 'pull' | 'push';
 }
+
+export type GoogleCalendarDeletion = {
+  activityId: string;
+  calendarId: string;
+  eventId: string;
+  origin: 'google' | 'ontrack';
+};
 
 export type GoogleCalendarConnectionRow = {
   user_id: string;

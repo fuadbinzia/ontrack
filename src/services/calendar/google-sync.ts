@@ -2,6 +2,7 @@ import type { Activity } from '@/types/models';
 
 import { buildGoogleBatchBody, parseGoogleBatchResponse, type GoogleBatchOperation } from './google-batch';
 import { activityBody, eventToActivity, googleEventIdForActivity } from './google-mapping';
+import { fetchGoogleApi } from './google-fetch';
 import {
   decryptGoogleCalendarToken,
   googleCalendarAccessToken,
@@ -15,6 +16,7 @@ import {
 } from './google-sync-policy';
 import type {
   GoogleCalendarConnectionRow,
+  GoogleCalendarDeletion,
   GoogleCalendarEvent,
   GoogleCalendarLinkRow,
   GoogleCalendarSyncDirection,
@@ -53,7 +55,7 @@ export async function setGoogleCalendarDirection(userId: string, direction: Goog
 }
 
 async function googleFetch<T>(token: string, path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`https://www.googleapis.com/calendar/v3${path}`, {
+  const response = await fetchGoogleApi(`https://www.googleapis.com/calendar/v3${path}`, {
     ...init,
     headers: { Authorization: `Bearer ${token}`, ...(init?.body ? { 'Content-Type': 'application/json' } : {}), ...init?.headers },
   });
@@ -67,7 +69,7 @@ async function googleFetch<T>(token: string, path: string, init?: RequestInit): 
 async function googleBatch<T>(token: string, operations: GoogleBatchOperation[]) {
   if (!operations.length) return new Map();
   const boundary = `batch_ontrack_${crypto.randomUUID().replace(/-/g, '')}`;
-  const response = await fetch('https://www.googleapis.com/batch/calendar/v3', {
+  const response = await fetchGoogleApi('https://www.googleapis.com/batch/calendar/v3', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -81,7 +83,7 @@ async function googleBatch<T>(token: string, operations: GoogleBatchOperation[])
   return results;
 }
 
-function assertGoogleBatchResult<T>(result: { status: number; body?: T } | undefined, allowed: number[]) {
+export function assertGoogleBatchResult<T>(result: { status: number; body?: T } | undefined, allowed: number[]) {
   if (result && allowed.includes(result.status)) return result.body;
   const failure = result?.body as { error?: { message?: string } } | undefined;
   throw new Error(failure?.error?.message || `Google Calendar request failed (${result?.status ?? 'unknown'}).`);
@@ -114,6 +116,7 @@ async function upsertLinks(db: ReturnType<typeof googleCalendarAdmin>, links: Go
 export async function syncGoogleCalendarServer(
   userId: string,
   activities: Activity[],
+  deletions: GoogleCalendarDeletion[],
   timeZone: string,
   phase: 'pull' | 'push',
 ) {
@@ -131,11 +134,40 @@ export async function syncGoogleCalendarServer(
   const syncedAt = new Date().toISOString();
   let imported = 0, exported = 0, updated = 0, removed = 0;
   const direction = row.sync_direction ?? 'two_way';
+  const acknowledgedDeletionIds = new Set<string>();
+  const deletionsToPush = googleCalendarSyncPolicy.pushesToGoogle(direction) ? deletions : [];
+  if (!googleCalendarSyncPolicy.pushesToGoogle(direction)) {
+    deletions.forEach((deletion) => acknowledgedDeletionIds.add(deletion.activityId));
+  }
+  const deletionByActivity = new Map(deletionsToPush.map((deletion) => [deletion.activityId, deletion]));
+  const deletionByEvent = new Map(deletionsToPush.map((deletion) => [`${deletion.calendarId}:${deletion.eventId}`, deletion]));
 
   if (phase === 'pull') {
     const linkEventIdsToDelete = new Set<string>();
     const discoveredLinks: GoogleCalendarLinkRow[] = [];
+    const recoveredDeletionLinks: GoogleCalendarLinkRow[] = [];
     const events = await listEvents(token, row.calendar_id);
+
+    // A reconnect can intentionally clear stale server mappings. Rebuild only
+    // explicit deletion mappings from their persisted local tombstones so the
+    // exact provider event is removed without treating a generally missing
+    // activity as a deletion.
+    for (const deletion of deletionsToPush) {
+      if (deletion.calendarId !== row.calendar_id || byActivity.has(deletion.activityId)) continue;
+      const recoveredLink: GoogleCalendarLinkRow = {
+        user_id: userId,
+        calendar_id: deletion.calendarId,
+        google_event_id: deletion.eventId,
+        activity_id: deletion.activityId,
+        origin: deletion.origin,
+        google_updated_at: null,
+        local_updated_at: null,
+        created_at: syncedAt,
+      };
+      byEvent.set(deletion.eventId, recoveredLink);
+      byActivity.set(deletion.activityId, recoveredLink);
+      recoveredDeletionLinks.push(recoveredLink);
+    }
 
     // Apply provider deletions before choosing a canonical event. Otherwise a
     // cancelled old link can cause its live replacement to be skipped.
@@ -150,11 +182,15 @@ export async function syncGoogleCalendarServer(
         continue;
       }
       local.delete(link.activity_id);
+      if (deletionByActivity.has(link.activity_id)) acknowledgedDeletionIds.add(link.activity_id);
       linkEventIdsToDelete.add(event.id);
       byEvent.delete(event.id);
       byActivity.delete(link.activity_id);
       removed += 1;
     }
+    discoveredLinks.push(...recoveredDeletionLinks.filter(
+      (link) => byActivity.get(link.activity_id) === link && !acknowledgedDeletionIds.has(link.activity_id),
+    ));
 
     const markedEvents = new Map<string, GoogleCalendarEvent[]>();
     for (const event of events) {
@@ -197,6 +233,11 @@ export async function syncGoogleCalendarServer(
       if (!event.id) continue;
       if (event.status === 'cancelled' || duplicateEventIds.has(event.id)) continue;
       let link = byEvent.get(event.id);
+      const deletion = deletionByEvent.get(`${row.calendar_id}:${event.id}`);
+      if (deletion) {
+        if (link) link.google_updated_at = event.updated ?? syncedAt;
+        continue;
+      }
       if (!link) {
         const markedActivityId = event.extendedProperties?.private?.ontrackActivityId;
         const metadataActivity = localActivityByEvent.get(`${row.calendar_id}:${event.id}`);
@@ -242,20 +283,21 @@ export async function syncGoogleCalendarServer(
       && duplicateEventIds.size > duplicatesToRemove.length;
     if (!hasMoreDuplicates && direction === 'from_google') {
       await markConnectionSynced(db, userId, syncedAt);
-      return { activities: [...local.values()], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: false };
+      return { activities: [...local.values()], acknowledgedDeletionIds: [...acknowledgedDeletionIds], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: false };
     }
-    return { activities: [...local.values()], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: true, nextPhase: hasMoreDuplicates ? 'pull' as const : 'push' as const };
+    return { activities: [...local.values()], acknowledgedDeletionIds: [...acknowledgedDeletionIds], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: true, nextPhase: hasMoreDuplicates ? 'pull' as const : 'push' as const };
   }
 
   if (!googleCalendarSyncPolicy.pushesToGoogle(direction)) {
     await markConnectionSynced(db, userId, syncedAt);
-    return { activities, imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: false };
+    return { activities, acknowledgedDeletionIds: [...acknowledgedDeletionIds], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: false };
   }
 
-  const deletedLinks = links.filter((link) => link.origin === 'ontrack' && !local.has(link.activity_id));
+  const deletedActivityIds = new Set(deletionByActivity.keys());
+  const deletedLinks = links.filter((link) => googleCalendarSyncPolicy.isExplicitDeletion(link, deletedActivityIds));
   const pendingActivities = activities.filter((activity) => {
     const link = byActivity.get(activity.id);
-    return !link || (link.origin === 'ontrack' && new Date(activity.updatedAt).getTime() > new Date(link.local_updated_at ?? 0).getTime());
+    return googleCalendarSyncPolicy.hasLocalChanges(activity, link);
   });
   const mutations = [
     ...deletedLinks.map((link) => ({ kind: 'delete' as const, link })),
@@ -294,6 +336,7 @@ export async function syncGoogleCalendarServer(
       if (mutation.kind === 'delete') {
         assertGoogleBatchResult(result, [204, 404, 410]);
         linksToDelete.push(mutation.link.google_event_id);
+        acknowledgedDeletionIds.add(mutation.link.activity_id);
         removed += 1;
         return;
       }
@@ -323,12 +366,12 @@ export async function syncGoogleCalendarServer(
       return link ? { ...activity, googleCalendar: { calendarId: link.calendar_id, eventId: link.google_event_id, origin: link.origin, lastSyncedAt: syncedAt } } : activity;
     });
     const hasMore = deletedLinks.length + pendingActivities.length > mutations.length;
-    if (hasMore) return { activities: nextActivities, imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore, nextPhase: 'push' as const };
+    if (hasMore) return { activities: nextActivities, acknowledgedDeletionIds: [...acknowledgedDeletionIds], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore, nextPhase: 'push' as const };
     activities = nextActivities;
   }
 
   await markConnectionSynced(db, userId, syncedAt);
-  return { activities, imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: false };
+  return { activities, acknowledgedDeletionIds: [...acknowledgedDeletionIds], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: false };
 }
 
 export async function disconnectGoogleCalendarServer(userId: string, removeExported: boolean) {
@@ -347,9 +390,12 @@ export async function disconnectGoogleCalendarServer(userId: string, removeExpor
     const operations = exportedLinks.map((link, index) => ({
       id: `operation-${index}`,
       method: 'DELETE' as const,
-      path: `/calendar/v3${googleCalendarEventPath(row.calendar_id, link.google_event_id)}`,
+      path: `/calendar/v3${googleCalendarEventPath(link.calendar_id, link.google_event_id)}`,
     }));
-    if (operations.length) await googleBatch(token, operations);
+    if (operations.length) {
+      const results = await googleBatch(token, operations);
+      operations.forEach((operation) => assertGoogleBatchResult(results.get(operation.id), [204, 404, 410]));
+    }
     if (exportedLinks.length) {
       const { error: linksDeleteError } = await db.from('google_calendar_event_links')
         .delete()

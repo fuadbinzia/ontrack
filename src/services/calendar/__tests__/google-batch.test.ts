@@ -1,4 +1,5 @@
 import { buildGoogleBatchBody, parseGoogleBatchResponse } from '../google-batch';
+import { assertGoogleBatchResult } from '../google-sync';
 import { dedupeGoogleCalendarActivities, googleEventIdForActivity } from '../google-server';
 
 it('builds and correlates a Google Calendar multipart batch', () => {
@@ -22,6 +23,14 @@ it('builds and correlates a Google Calendar multipart batch', () => {
   ].join('\r\n');
   expect(parseGoogleBatchResponse<{ id: string }>('multipart/mixed; boundary=response-boundary', response).get('operation-0'))
     .toEqual({ status: 200, body: { id: 'google-1' } });
+});
+
+it('does not discard unlink mappings when Google rejects an embedded deletion', () => {
+  expect(() => assertGoogleBatchResult({
+    status: 403,
+    body: { error: { message: 'Calendar permission denied.' } },
+  }, [204, 404, 410])).toThrow('Calendar permission denied.');
+  expect(() => assertGoogleBatchResult({ status: 404 }, [204, 404, 410])).not.toThrow();
 });
 
 it('uses a stable Google event id so concurrent retries cannot create duplicates', async () => {

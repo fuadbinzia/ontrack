@@ -109,3 +109,7 @@ export const flightConfirmationAIMemory: FlightConfirmationAIMemory = {
     });
   },
 };
+
+export async function clearFlightConfirmationAIMemory(): Promise<void> {
+  await storage?.removeItem(STORAGE_KEYS.flightParserMemory);
+}

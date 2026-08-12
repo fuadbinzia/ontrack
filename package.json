@@ -1,7 +1,7 @@
 {
   "name": "ontrack",
   "main": "expo-router/entry",
-  "version": "1.0.60",
+  "version": "1.0.61",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -57,7 +57,6 @@
     "react-native-svg": "15.15.4",
     "react-native-swipeable-item": "^2.0.9",
     "react-native-web": "~0.21.0",
-    "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.1",
     "reanimated-color-picker": "^5.1.2",
     "topojson-client": "^3.1.0",

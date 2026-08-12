@@ -1,24 +1,46 @@
 import { createFinanceAccount, createFinanceHolding, createFinanceTransaction } from '@/features/finance/create';
-import type { PlaidExchangeResult } from '@/services/finance/plaid';
-import { savePlaidAccessToken } from '@/services/finance/plaid-secure';
+import type { PlaidExchangeResult, PlaidSyncResult } from '@/services/finance/plaid';
 import { useFinance } from '@/store/finance';
 import { todayKey } from '@/utils/date';
 
 import { mapPlaidAccountKind } from './plaid-account-kind';
 
+type SuccessfulPlaidData = {
+  itemId: string;
+  institutionName?: string;
+  purpose: 'transactions' | 'investments';
+  accounts: Extract<PlaidExchangeResult, { ok: true }>['accounts'];
+  holdings: Extract<PlaidExchangeResult, { ok: true }>['holdings'];
+  transactions: Extract<PlaidExchangeResult, { ok: true }>['transactions'];
+  removedExternalIds: string[];
+  syncStatus: Extract<PlaidExchangeResult, { ok: true }>['syncStatus'];
+};
+
+function linkStatusForSync(
+  status: SuccessfulPlaidData['syncStatus'],
+): 'linked' | 'pending' | 'error' {
+  if (status === 'error') return 'error';
+  if (status === 'pending') return 'pending';
+  return 'linked';
+}
+
 function upsertLinkedAccounts(
-  result: Extract<PlaidExchangeResult, { ok: true }>,
+  result: SuccessfulPlaidData,
   baseCurrency: string,
 ): Map<string, string> {
   const asOf = todayKey();
   const saveAccount = useFinance.getState().saveAccount;
   const existing = useFinance.getState().accounts;
+  const existingForItem = existing.filter(
+    (account) => account.plaidItemId === result.itemId,
+  );
   const byPlaid = new Map(
-    existing
-      .filter((a) => a.plaidItemId === result.itemId && a.plaidAccountId)
-      .map((a) => [a.plaidAccountId!, a]),
+    existingForItem
+      .filter((account) => account.plaidAccountId)
+      .map((account) => [account.plaidAccountId!, account]),
   );
   const accountIds = new Map<string, string>();
+  const linkStatus = linkStatusForSync(result.syncStatus);
 
   for (const row of result.accounts) {
     const prior = row.accountId ? byPlaid.get(row.accountId) : undefined;
@@ -29,10 +51,10 @@ function upsertLinkedAccounts(
       last4: row.mask ?? prior?.last4,
       balance: row.balance ?? prior?.balance,
       balanceAsOf: row.balance != null ? asOf : prior?.balanceAsOf,
-      currency: row.currency || baseCurrency,
-      linkStatus: 'linked',
+      currency: row.currency || prior?.currency || baseCurrency,
+      linkStatus,
       plaidItemId: result.itemId,
-      plaidInstitutionName: result.institutionName,
+      plaidInstitutionName: result.institutionName ?? prior?.plaidInstitutionName,
       plaidAccountId: row.accountId,
       aprPercent: prior?.aprPercent,
       createdAt: prior?.createdAt,
@@ -41,12 +63,25 @@ function upsertLinkedAccounts(
     if (row.accountId) accountIds.set(row.accountId, account.id);
   }
 
+  if (result.accounts.length) {
+    for (const placeholder of existingForItem.filter((account) => !account.plaidAccountId)) {
+      useFinance.getState().removeAccount(placeholder.id);
+    }
+  }
+
   if (!result.accounts.length) {
+    for (const prior of existingForItem) {
+      if (prior.plaidAccountId) accountIds.set(prior.plaidAccountId, prior.id);
+      else accountIds.set('default', prior.id);
+      if (prior.linkStatus !== linkStatus) saveAccount({ ...prior, linkStatus });
+    }
+    if (existingForItem.length) return accountIds;
+
     const account = createFinanceAccount({
       name: result.institutionName || 'Linked account',
       kind: result.purpose === 'investments' ? 'other_investment' : 'bank',
       currency: baseCurrency,
-      linkStatus: 'linked',
+      linkStatus,
       plaidItemId: result.itemId,
       plaidInstitutionName: result.institutionName,
     });
@@ -57,13 +92,18 @@ function upsertLinkedAccounts(
   return accountIds;
 }
 
-function applyHoldings(
-  result: Extract<PlaidExchangeResult, { ok: true }>,
+function reconcileHoldings(
+  result: SuccessfulPlaidData,
   accountIds: Map<string, string>,
   baseCurrency: string,
 ) {
-  if (!result.holdings.length) return;
-  const fallbackAccountId = [...accountIds.values()][0];
+  const localAccountIds = [...new Set([
+    ...accountIds.values(),
+    ...useFinance.getState().accounts
+      .filter((account) => account.plaidItemId === result.itemId)
+      .map((account) => account.id),
+  ])];
+  const fallbackAccountId = localAccountIds[0];
   const holdings = result.holdings
     .map((row) =>
       createFinanceHolding({
@@ -80,39 +120,70 @@ function applyHoldings(
         externalId: row.externalId,
       }),
     )
-    .filter((h) => h.accountId);
-  useFinance.getState().upsertHoldings(holdings);
+    .filter((holding) => holding.accountId);
+  useFinance.getState().replacePlaidHoldings(localAccountIds, holdings);
 }
 
-/** Persist linked accounts + recent Plaid transactions / holdings after token exchange. */
-export async function applyPlaidExchangeResult(
+function reconcileTransactions(
+  result: SuccessfulPlaidData,
+  accountIds: Map<string, string>,
+  entityId: string,
+  baseCurrency: string,
+) {
+  const transactions = result.transactions.flatMap((row) => {
+    const accountId = accountIds.get(row.accountId);
+    if (!accountId) return [];
+    return [
+      createFinanceTransaction({
+        amount: row.amount,
+        currency: row.currency || baseCurrency,
+        date: row.date,
+        merchant: row.merchant,
+        categoryId: 'other',
+        entityId,
+        accountId,
+        source: 'plaid',
+        externalId: row.externalId,
+      }),
+    ];
+  });
+  useFinance.getState().reconcilePlaidTransactions(
+    transactions,
+    result.removedExternalIds,
+  );
+}
+
+function applyPlaidData(
+  result: SuccessfulPlaidData,
+  entityId: string,
+  baseCurrency: string,
+) {
+  const accountIds = upsertLinkedAccounts(result, baseCurrency);
+  if (result.purpose === 'investments') {
+    reconcileHoldings(result, accountIds, baseCurrency);
+  } else {
+    reconcileTransactions(result, accountIds, entityId, baseCurrency);
+  }
+}
+
+/** Persist linked accounts and the first server-side Plaid sync. */
+export function applyPlaidExchangeResult(
   result: Extract<PlaidExchangeResult, { ok: true }>,
   entityId: string,
   baseCurrency: string,
-): Promise<void> {
-  if (result.accessToken) {
-    await savePlaidAccessToken(result.itemId, result.accessToken);
-  }
+): void {
+  applyPlaidData(result, entityId, baseCurrency);
+}
 
-  const accountIds = upsertLinkedAccounts(result, baseCurrency);
-  applyHoldings(result, accountIds, baseCurrency);
-
-  const defaultAccountId = [...accountIds.values()][0];
-  if (result.transactions.length && defaultAccountId) {
-    useFinance.getState().upsertPlaidTransactions(
-      result.transactions.map((t) =>
-        createFinanceTransaction({
-          amount: t.amount,
-          currency: baseCurrency,
-          date: t.date,
-          merchant: t.merchant,
-          categoryId: 'other',
-          entityId,
-          accountId: defaultAccountId,
-          source: 'plaid',
-          externalId: t.externalId,
-        }),
-      ),
-    );
-  }
+/** Reconcile a later Item sync without exposing the Item access token. */
+export function applyPlaidSyncResult(
+  itemId: string,
+  result: Extract<PlaidSyncResult, { ok: true }>,
+  entityId: string,
+  baseCurrency: string,
+): void {
+  const institutionName = useFinance.getState().accounts.find(
+    (account) => account.plaidItemId === itemId,
+  )?.plaidInstitutionName;
+  applyPlaidData({ ...result, itemId, institutionName }, entityId, baseCurrency);
 }

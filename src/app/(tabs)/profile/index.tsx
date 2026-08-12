@@ -32,18 +32,10 @@ import {
   ProfileLocationPreferences,
   type ProfileLocationReveal,
 } from '@/features/account/profile-location-preferences';
-import { deleteAllVisionBoardImages } from '@/features/vision-board/media';
 import { useResponsive } from '@/hooks/use-responsive';
-import { deletePlant } from '@/services/plants/schedule';
 import { useAddons } from '@/store/addons';
 import { useAgents } from '@/store/agents';
-import { useHealth } from '@/store/health';
-import { usePlants } from '@/store/plants';
 import { usePreferences, type ThemePreference } from '@/store/preferences';
-import { useSchedule } from '@/store/schedule';
-import { useTodos } from '@/store/todos';
-import { useTravel } from '@/store/travel';
-import { useVisionBoard } from '@/store/vision-board';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { deferAfterPageLoad } from '@/utils/defer-after-page-load';
@@ -72,7 +64,7 @@ export default function ProfileSettingsScreen() {
         ? params.focus
         : undefined;
   const { s, spacing: rs } = useResponsive();
-  const { user, isGuest, deleteAccount } = useAuthSession();
+  const { user, isGuest, deleteAccount, resetAccountData } = useAuthSession();
   const scrollRef = useRef<ScrollView>(null);
   const [locationSectionY, setLocationSectionY] = useState<number>();
 
@@ -105,20 +97,9 @@ export default function ProfileSettingsScreen() {
   const setAiEnabled = usePreferences((state) => state.setAiEnabled);
   const setHapticsEnabled = usePreferences((state) => state.setHapticsEnabled);
   const setUsageAnalyticsEnabled = usePreferences((state) => state.setUsageAnalyticsEnabled);
-  const resetPreferences = usePreferences((state) => state.resetAll);
   const enabledAddons = useAddons((state) => state.enabled);
   const setAddonEnabled = useAddons((state) => state.setEnabled);
-  const resetAddons = useAddons((state) => state.reset);
   const installedAgentCount = useAgents((state) => Object.keys(state.installations).length);
-  const resetAgents = useAgents((state) => state.reset);
-  const resetSchedule = useSchedule((state) => state.resetAll);
-  const seedIfNeeded = useSchedule((state) => state.seedIfNeeded);
-  const plants = usePlants((state) => state.plants);
-  const resetPlants = usePlants((state) => state.reset);
-  const resetTravel = useTravel((state) => state.reset);
-  const resetTodos = useTodos((state) => state.reset);
-  const resetVisionBoard = useVisionBoard((state) => state.reset);
-  const resetHealth = useHealth((state) => state.reset);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [identityOpen, setIdentityOpen] = useState(false);
 
@@ -165,24 +146,14 @@ export default function ProfileSettingsScreen() {
     confirmDestructiveAction({
       title: 'Reset All Data?',
       message:
-        'This clears schedules, add-ons data, and app-owned photos on this device. Cloud account data is not deleted. You can sign in again to restore synced data.',
+        'This permanently clears all onTrack data and app-owned files. If you are signed in, synced cloud data is deleted too. Your account stays active. This cannot be undone.',
       actionLabel: 'Reset',
       onConfirm: () => {
         void (async () => {
-          await Promise.all([
-            ...plants.map((plant) => deletePlant(plant.id)),
-            deleteAllVisionBoardImages(),
-          ]);
-          resetPlants();
-          resetPreferences();
-          resetAddons();
-          resetAgents();
-          resetSchedule();
-          resetTravel();
-          resetTodos();
-          resetVisionBoard();
-          resetHealth();
-          seedIfNeeded();
+          const result = await resetAccountData();
+          if (result.status === 'failed') {
+            appPrompt.alert('Reset failed', result.message ?? 'Data reset failed.');
+          }
         })();
       },
     });
@@ -437,7 +408,7 @@ export default function ProfileSettingsScreen() {
           flush
           icon={null}
           label="Reset All Data"
-          description="Clears local schedules, add-ons data, and app photos."
+          description="Permanently clears all local and synced app data while keeping your account."
           onPress={handleReset}
           testID={AgentUiIds.profile.resetData}
           accessibilityLabel="Reset All Data"

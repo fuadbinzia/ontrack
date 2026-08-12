@@ -18,6 +18,9 @@ import {
   asPositiveNumber,
 } from '@/utils/parse';
 
+export const DEFAULT_CHECKLIST_NAME = 'To Do';
+export const DEFAULT_GROCERY_LIST_NAME = 'Groceries';
+
 export function nowIso() {
   return new Date().toISOString();
 }
@@ -358,7 +361,7 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
     lists = [
       {
         id: fallbackListId,
-        name: 'To Do',
+        name: DEFAULT_CHECKLIST_NAME,
         kind: 'checklist',
         mode: 'private',
         role: 'owner',
@@ -424,7 +427,7 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
     const createdAt = nowIso();
     const list: TodoList = {
       id: newUuid(),
-      name: 'To Do',
+      name: DEFAULT_CHECKLIST_NAME,
       kind: 'checklist',
       mode: 'private',
       role: 'owner',

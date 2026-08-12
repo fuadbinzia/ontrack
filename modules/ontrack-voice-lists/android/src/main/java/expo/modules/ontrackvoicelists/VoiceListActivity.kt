@@ -83,7 +83,7 @@ class VoiceListActivity : Activity(), TextToSpeech.OnInitListener {
       "thing.description",
       "itemList.name",
     ) ?: if (action == "add") null else firstExtra(intent, uri, "thing.name", "name")
-    val kindHint = kindHintFrom(list, uri?.getQueryParameter("kind"))
+    val kindHint = OnTrackVoiceStore.resolveKindHint(list, uri?.getQueryParameter("kind"))
     return when (action) {
       "add" -> OnTrackVoiceStore.addItem(applicationContext, title.orEmpty(), list, kindHint).spoken
       else -> OnTrackVoiceStore.readItems(applicationContext, list, kindHint)
@@ -93,18 +93,6 @@ class VoiceListActivity : Activity(), TextToSpeech.OnInitListener {
   private fun inferAction(intent: Intent): String {
     val extras = listOf("title", "name", "item", "thing.name", "itemList.item.name")
     return if (extras.any { !intent.getStringExtra(it).isNullOrBlank() }) "add" else "read"
-  }
-
-  private fun kindHintFrom(list: String?, kind: String?): String? {
-    val text = list.orEmpty()
-    if (kind == "grocery" || kind == "checklist") return kind
-    if (Regex("""\b(grocer(?:y|ies)|shopping|supermarket)\b""", RegexOption.IGNORE_CASE).containsMatchIn(text)) {
-      return "grocery"
-    }
-    if (Regex("""\b(to-?do|todo|checklist|task|tasks)\b""", RegexOption.IGNORE_CASE).containsMatchIn(text)) {
-      return "checklist"
-    }
-    return kind
   }
 
   private fun firstExtra(intent: Intent, uri: Uri?, vararg keys: String): String? {

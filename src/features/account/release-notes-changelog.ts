@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.57',
+    date: '2026-08-12',
+    notes: [
+      'Share one voice store with Siri and Assistant, and peel the checklists overview.',
+      'Touched: features/todos.',
+    ],
+  },
+  {
     version: '1.0.56',
     date: '2026-08-12',
     notes: [

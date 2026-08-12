@@ -152,7 +152,7 @@ internal object OnTrackVoiceStore {
           0,
           JSONObject()
             .put("id", "voice-inbox")
-            .put("name", if (kindHint == "grocery") "Groceries" else "Inbox")
+            .put("name", if (kindHint == "grocery") "Groceries" else "To Do")
             .put("kind", if (kindHint == "grocery") "grocery" else "checklist")
             .put("canEdit", true)
             .put("updatedAt", nowIso())
@@ -183,6 +183,11 @@ internal object OnTrackVoiceStore {
     return candidates.maxByOrNull { it.updatedAt }
   }
 
+  fun resolveKindHint(listName: String?, explicit: String?): String? {
+    if (explicit == "grocery" || explicit == "checklist") return explicit
+    return inferredKind(listName) ?: explicit
+  }
+
   private fun inferredKind(text: String?): String? {
     if (text.isNullOrBlank()) return null
     if (isGrocery(text)) return "grocery"
@@ -210,7 +215,7 @@ internal object OnTrackVoiceStore {
   private fun displayName(listName: String?, kindHint: String?): String {
     nameQuery(listName)?.let { return it }
     if (kindHint == "grocery" || isGrocery(listName)) return "Groceries"
-    return "Inbox"
+    return "To Do"
   }
 
   private fun spokenList(titles: List<String>): String {

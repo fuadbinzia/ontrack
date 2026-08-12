@@ -4,7 +4,6 @@ import {
     Keyboard,
     Platform,
     StyleSheet,
-    TextInput,
     View,
 } from 'react-native';
 import DraggableFlatList, {
@@ -13,45 +12,28 @@ import DraggableFlatList, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { bottomNavContentInset } from '@/components/navigation/bottom-nav-inset';
-import {
-  appPrompt,
-  AppText,
-  Button,
-  GlassPlate,
-  IconButton,
-  Screen,
-  SegmentedControl,
-  Symbol,
-} from '@/components/primitives';
-import { fontFamilies, glassMaterials, layout, radii, spacing, typography } from '@/design-system';
+import { Screen } from '@/components/primitives';
+import { layout, spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { EmptyChecklists } from '@/features/todos/empty-checklists';
 import { canShowChecklistCollaborator } from '@/features/todos/checklist-collaborator-visibility';
 import { TodoListCard } from '@/features/todos/todo-list-card';
+import { TodoListsOverviewHeader } from '@/features/todos/todo-lists-overview-header';
+import { confirmRemoveTodoList } from '@/features/todos/todo-list-remove';
 import { sortTodoListsByRecent } from '@/features/todos/todo-sort';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
-import { useResponsive } from '@/hooks/use-responsive';
-import { useTheme } from '@/hooks/use-theme';
-import { deletePersistedRecipeImage } from '@/services/recipes';
-import {
-    deleteSharedTodoList,
-    leaveTodoList,
-} from '@/services/todos/collaboration';
 import {
     useTodos,
     type TodoList,
     type TodoListKind,
 } from '@/store/todos';
 import { useFriends } from '@/store/friends';
-import { confirmDestructiveAction } from '@/utils/confirm-destructive';
-import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 import { listReferenceEquality } from '@/utils/list-equality';
 
 export function TodoListsOverview() {
   const router = useRouter();
-  const theme = useTheme();
-  const { s } = useResponsive();
   const insets = useSafeAreaInsets();
   const { user } = useAuthSession();
   const { refreshControl } = usePullToRefresh();
@@ -86,7 +68,6 @@ export function TodoListsOverview() {
   const friends = useFriends((state) => state.friends);
   const invites = useTodos((state) => state.invites, listReferenceEquality);
   const createList = useTodos((state) => state.createList);
-  const deletePrivateList = useTodos((state) => state.deleteList);
   const reorderLists = useTodos((state) => state.reorderLists);
   const renameList = useTodos((state) => state.renameList);
   const [draft, setDraft] = useState('');
@@ -200,62 +181,6 @@ export function TodoListsOverview() {
     else haptics.select();
   };
 
-  const newListNameAgent = useAgentUiTarget(AgentUiIds.checklists.newListName, {
-    label: 'New list name',
-  });
-
-  const removeList = useCallback(
-    (list: TodoList) => {
-      const leaving = list.mode === 'shared' && list.role !== 'owner';
-      const title = leaving
-        ? `Leave “${list.name}”?`
-        : `Delete “${list.name}”?`;
-      const sharedOwnerDelete =
-        !leaving &&
-        list.mode === 'shared' &&
-        useTodos.getState().members.some(
-          (member) => member.listId === list.id && member.role !== 'owner',
-        );
-      const message = leaving
-        ? 'This checklist will be removed from your account. The owner and other collaborators will keep it.'
-        : sharedOwnerDelete
-          ? 'This permanently deletes the checklist for you and every collaborator. It only stays available if you make someone else the owner first.'
-          : 'The checklist and every item in it will be permanently deleted.';
-      const remove = () => {
-        if (list.mode === 'private') {
-          useTodos
-            .getState()
-            .recipes.filter((recipe) => recipe.listId === list.id)
-            .forEach((recipe) =>
-              deletePersistedRecipeImage(recipe.sourceImageUri),
-            );
-        }
-        const action =
-          list.mode === 'private'
-            ? Promise.resolve(deletePrivateList(list.id))
-            : leaving
-              ? leaveTodoList(list.id)
-              : deleteSharedTodoList(list.id);
-        void action
-          .then(() => haptics.warning())
-          .catch((caught: unknown) => {
-            appPrompt.alert(
-              leaving ? 'Could not leave checklist' : 'Could not delete checklist',
-              caught instanceof Error ? caught.message : 'Please try again.',
-            );
-          });
-      };
-
-      confirmDestructiveAction({
-        title,
-        message,
-        actionLabel: leaving ? 'Leave' : 'Delete',
-        onConfirm: remove,
-      });
-    },
-    [deletePrivateList],
-  );
-
   const renderList = useCallback(
     ({
       item,
@@ -286,7 +211,7 @@ export function TodoListsOverview() {
             }}
             onMoveDown={() => moveList(item.id, 1)}
             onMoveUp={() => moveList(item.id, -1)}
-            onRemove={() => removeList(item)}
+            onRemove={() => confirmRemoveTodoList(item)}
             canMoveDown={index < lists.length - 1}
             canMoveUp={index > 0}
             onPress={() => router.push(`/(tabs)/to-do/${item.id}` as never)}
@@ -302,7 +227,6 @@ export function TodoListsOverview() {
       nameDrafts,
       commitListName,
       moveList,
-      removeList,
       router,
     ],
   );
@@ -336,148 +260,24 @@ export function TodoListsOverview() {
           keyboardShouldPersistTaps="handled"
           keyExtractor={(item) => item.id}
           ListHeaderComponent={
-            <View style={styles.header}>
-              <View style={styles.heading}>
-                <View style={styles.headingCopy}>
-                  <AppText variant="overline" color="accent">Your checklists</AppText>
-                  <AppText
-                    style={[
-                      styles.title,
-                      { fontSize: s(35), lineHeight: s(42) },
-                    ]}>
-                    Checklists
-                  </AppText>
-                  <AppText variant="body" color="secondary">
-                    {totalOpen
-                      ? `${totalOpen} open ${totalOpen === 1 ? 'item' : 'items'} across ${lists.length} ${lists.length === 1 ? 'list' : 'lists'}.`
-                      : 'Everything is handled. Make a list for what comes next.'}
-                  </AppText>
-                </View>
-                <View style={styles.headingActions}>
-                  {lists.length > 0 ? (
-                    <Button
-                      testID={AgentUiIds.checklists.editMode}
-                      accessibilityLabel={
-                        editMode
-                          ? 'Finish editing checklists'
-                          : 'Edit checklists'
-                      }
-                      size="sm"
-                      variant={editMode ? 'primary' : 'secondary'}
-                      onPress={() => {
-                        if (editMode) finishEditing();
-                        else beginEditing();
-                      }}
-                      style={[
-                        styles.editModeButton,
-                        {
-                          borderColor: editMode
-                            ? theme.accentPrimary
-                            : theme.separator,
-                        },
-                      ]}
-                      textStyle={editMode ? undefined : { color: theme.accentPrimary }}>
-                      {editMode ? 'Done' : 'Edit'}
-                    </Button>
-                  ) : null}
-                  <IconButton
-                    testID={AgentUiIds.checklists.collaborators}
-                    accessibilityLabel={
-                      invites.length
-                        ? `Add collaborators, ${invites.length} invitations waiting`
-                        : 'Add collaborators'
-                    }
-                    icon="invite"
-                    iconSize={21}
-                    color={
-                      invites.length
-                        ? theme.accentPrimary
-                        : theme.textSecondary
-                    }
-                    onPress={() => router.push('/todo-collaborators' as never)}
-                  />
-                </View>
-              </View>
-
-              {!editMode ? (
-                <View style={styles.newListBlock}>
-                  <SegmentedControl
-                    value={draftKind}
-                    options={[
-                      {
-                        value: 'checklist',
-                        label: 'Checklist',
-                        icon: 'tasks',
-                        testID: AgentUiIds.checklists.newListKind('checklist'),
-                      },
-                      {
-                        value: 'grocery',
-                        label: 'Grocery',
-                        icon: 'groceries',
-                        testID: AgentUiIds.checklists.newListKind('grocery'),
-                      },
-                    ]}
-                    onChange={setDraftKind}
-                  />
-                  <GlassPlate
-                    style={[
-                      styles.composer,
-                      {
-                        borderColor: draft.trim()
-                          ? theme.accentPrimary
-                          : theme.name === 'dark'
-                            ? glassMaterials.border.dark
-                            : glassMaterials.border.light,
-                        borderWidth: draft.trim() ? 1 : StyleSheet.hairlineWidth,
-                      },
-                    ]}>
-                    <Symbol name="add" size={21} color={theme.accentPrimary} />
-                    <AgentTestId
-                      testID={newListNameAgent.testID}
-                      label="New list name"
-                      onPress={() => undefined}
-                      style={styles.inputWrap}>
-                      <View collapsable={false} style={styles.inputWrap}>
-                        <TextInput
-                          accessibilityLabel="New list name"
-                          maxLength={80}
-                          onChangeText={setDraft}
-                          onSubmitEditing={add}
-                          placeholder={
-                            draftKind === 'grocery'
-                              ? 'New grocery list'
-                              : 'New checklist'
-                          }
-                          placeholderTextColor={theme.textTertiary}
-                          returnKeyType="done"
-                          underlineColorAndroid="transparent"
-                          style={[styles.input, { color: theme.textPrimary }]}
-                          value={draft}
-                        />
-                      </View>
-                    </AgentTestId>
-                    <IconButton
-                      testID={AgentUiIds.checklists.createList}
-                      accessibilityLabel="Create list"
-                      icon="arrow-up"
-                      iconSize={18}
-                      appearance={draft.trim() ? 'solid' : 'glass'}
-                      color={
-                        draft.trim() ? theme.textOnAccent : theme.textSecondary
-                      }
-                      background={
-                        draft.trim()
-                          ? theme.accentPrimary
-                          : theme.separator
-                      }
-                      disabled={!draft.trim()}
-                      onPress={add}
-                    />
-                  </GlassPlate>
-                </View>
-              ) : null}
-
-            </View>
+            <TodoListsOverviewHeader
+              listCount={lists.length}
+              totalOpen={totalOpen}
+              editMode={editMode}
+              inviteCount={invites.length}
+              draft={draft}
+              draftKind={draftKind}
+              onDraftChange={setDraft}
+              onDraftKindChange={setDraftKind}
+              onSubmitDraft={add}
+              onToggleEditMode={() => {
+                if (editMode) finishEditing();
+                else beginEditing();
+              }}
+              onOpenCollaborators={() =>
+                router.push('/todo-collaborators' as never)
+              }
+            />
           }
           ListEmptyComponent={<EmptyChecklists />}
           renderItem={renderList}
@@ -487,7 +287,6 @@ export function TodoListsOverview() {
     </Screen>
   );
 }
-
 
 const styles = StyleSheet.create({
   screenContent: {
@@ -503,48 +302,4 @@ const styles = StyleSheet.create({
   dragList: { flex: 1 },
   listContent: { paddingTop: 0 },
   listItem: { paddingBottom: spacing.md },
-  header: { gap: spacing.lg, paddingBottom: spacing.md },
-  heading: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  headingCopy: { flex: 1, gap: spacing.xs },
-  headingActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  title: {
-    fontFamily: fontFamilies.serif,
-    fontWeight: '400',
-    letterSpacing: -0.7,
-  },
-  editModeButton: {
-    minWidth: 58,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  composer: {
-    minHeight: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.sm,
-    borderRadius: radii.lg,
-    borderCurve: 'continuous',
-    zIndex: 1,
-  },
-  newListBlock: { gap: spacing.sm },
-  input: {
-    ...typography.body,
-    flex: 1,
-    minHeight: 52,
-    paddingVertical: spacing.md,
-  },
-  inputWrap: {
-    flex: 1,
-    minWidth: 0,
-  },
 });

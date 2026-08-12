@@ -1,14 +1,12 @@
 import type { AppIconName } from '@/design-system';
-import type { TodoListKind } from '@/store/todos';
+import { isGroceryListName, type TodoListKind } from '@/store/todos';
 
 export function todoListIcon(
   name: string,
   kind?: TodoListKind,
 ): AppIconName {
-  if (kind === 'grocery') return 'groceries';
-  const normalized = name.trim().toLocaleLowerCase();
-  if (/\b(grocer(?:y|ies)|supermarket)\b/.test(normalized)) return 'groceries';
-  if (/\b(maintenance|repair|repairs)\b/.test(normalized)) return 'maintenance';
+  if (kind === 'grocery' || isGroceryListName(name)) return 'groceries';
+  if (/\b(maintenance|repair|repairs)\b/i.test(name.trim())) return 'maintenance';
   return 'tasks';
 }
 

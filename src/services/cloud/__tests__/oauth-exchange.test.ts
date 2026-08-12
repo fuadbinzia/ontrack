@@ -1,17 +1,27 @@
 const mockExchangeCodeForSession = jest.fn();
+const mockSignInWithOAuth = jest.fn();
+const mockOpenAuthSessionAsync = jest.fn();
+
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
+  openAuthSessionAsync: (...args: unknown[]) => mockOpenAuthSessionAsync(...args),
+}));
 
 jest.mock('@/services/cloud/supabase', () => ({
   getSupabaseClient: () => ({
     auth: {
       exchangeCodeForSession: (...args: unknown[]) => mockExchangeCodeForSession(...args),
+      signInWithOAuth: (...args: unknown[]) => mockSignInWithOAuth(...args),
     },
   }),
 }));
 
 // eslint-disable-next-line import/first
 import {
+  beginBrowserSignIn,
   CloudAccountError,
   exchangeOAuthCallback,
+  ProviderCancelledError,
   resetOAuthCallbackExchangeForTests,
 } from '@/services/cloud/account';
 
@@ -22,6 +32,25 @@ describe('OAuth code exchange', () => {
   beforeEach(() => {
     resetOAuthCallbackExchangeForTests();
     mockExchangeCodeForSession.mockReset();
+    mockSignInWithOAuth.mockReset();
+    mockOpenAuthSessionAsync.mockReset();
+  });
+
+  it('opens the Google account chooser after an app-local sign-out', async () => {
+    mockSignInWithOAuth.mockResolvedValueOnce({
+      data: { url: 'https://accounts.example.com/authorize' },
+      error: null,
+    });
+    mockOpenAuthSessionAsync.mockResolvedValueOnce({ type: 'cancel' });
+
+    await expect(beginBrowserSignIn('google')).rejects.toBeInstanceOf(ProviderCancelledError);
+
+    expect(mockSignInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: expect.objectContaining({
+        queryParams: { prompt: 'select_account' },
+      }),
+    });
   });
 
   it('retries after a failed exchange instead of caching the failure', async () => {

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { BackHandler, Platform } from 'react-native';
 
 import { BottomNavBar } from '@/components/navigation/bottom-nav-bar';
+import { MORE_TAB_ROUTE } from '@/components/navigation/tab-pins';
 import { useShouldShowWelcome } from '@/features/auth/welcome-preview';
 import { usePreferences } from '@/store/preferences';
 import { useUI } from '@/store/ui';
@@ -36,9 +37,11 @@ export default function TabsLayout() {
       // rendering. Screens mount only after the user opens them.
       detachInactiveScreens
       tabBar={(props) => <BottomNavBar {...props} />}
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
-        freezeOnBlur: true,
+        // Sections self-dismisses on blur. Keep that one scene live long enough
+        // to render null instead of freezing its transparent list over the next tab.
+        freezeOnBlur: route.name !== MORE_TAB_ROUTE,
         lazy: true,
         animation: 'none',
         sceneStyle: { backgroundColor: 'transparent' },
@@ -54,8 +57,7 @@ export default function TabsLayout() {
           shadowColor: 'transparent',
         },
         tabBarBackground: () => null,
-      }}
-    >
+      })}>
       <Tabs.Screen
         name="(today)"
         listeners={{ tabPress: () => setSelectedDate(todayKey()) }}

@@ -121,6 +121,8 @@ export function TodoRow({
     <AppText
       variant="bodyMedium"
       color={task.completed ? 'tertiary' : 'primary'}
+      selectable
+      selectionColor={theme.accentSoft}
       numberOfLines={expanded ? undefined : TITLE_COLLAPSED_LINES}
       onTextLayout={(event) => {
         const next = event.nativeEvent.lines.length;

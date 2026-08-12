@@ -85,6 +85,11 @@ export function oauthRedirectUrl() {
   return Platform.OS === 'web' ? Linking.createURL('auth/callback') : 'ontrack://auth/callback';
 }
 
+/** Google keeps its browser session after app-local sign-out; always reopen its account chooser. */
+export function oauthProviderQueryParams(provider: AuthProvider) {
+  return provider === 'google' ? { prompt: 'select_account' } : undefined;
+}
+
 /** Normalize custom-scheme callback URLs so host/path variants match. */
 export function oauthCallbackRouteKey(url: string) {
   const parsed = new URL(url);
@@ -148,6 +153,7 @@ export async function beginBrowserSignIn(provider: AuthProvider) {
     options: {
       redirectTo,
       skipBrowserRedirect: Platform.OS !== 'web',
+      queryParams: oauthProviderQueryParams(provider),
     },
   });
   if (error) throw new CloudAccountError(error.message);

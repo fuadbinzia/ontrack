@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const {
   AndroidConfig,
+  IOSConfig,
   withAndroidManifest,
   withDangerousMod,
   withXcodeProject,
@@ -27,44 +28,24 @@ function swiftSources() {
   ];
 }
 
-function copySwiftIntoIosProject(config) {
-  return withDangerousMod(config, [
-    'ios',
-    (mod) => {
-      const projectName = mod.modRequest.projectName;
-      if (!projectName) return mod;
-      const targetDir = path.join(
-        mod.modRequest.platformProjectRoot,
-        projectName,
-        GROUP_NAME,
-      );
-      fs.mkdirSync(targetDir, { recursive: true });
-      for (const file of swiftSources()) {
-        fs.copyFileSync(file.from, path.join(targetDir, file.name));
-      }
-      return mod;
-    },
-  ]);
-}
-
-function fileAlreadyInProject(project, fileName) {
-  const section = project.pbxFileReferenceSection() || {};
-  return Object.values(section).some(
-    (file) => file && typeof file === 'object' && file.name === fileName,
-  );
-}
-
-function addSwiftToXcode(config) {
+function addSwiftSources(config) {
   return withXcodeProject(config, (mod) => {
-    const project = mod.modResults;
     const projectName = mod.modRequest.projectName;
-    const targetUuid = project.getFirstTarget()?.uuid;
-    if (!projectName || !targetUuid) return mod;
+    const nativeRoot = mod.modRequest.platformProjectRoot;
+    if (!projectName) return mod;
 
     const groupPath = `${projectName}/${GROUP_NAME}`;
+    fs.mkdirSync(path.join(nativeRoot, groupPath), { recursive: true });
+    IOSConfig.XcodeUtils.ensureGroupRecursively(mod.modResults, groupPath);
+
     for (const file of swiftSources()) {
-      if (fileAlreadyInProject(project, file.name)) continue;
-      project.addSourceFile(`${groupPath}/${file.name}`, { target: targetUuid });
+      mod.modResults = IOSConfig.XcodeProjectFile.createBuildSourceFile({
+        project: mod.modResults,
+        nativeProjectRoot: nativeRoot,
+        filePath: `${groupPath}/${file.name}`,
+        fileContents: fs.readFileSync(file.from, 'utf8'),
+        overwrite: true,
+      });
     }
     return mod;
   });
@@ -114,8 +95,7 @@ function addShortcutsMeta(config) {
 }
 
 module.exports = function withOnTrackVoiceLists(config) {
-  config = copySwiftIntoIosProject(config);
-  config = addSwiftToXcode(config);
+  config = addSwiftSources(config);
   config = copyAndroidShortcuts(config);
   config = addShortcutsMeta(config);
   return config;

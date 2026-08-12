@@ -161,15 +161,18 @@ function applySafeProjectFixes() {
   if (!fs.existsSync(appJsonPath)) return;
   try {
     const appConfig = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
-    if (appConfig?.expo?.experiments?.reactCompiler === true) return;
+    if (appConfig?.expo?.experiments?.reactCompiler !== true) return;
     appConfig.expo ??= {};
     appConfig.expo.experiments ??= {};
-    appConfig.expo.experiments.reactCompiler = true;
+    // The currently distributed native runtime does not provide the compiler
+    // memo-cache function consistently. Enabling this in an OTA caused the
+    // first compiled auth component to crash before the app became usable.
+    appConfig.expo.experiments.reactCompiler = false;
     fs.writeFileSync(appJsonPath, `${JSON.stringify(appConfig, null, 2)}\n`);
     appliedFixes.push({
-      rule: 'react-compiler-disabled',
+      rule: 'react-compiler-ota-unsafe',
       file: 'app.json',
-      message: 'Enabled Expo React Compiler automatic memoization.',
+      message: 'Disabled React Compiler for compatibility with the distributed native runtime.',
     });
   } catch {
     // Invalid or dynamic configs stay audit-only; do not risk rewriting them.
@@ -415,14 +418,14 @@ if (rootLayout) {
   }
 }
 
-if (appConfig?.expo?.experiments?.reactCompiler !== true) {
+if (appConfig?.expo?.experiments?.reactCompiler === true) {
   addFinding({
-    rule: 'react-compiler-disabled',
+    rule: 'react-compiler-ota-unsafe',
     severity: 'high',
     file: path.join(projectRoot, 'app.json'),
     line: 1,
-    message: 'React Compiler is disabled, so application components do not receive Expo automatic memoization.',
-    suggestion: 'Run the compiler healthcheck, then enable expo.experiments.reactCompiler when compatible.',
+    message: 'React Compiler requires a compatible native runtime and has crashed the distributed iOS build during auth rendering.',
+    suggestion: 'Keep it disabled until a native build is validated before distribution.',
   });
 }
 

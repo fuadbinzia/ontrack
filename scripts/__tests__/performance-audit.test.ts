@@ -29,7 +29,7 @@ describe('performance audit CLI', () => {
     );
   });
 
-  it('applies safe configuration fixes in fix mode', () => {
+  it('disables the compiler when fix mode finds an OTA-unsafe configuration', () => {
     const fixtureRoot = fs.mkdtempSync(
       path.join(os.tmpdir(), 'ontrack-performance-audit-'),
     );
@@ -37,7 +37,7 @@ describe('performance audit CLI', () => {
       fs.mkdirSync(path.join(fixtureRoot, 'src'));
       fs.writeFileSync(
         path.join(fixtureRoot, 'app.json'),
-        JSON.stringify({ expo: { experiments: { reactCompiler: false } } }),
+        JSON.stringify({ expo: { experiments: { reactCompiler: true } } }),
       );
       const output = execFileSync(
         process.execPath,
@@ -55,9 +55,9 @@ describe('performance audit CLI', () => {
         fs.readFileSync(path.join(fixtureRoot, 'app.json'), 'utf8'),
       ) as { expo: { experiments: { reactCompiler: boolean } } };
 
-      expect(config.expo.experiments.reactCompiler).toBe(true);
+      expect(config.expo.experiments.reactCompiler).toBe(false);
       expect(report.appliedFixes).toEqual([
-        expect.objectContaining({ rule: 'react-compiler-disabled' }),
+        expect.objectContaining({ rule: 'react-compiler-ota-unsafe' }),
       ]);
     } finally {
       fs.rmSync(fixtureRoot, { recursive: true, force: true });

@@ -199,6 +199,11 @@ describe('to-do store', () => {
       'To Do',
       'Maintenance',
     ]);
+    expect(
+      [...useTodos.getState().lists]
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+        .map((list) => list.name),
+    ).toEqual(['Groceries', 'To Do', 'Maintenance']);
 
     const shared = {
       ...useTodos.getState().lists[0],

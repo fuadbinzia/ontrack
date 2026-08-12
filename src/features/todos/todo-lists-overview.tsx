@@ -28,6 +28,7 @@ import { useAuthSession } from '@/features/auth/auth-provider';
 import { EmptyChecklists } from '@/features/todos/empty-checklists';
 import { canShowChecklistCollaborator } from '@/features/todos/checklist-collaborator-visibility';
 import { TodoListCard } from '@/features/todos/todo-list-card';
+import { sortTodoListsByRecent } from '@/features/todos/todo-sort';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -54,7 +55,10 @@ export function TodoListsOverview() {
   const insets = useSafeAreaInsets();
   const { user } = useAuthSession();
   const { refreshControl } = usePullToRefresh();
-  const lists = useTodos((state) => state.lists);
+  const lists = useTodos(
+    (state) => sortTodoListsByRecent(state.lists),
+    listReferenceEquality,
+  );
   const counts = useTodos(
     (state) => {
       const next = new Map<string, { open: number; total: number }>();

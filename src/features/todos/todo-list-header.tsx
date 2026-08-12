@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import type { RefObject } from 'react';
+import { useRef, type RefObject } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import {
@@ -97,17 +97,16 @@ export function TodoListHeader({
   const router = useRouter();
   const theme = useTheme();
   const { s } = useResponsive();
+  const titleInputRef = useRef<TextInput>(null);
   const titleEditing = editMode && owner;
   const titleStyle = [
     styles.title,
     { fontSize: s(34), lineHeight: s(41), color: theme.textPrimary },
   ];
+  const focusTitle = () => titleInputRef.current?.focus();
 
   return (
-    <Pressable
-      accessible={false}
-      onPress={onDismissChrome}
-      style={styles.listHeader}>
+    <View style={styles.listHeader}>
       <View style={styles.heading}>
         <View style={styles.headingCopy}>
           <HeaderBackButton
@@ -124,8 +123,10 @@ export function TodoListHeader({
             <AgentTestId
               testID={AgentUiIds.checklists.detail.title}
               label="Edit checklist title"
+              onPress={focusTitle}
               style={styles.titleEditor}>
               <TextInput
+                ref={titleInputRef}
                 accessibilityLabel="Checklist title"
                 maxLength={80}
                 onChangeText={onNameChange}
@@ -146,59 +147,61 @@ export function TodoListHeader({
         </View>
       </View>
 
-      <GlassPlate
-        style={[
-          styles.hero,
-          {
-            borderColor:
-              theme.name === 'dark'
-                ? glassMaterials.border.dark
-                : glassMaterials.border.light,
-            boxShadow:
-              theme.name === 'light'
-                ? '0 10px 30px rgba(61, 50, 32, 0.09)'
-                : '0 10px 30px rgba(0, 0, 0, 0.26)',
-          },
-        ]}>
-        <View style={styles.heroCopy}>
-          <AppText
-            variant="overline"
-            color="tertiary"
-            style={[
-              styles.heroOverline,
-              { fontSize: s(10), lineHeight: s(12) },
-            ]}>
-            Momentum
-          </AppText>
-          <AppText
-            variant="heading"
-            style={{ fontSize: s(16), lineHeight: s(21) }}>
-            {heroCopy}
-          </AppText>
-          <AppText
-            variant="caption"
-            color="secondary"
-            style={{ fontSize: s(11), lineHeight: s(14) }}>
-            {tasks.length === 0
-              ? 'Capture the next thing. The rest can wait.'
-              : `${completedCount} of ${tasks.length} complete`}
-          </AppText>
-        </View>
-        <View style={{ zIndex: 1 }}>
-          <ProgressRing
-            progress={progress}
-            size={48}
-            strokeWidth={4}
-            label={`${Math.round(progress * 100)}%`}
-            sublabel="done"
-            trackColor={
-              theme.name === 'dark'
-                ? glassMaterials.field.dark
-                : glassMaterials.field.light
-            }
-          />
-        </View>
-      </GlassPlate>
+      <Pressable accessible={false} onPress={onDismissChrome}>
+        <GlassPlate
+          style={[
+            styles.hero,
+            {
+              borderColor:
+                theme.name === 'dark'
+                  ? glassMaterials.border.dark
+                  : glassMaterials.border.light,
+              boxShadow:
+                theme.name === 'light'
+                  ? '0 10px 30px rgba(61, 50, 32, 0.09)'
+                  : '0 10px 30px rgba(0, 0, 0, 0.26)',
+            },
+          ]}>
+          <View style={styles.heroCopy}>
+            <AppText
+              variant="overline"
+              color="tertiary"
+              style={[
+                styles.heroOverline,
+                { fontSize: s(10), lineHeight: s(12) },
+              ]}>
+              Momentum
+            </AppText>
+            <AppText
+              variant="heading"
+              style={{ fontSize: s(16), lineHeight: s(21) }}>
+              {heroCopy}
+            </AppText>
+            <AppText
+              variant="caption"
+              color="secondary"
+              style={{ fontSize: s(11), lineHeight: s(14) }}>
+              {tasks.length === 0
+                ? 'Capture the next thing. The rest can wait.'
+                : `${completedCount} of ${tasks.length} complete`}
+            </AppText>
+          </View>
+          <View style={{ zIndex: 1 }}>
+            <ProgressRing
+              progress={progress}
+              size={48}
+              strokeWidth={4}
+              label={`${Math.round(progress * 100)}%`}
+              sublabel="done"
+              trackColor={
+                theme.name === 'dark'
+                  ? glassMaterials.field.dark
+                  : glassMaterials.field.light
+              }
+            />
+          </View>
+        </GlassPlate>
+      </Pressable>
 
       {canEdit ? (
         <GlassPlate
@@ -301,7 +304,7 @@ export function TodoListHeader({
         onManageSettings={onManageSettings}
         onRemoveList={onRemoveList}
       />
-    </Pressable>
+    </View>
   );
 }
 

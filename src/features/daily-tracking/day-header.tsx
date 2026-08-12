@@ -91,6 +91,10 @@ export function DayHeader({
     label: openCalendarLabel,
     onPress: openCalendar,
   });
+  const showWeatherBar = Boolean(
+    showWeather && weather && weatherAccessibilityLabel,
+  );
+  const showDayVoice = completion > 0 || Boolean(nowLine || summaryLine);
 
   return (
     <View style={[styles.container, { paddingTop: topInset + spacing.md }]}>
@@ -144,6 +148,8 @@ export function DayHeader({
         />
       </View>
 
+      {showWeatherBar || showDayVoice ? (
+        <View style={styles.dayBrief}>
       {showWeather && weather && weatherAccessibilityLabel ? (
         dualBars && currentWeather ? (
           <View style={[styles.weatherRow, { gap: rs.sm }]}>
@@ -189,8 +195,12 @@ export function DayHeader({
         )
       ) : null}
 
-      {completion > 0 || nowLine || summaryLine ? (
-        <View style={styles.progressRow}>
+      {showDayVoice ? (
+        <View
+          style={[
+            styles.progressRow,
+            completion <= 0 ? styles.progressRowSolo : null,
+          ]}>
           {completion > 0 ? (
             <AgentTestId testID={AgentUiIds.today.progress}>
               <ProgressRing
@@ -202,19 +212,33 @@ export function DayHeader({
             </AgentTestId>
           ) : null}
           {nowLine || summaryLine ? (
-            <View style={styles.progressText}>
+            <View
+              style={[
+                styles.progressText,
+                completion <= 0 ? styles.progressTextSolo : null,
+              ]}>
               {nowLine ? (
-                <AppText variant="callout" color="accent" numberOfLines={1}>
+                <AppText
+                  variant="callout"
+                  color="accent"
+                  align={completion > 0 ? undefined : 'center'}
+                  numberOfLines={1}>
                   {nowLine}
                 </AppText>
               ) : null}
               {summaryLine ? (
-                <AppText variant="callout" color="secondary" numberOfLines={3}>
+                <AppText
+                  variant="callout"
+                  color="secondary"
+                  align={completion > 0 ? undefined : 'center'}
+                  numberOfLines={3}>
                   {summaryLine}
                 </AppText>
               ) : null}
             </View>
           ) : null}
+        </View>
+      ) : null}
         </View>
       ) : null}
     </View>
@@ -224,7 +248,7 @@ export function DayHeader({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: layout.screenPadding,
-    paddingBottom: spacing.lg,
+    paddingBottom: 0,
     gap: spacing.md,
     overflow: 'hidden',
   },
@@ -247,13 +271,25 @@ const styles = StyleSheet.create({
     width: '100%',
     minWidth: 0,
   },
+  dayBrief: {
+    width: '100%',
+    gap: spacing.xl,
+  },
   progressRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xl,
+    width: '100%',
+  },
+  progressRowSolo: {
+    justifyContent: 'center',
   },
   progressText: {
     flex: 1,
     gap: spacing.xs,
+    minWidth: 0,
+  },
+  progressTextSolo: {
+    alignItems: 'center',
   },
 });

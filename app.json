@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.55",
+    "version": "1.0.56",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -143,6 +143,7 @@
         }
       ],
       "./plugins/with-ontrack-healthkit.js",
+      "./plugins/with-ontrack-voice-lists.js",
       [
         "expo-location",
         {

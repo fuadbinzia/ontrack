@@ -1,4 +1,4 @@
-import type { TodoTask } from '@/store/todos';
+import type { TodoList, TodoTask } from '@/store/todos';
 
 export type TodoFilter = 'open' | 'completed';
 export type TodoSort = 'manual' | 'smart' | 'newest' | 'oldest' | 'alphabetical';
@@ -42,4 +42,15 @@ export function sortTodoTasks(
     }
     return byPriorityAndRecency(a, b) || a.id.localeCompare(b.id);
   });
+}
+
+export function sortTodoListsByRecent(lists: TodoList[]): TodoList[] {
+  if (lists.length < 2) return lists;
+  const sorted = [...lists].sort(
+    (a, b) =>
+      b.updatedAt.localeCompare(a.updatedAt) ||
+      b.createdAt.localeCompare(a.createdAt) ||
+      a.id.localeCompare(b.id),
+  );
+  return sorted.every((list, index) => list === lists[index]) ? lists : sorted;
 }

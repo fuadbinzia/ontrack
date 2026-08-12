@@ -30,7 +30,7 @@ export function RentalDetailsSummary({
   details,
   pickupDate,
   pickupMinutes,
-  dateDisplayFormat: _dateDisplayFormat = 'mdy',
+  dateDisplayFormat: _dateDisplayFormat = 'en-US',
 }: {
   details: TravelRentalDetails;
   /** Itinerary pick-up day (YYYY-MM-DD). */

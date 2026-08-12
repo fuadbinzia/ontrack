@@ -91,8 +91,6 @@ export const domains: SyncDomain[] = [
         aiEnabled: state.aiEnabled,
         hapticsEnabled: state.hapticsEnabled,
         usageAnalyticsEnabled: state.usageAnalyticsEnabled,
-        dateLocale: state.dateLocale,
-        dateDisplayFormat: state.dateDisplayFormat,
       };
     },
     write: (payload) => {
@@ -119,14 +117,6 @@ export const domains: SyncDomain[] = [
           typeof payload.usageAnalyticsEnabled === 'boolean'
             ? payload.usageAnalyticsEnabled
             : local.usageAnalyticsEnabled,
-        dateLocale:
-          typeof payload.dateLocale === 'string'
-            ? payload.dateLocale
-            : local.dateLocale,
-        dateDisplayFormat:
-          payload.dateDisplayFormat === 'mdy' || payload.dateDisplayFormat === 'iso'
-            ? payload.dateDisplayFormat
-            : local.dateDisplayFormat,
         // avatar stays device-only — never in app_state preferences payload.
       });
     },

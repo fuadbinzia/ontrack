@@ -42,6 +42,7 @@ import {
 import { useUI } from '@/store/ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
+import { getDateTimeFormatter } from '@/utils/intl-cache';
 import { listReferenceEquality } from '@/utils/list-equality';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -109,7 +110,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
 
   const dateLabel = useMemo(
     () =>
-      new Intl.DateTimeFormat(dateLocale, {
+      getDateTimeFormatter(dateLocale, {
         weekday: 'long',
         month: 'long',
         day: 'numeric',

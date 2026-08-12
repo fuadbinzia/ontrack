@@ -1,8 +1,13 @@
+import {
+  getDateTimeFormatter,
+  getNumberFormatter,
+} from '@/utils/intl-cache';
+
 export function formatAmountInput(amount: number): string {
   if (!Number.isFinite(amount)) return '';
   const rounded = Math.round(amount * 100) / 100;
   try {
-    return new Intl.NumberFormat('en-US', {
+    return getNumberFormatter('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(rounded);
@@ -15,7 +20,7 @@ export function formatAmountInput(amount: number): string {
 export function formatRateInput(rate: number): string {
   if (!Number.isFinite(rate) || !(rate > 0)) return '';
   try {
-    return new Intl.NumberFormat('en-US', {
+    return getNumberFormatter('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 6,
       useGrouping: false,
@@ -60,7 +65,7 @@ export function formatFxMoney(amount: number, currency: string, locale?: string)
     return `${code || '?'} ${formatAmountInput(amount)}`;
   }
   try {
-    return new Intl.NumberFormat(locale === 'system' ? undefined : locale, {
+    return getNumberFormatter(locale === 'system' ? undefined : locale, {
       style: 'currency',
       currency: code,
       minimumFractionDigits: 2,
@@ -73,7 +78,7 @@ export function formatFxMoney(amount: number, currency: string, locale?: string)
 
 export function formatRateDate(date: string, locale?: string): string {
   try {
-    return new Intl.DateTimeFormat(locale === 'system' ? undefined : locale, {
+    return getDateTimeFormatter(locale === 'system' ? undefined : locale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -85,7 +90,7 @@ export function formatRateDate(date: string, locale?: string): string {
 
 export function formatPlainAmount(amount: number, locale?: string): string {
   try {
-    return new Intl.NumberFormat(locale === 'system' ? undefined : locale, {
+    return getNumberFormatter(locale === 'system' ? undefined : locale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);

@@ -17,6 +17,7 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
+import { getDateTimeFormatter } from '@/utils/intl-cache';
 
 type TravelChatRowPalette = ReturnType<typeof travelChatPalette>;
 
@@ -244,7 +245,7 @@ export function TravelChatMessageRow({
           {message.pending
             ? 'Sending…'
             : [
-                new Intl.DateTimeFormat(undefined, {
+                getDateTimeFormatter(undefined, {
                   hour: 'numeric',
                   minute: '2-digit',
                 }).format(new Date(message.createdAt)),

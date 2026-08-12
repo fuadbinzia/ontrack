@@ -1,4 +1,4 @@
-import type { DateDisplayFormat } from '@/utils/date';
+import { usesMonthFirstDateFormat, type DateDisplayFormat } from '@/utils/date';
 
 import type { TemperatureUnit } from './types';
 
@@ -6,7 +6,7 @@ import type { TemperatureUnit } from './types';
 export function temperatureUnitForDateFormat(
   format: DateDisplayFormat,
 ): TemperatureUnit {
-  return format === 'mdy' ? 'fahrenheit' : 'celsius';
+  return usesMonthFirstDateFormat(format) ? 'fahrenheit' : 'celsius';
 }
 
 export function unitSymbol(unit: TemperatureUnit): string {

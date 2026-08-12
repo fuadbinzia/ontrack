@@ -1,5 +1,8 @@
+import { getDateTimeFormatter } from '@/utils/intl-cache';
+
 export const DAY_MS = 24 * 60 * 60 * 1000;
-export type DateDisplayFormat = 'mdy' | 'iso';
+/** Locale identifier used to render a stored date key for the current device. */
+export type DateDisplayFormat = string;
 
 /** YYYY-MM-DD in local time. */
 export function toDateKey(date: Date): string {
@@ -34,13 +37,45 @@ export function deviceLocale(): string {
 }
 
 export function dateDisplayFormatForLocale(locale?: string): DateDisplayFormat {
-  const sample = new Date(2006, 10, 22, 12);
   try {
-    const rendered = sample.toLocaleDateString(locale === 'system' ? undefined : locale);
-    const firstNumber = rendered.match(/\d+/)?.[0];
-    return Number(firstNumber) === 11 ? 'mdy' : 'iso';
+    return getDateTimeFormatter(locale === 'system' ? undefined : locale)
+      .resolvedOptions().locale || 'system';
   } catch {
-    return 'iso';
+    return 'system';
+  }
+}
+
+function dateFormatter(locale: DateDisplayFormat): Intl.DateTimeFormat {
+  return getDateTimeFormatter(locale === 'system' ? undefined : locale, {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  });
+}
+
+export function usesMonthFirstDateFormat(locale: DateDisplayFormat): boolean {
+  try {
+    return dateFormatter(locale).formatToParts(new Date(2006, 10, 22, 12))
+      .find((part) => part.type === 'day' || part.type === 'month' || part.type === 'year')
+      ?.type === 'month';
+  } catch {
+    return false;
+  }
+}
+
+export function datePlaceholderForLocale(locale: DateDisplayFormat): string {
+  try {
+    return dateFormatter(locale)
+      .formatToParts(new Date(2006, 10, 22, 12))
+      .map((part) => {
+        if (part.type === 'day') return 'DD';
+        if (part.type === 'month') return 'MM';
+        if (part.type === 'year') return 'YYYY';
+        return part.value;
+      })
+      .join('');
+  } catch {
+    return 'YYYY-MM-DD';
   }
 }
 
@@ -52,12 +87,11 @@ export function nativeDatePickerLocale(locale: unknown): string | undefined {
 
 export function formatDateKey(value: string, format: DateDisplayFormat): string {
   if (!isDateKey(value)) return value;
-  const [year, month, day] = value.split('-');
-  const shortYear = year.slice(-2);
-  const normalized = normalizeDateParts(day, month);
-  return format === 'iso'
-    ? `${shortYear}-${month}-${day}`
-    : `${normalized.month}/${normalized.day}/${shortYear}`;
+  try {
+    return dateFormatter(format).format(fromDateKey(value));
+  } catch {
+    return value;
+  }
 }
 
 /** Visible calendar-sheet title derived from a spoken accessibility label. */
@@ -77,11 +111,14 @@ export function formatTimePickerTitle(label: string): string {
 /** Month/day (or day/month) without year or leading zeros — for dense timeline chrome. */
 export function formatDateKeyShort(value: string, format: DateDisplayFormat): string {
   if (!isDateKey(value)) return value;
-  const [, month, day] = value.split('-');
-  const normalized = normalizeDateParts(day, month);
-  return format === 'iso'
-    ? `${normalized.day}/${normalized.month}`
-    : `${normalized.month}/${normalized.day}`;
+  try {
+    return getDateTimeFormatter(format === 'system' ? undefined : format, {
+      day: 'numeric',
+      month: 'numeric',
+    }).format(fromDateKey(value));
+  } catch {
+    return value;
+  }
 }
 
 const SHORT_MONTHS = [
@@ -127,16 +164,6 @@ export function formatTripDateRangeLabel(startDate: string, endDate: string): st
 export function formatTripWeekdayRangeLabel(startDate: string, endDate: string): string {
   if (!isDateKey(startDate) || !isDateKey(endDate)) return '';
   return `${formatWeekday(startDate)} – ${formatWeekday(endDate)}`;
-}
-
-function normalizeDateParts(
-  day: string,
-  month: string,
-): { day: string; month: string } {
-  return {
-    day: String(Number(day)),
-    month: String(Number(month)),
-  };
 }
 
 export function todayKey(): string {

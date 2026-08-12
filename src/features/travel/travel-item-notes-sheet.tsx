@@ -27,10 +27,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { newId } from '@/utils/id';
+import { getDateTimeFormatter } from '@/utils/intl-cache';
 
 function formatNoteTime(iso: string): string {
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return getDateTimeFormatter(undefined, {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',

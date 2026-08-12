@@ -146,16 +146,16 @@ describe('travel timeline entries', () => {
 
   it('formats action captions without the full span', () => {
     const [board, land] = expandTimelineEntries([outbound]);
-    expect(timelineEntryCaption(board, 'mdy')).toMatch(/8:25 PM/);
-    expect(timelineEntryCaption(board, 'mdy')).toContain('EWR → KEF');
-    expect(timelineEntryCaption(land, 'mdy')).toMatch(/6:15 AM/);
-    expect(timelineEntryCaption(land, 'mdy')).toContain('KEF');
-    expect(timelineEntryCaption(land, 'mdy')).not.toMatch(/8:25 PM/);
+    expect(timelineEntryCaption(board, 'en-US')).toMatch(/8:25 PM/);
+    expect(timelineEntryCaption(board, 'en-US')).toContain('EWR → KEF');
+    expect(timelineEntryCaption(land, 'en-US')).toMatch(/6:15 AM/);
+    expect(timelineEntryCaption(land, 'en-US')).toContain('KEF');
+    expect(timelineEntryCaption(land, 'en-US')).not.toMatch(/8:25 PM/);
 
     const [pickup, dropoff] = expandTimelineEntries([rental]);
-    expect(timelineEntryCaption(pickup, 'mdy')).toBe('Sep 9 · 6:30 AM · KEF');
-    expect(timelineEntryCaption(dropoff, 'mdy')).toBe('Sep 14 · 3:00 PM · KEF');
-    expect(timelineEntryCaption(pickup, 'mdy')).not.toContain(
+    expect(timelineEntryCaption(pickup, 'en-US')).toBe('Sep 9 · 6:30 AM · KEF');
+    expect(timelineEntryCaption(dropoff, 'en-US')).toBe('Sep 14 · 3:00 PM · KEF');
+    expect(timelineEntryCaption(pickup, 'en-US')).not.toContain(
       'Keflavik International Airport',
     );
   });
@@ -170,7 +170,7 @@ describe('travel timeline entries', () => {
         startMinutes: outbound.startMinutes,
         title: outbound.title,
       },
-      'mdy',
+      'en-US',
     );
     expect(flightCaption).toContain('Sep 8');
     expect(flightCaption).not.toMatch(/\b9\/8\b/);
@@ -196,7 +196,7 @@ describe('travel timeline entries', () => {
         startMinutes: stay.startMinutes,
         title: stay.title,
       },
-      'mdy',
+      'en-US',
     );
     expect(stayCaption).toBe('Sep 27 · 3:00 PM → Sep 29 · 11:00 AM');
   });

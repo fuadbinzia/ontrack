@@ -35,7 +35,7 @@ export function StayDetailsSummary({
   photoUris,
   checkinDate,
   checkinMinutes,
-  dateDisplayFormat: _dateDisplayFormat = 'mdy',
+  dateDisplayFormat: _dateDisplayFormat = 'en-US',
 }: {
   details: TravelStayDetails;
   /** Hotel / property name for brand + place-photo lookup. */

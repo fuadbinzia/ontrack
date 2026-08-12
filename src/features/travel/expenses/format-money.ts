@@ -1,3 +1,5 @@
+import { getIntlLocale, getNumberFormatter } from '@/utils/intl-cache';
+
 /** Format a money amount with Intl; falls back to code + number. */
 export function formatMoney(
   amount: number,
@@ -9,7 +11,7 @@ export function formatMoney(
     return `${code || '?'} ${amount}`;
   }
   try {
-    return new Intl.NumberFormat(locale, {
+    return getNumberFormatter(locale, {
       style: 'currency',
       currency: code,
       maximumFractionDigits: code === 'ISK' || code === 'JPY' || code === 'KRW' ? 0 : 2,
@@ -65,7 +67,7 @@ const REGION_CURRENCY: Record<string, string> = {
 /** Best-effort home currency from a BCP-47 locale. */
 export function currencyFromLocale(locale: string, fallback = 'USD'): string {
   try {
-    const region = new Intl.Locale(locale).maximize().region?.toUpperCase();
+    const region = getIntlLocale(locale).maximize().region?.toUpperCase();
     if (region && REGION_CURRENCY[region]) return REGION_CURRENCY[region];
   } catch {
     // ignore

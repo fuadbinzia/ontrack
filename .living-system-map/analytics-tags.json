@@ -124,7 +124,7 @@
       "id": "batch.installId",
       "label": "Opaque install ID",
       "category": "Batch context",
-      "description": "Supports idempotency and rate limits. The API immediately HMACs it and never persists the raw value.",
+      "description": "Supports idempotency, rate limits, and a stable anonymous device label. The API immediately HMACs it and never persists or displays the raw value.",
       "trigger": "Included server-side only when Usage Analytics consent is enabled."
     },
     {

@@ -88,6 +88,24 @@ describe('flow analytics ingestion', () => {
     expect(JSON.stringify(args)).not.toContain(base.installId);
     expect(JSON.stringify(args)).not.toContain(base.events[0].sessionId);
     expect(args.p_events[0].sessionHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(rpc).toHaveBeenNthCalledWith(2, 'record_analytics_flow_device_batch', expect.objectContaining({
+      p_install_hash: args.p_install_hash,
+      p_platform: 'ios',
+      p_environment: 'production',
+    }));
+    expect(JSON.stringify(rpc.mock.calls[1][1])).not.toContain(base.installId);
+  });
+
+  it('fails closed when anonymous device aggregation rejects a batch', async () => {
+    rpc
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: { code: '22000', message: 'rejected' } });
+    const response = await ingestFlowAnalytics(
+      new Request('https://api.example.test/api/analytics/flows', { method: 'POST' }),
+      base,
+    );
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({ error: 'Analytics device aggregation rejected the batch.' });
   });
 
   it('fails closed when server-only analytics configuration is missing', async () => {

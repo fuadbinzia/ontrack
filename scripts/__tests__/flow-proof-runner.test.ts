@@ -21,6 +21,13 @@ describe('dual-platform flow proof runner', () => {
     expect(source).not.toMatch(/SKIP_IOS|SKIP_ANDROID|AGENT_UI_SKIP_LEASE|ONTRACK_PACKAGER_TARGET/);
   });
 
+  it('keeps agent devices warm only between batch flows and safely shuts down after the final flow', () => {
+    const source = read('scripts/agent-ui-flow-proof-batch.mjs');
+    expect(source).toContain("keepDevices ? { ...process.env, AGENT_UI_KEEP_DEVICES: '1' } : process.env");
+    expect(source).toContain('for (const [index, flow] of flows.entries())');
+    expect(source).toContain('keepDevices: index < flows.length - 1');
+  });
+
   it('keeps a passing iOS result when Android bridge proof fails', () => {
     const output = [
       'error: Android app bridge not answering',

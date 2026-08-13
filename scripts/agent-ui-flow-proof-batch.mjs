@@ -44,12 +44,12 @@ function selectedFlows(all) {
   throw new Error('Use --all, --flow <name>, or --changed <git-ref>.');
 }
 
-function runFlow(flow) {
+function runFlow(flow, { keepDevices = false } = {}) {
   const started = Date.now();
   return new Promise((resolve) => {
     const child = spawn(path.join(root, 'scripts/agent-ui-verify-both.sh'), ['--proof-flow', flow.name], {
       cwd: root,
-      env: process.env,
+      env: keepDevices ? { ...process.env, AGENT_UI_KEEP_DEVICES: '1' } : process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let output = '';
@@ -84,9 +84,9 @@ fs.mkdirSync(path.dirname(resultPath), { recursive: true });
 let previous = { schemaVersion: 1, runs: [] };
 try { previous = JSON.parse(fs.readFileSync(resultPath, 'utf8')); } catch {}
 const fresh = [];
-for (const flow of flows) {
+for (const [index, flow] of flows.entries()) {
   process.stdout.write(`\nflow-proof: ${flow.name} (${flow.digest})\n`);
-  const runs = await runFlow(flow);
+  const runs = await runFlow(flow, { keepDevices: index < flows.length - 1 });
   fresh.push(...runs);
   if (runs.some((run) => run.exitCode === 3)) {
     fs.writeFileSync(resultPath, `${JSON.stringify({ schemaVersion: 1, generatedAt: new Date().toISOString(), runs: [...previous.runs, ...fresh] }, null, 2)}\n`);

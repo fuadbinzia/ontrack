@@ -16,13 +16,17 @@ const days = Math.max(1, Math.min(90, Number(process.env.LSM_ANALYTICS_DAYS) || 
 const environment = process.env.LSM_ANALYTICS_ENVIRONMENT || 'production';
 const platform = process.env.LSM_ANALYTICS_PLATFORM || null;
 const client = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
-const { data, error } = await client.rpc('analytics_flow_map_summary', {
+const filters = {
   p_days: days,
   p_environment: environment,
   p_platform: platform,
-});
-if (error) {
+};
+const [flowResult, deviceResult] = await Promise.all([
+  client.rpc('analytics_flow_map_summary', filters),
+  client.rpc('analytics_flow_device_summary', filters),
+]);
+if (flowResult.error || deviceResult.error) {
   process.stderr.write('Runtime analytics query failed.\n');
   process.exit(1);
 }
-process.stdout.write(`${JSON.stringify(data)}\n`);
+process.stdout.write(`${JSON.stringify({ ...flowResult.data, ...deviceResult.data })}\n`);

@@ -172,6 +172,20 @@ export async function ingestFlowAnalytics(request: Request, payload: unknown): P
       });
       return json(request, { error: 'Analytics storage rejected the batch.' }, 502);
     }
+    const { error: deviceError } = await adminClient().rpc('record_analytics_flow_device_batch', {
+      p_install_hash: installHash,
+      p_platform: batch.platform,
+      p_environment: batch.environment,
+      p_app_version: batch.appVersion,
+      p_events: events,
+    });
+    if (deviceError) {
+      console.error('[flow-analytics] anonymous device aggregate rejected batch', {
+        code: deviceError.code,
+        message: deviceError.message,
+      });
+      return json(request, { error: 'Analytics device aggregation rejected the batch.' }, 502);
+    }
     return json(request, { accepted: batch.events.map((item) => item.id) });
   } catch (error) {
     console.error('[flow-analytics] ingestion unavailable', {

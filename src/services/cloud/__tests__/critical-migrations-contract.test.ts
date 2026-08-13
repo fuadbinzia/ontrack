@@ -109,6 +109,7 @@ describe('critical persistence migration boundaries', () => {
     const ingestionFix = migration('202608130003_fix_flow_analytics_ingestion.sql');
     const latency = migration('202608130004_flow_latency_aggregates.sql');
     const percentileFix = migration('202608130005_flow_latency_percentile_numeric.sql');
+    const devices = migration('202608130006_anonymous_flow_devices.sql');
     for (const table of [
       'analytics_flow_receipts', 'analytics_flow_routes_daily',
       'analytics_flow_transitions_daily', 'analytics_flow_outcomes_daily',
@@ -133,6 +134,13 @@ describe('critical persistence migration boundaries', () => {
     expect(latency).toContain("event_lifecycle = 'measure'");
     expect(latency).toContain('analytics_latency_percentile');
     expect(latency).toContain('grant execute on function public.record_analytics_flow_batch(text, text, text, text, jsonb)');
+    expect(devices).toContain('analytics_flow_devices_daily');
+    expect(devices).toContain('install_hash text not null');
+    expect(devices).toContain("upper(substr(install_hash, 1, 8))");
+    expect(devices).toContain("delete from public.analytics_flow_devices_daily where day < current_date - 89");
+    expect(devices).toContain('revoke all on public.analytics_flow_devices_daily from anon, authenticated');
+    expect(devices).toContain('grant execute on function public.analytics_flow_device_summary(integer, text, text)');
+    expect(devices).not.toMatch(/grant\s+(select|insert|update|delete).*to\s+(anon|authenticated)/);
     expect(latency).not.toMatch(/grant\s+(select|insert|update|delete).*to\s+(anon|authenticated)/);
     expect(percentileFix).toContain('sample_count numeric');
     expect(percentileFix).toContain('grant execute on function public.analytics_latency_percentile(numeric');

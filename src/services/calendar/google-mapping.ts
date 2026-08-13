@@ -1,4 +1,5 @@
 import type { Activity } from '@/types/models';
+import { isAllDayActivity } from '@/utils/activity-time';
 import { addDays, isDateKey } from '@/utils/date';
 
 import type { GoogleCalendarEvent, GoogleCalendarLinkRow } from './google-types';
@@ -60,8 +61,44 @@ export function eventToActivity(event: GoogleCalendarEvent, existing: Activity |
   };
 }
 
+export function googleEventAllDay(event: GoogleCalendarEvent) {
+  return event.start?.date ? true : undefined;
+}
+
+function normalizedEventText(value: string | undefined) {
+  return value?.trim() || undefined;
+}
+
+/** Compare only fields that onTrack sends to Google Calendar. */
+export function googleEventMatchesActivity(
+  event: GoogleCalendarEvent,
+  activity: Activity,
+  timeZone: string,
+) {
+  if (normalizedEventText(event.summary) !== normalizedEventText(activity.title)) return false;
+  if (normalizedEventText(event.description) !== normalizedEventText(activity.notes)) return false;
+
+  if (isAllDayActivity(activity)) {
+    const days = Math.max(1, Math.round(activity.durationMinutes / (24 * 60)));
+    return event.start?.date === activity.date
+      && event.end?.date === addDays(activity.date, days);
+  }
+  if (!event.start?.dateTime || !event.end?.dateTime) return false;
+  try {
+    const start = new Date(event.start.dateTime);
+    const end = new Date(event.end.dateTime);
+    const parts = zonedDateParts(start, timeZone);
+    const durationMinutes = Math.max(5, Math.round((end.getTime() - start.getTime()) / 60_000));
+    return parts.date === activity.date
+      && parts.minutes === activity.startMinutes
+      && durationMinutes === activity.durationMinutes;
+  } catch {
+    return false;
+  }
+}
+
 export function activityBody(activity: Activity, timeZone: string, eventId?: string) {
-  if (activity.allDay) {
+  if (isAllDayActivity(activity)) {
     const days = Math.max(1, Math.round(activity.durationMinutes / (24 * 60)));
     return {
       ...(eventId ? { id: eventId } : {}),

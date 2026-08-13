@@ -28,6 +28,17 @@ export async function withGoogleCalendarApiAuth(
     if (result instanceof Response) return result;
     return Response.json(result, { headers: cors });
   } catch (error) {
-    return Response.json({ error: googleCalendarErrorMessage(error, config.errorFallback) }, { status: 503, headers: cors });
+    const code = error instanceof Error
+      && 'code' in error
+      && typeof error.code === 'string'
+      ? error.code
+      : undefined;
+    return Response.json(
+      {
+        error: googleCalendarErrorMessage(error, config.errorFallback),
+        ...(code ? { code } : {}),
+      },
+      { status: 503, headers: cors },
+    );
   }
 }

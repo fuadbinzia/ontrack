@@ -335,6 +335,51 @@ describe('movie event details', () => {
 });
 
 describe('schedule persistence migrations', () => {
+  it('marks legacy Google midnight whole-day records as all-day', async () => {
+    const legacyGoogleAllDay: Activity = {
+      ...activity,
+      id: 'legacy-google-all-day',
+      startMinutes: 0,
+      durationMinutes: 24 * 60,
+      googleCalendar: {
+        calendarId: 'primary',
+        eventId: 'google-event-1',
+        origin: 'google',
+        lastSyncedAt: activity.updatedAt,
+      },
+    };
+    const localMidnightEvent: Activity = {
+      ...legacyGoogleAllDay,
+      id: 'local-midnight-event',
+      googleCalendar: undefined,
+    };
+    await mockAsyncStorage.setItem(
+      STORAGE_KEYS.schedule,
+      JSON.stringify({
+        state: {
+          seeded: true,
+          activities: [legacyGoogleAllDay, localMidnightEvent],
+          meals: [],
+          workouts: [],
+          workSessions: [],
+          movies: [],
+          categories: DEFAULT_CATEGORIES,
+        },
+        version: 0,
+      }),
+    );
+
+    await useSchedule.persist.rehydrate();
+
+    const migrated = useSchedule.getState().activities;
+    expect(migrated[0]).toEqual(expect.objectContaining({
+      id: legacyGoogleAllDay.id,
+      allDay: true,
+    }));
+    expect(migrated[1]).toEqual(expect.objectContaining({ id: localMidnightEvent.id }));
+    expect(migrated[1]).not.toHaveProperty('allDay');
+  });
+
   it('adds newly shipped categories to an existing saved schedule', async () => {
     await mockAsyncStorage.setItem(
       STORAGE_KEYS.schedule,

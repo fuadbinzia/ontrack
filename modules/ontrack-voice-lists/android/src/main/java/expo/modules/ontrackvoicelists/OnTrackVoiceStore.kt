@@ -173,10 +173,13 @@ internal object OnTrackVoiceStore {
     val byKind = if (kind == null) pool else pool.filter { it.kind == kind }
     if (kind != null && byKind.isEmpty()) return null
     val candidates = byKind.ifEmpty { pool }
+    val exactName = hint?.trim()?.lowercase().orEmpty()
+    if (exactName.isNotEmpty()) {
+      candidates.firstOrNull { it.name.lowercase() == exactName }?.let { return it }
+      pool.firstOrNull { it.name.lowercase() == exactName }?.let { return it }
+    }
     val query = nameQuery(hint)?.lowercase()
     if (query != null) {
-      candidates.firstOrNull { it.name.lowercase() == query }?.let { return it }
-      pool.firstOrNull { it.name.lowercase() == query }?.let { return it }
       candidates.firstOrNull { it.name.lowercase().contains(query) }?.let { return it }
       pool.firstOrNull { it.name.lowercase().contains(query) }?.let { return it }
     }

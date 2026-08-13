@@ -1,4 +1,5 @@
 import type { Activity } from '@/types/models';
+import { isAllDayActivity } from '@/utils/activity-time';
 import { toDateKey } from '@/utils/date';
 
 export interface DayTimeState {
@@ -17,7 +18,7 @@ export function resolveDayTimeState(
   const minutes = now.getHours() * 60 + now.getMinutes();
   const current = activities.find(
     (activity) =>
-      !activity.allDay &&
+      !isAllDayActivity(activity) &&
       activity.status === 'upcoming' &&
       activity.startMinutes <= minutes &&
       minutes < activity.startMinutes + activity.durationMinutes,
@@ -31,7 +32,7 @@ export function resolveDayTimeState(
 
   const next = activities.find(
     (activity) =>
-      !activity.allDay &&
+      !isAllDayActivity(activity) &&
       activity.status === 'upcoming' && activity.startMinutes > minutes,
   );
   return next ? { nowLine: `Next · ${next.title}` } : {};

@@ -83,6 +83,17 @@ describe('critical persistence migration boundaries', () => {
     expect(direction).toContain('sync_direction');
   });
 
+  it('replaces conflicting Calendar event links atomically without client RPC access', () => {
+    const source = migration('202608130001_atomic_google_calendar_event_links.sql');
+    expect(source).toContain('pg_advisory_xact_lock');
+    expect(source).toContain('activity_id = link_row.activity_id');
+    expect(source).toContain('google_event_id = link_row.google_event_id');
+    expect(source).toContain('delete from public.google_calendar_event_links');
+    expect(source).toContain('insert into public.google_calendar_event_links');
+    expect(source).toContain('revoke all on function public.upsert_google_calendar_event_links(jsonb) from public, anon, authenticated');
+    expect(source).toContain('grant execute on function public.upsert_google_calendar_event_links(jsonb) to service_role');
+  });
+
   it('adds Finance only to the existing owner-scoped sync and entitlement constraints', () => {
     const source = migration('202608120007_finance_addon.sql');
     expect(source).toContain('alter table public.app_state');

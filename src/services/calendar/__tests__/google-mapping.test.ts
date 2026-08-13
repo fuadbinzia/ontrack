@@ -2,6 +2,8 @@ import {
   activityBody,
   eventToActivity,
   googleCalendarMetadata,
+  googleEventAllDay,
+  googleEventMatchesActivity,
 } from '@/services/calendar/google-mapping';
 import type { GoogleCalendarLinkRow } from '@/services/calendar/google-types';
 import type { Activity } from '@/types/models';
@@ -103,6 +105,11 @@ it('keeps series identity while refreshing link metadata after local edits', () 
   });
 });
 
+it('reads date-only shape independently from Google content timestamps', () => {
+  expect(googleEventAllDay({ start: { date: '2026-08-12' } })).toBe(true);
+  expect(googleEventAllDay({ start: { dateTime: '2026-08-12T00:00:00Z' } })).toBeUndefined();
+});
+
 it('exports timed activities across midnight without losing the next date', () => {
   const activity: Activity = {
     id: 'activity-1',
@@ -141,4 +148,48 @@ it('exports all-day activities with date-only boundaries and no invented time', 
     end: { date: '2026-08-15' },
   });
   expect(activityBody(activity, 'America/New_York')).not.toHaveProperty('start.dateTime');
+});
+
+it('matches Google-visible content independently from local-only activity fields', () => {
+  const activity: Activity = {
+    id: 'activity-1',
+    date: '2026-08-12',
+    title: 'Therapy',
+    notes: 'Weekly appointment',
+    categoryId: 'health',
+    startMinutes: 14 * 60,
+    durationMinutes: 60,
+    status: 'completed',
+    photo: 'local-only-photo',
+    createdAt: syncedAt,
+    updatedAt: '2026-08-13T12:00:00.000Z',
+  };
+  const event = {
+    summary: 'Therapy',
+    description: 'Weekly appointment',
+    start: { dateTime: '2026-08-12T14:00:00-04:00' },
+    end: { dateTime: '2026-08-12T15:00:00-04:00' },
+  };
+
+  expect(googleEventMatchesActivity(event, activity, 'America/New_York')).toBe(true);
+  expect(googleEventMatchesActivity(
+    { ...event, end: { dateTime: '2026-08-12T15:30:00-04:00' } },
+    activity,
+    'America/New_York',
+  )).toBe(false);
+});
+
+it('matches all-day content by exclusive date boundaries', () => {
+  const activity: Activity = {
+    id: 'activity-all-day', date: '2026-08-12', allDay: true, title: 'Conference',
+    categoryId: 'personal', startMinutes: 0, durationMinutes: 2 * 24 * 60,
+    status: 'upcoming', createdAt: syncedAt, updatedAt: syncedAt,
+  };
+
+  expect(googleEventMatchesActivity({
+    summary: 'Conference', start: { date: '2026-08-12' }, end: { date: '2026-08-14' },
+  }, activity, 'UTC')).toBe(true);
+  expect(googleEventMatchesActivity({
+    summary: 'Conference', start: { date: '2026-08-12' }, end: { date: '2026-08-13' },
+  }, activity, 'UTC')).toBe(false);
 });

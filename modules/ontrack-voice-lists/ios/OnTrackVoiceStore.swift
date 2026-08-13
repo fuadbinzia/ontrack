@@ -125,11 +125,13 @@ enum OnTrackVoiceStore {
     let byKind = kind == nil ? pool : pool.filter { $0.kind == kind }
     if kind != nil && byKind.isEmpty { return nil }
     let candidates = byKind.isEmpty ? pool : byKind
+    let exactName = hint?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+    if !exactName.isEmpty,
+       let exact = candidates.first(where: { $0.name.lowercased() == exactName })
+         ?? pool.first(where: { $0.name.lowercased() == exactName }) {
+      return exact
+    }
     if let query = nameQuery(hint)?.lowercased() {
-      if let exact = candidates.first(where: { $0.name.lowercased() == query })
-        ?? pool.first(where: { $0.name.lowercased() == query }) {
-        return exact
-      }
       if let partial = candidates.first(where: { $0.name.lowercased().contains(query) })
         ?? pool.first(where: { $0.name.lowercased().contains(query) }) {
         return partial

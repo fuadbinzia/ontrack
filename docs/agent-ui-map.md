@@ -667,7 +667,8 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.straiaway.openOntrack`                     | Open partner link in onTrack        |
 | `ontrack.calendarSync.connect`                      | Connect Google Calendar             |
 | `ontrack.calendarSync.reconnect`                    | Renew Google Calendar permissions   |
-| `ontrack.calendarSync.sync`                         | Run two-way calendar sync           |
+| `ontrack.calendarSync.sync`                         | Preview Google Calendar sync        |
+| `ontrack.calendarSync.confirmSync`                  | Confirm previewed calendar changes  |
 | `ontrack.calendarSync.disconnectKeep`               | Disconnect and keep synced copies   |
 | `ontrack.calendarSync.disconnectRemove`             | Disconnect and remove synced copies |
 | `ontrack.calendarSync.confirmDisconnectRemove`      | Confirm removal of synced copies    |
@@ -725,6 +726,7 @@ dock); legacy `/(tabs)/profile/account` redirects there.
 | `ontrack.auth.dataChoice.startFresh`  | Start fresh without guest data             |
 | `ontrack.auth.dataChoice.cancel`      | Cancel sign-in, keep guest                 |
 | `ontrack.prompt.close`                | Prompt / alert dismiss (X)                 |
+| `ontrack.prompt.messageScroll`        | Scrollable prompt message list             |
 | `ontrack.prompt.action.<index>`       | Prompt action by visible position          |
 
 `ensurePastLaunchGates` auto-taps `ontrack.onboarding.skip` (or `auth.guest`)

@@ -51,6 +51,82 @@ describe('voice lists', () => {
     expect(matchVoiceList(lists)?.id).toBe('food');
   });
 
+  it('honors an exact To Do list name instead of the most recent checklist', () => {
+    const lists = [
+      {
+        id: 'recent',
+        name: '7 Maple',
+        kind: 'checklist' as const,
+        canEdit: true,
+        updatedAt: '2026-08-13T02:00:00.000Z',
+        openTitles: [],
+      },
+      {
+        id: 'default',
+        name: 'To Do',
+        kind: 'checklist' as const,
+        canEdit: true,
+        updatedAt: '2026-08-01T00:00:00.000Z',
+        openTitles: [],
+      },
+    ];
+
+    expect(matchVoiceList(lists, 'To Do')?.id).toBe('default');
+    expect(matchVoiceList(lists, '  to do  ', 'checklist')?.id).toBe('default');
+  });
+
+  it('adds a Siri item requested for To Do to To Do instead of another checklist', () => {
+    const toDo = useTodos.getState().lists.find((list) => list.name === 'To Do')!;
+    const other = useTodos.getState().createList('7 Maple', 'checklist')!;
+    useTodos.setState((state) => ({
+      lists: state.lists.map((list) => ({
+        ...list,
+        updatedAt:
+          list.id === other.id
+            ? '2026-08-13T02:00:00.000Z'
+            : '2026-08-01T00:00:00.000Z',
+      })),
+    }));
+
+    expect(
+      applyVoicePendingToStore([
+        {
+          id: 'op-to-do',
+          title: 'Test',
+          listName: 'To Do',
+          kindHint: 'checklist',
+          createdAt: updatedAt,
+        },
+      ]),
+    ).toBe(1);
+    expect(useTodos.getState().tasks).toEqual([
+      expect.objectContaining({ title: 'Test', listId: toDo.id }),
+    ]);
+  });
+
+  it('still falls back by checklist recency when a generic named list does not exist', () => {
+    const lists = [
+      {
+        id: 'older',
+        name: 'Weekend',
+        kind: 'checklist' as const,
+        canEdit: true,
+        updatedAt: '2026-08-01T00:00:00.000Z',
+        openTitles: [],
+      },
+      {
+        id: 'recent',
+        name: '7 Maple',
+        kind: 'checklist' as const,
+        canEdit: true,
+        updatedAt: '2026-08-13T02:00:00.000Z',
+        openTitles: [],
+      },
+    ];
+
+    expect(matchVoiceList(lists, 'checklist')?.id).toBe('recent');
+  });
+
   it('builds a snapshot of open titles and applies pending adds', () => {
     const groceries = useTodos.getState().createList('Groceries', 'grocery');
     useTodos.getState().addTask(groceries!.id, 'Eggs');

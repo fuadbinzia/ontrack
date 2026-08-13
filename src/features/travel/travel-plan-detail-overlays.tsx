@@ -3,6 +3,7 @@ import type { MutableRefObject } from 'react';
 import type { StayBookingOpen } from '@/features/travel/booking-open';
 import { BookingOpenSheet } from '@/features/travel/booking-open-sheet';
 import type { ExpenseFormState } from '@/features/travel/expenses/expense-form';
+import { applyExpenseSheetSavePresentation } from '@/features/travel/expenses/expense-sheet-save-presentation';
 import { TravelExpensesSheet } from '@/features/travel/expenses/travel-expenses-sheet';
 import { TravelAddPhotosModal } from '@/features/travel/travel-add-photos-modal';
 import {
@@ -247,11 +248,16 @@ export function TravelPlanDetailOverlays({
         }}
         onSavePlan={updatePlan}
         onSaved={({ mode }) => {
-          setOpenExpenseSheet(false);
-          setExpenseDraft(undefined);
-          if (mode === 'edit') return;
-          importResultExpenseRef.current = null;
-          setImportResult({ stage: 'expense-saved' });
+          applyExpenseSheetSavePresentation(mode, {
+            dismissSheet: () => setOpenExpenseSheet(false),
+            clearDraft: () => setExpenseDraft(undefined),
+            clearPendingImport: () => {
+              importResultExpenseRef.current = null;
+            },
+            showSavedConfirmation: () => {
+              setImportResult({ stage: 'expense-saved' });
+            },
+          });
         }}
       />
       <TravelImportResultModal

@@ -297,6 +297,7 @@ export const agentUiIdsShell = {
   },
   prompt: {
     close: 'ontrack.prompt.close',
+    messageScroll: 'ontrack.prompt.messageScroll',
     action: (index: number) => `ontrack.prompt.action.${index}`,
   },
   eventDetail: {

@@ -6,6 +6,7 @@ import { activityFormStyles as styles } from './activity-form-styles';
 
 import {
   AppText,
+  AppPromptHost,
   appPrompt,
   Button,
   ErrorMessage,
@@ -56,6 +57,7 @@ import {
 import { pickLibraryImage } from '@/utils/pick-image';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
+import { isAllDayActivity } from '@/utils/activity-time';
 import { isDateKey, nowMinutes, todayKey } from '@/utils/date';
 import { goBackOrReplace } from '@/utils/navigation';
 
@@ -87,7 +89,7 @@ export default function ActivityFormScreen() {
   const initialId = editId ?? 'draft';
   const initialDate = existing?.date ?? (typeof params.date === 'string' ? params.date : todayKey());
   const initialStartMinutes = existing?.startMinutes ?? nowMinutes();
-  const allDay = existing?.allDay === true;
+  const allDay = existing ? isAllDayActivity(existing) : false;
   const [title, setTitle] = useState(existing?.title ?? '');
   const requestedCategory = typeof params.category === 'string' ? params.category : '';
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? requestedCategory);
@@ -134,6 +136,10 @@ export default function ActivityFormScreen() {
   const leave = () => {
     allowLeave.current = true;
     goBackOrReplace(router, '/(tabs)/calendar');
+  };
+  const leaveAfterSave = () => {
+    allowLeave.current = true;
+    goBackOrReplace(router, '/');
   };
   const confirmDiscard = (onDiscard: () => void) => {
     appPrompt.alert('Discard Changes?', 'Your unsaved changes will be lost.', [
@@ -370,8 +376,7 @@ export default function ActivityFormScreen() {
 
     const commitSave = (editScope: 'single' | 'series') => {
       saveEvent({ ...payload, editScope });
-      allowLeave.current = true;
-      close();
+      leaveAfterSave();
     };
 
     if (isRecurringSeries) {
@@ -575,6 +580,7 @@ export default function ActivityFormScreen() {
         </>
         ) : null}
       </Screen>
+      <AppPromptHost embedded />
     </View>
   );
 }

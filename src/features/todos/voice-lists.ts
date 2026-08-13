@@ -44,13 +44,16 @@ export function matchVoiceList(
   const byKind = kind ? pool.filter((list) => list.kind === kind) : pool;
   if (kind && byKind.length === 0) return undefined;
   const candidates = byKind.length > 0 ? byKind : pool;
+  const exactName = hint?.trim().toLowerCase();
+  if (exactName) {
+    const exact =
+      candidates.find((list) => list.name.toLowerCase() === exactName) ??
+      pool.find((list) => list.name.toLowerCase() === exactName);
+    if (exact) return exact;
+  }
   const nameQuery = voiceListNameQuery(hint)?.toLowerCase();
 
   if (nameQuery) {
-    const exact =
-      candidates.find((list) => list.name.toLowerCase() === nameQuery) ??
-      pool.find((list) => list.name.toLowerCase() === nameQuery);
-    if (exact) return exact;
     const partial =
       candidates.find((list) => list.name.toLowerCase().includes(nameQuery)) ??
       pool.find((list) => list.name.toLowerCase().includes(nameQuery));

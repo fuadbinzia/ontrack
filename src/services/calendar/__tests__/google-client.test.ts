@@ -14,9 +14,12 @@ jest.mock('expo-web-browser', () => ({
 
 const {
   connectGoogleCalendar,
+  describeGoogleCalendarSyncPreview,
   disconnectGoogleCalendar,
   googleCalendarCallbackError,
+  googleCalendarReviewErrorMessage,
   GoogleCalendarError,
+  previewGoogleCalendarSync,
   syncGoogleCalendar,
 } = require('../google-client') as typeof import('../google-client');
 
@@ -56,6 +59,133 @@ it('surfaces provider callback errors instead of treating any browser return as 
     .toBe('Google Calendar did not finish connecting.');
   expect(googleCalendarCallbackError('not a url'))
     .toBe('Google Calendar returned an invalid callback.');
+});
+
+it('requests a read-only preview from current local schedule state', async () => {
+  useSchedule.setState({ activities: [baseActivity] });
+  mockApiRequest.mockResolvedValueOnce({ direction: 'to_google', changes: [] });
+
+  await expect(previewGoogleCalendarSync()).resolves.toEqual({ direction: 'to_google', changes: [] });
+  expect(mockApiRequest).toHaveBeenCalledWith(expect.objectContaining({
+    method: 'POST',
+    timeoutMs: 60_000,
+    url: expect.stringContaining('/api/calendar/google/preview'),
+    body: expect.objectContaining({
+      activities: [baseActivity],
+      deletions: [],
+      timeZone: expect.any(String),
+    }),
+  }));
+});
+
+it('explains a failed review with the server status and confirms that nothing changed', () => {
+  expect(googleCalendarReviewErrorMessage(new GoogleCalendarError(
+    'Google Calendar sync is temporarily unavailable.',
+    undefined,
+    503,
+  ))).toBe(
+    'The onTrack calendar server could not prepare the change review (503). No calendar events were changed. Try again in a few minutes.',
+  );
+});
+
+it.each([
+  [
+    new GoogleCalendarError('Too many requests.', undefined, 429),
+    'Google Calendar is rate-limiting requests (429). No calendar events were changed. Wait a minute, then tap Sync Now again.',
+  ],
+  [
+    new GoogleCalendarError('Not found.', undefined, 404),
+    'The connected onTrack server does not have the calendar review endpoint (404). No calendar events were changed. Update onTrack or try again later.',
+  ],
+  [
+    new GoogleCalendarError('Permission needs to be renewed.', 'RECONNECT_REQUIRED', 503),
+    'Google Calendar access has expired. Reconnect your account, then tap Sync Now again. No calendar events were changed.',
+  ],
+  [
+    Object.assign(new Error('The request was aborted.'), { name: 'AbortError' }),
+    'Google Calendar did not finish preparing the change review within 60 seconds. No calendar events were changed. Try again.',
+  ],
+] as const)('gives an actionable review message for %s', (error, expected) => {
+  expect(googleCalendarReviewErrorMessage(error)).toBe(expected);
+});
+
+it('preserves a specific safe validation message and adds the no-change result', () => {
+  expect(googleCalendarReviewErrorMessage(new GoogleCalendarError(
+    'Calendar payload is invalid.',
+    undefined,
+    400,
+  ))).toBe('Calendar payload is invalid. No calendar events were changed.');
+});
+
+it('describes every previewed change so long lists can be reviewed', () => {
+  const changes = Array.from({ length: 10 }, (_, index) => ({
+    id: `change-${index}`,
+    title: `Plan ${index}`,
+    action: index === 0 ? 'delete' as const : 'create' as const,
+    destination: index === 0 ? 'ontrack' as const : 'google' as const,
+  }));
+
+  const description = describeGoogleCalendarSyncPreview({ direction: 'two_way', changes });
+
+  expect(description).toContain('10 changes will be made');
+  expect(description).toContain('Remove from onTrack: “Plan 0”');
+  expect(description).toContain('Add to Google: “Plan 1”');
+  expect(description).toContain('Add to Google: “Plan 8”');
+  expect(description).toContain('Add to Google: “Plan 9”');
+  expect(description).not.toContain('Plus 2 more changes');
+});
+
+it('keeps long or multiline event titles compact in the confirmation prompt', () => {
+  const description = describeGoogleCalendarSyncPreview({
+    direction: 'to_google',
+    changes: [{
+      id: 'change-1',
+      title: `A long\ncalendar title ${'x'.repeat(80)}`,
+      action: 'update',
+      destination: 'google',
+    }],
+  });
+
+  expect(description).not.toContain('\ncalendar title');
+  expect(description).toContain('A long calendar title');
+  expect(description).toContain('…');
+});
+
+it('describes the reason and before-to-after fields for each planned update', () => {
+  const description = describeGoogleCalendarSyncPreview({
+    direction: 'from_google',
+    changes: [{
+      id: 'change-1',
+      title: 'Therapy',
+      action: 'update',
+      destination: 'ontrack',
+      reason: 'Matched by Google event id',
+      details: [
+        { label: 'Time', before: '10:00 AM', after: '11:00 AM' },
+        { label: 'Duration', before: '1h', after: '1h 30m' },
+      ],
+    }],
+  });
+
+  expect(description).toContain('Update in onTrack: “Therapy”');
+  expect(description).toContain('Why: Matched by Google event id');
+  expect(description).toContain('Time: 10:00 AM → 11:00 AM');
+  expect(description).toContain('Duration: 1h → 1h 30m');
+});
+
+it('labels metadata-only link repairs without claiming event content will change', () => {
+  const description = describeGoogleCalendarSyncPreview({
+    direction: 'from_google',
+    changes: [{
+      id: 'repair-1', title: 'Therapy', action: 'relink', destination: 'ontrack',
+      reason: 'The events already match; only their stored connection will be corrected.',
+      details: [{ label: 'Time', after: '2:00 PM' }],
+    }],
+  });
+
+  expect(description).toContain('Repair calendar link for “Therapy”');
+  expect(description).toContain('Time: 2:00 PM');
+  expect(description).not.toContain('Update in onTrack');
 });
 
 it('rejects a native OAuth session when Google redirects back with an error', async () => {
@@ -149,6 +279,32 @@ it('keeps an unacknowledged tombstone and rejects a stale activity returned by s
   expect(useSchedule.getState().googleCalendarDeletions).toEqual([
     expect.objectContaining({ activityId: linked.id, eventId: 'event-1' }),
   ]);
+});
+
+it('retries one timed-out sync chunk before succeeding', async () => {
+  const abort = Object.assign(new Error('The operation was aborted'), { name: 'AbortError' });
+  mockApiRequest
+    .mockRejectedValueOnce(abort)
+    .mockResolvedValueOnce({
+      activities: [], acknowledgedDeletionIds: [], imported: 0, exported: 1,
+      updated: 0, removed: 0, lastSyncedAt: syncedAt, hasMore: false,
+    });
+
+  await expect(syncGoogleCalendar()).resolves.toEqual(expect.objectContaining({ exported: 1 }));
+  expect(mockApiRequest).toHaveBeenCalledTimes(2);
+});
+
+it('replaces repeated request aborts with a resumable timeout message', async () => {
+  mockApiRequest.mockRejectedValue(
+    Object.assign(new Error('The operation was aborted'), { name: 'AbortError' }),
+  );
+
+  await expect(syncGoogleCalendar()).rejects.toEqual(expect.objectContaining({
+    name: 'GoogleCalendarError',
+    code: 'TIMEOUT',
+    message: 'Google Calendar took too long to respond. Completed changes were saved; tap Sync Now to continue.',
+  }));
+  expect(mockApiRequest).toHaveBeenCalledTimes(2);
 });
 
 it('finishes every disconnect cleanup chunk before stripping local links', async () => {

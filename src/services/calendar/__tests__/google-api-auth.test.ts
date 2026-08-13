@@ -7,6 +7,7 @@ jest.mock('@/services/http/api-auth', () => ({
 }));
 
 const { withGoogleCalendarApiAuth } = require('../google-api-route') as typeof import('../google-api-route');
+const { GoogleCalendarProviderTimeoutError } = require('../google-fetch') as typeof import('../google-fetch');
 
 const config = {
   methods: 'POST, OPTIONS',
@@ -60,4 +61,22 @@ it('preserves a structured server failure instead of replacing it with a generic
 
   expect(response.status).toBe(503);
   await expect(response.json()).resolves.toEqual({ error: 'Google Calendar permission expired.' });
+});
+
+it('preserves the provider timeout code so the client can retry safely', async () => {
+  mockAuthenticateApiRequest.mockResolvedValueOnce({ status: 'ok', userId: 'user-1' });
+  mockIsApiRequestBlocked.mockReturnValueOnce(false);
+  const handler = jest.fn().mockRejectedValue(new GoogleCalendarProviderTimeoutError());
+
+  const response = await withGoogleCalendarApiAuth(
+    new Request('https://ontrack.example/api/calendar/google/sync', { method: 'POST' }),
+    config,
+    handler,
+  );
+
+  expect(response.status).toBe(503);
+  await expect(response.json()).resolves.toEqual({
+    error: 'Google Calendar took too long to respond. Tap Sync Now to continue.',
+    code: 'PROVIDER_TIMEOUT',
+  });
 });

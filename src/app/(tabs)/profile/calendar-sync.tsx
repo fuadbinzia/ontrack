@@ -16,6 +16,7 @@ import {
   StatusBadge,
 } from '@/components/primitives';
 import { useAuthSession } from '@/features/auth/auth-provider';
+import { CalendarSyncReview } from '@/features/calendar/calendar-sync-review';
 import { useResponsive } from '@/hooks/use-responsive';
 import {
   connectGoogleCalendar,
@@ -23,6 +24,8 @@ import {
   getGoogleCalendarBackgroundSyncState,
   getGoogleCalendarStatus,
   GoogleCalendarError,
+  googleCalendarReviewErrorMessage,
+  previewGoogleCalendarSync,
   setGoogleCalendarDirection,
   startGoogleCalendarBackgroundSync,
   subscribeToGoogleCalendarBackgroundSync,
@@ -40,6 +43,7 @@ export default function CalendarSyncScreen() {
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [changingDirection, setChangingDirection] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
   const [needsReconnect, setNeedsReconnect] = useState(false);
@@ -57,13 +61,12 @@ export default function CalendarSyncScreen() {
 
   useEffect(() => { void refreshStatus(); }, [refreshStatus]);
   useEffect(() => {
-    if (!backgroundSync.running) return;
-    void startGoogleCalendarBackgroundSync({ notifyWhenComplete: true }).catch(() => undefined);
-  }, [backgroundSync.running]);
-  useEffect(() => {
     if (typeof params.calendarError === 'string') setError(params.calendarError);
-    if (params.calendarConnected === '1') void runSync();
-  }, [params.calendarConnected, params.calendarError]);
+    if (params.calendarConnected === '1') {
+      setMessage('Google Calendar connected. Tap Sync Now when you are ready.');
+      void refreshStatus();
+    }
+  }, [params.calendarConnected, params.calendarError, refreshStatus]);
 
   const runConnect = async () => {
     if (isGuest) { router.push('/account?returnTo=/(tabs)/profile/calendar-sync' as never); return; }
@@ -71,7 +74,7 @@ export default function CalendarSyncScreen() {
     try {
       await connectGoogleCalendar();
       await refreshStatus();
-      void runSync();
+      setMessage('Google Calendar connected. Tap Sync Now when you are ready.');
     }
     catch (caught) { setError(caught instanceof Error ? caught.message : 'Google Calendar could not connect.'); }
     finally { setConnecting(false); }
@@ -83,29 +86,60 @@ export default function CalendarSyncScreen() {
       try {
         const result = await startGoogleCalendarBackgroundSync({ notifyWhenComplete: true });
         setStatus((current) => ({ ...current, connected: true, lastSyncedAt: result.lastSyncedAt }));
-        setMessage(`Synced: ${result.imported} imported · ${result.exported} exported · ${result.updated} updated · ${result.removed} removed.`);
       } catch (caught) {
-        setError(caught instanceof Error ? caught.message : 'Calendar sync failed.');
         setNeedsReconnect(caught instanceof GoogleCalendarError && caught.code === 'RECONNECT_REQUIRED');
       }
     })();
   }
+
+  const reviewSync = async () => {
+    setPreviewing(true); setMessage(undefined); setError(undefined); setNeedsReconnect(false);
+    try {
+      const preview = await previewGoogleCalendarSync();
+      if (!preview.changes.length) {
+        appPrompt.alert('Everything is up to date', 'No changes need to be synced.');
+        return;
+      }
+      appPrompt.alert(
+        'Review Sync Changes',
+        undefined,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Sync Changes',
+            style: 'primary',
+            testID: AgentUiIds.calendarSync.confirmSync,
+            onPress: () => void runSync(),
+          },
+        ],
+        {
+          content: <CalendarSyncReview preview={preview} />,
+          scrollableMessage: true,
+        },
+      );
+    } catch (caught) {
+      setError(googleCalendarReviewErrorMessage(caught));
+      setNeedsReconnect(caught instanceof GoogleCalendarError && caught.code === 'RECONNECT_REQUIRED');
+    } finally {
+      setPreviewing(false);
+    }
+  };
 
   const syncProgress = backgroundSync.progress?.phase === 'pull'
     ? 'Reading Google events…'
     : backgroundSync.progress?.changedEvents
       ? `Applying changes · ${backgroundSync.progress.changedEvents}`
       : 'Applying changes…';
-  const primaryControlsDisabled = connecting || disconnecting || changingDirection || backgroundSync.running;
-  const disconnectControlsDisabled = connecting || disconnecting || changingDirection;
+  const primaryControlsDisabled = connecting || disconnecting || changingDirection || previewing || backgroundSync.running;
+  const disconnectControlsDisabled = connecting || disconnecting || changingDirection || previewing;
 
   const changeDirection = async (direction: GoogleCalendarSyncDirection) => {
     if (direction === status.direction) return;
     setChangingDirection(true); setMessage(undefined); setError(undefined);
     try {
       await setGoogleCalendarDirection(direction);
-      setStatus((current) => ({ ...current, direction }));
-      void runSync();
+      setStatus((current) => ({ ...current, direction, lastSyncedAt: undefined }));
+      setMessage('Sync direction saved. Tap Sync Now to apply pending changes.');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Calendar sync direction could not be changed.');
     } finally {
@@ -188,14 +222,14 @@ export default function CalendarSyncScreen() {
               ? 'Changes made in either calendar sync to the other.'
               : status.direction === 'to_google'
                 ? 'onTrack changes go to Google. Google-only changes are not imported.'
-                : 'Google changes come into onTrack. onTrack-only changes are not exported.'}
+                : 'Google additions and updates come into onTrack. Nothing is removed or exported.'}
           </AppText>
         ) : null}
         {status.lastSyncedAt ? <AppText variant="caption" color="tertiary">Last synced {new Date(status.lastSyncedAt).toLocaleString()}</AppText> : null}
         {status.connected && needsReconnect ? (
           <Button testID={AgentUiIds.calendarSync.reconnect} disabled={primaryControlsDisabled} onPress={() => void runConnect()} accessibilityLabel="Reconnect Google Calendar">{connecting ? 'Reconnecting…' : 'Reconnect Google Calendar'}</Button>
         ) : status.connected ? (
-          <Button testID={AgentUiIds.calendarSync.sync} disabled={primaryControlsDisabled} onPress={() => void runSync()} accessibilityLabel="Sync Google Calendar now">{backgroundSync.running ? syncProgress : 'Sync Now'}</Button>
+          <Button testID={AgentUiIds.calendarSync.sync} disabled={primaryControlsDisabled} onPress={() => void reviewSync()} accessibilityLabel="Review Google Calendar sync changes">{backgroundSync.running ? syncProgress : previewing ? 'Reviewing Changes…' : 'Sync Now'}</Button>
         ) : (
           <Button testID={AgentUiIds.calendarSync.connect} disabled={primaryControlsDisabled} onPress={() => void runConnect()} accessibilityLabel="Connect Google Calendar">{connecting ? 'Connecting…' : isGuest ? 'Sign In to Connect' : 'Connect Google Calendar'}</Button>
         )}

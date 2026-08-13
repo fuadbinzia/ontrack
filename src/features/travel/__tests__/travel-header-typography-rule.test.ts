@@ -232,15 +232,15 @@ describe('timeline section header', () => {
   });
 });
 
-describe('trip tools section header', () => {
-  it('uses subheading so the title stays readable on the glass card', () => {
+describe('trip tools page header', () => {
+  it('keeps Trip Tools as the dedicated page title', () => {
     const source = readFileSync(
-      join(process.cwd(), 'src/features/travel/travel-plan-trip-tools.tsx'),
+      join(process.cwd(), 'src/features/travel/travel-trip-tools-screen.tsx'),
       'utf8',
     );
     expect(source).toContain('title="Trip Tools"');
-    expect(source).toContain('titleVariant="subheading"');
-    expect(source).toContain('travelAccent(theme)');
+    expect(source).toContain('eyebrow="Itinerary"');
+    expect(source).toContain('HeaderBackButton');
   });
 
   it('keeps action-group labels on itinerary ink (readable on cream sheet)', () => {
@@ -248,8 +248,8 @@ describe('trip tools section header', () => {
       join(process.cwd(), 'src/features/travel/travel-trip-action-grid.tsx'),
       'utf8',
     );
-    expect(grid).toContain("travelItineraryInk(theme, 'secondary')");
-    expect(grid).not.toContain("color: 'rgba(255,255,255,0.72)'");
+    expect(grid).toMatch(/travelItineraryInk\(theme, ["']secondary["']\)/);
+    expect(grid).not.toMatch(/color: ["']rgba\(255,255,255,0\.72\)["']/);
   });
 });
 

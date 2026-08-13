@@ -27,8 +27,8 @@ export const TRAVEL_HEADER_DATES_SKY_OVERLAP = 0;
 export const TRAVEL_HEADER_DATES_TOP_GAP = 12;
 
 /**
- * Page paper under the sky band. Sky chrome eases into theme base by `fadeTail`
- * (just below the dates) — solid paper for the rest of the page, no long wash.
+ * Page layer under the sky band. Sky chrome eases into `paper` by `fadeTail`;
+ * callers may pass transparent when handing the hero off to scenic artwork.
  */
 export function travelPlanSkyPageWashStyle(options: {
   skyContentBand: number;

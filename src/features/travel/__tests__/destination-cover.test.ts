@@ -1,4 +1,5 @@
 import {
+    coverUriIdentityKey,
     destinationCoverCandidates,
     destinationPhotoSuggestsPeople,
     destinationPhotoSuggestsText,
@@ -95,6 +96,40 @@ describe('pickRotatingHeroUris', () => {
     const second = pickRotatingHeroUris(mixed, [], 3, 2);
     expect(first[0]).not.toBe(second[0]);
     expect(second[0]).toBe(mixed[2]);
+  });
+
+  it('shows one page when the same CDN photo has different resize params', () => {
+    const variants = [
+      'https://images.unsplash.com/photo-same?w=1080&q=80',
+      'https://images.unsplash.com/photo-same?w=640&q=70',
+      'https://images.unsplash.com/photo-different?w=1080&q=80',
+    ];
+
+    expect(pickRotatingHeroUris(variants, [], 3, 0)).toEqual([
+      variants[0],
+      variants[2],
+    ]);
+  });
+
+  it('still keeps distinct photos from the same provider', () => {
+    const distinct = [
+      'https://images.unsplash.com/photo-a?w=1080',
+      'https://images.unsplash.com/photo-b?w=1080',
+      'https://images.unsplash.com/photo-c?w=1080',
+    ];
+    expect(pickRotatingHeroUris(distinct, [], 3, 0)).toEqual(distinct);
+  });
+});
+
+describe('coverUriIdentityKey', () => {
+  it('matches a proxied Wikimedia thumb to another rendition', () => {
+    const first =
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Paris.jpg/800px-Paris.jpg';
+    const second =
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Paris.jpg/1200px-Paris.jpg';
+    const proxied = `http://localhost:8081/api/destination-cover-image?src=${encodeURIComponent(second)}`;
+
+    expect(coverUriIdentityKey(proxied)).toBe(coverUriIdentityKey(first));
   });
 });
 
@@ -434,6 +469,23 @@ describe('uploadedTripCoverUris', () => {
         }),
       ),
     ).toEqual([]);
+  });
+
+  it('does not create multiple pages for a repeated uploaded cover', () => {
+    expect(
+      uploadedTripCoverUris(
+        plan({
+          coverUris: [
+            'file:///Documents/travel-moments/cover-a.jpg',
+            'file:///Documents/travel-moments/cover-a.jpg',
+            'file:///Documents/travel-moments/cover-b.jpg',
+          ],
+        }),
+      ),
+    ).toEqual([
+      'file:///Documents/travel-moments/cover-a.jpg',
+      'file:///Documents/travel-moments/cover-b.jpg',
+    ]);
   });
 });
 

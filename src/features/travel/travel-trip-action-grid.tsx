@@ -1,16 +1,22 @@
-import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import type { ReactNode } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 
-import { AppText } from '@/components/primitives';
-import { spacing } from '@/design-system';
-import { travelEditorialTextStyle } from '@/features/travel/travel-chrome';
-import { promotesFlightSearch } from '@/features/travel/travel-mode';
-import { travelItineraryInk } from '@/features/travel/travel-surface';
-import type { TravelPlanMode } from '@/features/travel/types';
-import { useTheme } from '@/hooks/use-theme';
-import { AgentUiIds } from '@/utils/agent-ui';
+import { AppText, GlassIconWell, Symbol } from "@/components/primitives";
+import { type AppIconName, motion, spacing } from "@/design-system";
+import { travelEditorialTextStyle } from "@/features/travel/travel-chrome";
+import { promotesFlightSearch } from "@/features/travel/travel-mode";
+import {
+  travelAccent,
+  travelItineraryInk,
+  TravelSurfaceCard,
+} from "@/features/travel/travel-surface";
+import type { TravelPlanMode } from "@/features/travel/types";
+import { useResponsive } from "@/hooks/use-responsive";
+import { useTheme } from "@/hooks/use-theme";
+import { AgentUiIds } from "@/utils/agent-ui";
 
-import { TravelSheetAction } from './travel-list-actions';
+import { TravelSheetAction } from "./travel-list-actions";
 
 interface TravelTripActionGridProps {
   tripId: string;
@@ -37,30 +43,58 @@ interface TravelTripActionGridProps {
 
 function ActionGroup({
   title,
+  subtitle,
+  icon,
+  delay,
   children,
 }: {
   title: string;
+  subtitle: string;
+  icon: AppIconName;
+  delay: number;
   children: ReactNode;
 }) {
   const theme = useTheme();
+  const { s, spacing: rs } = useResponsive();
+  const iconSize = Math.max(34, s(36));
   return (
-    <View style={styles.group}>
-      <View style={styles.groupHeader}>
-        <AppText
-          variant="overline"
-          bold
-          fit
-          align="center"
-          numberOfLines={1}
-          style={[
-            styles.groupTitle,
-            { color: travelItineraryInk(theme, 'secondary') },
-          ]}>
-          {title}
-        </AppText>
-      </View>
-      <View style={styles.grid}>{children}</View>
-    </View>
+    <Animated.View
+      entering={FadeInDown.duration(motion.fade)
+        .delay(delay)
+        .reduceMotion(ReduceMotion.System)}
+    >
+      <TravelSurfaceCard padding={0}>
+        <View style={[styles.group, { gap: rs.md, padding: rs.md }]}>
+          <View style={[styles.groupHeader, { gap: rs.sm }]}>
+            <GlassIconWell size={iconSize} borderRadius={Math.max(10, s(11))}>
+              <Symbol name={icon} size="sm" color={travelAccent(theme)} />
+            </GlassIconWell>
+            <View style={styles.groupCopy}>
+              <AppText
+                variant="subheading"
+                fit
+                numberOfLines={1}
+                style={[
+                  styles.groupTitle,
+                  { color: travelItineraryInk(theme) },
+                ]}
+              >
+                {title}
+              </AppText>
+              <AppText
+                variant="caption"
+                fit
+                numberOfLines={1}
+                style={{ color: travelItineraryInk(theme, "secondary") }}
+              >
+                {subtitle}
+              </AppText>
+            </View>
+          </View>
+          <View style={[styles.grid, { gap: rs.sm }]}>{children}</View>
+        </View>
+      </TravelSurfaceCard>
+    </Animated.View>
   );
 }
 
@@ -102,7 +136,12 @@ export function TravelTripActionGrid({
         </View>
       ) : null}
 
-      <ActionGroup title="Book & Organize">
+      <ActionGroup
+        title="Book & Organize"
+        subtitle="Bookings, plans, and trip essentials"
+        icon="maintenance"
+        delay={0}
+      >
         <TravelSheetAction
           label="Calendar"
           icon="sync"
@@ -168,7 +207,12 @@ export function TravelTripActionGrid({
         />
       </ActionGroup>
 
-      <ActionGroup title="At Your Destination">
+      <ActionGroup
+        title="At Your Destination"
+        subtitle={`Useful while you’re in ${destination || "town"}`}
+        icon="location"
+        delay={50}
+      >
         <TravelSheetAction
           label="Trip Weather"
           icon="weather"
@@ -195,7 +239,12 @@ export function TravelTripActionGrid({
         />
       </ActionGroup>
 
-      <ActionGroup title="Travel Together">
+      <ActionGroup
+        title="Travel Together"
+        subtitle="Keep everyone in the loop"
+        icon="people"
+        delay={100}
+      >
         <TravelSheetAction
           label="Group Chat"
           icon="chat"
@@ -222,28 +271,29 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   itineraryAction: {
-    width: '75%',
-    alignSelf: 'center',
+    width: "75%",
+    alignSelf: "center",
   },
   group: {
-    gap: spacing.xs,
+    width: "100%",
   },
   groupHeader: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 22,
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 0,
+  },
+  groupCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
   },
   groupTitle: {
     ...travelEditorialTextStyle,
-    alignSelf: 'stretch',
-    width: '100%',
-    textAlign: 'center',
     flexShrink: 1,
     minWidth: 0,
   },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
 });

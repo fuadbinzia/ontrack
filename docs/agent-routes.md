@@ -41,11 +41,11 @@ Pin is required when iOS Simulator and Android Emulator are both running — oth
   --assert-exists travel.list.itinerary.trip-agent-ui-demo \
   --assert-route /travel
 
-# Trip tools (top of plan detail; legacy /hub redirects here)
+# Dedicated Trip Tools page (legacy /hub redirects here)
 ./scripts/agent-ui.sh once --flow travel-demo-hub \
-  --assert-exists travel.planDetail.section.tools \
+  --assert-exists travel.tripTools.section.trip-agent-ui-demo \
   --assert-exists travel.list.tripWeather.trip-agent-ui-demo \
-  --assert-route /travel/trip-agent-ui-demo
+  --assert-route /travel/trip-agent-ui-demo/tools
 
 # Food tab — runtime routes drop the (tabs) group (/food, not /(tabs)/food)
 ./scripts/agent-ui-verify-both.sh --route /food --flow food-demo \

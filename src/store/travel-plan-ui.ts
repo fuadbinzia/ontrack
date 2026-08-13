@@ -22,7 +22,6 @@ type TravelPlanUiState = {
 };
 
 const DETAIL_SECTION_KEYS = new Set<DetailSectionKey>([
-  'tools',
   'transport',
   'flights',
   'ground',

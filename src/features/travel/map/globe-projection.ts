@@ -48,6 +48,17 @@ export function normalizeTravelGlobeRotation(
   ];
 }
 
+/** D3 rotation is the inverse of the geographic coordinate at screen center. */
+export function travelGlobeRotationForCoordinate(
+  longitude: number,
+  latitude: number,
+): TravelGlobeRotation {
+  if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
+    return TRAVEL_GLOBE_INITIAL_ROTATION;
+  }
+  return normalizeTravelGlobeRotation([-longitude, -latitude, 0]);
+}
+
 export function travelGlobeCoordinateVisible(
   longitude: number,
   latitude: number,

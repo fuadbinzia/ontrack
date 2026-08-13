@@ -17,10 +17,7 @@ type TravelTripHubScreenProps = {
   planId: string;
 };
 
-/**
- * Legacy `/travel/<id>/hub` entry — trip tools now live on plan detail.
- * Redirects to the itinerary so deep links and openHub taps still land correctly.
- */
+/** Legacy `/travel/<id>/hub` entry — forwards old links to Trip Tools. */
 export function TravelTripHubScreen({ planId }: TravelTripHubScreenProps) {
   const theme = useTheme();
   const travelStyle = useTravelPageStyle(theme);
@@ -32,7 +29,7 @@ export function TravelTripHubScreen({ planId }: TravelTripHubScreenProps) {
   useEffect(() => {
     if (!planId || !plan) return;
     router.replace({
-      pathname: '/travel/[id]',
+      pathname: '/travel/[id]/tools',
       params: { id: planId },
     } as never);
   }, [plan, planId, router]);

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -204,14 +204,52 @@ describe('canonical design-system contract', () => {
     expect(grid).toContain('title="At Your Destination"');
     expect(grid).toContain('title="Travel Together"');
     expect(grid).toContain('showItineraryAction');
-    // Tools sit in a collapsible at the bottom of plan detail (after timeline).
+    // Tools have a dedicated page and no longer extend the itinerary body.
     const tools = read('src/features/travel/travel-plan-trip-tools.tsx');
-    expect(tools).toContain('title="Trip Tools"');
-    expect(body).toContain("toggleSection('tools')");
-    expect(body).toContain('TravelPlanTripTools');
-    expect(body.indexOf('<TravelCollapsibleSection')).toBeLessThan(
-      body.indexOf('<TravelPlanTripTools'),
+    const toolsScreen = read('src/features/travel/travel-trip-tools-screen.tsx');
+    const hero = read('src/features/travel/travel-plan-hero.tsx');
+    expect(tools).toContain('TravelTripActionGrid');
+    expect(toolsScreen).toContain('title="Trip Tools"');
+    expect(hero).toContain("pathname: '/travel/[id]/tools'");
+    expect(hero).toContain('icon="maintenance"');
+    expect(hero).toContain('styles.actionStack');
+    expect(hero).toContain("alignItems: 'flex-start'");
+    expect(body).not.toContain('TravelPlanTripTools');
+  });
+
+  it('gives Trip Tools a full-window illustrated travel-desk atmosphere', () => {
+    const background = read(
+      'src/features/travel/use-travel-trip-tools-background.tsx',
     );
+    const screen = read('src/features/travel/travel-trip-tools-screen.tsx');
+    const route = read('src/app/(tabs)/travel/[id]/tools.tsx');
+    expect(background).toContain('trip-tools-atlas-v1.png');
+    expect(background).toContain('backgroundImageHeight: height');
+    expect(background).toContain('useSafeAreaChromeOverlay');
+    expect(screen).toContain('useTravelTripToolsBackground()');
+    expect(screen).toContain('atmosphere={false}');
+    expect(route).toContain("backgroundColor: 'transparent'");
+    expect(
+      existsSync(
+        join(root, 'assets/images/travel/trip-tools-atlas-v1.png'),
+      ),
+    ).toBe(true);
+  });
+
+  it('hands the itinerary sky artwork off to an illustrated journey atlas', () => {
+    const body = read('src/features/travel/travel-plan-detail-body.tsx');
+    const background = read(
+      'src/features/travel/travel-itinerary-background.tsx',
+    );
+    expect(body).toContain('TravelItineraryBackground');
+    expect(body).toContain("paper: 'transparent'");
+    expect(background).toContain('itinerary-journey-atlas-v1.png');
+    expect(background).toContain('contentPosition={{ top: "0%", left: "50%" }}');
+    expect(
+      existsSync(
+        join(root, 'assets/images/travel/itinerary-journey-atlas-v1.png'),
+      ),
+    ).toBe(true);
   });
 
   it('uses a single blue-to-neutral background across Travel routes', () => {

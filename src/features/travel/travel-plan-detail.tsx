@@ -152,8 +152,6 @@ function TravelPlanDetailLoaded({
   bodyReady: boolean;
   active: boolean;
 }) {
-  const theme = useTheme();
-  const travelStyle = useTravelPageStyle(theme);
   const savePlan = useTravel((state) => state.savePlan);
   const replaceTravelActivities = useSchedule(
     (state) => state.replaceTravelActivities,
@@ -165,13 +163,13 @@ function TravelPlanDetailLoaded({
   const localUserId = user?.id;
   const itinerary = Array.isArray(plan.itinerary) ? plan.itinerary : [];
 
-  // Warm trip-tool routes after the itinerary settles (staggered, max 3).
+  // Warm the top itinerary destinations after the stack settles (max 3).
   useEffect(() => {
     if (!bodyReady || !active) return;
     return warmHrefsAfterTransition([
+      { pathname: '/travel/[id]/tools', params: { id: planId } },
       { pathname: '/travel/[id]/stays', params: { id: planId } },
       { pathname: '/travel/[id]/flights', params: { id: planId } },
-      { pathname: '/travel/[id]/chat', params: { id: planId } },
     ] as never);
   }, [active, bodyReady, planId]);
 
@@ -505,7 +503,6 @@ function TravelPlanDetailLoaded({
     <View style={styles.root}>
       <TravelPlanDetailBody
         plan={plan}
-        travelStyle={travelStyle}
         sortedItinerary={sortedItinerary}
         itemEditHandlers={itemEditHandlers}
         collapsedDayDates={collapsedDayDates}
@@ -516,7 +513,6 @@ function TravelPlanDetailLoaded({
         onAddKind={chooseAddKind}
         onEditDates={() => setEditingTripDates(true)}
         onEditNotes={() => setEditingTripNotes(true)}
-        onOpenExpenses={() => setOpenExpenseSheet(true)}
         notesExpanded={notesExpanded}
         onNotesExpandedChange={setNotesExpanded}
         denseHeroGlass={denseHeroGlass}

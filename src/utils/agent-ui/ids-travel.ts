@@ -183,6 +183,11 @@ export const agentUiIdsTravel = {
       backToTravel: 'ontrack.travel.hub.backToTravel',
       section: (tripId: string) => `ontrack.travel.hub.section.${tripId}`,
     },
+    tripTools: {
+      back: 'ontrack.travel.tripTools.back',
+      backToTravel: 'ontrack.travel.tripTools.backToTravel',
+      section: (tripId: string) => `ontrack.travel.tripTools.section.${tripId}`,
+    },
     dates: {
       close: 'ontrack.travel.dates.close',
       start: 'ontrack.travel.dates.start',
@@ -292,7 +297,7 @@ export const agentUiIdsTravel = {
       /** Unused — prefer `list.currency`. */
       currency: 'ontrack.travel.planDetail.currency',
       addToTimeline: 'ontrack.travel.planDetail.addToTimeline',
-      toolsSection: 'ontrack.travel.planDetail.section.tools',
+      tripTools: 'ontrack.travel.planDetail.tripTools',
       transportSection: 'ontrack.travel.planDetail.section.transport',
       flightsSection: 'ontrack.travel.planDetail.section.flights',
       groundSection: 'ontrack.travel.planDetail.section.ground',

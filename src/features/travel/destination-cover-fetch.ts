@@ -9,6 +9,7 @@ import {
   lookupDestinationCoverUrls,
 } from '@/features/travel/destination-cover-lookup';
 import {
+  coverUriIdentityKey,
   destinationCoverCandidates,
   isLocalTravelPhotoUri,
   normalizeCoverUri,
@@ -69,8 +70,11 @@ function rememberHeroRecentKeys(
   for (const uri of [...shown].reverse()) {
     const trimmed = uri.trim();
     if (!trimmed) continue;
-    const lower = trimmed.toLowerCase();
-    next = [trimmed, ...next.filter((key) => key.toLowerCase() !== lower)];
+    const identity = coverUriIdentityKey(trimmed);
+    next = [
+      trimmed,
+      ...next.filter((key) => coverUriIdentityKey(key) !== identity),
+    ];
   }
   return next.slice(0, HERO_RECENT_LIMIT);
 }

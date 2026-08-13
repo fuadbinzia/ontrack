@@ -34,7 +34,6 @@ import {
   createTravelGlobeSnapshot,
   normalizeTravelGlobeRotation,
   travelGlobeCameraForLayout,
-  TRAVEL_GLOBE_INITIAL_ROTATION,
   type TravelGlobeRotation,
 } from './globe-projection';
 import type { TravelMapCountryCluster } from './model';
@@ -49,16 +48,17 @@ export function TravelMapWorldGlobe({
   clusters,
   onCountryPress,
   onInteract,
+  onRotationChange,
+  rotation,
 }: {
   autoRotate: boolean;
   clusters: TravelMapCountryCluster[];
   onCountryPress: (countryCode: string) => void;
   onInteract: () => void;
+  onRotationChange: (rotation: TravelGlobeRotation) => void;
+  rotation: TravelGlobeRotation;
 }) {
   const [layout, setLayout] = useState<Layout>({ width: 1, height: 1 });
-  const [rotation, setRotation] = useState<TravelGlobeRotation>(
-    TRAVEL_GLOBE_INITIAL_ROTATION,
-  );
   const rotationRef = useRef(rotation);
   const dragStartRef = useRef(rotation);
   const lastGestureFrameRef = useRef(0);
@@ -82,8 +82,12 @@ export function TravelMapWorldGlobe({
   const commitRotation = useCallback((next: readonly number[]) => {
     const normalized = normalizeTravelGlobeRotation(next);
     rotationRef.current = normalized;
-    setRotation(normalized);
-  }, []);
+    onRotationChange(normalized);
+  }, [onRotationChange]);
+
+  useEffect(() => {
+    rotationRef.current = rotation;
+  }, [rotation]);
 
   const stopIdleRotation = useCallback(() => {
     idleUntilRef.current = Number.POSITIVE_INFINITY;

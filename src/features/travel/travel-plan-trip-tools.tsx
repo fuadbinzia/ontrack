@@ -1,68 +1,63 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { View } from 'react-native';
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { View } from "react-native";
 
-import { appPrompt } from '@/components/primitives';
-import { useAuthSession } from '@/features/auth/auth-provider';
-import { isTravelPlanOnCalendar, travelCalendarDrafts } from '@/features/travel/calendar';
-import { applyStayPackagesToPlan, stayPackagesFromPlan } from '@/features/travel/stay-package';
-import { TravelCollapsibleSection } from '@/features/travel/travel-collapsible-section';
+import { appPrompt } from "@/components/primitives";
+import { useAuthSession } from "@/features/auth/auth-provider";
+import {
+  isTravelPlanOnCalendar,
+  travelCalendarDrafts,
+} from "@/features/travel/calendar";
+import { TravelExpensesSheet } from "@/features/travel/expenses/travel-expenses-sheet";
+import {
+  applyStayPackagesToPlan,
+  stayPackagesFromPlan,
+} from "@/features/travel/stay-package";
 import {
   TravelCalendarUpdatedModal,
   type TravelCalendarUpdatedPayload,
-} from '@/features/travel/travel-calendar-updated-modal';
-import { TravelCurrencySheet } from '@/features/travel/travel-currency-sheet';
-import { TravelFriendsSheet } from '@/features/travel/travel-friends-sheet';
-import { getOrCreateTravelPackingList } from '@/features/travel/travel-packing-list';
-import { travelAccent } from '@/features/travel/travel-surface';
-import { TravelTripActionGrid } from '@/features/travel/travel-trip-action-grid';
-import { TravelTranslatorSheet } from '@/features/travel/translator/travel-translator-sheet';
-import type { TravelPlan } from '@/features/travel/types';
-import { TravelWeatherSheet } from '@/features/travel/weather/travel-weather-sheet';
-import { useResponsive } from '@/hooks/use-responsive';
-import { useTheme } from '@/hooks/use-theme';
+} from "@/features/travel/travel-calendar-updated-modal";
+import { TravelCurrencySheet } from "@/features/travel/travel-currency-sheet";
+import { TravelFriendsSheet } from "@/features/travel/travel-friends-sheet";
+import { getOrCreateTravelPackingList } from "@/features/travel/travel-packing-list";
+import { TravelTripActionGrid } from "@/features/travel/travel-trip-action-grid";
+import { TravelTranslatorSheet } from "@/features/travel/translator/travel-translator-sheet";
+import type { TravelPlan } from "@/features/travel/types";
+import { TravelWeatherSheet } from "@/features/travel/weather/travel-weather-sheet";
+import { useResponsive } from "@/hooks/use-responsive";
 import {
   getStraiAwayStatus,
   openStraiAwayStay,
   pullStraiAwayStays,
   pushStraiAwayStays,
-} from '@/services/partner/straiaway';
-import { usePreferences } from '@/store/preferences';
-import { useSchedule } from '@/store/schedule';
-import { useTodos } from '@/store/todos';
-import { useTravel } from '@/store/travel';
-import { useUI } from '@/store/ui';
-import { AgentUiIds } from '@/utils/agent-ui';
-import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
+} from "@/services/partner/straiaway";
+import { usePreferences } from "@/store/preferences";
+import { useSchedule } from "@/store/schedule";
+import { useTodos } from "@/store/todos";
+import { useTravel } from "@/store/travel";
+import { useUI } from "@/store/ui";
+import { AgentTestId, AgentUiIds } from "@/utils/agent-ui";
+import { deferAfterPageTransition } from "@/utils/defer-after-page-transition";
 
 type TravelPlanTripToolsProps = {
   plan: TravelPlan;
-  expanded: boolean;
-  onToggle: () => void;
-  onOpenExpenses: () => void;
   onAddTransport: () => void;
 };
 
-/**
- * Collapsible Trip Tools on plan detail — glass action grid inside the
- * section; weather/currency/friends sheets stay mounted as siblings so
- * collapsing the header does not tear down an open sheet.
- */
+/** Trip Tools page content and its locally owned sheets. */
 export function TravelPlanTripTools({
   plan,
-  expanded,
-  onToggle,
-  onOpenExpenses,
   onAddTransport,
 }: TravelPlanTripToolsProps) {
   const router = useRouter();
   const { user } = useAuthSession();
   const guestName = usePreferences((state) => state.name);
-  const theme = useTheme();
   const { spacing: rs } = useResponsive();
   const savePlan = useTravel((state) => state.savePlan);
   const createTodoList = useTodos((state) => state.createList);
-  const recordPlanInteraction = useTravel((state) => state.recordPlanInteraction);
+  const recordPlanInteraction = useTravel(
+    (state) => state.recordPlanInteraction,
+  );
   const activities = useSchedule((state) => state.activities);
   const replaceTravelActivities = useSchedule(
     (state) => state.replaceTravelActivities,
@@ -75,33 +70,22 @@ export function TravelPlanTripTools({
   const [currencyVisible, setCurrencyVisible] = useState(false);
   const [translatorVisible, setTranslatorVisible] = useState(false);
   const [friendsVisible, setFriendsVisible] = useState(false);
+  const [expensesVisible, setExpensesVisible] = useState(false);
   const [calendarUpdated, setCalendarUpdated] =
     useState<TravelCalendarUpdatedPayload | null>(null);
 
   return (
     <>
-      <TravelCollapsibleSection
-        title="Trip Tools"
-        icon="settings"
-        accentColor={travelAccent(theme)}
-        card
-        compact
-        tightHeader
-        expanded={expanded}
-        onToggle={onToggle}
-        toggleTestID={AgentUiIds.travel.planDetail.toolsSection}
-        titleVariant="subheading">
-        <View
-          style={{
-            paddingHorizontal: rs.sm,
-            paddingTop: rs.xs,
-            paddingBottom: rs.md,
-          }}>
+      <AgentTestId
+        testID={AgentUiIds.travel.tripTools.section(plan.id)}
+        label={`Trip Tools for ${plan.title}`}
+      >
+        <View style={{ gap: rs.md }}>
           <TravelTripActionGrid
             tripId={plan.id}
             tripTitle={plan.title}
             destination={plan.destination}
-            mode={plan.mode ?? 'flight'}
+            mode={plan.mode ?? "flight"}
             isOnCalendar={isOnCalendar}
             showItineraryAction={false}
             onOpenCalendar={() => {
@@ -118,7 +102,7 @@ export function TravelPlanTripTools({
             }}
             onSearchFlights={() => {
               router.push({
-                pathname: '/travel/[id]/flights',
+                pathname: "/travel/[id]/flights",
                 params: { id: plan.id },
               } as never);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
@@ -129,7 +113,7 @@ export function TravelPlanTripTools({
             }}
             onSearchStays={() => {
               router.push({
-                pathname: '/travel/[id]/stays',
+                pathname: "/travel/[id]/stays",
                 params: { id: plan.id },
               } as never);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
@@ -140,48 +124,75 @@ export function TravelPlanTripTools({
                 try {
                   const status = await getStraiAwayStatus();
                   if (!status.connected) {
-                    router.push('/(tabs)/profile/straiaway' as never);
+                    router.push("/(tabs)/profile/straiaway" as never);
                     return;
                   }
                   appPrompt.alert(
-                    'StraiAway',
-                    'Send this trip’s stays, import stays from StraiAway, or open the other app.',
+                    "StraiAway",
+                    "Send this trip’s stays, import stays from StraiAway, or open the other app.",
                     [
                       {
-                        text: 'Send stays',
+                        text: "Send stays",
                         onPress: () => {
-                          void pushStraiAwayStays(stayPackagesFromPlan(plan, guestName || user?.email || undefined)).then(
-                            (result) => {
-                              appPrompt.alert('Sent to StraiAway', `${result.pushed} stay${result.pushed === 1 ? '' : 's'} handed off.`);
-                            },
-                          ).catch((caught) => {
-                            appPrompt.alert('StraiAway', caught instanceof Error ? caught.message : 'Stay handoff failed.');
-                          });
+                          void pushStraiAwayStays(
+                            stayPackagesFromPlan(
+                              plan,
+                              guestName || user?.email || undefined,
+                            ),
+                          )
+                            .then((result) => {
+                              appPrompt.alert(
+                                "Sent to StraiAway",
+                                `${result.pushed} stay${result.pushed === 1 ? "" : "s"} handed off.`,
+                              );
+                            })
+                            .catch((caught) => {
+                              appPrompt.alert(
+                                "StraiAway",
+                                caught instanceof Error
+                                  ? caught.message
+                                  : "Stay handoff failed.",
+                              );
+                            });
                         },
                       },
                       {
-                        text: 'Import stays',
+                        text: "Import stays",
                         onPress: () => {
-                          void pullStraiAwayStays().then(({ stays }) => {
-                            const next = applyStayPackagesToPlan(plan, stays);
-                            if (next) savePlan(next);
-                            appPrompt.alert('Imported from StraiAway', stays.length ? `${stays.length} stay${stays.length === 1 ? '' : 's'} updated.` : 'No stays to import.');
-                          }).catch((caught) => {
-                            appPrompt.alert('StraiAway', caught instanceof Error ? caught.message : 'Stay import failed.');
-                          });
+                          void pullStraiAwayStays()
+                            .then(({ stays }) => {
+                              const next = applyStayPackagesToPlan(plan, stays);
+                              if (next) savePlan(next);
+                              appPrompt.alert(
+                                "Imported from StraiAway",
+                                stays.length
+                                  ? `${stays.length} stay${stays.length === 1 ? "" : "s"} updated.`
+                                  : "No stays to import.",
+                              );
+                            })
+                            .catch((caught) => {
+                              appPrompt.alert(
+                                "StraiAway",
+                                caught instanceof Error
+                                  ? caught.message
+                                  : "Stay import failed.",
+                              );
+                            });
                         },
                       },
                       {
-                        text: 'Open StraiAway',
+                        text: "Open StraiAway",
                         onPress: () => {
-                          const reservation = plan.itinerary.find((item) => item.kind === 'stay')?.stay?.straiawayReservationId;
+                          const reservation = plan.itinerary.find(
+                            (item) => item.kind === "stay",
+                          )?.stay?.straiawayReservationId;
                           void openStraiAwayStay(reservation);
                         },
                       },
                     ],
                   );
                 } catch {
-                  router.push('/(tabs)/profile/straiaway' as never);
+                  router.push("/(tabs)/profile/straiaway" as never);
                 }
               })();
             }}
@@ -198,7 +209,7 @@ export function TravelPlanTripTools({
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
             onOpenExpenses={() => {
-              onOpenExpenses();
+              setExpensesVisible(true);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
             onOpenPackingList={() => {
@@ -209,20 +220,20 @@ export function TravelPlanTripTools({
               });
               if (!list) {
                 appPrompt.alert(
-                  'Packing List',
-                  'The packing list could not be opened. Please try again.',
+                  "Packing List",
+                  "The packing list could not be opened. Please try again.",
                 );
                 return;
               }
               router.push({
-                pathname: '/(tabs)/to-do/[id]',
+                pathname: "/(tabs)/to-do/[id]",
                 params: { id: list.id },
               } as never);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
             onOpenChat={() => {
               router.push({
-                pathname: '/travel/[id]/chat',
+                pathname: "/travel/[id]/chat",
                 params: { id: plan.id },
               } as never);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
@@ -233,7 +244,7 @@ export function TravelPlanTripTools({
             }}
           />
         </View>
-      </TravelCollapsibleSection>
+      </AgentTestId>
 
       <TravelWeatherSheet
         plan={plan}
@@ -269,12 +280,18 @@ export function TravelPlanTripTools({
         }}
         onSavePlan={savePlan}
       />
+      <TravelExpensesSheet
+        plan={plan}
+        visible={expensesVisible}
+        onClose={() => setExpensesVisible(false)}
+        onSavePlan={savePlan}
+      />
       <TravelCalendarUpdatedModal
         payload={calendarUpdated}
         onGoToCalendar={(startDate) => {
           setCalendarUpdated(null);
           setSelectedDate(startDate);
-          router.navigate('/(tabs)/calendar');
+          router.navigate("/(tabs)/calendar");
         }}
         onBackToTravel={() => setCalendarUpdated(null)}
       />

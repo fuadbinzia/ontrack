@@ -23,7 +23,7 @@ describe('travel plan UI prefs', () => {
         notesExpanded: false,
       }),
     ).toEqual({
-      sectionExpanded: { tools: false, timeline: true },
+      sectionExpanded: { timeline: true },
       minimizedItemIds: ['a', 'b'],
       collapsedDayDates: ['2026-08-01'],
       dayCollapseTouched: ['2026-08-01'],
@@ -34,12 +34,12 @@ describe('travel plan UI prefs', () => {
   it('patches and clears per-plan prefs', () => {
     const { patchPlanUi, clearPlanUi, retainPlanIds } = useTravelPlanUi.getState();
     patchPlanUi('trip-1', {
-      sectionExpanded: { tools: false },
+      sectionExpanded: { timeline: false },
       notesExpanded: false,
     });
     patchPlanUi('trip-2', { notesExpanded: true });
     expect(useTravelPlanUi.getState().byPlanId['trip-1']).toEqual({
-      sectionExpanded: { tools: false },
+      sectionExpanded: { timeline: false },
       notesExpanded: false,
     });
 

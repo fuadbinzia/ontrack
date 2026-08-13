@@ -3,6 +3,7 @@ import {
   normalizeTravelGlobeRotation,
   travelGlobeCameraForLayout,
   travelGlobeCoordinateVisible,
+  travelGlobeRotationForCoordinate,
   TRAVEL_GLOBE_INITIAL_ROTATION,
 } from '../globe-projection';
 
@@ -24,6 +25,22 @@ describe('travel globe projection', () => {
   it('wraps longitude and restrains vertical rotation', () => {
     expect(normalizeTravelGlobeRotation([400, 90, 18])).toEqual([40, 65, 0]);
     expect(normalizeTravelGlobeRotation([-400, -90, -4])).toEqual([-40, -65, 0]);
+  });
+
+  it('starts with the user coordinate centered on the globe', () => {
+    const newYork = travelGlobeRotationForCoordinate(-74.006, 40.7128);
+
+    expect(newYork[0]).toBeCloseTo(74.006);
+    expect(newYork[1]).toBeCloseTo(-40.7128);
+    expect(newYork[2]).toBe(0);
+    expect(travelGlobeCoordinateVisible(-74.006, 40.7128, newYork)).toBe(true);
+  });
+
+  it('normalizes location-centered rotation at geographic boundaries', () => {
+    expect(travelGlobeRotationForCoordinate(200, 89)).toEqual([160, -65, 0]);
+    expect(travelGlobeRotationForCoordinate(Number.NaN, 20)).toEqual(
+      TRAVEL_GLOBE_INITIAL_ROTATION,
+    );
   });
 
   it('uses an edge-to-edge globe camera in both orientations', () => {

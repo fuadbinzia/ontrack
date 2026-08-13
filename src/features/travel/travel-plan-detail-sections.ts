@@ -1,5 +1,4 @@
 export type DetailSectionKey =
-  | 'tools'
   | 'transport'
   | 'flights'
   | 'ground'
@@ -12,8 +11,8 @@ export type DetailSectionKey =
  * First-visit defaults for plan-detail accordion sections.
  * Persisted `sectionExpanded` in `travel-plan-ui` always wins once the user toggles.
  *
- * Match the intended first paint: Transport + Timeline open; Tools closed;
- * nested transport kinds collapsed until the user opens them.
+ * Match the intended first paint: Transport + Timeline open; nested transport
+ * kinds collapsed until the user opens them.
  */
 export function sectionDefaultExpanded(
   key: DetailSectionKey,
@@ -26,8 +25,6 @@ export function sectionDefaultExpanded(
   },
 ): boolean {
   switch (key) {
-    case 'tools':
-      return false;
     case 'transport':
       return (
         counts.flights +

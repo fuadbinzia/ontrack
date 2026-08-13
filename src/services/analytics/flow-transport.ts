@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 import { Platform } from 'react-native';
 
 import {
@@ -9,15 +10,14 @@ import {
 } from '@/services/analytics/flow-model';
 import { resolveExpoApiUrl } from '@/services/http/api-url';
 import { apiRequest } from '@/services/http/api-client';
+import { resolveFlowEnvironment } from '@/services/analytics/flow-environment';
 import { useFlowAnalytics } from '@/store/flow-analytics';
 import { useUsageAnalytics } from '@/store/usage-analytics';
 
 class FlowAnalyticsTransportError extends Error {}
 
 function environment(): FlowEnvironment {
-  const value = process.env.EXPO_PUBLIC_APP_ENV;
-  if (value === 'production' || value === 'testflight' || value === 'preview') return value;
-  return 'development';
+  return resolveFlowEnvironment(Updates.channel, process.env.EXPO_PUBLIC_APP_ENV);
 }
 
 function url() {

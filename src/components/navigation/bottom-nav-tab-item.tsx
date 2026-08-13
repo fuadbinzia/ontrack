@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -10,7 +10,7 @@ import Animated, {
 
 import { Symbol } from '@/components/primitives';
 import type { AppIconName } from '@/design-system';
-import { durations, easings, radii } from '@/design-system';
+import { durations, easings } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 
 /** Chrome settle — short enough to feel snappy, long enough to read as a blend. */
@@ -30,13 +30,6 @@ type BottomNavTabItemProps = {
     minWidth: number;
     flexShrink: number;
   };
-  badge?: number;
-  badgeColor: string;
-  badgeMinWidth: number;
-  badgeHeight: number;
-  badgePadX: number;
-  badgeFontSize: number;
-  badgeLineHeight: number;
 };
 
 /**
@@ -53,13 +46,6 @@ export function BottomNavTabItem({
   inactiveColor,
   iconSize,
   captionStyle,
-  badge = 0,
-  badgeColor,
-  badgeMinWidth,
-  badgeHeight,
-  badgePadX,
-  badgeFontSize,
-  badgeLineHeight,
 }: BottomNavTabItemProps) {
   const { typography } = useResponsive();
   const reduceMotion = useReducedMotion();
@@ -88,26 +74,6 @@ export function BottomNavTabItem({
           size={iconSize}
           color={selected ? activeColor : inactiveColor}
         />
-        {badge > 0 ? (
-          <View
-            style={[
-              styles.badge,
-              {
-                backgroundColor: badgeColor,
-                minWidth: badgeMinWidth,
-                height: badgeHeight,
-                paddingHorizontal: badgePadX,
-              },
-            ]}>
-            <Text
-              style={[
-                styles.badgeText,
-                { fontSize: badgeFontSize, lineHeight: badgeLineHeight },
-              ]}>
-              {badge > 99 ? '99+' : String(badge)}
-            </Text>
-          </View>
-        ) : null}
       </View>
       <Animated.Text
         allowFontScaling
@@ -137,18 +103,5 @@ const styles = StyleSheet.create({
   },
   caption: {
     textAlign: 'center',
-  },
-  badge: {
-    position: 'absolute',
-    top: -6,
-    right: -12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.pill,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontWeight: '400',
-    fontVariant: ['tabular-nums'],
   },
 });

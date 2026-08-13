@@ -26,4 +26,11 @@ describe('bottom nav tab selection motion', () => {
     expect(itemSource).not.toContain('createAnimatedComponent');
     expect(itemSource).not.toContain('useAnimatedProps');
   });
+
+  it('does not show an open-task count on the Checklists tab', () => {
+    expect(barSource).not.toContain('openTaskCount');
+    expect(barSource).not.toContain("slot.name === 'to-do' ?");
+    expect(barSource).not.toContain('badge=');
+    expect(itemSource).not.toContain('badge');
+  });
 });

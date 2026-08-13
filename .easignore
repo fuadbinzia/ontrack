@@ -18,6 +18,7 @@ supabase/
 *.log
 *.tsbuildinfo
 .env*.local
+.living-system-map/runtime-analytics.local
 /ios/
 /android/
 scripts/__pycache__/

@@ -19,7 +19,7 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
     paragraphs: [
       'Approximate location when you allow it, used for local weather and travel departure suggestions.',
       'Device and app diagnostics needed to operate sync, notifications, and crash recovery. We do not sell personal information.',
-      'Optional product usage analytics (on by default; turn off in Profile → Usage Analytics) record approximate time spent on app areas such as Travel or Today. These rollups help us improve the product and support. They do not include Health notes, meal contents, messages, or other private text. When you are signed in, daily totals may sync with your account so we can understand overall engagement. Guests keep usage data on the device only.',
+      'Optional product usage analytics (on by default; turn off in Profile → Usage Analytics) record approximate time spent on app areas plus anonymous route visits, transitions, success or failure outcomes, and coarsened page-load or named-action durations. Only aggregate latency histograms are retained; route parameters, Health notes, meal contents, messages, and other private text are never included. Consenting guest and signed-in installs may upload anonymous flow aggregates retained for up to 90 days. Turning analytics off stops collection and clears pending flow events.',
       'On signed-in devices, cloud sync stores your account data so it can follow you across devices you authorize.',
     ],
   },

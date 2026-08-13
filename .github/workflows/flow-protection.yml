@@ -1,0 +1,55 @@
+name: Dual-platform flow protection
+
+on:
+  pull_request:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      flow:
+        description: Optional single named flow
+        required: false
+
+concurrency:
+  group: flow-protection-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  dual-platform:
+    runs-on: [self-hosted, macOS, ontrack-agent-ui]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Restore latest flow evidence
+        uses: actions/cache@v4
+        with:
+          path: .living-system-map/generated/flow-runs.json
+          key: flow-proof-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            flow-proof-${{ github.ref_name }}-
+            flow-proof-main-
+      - name: Run affected or complete flow suite
+        shell: bash
+        run: |
+          if [[ -n "${{ inputs.flow }}" ]]; then
+            npm run flow-proof -- --flow "${{ inputs.flow }}"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            npm run flow-proof -- --changed "origin/${{ github.base_ref }}"
+          else
+            npm run flow-proof -- --all
+          fi
+      - name: Scan and enforce system protection
+        run: npm run system-map:verify && npm run system-map:check
+      - name: Upload flow evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flow-proof-${{ github.run_id }}
+          path: .living-system-map/generated/flow-runs.json

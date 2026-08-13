@@ -77,6 +77,10 @@ export function TravelPlanTripTools({
   return (
     <>
       <AgentTestId
+        testID={AgentUiIds.travel.planDetail.toolsSection}
+        label="Trip Tools compatibility anchor"
+      />
+      <AgentTestId
         testID={AgentUiIds.travel.tripTools.section(plan.id)}
         label={`Trip Tools for ${plan.title}`}
       >

@@ -103,4 +103,38 @@ describe('critical persistence migration boundaries', () => {
     expect(source).toContain('add constraint addon_entitlements_addon_id_check');
     expect(source).not.toMatch(/grant\s+(insert|update|delete)/);
   });
+
+  it('keeps anonymous flow analytics aggregate-only and service-role scoped', () => {
+    const source = migration('202608130002_flow_analytics.sql');
+    const ingestionFix = migration('202608130003_fix_flow_analytics_ingestion.sql');
+    const latency = migration('202608130004_flow_latency_aggregates.sql');
+    const percentileFix = migration('202608130005_flow_latency_percentile_numeric.sql');
+    for (const table of [
+      'analytics_flow_receipts', 'analytics_flow_routes_daily',
+      'analytics_flow_transitions_daily', 'analytics_flow_outcomes_daily',
+      'analytics_flow_paths_daily', 'analytics_flow_live',
+    ]) {
+      expect(source).toContain(`alter table public.%i enable row level security`);
+      expect(source).toContain(`'${table}'`);
+    }
+    expect(source).toContain('revoke all on function public.record_analytics_flow_batch');
+    expect(source).toContain('grant execute on function public.record_analytics_flow_batch(text, text, text, text, jsonb) to service_role');
+    expect(source).toContain("delete from public.analytics_flow_live where updated_at < now() - interval '90 seconds'");
+    expect(source).toContain('having sum(executions) >= 3');
+    expect(source).not.toMatch(/grant\s+(select|insert|update|delete).*to\s+(anon|authenticated)/);
+    expect(ingestionFix).toContain('event_route_key text');
+    expect(ingestionFix).not.toContain('\n  route_key text;');
+    expect(ingestionFix).toContain('on conflict on constraint analytics_flow_routes_daily_pkey');
+    expect(ingestionFix).toContain('on conflict on constraint analytics_flow_transitions_daily_pkey');
+    for (const table of ['analytics_flow_routes_daily', 'analytics_flow_transitions_daily', 'analytics_flow_outcomes_daily']) {
+      expect(latency).toContain(`alter table public.${table}`);
+    }
+    expect(latency).toContain('latency_samples bigint not null default 0');
+    expect(latency).toContain("event_lifecycle = 'measure'");
+    expect(latency).toContain('analytics_latency_percentile');
+    expect(latency).toContain('grant execute on function public.record_analytics_flow_batch(text, text, text, text, jsonb)');
+    expect(latency).not.toMatch(/grant\s+(select|insert|update|delete).*to\s+(anon|authenticated)/);
+    expect(percentileFix).toContain('sample_count numeric');
+    expect(percentileFix).toContain('grant execute on function public.analytics_latency_percentile(numeric');
+  });
 });

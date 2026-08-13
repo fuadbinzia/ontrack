@@ -129,6 +129,8 @@ describe('metro launch command contract', () => {
     const beaconEnsure = read('scripts/ensure-metro-hmr-beacon.sh');
     expect(beaconEnsure).toContain('metro-hmr-beacon.ts');
     expect(read('.gitignore')).toContain('src/utils/dev/metro-hmr-beacon.ts');
+    expect(read('scripts/living-system-map-analytics.mjs')).not.toContain('.env.analytics.local');
+    expect(read('scripts/living-system-map-analytics.mjs')).toContain('.living-system-map/runtime-analytics.local');
 
     const ensure = read('scripts/ensure-packager.sh');
     expect(ensure).toContain('metro-watcher.sh');
@@ -138,6 +140,9 @@ describe('metro launch command contract', () => {
     const launcher = read('scripts/start-metro.sh');
     expect(launcher).toContain('patch-expo-metro-watchman.sh');
     expect(launcher).toContain('wait_for_watchman');
+    expect(launcher).toContain('ensure-local-analytics-env.mjs');
+    expect(launcher).toContain('SUPABASE_SERVICE_ROLE_KEY=*|ANALYTICS_INSTALL_HASH_SECRET=*');
+    expect(launcher).not.toContain('EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY');
   });
 
   it('reconnects the dev client whenever this run (re)launched Metro', () => {

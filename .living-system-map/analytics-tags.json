@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "tags": [
+    {
+      "id": "lifecycle.visit",
+      "label": "Route visit",
+      "category": "Lifecycle",
+      "description": "Counts one render of a canonical, content-free route key.",
+      "trigger": "A consented foreground session renders a route."
+    },
+    {
+      "id": "lifecycle.complete",
+      "label": "Completed movement or outcome",
+      "category": "Lifecycle",
+      "description": "Counts a rendered route transition when fromRoute is present, or an explicit successful product outcome when outcomeId is present.",
+      "trigger": "A destination renders after a different route, or product code records an enumerated success."
+    },
+    {
+      "id": "lifecycle.fail",
+      "label": "Failed outcome",
+      "category": "Lifecycle",
+      "description": "Increments the route and outcome failure counters without accepting error text or user content.",
+      "trigger": "Product code records an explicit failure using an allowlisted-style outcomeId."
+    },
+    {
+      "id": "lifecycle.measure",
+      "label": "Performance measurement",
+      "category": "Lifecycle",
+      "description": "Adds one bounded, 10-millisecond-coarsened page-load or named-action duration to aggregate latency histograms.",
+      "trigger": "A route paints its second frame or an enumerated product action finishes."
+    },
+    {
+      "id": "lifecycle.heartbeat",
+      "label": "Live activity heartbeat",
+      "category": "Lifecycle",
+      "description": "Refreshes ephemeral active-session state so routes and transitions can pulse in the map; it does not add a route visit.",
+      "trigger": "Every 20 seconds while analytics is enabled and the app remains active."
+    },
+    {
+      "id": "lifecycle.session-end",
+      "label": "Session path close",
+      "category": "Lifecycle",
+      "description": "Stores the run-collapsed anonymous route path for aggregate path counts and removes the session from live activity.",
+      "trigger": "The app leaves the foreground or the active flow session ends."
+    },
+    {
+      "id": "event.id",
+      "label": "Event ID",
+      "category": "Event context",
+      "description": "A random UUID used to make ingestion idempotent; receipts expire after seven days.",
+      "trigger": "Generated once for every queued analytics event."
+    },
+    {
+      "id": "event.sessionId",
+      "label": "Foreground session ID",
+      "category": "Event context",
+      "description": "Connects events within one foreground journey. The server hashes it before storage.",
+      "trigger": "Created at the first route visit and replaced after 90 seconds of inactivity."
+    },
+    {
+      "id": "event.occurredAt",
+      "label": "Occurrence time",
+      "category": "Event context",
+      "description": "ISO timestamp used to place aggregate counters into the correct UTC day and reject stale or future payloads.",
+      "trigger": "Stamped when the event is created on the device."
+    },
+    {
+      "id": "event.lifecycle",
+      "label": "Lifecycle type",
+      "category": "Event context",
+      "description": "Selects one of the five documented lifecycle behaviors in this catalog.",
+      "trigger": "Included on every event."
+    },
+    {
+      "id": "event.route",
+      "label": "Canonical route",
+      "category": "Event context",
+      "description": "The rendered Expo route after groups, query strings, IDs, invite codes, emails, and authored values are removed.",
+      "trigger": "Included on every event, for example /travel/[id]/tools."
+    },
+    {
+      "id": "event.fromRoute",
+      "label": "Previous canonical route",
+      "category": "Event context",
+      "description": "Identifies the source side of a completed or live route-to-route transition.",
+      "trigger": "Added when the session moved from a different route."
+    },
+    {
+      "id": "event.outcomeId",
+      "label": "Enumerated outcome",
+      "category": "Event context",
+      "description": "A stable product-defined success or failure key such as plants.watering; free-text errors are rejected.",
+      "trigger": "Added only when product code explicitly records a complete or fail outcome."
+    },
+    {
+      "id": "event.path",
+      "label": "Anonymous session path",
+      "category": "Event context",
+      "description": "A run-collapsed list capped at 30 canonical routes and released by the map only after at least three matching executions.",
+      "trigger": "Added to the session-end event."
+    },
+    {
+      "id": "event.metric",
+      "label": "Performance metric",
+      "category": "Event context",
+      "description": "Selects the fixed page-load or action timing category; arbitrary metric names are rejected.",
+      "trigger": "Added only to a performance measurement event."
+    },
+    {
+      "id": "event.durationMs",
+      "label": "Coarsened duration",
+      "category": "Event context",
+      "description": "A non-negative duration rounded to 10 milliseconds and capped at 120 seconds; only aggregate histograms persist.",
+      "trigger": "Added only to a validated performance measurement event."
+    },
+    {
+      "id": "batch.schemaVersion",
+      "label": "Contract version",
+      "category": "Batch context",
+      "description": "Pins the upload to the validated FlowEventBatchV1 wire contract.",
+      "trigger": "Included on every upload batch."
+    },
+    {
+      "id": "batch.installId",
+      "label": "Opaque install ID",
+      "category": "Batch context",
+      "description": "Supports idempotency and rate limits. The API immediately HMACs it and never persists the raw value.",
+      "trigger": "Included server-side only when Usage Analytics consent is enabled."
+    },
+    {
+      "id": "batch.platform",
+      "label": "Platform",
+      "category": "Batch context",
+      "description": "Separates aggregate evidence for iOS, Android, web, or unknown clients.",
+      "trigger": "Resolved for every upload batch."
+    },
+    {
+      "id": "batch.environment",
+      "label": "Release environment",
+      "category": "Batch context",
+      "description": "Separates production from TestFlight, preview, and development traffic so product totals stay clean.",
+      "trigger": "Resolved from the running build for every upload batch."
+    },
+    {
+      "id": "batch.appVersion",
+      "label": "App version",
+      "category": "Batch context",
+      "description": "Groups counters by shipped app version for rollout and regression comparisons.",
+      "trigger": "Resolved from application metadata for every upload batch."
+    },
+    {
+      "id": "batch.events",
+      "label": "Event collection",
+      "category": "Batch context",
+      "description": "Contains up to 50 validated flow events; content fields and oversized batches are rejected.",
+      "trigger": "Built when pending consented events are flushed."
+    }
+  ]
+}

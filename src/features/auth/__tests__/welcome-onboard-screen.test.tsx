@@ -12,11 +12,12 @@ const METRICS = {
 const mockContinueAsGuest = jest.fn(async () => undefined);
 const mockCompleteOnboarding = jest.fn();
 const mockReplace = jest.fn();
+let mockReturnTo: unknown;
 
 jest.mock('expo-router', () => ({
   useFocusEffect: () => undefined,
   useRouter: () => ({ push: jest.fn(), replace: mockReplace, back: jest.fn() }),
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => ({ returnTo: mockReturnTo }),
 }));
 
 jest.mock('@/features/auth/auth-atmosphere', () => ({
@@ -57,6 +58,7 @@ describe('WelcomeOnboardScreen', () => {
     mockContinueAsGuest.mockClear();
     mockCompleteOnboarding.mockClear();
     mockReplace.mockClear();
+    mockReturnTo = undefined;
   });
 
   it('renders the celestial first-run canvas', () => {
@@ -74,7 +76,7 @@ describe('WelcomeOnboardScreen', () => {
     expect(screen.getByTestId(AgentUiIds.onboarding.goal)).toBeTruthy();
   });
 
-  it('try-first enters guest, completes onboarding, and leaves welcome', async () => {
+  it('try-first enters guest, completes onboarding, and opens Overview by default', async () => {
     render(
       <SafeAreaProvider initialMetrics={METRICS}>
         <WelcomeOnboardScreen />
@@ -91,7 +93,41 @@ describe('WelcomeOnboardScreen', () => {
         name: 'Guest',
         goal: 'Live intentionally',
       });
-      expect(mockReplace).toHaveBeenCalledWith('/');
+      expect(mockReplace).toHaveBeenCalledWith('/overview');
+    });
+  });
+
+  it('preserves a safe in-app return route after onboarding', async () => {
+    mockReturnTo = '/l/secure-code';
+    render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <WelcomeOnboardScreen />
+      </SafeAreaProvider>,
+    );
+
+    fireEvent.press(screen.getByLabelText('I want to try the app out first'));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/l/secure-code');
+    });
+  });
+
+  it.each([
+    ['an absolute URL', 'https://example.com/phish'],
+    ['a protocol-relative URL', '//example.com/phish'],
+    ['a repeated query value', ['/travel', '/profile']],
+  ])('rejects %s as a return route', async (_label, unsafeReturnTo) => {
+    mockReturnTo = unsafeReturnTo;
+    render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <WelcomeOnboardScreen />
+      </SafeAreaProvider>,
+    );
+
+    fireEvent.press(screen.getByLabelText('I want to try the app out first'));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/overview');
     });
   });
 });

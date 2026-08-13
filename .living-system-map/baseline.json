@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "createdAt": "2026-08-13T01:58:26.817Z",
+  "createdAt": "2026-08-13T19:18:51.066Z",
   "git": {
-    "sha": "1b282bc",
+    "sha": "fcac843",
     "branch": "main",
     "dirty": true
   },
@@ -10,8 +10,8 @@
     "score": 100,
     "categories": {
       "regressions": {
-        "total": 29,
-        "protected": 29,
+        "total": 30,
+        "protected": 30,
         "pct": 100
       },
       "criticalNodes": {
@@ -20,8 +20,8 @@
         "pct": 100
       },
       "criticalConnections": {
-        "total": 1062,
-        "protected": 1062,
+        "total": 1078,
+        "protected": 1078,
         "pct": 100
       },
       "flows": {
@@ -30,7 +30,7 @@
         "pct": 100
       }
     },
-    "verifiedAt": "2026-08-13T01:56:14.714Z"
+    "verifiedAt": "2026-08-13T19:18:39.035Z"
   },
   "obligations": {
     "bugFixes": [
@@ -41,6 +41,7 @@
       "3b420243a7ab694c2783c60bffa73d11580332c4",
       "418ae4e6bc5751f6d1a59eacd0b5699e64359e99",
       "4b40a42d9534b6aa155a844195b439b1a55f67b1",
+      "67088f1dd937493d2a4e4b1635b12db486eb5230",
       "6dbfd0223344580ed98b5562bca6801234c0f631",
       "78d14b50e129e104db28f332f0146fd013f88ad6",
       "863b0befe2dfe6f3041c81739838c581254cf03c",
@@ -174,6 +175,10 @@
       {
         "key": "data-access:src/services/calendar/google-sync.ts->data:google_calendar_event_links",
         "count": 7
+      },
+      {
+        "key": "data-access:src/services/calendar/google-sync.ts->data:upsert_google_calendar_event_links",
+        "count": 1
       },
       {
         "key": "data-access:src/services/cloud/account-flags.ts->data:account_flags",
@@ -824,6 +829,10 @@
         "count": 1
       },
       {
+        "key": "external:src/features/calendar/calendar-sync-review.tsx->external:react-native",
+        "count": 1
+      },
+      {
         "key": "external:src/features/finance/finance-accounts-screen.tsx->external:react",
         "count": 1
       },
@@ -1197,6 +1206,10 @@
       },
       {
         "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/features/calendar/calendar-sync-review.tsx",
         "count": 1
       },
       {
@@ -2508,6 +2521,30 @@
         "count": 1
       },
       {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/utils/auth-return-to.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/utils/navigation-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/calendar/calendar-sync-review.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/calendar/calendar-sync-review.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/calendar/calendar-sync-review.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/calendar/calendar-sync-review.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/apply-plaid-link.ts->src/features/finance/create.ts",
         "count": 1
       },
@@ -3024,6 +3061,10 @@
         "count": 1
       },
       {
+        "key": "import:src/features/overview/overview-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/performance/performance-monitor-provider.tsx->src/store/account-flags.ts",
         "count": 1
       },
@@ -3092,6 +3133,10 @@
         "count": 1
       },
       {
+        "key": "import:src/features/todos/todo-list-header-toolbar.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
         "key": "import:src/features/todos/todo-list-remove.ts->src/services/todos/collaboration.ts",
         "count": 1
       },
@@ -3109,6 +3154,10 @@
       },
       {
         "key": "import:src/features/todos/todo-list-settings-screen.tsx->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-list-settings-sharing.tsx->src/features/account/profile-avatar.tsx",
         "count": 1
       },
       {
@@ -3380,6 +3429,10 @@
         "count": 1
       },
       {
+        "key": "import:src/services/calendar/google-sync-policy.ts->src/services/calendar/google-mapping.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/google-batch.ts",
         "count": 1
       },
@@ -3393,6 +3446,10 @@
       },
       {
         "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/google-oauth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/google-preview-details.ts",
         "count": 1
       },
       {
@@ -3924,6 +3981,10 @@
         "count": 1
       },
       {
+        "key": "import:src/services/travel/translator-server.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/services/travel/travel-collaboration-shared.ts->src/features/travel/chat.ts",
         "count": 1
       },
@@ -4041,6 +4102,10 @@
       },
       {
         "key": "import:src/store/health.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/overview-attention.ts->src/services/storage/index.ts",
         "count": 1
       },
       {

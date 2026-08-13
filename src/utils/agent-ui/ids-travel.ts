@@ -301,6 +301,7 @@ export const agentUiIdsTravel = {
       /** Unused — prefer `list.currency`. */
       currency: 'ontrack.travel.planDetail.currency',
       addToTimeline: 'ontrack.travel.planDetail.addToTimeline',
+      toolsSection: 'ontrack.travel.planDetail.section.tools',
       tripTools: 'ontrack.travel.planDetail.tripTools',
       transportSection: 'ontrack.travel.planDetail.section.transport',
       flightsSection: 'ontrack.travel.planDetail.section.flights',

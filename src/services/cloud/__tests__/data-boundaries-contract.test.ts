@@ -5,6 +5,7 @@ const boundaries: Record<string, readonly string[]> = {
   'src/features/auth/agent-account-login.ts': ['account_flags'],
   'src/features/travel/chat.ts': ['delete_travel_chat_message'],
   'src/services/analytics/sync.ts': ['analytics_product_summary', 'upsert_analytics_daily'],
+  'src/services/analytics/flow-server.ts': ['record_analytics_flow_batch'],
   'src/services/calendar/google-oauth.ts': [
     'google_calendar_connections',
     'google_calendar_event_links',

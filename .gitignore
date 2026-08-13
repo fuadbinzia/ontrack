@@ -43,6 +43,7 @@ coverage/
 
 # local env files
 .env*.local
+.living-system-map/runtime-analytics.local
 
 # typescript
 *.tsbuildinfo

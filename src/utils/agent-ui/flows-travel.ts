@@ -121,7 +121,13 @@ export const AGENT_UI_TRAVEL_FLOWS = {
     { op: 'goto', to: `travel/${AGENT_UI_DEMO_TRIP_ID}/hub` },
     {
       op: 'wait',
-      id: `ontrack.travel.tripTools.section.${AGENT_UI_DEMO_TRIP_ID}`,
+      id: 'ontrack.travel.planDetail.section.tools',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'wait',
+      // Keep this stable demo target literal so the Living System Map can map the flow.
+      id: 'ontrack.travel.tripTools.section.trip-agent-ui-demo',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],

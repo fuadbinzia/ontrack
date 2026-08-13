@@ -7,8 +7,11 @@ import {
   resolveAnalyticsSurface,
   type AnalyticsSurface,
 } from '@/services/analytics/surfaces';
+import { canonicalizeAnalyticsRoute } from '@/services/analytics/flow-model';
+import { flushFlowAnalytics } from '@/services/analytics/flow-transport';
 import { flushUsageAnalytics } from '@/services/analytics/sync';
 import { useAuthSession } from '@/features/auth/auth-provider';
+import { useFlowAnalytics } from '@/store/flow-analytics';
 import { usePreferences } from '@/store/preferences';
 import { useUsageAnalytics } from '@/store/usage-analytics';
 
@@ -21,8 +24,13 @@ export function UsageAnalyticsTracker() {
   const enabled = usePreferences((s) => s.usageAnalyticsEnabled);
   const { phase } = useAuthSession();
   const surface = resolveAnalyticsSurface(pathname);
+  const route = canonicalizeAnalyticsRoute(pathname);
   const activeRef = useRef<{ surface: AnalyticsSurface; startedAt: number } | null>(null);
   const sessionOpenRef = useRef(false);
+  const routeRenderRef = useRef({ route, startedAt: performance.now() });
+  if (routeRenderRef.current.route !== route) {
+    routeRenderRef.current = { route, startedAt: performance.now() };
+  }
 
   useEffect(() => {
     useUsageAnalytics.getState().ensureInstallId();
@@ -40,8 +48,23 @@ export function UsageAnalyticsTracker() {
   useEffect(() => {
     if (!enabled) {
       activeRef.current = null;
+      useFlowAnalytics.getState().reset();
       return;
     }
+
+    const flowStore = useFlowAnalytics.getState();
+    const fromRoute = flowStore.session?.currentRoute;
+    flowStore.visitRoute(route);
+    let secondFrame = 0;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => {
+        useFlowAnalytics.getState().recordPageLoad(
+          route,
+          fromRoute && fromRoute !== route ? fromRoute : undefined,
+          performance.now() - routeRenderRef.current.startedAt,
+        );
+      });
+    });
 
     const closeSurface = () => {
       const current = activeRef.current;
@@ -69,26 +92,41 @@ export function UsageAnalyticsTracker() {
           useUsageAnalytics.getState().recordSessionStart();
         }
         openSurface(resolveAnalyticsSurface(pathname));
+        useFlowAnalytics.getState().visitRoute(canonicalizeAnalyticsRoute(pathname));
         return;
       }
       closeSurface();
+      useFlowAnalytics.getState().endSession();
       sessionOpenRef.current = false;
       if (phase === 'authenticated') {
         void flushUsageAnalytics().catch(() => undefined);
       }
+      void flushFlowAnalytics().catch(() => undefined);
     };
 
     const sub = AppState.addEventListener('change', onAppState);
     return () => {
+      cancelAnimationFrame(firstFrame);
+      if (secondFrame) cancelAnimationFrame(secondFrame);
       closeSurface();
       sub.remove();
     };
-  }, [enabled, pathname, phase, surface]);
+  }, [enabled, pathname, phase, route, surface]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const timer = setInterval(() => {
+      useFlowAnalytics.getState().heartbeat();
+      void flushFlowAnalytics().catch(() => undefined);
+    }, 20_000);
+    return () => clearInterval(timer);
+  }, [enabled]);
 
   useEffect(() => {
     if (!enabled || phase !== 'authenticated') return;
     const timer = setTimeout(() => {
       void flushUsageAnalytics().catch(() => undefined);
+      void flushFlowAnalytics().catch(() => undefined);
     }, 8_000);
     return () => clearTimeout(timer);
   }, [enabled, phase, pathname]);

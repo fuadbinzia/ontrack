@@ -31,6 +31,7 @@ const migrations = [
   'supabase/migrations/202608120005_fix_todo_category_mutation_vars.sql',
   'supabase/migrations/202608120006_todo_multi_assignees.sql',
   'supabase/migrations/202608120008_partner_links.sql',
+  'supabase/migrations/202608130002_flow_analytics.sql',
 ] as const;
 
 const nativeAndPluginFiles = [

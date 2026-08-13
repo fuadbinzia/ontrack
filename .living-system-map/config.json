@@ -47,6 +47,20 @@
     ],
     "summaryPath": "coverage/coverage-summary.json"
   },
+  "flowProtection": {
+    "manifestPath": ".living-system-map/flows.json",
+    "resultsPath": ".living-system-map/generated/flow-runs.json",
+    "mode": "observe",
+    "observeUntil": "2026-08-20T23:59:59.000Z"
+  },
+  "runtimeAnalytics": {
+    "command": ["node", "scripts/living-system-map-analytics.mjs"],
+    "tagCatalogPath": ".living-system-map/analytics-tags.json",
+    "refreshMs": 15000,
+    "windows": [1, 7, 30, 90],
+    "defaultWindow": 7,
+    "defaultEnvironment": "production"
+  },
   "domains": [
     { "id": "account", "label": "Account", "paths": ["src/features/account"] },
     { "id": "auth", "label": "Authentication", "paths": ["src/features/auth"] },

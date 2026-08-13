@@ -61,6 +61,18 @@ describe('agent-ui flows', () => {
         (s) => s.op === 'wait' && s.prefix === 'ontrack.travel.itineraryAdd.',
       ),
     ).toBe(true);
+    expect(resolveAgentUiFlow('travel-demo-hub')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.travel.planDetail.section.tools',
+        }),
+        expect.objectContaining({
+          op: 'wait',
+          id: `ontrack.travel.tripTools.section.${AGENT_UI_DEMO_TRIP_ID}`,
+        }),
+      ]),
+    );
     expect(
       steps?.every(
         (s) => s.op !== 'wait' || s.ms != null || s.timeoutMs === AGENT_UI_WAIT_TIMEOUT_MS,
@@ -286,5 +298,24 @@ describe('agent-ui flows', () => {
         }),
       ]),
     );
+  });
+
+  it('keeps every declared flow executable without discovery dumps', () => {
+    const supported = new Set([
+      'dismiss', 'seed', 'goto', 'tap', 'wait', 'scroll', 'assert', 'open',
+    ]);
+    for (const name of listAgentUiFlowNames()) {
+      const steps = resolveAgentUiFlow(name);
+      expect(steps).toBeTruthy();
+      expect(steps?.length).toBeGreaterThan(0);
+      expect({ name, hasDump: steps?.some((step) => step.op === 'dump') }).toEqual({ name, hasDump: false });
+      expect({ name, supported: steps?.every((step) => supported.has(step.op)) }).toEqual({ name, supported: true });
+      expect({
+        name,
+        bounded: steps?.every(
+          (step) => step.op !== 'wait' || Boolean(step.id || step.prefix || step.ms),
+        ),
+      }).toEqual({ name, bounded: true });
+    }
   });
 });

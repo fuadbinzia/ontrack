@@ -29,6 +29,18 @@ describe('historical bug-fix regressions', () => {
     expect(app.expo.runtimeVersion).not.toBe(app.expo.version);
   });
 
+  it('builds a compatible TestFlight binary before publishing an orphaned runtime', () => {
+    const ship = read('scripts/ship-push.sh');
+    const compatibilityCheck = ship.indexOf('ensure_testflight_runtime');
+    const testflightPublish = ship.indexOf('npm run update:testflight');
+
+    expect(ship).toContain('--build-profile testflight');
+    expect(ship).toContain('--status finished');
+    expect(ship).toContain('npm run build:testflight');
+    expect(compatibilityCheck).toBeGreaterThan(-1);
+    expect(testflightPublish).toBeGreaterThan(compatibilityCheck);
+  });
+
   it('adds both Siri Swift sources through the supported Xcode helper', () => {
     const plugin = read('plugins/with-ontrack-voice-lists.js');
 

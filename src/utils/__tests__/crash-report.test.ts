@@ -1,23 +1,11 @@
-import { ONTRACK_SUPPORT_EMAIL } from '@/constants/legal';
-
 import {
   buildCrashLogText,
-  crashReportBody,
   crashReportSubject,
   sendCrashReport,
 } from '../crash-report';
 
-const mockCreate = jest.fn();
-const mockWrite = jest.fn();
-const mockFileUri = 'file:///cache/ontrack-crash-report.txt';
-
-jest.mock('expo-file-system', () => ({
-  Paths: { cache: 'cache://' },
-  File: jest.fn().mockImplementation(() => ({
-    uri: mockFileUri,
-    create: mockCreate,
-    write: mockWrite,
-  })),
+jest.mock('@/services/http/api-url', () => ({
+  resolveExpoApiUrl: (path: string) => `https://api.example.test${path}`,
 }));
 
 jest.mock('expo-constants', () => ({
@@ -36,27 +24,18 @@ jest.mock('expo-device', () => ({
   osVersion: '18.0',
 }));
 
-const mockIsSharingAvailable = jest.fn();
-const mockShareAsync = jest.fn();
-jest.mock('expo-sharing', () => ({
-  isAvailableAsync: () => mockIsSharingAvailable(),
-  shareAsync: (uri: string, options?: unknown) => mockShareAsync(uri, options),
-}));
-
-const mockCanOpenURL = jest.fn();
-const mockOpenURL = jest.fn();
-jest.mock('expo-linking', () => ({
-  canOpenURL: (url: string) => mockCanOpenURL(url),
-  openURL: (url: string) => mockOpenURL(url),
-}));
-
 describe('crash-report', () => {
+  const originalFetch = global.fetch;
+  const mockFetch = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsSharingAvailable.mockResolvedValue(false);
-    mockCanOpenURL.mockResolvedValue(true);
-    mockOpenURL.mockResolvedValue(undefined);
-    mockShareAsync.mockResolvedValue(undefined);
+    global.fetch = mockFetch;
+    mockFetch.mockResolvedValue(new Response(JSON.stringify({ sent: true })));
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
   });
 
   it('builds a log with error stack and device/app fields', () => {
@@ -71,34 +50,38 @@ describe('crash-report', () => {
     expect(text).toContain('Model: iPhone');
   });
 
-  it('keeps subject short and body mentions the attachment', () => {
+  it('keeps the email subject concise', () => {
     const error = new Error('x'.repeat(200));
     expect(crashReportSubject(error).length).toBeLessThanOrEqual(100);
-    expect(crashReportBody(error)).toContain('crash log is attached');
-    expect(crashReportBody(error)).toContain(ONTRACK_SUPPORT_EMAIL);
   });
 
-  it('shares the crash log file so Mail can attach it', async () => {
-    mockIsSharingAvailable.mockResolvedValue(true);
-    const result = await sendCrashReport({ error: new Error('Share me') });
-    expect(mockCreate).toHaveBeenCalled();
-    expect(mockWrite).toHaveBeenCalled();
-    expect(mockShareAsync).toHaveBeenCalledWith(
-      mockFileUri,
+  it('sends the crash report directly to the server without opening system UI', async () => {
+    const result = await sendCrashReport({ error: new Error('Direct delivery') });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://api.example.test/api/crash-report',
       expect.objectContaining({
-        mimeType: 'text/plain',
-        dialogTitle: expect.stringContaining(ONTRACK_SUPPORT_EMAIL),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       }),
     );
-    expect(result).toEqual({ method: 'share' });
+    const request = mockFetch.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(request.body as string)).toMatchObject({
+      subject: expect.stringContaining('Direct delivery'),
+      report: expect.stringContaining('Direct delivery'),
+    });
+    expect(result).toEqual({ method: 'sent' });
   });
 
-  it('falls back to mailto with log body when share is unavailable', async () => {
-    const result = await sendCrashReport({ error: new Error('Mailto path') });
-    expect(mockOpenURL).toHaveBeenCalled();
-    const url = mockOpenURL.mock.calls[0][0] as string;
-    expect(url.startsWith(`mailto:${ONTRACK_SUPPORT_EMAIL}?`)).toBe(true);
-    expect(url).toContain('Mailto+path');
-    expect(result).toEqual({ method: 'mailto' });
+  it.each([
+    ['server rejection', () => mockFetch.mockResolvedValueOnce(new Response(null, { status: 503 }))],
+    ['offline failure', () => mockFetch.mockRejectedValueOnce(new Error('offline'))],
+  ])('reports %s without claiming the crash report was sent', async (_label, arrange) => {
+    arrange();
+    const result = await sendCrashReport({ error: new Error('Not delivered') });
+    expect(result).toMatchObject({
+      method: 'unavailable',
+      reason: expect.stringContaining('could not send'),
+    });
   });
 });

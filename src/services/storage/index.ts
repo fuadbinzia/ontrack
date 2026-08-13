@@ -33,6 +33,8 @@ export const STORAGE_KEYS = {
   tabRecency: 'ontrack/tab-recency/v1',
   /** Pinned bottom-nav trackers + Trackers page order (device-local). */
   tabPins: 'ontrack/tab-pins/v1',
+  /** Device-local Overview attention acknowledgements; source records stay unchanged. */
+  overviewAttention: 'ontrack/overview-attention/v1',
   /** Dev Mode toggle + live-account snapshot (sandbox isolation). */
   devMode: 'ontrack/dev-mode/v1',
 } as const;

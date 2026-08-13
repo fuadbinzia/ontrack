@@ -9,6 +9,7 @@ export const agentUiIdsShell = {
     plate: 'ontrack.sheet.plate',
   },
   tabs: {
+    overview: 'ontrack.tabs.overview',
     today: 'ontrack.tabs.today',
     calendar: 'ontrack.tabs.calendar',
     checklists: 'ontrack.tabs.checklists',
@@ -30,6 +31,15 @@ export const agentUiIdsShell = {
     carouselNext: 'ontrack.tabs.carousel.next',
     /** Layout anchor for the page-matching bottom nav fill (not tappable). */
     dock: 'ontrack.tabs.dock',
+  },
+  overview: {
+    screen: 'ontrack.overview.screen',
+    hero: 'ontrack.overview.hero',
+    section: 'ontrack.overview.section.all',
+    acknowledge: (key: string) =>
+      `ontrack.overview.attention.acknowledge.${key.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    row: (routeName: string) =>
+      `ontrack.overview.row.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
   },
   trackers: {
     screen: 'ontrack.trackers.screen',
@@ -487,6 +497,7 @@ export const agentUiIdsShell = {
     root: 'ontrack.errorBoundary.root',
     retry: 'ontrack.errorBoundary.retry',
     sendReport: 'ontrack.errorBoundary.sendReport',
+    reportStatus: 'ontrack.errorBoundary.reportStatus',
   },
   agentUi: {
     /** __DEV__ overlay root — present when AgentUiOverlay is mounted. */

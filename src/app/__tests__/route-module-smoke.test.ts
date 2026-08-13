@@ -87,6 +87,7 @@ const routeModules = [
 ] as const;
 
 const apiModules = [
+  'src/app/api/crash-report+api.ts',
   'src/app/api/calendar/google/connect+api.ts',
   'src/app/api/calendar/google/direction+api.ts',
   'src/app/api/calendar/google/disconnect+api.ts',

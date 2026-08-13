@@ -113,6 +113,7 @@ Dump/status/command files live in the app Documents directory:
 
 | testID                                                    | Label            | Notes                                                                                                 |
 | --------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------- |
+| `ontrack.tabs.overview`                                   | Overview         | First, fixed app-wide summary destination                                                            |
 | `ontrack.tabs.today`                                      | Today            |                                                                                                       |
 | `ontrack.tabs.calendar`                                   | Calendar         |                                                                                                       |
 | `ontrack.tabs.checklists`                                 | Checklists       | route `to-do`                                                                                         |
@@ -130,12 +131,17 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.tabs.carousel.prev`                              | Previous tabs    | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.carousel.next`                              | Next tabs        | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.dock`                                       | Bottom nav       | Layout anchor — page-matching bottom nav fill (not tappable)                                          |
+| `ontrack.overview.screen`                                 | Overview         | App-wide summary screen anchor                                                                        |
+| `ontrack.overview.hero`                                   | Overview pulse   | Today's highest-level status                                                                          |
+| `ontrack.overview.attention.acknowledge.<key>`            | Acknowledge      | Hides the current version of an Overview attention item without changing its source record           |
+| `ontrack.overview.section.all`                            | Across onTrack   | Live module summary list                                                                              |
+| `ontrack.overview.row.<route>`                            | Overview row     | Opens the matching section                                                                            |
 | `ontrack.sheet.plate`                                     | Any modal sheet  | Layout anchor — visible `SheetScaffold` plate bounds (not tappable)                                   |
 | `ontrack.trackers.screen`                                 | Sections         | More hub — In nav / Others reorder                                                                  |
 | `ontrack.trackers.row.<route>`                            | Trackers         | Open a tracker from the list (`(today)` → `_today_`)                                                |
 | `ontrack.trackers.add.<route>`                            | Trackers         | Add tracker to nav (when under pin limit)                                                           |
 | `ontrack.trackers.remove.<route>`                         | Trackers         | Retired — demote via drag into More                                                                 |
-| `ontrack.trackers.drag.<route>`                           | Trackers         | Long-press drag handle to reorder                                                                   |
+| `ontrack.trackers.drag.<route>`                           | Trackers         | Long-press drag handle to reorder; Overview is fixed first and has no drag control                  |
 | `ontrack.vehicles.list.add`                               | Vehicles         | Add a vehicle                                                                                         |
 | `ontrack.vehicles.list.vehicle.<vehicleId>`               | Vehicles         | Open a vehicle (`vehicle-agent-ui-demo` via `vehicle-demo`)                                           |
 | `ontrack.vehicles.detail.settings`                        | Vehicle detail   | Open vehicle settings                                                                                 |
@@ -939,7 +945,8 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 |----|---------|
 | `ontrack.errorBoundary.root` | Crash / failed-route shell |
 | `ontrack.errorBoundary.retry` | Try again |
-| `ontrack.errorBoundary.sendReport` | Send crash report (share/email crash log file) |
+| `ontrack.errorBoundary.sendReport` | Send crash report directly to support |
+| `ontrack.errorBoundary.reportStatus` | Crash report sent / failed status |
 
 ### Developer Tools (`/developer`, `account_flags.developer_tools`)
 

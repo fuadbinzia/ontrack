@@ -6,6 +6,7 @@
  * entry (Profile for brand-new users).
  */
 export const DEFAULT_TAB_ORDER = [
+  'overview',
   '(today)',
   'calendar',
   'to-do',

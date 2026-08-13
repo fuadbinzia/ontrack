@@ -10,8 +10,7 @@ describe('sectionDefaultExpanded', () => {
   };
   const empty = { flights: 0, ground: 0, stays: 0, rentals: 0, events: 0 };
 
-  it('opens transport + timeline; keeps tools and nested kinds collapsed', () => {
-    expect(sectionDefaultExpanded('tools', withItems)).toBe(false);
+  it('opens transport + timeline and keeps nested kinds collapsed', () => {
     expect(sectionDefaultExpanded('transport', withItems)).toBe(true);
     expect(sectionDefaultExpanded('timeline', withItems)).toBe(true);
     expect(sectionDefaultExpanded('flights', withItems)).toBe(false);
@@ -24,6 +23,5 @@ describe('sectionDefaultExpanded', () => {
   it('keeps transport collapsed when the trip has no booking rows', () => {
     expect(sectionDefaultExpanded('transport', empty)).toBe(false);
     expect(sectionDefaultExpanded('timeline', empty)).toBe(true);
-    expect(sectionDefaultExpanded('tools', empty)).toBe(false);
   });
 });

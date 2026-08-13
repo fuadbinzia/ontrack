@@ -2,6 +2,7 @@
  * Title-case chrome labels (fields, headers, buttons, chips).
  * Preserves punctuation, required markers, and hyphen/paren boundaries.
  * Keeps short all-caps acronyms (UI, FX, API) intact.
+ * Preserves intentional camel casing (StraiAway, onTrack, iOS).
  * Leaves common short words lowercase unless they start the title.
  */
 const TITLE_SMALL_WORDS = new Set([
@@ -36,6 +37,8 @@ export function fieldTitleCase(label: string): string {
 
   return label.replace(WORD_RE, (word, offset: number) => {
     const lower = word.toLowerCase();
+    const hasIntentionalInternalCapital = /[a-z][A-Z]/.test(word);
+    if (hasIntentionalInternalCapital) return word;
     // Small words stay lowercase mid-title — including single-letter "a".
     if (offset !== firstOffset && TITLE_SMALL_WORDS.has(lower)) return lower;
     if (word.length <= 1) return word.toUpperCase();

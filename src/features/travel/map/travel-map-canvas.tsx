@@ -44,6 +44,11 @@ import {
 } from './country-data';
 import { atlasCitiesForCountry } from './city-data';
 import {
+  TRAVEL_GLOBE_INITIAL_ROTATION,
+  travelGlobeRotationForCoordinate,
+  type TravelGlobeRotation,
+} from './globe-projection';
+import {
   travelMapCountryClusters,
   type TravelMapRenderedVisit,
 } from './model';
@@ -66,6 +71,7 @@ type Props = {
   renderedVisits: TravelMapRenderedVisit[];
   selectedCountryCode?: string;
   selectedPinId?: string;
+  initialGlobeCoordinate?: { latitude: number; longitude: number };
   placing?: boolean;
   worldMotionPaused?: boolean;
   onCountryPress: (countryCode: string) => void;
@@ -115,6 +121,7 @@ export function TravelMapCanvas({
   renderedVisits,
   selectedCountryCode,
   selectedPinId,
+  initialGlobeCoordinate,
   placing = false,
   worldMotionPaused = false,
   onCountryPress,
@@ -137,6 +144,9 @@ export function TravelMapCanvas({
   );
   const [layout, setLayout] = useState<Layout>({ width: 1, height: 1 });
   const [worldAutoRotate, setWorldAutoRotate] = useState(true);
+  const [worldRotation, setWorldRotation] = useState<TravelGlobeRotation>(
+    TRAVEL_GLOBE_INITIAL_ROTATION,
+  );
   const clusters = useMemo(
     () => travelMapCountryClusters(renderedVisits),
     [renderedVisits],
@@ -206,6 +216,16 @@ export function TravelMapCanvas({
   const stopWorldAutoRotation = useCallback(() => {
     setWorldAutoRotate(false);
   }, []);
+
+  useEffect(() => {
+    if (!initialGlobeCoordinate || !worldAutoRotate) return;
+    setWorldRotation(
+      travelGlobeRotationForCoordinate(
+        initialGlobeCoordinate.longitude,
+        initialGlobeCoordinate.latitude,
+      ),
+    );
+  }, [initialGlobeCoordinate, worldAutoRotate]);
 
   const countryPlaces = selectedCountryCode
     ? renderedVisits.flatMap((rendered) =>
@@ -383,6 +403,8 @@ export function TravelMapCanvas({
           clusters={clusters}
           onCountryPress={onCountryPress}
           onInteract={stopWorldAutoRotation}
+          onRotationChange={setWorldRotation}
+          rotation={worldRotation}
         />
       )}
 

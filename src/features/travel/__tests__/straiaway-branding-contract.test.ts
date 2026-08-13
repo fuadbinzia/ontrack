@@ -1,6 +1,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 
+import { fieldTitleCase } from '@/components/primitives/field-title-case';
+
 const ROOT = process.cwd();
 const TEXT_EXTENSIONS = new Set(['.json', '.md', '.sql', '.ts', '.tsx']);
 const LEGACY_BRAND_CASE = ['Strai', 'away'].join('');
@@ -37,6 +39,8 @@ describe('StraiAway branding', () => {
     const partnerClient = readFileSync(join(ROOT, 'src/services/partner/straiaway.ts'), 'utf8');
 
     expect(actionGrid).toContain('label="StraiAway"');
+    expect(fieldTitleCase('StraiAway')).toBe('StraiAway');
+    expect(fieldTitleCase('Send stays to StraiAway')).toBe('Send Stays to StraiAway');
     expect(partnerClient).toContain('export class StraiAwayPartnerError');
   });
 

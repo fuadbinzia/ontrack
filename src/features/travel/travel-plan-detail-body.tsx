@@ -5,7 +5,6 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type ScrollView,
-  type ViewStyle,
 } from 'react-native';
 import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 
@@ -22,11 +21,11 @@ import {
     TRAVEL_HEADER_SKY_FADE_TAIL,
     travelPlanSkyPageWashStyle,
 } from '@/features/travel/travel-header-sky-height';
+import { TravelItineraryBackground } from '@/features/travel/travel-itinerary-background';
 import { TravelItineraryTimeline } from '@/features/travel/travel-itinerary-timeline';
 import { TravelPlanDetailBodySkeleton } from '@/features/travel/travel-plan-detail-body-skeleton';
 import type { DetailSectionKey } from '@/features/travel/travel-plan-detail-sections';
 import { TravelPlanHero } from '@/features/travel/travel-plan-hero';
-import { TravelPlanTripTools } from '@/features/travel/travel-plan-trip-tools';
 import {
     resolveHeaderSkyCondition,
     resolveHeaderSkyWashTop,
@@ -45,7 +44,6 @@ import { AgentUiIds } from '@/utils/agent-ui';
 
 type TravelPlanDetailBodyProps = {
   plan: TravelPlan;
-  travelStyle: ViewStyle;
   sortedItinerary: TravelItineraryItem[];
   itemEditHandlers: TravelPlanDetailItemHandlers;
   collapsedDayDates: Set<string>;
@@ -56,7 +54,6 @@ type TravelPlanDetailBodyProps = {
   onAddKind: (kind: TravelItemKind) => void;
   onEditDates: () => void;
   onEditNotes: () => void;
-  onOpenExpenses: () => void;
   notesExpanded: boolean;
   onNotesExpandedChange: (expanded: boolean) => void;
   /** Dates/Notes denser frost while a flight card is expanded. */
@@ -72,7 +69,6 @@ type TravelPlanDetailBodyProps = {
 
 export function TravelPlanDetailBody({
   plan,
-  travelStyle,
   sortedItinerary,
   itemEditHandlers,
   collapsedDayDates,
@@ -83,7 +79,6 @@ export function TravelPlanDetailBody({
   onAddKind,
   onEditDates,
   onEditNotes,
-  onOpenExpenses,
   notesExpanded,
   onNotesExpandedChange,
   denseHeroGlass = false,
@@ -132,24 +127,23 @@ export function TravelPlanDetailBody({
       }),
     [skyCondition.look, skyDestination, themeDark],
   );
-  const paper =
-    typeof travelStyle.backgroundColor === 'string'
-      ? travelStyle.backgroundColor
-      : theme.backgroundPrimary;
+  const itineraryBackgroundTop =
+    skyContentBand + Math.max(0, datesTopGap - datesSkyOverlap);
 
   return (
     <TravelArtworkTintProvider hex={artworkTint}>
       <View style={styles.fill}>
+        <TravelItineraryBackground top={itineraryBackgroundTop} />
         {/*
-          Short sky→paper dissolve starting at the dates card so the artwork
-          floor meets that seam (not a peach strip above it).
+          Short sky→illustration dissolve starting at the dates card so the
+          destination artwork hands off smoothly to the journey atlas.
         */}
         <View
           pointerEvents="none"
           style={travelPlanSkyPageWashStyle({
             skyContentBand,
             washTop,
-            paper,
+            paper: 'transparent',
             fadeTail: skyFadeTail,
             washOffset: Math.max(0, datesTopGap - datesSkyOverlap),
           })}
@@ -217,13 +211,6 @@ export function TravelPlanDetailBody({
                     {...itemEditHandlers}
                   />
                 </TravelCollapsibleSection>
-                <TravelPlanTripTools
-                  plan={plan}
-                  expanded={isSectionExpanded('tools')}
-                  onToggle={() => toggleSection('tools')}
-                  onOpenExpenses={onOpenExpenses}
-                  onAddTransport={() => onAddKind('transport')}
-                />
               </View>
             </Animated.View>
           ) : (

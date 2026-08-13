@@ -23,6 +23,7 @@ import { usePreferences } from '@/store/preferences';
 import { useTravel } from '@/store/travel';
 import { useTravelMap } from '@/store/travel-map';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { getCurrentDeviceCoordinate } from '@/utils/device-location';
 import { newUuid } from '@/utils/id';
 
 import { canonicalTravelTripId } from '../trip-roster';
@@ -96,7 +97,23 @@ export function TravelMapScreen() {
     longitude: number;
     label?: string;
   }>();
+  const [initialGlobeCoordinate, setInitialGlobeCoordinate] = useState<{
+    latitude: number;
+    longitude: number;
+  }>();
   const unpinPlace = useTravelMapUnpin(setSelected);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getCurrentDeviceCoordinate().then((result) => {
+      if (!cancelled && result.status === 'suggested') {
+        setInitialGlobeCoordinate(result.coordinate);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const selfName = resolveSelfDisplayName({
     preferencesName,
@@ -276,6 +293,7 @@ export function TravelMapScreen() {
         >
           <TravelMapCanvas
             renderedVisits={renderedVisits}
+            initialGlobeCoordinate={initialGlobeCoordinate}
             selectedCountryCode={countryCode}
             selectedPinId={selected?.pin.id}
             placing={placingPin}

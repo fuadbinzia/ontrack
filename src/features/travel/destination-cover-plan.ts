@@ -45,6 +45,45 @@ export function normalizeCoverUri(uri: string): string {
   return trimmed;
 }
 
+/**
+ * Stable identity for one photo across CDN resize params and our image proxy.
+ * The display URI stays untouched; this key is only for carousel uniqueness.
+ */
+export function coverUriIdentityKey(uri: string): string {
+  const normalized = normalizeCoverUri(uri);
+  if (isLocalTravelPhotoUri(normalized)) return normalized.toLowerCase();
+
+  try {
+    let parsed = new URL(normalized);
+    if (parsed.pathname.endsWith('/api/destination-cover-image')) {
+      const upstream = parsed.searchParams.get('src');
+      if (upstream) parsed = new URL(normalizeCoverUri(upstream));
+    }
+
+    const host = parsed.hostname.toLowerCase();
+    let path = parsed.pathname;
+    if (host.endsWith('wikimedia.org')) {
+      // A Wikimedia original and its /thumb/.../<width>-... rendition are the
+      // same photo even though the native loader receives different URLs.
+      path = path.replace('/wikipedia/commons/thumb/', '/wikipedia/commons/');
+      if (parsed.pathname.includes('/wikipedia/commons/thumb/')) {
+        path = path.slice(0, path.lastIndexOf('/'));
+      }
+    }
+
+    if (
+      isDirectClientCoverUrl(parsed.toString()) ||
+      isAllowedDestinationCoverImageUrl(parsed.toString())
+    ) {
+      return `${host}${path}`.toLowerCase();
+    }
+  } catch {
+    // Malformed values retain exact normalized identity below.
+  }
+
+  return normalized.toLowerCase();
+}
+
 export function pushUniqueUri(out: string[], uri: string | undefined): void {
   const trimmed = uri?.trim();
   if (!trimmed) return;
@@ -53,8 +92,8 @@ export function pushUniqueUri(out: string[], uri: string | undefined): void {
     return;
   }
   const normalized = normalizeCoverUri(trimmed);
-  const key = normalized.toLowerCase();
-  if (out.some((existing) => existing.toLowerCase() === key)) return;
+  const key = coverUriIdentityKey(normalized);
+  if (out.some((existing) => coverUriIdentityKey(existing) === key)) return;
   out.push(normalized);
 }
 
@@ -70,23 +109,28 @@ export function pickRotatingHeroUris(
   count: number,
   salt = 0,
 ): string[] {
+  const uniquePool: string[] = [];
+  for (const uri of pool) pushUniqueUri(uniquePool, uri);
   const want = Math.max(
     0,
-    Math.min(count, pool.length, DESTINATION_COVER_MAX),
+    Math.min(count, uniquePool.length, DESTINATION_COVER_MAX),
   );
   if (want === 0) return [];
 
   const recent = recentKeys
-    .map((key) => key.trim().toLowerCase())
+    .map(coverUriIdentityKey)
     .filter(Boolean);
   const recentSet = new Set(recent);
-  const fresh = pool.filter((uri) => !recentSet.has(uri.toLowerCase()));
-  const seen = pool
-    .filter((uri) => recentSet.has(uri.toLowerCase()))
+  const fresh = uniquePool.filter(
+    (uri) => !recentSet.has(coverUriIdentityKey(uri)),
+  );
+  const seen = uniquePool
+    .filter((uri) => recentSet.has(coverUriIdentityKey(uri)))
     .sort((a, b) => {
       // Older history entries (higher index) first when wrapping.
       return (
-        recent.indexOf(b.toLowerCase()) - recent.indexOf(a.toLowerCase())
+        recent.indexOf(coverUriIdentityKey(b)) -
+        recent.indexOf(coverUriIdentityKey(a))
       );
     });
 
@@ -142,9 +186,13 @@ export function uploadedTripCoverUris(plan: TravelPlan): string[] {
       : plan.coverUri
         ? [plan.coverUri]
         : [];
-  return resolveTravelPhotoUris(raw)
-    .filter((uri) => !isRemoteDestinationCoverUri(uri))
-    .slice(0, TRIP_COVER_UPLOAD_MAX);
+  const unique: string[] = [];
+  for (const uri of resolveTravelPhotoUris(raw)) {
+    if (isRemoteDestinationCoverUri(uri)) continue;
+    pushUniqueUri(unique, uri);
+    if (unique.length >= TRIP_COVER_UPLOAD_MAX) break;
+  }
+  return unique;
 }
 
 /**
@@ -274,5 +322,4 @@ export function stayCoverCandidates(
 
   return out;
 }
-
 

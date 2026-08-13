@@ -9,6 +9,14 @@ export type DevicePlaceResult =
   | { status: 'denied' }
   | { status: 'unavailable' };
 
+export type DeviceCoordinateResult =
+  | {
+      status: 'suggested';
+      coordinate: { latitude: number; longitude: number };
+    }
+  | { status: 'denied' }
+  | { status: 'unavailable' };
+
 export type DevicePlaceAddress = Pick<
   Location.LocationGeocodedAddress,
   'city' | 'country' | 'district' | 'isoCountryCode' | 'region' | 'subregion'
@@ -52,12 +60,10 @@ export function formatPlaceAddress(address: DevicePlaceAddress): string | undefi
 }
 
 /**
- * Resolves an approximate place label from the device’s current location.
+ * Resolves the device’s current coordinate using foreground permission only.
  * Requests foreground permission when needed. Web always returns unavailable.
  */
-export async function getCurrentPlaceLabel(
-  formatAddress: (address: DevicePlaceAddress) => string | undefined = formatPlaceAddress,
-): Promise<DevicePlaceResult> {
+export async function getCurrentDeviceCoordinate(): Promise<DeviceCoordinateResult> {
   if (Platform.OS === 'web') return { status: 'unavailable' };
 
   try {
@@ -76,11 +82,28 @@ export async function getCurrentPlaceLabel(
       (await withTimeout(
         Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
       ));
-    const addresses = await withTimeout(
-      Location.reverseGeocodeAsync({
+    return {
+      status: 'suggested',
+      coordinate: {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-      }),
+      },
+    };
+  } catch {
+    return { status: 'unavailable' };
+  }
+}
+
+/** Resolves an approximate place label from the device’s current location. */
+export async function getCurrentPlaceLabel(
+  formatAddress: (address: DevicePlaceAddress) => string | undefined = formatPlaceAddress,
+): Promise<DevicePlaceResult> {
+  const coordinateResult = await getCurrentDeviceCoordinate();
+  if (coordinateResult.status !== 'suggested') return coordinateResult;
+
+  try {
+    const addresses = await withTimeout(
+      Location.reverseGeocodeAsync(coordinateResult.coordinate),
     );
     const label = addresses[0] ? formatAddress(addresses[0]) : undefined;
     return label ? { status: 'suggested', label } : { status: 'unavailable' };

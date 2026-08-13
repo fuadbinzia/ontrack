@@ -807,13 +807,21 @@ portrait Travel screen.
 | `ontrack.travel.map.share.toggle` | Owner friend-sharing opt-in inside the friend-overlay sheet |
 | `ontrack.travel.map.suggestion.confirm` / `.skip` | Review or dismiss an inferred existing-trip pin |
 
-### Travel trip hub (`/travel/<id>/hub`) — redirects to plan detail
+### Travel trip hub (`/travel/<id>/hub`) — redirects to Trip Tools
 
 | testID                                      | Control                          |
 | ------------------------------------------- | -------------------------------- |
 | `ontrack.travel.hub.close`                  | Close trip tools (empty state)   |
 | `ontrack.travel.hub.backToTravel`           | Empty-state back to Travel       |
 | `ontrack.travel.hub.section.<tripId>`       | Legacy hub anchor (unused)       |
+
+### Trip Tools (`/travel/<id>/tools`)
+
+| testID                                      | Control                                      |
+| ------------------------------------------- | -------------------------------------------- |
+| `ontrack.travel.tripTools.back`             | Return to the trip itinerary                 |
+| `ontrack.travel.tripTools.backToTravel`     | Missing-trip fallback to Travel              |
+| `ontrack.travel.tripTools.section.<tripId>` | Trip Tools glass action-grid page anchor     |
 | `ontrack.travel.dates.close`                     | Close the trip date-range calendar                        |
 | `ontrack.travel.dates.start`                     | Select the trip start-date endpoint                       |
 | `ontrack.travel.dates.end`                       | Select the trip end-date endpoint                         |
@@ -1092,8 +1100,8 @@ Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flow `finance`
 | ~~`ontrack.travel.planDetail.weather`~~        | **Unused** — use `list.tripWeather.<tripId>` on the travel list          |
 | ~~`ontrack.travel.planDetail.currency`~~       | **Unused** — use `list.currency.<tripId>` on the travel list             |
 | `ontrack.travel.planDetail.addToTimeline`      | Add to Timeline                                                          |
+| `ontrack.travel.planDetail.tripTools`          | Open Trip Tools (below Add to Timeline)                                   |
 | `ontrack.travel.planDetail.groupChat`          | Group Chat — itinerary header top-right, left of Add (+)                 |
-| `ontrack.travel.planDetail.section.tools`      | Expand/collapse Trip Tools (glass action grid)                           |
 | `ontrack.travel.planDetail.section.transport`  | Expand/collapse transport group                                          |
 | `ontrack.travel.planDetail.section.timeline`   | Expand/collapse timeline                                                 |
 | `ontrack.travel.planDetail.section.loading`    | Glass skeleton under hero while itinerary cards settle                   |

@@ -12,6 +12,7 @@ export {
 } from '@/features/travel/destination-cover-lookup';
 
 export {
+  coverUriIdentityKey,
   destinationCoverCandidates,
   isRemoteDestinationCoverUri,
   localTripCoverUri,

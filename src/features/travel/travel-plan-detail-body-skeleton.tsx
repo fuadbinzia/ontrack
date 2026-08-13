@@ -144,7 +144,7 @@ function SkeletonSection({
 
 /**
  * Immediate glass shells under the itinerary hero while heavy transport /
- * timeline / tools wait for the stack transition to settle.
+ * timeline wait for the stack transition to settle.
  */
 export function TravelPlanDetailBodySkeleton({
   cardHint = 3,
@@ -155,7 +155,6 @@ export function TravelPlanDetailBodySkeleton({
   const { s, spacing: rs } = useResponsive();
   const cards = Math.max(2, Math.min(4, cardHint || 3));
   const cardH = Math.max(72, s(78));
-  const toolH = Math.max(56, s(60));
 
   return (
     <AgentTestId
@@ -183,16 +182,6 @@ export function TravelPlanDetailBodySkeleton({
               <SkeletonBone height={cardH} />
             </View>
           ))}
-        </SkeletonSection>
-
-        <SkeletonSection title="Trip Tools" icon="settings">
-          <View style={[styles.toolsGrid, { gap: rs.xs }]}>
-            {Array.from({ length: 4 }, (_, i) => (
-              <View key={`tool-${i}`} style={styles.toolCell}>
-                <SkeletonBone height={toolH} />
-              </View>
-            ))}
-          </View>
         </SkeletonSection>
       </View>
     </AgentTestId>
@@ -224,13 +213,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minWidth: 0,
-  },
-  toolsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  toolCell: {
-    width: '48%',
-    flexGrow: 1,
   },
 });

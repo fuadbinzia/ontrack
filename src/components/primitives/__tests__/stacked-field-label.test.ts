@@ -26,6 +26,12 @@ describe('fieldTitleCase', () => {
     expect(fieldTitleCase('API key')).toBe('API Key');
   });
 
+  it('preserves intentional camel casing in product and platform names', () => {
+    expect(fieldTitleCase('StraiAway')).toBe('StraiAway');
+    expect(fieldTitleCase('Connect StraiAway')).toBe('Connect StraiAway');
+    expect(fieldTitleCase('Open in onTrack for iOS')).toBe('Open in onTrack for iOS');
+  });
+
   it('keeps short prepositions lowercase unless first', () => {
     expect(fieldTitleCase('Starts in 34 days')).toBe('Starts in 34 Days');
     expect(fieldTitleCase('Day 3 of 4')).toBe('Day 3 of 4');

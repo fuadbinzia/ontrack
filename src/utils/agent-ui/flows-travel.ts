@@ -117,11 +117,11 @@ export const AGENT_UI_TRAVEL_FLOWS = {
   'travel-demo-hub': [
     { op: 'dismiss', prefix: 'ontrack.travel.' },
     { op: 'seed', to: 'travel-demo' },
-    // Legacy hub route redirects onto plan detail where tools now live.
+    // Keep the legacy flow name while proving the dedicated tools route.
     { op: 'goto', to: `travel/${AGENT_UI_DEMO_TRIP_ID}/hub` },
     {
       op: 'wait',
-      id: 'ontrack.travel.planDetail.section.tools',
+      id: `ontrack.travel.tripTools.section.${AGENT_UI_DEMO_TRIP_ID}`,
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],

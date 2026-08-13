@@ -1,4 +1,8 @@
-import { atlasCitiesForCountry, nearestAtlasCity } from '../city-data';
+import {
+  atlasCitiesForCountry,
+  nearestAtlasCity,
+  searchAtlasCities,
+} from '../city-data';
 
 describe('travel atlas city data', () => {
   it('bundles offline populated places by ISO country code', () => {
@@ -21,5 +25,26 @@ describe('travel atlas city data', () => {
     expect(nearestAtlasCity('is', 64.14, -21.93)?.name).toBe('Reykjavík');
     expect(nearestAtlasCity(undefined, 64.14, -21.93)).toBeUndefined();
     expect(nearestAtlasCity('IS', Number.NaN, -21.93)).toBeUndefined();
+  });
+
+  it('searches only cities inside the selected country', () => {
+    expect(searchAtlasCities('MX', 'mer').map((city) => city.name)).toEqual([
+      'Mérida',
+    ]);
+    expect(searchAtlasCities('US', 'merida')).toEqual([]);
+  });
+
+  it('matches city names without requiring accents or exact casing', () => {
+    expect(searchAtlasCities('MX', '  MEXICO  ').map((city) => city.name)).toContain(
+      'Mexico City',
+    );
+    expect(searchAtlasCities('MX', 'culiacan').map((city) => city.name)).toEqual([
+      'Culiacán',
+    ]);
+  });
+
+  it('shows every bundled city for an empty query and none for an unknown country', () => {
+    expect(searchAtlasCities('MX', '')).toEqual(atlasCitiesForCountry('MX'));
+    expect(searchAtlasCities(undefined, 'city')).toEqual([]);
   });
 });

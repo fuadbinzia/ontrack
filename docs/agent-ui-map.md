@@ -782,13 +782,16 @@ portrait Travel screen.
 
 | testID | Control |
 | --- | --- |
-| `ontrack.travel.map.open` / `.close` | Travel Home globe entry / close atlas (left on world, right in country view) |
+| `ontrack.travel.map.open` / `.close` | Travel Home globe entry / close atlas from the world view |
 | `ontrack.travel.map.section.world` / `.country` | World and drilled country canvas anchors |
 | `ontrack.travel.map.section.globe` | Interactive orthographic world globe anchor |
 | `ontrack.travel.map.section.flatWorld` | Landscape edge-to-edge flat world map anchor |
 | `ontrack.travel.map.layout.portrait` / `.landscape` | Orientation-specific layout anchors |
 | `ontrack.travel.map.countryPicker.open` | Searchable country picker |
 | `ontrack.travel.map.country.<ISO>` | Country picker option |
+| `ontrack.travel.map.citySearch.open` | Open city search inside the selected country |
+| `ontrack.travel.map.citySearch.input` | Offline city search field scoped to the selected country |
+| `ontrack.travel.map.citySearch.result.<index>` | Highlight a city; Pin a Place then opens prefilled with it |
 | `ontrack.travel.map.cluster.<ISO>` | Visited-country aggregate marker |
 | `ontrack.travel.map.backToWorld` | Country-view top-left back chevron; return to the world map |
 | `ontrack.travel.map.pinPlace.open` / `.close` | Start / dismiss Pin a Place |

@@ -113,14 +113,16 @@ describe('canonical design-system contract', () => {
     }
   });
 
-  it('fades sheet scrim separately from the sliding card', () => {
+  it('mounts sheet cards on-screen while fading the scrim independently', () => {
     const scaffold = read('src/components/primitives/sheet-scaffold.tsx');
-    // Modal slide would drag the dim with the card — keep native anim off.
+    // Both native and Reanimated slide entrances can strand the card below the
+    // viewport while leaving the scrim visible. Mount at the final bottom pin.
     expect(scaffold).toContain('animationType="none"');
     expect(scaffold).toContain('FadeIn');
-    expect(scaffold).toContain('SlideInDown');
-    expect(scaffold).toContain('springs.sheet');
-    expect(scaffold).toContain('overshootClamping(1)');
+    expect(scaffold).toContain('const sheetEntrance = FadeIn.duration(motion.fade)');
+    expect(scaffold).not.toContain('SlideInDown');
+    expect(scaffold).toContain("position: 'absolute' as const");
+    expect(scaffold).toContain('bottom: keyboardInset');
     expect(scaffold).toContain('overlayScrim');
     expect(scaffold).not.toContain('animationType="slide"');
     // Exit must unmount immediately — holding Modal for exit traps touches

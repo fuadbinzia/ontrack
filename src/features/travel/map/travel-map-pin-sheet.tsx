@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View, type ModalProps } from 'react-native';
+import {
+  Keyboard,
+  Pressable,
+  StyleSheet,
+  View,
+  type ModalProps,
+} from 'react-native';
 
 import {
   AppText,
@@ -53,6 +59,9 @@ export function TravelMapPinSheet({
 
   useEffect(() => {
     if (!visible) return;
+    setQuery('');
+    setResults([]);
+    setSearching(false);
     setTripId(
       initialTripId && plans.some((plan) => plan.id === initialTripId)
         ? initialTripId
@@ -61,6 +70,9 @@ export function TravelMapPinSheet({
     if (initialCoordinate) {
       setCoordinate(initialCoordinate);
       setLabel(initialCoordinate.label ?? '');
+    } else {
+      setCoordinate(undefined);
+      setLabel('');
     }
   }, [initialCoordinate, initialTripId, plans, visible]);
 
@@ -123,7 +135,10 @@ export function TravelMapPinSheet({
       <View style={[styles.searchRow, { gap: spacing.sm }]}>
         <Input
           value={query}
-          onChangeText={setQuery}
+          onChangeText={(value) => {
+            setQuery(value);
+            setResults([]);
+          }}
           onSubmitEditing={() => void search()}
           placeholder={`Search ${countryName}`}
           icon="search"
@@ -145,6 +160,9 @@ export function TravelMapPinSheet({
             if (result.latitude == null || result.longitude == null) return;
             setCoordinate({ latitude: result.latitude, longitude: result.longitude });
             setLabel(result.label);
+            setQuery(result.label);
+            setResults([]);
+            Keyboard.dismiss();
           }}
         />
       ))}

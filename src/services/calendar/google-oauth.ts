@@ -35,10 +35,16 @@ export function googleCalendarAccountChanged(currentEmail: string | null | undef
 }
 
 export function googleCalendarErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message) return error.message;
+  const safeMessage = (message: string) => {
+    if (/duplicate key|unique constraint|google_calendar_event_links/i.test(message)) {
+      return 'Calendar links changed during sync. Please try again.';
+    }
+    return message;
+  };
+  if (error instanceof Error && error.message) return safeMessage(error.message);
   if (error && typeof error === 'object' && 'message' in error) {
     const message = (error as { message?: unknown }).message;
-    if (typeof message === 'string' && message.trim()) return message;
+    if (typeof message === 'string' && message.trim()) return safeMessage(message);
   }
   return fallback;
 }

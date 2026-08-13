@@ -1,5 +1,6 @@
 const mockExchangeGoogleCalendarCode = jest.fn();
 const mockReadCalendarOAuthState = jest.fn();
+const mockPreviewGoogleCalendarSyncServer = jest.fn();
 const mockSyncGoogleCalendarServer = jest.fn();
 
 jest.mock('@/services/calendar/google-server', () => ({
@@ -8,6 +9,7 @@ jest.mock('@/services/calendar/google-server', () => ({
   googleCalendarErrorMessage: (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback,
   readCalendarOAuthState: (...args: unknown[]) => mockReadCalendarOAuthState(...args),
+  previewGoogleCalendarSyncServer: (...args: unknown[]) => mockPreviewGoogleCalendarSyncServer(...args),
   syncGoogleCalendarServer: (...args: unknown[]) => mockSyncGoogleCalendarServer(...args),
 }));
 
@@ -22,6 +24,7 @@ jest.mock('@/services/calendar/google-api-route', () => ({
 }));
 
 const callbackRoute = require('@/app/api/calendar/google/callback+api') as typeof import('@/app/api/calendar/google/callback+api');
+const previewRoute = require('@/app/api/calendar/google/preview+api') as typeof import('@/app/api/calendar/google/preview+api');
 const syncRoute = require('@/app/api/calendar/google/sync+api') as typeof import('@/app/api/calendar/google/sync+api');
 
 beforeEach(() => {
@@ -106,6 +109,25 @@ it('passes activities, deletion intent, timezone, and push phase to the server b
   expect(mockSyncGoogleCalendarServer).toHaveBeenCalledWith(
     'user-1', [], [deletion], 'America/New_York', 'push',
   );
+});
+
+it('returns a read-only sync preview before any sync mutation starts', async () => {
+  const deletion = {
+    activityId: 'activity-1', calendarId: 'primary', eventId: 'event-1', origin: 'ontrack',
+  };
+  mockPreviewGoogleCalendarSyncServer.mockResolvedValueOnce({
+    direction: 'to_google',
+    changes: [{ id: 'change-1', title: 'Plan', action: 'create', destination: 'google' }],
+  });
+
+  const response = await previewRoute.POST(new Request(
+    'https://ontrack.example/api/calendar/google/preview',
+    { method: 'POST', body: JSON.stringify({ activities: [], deletions: [deletion] }) },
+  ));
+
+  expect(response.status).toBe(200);
+  expect(mockPreviewGoogleCalendarSyncServer).toHaveBeenCalledWith('user-1', [], [deletion], 'UTC');
+  expect(mockSyncGoogleCalendarServer).not.toHaveBeenCalled();
 });
 
 it('normalizes untrusted timezone and phase values at the sync route', async () => {

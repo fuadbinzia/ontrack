@@ -14,6 +14,7 @@ import type {
     Workout,
     WorkSession,
 } from '@/types/models';
+import { isAllDayActivity } from '@/utils/activity-time';
 import { addDays, DAY_MS, fromDateKey, isDateKey } from '@/utils/date';
 import { newId } from '@/utils/id';
 
@@ -99,6 +100,16 @@ function cloneEventDetail<T extends { activityId: string }>(detail: T, activityI
   if (cloned.tasks) cloned.tasks = cloned.tasks.map((task) => ({ ...(task as object) }));
   if (cloned.genres) cloned.genres = [...cloned.genres];
   return cloned;
+}
+
+export function migrateLegacyGoogleAllDayActivities(activities: Activity[]) {
+  let changed = false;
+  const migrated = activities.map((activity) => {
+    if (activity.allDay !== undefined || !isAllDayActivity(activity)) return activity;
+    changed = true;
+    return { ...activity, allDay: true };
+  });
+  return changed ? migrated : activities;
 }
 
 export interface ImportedEventDraft {
@@ -587,6 +598,15 @@ export const useSchedule = create<ScheduleState>()(
     {
       name: STORAGE_KEYS.schedule,
       storage: createPersistStorage(),
+      version: 1,
+      migrate: (persistedState, version) => {
+        const persisted = persistedState as Partial<ScheduleState>;
+        if (version >= 1 || !persisted.activities) return persisted;
+        return {
+          ...persisted,
+          activities: migrateLegacyGoogleAllDayActivities(persisted.activities),
+        };
+      },
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<ScheduleState>;
         const savedCategories = persisted.categories ?? [];

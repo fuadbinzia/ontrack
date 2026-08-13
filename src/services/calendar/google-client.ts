@@ -7,13 +7,60 @@ import { resolveExpoApiUrl } from '@/services/http/api-url';
 import { apiRequest } from '@/services/http/api-client';
 import { useSchedule } from '@/store/schedule';
 
-import type { GoogleCalendarStatus, GoogleCalendarSyncDirection, GoogleCalendarSyncResult } from './google-types';
+import type {
+  GoogleCalendarStatus,
+  GoogleCalendarSyncDirection,
+  GoogleCalendarSyncPreview,
+  GoogleCalendarSyncPreviewItem,
+  GoogleCalendarSyncResult,
+} from './google-types';
 
 export class GoogleCalendarError extends Error {
   constructor(message: string, public code?: string, public status?: number) {
     super(message);
     this.name = 'GoogleCalendarError';
   }
+}
+
+const GENERIC_CALENDAR_UNAVAILABLE_MESSAGE = 'Google Calendar sync is temporarily unavailable.';
+
+/** Converts preview failures into specific, actionable copy without exposing server internals. */
+export function googleCalendarReviewErrorMessage(error: unknown): string {
+  const noChanges = 'No calendar events were changed.';
+  if (error instanceof Error && error.name === 'AbortError') {
+    return `Google Calendar did not finish preparing the change review within 60 seconds. ${noChanges} Try again.`;
+  }
+  if (!(error instanceof GoogleCalendarError)) {
+    return `The change review could not be prepared because onTrack received an unexpected response. ${noChanges} Try again.`;
+  }
+  if (error.code === 'RECONNECT_REQUIRED') {
+    return `Google Calendar access has expired. Reconnect your account, then tap Sync Now again. ${noChanges}`;
+  }
+  if (error.code === 'OFFLINE') {
+    return `The change review could not be loaded because this device is offline. Reconnect to the internet and try again. ${noChanges}`;
+  }
+  if (error.code === 'PROVIDER_TIMEOUT' || error.code === 'TIMEOUT') {
+    return `Google Calendar did not finish preparing the change review within 60 seconds. ${noChanges} Try again.`;
+  }
+  if (error.code === 'NOT_CONFIGURED') {
+    return `Calendar sync is not configured in this version of onTrack. ${noChanges} Update the app and try again.`;
+  }
+  if (error.status === 401) {
+    return `Your onTrack sign-in expired while loading the change review. Sign in again, then retry. ${noChanges}`;
+  }
+  if (error.status === 404) {
+    return `The connected onTrack server does not have the calendar review endpoint (404). ${noChanges} Update onTrack or try again later.`;
+  }
+  if (error.status === 429) {
+    return `Google Calendar is rate-limiting requests (429). ${noChanges} Wait a minute, then tap Sync Now again.`;
+  }
+  if (error.status && error.status >= 500) {
+    return `The onTrack calendar server could not prepare the change review (${error.status}). ${noChanges} Try again in a few minutes.`;
+  }
+  if (error.message && error.message !== GENERIC_CALENDAR_UNAVAILABLE_MESSAGE) {
+    return `${error.message} ${noChanges}`;
+  }
+  return `The onTrack calendar server returned an unreadable response while preparing the change review. ${noChanges} Try again in a few minutes.`;
 }
 
 function normalizeGoogleCalendarSyncError(error: unknown) {
@@ -65,6 +112,50 @@ export function setGoogleCalendarDirection(direction: GoogleCalendarSyncDirectio
   return request<{ direction: GoogleCalendarSyncDirection }>('/api/calendar/google/direction', 'POST', { direction });
 }
 
+export function previewGoogleCalendarSync() {
+  const state = useSchedule.getState();
+  return request<GoogleCalendarSyncPreview>(
+    '/api/calendar/google/preview',
+    'POST',
+    {
+      activities: state.activities,
+      deletions: state.googleCalendarDeletions,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    },
+    undefined,
+    60_000,
+  );
+}
+
+function previewVerb(change: GoogleCalendarSyncPreviewItem) {
+  if (change.action === 'create') return 'Add to';
+  if (change.action === 'update') return 'Update in';
+  if (change.action === 'relink') return 'Repair calendar link for';
+  return 'Remove from';
+}
+
+function previewTitle(title: string) {
+  const singleLine = title.replace(/\s+/g, ' ').trim() || 'Untitled event';
+  return singleLine.length > 64 ? `${singleLine.slice(0, 61)}…` : singleLine;
+}
+
+export function describeGoogleCalendarSyncPreview(preview: GoogleCalendarSyncPreview) {
+  const lines = preview.changes.flatMap((change) => {
+    const summary = change.action === 'relink'
+      ? `• ${previewVerb(change)} “${previewTitle(change.title)}”`
+      : `• ${previewVerb(change)} ${change.destination === 'google' ? 'Google' : 'onTrack'}: “${previewTitle(change.title)}”`;
+    const reason = change.reason ? [`   Why: ${change.reason}`] : [];
+    const details = (change.details ?? []).map((detail) => {
+      if (detail.before !== undefined && detail.after !== undefined) {
+        return `   ${detail.label}: ${previewTitle(detail.before)} → ${previewTitle(detail.after)}`;
+      }
+      return `   ${detail.label}: ${previewTitle(detail.after ?? detail.before ?? '')}`;
+    });
+    return [summary, ...reason, ...details];
+  });
+  return `${preview.changes.length} change${preview.changes.length === 1 ? '' : 's'} will be made:\n\n${lines.join('\n')}`;
+}
+
 export function googleCalendarCallbackError(url: string | undefined) {
   if (!url) return 'Google Calendar did not return to onTrack.';
   try {
@@ -109,6 +200,47 @@ export type GoogleCalendarBackgroundSyncState = {
   progress?: GoogleCalendarSyncProgress;
 };
 
+const GOOGLE_CALENDAR_SYNC_TIMEOUT_MS = 10 * 60_000;
+const GOOGLE_CALENDAR_SYNC_REQUEST_TIMEOUT_MS = 60_000;
+const GOOGLE_CALENDAR_SYNC_REQUEST_ATTEMPTS = 2;
+
+function calendarSyncTimeoutError() {
+  return new GoogleCalendarError(
+    'Google Calendar took too long to respond. Completed changes were saved; tap Sync Now to continue.',
+    'TIMEOUT',
+  );
+}
+
+function isCalendarSyncTimeout(error: unknown) {
+  return error instanceof Error && (
+    error.name === 'AbortError'
+    || (error instanceof GoogleCalendarError && error.code === 'PROVIDER_TIMEOUT')
+  );
+}
+
+async function requestGoogleCalendarSyncChunk(
+  body: unknown,
+  signal: AbortSignal,
+) {
+  for (let attempt = 0; attempt < GOOGLE_CALENDAR_SYNC_REQUEST_ATTEMPTS; attempt += 1) {
+    try {
+      return await request<GoogleCalendarSyncResult>(
+        '/api/calendar/google/sync',
+        'POST',
+        body,
+        signal,
+        GOOGLE_CALENDAR_SYNC_REQUEST_TIMEOUT_MS,
+      );
+    } catch (error) {
+      if (!isCalendarSyncTimeout(error)) throw error;
+      if (signal.aborted || attempt === GOOGLE_CALENDAR_SYNC_REQUEST_ATTEMPTS - 1) {
+        throw calendarSyncTimeoutError();
+      }
+    }
+  }
+  throw calendarSyncTimeoutError();
+}
+
 const idleBackgroundSyncState: GoogleCalendarBackgroundSyncState = { running: false };
 let backgroundSyncState = idleBackgroundSyncState;
 let activeBackgroundSync: ReturnType<typeof syncGoogleCalendar> | undefined;
@@ -133,17 +265,17 @@ export async function syncGoogleCalendar(onProgress?: (progress: GoogleCalendarS
   const totals = { imported: 0, exported: 0, updated: 0, removed: 0 };
   let phase: 'pull' | 'push' = 'pull';
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120_000);
+  const timeout = setTimeout(() => controller.abort(), GOOGLE_CALENDAR_SYNC_TIMEOUT_MS);
   try {
     for (let chunk = 0; chunk < 100; chunk += 1) {
       onProgress?.({ phase, completedRequests: chunk, changedEvents: Object.values(totals).reduce((sum, value) => sum + value, 0) });
       const state = useSchedule.getState();
-      const result: GoogleCalendarSyncResult = await request<GoogleCalendarSyncResult>('/api/calendar/google/sync', 'POST', {
+      const result = await requestGoogleCalendarSyncChunk({
         activities: state.activities,
         deletions: state.googleCalendarDeletions,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         phase,
-      }, controller.signal, 60_000);
+      }, controller.signal);
       // Clear only provider-acknowledged tombstones before reconciliation.
       // Any deletion queued while this request was in flight remains present,
       // allowing the store to reject the response's now-stale activity copy.
@@ -158,7 +290,7 @@ export async function syncGoogleCalendar(onProgress?: (progress: GoogleCalendarS
     }
     throw new GoogleCalendarError('Calendar sync still has pending changes. Tap Sync Now again to continue.');
   } catch (error) {
-    if (controller.signal.aborted) throw new GoogleCalendarError('Calendar sync timed out. Completed changes were saved; tap Sync Now to continue.', 'TIMEOUT');
+    if (controller.signal.aborted || isCalendarSyncTimeout(error)) throw calendarSyncTimeoutError();
     throw normalizeGoogleCalendarSyncError(error);
   } finally {
     clearTimeout(timeout);
@@ -189,7 +321,10 @@ export function startGoogleCalendarBackgroundSync(options?: { notifyWhenComplete
             style: 'primary',
             onPress: () => {
               void connectGoogleCalendar()
-                .then(() => startGoogleCalendarBackgroundSync({ notifyWhenComplete: true }))
+                .then(() => appPrompt.alert(
+                  'Google Calendar reconnected',
+                  'Tap Sync Now when you are ready to sync events.',
+                ))
                 .catch((reconnectError) => appPrompt.alert(
                   'Google Calendar could not reconnect',
                   reconnectError instanceof Error ? reconnectError.message : 'Try again later.',
@@ -211,22 +346,6 @@ export function startGoogleCalendarBackgroundSync(options?: { notifyWhenComplete
     setBackgroundSyncState(idleBackgroundSyncState);
   });
   return task;
-}
-
-let lastAutomaticSyncAt = 0;
-
-/** Quiet, throttled sync used when the user returns to the Calendar tab. */
-export async function syncGoogleCalendarIfConnected() {
-  if (Date.now() - lastAutomaticSyncAt < 5 * 60_000) return;
-  const status = await getGoogleCalendarStatus();
-  if (!status.connected) return;
-  lastAutomaticSyncAt = Date.now();
-  try {
-    await startGoogleCalendarBackgroundSync();
-  } catch (error) {
-    lastAutomaticSyncAt = 0;
-    throw error;
-  }
 }
 
 export async function disconnectGoogleCalendar(options: {

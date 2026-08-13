@@ -4,9 +4,12 @@ import { buildGoogleBatchBody, parseGoogleBatchResponse, type GoogleBatchOperati
 import {
   activityBody,
   eventToActivity,
+  googleEventAllDay,
+  googleEventMatchesActivity,
   googleCalendarMetadata,
   googleEventIdForActivity,
 } from './google-mapping';
+import { activityPreviewValues, eventPreviewValues, previewDetails } from './google-preview-details';
 import { fetchGoogleApi } from './google-fetch';
 import {
   decryptGoogleCalendarToken,
@@ -17,7 +20,10 @@ import {
 import {
   dedupeGoogleCalendarActivities,
   GOOGLE_CALENDAR_MUTATIONS_PER_REQUEST,
+  googleCalendarDuplicateEventIds,
   googleCalendarSyncPolicy,
+  reconcileGoogleCalendarLinks,
+  recoverActivityForGoogleEvent,
 } from './google-sync-policy';
 import type {
   GoogleCalendarConnectionRow,
@@ -25,7 +31,11 @@ import type {
   GoogleCalendarEvent,
   GoogleCalendarLinkRow,
   GoogleCalendarSyncDirection,
+  GoogleCalendarSyncPreview,
+  GoogleCalendarSyncPreviewItem,
 } from './google-types';
+
+const GOOGLE_CALENDAR_BATCH_TIMEOUT_MS = 45_000;
 
 export function googleCalendarEventPath(calendarId: string, eventId?: string) {
   const base = `/calendars/${encodeURIComponent(calendarId)}/events`;
@@ -81,7 +91,7 @@ async function googleBatch<T>(token: string, operations: GoogleBatchOperation[])
       'Content-Type': `multipart/mixed; boundary=${boundary}`,
     },
     body: buildGoogleBatchBody(boundary, operations),
-  });
+  }, GOOGLE_CALENDAR_BATCH_TIMEOUT_MS);
   if (!response.ok) throw new Error(`Google Calendar batch request failed (${response.status}).`);
   const results = parseGoogleBatchResponse<T>(response.headers.get('content-type'), await response.text());
   if (results.size !== operations.length) throw new Error('Google Calendar returned an incomplete batch response.');
@@ -110,10 +120,35 @@ async function listEvents(token: string, calendarId: string) {
 
 const LINK_WRITE_BATCH_SIZE = 1_000;
 
-async function upsertLinks(db: ReturnType<typeof googleCalendarAdmin>, links: GoogleCalendarLinkRow[]) {
-  for (let offset = 0; offset < links.length; offset += LINK_WRITE_BATCH_SIZE) {
-    const { error } = await db.from('google_calendar_event_links')
-      .upsert(links.slice(offset, offset + LINK_WRITE_BATCH_SIZE), { onConflict: 'user_id,calendar_id,google_event_id' });
+export function canonicalGoogleCalendarLinks(links: GoogleCalendarLinkRow[]) {
+  const byActivity = new Map<string, GoogleCalendarLinkRow>();
+  const byEvent = new Map<string, GoogleCalendarLinkRow>();
+  for (const link of links) {
+    const activityKey = `${link.user_id}:${link.activity_id}`;
+    const eventKey = `${link.user_id}:${link.calendar_id}:${link.google_event_id}`;
+    const previousActivityLink = byActivity.get(activityKey);
+    const previousEventLink = byEvent.get(eventKey);
+    if (previousActivityLink) {
+      byEvent.delete(`${previousActivityLink.user_id}:${previousActivityLink.calendar_id}:${previousActivityLink.google_event_id}`);
+    }
+    if (previousEventLink) {
+      byActivity.delete(`${previousEventLink.user_id}:${previousEventLink.activity_id}`);
+    }
+    byActivity.set(activityKey, link);
+    byEvent.set(eventKey, link);
+  }
+  return [...byActivity.values()];
+}
+
+export async function upsertGoogleCalendarLinks(
+  db: ReturnType<typeof googleCalendarAdmin>,
+  links: GoogleCalendarLinkRow[],
+) {
+  const canonicalLinks = canonicalGoogleCalendarLinks(links);
+  for (let offset = 0; offset < canonicalLinks.length; offset += LINK_WRITE_BATCH_SIZE) {
+    const { error } = await db.rpc('upsert_google_calendar_event_links', {
+      link_rows: canonicalLinks.slice(offset, offset + LINK_WRITE_BATCH_SIZE),
+    });
     if (error) throw error;
   }
 }
@@ -131,7 +166,7 @@ export async function syncGoogleCalendarServer(
   const db = googleCalendarAdmin();
   const { data, error } = await db.from('google_calendar_event_links').select('*').eq('user_id', userId);
   if (error) throw error;
-  const links = (data ?? []) as GoogleCalendarLinkRow[];
+  let links = (data ?? []) as GoogleCalendarLinkRow[];
   const byEvent = new Map(links.map((link) => [link.google_event_id, link]));
   const byActivity = new Map(links.map((link) => [link.activity_id, link]));
   activities = dedupeGoogleCalendarActivities(activities, links);
@@ -152,6 +187,22 @@ export async function syncGoogleCalendarServer(
     const discoveredLinks: GoogleCalendarLinkRow[] = [];
     const recoveredDeletionLinks: GoogleCalendarLinkRow[] = [];
     const events = await listEvents(token, row.calendar_id);
+    const reconciliation = reconcileGoogleCalendarLinks(
+      activities,
+      links,
+      events,
+      timeZone,
+    );
+    if (reconciliation.repaired.length) {
+      links = reconciliation.links;
+      byEvent.clear();
+      byActivity.clear();
+      links.forEach((link) => {
+        byEvent.set(link.google_event_id, link);
+        byActivity.set(link.activity_id, link);
+      });
+      await upsertGoogleCalendarLinks(db, reconciliation.repaired);
+    }
 
     // A reconnect can intentionally clear stale server mappings. Rebuild only
     // explicit deletion mappings from their persisted local tombstones so the
@@ -180,9 +231,9 @@ export async function syncGoogleCalendarServer(
       if (!event.id || event.status !== 'cancelled') continue;
       const link = byEvent.get(event.id);
       if (!link) continue;
-      if (direction === 'to_google' && link.origin === 'ontrack') {
+      if (!googleCalendarSyncPolicy.removesFromOnTrack(direction)) {
         link.google_updated_at = event.updated ?? syncedAt;
-        link.local_updated_at = null;
+        if (direction === 'to_google') link.local_updated_at = null;
         discoveredLinks.push(link);
         continue;
       }
@@ -197,24 +248,7 @@ export async function syncGoogleCalendarServer(
       (link) => byActivity.get(link.activity_id) === link && !acknowledgedDeletionIds.has(link.activity_id),
     ));
 
-    const markedEvents = new Map<string, GoogleCalendarEvent[]>();
-    for (const event of events) {
-      const activityId = event.status !== 'cancelled' ? event.extendedProperties?.private?.ontrackActivityId : undefined;
-      if (!activityId || !event.id) continue;
-      const group = markedEvents.get(activityId) ?? [];
-      group.push(event);
-      markedEvents.set(activityId, group);
-    }
-    const duplicateEventIds = new Set<string>();
-    for (const [activityId, group] of markedEvents) {
-      const linkedEventId = byActivity.get(activityId)?.google_event_id;
-      const canonical = group.find((event) => event.id === linkedEventId)
-        ?? [...group].sort((left, right) => String(left.id).localeCompare(String(right.id)))[0];
-      for (const event of group) if (event.id !== canonical.id) duplicateEventIds.add(event.id!);
-      if (linkedEventId && !group.some((event) => event.id === linkedEventId)) {
-        for (const event of group) duplicateEventIds.add(event.id!);
-      }
-    }
+    const duplicateEventIds = googleCalendarDuplicateEventIds(events, links);
     const duplicatesToRemove = googleCalendarSyncPolicy.cleansRemoteDuplicates(direction)
       ? [...duplicateEventIds].slice(0, GOOGLE_CALENDAR_MUTATIONS_PER_REQUEST)
       : [];
@@ -244,17 +278,22 @@ export async function syncGoogleCalendarServer(
         continue;
       }
       if (!link) {
-        const markedActivityId = event.extendedProperties?.private?.ontrackActivityId;
         const metadataActivity = localActivityByEvent.get(`${row.calendar_id}:${event.id}`);
-        if (!googleCalendarSyncPolicy.importsUnlinkedGoogleEvents(direction) && !markedActivityId && !metadataActivity) continue;
-        const recoveredActivityId = metadataActivity?.id ?? markedActivityId;
-        const recoverOnTrackEvent = Boolean(markedActivityId);
+        const recoveredActivity = metadataActivity ?? recoverActivityForGoogleEvent(
+          event,
+          row.calendar_id,
+          local,
+          byActivity,
+          timeZone,
+        );
+        if (!googleCalendarSyncPolicy.importsUnlinkedGoogleEvents(direction) && !recoveredActivity) continue;
+        const recoveredActivityId = recoveredActivity?.id;
         link = {
           user_id: userId,
           calendar_id: row.calendar_id,
           google_event_id: event.id,
           activity_id: recoveredActivityId ?? `google-event-${crypto.randomUUID()}`,
-          origin: metadataActivity?.googleCalendar?.origin ?? (recoverOnTrackEvent ? 'ontrack' : 'google'),
+          origin: recoveredActivity?.googleCalendar?.origin ?? (recoveredActivity ? 'ontrack' : 'google'),
           google_updated_at: event.updated ?? syncedAt,
           local_updated_at: recoveredActivityId ? local.get(recoveredActivityId)?.updatedAt ?? syncedAt : event.updated ?? syncedAt,
           created_at: syncedAt,
@@ -274,6 +313,9 @@ export async function syncGoogleCalendarServer(
       else if (existing) {
         local.set(link.activity_id, {
           ...existing,
+          // Event shape is provider metadata, not editable local content. Keep
+          // date-only vs timed accurate even when newer local copy wins.
+          allDay: googleEventAllDay(event),
           googleCalendar: googleCalendarMetadata(
             link,
             syncedAt,
@@ -282,7 +324,13 @@ export async function syncGoogleCalendarServer(
         });
       }
       link.google_updated_at = event.updated ?? syncedAt;
-      if (remoteWins) link.local_updated_at = local.get(link.activity_id)?.updatedAt ?? syncedAt;
+      const resolvedActivity = local.get(link.activity_id);
+      if (remoteWins || (resolvedActivity && googleEventMatchesActivity(event, resolvedActivity, timeZone))) {
+        // Local-only edits (status, category, photos, etc.) may advance updatedAt
+        // without changing anything Google stores. Acknowledge that timestamp so
+        // the following push phase does not send a phantom event update.
+        link.local_updated_at = resolvedActivity?.updatedAt ?? syncedAt;
+      }
       discoveredLinks.push(link);
     }
     if (linkEventIdsToDelete.size) {
@@ -292,7 +340,7 @@ export async function syncGoogleCalendarServer(
         .in('google_event_id', [...linkEventIdsToDelete]);
       if (deleteError) throw deleteError;
     }
-    await upsertLinks(db, discoveredLinks);
+    await upsertGoogleCalendarLinks(db, discoveredLinks);
     const hasMoreDuplicates = googleCalendarSyncPolicy.cleansRemoteDuplicates(direction)
       && duplicateEventIds.size > duplicatesToRemove.length;
     if (!hasMoreDuplicates && direction === 'from_google') {
@@ -374,7 +422,7 @@ export async function syncGoogleCalendarServer(
       const { error: deleteError } = await db.from('google_calendar_event_links').delete().eq('user_id', userId).in('google_event_id', linksToDelete);
       if (deleteError) throw deleteError;
     }
-    await upsertLinks(db, linksToUpsert);
+    await upsertGoogleCalendarLinks(db, linksToUpsert);
     const nextActivities = activities.map((activity) => {
       const link = activityLinks.get(activity.id);
       return link
@@ -395,6 +443,219 @@ export async function syncGoogleCalendarServer(
 
   await markConnectionSynced(db, userId, syncedAt);
   return { activities, acknowledgedDeletionIds: [...acknowledgedDeletionIds], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore: false };
+}
+
+function previewItem(
+  id: string,
+  title: string | undefined,
+  action: GoogleCalendarSyncPreviewItem['action'],
+  destination: GoogleCalendarSyncPreviewItem['destination'],
+  options?: Pick<GoogleCalendarSyncPreviewItem, 'details' | 'reason'>,
+): GoogleCalendarSyncPreviewItem {
+  return { id, title: title?.trim() || 'Untitled event', action, destination, ...options };
+}
+
+export function buildGoogleCalendarSyncPreview(
+  direction: GoogleCalendarSyncDirection,
+  activities: Activity[],
+  deletions: GoogleCalendarDeletion[],
+  links: GoogleCalendarLinkRow[],
+  events: GoogleCalendarEvent[],
+  timeZone = 'UTC',
+): GoogleCalendarSyncPreview {
+  const reconciliation = reconcileGoogleCalendarLinks(
+    activities,
+    links,
+    events,
+    timeZone,
+  );
+  links = reconciliation.links;
+  activities = dedupeGoogleCalendarActivities(activities, links);
+  const local = new Map(activities.map((activity) => [activity.id, activity]));
+  const byEvent = new Map(links.map((link) => [link.google_event_id, link]));
+  const byActivity = new Map(links.map((link) => [link.activity_id, link]));
+  const eventById = new Map(events.flatMap((event) => event.id ? [[event.id, event] as const] : []));
+  const changes: GoogleCalendarSyncPreviewItem[] = [];
+  const recoveredEventIds = new Set<string>();
+  const calendarId = links[0]?.calendar_id
+    ?? activities.find((activity) => activity.googleCalendar)?.googleCalendar?.calendarId
+    ?? 'primary';
+  for (const repairedLink of reconciliation.repaired) {
+    const activity = local.get(repairedLink.activity_id);
+    if (!activity) continue;
+    const values = activityPreviewValues(activity);
+    changes.push(previewItem(
+      `repair-link-${activity.id}`,
+      activity.title,
+      'relink',
+      'ontrack',
+      {
+        reason: 'The existing onTrack and Google events already match; only their stored connection will be corrected.',
+        details: [
+          ...(values.Date ? [{ label: 'Date', after: values.Date }] : []),
+          ...(values.Time ? [{ label: 'Time', after: values.Time }] : []),
+        ],
+      },
+    ));
+  }
+
+  for (const event of events) {
+    if (!event.id || byEvent.has(event.id) || event.status === 'cancelled') continue;
+    const recoveredActivity = recoverActivityForGoogleEvent(
+      event,
+      calendarId,
+      local,
+      byActivity,
+      timeZone,
+    );
+    if (!recoveredActivity) continue;
+    const recoveredLink: GoogleCalendarLinkRow = {
+      user_id: '',
+      calendar_id: calendarId,
+      google_event_id: event.id,
+      activity_id: recoveredActivity.id,
+      origin: recoveredActivity.googleCalendar?.origin ?? 'ontrack',
+      google_updated_at: null,
+      local_updated_at: null,
+      created_at: '',
+    };
+    byEvent.set(event.id, recoveredLink);
+    byActivity.set(recoveredActivity.id, recoveredLink);
+    recoveredEventIds.add(event.id);
+  }
+
+  const duplicateEventIds = googleCalendarDuplicateEventIds(events, links);
+  if (googleCalendarSyncPolicy.cleansRemoteDuplicates(direction)) {
+    for (const eventId of duplicateEventIds) {
+      changes.push(previewItem(
+        `google-duplicate-${eventId}`,
+        eventById.get(eventId)?.summary,
+        'delete',
+        'google',
+        { reason: 'Duplicate Google copy of the same onTrack event' },
+      ));
+    }
+  }
+
+  if (googleCalendarSyncPolicy.pushesToGoogle(direction)) {
+    const deletedActivityIds = new Set(deletions.map((deletion) => deletion.activityId));
+    for (const link of links) {
+      if (!googleCalendarSyncPolicy.isExplicitDeletion(link, deletedActivityIds)) continue;
+      changes.push(previewItem(
+        `google-delete-${link.google_event_id}`,
+        local.get(link.activity_id)?.title ?? eventById.get(link.google_event_id)?.summary,
+        'delete',
+        'google',
+        { reason: 'Deleted in onTrack' },
+      ));
+    }
+    for (const activity of activities) {
+      const link = byActivity.get(activity.id);
+      const event = link ? eventById.get(link.google_event_id) : undefined;
+      const providerMatches = Boolean(
+        event
+        && event.status !== 'cancelled'
+        && googleEventMatchesActivity(event, activity, timeZone),
+      );
+      const providerWouldWin = Boolean(
+        link
+        && event
+        && googleCalendarSyncPolicy.acceptsGoogleChanges(direction, link.origin)
+        && new Date(event.updated ?? 0).getTime() >= new Date(activity.updatedAt).getTime(),
+      );
+      const providerDeletionWins = event?.status === 'cancelled' && direction !== 'to_google';
+      const providerOutsideSyncWindow = Boolean(
+        link && !event && !googleCalendarSyncPolicy.hasLocalChanges(activity, link),
+      );
+      if (providerMatches || providerWouldWin || providerDeletionWins || providerOutsideSyncWindow) continue;
+      changes.push(previewItem(
+        `google-${activity.id}`,
+        activity.title,
+        link ? 'update' : 'create',
+        'google',
+        link && event
+          ? { details: previewDetails(eventPreviewValues(event, timeZone), activityPreviewValues(activity)) }
+          : { details: previewDetails(undefined, activityPreviewValues(activity)) },
+      ));
+    }
+  }
+
+  if (googleCalendarSyncPolicy.importsUnlinkedGoogleEvents(direction)) {
+    for (const event of events) {
+      if (!event.id) continue;
+      if (duplicateEventIds.has(event.id)) continue;
+      const link = byEvent.get(event.id);
+      if (event.status === 'cancelled') {
+        if (
+          googleCalendarSyncPolicy.removesFromOnTrack(direction)
+          && link
+          && local.has(link.activity_id)
+        ) {
+          changes.push(previewItem(
+            `ontrack-delete-${link.activity_id}`,
+            local.get(link.activity_id)?.title ?? event.summary,
+            'delete',
+            'ontrack',
+            { reason: 'Deleted in Google' },
+          ));
+        }
+        continue;
+      }
+      if (!link) {
+        changes.push(previewItem(
+          `ontrack-create-${event.id}`,
+          event.summary,
+          'create',
+          'ontrack',
+          {
+            details: previewDetails(undefined, eventPreviewValues(event, timeZone)),
+            reason: 'Google event is not linked to an onTrack event',
+          },
+        ));
+        continue;
+      }
+      const existing = local.get(link.activity_id);
+      if (!existing || !googleCalendarSyncPolicy.acceptsGoogleChanges(direction, link.origin)) continue;
+      const providerChanged = new Date(event.updated ?? 0).getTime()
+        > new Date(link.google_updated_at ?? 0).getTime();
+      const remoteWins = direction === 'from_google'
+        || new Date(event.updated ?? 0).getTime() >= new Date(existing.updatedAt).getTime();
+      if ((providerChanged || recoveredEventIds.has(event.id))
+        && remoteWins
+        && !googleEventMatchesActivity(event, existing, timeZone)) {
+        changes.push(previewItem(
+          `ontrack-update-${existing.id}`,
+          event.summary,
+          'update',
+          'ontrack',
+          { details: previewDetails(activityPreviewValues(existing), eventPreviewValues(event, timeZone)) },
+        ));
+      }
+    }
+  }
+
+  return { direction, changes };
+}
+
+/** Read-only plan used for explicit user confirmation before a sync mutates either calendar. */
+export async function previewGoogleCalendarSyncServer(
+  userId: string,
+  activities: Activity[],
+  deletions: GoogleCalendarDeletion[],
+  timeZone: string,
+): Promise<GoogleCalendarSyncPreview> {
+  const row = await connection(userId);
+  if (!row) throw new Error('Connect Google Calendar before syncing.');
+  const db = googleCalendarAdmin();
+  const { data, error } = await db.from('google_calendar_event_links').select('*').eq('user_id', userId);
+  if (error) throw error;
+  const links = (data ?? []) as GoogleCalendarLinkRow[];
+  const direction = row.sync_direction ?? 'two_way';
+  const events = await listEvents(
+    await googleCalendarAccessToken(row.refresh_token_ciphertext),
+    row.calendar_id,
+  );
+  return buildGoogleCalendarSyncPreview(direction, activities, deletions, links, events, timeZone);
 }
 
 export async function disconnectGoogleCalendarServer(userId: string, removeExported: boolean) {

@@ -198,12 +198,12 @@ export function TravelTripActionGrid({
           accessibilityLabel={`Open Expenses for ${tripTitle}`}
         />
         <TravelSheetAction
-          label="Packing List"
+          label="Checklist"
           icon="backpack"
           tone="link"
           testID={AgentUiIds.travel.list.packingList(tripId)}
           onPress={onOpenPackingList}
-          accessibilityLabel={`Open Packing List for ${tripTitle}`}
+          accessibilityLabel={`Open Checklist for ${tripTitle}`}
         />
       </ActionGroup>
 

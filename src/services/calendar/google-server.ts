@@ -15,12 +15,17 @@ export { googleEventIdForActivity } from './google-mapping';
 export {
   dedupeGoogleCalendarActivities,
   GOOGLE_CALENDAR_MUTATIONS_PER_REQUEST,
+  googleCalendarDuplicateEventIds,
   googleCalendarSyncPolicy,
+  reconcileGoogleCalendarLinks,
+  recoverActivityForGoogleEvent,
 } from './google-sync-policy';
 
 export {
+  buildGoogleCalendarSyncPreview,
   disconnectGoogleCalendarServer,
   googleCalendarStatus,
+  previewGoogleCalendarSyncServer,
   setGoogleCalendarDirection,
   syncGoogleCalendarServer,
 } from './google-sync';
@@ -28,6 +33,7 @@ export {
 export type {
   GoogleCalendarStatus,
   GoogleCalendarSyncDirection,
+  GoogleCalendarSyncPreview,
   GoogleCalendarSyncResult,
 } from './google-types';
 

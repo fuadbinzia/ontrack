@@ -1,11 +1,12 @@
 import { BlurView } from 'expo-blur';
-import { useCallback, useEffect, useId } from 'react';
+import { useCallback, useEffect, useId, type ReactNode } from 'react';
 import {
     BackHandler,
     Modal,
     Pressable,
     ScrollView,
     StyleSheet,
+    useWindowDimensions,
     View,
     type ModalProps,
 } from 'react-native';
@@ -23,7 +24,7 @@ import {
     type Theme,
 } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
-import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
 import { AppText } from './app-text';
 import { fieldTitleCase } from './field-title-case';
@@ -46,8 +47,10 @@ interface PromptRequest {
   id: number;
   title: string;
   message?: string;
+  content?: ReactNode;
   actions: PromptAction[];
   cancelable: boolean;
+  scrollableMessage?: boolean;
   theme?: Theme;
   onDismiss?: () => void;
   supportedOrientations?: ModalProps['supportedOrientations'];
@@ -64,6 +67,8 @@ interface PromptState {
 
 interface AppAlertOptions {
   cancelable?: boolean;
+  scrollableMessage?: boolean;
+  content?: ReactNode;
   theme?: Theme;
   onDismiss?: () => void;
   supportedOrientations?: ModalProps['supportedOrientations'];
@@ -116,10 +121,12 @@ export const appPrompt = {
     showPrompt({
       title,
       message,
+      content: options?.content,
       actions: resolvedActions,
       cancelable:
         options?.cancelable === true ||
         resolvedActions.some((action) => action.style === 'cancel'),
+      scrollableMessage: options?.scrollableMessage,
       theme: options?.theme,
       onDismiss: options?.onDismiss,
       supportedOrientations: options?.supportedOrientations,
@@ -162,6 +169,7 @@ export const appPrompt = {
 };
 
 export function AppPromptHost({ embedded = false }: { embedded?: boolean }) {
+  const { height: windowHeight } = useWindowDimensions();
   const hostTheme = useTheme();
   const request = useAppPrompt((state) => state.request);
   const theme = request?.theme ?? hostTheme;
@@ -219,6 +227,13 @@ export function AppPromptHost({ embedded = false }: { embedded?: boolean }) {
   const visibleActions = request.actions.filter(
     (action) => action.style !== 'cancel',
   );
+  const promptBody = request.content ?? (request.message ? (
+    <AppText
+      selectable
+      style={[styles.message, { color: theme.textSecondary }]}>
+      {request.message}
+    </AppText>
+  ) : null);
 
   const content = (
     <Animated.View
@@ -296,12 +311,27 @@ export function AppPromptHost({ embedded = false }: { embedded?: boolean }) {
             style={[styles.title, { color: theme.textPrimary }]}>
             {request.title}
           </AppText>
-          {request.message ? (
-            <AppText
-              selectable
-              style={[styles.message, { color: theme.textSecondary }]}>
-              {request.message}
-            </AppText>
+          {promptBody ? (
+            request.scrollableMessage ? (
+              <AgentTestId
+                testID={AgentUiIds.prompt.messageScroll}
+                label="Prompt message list"
+                style={[
+                  styles.messageScrollFrame,
+                  { maxHeight: Math.max(140, Math.min(360, windowHeight * 0.38)) },
+                ]}>
+                <ScrollView
+                  accessibilityLabel="Prompt message list"
+                  bounces={false}
+                  contentContainerStyle={styles.messageScrollContent}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator>
+                  {promptBody}
+                </ScrollView>
+              </AgentTestId>
+            ) : (
+              promptBody
+            )
           ) : null}
         </View>
         <ScrollView
@@ -469,6 +499,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     position: 'relative',
+    maxHeight: '100%',
     gap: spacing.lg,
     padding: spacing.xl,
     zIndex: 1,
@@ -502,6 +533,14 @@ const styles = StyleSheet.create({
     ...appTextStyle('body'),
     textAlign: 'center',
     lineHeight: 22,
+  },
+  messageScrollFrame: {
+    flexShrink: 1,
+    minHeight: 120,
+    width: '100%',
+  },
+  messageScrollContent: {
+    paddingHorizontal: spacing.xs,
   },
   actions: {
     gap: spacing.sm,

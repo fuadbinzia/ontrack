@@ -90,6 +90,7 @@ const apiModules = [
   'src/app/api/calendar/google/connect+api.ts',
   'src/app/api/calendar/google/direction+api.ts',
   'src/app/api/calendar/google/disconnect+api.ts',
+  'src/app/api/calendar/google/preview+api.ts',
   'src/app/api/calendar/google/status+api.ts',
   'src/app/api/destination-cover+api.ts',
   'src/app/api/movies/[id]+api.ts',

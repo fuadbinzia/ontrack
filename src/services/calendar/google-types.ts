@@ -27,6 +27,24 @@ export interface GoogleCalendarSyncResult {
   nextPhase?: 'pull' | 'push';
 }
 
+export type GoogleCalendarSyncPreviewItem = {
+  id: string;
+  title: string;
+  action: 'create' | 'update' | 'delete' | 'relink';
+  destination: 'google' | 'ontrack';
+  details?: {
+    label: string;
+    before?: string;
+    after?: string;
+  }[];
+  reason?: string;
+};
+
+export interface GoogleCalendarSyncPreview {
+  direction: GoogleCalendarSyncDirection;
+  changes: GoogleCalendarSyncPreviewItem[];
+}
+
 export type GoogleCalendarDeletion = {
   activityId: string;
   calendarId: string;

@@ -85,6 +85,7 @@ export const agentUiIdsShellProfile = {
     connect: 'ontrack.calendarSync.connect',
     reconnect: 'ontrack.calendarSync.reconnect',
     sync: 'ontrack.calendarSync.sync',
+    confirmSync: 'ontrack.calendarSync.confirmSync',
     disconnectKeep: 'ontrack.calendarSync.disconnectKeep',
     disconnectRemove: 'ontrack.calendarSync.disconnectRemove',
     confirmDisconnectRemove: 'ontrack.calendarSync.confirmDisconnectRemove',

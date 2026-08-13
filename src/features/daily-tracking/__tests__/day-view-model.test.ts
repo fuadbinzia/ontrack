@@ -72,6 +72,20 @@ describe('resolveDayTimeState', () => {
       ),
     ).toEqual({ nowLine: 'Next · Lunch' });
   });
+
+  it('excludes a legacy Google all-day record before persistence migration runs', () => {
+    const allDay = {
+      ...activity('legacy-all-day', 'Conference', 0, 24 * 60),
+      googleCalendar: {
+        calendarId: 'primary',
+        eventId: 'event-1',
+        origin: 'google' as const,
+        lastSyncedAt: '2026-08-12T00:00:00.000Z',
+      },
+    };
+
+    expect(resolveDayTimeState([allDay], '2026-08-12', now)).toEqual({});
+  });
 });
 
 describe('emptyDayTitle', () => {

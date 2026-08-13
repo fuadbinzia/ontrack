@@ -29,7 +29,6 @@ export function TodoListHeader({
   members,
   owner,
   canEdit,
-  heroCopy,
   completedCount,
   progress,
   draft,
@@ -44,7 +43,6 @@ export function TodoListHeader({
   newTaskAgent,
   addTaskAgent,
   editModeAgent,
-  onDismissChrome,
   onDraftChange,
   onNameChange,
   onNameSubmit,
@@ -65,7 +63,6 @@ export function TodoListHeader({
   members: TodoMember[];
   owner: boolean;
   canEdit: boolean;
-  heroCopy: string;
   completedCount: number;
   progress: number;
   draft: string;
@@ -80,7 +77,6 @@ export function TodoListHeader({
   newTaskAgent: AgentUiTargetApi;
   addTaskAgent: AgentUiTargetApi;
   editModeAgent: AgentUiTargetApi;
-  onDismissChrome: () => void;
   onDraftChange: (value: string) => void;
   onNameChange: (value: string) => void;
   onNameSubmit: () => void;
@@ -145,63 +141,21 @@ export function TodoListHeader({
             <AppText style={titleStyle}>{list.name}</AppText>
           )}
         </View>
+        <View style={styles.headingProgress}>
+          <ProgressRing
+            progress={progress}
+            size={48}
+            strokeWidth={4}
+            label={`${Math.round(progress * 100)}%`}
+            sublabel="done"
+            trackColor={
+              theme.name === 'dark'
+                ? glassMaterials.field.dark
+                : glassMaterials.field.light
+            }
+          />
+        </View>
       </View>
-
-      <Pressable accessible={false} onPress={onDismissChrome}>
-        <GlassPlate
-          style={[
-            styles.hero,
-            {
-              borderColor:
-                theme.name === 'dark'
-                  ? glassMaterials.border.dark
-                  : glassMaterials.border.light,
-              boxShadow:
-                theme.name === 'light'
-                  ? '0 10px 30px rgba(61, 50, 32, 0.09)'
-                  : '0 10px 30px rgba(0, 0, 0, 0.26)',
-            },
-          ]}>
-          <View style={styles.heroCopy}>
-            <AppText
-              variant="overline"
-              color="tertiary"
-              style={[
-                styles.heroOverline,
-                { fontSize: s(10), lineHeight: s(12) },
-              ]}>
-              Momentum
-            </AppText>
-            <AppText
-              variant="heading"
-              style={{ fontSize: s(16), lineHeight: s(21) }}>
-              {heroCopy}
-            </AppText>
-            <AppText
-              variant="caption"
-              color="secondary"
-              style={{ fontSize: s(11), lineHeight: s(14) }}>
-              {tasks.length === 0
-                ? 'Capture the next thing. The rest can wait.'
-                : `${completedCount} of ${tasks.length} complete`}
-            </AppText>
-          </View>
-          <View style={{ zIndex: 1 }}>
-            <ProgressRing
-              progress={progress}
-              size={48}
-              strokeWidth={4}
-              label={`${Math.round(progress * 100)}%`}
-              sublabel="done"
-              trackColor={
-                theme.name === 'dark'
-                  ? glassMaterials.field.dark
-                  : glassMaterials.field.light
-              }
-            />
-          </View>
-        </GlassPlate>
-      </Pressable>
 
       {canEdit ? (
         <GlassPlate
@@ -344,23 +298,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   headingCopy: { flex: 1, minWidth: 0, gap: spacing.xs },
+  headingProgress: {
+    alignSelf: 'flex-end',
+    flexShrink: 0,
+  },
   titleEditor: {
     minHeight: 44,
     justifyContent: 'center',
-  },
-  hero: {
-    minHeight: 84,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radii.lg,
-    borderCurve: 'continuous',
-  },
-  heroCopy: { flex: 1, gap: spacing.xs, zIndex: 1 },
-  heroOverline: {
-    letterSpacing: 1.1,
   },
   listHeader: { gap: spacing.md, paddingBottom: spacing.md },
   memberNotice: {

@@ -221,15 +221,6 @@ export function TodoListScreen({ listId }: { listId: string }) {
     });
   };
 
-  const heroCopy =
-    tasks.length === 0
-      ? 'A clear page is a fresh start.'
-      : openTasks.length === 0
-        ? 'Everything is handled.'
-        : completedCount === 0
-          ? `${openTasks.length} ${openTasks.length === 1 ? 'task is' : 'tasks are'} ready for your attention.`
-          : `${completedCount} down. Keep the rhythm going.`;
-
   if (!list) {
     return (
       <Screen contentStyle={styles.missingList}>
@@ -304,7 +295,6 @@ export function TodoListScreen({ listId }: { listId: string }) {
                 members={members}
                 owner={owner}
                 canEdit={canEdit}
-                heroCopy={heroCopy}
                 completedCount={completedCount}
                 progress={progress}
                 draft={draft}
@@ -318,7 +308,6 @@ export function TodoListScreen({ listId }: { listId: string }) {
                 newTaskAgent={newTaskAgent}
                 addTaskAgent={addTaskAgent}
                 editModeAgent={editModeAgent}
-                onDismissChrome={dismissChrome}
                 onDraftChange={setDraft}
                 onAdd={() => add()}
                 onClearSyncError={clearSyncError}

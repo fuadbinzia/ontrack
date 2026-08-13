@@ -8,9 +8,14 @@ import { AgentUiIds } from '@/utils/agent-ui';
 
 jest.mock('@/components/primitives/progress-ring', () => {
   const React = jest.requireActual('react');
-  const { View } = jest.requireActual('react-native');
+  const { Text, View } = jest.requireActual('react-native');
   return {
-    ProgressRing: () => React.createElement(View, { testID: 'progress-ring' }),
+    ProgressRing: ({ label, sublabel }: { label: string; sublabel: string }) =>
+      React.createElement(
+        View,
+        { testID: 'progress-ring' },
+        React.createElement(Text, null, `${label} ${sublabel}`),
+      ),
   };
 });
 
@@ -58,7 +63,6 @@ function renderHeader(
       members={[]}
       owner
       canEdit
-      heroCopy="Nothing waiting yet."
       completedCount={0}
       progress={0}
       draft=""
@@ -72,7 +76,6 @@ function renderHeader(
       newTaskAgent={agent}
       addTaskAgent={agent}
       editModeAgent={agent}
-      onDismissChrome={jest.fn()}
       onDraftChange={jest.fn()}
       onNameChange={jest.fn()}
       onNameSubmit={jest.fn()}
@@ -104,5 +107,38 @@ describe('TodoListHeader', () => {
 
     expect(screen.queryByLabelText('Checklist title')).toBeNull();
     expect(screen.getByText('To Do')).toBeTruthy();
+  });
+
+  it('shows completion beside the title without the momentum card copy', () => {
+    renderHeader({
+      tasks: [
+        {
+          id: 'task-open',
+          listId: list.id,
+          title: 'Open task',
+          completed: false,
+          important: false,
+          createdAt,
+          updatedAt: createdAt,
+          version: 1,
+        },
+        {
+          id: 'task-done',
+          listId: list.id,
+          title: 'Done task',
+          completed: true,
+          important: false,
+          createdAt,
+          updatedAt: createdAt,
+          version: 1,
+        },
+      ],
+      completedCount: 1,
+      progress: 0.5,
+    });
+
+    expect(screen.getByText('50% done')).toBeTruthy();
+    expect(screen.queryByText('Momentum')).toBeNull();
+    expect(screen.queryByText(/complete$/)).toBeNull();
   });
 });

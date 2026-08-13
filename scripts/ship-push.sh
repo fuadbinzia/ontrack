@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Full ship flow for onTrack:
 #   patch-bump version + release notes/changelog → commit → branch → PR →
-#   merge main → delete branch → TestFlight + device OTA
+#   merge main → delete branch → ensure compatible TestFlight binary →
+#   TestFlight + device OTA
 #
 # Agent / human phrases that mean this script:
 #   "push" · "run the push script" · "push script" · "ship push" · "ship:push"
@@ -66,6 +67,60 @@ run() {
     return 0
   fi
   "$@"
+}
+
+latest_testflight_runtime() {
+  npx eas-cli@latest build:list \
+    --platform ios \
+    --build-profile testflight \
+    --status finished \
+    --limit 1 \
+    --json \
+    --non-interactive \
+    2>/dev/null | node -e '
+      let input = "";
+      process.stdin.setEncoding("utf8");
+      process.stdin.on("data", (chunk) => { input += chunk; });
+      process.stdin.on("end", () => {
+        try {
+          const builds = JSON.parse(input);
+          process.stdout.write(String(builds?.[0]?.runtimeVersion || ""));
+        } catch {
+          process.exit(1);
+        }
+      });
+    '
+}
+
+ensure_testflight_runtime() {
+  local required_runtime latest_runtime
+  required_runtime="$(
+    node -e "const a=require('${ROOT}/app.json'); process.stdout.write(String(a?.expo?.runtimeVersion||''))"
+  )"
+  [[ -n "$required_runtime" ]] || die "app.json missing a fixed expo.runtimeVersion"
+
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] compare latest finished TestFlight runtime with $required_runtime"
+    echo "[dry-run] npm run build:testflight when no compatible binary exists"
+    return 0
+  fi
+
+  echo "==> Checking TestFlight binary runtime compatibility"
+  latest_runtime="$(latest_testflight_runtime)" || \
+    die "could not inspect the latest finished TestFlight build"
+  if [[ "$latest_runtime" == "$required_runtime" ]]; then
+    echo "    compatible TestFlight binary found (runtime $required_runtime)"
+    return 0
+  fi
+
+  if [[ -n "$latest_runtime" ]]; then
+    echo "    latest TestFlight binary runtime: $latest_runtime"
+  else
+    echo "    no finished TestFlight binary found"
+  fi
+  echo "    required OTA runtime: $required_runtime"
+  echo "==> Building and submitting a compatible TestFlight binary"
+  npm run build:testflight
 }
 
 while [[ $# -gt 0 ]]; do
@@ -220,6 +275,7 @@ OTA_MSG="$MESSAGE"
 [[ -n "$OTA_MSG" ]] || OTA_MSG="Ship $(git rev-parse --short HEAD)"
 
 if [[ "$SKIP_OTA" -eq 0 ]]; then
+  ensure_testflight_runtime
   echo "==> Publishing TestFlight OTA (iOS)"
   run npm run update:testflight -- --message "$OTA_MSG" --non-interactive
   echo "==> Publishing device OTA (Android sideload)"

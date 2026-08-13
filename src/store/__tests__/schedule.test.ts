@@ -72,6 +72,97 @@ describe('schedule event saves', () => {
     expect(state.meals[0].items).toHaveLength(1);
   });
 
+  it('updates only the selected occurrence when a recurring edit uses single scope', () => {
+    const first = {
+      ...activity,
+      googleCalendar: {
+        calendarId: 'primary',
+        eventId: 'occurrence-1',
+        recurringEventId: 'series-1',
+        origin: 'google' as const,
+        lastSyncedAt: activity.updatedAt,
+      },
+    };
+    const second = {
+      ...first,
+      id: 'event-2',
+      date: '2026-07-17',
+      googleCalendar: { ...first.googleCalendar, eventId: 'occurrence-2' },
+    };
+    useSchedule.setState({ activities: [first, second], meals: [], workouts: [], workSessions: [], movies: [] });
+
+    useSchedule.getState().saveEvent({
+      id: first.id,
+      editScope: 'single',
+      detailKind: 'generic',
+      activity: {
+        date: first.date,
+        title: 'One changed sync',
+        categoryId: first.categoryId,
+        startMinutes: first.startMinutes,
+        durationMinutes: first.durationMinutes,
+        status: first.status,
+      },
+    });
+
+    expect(useSchedule.getState().activities).toEqual([
+      expect.objectContaining({ id: first.id, title: 'One changed sync' }),
+      expect.objectContaining({ id: second.id, title: second.title }),
+    ]);
+  });
+
+  it('updates every occurrence in the chosen recurring series and preserves per-event status', () => {
+    const first = {
+      ...activity,
+      googleCalendar: {
+        calendarId: 'primary',
+        eventId: 'occurrence-1',
+        recurringEventId: 'series-1',
+        origin: 'google' as const,
+        lastSyncedAt: activity.updatedAt,
+      },
+    };
+    const second = {
+      ...first,
+      id: 'event-2',
+      date: '2026-07-17',
+      status: 'completed' as const,
+      googleCalendar: { ...first.googleCalendar, eventId: 'occurrence-2' },
+    };
+    const unrelated = {
+      ...first,
+      id: 'event-3',
+      date: '2026-07-17',
+      googleCalendar: {
+        ...first.googleCalendar,
+        eventId: 'occurrence-3',
+        recurringEventId: 'series-2',
+      },
+    };
+    useSchedule.setState({ activities: [first, second, unrelated], meals: [], workouts: [], workSessions: [], movies: [] });
+
+    useSchedule.getState().saveEvent({
+      id: first.id,
+      editScope: 'series',
+      detailKind: 'generic',
+      activity: {
+        date: '2026-07-11',
+        title: 'Changed weekly sync',
+        categoryId: first.categoryId,
+        startMinutes: 780,
+        durationMinutes: 30,
+        status: first.status,
+        notes: 'New agenda',
+      },
+    });
+
+    expect(useSchedule.getState().activities).toEqual([
+      expect.objectContaining({ id: first.id, date: '2026-07-11', title: 'Changed weekly sync', startMinutes: 780 }),
+      expect.objectContaining({ id: second.id, date: '2026-07-18', title: 'Changed weekly sync', status: 'completed' }),
+      expect.objectContaining({ id: unrelated.id, date: unrelated.date, title: unrelated.title }),
+    ]);
+  });
+
   it('copies meal details when duplicating a food event', () => {
     useSchedule.getState().duplicateActivity(activity.id);
     const state = useSchedule.getState();

@@ -6,7 +6,7 @@ import { CategoryBadge } from '@/components/shared';
 import { findCategory } from '@/constants/categories';
 import { spacing } from '@/design-system';
 import { useSchedule } from '@/store/schedule';
-import { formatDuration, formatMinutes } from '@/utils/date';
+import { activityTimingLabel } from '@/utils/activity-time';
 import { openSleepData } from '@/utils/open-sleep-data';
 import { useAddons } from '@/store/addons';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -41,7 +41,7 @@ export default function SleepDetailScreen() {
       <CategoryBadge category={category} />
       <AppText variant="title">{activity.title}</AppText>
       <AppText variant="callout" color="secondary">
-        {formatMinutes(activity.startMinutes)} · {formatDuration(activity.durationMinutes)} planned
+        {activity.allDay ? 'All day' : `${activityTimingLabel(activity)} planned`}
       </AppText>
 
       <Card variant="sunken" style={styles.healthCard}>

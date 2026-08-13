@@ -57,6 +57,7 @@ export type GoogleCalendarLinkRow = {
 
 export type GoogleCalendarEvent = {
   id?: string;
+  recurringEventId?: string;
   status?: string;
   summary?: string;
   description?: string;

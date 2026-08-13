@@ -7,7 +7,7 @@ import { findCategory } from '@/constants/categories';
 import { spacing } from '@/design-system';
 import { useSchedule } from '@/store/schedule';
 import { AgentUiIds } from '@/utils/agent-ui';
-import { formatDuration, formatMinutes } from '@/utils/date';
+import { activityTimingLabel } from '@/utils/activity-time';
 
 export default function GenericDetailScreen() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function GenericDetailScreen() {
         {activity.title}
       </AppText>
       <AppText variant="callout" color="secondary">
-        {formatMinutes(activity.startMinutes)} · {formatDuration(activity.durationMinutes)}
+        {activityTimingLabel(activity)}
       </AppText>
       <Button
         variant="secondary"

@@ -19,6 +19,8 @@ export type RecurrenceFrequency = 'none' | 'daily' | 'weekdays' | 'weekly';
 
 export interface RecurrenceRule {
   frequency: RecurrenceFrequency;
+  /** Stable identity shared by materialized occurrences in the same series. */
+  seriesId?: string;
   /** 0 = Sunday … 6 = Saturday. Used when frequency is 'weekly'. */
   weekday?: number;
 }
@@ -27,6 +29,8 @@ export interface Activity {
   id: string;
   /** Date key in YYYY-MM-DD */
   date: string;
+  /** Calendar-style event without a clock time. */
+  allDay?: boolean;
   title: string;
   categoryId: string;
   /** Minutes from midnight */
@@ -50,6 +54,8 @@ export interface Activity {
   googleCalendar?: {
     calendarId: string;
     eventId: string;
+    /** Google's stable parent id for one occurrence of a recurring event. */
+    recurringEventId?: string;
     origin: 'google' | 'ontrack';
     lastSyncedAt: string;
   };

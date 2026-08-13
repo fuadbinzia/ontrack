@@ -7,7 +7,7 @@ import { CategoryBadge } from '@/components/shared';
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
 import { useSchedule } from '@/store/schedule';
-import { formatDuration, formatMinutes } from '@/utils/date';
+import { activityTimingLabel } from '@/utils/activity-time';
 import { openHttpsUrl } from '@/utils/safe-url';
 
 export default function MovieDetailScreen() {
@@ -43,7 +43,7 @@ export default function MovieDetailScreen() {
       ) : null}
       <AppText variant="title">{activity.title}</AppText>
       <AppText variant="callout" color="secondary">
-        {formatMinutes(activity.startMinutes)} · {formatDuration(activity.durationMinutes)}
+        {activityTimingLabel(activity)}
       </AppText>
       <AppText variant="callout" color="secondary">
         {[movie.mediaType === 'tv' ? 'TV show' : 'Movie', movie.releaseDate, movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : undefined, movie.genres.join(', ') || undefined]

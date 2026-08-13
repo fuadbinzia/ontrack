@@ -272,7 +272,7 @@ export function TravelTransportSections({
   return (
     <TravelCollapsibleSection
       title="Transportation, Stays & Events"
-      icon="suitcase"
+      icon="backpack"
       accentColor={travelAccent(theme)}
       card
       compact

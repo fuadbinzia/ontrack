@@ -160,7 +160,7 @@ export function resolveJourneyTraveler(options: {
   if (summary.tripPhase === 'complete') {
     return {
       beat: 'complete',
-      icon: 'suitcase',
+      icon: 'backpack',
       progress: 1,
       accessibilityLabel: `${BEAT_LABEL.complete} · ${summary.label}`,
     };
@@ -181,7 +181,7 @@ export function resolveJourneyTraveler(options: {
       }
       return {
         beat: 'heading_out',
-        icon: 'suitcase',
+        icon: 'backpack',
         progress,
         accessibilityLabel: `${BEAT_LABEL.heading_out} · ${summary.label}`,
       };
@@ -190,7 +190,7 @@ export function resolveJourneyTraveler(options: {
     if (until <= 14) {
       return {
         beat: 'packing',
-        icon: 'suitcase',
+        icon: 'backpack',
         progress,
         accessibilityLabel: `${BEAT_LABEL.packing} · ${summary.label}`,
       };

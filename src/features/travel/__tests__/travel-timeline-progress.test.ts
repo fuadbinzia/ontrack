@@ -197,7 +197,7 @@ describe('travel timeline progress', () => {
         now: timelineClockSample('2026-09-17', 12 * 60),
       });
       expect(traveler.beat).toBe('packing');
-      expect(traveler.icon).toBe('suitcase');
+      expect(traveler.icon).toBe('backpack');
       expect(traveler.progress).toBeGreaterThan(0.05);
       expect(traveler.progress).toBeLessThanOrEqual(0.18);
     });
@@ -246,7 +246,7 @@ describe('travel timeline progress', () => {
         now: timelineClockSample('2026-10-01', 9 * 60),
       });
       expect(traveler.beat).toBe('complete');
-      expect(traveler.icon).toBe('suitcase');
+      expect(traveler.icon).toBe('backpack');
       expect(traveler.progress).toBe(1);
     });
   });

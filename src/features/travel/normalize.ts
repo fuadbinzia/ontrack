@@ -269,6 +269,9 @@ export function normalizeTravelPlan(value: unknown): TravelPlan | undefined {
         ? repairedImport.correctedEndDate
         : plan.endDate,
     notes: asString(plan.notes),
+    ...(asString(plan.packingListId)?.trim()
+      ? { packingListId: asString(plan.packingListId)!.trim() }
+      : {}),
     ...(() => {
       const rawCovers: string[] = [];
       const pushCover = (value: string) => {

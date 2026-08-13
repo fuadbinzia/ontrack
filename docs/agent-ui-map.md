@@ -474,12 +474,15 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.checklists.detail.newTask`       | New task field                        |
 | `ontrack.checklists.detail.addTask`       | Add task                              |
 | `ontrack.checklists.detail.sort`          | Sort menu                             |
+| `ontrack.checklists.detail.assigneeFilter` | Filter items by assignee             |
+| `ontrack.checklists.detail.assigneeOption.<id>` | Select all assignees or a member |
 | `ontrack.checklists.detail.actions`       | Open list actions sheet               |
 | `ontrack.checklists.detail.actionsClose`  | Close list actions sheet              |
 | `ontrack.checklists.detail.action.<action>` | Select a list action                |
 | `ontrack.checklists.detail.categoryTabs`  | Category tab rail                     |
 | `ontrack.checklists.detail.category.<id>` | Filter items by category              |
 | `ontrack.checklists.detail.editMode`      | Edit / Done tasks                     |
+| `ontrack.checklists.detail.linkedTrip`    | Open the trip linked to this packing list |
 | `ontrack.checklists.detail.task.<taskId>` | Open item details sheet               |
 | `ontrack.checklists.itemDetails.close` | Close item details sheet             |
 | `ontrack.checklists.itemDetails.title` | Edit checklist item title            |
@@ -517,7 +520,9 @@ Demo fixture: `list-agent-ui-demo-grocery` / `recipe-agent-ui-demo-pasta` via `.
 | `ontrack.listSettings.close`   | Grabber / dismiss |
 | `ontrack.listSettings.name`    | List name    |
 | `ontrack.listSettings.saveName`| Save name (trailing check) |
-| `ontrack.listSettings.addEditors` | Add editors from friends |
+| `ontrack.listSettings.addEditors` | Open editor multi-select dropdown |
+| `ontrack.listSettings.editor.<userId>` | Select an editor in the dropdown |
+| `ontrack.listSettings.confirmEditors` | Add selected editors |
 | `ontrack.listSettings.makeEditor.<userId>` | Promote member to editor |
 | `ontrack.listSettings.makeMember.<userId>` | Demote editor to member |
 
@@ -763,7 +768,9 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 | `ontrack.travel.list.straiaway.<tripId>`         | Send / import / open stays in StraiAway                   |
 | `ontrack.travel.list.tripWeather.<tripId>`       | Trip Weather (**plan detail tools**)                      |
 | `ontrack.travel.list.currency.<tripId>`          | Open Currency Calculator (**plan detail tools**)          |
+| `ontrack.travel.list.translator.<tripId>`        | Open Destination Translator (**plan detail tools**)       |
 | `ontrack.travel.list.expenses.<tripId>`          | Open Expenses (**plan detail tools**)                     |
+| `ontrack.travel.list.packingList.<tripId>`       | Open or create Packing List (**plan detail tools**)       |
 | `ontrack.travel.list.groupChat.<tripId>`         | Open Group Chat (**plan detail tools**)                   |
 | `ontrack.travel.list.notesSection.<tripId>`      | Legacy notes section (unused on launcher cards)           |
 
@@ -1100,6 +1107,23 @@ Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flow `finance`
 | `ontrack.travel.planDetail.addRental`          | Empty-state CTA to add a rental                                          |
 | `ontrack.travel.planDetail.addEvent`           | Empty-state CTA to add an event                                          |
 | `ontrack.travel.planDetail.backToTravel`       | Empty-state back to Travel when plan is missing                          |
+
+### Destination translator
+
+| testID | Control |
+| --- | --- |
+| `ontrack.travel.translator.sheet` | Destination translator glass sheet |
+| `ontrack.travel.translator.close` | Close translator and stop active audio/network work |
+| `ontrack.travel.translator.language.home` / `.destination` | Choose either conversation language |
+| `ontrack.travel.translator.language.swap` | Swap the selected languages |
+| `ontrack.travel.translator.direction.home` / `.destination` | Choose typed translation direction |
+| `ontrack.travel.translator.input` / `.translate` | Enter and translate typed text |
+| `ontrack.travel.translator.microphone.home` / `.destination` | Record one short turn in the selected language |
+| `ontrack.travel.translator.microphone.stop` | Stop the current recording and translate it |
+| `ontrack.travel.translator.quickPhrase.<index>` | Translate a common traveler phrase |
+| `ontrack.travel.translator.turn.<turnId>.copy` / `.replay` / `.retry` | Turn actions |
+| `ontrack.travel.translator.preferences` | Open Profile preferences when AI is disabled |
+
 | `ontrack.travel.timelineAdd.close`             | Kind picker close                                                        |
 | `ontrack.travel.timelineAdd.kind.<kind>`       | Timeline kind choice                                                     |
 | `ontrack.travel.timelineDay.<date>`            | Expand/collapse a timeline day group                                     |

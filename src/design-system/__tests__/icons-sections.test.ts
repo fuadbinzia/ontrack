@@ -1,6 +1,15 @@
 import { appIcons, appIconSections, type AppIconName } from '@/design-system/icons';
 
 describe('appIconSections', () => {
+  it('uses backpack glyphs for the travel packing icon on every platform', () => {
+    expect(appIcons.backpack).toEqual({
+      ios: 'backpack.fill',
+      android: 'backpack',
+      web: 'backpack',
+    });
+    expect('suitcase' in appIcons).toBe(false);
+  });
+
   it('covers every app icon exactly once', () => {
     const seen = new Set<string>();
     for (const section of appIconSections) {

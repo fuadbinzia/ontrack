@@ -153,6 +153,17 @@ export const API_USAGE_CATALOG: readonly ApiUsageCatalogEntry[] = [
     healthProbe: { kind: 'openai' },
   },
   {
+    id: 'openai-travel-translator',
+    name: 'OpenAI (travel translator)',
+    provider: 'OpenAI Transcription / Responses',
+    usedBy: ['Destination language resolution', 'Trip Tools voice translation'],
+    metering: 'app-rate-limit',
+    bucket: 'travel',
+    configKey: 'openai',
+    guardNames: ['openai'],
+    healthProbe: { kind: 'openai' },
+  },
+  {
     id: 'gemini',
     name: 'Google Gemini',
     provider: 'Google Generative Language',

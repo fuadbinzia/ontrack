@@ -1,0 +1,50 @@
+name: Living System Map
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  atlas:
+    if: ${{ vars.LIVING_SYSTEM_MAP_REPOSITORY != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out application
+        uses: actions/checkout@v4
+
+      - name: Check out Living System Map
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.LIVING_SYSTEM_MAP_REPOSITORY }}
+          path: .living-system-map-tool
+          token: ${{ secrets.LIVING_SYSTEM_MAP_TOKEN || github.token }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install application dependencies
+        run: npm ci
+
+      - name: Install atlas dependencies
+        working-directory: .living-system-map-tool
+        run: npm ci
+
+      - name: Verify required protection
+        run: node .living-system-map-tool/scripts/atlas.mjs verify --repo .
+
+      - name: Enforce 100% protection floor
+        run: node .living-system-map-tool/scripts/atlas.mjs check --repo .
+
+      - name: Upload atlas evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: living-system-map
+          path: |
+            .living-system-map/generated/
+            coverage/coverage-summary.json

@@ -1,4 +1,4 @@
-import { disconnectStraiaway } from '@/services/partner/straiaway-server';
+import { disconnectStraiAway } from '@/services/partner/straiaway-server';
 import { partnerApiOptions, withPartnerUserAuth } from '@/services/partner/straiaway-api-route';
 
 const METHODS = 'POST, OPTIONS';
@@ -12,5 +12,5 @@ export async function POST(request: Request) {
     methods: METHODS,
     unauthorizedMessage: 'Sign in to disconnect StraiAway.',
     errorFallback: 'StraiAway disconnect failed.',
-  }, async (_incoming, userId) => disconnectStraiaway(userId));
+  }, async (_incoming, userId) => disconnectStraiAway(userId));
 }

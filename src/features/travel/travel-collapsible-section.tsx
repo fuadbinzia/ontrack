@@ -99,7 +99,7 @@ export function TravelCollapsibleSection({
     : nested
       ? s(16)
       : Math.max(32, s(32));
-  // Same icon→title breath for parent + nested (mock: suitcase / FLIGHTS).
+  // Same icon→title breath for parent + nested (mock: backpack / FLIGHTS).
   const titleIconGap = Math.max(TRAVEL_TITLE_ICON_GAP, s(TRAVEL_TITLE_ICON_GAP));
   const headerGap = titleIconGap;
   const leadingIconSize = compact ? (nested ? 12 : 16) : undefined;

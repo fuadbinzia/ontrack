@@ -1,11 +1,16 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import {
   AppText,
   Button,
   Card,
+  Dropdown,
+  GlassPrimaryAction,
   SectionHeader,
 } from '@/components/primitives';
+import { ProfileAvatar } from '@/features/account/profile-avatar';
+import type { FriendProfile } from '@/services/friends';
 import { revokeTodoShareLink } from '@/services/todos/collaboration';
 import type { TodoList } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -18,9 +23,11 @@ export type TodoListSettingsSharingProps = {
   shareLink: () => void;
   run: (
     key: string,
-    work: () => Promise<unknown> | unknown,
-  ) => Promise<void> | void;
-  setPickingFriends: (v: boolean) => void;
+    work: () => Promise<void>,
+  ) => Promise<void>;
+  friends: FriendProfile[];
+  excludeEditorIds: string[];
+  onAddEditors: (friends: FriendProfile[]) => void;
   requireSignIn: () => void;
   user: { id: string } | null | undefined;
 };
@@ -32,16 +39,69 @@ export function TodoListSettingsSharing({
   beginSharing,
   shareLink,
   run,
-  setPickingFriends,
+  friends,
+  excludeEditorIds,
+  onAddEditors,
   requireSignIn,
   user,
 }: TodoListSettingsSharingProps) {
   const shared = list.mode === 'shared';
   const busy = Boolean(working);
+  const [editorDropdownOpen, setEditorDropdownOpen] = useState(false);
+  const [selectedEditorIds, setSelectedEditorIds] = useState<string[]>([]);
+  const previousWorking = useRef(working);
+  const eligibleFriends = useMemo(() => {
+    const excluded = new Set(excludeEditorIds);
+    return friends.filter(
+      (friend) =>
+        !excluded.has(friend.userId) && !excluded.has(friend.email),
+    );
+  }, [excludeEditorIds, friends]);
+  const editorOptions = useMemo(
+    () =>
+      eligibleFriends.map((friend) => ({
+        value: friend.userId,
+        label: friend.displayName,
+        testID: AgentUiIds.listSettings.editor(friend.userId),
+        leading: (
+          <ProfileAvatar
+            displayName={friend.displayName}
+            userId={friend.userId}
+            avatar={friend.avatar}
+            size={28}
+          />
+        ),
+      })),
+    [eligibleFriends],
+  );
 
-  const openEditors = () => {
-    if (!user) return requireSignIn();
-    setPickingFriends(true);
+  useEffect(() => {
+    const eligibleIds = new Set(eligibleFriends.map((friend) => friend.userId));
+    setSelectedEditorIds((current) =>
+      current.filter((id) => eligibleIds.has(id)),
+    );
+  }, [eligibleFriends]);
+
+  useEffect(() => {
+    if (previousWorking.current === 'friends' && working !== 'friends') {
+      setSelectedEditorIds([]);
+    }
+    previousWorking.current = working;
+  }, [working]);
+
+  const setEditorsOpen = (open: boolean) => {
+    if (open && !user) return requireSignIn();
+    if (open && busy) return;
+    setEditorDropdownOpen(open);
+  };
+
+  const confirmEditors = () => {
+    const selected = eligibleFriends.filter((friend) =>
+      selectedEditorIds.includes(friend.userId),
+    );
+    if (!selected.length || busy) return;
+    setEditorDropdownOpen(false);
+    onAddEditors(selected);
   };
 
   return (
@@ -54,13 +114,51 @@ export function TodoListSettingsSharing({
             : 'Add friends or share a join link to move this list into its collaborative space. You stay the owner.'}
         </AppText>
 
-        <Button
-          testID={AgentUiIds.listSettings.addEditors}
-          icon="people"
-          disabled={busy}
-          onPress={openEditors}>
-          {working === 'friends' ? 'Adding…' : 'Add Editors'}
-        </Button>
+        <Dropdown
+          label="Add Editors"
+          multiple
+          open={editorDropdownOpen}
+          onOpenChange={setEditorsOpen}
+          value={selectedEditorIds}
+          options={editorOptions}
+          onChange={setSelectedEditorIds}
+          menuFooter={
+            eligibleFriends.length ? (
+              <GlassPrimaryAction
+                label={working === 'friends'
+                  ? 'Adding…'
+                  : selectedEditorIds.length
+                    ? `Add ${selectedEditorIds.length} ${selectedEditorIds.length === 1 ? 'Editor' : 'Editors'}`
+                    : 'Choose Editors'}
+                disabled={!selectedEditorIds.length || busy}
+                onPress={confirmEditors}
+                testID={AgentUiIds.listSettings.confirmEditors}
+              />
+            ) : (
+              <AppText variant="caption" color="secondary" align="center">
+                Add friends on the Social tab first.
+              </AppText>
+            )
+          }
+          menuFooterHeight={60}
+          renderTrigger={({ open, onPress, fieldRef }) => (
+            <View ref={fieldRef} collapsable={false}>
+              <Button
+                testID={AgentUiIds.listSettings.addEditors}
+                icon="people"
+                disabled={busy}
+                onPress={onPress}>
+                {working === 'friends'
+                  ? 'Adding…'
+                  : selectedEditorIds.length
+                    ? `${selectedEditorIds.length} ${selectedEditorIds.length === 1 ? 'Editor' : 'Editors'} Selected`
+                    : open
+                      ? 'Choose Editors'
+                      : 'Add Editors'}
+              </Button>
+            </View>
+          )}
+        />
 
         <Button
           icon="send"

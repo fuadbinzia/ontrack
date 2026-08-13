@@ -115,7 +115,7 @@ export function TravelMapPinSheet({
           ...plans.map((plan) => ({ value: plan.id, label: plan.title })),
         ]}
         onChange={setTripId}
-        icon="suitcase"
+        icon="backpack"
         testID={AgentUiIds.travel.map.pinTrip}
         supportedOrientations={supportedOrientations}
       />

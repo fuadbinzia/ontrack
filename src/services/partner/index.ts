@@ -2,17 +2,17 @@ export type {
   PartnerId,
   PartnerScope,
   StayPackage,
-  StraiawayConnectResult,
-  StraiawayLinkStatus,
+  StraiAwayConnectResult,
+  StraiAwayLinkStatus,
 } from './types';
 export { PARTNER_SCOPES, PARTNER_STRAIAWAY, STAY_PACKAGE_VERSION } from './types';
 export {
-  confirmStraiawayCallback,
-  connectStraiaway,
-  disconnectStraiaway,
-  getStraiawayStatus,
-  openStraiawayStay,
-  pullStraiawayStays,
-  pushStraiawayStays,
-  StraiawayPartnerError,
+  confirmStraiAwayCallback,
+  connectStraiAway,
+  disconnectStraiAway,
+  getStraiAwayStatus,
+  openStraiAwayStay,
+  pullStraiAwayStays,
+  pushStraiAwayStays,
+  StraiAwayPartnerError,
 } from './straiaway';

@@ -10,7 +10,7 @@ const INSTALLED = 'ontrack://partner/straiaway';
 const APP_STORE = 'https://apps.apple.com/app/id6789723522';
 
 /** Universal-link / web landing for StraiAway partner connect. */
-export default function StraiawayPartnerLanding() {
+export default function StraiAwayPartnerLanding() {
   const router = useRouter();
   const { spacing } = useResponsive();
   const params = useLocalSearchParams<{ code?: string; connected?: string; error?: string }>();

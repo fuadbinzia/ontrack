@@ -1,6 +1,6 @@
 import { apiCorsHeaders, apiOptionsResponse } from '@/services/http/cors';
 import { partnerErrorMessage } from '@/services/partner/crypto';
-import { exchangeStraiawayCode } from '@/services/partner/straiaway-server';
+import { exchangeStraiAwayCode } from '@/services/partner/straiaway-server';
 
 const METHODS = 'POST, OPTIONS';
 
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       partnerUserId?: string;
       partnerDisplayName?: string;
     };
-    const result = await exchangeStraiawayCode(request, body);
+    const result = await exchangeStraiAwayCode(request, body);
     return Response.json(result, { headers: cors });
   } catch (error) {
     const message = partnerErrorMessage(error, 'StraiAway exchange failed.');

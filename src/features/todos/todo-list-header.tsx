@@ -12,6 +12,7 @@ import {
 } from '@/components/primitives';
 import { fontFamilies, glassMaterials, radii, spacing, typography } from '@/design-system';
 import { ChecklistCategoryTabs } from '@/features/todos/checklist-category-tabs';
+import { TodoLinkedTripAction } from '@/features/todos/todo-linked-trip-action';
 import { TodoListHeaderToolbar } from '@/features/todos/todo-list-header-toolbar';
 import type { TodoFilter, TodoSort } from '@/features/todos/todo-sort';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -26,6 +27,7 @@ export function TodoListHeader({
   tasks,
   categories,
   selectedCategoryId,
+  selectedAssigneeId,
   members,
   owner,
   canEdit,
@@ -53,13 +55,17 @@ export function TodoListHeader({
   onSortChange,
   onClearDone,
   onCategorySelect,
+  onAssigneeSelect,
   onManageSettings,
   onRemoveList,
+  linkedTripTitle,
+  onOpenLinkedTrip,
 }: {
   list: TodoList;
   tasks: TodoTask[];
   categories: TodoCategory[];
   selectedCategoryId: string;
+  selectedAssigneeId: string;
   members: TodoMember[];
   owner: boolean;
   canEdit: boolean;
@@ -87,8 +93,11 @@ export function TodoListHeader({
   onSortChange: (sort: TodoSort) => void;
   onClearDone: () => void;
   onCategorySelect: (id: string) => void;
+  onAssigneeSelect: (id: string) => void;
   onManageSettings: () => void;
   onRemoveList: () => void;
+  linkedTripTitle?: string;
+  onOpenLinkedTrip?: () => void;
 }) {
   const router = useRouter();
   const theme = useTheme();
@@ -156,6 +165,13 @@ export function TodoListHeader({
           />
         </View>
       </View>
+
+      {linkedTripTitle && onOpenLinkedTrip ? (
+        <TodoLinkedTripAction
+          tripTitle={linkedTripTitle}
+          onPress={onOpenLinkedTrip}
+        />
+      ) : null}
 
       {canEdit ? (
         <GlassPlate
@@ -245,6 +261,7 @@ export function TodoListHeader({
         owner={owner}
         canEdit={canEdit}
         filter={filter}
+        selectedAssigneeId={selectedAssigneeId}
         sort={sort}
         editMode={editMode}
         openTasksCount={openTasksCount}
@@ -252,6 +269,7 @@ export function TodoListHeader({
         completedCount={completedCount}
         editModeAgent={editModeAgent}
         onFilterToggle={onFilterToggle}
+        onAssigneeSelect={onAssigneeSelect}
         onToggleEditMode={onToggleEditMode}
         onSortChange={onSortChange}
         onClearDone={onClearDone}

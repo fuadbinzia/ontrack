@@ -1,4 +1,4 @@
-import { confirmStraiawayCallback } from '@/services/partner/straiaway-server';
+import { confirmStraiAwayCallback } from '@/services/partner/straiaway-server';
 import { partnerApiOptions, withPartnerUserAuth } from '@/services/partner/straiaway-api-route';
 
 const METHODS = 'POST, OPTIONS';
@@ -14,6 +14,6 @@ export async function POST(request: Request) {
     errorFallback: 'StraiAway connection could not finish.',
   }, async (incoming, userId) => {
     const body = await incoming.json().catch(() => ({})) as { code?: string; codeVerifier?: string };
-    return confirmStraiawayCallback(userId, body.code ?? '', body.codeVerifier ?? '');
+    return confirmStraiAwayCallback(userId, body.code ?? '', body.codeVerifier ?? '');
   });
 }

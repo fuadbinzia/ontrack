@@ -31,6 +31,8 @@ src/utils/dev/metro-hmr-beacon.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+.living-system-map/generated/
+coverage/
 .playwright-cli/
 /output/
 /tmp/

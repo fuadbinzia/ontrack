@@ -11,7 +11,8 @@ export type PaidApiBucket =
   | 'movies'
   | 'flights'
   | 'health'
-  | 'finance';
+  | 'finance'
+  | 'travel';
 
 export const PAID_API_BUCKETS: readonly PaidApiBucket[] = [
   'nutrition',
@@ -22,6 +23,7 @@ export const PAID_API_BUCKETS: readonly PaidApiBucket[] = [
   'flights',
   'health',
   'finance',
+  'travel',
 ] as const;
 
 export const PAID_API_LIMITS: Record<PaidApiBucket, { max: number; windowMs: number }> = {
@@ -33,6 +35,7 @@ export const PAID_API_LIMITS: Record<PaidApiBucket, { max: number; windowMs: num
   flights: { max: 40, windowMs: 60 * 60 * 1000 },
   health: { max: 20, windowMs: 60 * 60 * 1000 },
   finance: { max: 30, windowMs: 60 * 60 * 1000 },
+  travel: { max: 80, windowMs: 60 * 60 * 1000 },
 };
 
 export type ApiRateLimitPeek = {

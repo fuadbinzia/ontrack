@@ -46,7 +46,7 @@ import type {
   TravelPlan,
 } from '@/features/travel/types';
 import { useRecoverReservedTravelPlan } from '@/features/travel/use-recover-reserved-travel-plan';
-import { useStraiawayStayPull } from '@/features/travel/use-straiaway-stay-pull';
+import { useStraiAwayStayPull } from '@/features/travel/use-straiaway-stay-pull';
 import { useTravelPlanConfirmationImports } from '@/features/travel/use-travel-plan-confirmation-imports';
 import { useTravelPlanDetailAddForm } from '@/features/travel/use-travel-plan-detail-add-form';
 import { useTravelPlanDetailAddItem } from '@/features/travel/use-travel-plan-detail-add-item';
@@ -98,7 +98,7 @@ export function TravelPlanDetail(props: TravelPlanDetailProps) {
   const plan = useTravel((state) =>
     planId ? state.plans.find((item) => item.id === planId) : undefined,
   );
-  useStraiawayStayPull(plan);
+  useStraiAwayStayPull(plan);
   // One stable tree from first paint: hero/sky Fabric overlay mounts once.
   // Entrance→Loaded swaps remounted ExpoFabricView (LinearGradient) and raced
   // AppContext ("The app context has been lost"). Heavy body waits for settle.

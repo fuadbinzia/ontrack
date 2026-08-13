@@ -167,7 +167,7 @@ export function TravelPlanDetailBodySkeleton({
         accessibilityState={{ busy: true }}
         style={{ gap: Math.max(rs.md, s(20)) }}
       >
-        <SkeletonSection title="Transportation, Stays & Events" icon="suitcase">
+        <SkeletonSection title="Transportation, Stays & Events" icon="backpack">
           {Array.from({ length: Math.min(2, cards) }, (_, i) => (
             <SkeletonBone key={`transport-${i}`} height={cardH} />
           ))}

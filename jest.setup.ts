@@ -56,6 +56,27 @@ jest.mock('expo-haptics', () => ({
   NotificationFeedbackType: { Success: 'Success', Warning: 'Warning', Error: 'Error' },
 }));
 
+// Native audio modules are unavailable in Jest's Node runtime. Feature suites
+// override these defaults when they need recorder or speech behavior assertions.
+jest.mock('expo-audio', () => ({
+  RecordingPresets: { HIGH_QUALITY: {} },
+  requestRecordingPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  setAudioModeAsync: jest.fn(async () => undefined),
+  useAudioRecorder: jest.fn(() => ({
+    isRecording: false,
+    uri: null,
+    prepareToRecordAsync: jest.fn(async () => undefined),
+    record: jest.fn(),
+    stop: jest.fn(async () => undefined),
+  })),
+}));
+
+jest.mock('expo-speech', () => ({
+  getAvailableVoicesAsync: jest.fn(async () => []),
+  speak: jest.fn(),
+  stop: jest.fn(async () => undefined),
+}));
+
 jest.mock('expo-crypto', () => ({
   randomUUID: () => '00000000-0000-4000-8000-000000000001',
 }));

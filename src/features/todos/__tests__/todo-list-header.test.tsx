@@ -60,6 +60,7 @@ function renderHeader(
       tasks={[]}
       categories={[]}
       selectedCategoryId="all"
+      selectedAssigneeId="all"
       members={[]}
       owner
       canEdit
@@ -86,6 +87,7 @@ function renderHeader(
       onSortChange={jest.fn()}
       onClearDone={jest.fn()}
       onCategorySelect={jest.fn()}
+      onAssigneeSelect={jest.fn()}
       onManageSettings={jest.fn()}
       onRemoveList={jest.fn()}
       {...overrides}

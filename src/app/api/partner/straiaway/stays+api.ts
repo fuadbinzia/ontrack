@@ -1,6 +1,6 @@
 import { apiCorsHeaders } from '@/services/http/cors';
 import { partnerErrorMessage } from '@/services/partner/crypto';
-import { inboundStraiawayStays, pullStraiawayStays, pushStraiawayStays } from '@/services/partner/straiaway-server';
+import { inboundStraiAwayStays, pullStraiAwayStays, pushStraiAwayStays } from '@/services/partner/straiaway-server';
 import { partnerApiOptions, withPartnerUserAuth } from '@/services/partner/straiaway-api-route';
 import type { StayPackage } from '@/services/partner/types';
 
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     methods: METHODS,
     unauthorizedMessage: 'Sign in to import StraiAway stays.',
     errorFallback: 'StraiAway stays could not be loaded.',
-  }, async (_incoming, userId) => pullStraiawayStays(userId));
+  }, async (_incoming, userId) => pullStraiAwayStays(userId));
 }
 
 export async function POST(request: Request) {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const cors = apiCorsHeaders(request, METHODS);
     try {
       const body = await request.json().catch(() => ({})) as { stays?: StayPackage[] };
-      const result = await inboundStraiawayStays(request, Array.isArray(body.stays) ? body.stays : []);
+      const result = await inboundStraiAwayStays(request, Array.isArray(body.stays) ? body.stays : []);
       return Response.json(result, { headers: cors });
     } catch (error) {
       const message = partnerErrorMessage(error, 'Stay handoff failed.');
@@ -38,6 +38,6 @@ export async function POST(request: Request) {
     errorFallback: 'Stay handoff failed.',
   }, async (incoming, userId) => {
     const body = await incoming.json().catch(() => ({})) as { stays?: StayPackage[] };
-    return pushStraiawayStays(userId, Array.isArray(body.stays) ? body.stays : []);
+    return pushStraiAwayStays(userId, Array.isArray(body.stays) ? body.stays : []);
   });
 }

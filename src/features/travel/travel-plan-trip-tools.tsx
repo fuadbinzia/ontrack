@@ -13,20 +13,23 @@ import {
 } from '@/features/travel/travel-calendar-updated-modal';
 import { TravelCurrencySheet } from '@/features/travel/travel-currency-sheet';
 import { TravelFriendsSheet } from '@/features/travel/travel-friends-sheet';
+import { getOrCreateTravelPackingList } from '@/features/travel/travel-packing-list';
 import { travelAccent } from '@/features/travel/travel-surface';
 import { TravelTripActionGrid } from '@/features/travel/travel-trip-action-grid';
+import { TravelTranslatorSheet } from '@/features/travel/translator/travel-translator-sheet';
 import type { TravelPlan } from '@/features/travel/types';
 import { TravelWeatherSheet } from '@/features/travel/weather/travel-weather-sheet';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import {
-  getStraiawayStatus,
-  openStraiawayStay,
-  pullStraiawayStays,
-  pushStraiawayStays,
+  getStraiAwayStatus,
+  openStraiAwayStay,
+  pullStraiAwayStays,
+  pushStraiAwayStays,
 } from '@/services/partner/straiaway';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
+import { useTodos } from '@/store/todos';
 import { useTravel } from '@/store/travel';
 import { useUI } from '@/store/ui';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -58,6 +61,7 @@ export function TravelPlanTripTools({
   const theme = useTheme();
   const { spacing: rs } = useResponsive();
   const savePlan = useTravel((state) => state.savePlan);
+  const createTodoList = useTodos((state) => state.createList);
   const recordPlanInteraction = useTravel((state) => state.recordPlanInteraction);
   const activities = useSchedule((state) => state.activities);
   const replaceTravelActivities = useSchedule(
@@ -69,6 +73,7 @@ export function TravelPlanTripTools({
 
   const [weatherVisible, setWeatherVisible] = useState(false);
   const [currencyVisible, setCurrencyVisible] = useState(false);
+  const [translatorVisible, setTranslatorVisible] = useState(false);
   const [friendsVisible, setFriendsVisible] = useState(false);
   const [calendarUpdated, setCalendarUpdated] =
     useState<TravelCalendarUpdatedPayload | null>(null);
@@ -129,11 +134,11 @@ export function TravelPlanTripTools({
               } as never);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
-            onOpenStraiaway={() => {
+            onOpenStraiAway={() => {
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
               void (async () => {
                 try {
-                  const status = await getStraiawayStatus();
+                  const status = await getStraiAwayStatus();
                   if (!status.connected) {
                     router.push('/(tabs)/profile/straiaway' as never);
                     return;
@@ -145,7 +150,7 @@ export function TravelPlanTripTools({
                       {
                         text: 'Send stays',
                         onPress: () => {
-                          void pushStraiawayStays(stayPackagesFromPlan(plan, guestName || user?.email || undefined)).then(
+                          void pushStraiAwayStays(stayPackagesFromPlan(plan, guestName || user?.email || undefined)).then(
                             (result) => {
                               appPrompt.alert('Sent to StraiAway', `${result.pushed} stay${result.pushed === 1 ? '' : 's'} handed off.`);
                             },
@@ -157,7 +162,7 @@ export function TravelPlanTripTools({
                       {
                         text: 'Import stays',
                         onPress: () => {
-                          void pullStraiawayStays().then(({ stays }) => {
+                          void pullStraiAwayStays().then(({ stays }) => {
                             const next = applyStayPackagesToPlan(plan, stays);
                             if (next) savePlan(next);
                             appPrompt.alert('Imported from StraiAway', stays.length ? `${stays.length} stay${stays.length === 1 ? '' : 's'} updated.` : 'No stays to import.');
@@ -170,7 +175,7 @@ export function TravelPlanTripTools({
                         text: 'Open StraiAway',
                         onPress: () => {
                           const reservation = plan.itinerary.find((item) => item.kind === 'stay')?.stay?.straiawayReservationId;
-                          void openStraiawayStay(reservation);
+                          void openStraiAwayStay(reservation);
                         },
                       },
                     ],
@@ -188,8 +193,31 @@ export function TravelPlanTripTools({
               setCurrencyVisible(true);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
+            onOpenTranslator={() => {
+              setTranslatorVisible(true);
+              deferAfterPageTransition(() => recordPlanInteraction(plan.id));
+            }}
             onOpenExpenses={() => {
               onOpenExpenses();
+              deferAfterPageTransition(() => recordPlanInteraction(plan.id));
+            }}
+            onOpenPackingList={() => {
+              const list = getOrCreateTravelPackingList(plan, {
+                lists: useTodos.getState().lists,
+                createList: createTodoList,
+                savePlan,
+              });
+              if (!list) {
+                appPrompt.alert(
+                  'Packing List',
+                  'The packing list could not be opened. Please try again.',
+                );
+                return;
+              }
+              router.push({
+                pathname: '/(tabs)/to-do/[id]',
+                params: { id: list.id },
+              } as never);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
             onOpenChat={() => {
@@ -222,6 +250,14 @@ export function TravelPlanTripTools({
         onClose={() => {
           appPrompt.dismiss();
           setCurrencyVisible(false);
+        }}
+      />
+      <TravelTranslatorSheet
+        plan={plan}
+        visible={translatorVisible}
+        onClose={() => {
+          appPrompt.dismiss();
+          setTranslatorVisible(false);
         }}
       />
       <TravelFriendsSheet

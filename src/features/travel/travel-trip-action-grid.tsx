@@ -25,10 +25,12 @@ interface TravelTripActionGridProps {
   onSearchFlights: () => void;
   onAddTransport: () => void;
   onSearchStays: () => void;
-  onOpenStraiaway: () => void;
+  onOpenStraiAway: () => void;
   onOpenWeather: () => void;
   onOpenCurrency: () => void;
+  onOpenTranslator: () => void;
   onOpenExpenses: () => void;
+  onOpenPackingList: () => void;
   onOpenChat: () => void;
   onOpenCoTravelers: () => void;
 }
@@ -75,10 +77,12 @@ export function TravelTripActionGrid({
   onSearchFlights,
   onAddTransport,
   onSearchStays,
-  onOpenStraiaway,
+  onOpenStraiAway,
   onOpenWeather,
   onOpenCurrency,
+  onOpenTranslator,
   onOpenExpenses,
+  onOpenPackingList,
   onOpenChat,
   onOpenCoTravelers,
 }: TravelTripActionGridProps) {
@@ -143,7 +147,7 @@ export function TravelTripActionGrid({
           icon="link"
           tone="link"
           testID={AgentUiIds.travel.list.straiaway(tripId)}
-          onPress={onOpenStraiaway}
+          onPress={onOpenStraiAway}
           accessibilityLabel={`Send or open stays in StraiAway for ${tripTitle}`}
         />
         <TravelSheetAction
@@ -153,6 +157,14 @@ export function TravelTripActionGrid({
           testID={AgentUiIds.travel.list.expenses(tripId)}
           onPress={onOpenExpenses}
           accessibilityLabel={`Open Expenses for ${tripTitle}`}
+        />
+        <TravelSheetAction
+          label="Packing List"
+          icon="backpack"
+          tone="link"
+          testID={AgentUiIds.travel.list.packingList(tripId)}
+          onPress={onOpenPackingList}
+          accessibilityLabel={`Open Packing List for ${tripTitle}`}
         />
       </ActionGroup>
 
@@ -172,6 +184,14 @@ export function TravelTripActionGrid({
           testID={AgentUiIds.travel.list.currency(tripId)}
           onPress={onOpenCurrency}
           accessibilityLabel={`Convert Currency for ${destination}`}
+        />
+        <TravelSheetAction
+          label="Translator"
+          icon="translator"
+          tone="link"
+          testID={AgentUiIds.travel.list.translator(tripId)}
+          onPress={onOpenTranslator}
+          accessibilityLabel={`Open Translator for ${destination}`}
         />
       </ActionGroup>
 

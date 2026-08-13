@@ -275,6 +275,8 @@ export interface TravelPlan {
   startDate: string;
   endDate: string;
   notes?: string;
+  /** Checklist created from Trip Tools for packing; also powers the checklist backlink. */
+  packingListId?: string;
   /**
    * User-uploaded trip cover photos (durable file:// / ontrack-media:), max 3.
    * Drives the Travel Home hero carousel; destination placeholders never mix in.

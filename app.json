@@ -2,12 +2,12 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.62",
+    "version": "1.0.63",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
     "userInterfaceStyle": "automatic",
-    "runtimeVersion": "1.0.2",
+    "runtimeVersion": "1.0.3",
     "updates": {
       "url": "https://u.expo.dev/bd232bf6-7397-4463-b25a-9b67d78e5695",
       "requestHeaders": {
@@ -24,6 +24,7 @@
       ],
       "infoPlist": {
         "NSCameraUsageDescription": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos.",
+        "NSMicrophoneUsageDescription": "onTrack uses the microphone to translate short phrases you choose to record during a trip.",
         "NSPhotoLibraryUsageDescription": "onTrack accesses your photo library so you can attach meal, activity, plant-care, and vision-board photos.",
         "NSMotionUsageDescription": "onTrack uses device motion for activity features and so the travel sky can twinkle and shimmer as you move your phone.",
         "ITSAppUsesNonExemptEncryption": false,
@@ -112,7 +113,7 @@
         {
           "photosPermission": "onTrack accesses your photos so you can attach meal, activity, plant-care, and vision-board photos.",
           "cameraPermission": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos.",
-          "microphonePermission": false
+          "microphonePermission": "onTrack uses the microphone to translate short phrases you choose to record during a trip."
         }
       ],
       [
@@ -188,6 +189,12 @@
           "ios": {
             "usePrecompiledModules": false
           }
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "onTrack uses the microphone to translate short phrases you choose to record during a trip."
         }
       ]
     ],

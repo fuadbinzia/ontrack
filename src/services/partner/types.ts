@@ -26,7 +26,7 @@ export type StayPackage = {
   straiawayReservationId?: string;
 };
 
-export type StraiawayLinkStatus = {
+export type StraiAwayLinkStatus = {
   connected: boolean;
   partnerUserId?: string;
   partnerDisplayName?: string;
@@ -35,7 +35,7 @@ export type StraiawayLinkStatus = {
   lastSyncedAt?: string;
 };
 
-export type StraiawayConnectResult = {
+export type StraiAwayConnectResult = {
   authorizeUrl: string;
   code: string;
   expiresAt: string;

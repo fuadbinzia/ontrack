@@ -1,4 +1,4 @@
-import { createStraiawayConnect } from '@/services/partner/straiaway-server';
+import { createStraiAwayConnect } from '@/services/partner/straiaway-server';
 import { partnerApiOptions, withPartnerUserAuth } from '@/services/partner/straiaway-api-route';
 
 const METHODS = 'POST, OPTIONS';
@@ -14,6 +14,6 @@ export async function POST(request: Request) {
     errorFallback: 'StraiAway connection could not start.',
   }, async (incoming, userId) => {
     const body = await incoming.json().catch(() => ({})) as { codeChallenge?: string };
-    return createStraiawayConnect(userId, body.codeChallenge ?? '');
+    return createStraiAwayConnect(userId, body.codeChallenge ?? '');
   });
 }

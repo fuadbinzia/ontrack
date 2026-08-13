@@ -271,6 +271,9 @@ export const AGENT_UI_TRAVEL_FLOWS = {
   ],
   'open-new-trip': [
     { op: 'dismiss', prefix: 'ontrack.travel.' },
+    // The header add button is intentionally absent in the zero-trip state;
+    // seed one stable trip so this flow always exercises that entry point.
+    { op: 'seed', to: 'travel-demo' },
     { op: 'goto', to: 'travel' },
     { op: 'wait', prefix: 'ontrack.travel.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
     { op: 'tap', id: 'ontrack.travel.newTrip.open' },

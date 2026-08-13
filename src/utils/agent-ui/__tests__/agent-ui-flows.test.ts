@@ -88,6 +88,22 @@ describe('agent-ui flows', () => {
     expect(resolveAgentUiFlow('missing')).toBeNull();
   });
 
+  it('keeps state-sensitive entry flows deterministic', () => {
+    expect(resolveAgentUiFlow('open-new-trip')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'seed', to: 'travel-demo' }),
+        expect.objectContaining({ op: 'tap', id: 'ontrack.travel.newTrip.open' }),
+      ]),
+    );
+    for (const name of ['today-prev-day', 'today-next-day']) {
+      expect(resolveAgentUiFlow(name)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ op: 'wait', id: 'ontrack.today.nonToday' }),
+        ]),
+      );
+    }
+  });
+
   it('lands Chase roundtrip submit on the expanded outbound passenger row', () => {
     const steps = resolveAgentUiFlow('travel-demo-add-flight-roundtrip');
     expect(steps).toEqual(

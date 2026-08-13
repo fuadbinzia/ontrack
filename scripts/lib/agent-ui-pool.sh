@@ -137,26 +137,38 @@ agent_ui_pool_bind_android() {
 
 # Install the app onto a pool Android serial from any emulator that already has it.
 agent_ui_pool_clone_android_app() {
-  local target_serial="${1:-${ONTRACK_ANDROID_SERIAL:-}}" adb_bin src_serial apk remote root
+  local target_serial="${1:-${ONTRACK_ANDROID_SERIAL:-}}" adb_bin src_serial apk remote root local_apk
   root="$(agent_ui_pool_repo_root)"
   # shellcheck disable=SC1091
   source "${root}/scripts/lib/android-emulator.sh"
   adb_bin="$(android_emu_sdk_bin adb)"
   [[ -n "$adb_bin" && -n "$target_serial" ]] || return 1
-  if "$adb_bin" -s "$target_serial" shell pm path "$BUNDLE_ID" 2>/dev/null | grep -q "package:"; then
+  if "$adb_bin" -s "$target_serial" shell run-as "$BUNDLE_ID" true >/dev/null 2>&1; then
     return 0
+  fi
+  local_apk="${root}/android/app/build/outputs/apk/debug/app-debug.apk"
+  if [[ -f "$local_apk" ]]; then
+    echo "agent-ui: installing local debug client → ${ONTRACK_ANDROID_AVD:-pool}" >&2
+    if "$adb_bin" -s "$target_serial" install -r "$local_apk" >/dev/null 2>&1; then
+      return 0
+    fi
+    # A release build signed with another key cannot be replaced in place.
+    # This target is a dedicated agent AVD, so replace only its stale package.
+    "$adb_bin" -s "$target_serial" uninstall "$BUNDLE_ID" >/dev/null 2>&1 || true
+    "$adb_bin" -s "$target_serial" install "$local_apk" >/dev/null 2>&1
+    return $?
   fi
   src_serial="$(
     "$adb_bin" devices 2>/dev/null | awk '/^emulator-[0-9]+[[:space:]]+device/{print $1}' | while read -r serial; do
       [[ "$serial" == "$target_serial" ]] && continue
-      if "$adb_bin" -s "$serial" shell pm path "$BUNDLE_ID" 2>/dev/null | grep -q "package:"; then
+      if "$adb_bin" -s "$serial" shell run-as "$BUNDLE_ID" true >/dev/null 2>&1; then
         printf '%s' "$serial"
         break
       fi
     done
   )"
   if [[ -z "${src_serial:-}" ]]; then
-    echo "error: ${BUNDLE_ID} is not installed on any emulator to clone onto agent slot" >&2
+    echo "error: no debuggable ${BUNDLE_ID} build is available locally or on another agent emulator" >&2
     return 1
   fi
   remote="$("$adb_bin" -s "$src_serial" shell pm path "$BUNDLE_ID" 2>/dev/null | tr -d '\r' | head -1 | sed 's/^package://')"

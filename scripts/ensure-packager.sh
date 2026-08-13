@@ -282,7 +282,10 @@ simulator_booted() {
 
 app_installed() {
   if [[ "$PACKAGER_TARGET" == "android" ]]; then
-    android_emu_adb shell pm path "$BUNDLE_ID" 2>/dev/null | grep -q "package:"
+    android_emu_adb shell pm path "$BUNDLE_ID" 2>/dev/null | grep -q "package:" || return 1
+    # Metro/agent-ui requires a debuggable development client. Treat a stale
+    # release install as missing so the pool replaces it instead of timing out.
+    android_emu_adb shell run-as "$BUNDLE_ID" true >/dev/null 2>&1
     return $?
   fi
   ios_simctl_timed get_app_container "$(ios_sim_target)" "$BUNDLE_ID" data >/dev/null 2>&1
@@ -766,6 +769,14 @@ reconnect_dev_client() {
       >/dev/null 2>&1 || true
     echo "Reconnecting Android dev client → http://${host}:${METRO_PORT}"
     android_emu_adb shell am start -a android.intent.action.VIEW -d "$url" >/dev/null 2>&1 || true
+    # SDK 57 may accept the VIEW intent but remain at the Development Build
+    # server picker (and can then chain into a runtime permission prompt).
+    # Clear that bounded native-sheet sequence before waiting for the bridge.
+    AGENT_UI_ROOT="$ROOT" ROOT="$ROOT" AGENT_UI_PLATFORM=android \
+    ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
+    ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-${ANDROID_SERIAL:-}}" \
+    BUNDLE_ID="$BUNDLE_ID" \
+      python3 "$ROOT/scripts/lib/android_system_alert.py" dismiss >/dev/null || true
   else
     if ! ensure_preferred_ios_simulator; then
       print_packager_diagnostics "$host"
@@ -858,10 +869,20 @@ reconnect_dev_client() {
         packager_write_slot_pin
       fi
     fi
-    # While waiting, auto-accept an "Open in …?" sheet if approval missed this boot.
-    if [[ "$PACKAGER_TARGET" != "android" ]] && (( alert_ticks % 3 == 0 )); then
-      AGENT_UI_ROOT="$ROOT" AGENT_UI_PLATFORM=ios \
-        python3 "$ROOT/scripts/lib/ios_system_alert.py" ensure >/dev/null 2>&1 || true
+    # While waiting, clear native sheets that can arrive after the bundle paint.
+    # Android commonly chains server picker -> blank frame -> location prompt,
+    # so the one check immediately after VIEW is necessarily too early.
+    if (( alert_ticks % 3 == 0 )); then
+      if [[ "$PACKAGER_TARGET" == "android" ]]; then
+        AGENT_UI_ROOT="$ROOT" ROOT="$ROOT" AGENT_UI_PLATFORM=android \
+        ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
+        ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-${ANDROID_SERIAL:-}}" \
+        BUNDLE_ID="$BUNDLE_ID" \
+          python3 "$ROOT/scripts/lib/android_system_alert.py" ensure >/dev/null || true
+      else
+        AGENT_UI_ROOT="$ROOT" AGENT_UI_PLATFORM=ios \
+          python3 "$ROOT/scripts/lib/ios_system_alert.py" ensure >/dev/null 2>&1 || true
+      fi
     fi
     alert_ticks=$((alert_ticks + 1))
     sleep 0.75

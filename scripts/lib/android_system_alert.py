@@ -40,6 +40,23 @@ DEV_MENU_TOOLS_PHRASES = (
     "open react native dev menu",
 )
 
+PERMISSION_CONTROLLER_PACKAGES = (
+    "com.google.android.permissioncontroller",
+    "com.android.permissioncontroller",
+)
+
+PERMISSION_ALLOW_LABELS = (
+    "While using the app",
+    "Allow while using the app",
+    "Allow",
+)
+
+DEV_LAUNCHER_PHRASES = (
+    "development build",
+    "development servers",
+    "new development server",
+)
+
 
 def repo_root() -> Path:
     env = os.environ.get("AGENT_UI_ROOT") or os.environ.get("ROOT")
@@ -230,12 +247,48 @@ def _press_back() -> bool:
         return False
 
 
+def blocking_activity_active() -> bool:
+    """Cheaply bypass the clear-cache for Android-owned blockers."""
+    try:
+        result = adb("shell", "dumpsys", "activity", "activities", timeout=8)
+    except (subprocess.TimeoutExpired, OSError):
+        return False
+    if result.returncode != 0:
+        return False
+    top = next(
+        (
+            line
+            for line in result.stdout.splitlines()
+            if "topResumedActivity=" in line or "mResumedActivity:" in line
+        ),
+        "",
+    ).lower()
+    return (
+        any(package in top for package in PERMISSION_CONTROLLER_PACKAGES)
+        or "devlauncheractivity" in top
+    )
+
+
+def _is_permission_prompt(root: ET.Element, hay: str) -> bool:
+    packages = {
+        (node.attrib.get("package") or "").strip().lower()
+        for node in root.iter("node")
+    }
+    if not packages.intersection(PERMISSION_CONTROLLER_PACKAGES):
+        return False
+    return "allow ontrack" in hay and any(label.lower() in hay for label in PERMISSION_ALLOW_LABELS)
+
+
 def classify(xml: str) -> str | None:
     try:
         root = ET.fromstring(xml)
     except ET.ParseError:
         return None
     hay = _haystack(_node_texts(root))
+    if _is_permission_prompt(root, hay):
+        return "permission"
+    if all(phrase in hay for phrase in DEV_LAUNCHER_PHRASES) and "http://" in hay:
+        return "launcher"
     if _phrases_match(hay, DEV_MENU_INTRO_PHRASES) and "continue" in hay:
         return "intro"
     if _phrases_match(hay, DEV_MENU_TOOLS_PHRASES):
@@ -254,6 +307,24 @@ def dismiss_once(xml: str) -> bool:
     except ET.ParseError:
         return False
     kind = classify(xml)
+    if kind == "permission":
+        for label in PERMISSION_ALLOW_LABELS:
+            center = _find_tap_center(root, label)
+            if center:
+                print(f"agent-ui: granting Android runtime permission ({label})", file=sys.stderr)
+                return _tap(*center)
+        return False
+    if kind == "launcher":
+        for node in root.iter("node"):
+            label = (node.attrib.get("text") or node.attrib.get("content-desc") or "").strip()
+            if not re.match(r"^https?://.+:\d+/?$", label, re.IGNORECASE):
+                continue
+            bounds = _parse_bounds(node.attrib.get("bounds") or "")
+            if bounds:
+                left, top, right, bottom = bounds
+                print(f"agent-ui: opening Android development server ({label})", file=sys.stderr)
+                return _tap((left + right) // 2, (top + bottom) // 2)
+        return False
     if kind == "intro":
         center = _find_tap_center(root, "Continue")
         if center:
@@ -274,23 +345,45 @@ def ensure(force: bool = False) -> int:
     # Always keep prefs suppressed so the next cold start stays clear.
     suppress_dev_menu_prefs()
 
-    if not force and _cache_fresh():
+    # A fresh Dev Menu cache must never hide a newly installed app's runtime
+    # permission dialog. Top-activity inspection is much cheaper than UI XML.
+    if not force and _cache_fresh() and not blocking_activity_active():
         return 0
 
     xml = dump_ui_xml()
     if xml is None:
         return 2
 
+    # The VIEW intent can arrive before DevLauncher paints its server list.
+    # A one-shot dump then caches a false "clear" result and leaves the cold
+    # client parked at the picker. In explicit dismiss mode, briefly wait for
+    # that accessibility tree to materialize.
+    if force and classify(xml) is None and blocking_activity_active():
+        for _ in range(8):
+            time.sleep(0.5)
+            xml = dump_ui_xml()
+            if xml is None:
+                return 2
+            if classify(xml) is not None:
+                break
+
     if classify(xml) is None:
         _touch_cache()
         return 0
 
-    for attempt in range(4):
+    attempts = 10 if force else 4
+    for attempt in range(attempts):
         xml = dump_ui_xml()
         if xml is None:
             return 2
         kind = classify(xml)
         if kind is None:
+            # A cold launch commonly transitions picker -> blank bundle paint ->
+            # runtime permission. Keep observing that bounded sequence instead
+            # of caching the transient blank frame as clear.
+            if force and attempt < attempts - 1 and blocking_activity_active():
+                time.sleep(0.5)
+                continue
             _touch_cache()
             return 0
         if not dismiss_once(xml):

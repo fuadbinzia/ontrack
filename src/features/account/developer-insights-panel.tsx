@@ -20,6 +20,7 @@ import {
 } from '@/services/analytics/sync';
 import { summarizeLocalUsage } from '@/store/usage-analytics';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 
 export function DeveloperInsightsPanel() {
   const { spacing } = useResponsive();
@@ -83,7 +84,7 @@ export function DeveloperInsightsPanel() {
         <Card style={{ gap: spacing.sm }} testID={AgentUiIds.developer.insightsLocal}>
           <PanelTitle>This device (7 days)</PanelTitle>
           <AppText variant="body" fit>
-            {local.sessionCount} sessions · {formatActiveDuration(local.activeMs)} active
+            {formatCount(local.sessionCount, 'session')} · {formatActiveDuration(local.activeMs)} active
           </AppText>
           {localSurfaces.length === 0 ? (
             <AppText variant="caption" color="secondary">
@@ -99,8 +100,8 @@ export function DeveloperInsightsPanel() {
           {product ? (
             <>
               <AppText variant="body" fit>
-                {product.totalUsers} accounts · {product.activeUsers} active ·{' '}
-                {product.totalSessions} sessions
+                {formatCount(product.totalUsers, 'account')} · {product.activeUsers} active ·{' '}
+                {formatCount(product.totalSessions, 'session')}
               </AppText>
               <AppText variant="caption" color="secondary" fit>
                 {formatActiveDuration(product.totalActiveMs)} total active time

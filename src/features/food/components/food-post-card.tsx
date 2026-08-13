@@ -19,6 +19,7 @@ import type { FoodPost } from '@/types/food';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { formatDateLong, todayKey } from '@/utils/date';
 import { haptics } from '@/utils/haptics';
+import { formatCount } from '@/utils/grammar';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -134,7 +135,7 @@ export function FoodPostCard({
         {/* Comments are read-only until a food social backend exists. */}
         <View
           accessible
-          accessibilityLabel={`${post.commentCount} comments`}
+          accessibilityLabel={formatCount(post.commentCount, 'comment')}
           style={[styles.metaPair, { gap: spacing.xs }]}>
           <Symbol name="chat" size="sm" color={theme.textTertiary} />
           <AppText variant="caption" color="tertiary">

@@ -19,6 +19,7 @@ import {
 } from '@/components/primitives';
 import { featureFlags } from '@/constants/feature-flags';
 import { fontFamilies, radii, spacing } from '@/design-system';
+import { formatCount } from '@/utils/grammar';
 import {
     compareOnGoogleFlights,
     isValidFlightLocation,
@@ -461,7 +462,7 @@ export function FlightSearchScreen({
           <View style={styles.resultsHeader}>
             <SectionHeader
               title={`${result.originCode} → ${result.destinationCode}`}
-              detail={`${result.offers.length} options`}
+              detail={formatCount(result.offers.length, 'option')}
             />
             <AppText variant="caption" color={result.dataMode === 'live' ? 'success' : 'secondary'}>
               {result.dataMode === 'live' ? 'Live Prices' : 'Test Data'}
@@ -492,7 +493,9 @@ export function FlightSearchScreen({
                   <AppText variant="subheading">{offer.outbound.carrier || 'Airline'}</AppText>
                   <AppText variant="caption" color="secondary">
                     {offer.outbound.flightNumber}
-                    {offer.seatsAvailable ? ` · ${offer.seatsAvailable} seats left` : ''}
+                    {offer.seatsAvailable
+                      ? ` · ${formatCount(offer.seatsAvailable, 'seat')} left`
+                      : ''}
                   </AppText>
                 </View>
                 <View style={styles.price}>

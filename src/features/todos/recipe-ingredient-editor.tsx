@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type { RecipeImportIngredient } from '@/services/recipes';
 import { canonicalIngredientKey } from '@/store/todos';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 
 export type EditableRecipeIngredient = RecipeImportIngredient & { id: string };
 
@@ -33,7 +34,7 @@ export function RecipeIngredientEditor({
   return (
     <View style={styles.ingredientSection}>
       <View style={styles.ingredientHeading}>
-        <SectionHeader title={`${ingredients.length} ingredients`} />
+        <SectionHeader title={formatCount(ingredients.length, 'ingredient')} />
         <Button
           variant="ghost"
           testID={AgentUiIds.recipeImport.addIngredient}

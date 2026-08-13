@@ -26,6 +26,7 @@ import { useMealPlan } from '@/store/food-meal-plan';
 import type { MealType, Recipe } from '@/types/food';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { addDays, formatDateLong, formatWeekday, todayKey } from '@/utils/date';
+import { formatCount } from '@/utils/grammar';
 import { haptics } from '@/utils/haptics';
 
 const PLAN_DAY_COUNT = 7;
@@ -130,7 +131,7 @@ export function AddToPlanSheet({
             variant="heading"
             fit
             style={{ minWidth: s(44), textAlign: 'center' }}
-            accessibilityLabel={`${servings} servings`}>
+            accessibilityLabel={formatCount(servings, 'serving')}>
             {`${servings}`}
           </AppText>
           <IconButton

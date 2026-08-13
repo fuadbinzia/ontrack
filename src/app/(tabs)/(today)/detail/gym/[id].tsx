@@ -10,6 +10,7 @@ import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import type { WorkoutRecommendation } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 
 export default function GymDetailScreen() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function GymDetailScreen() {
       </AppText>
       <AppText variant="title">{workout?.name ?? activity.title}</AppText>
       <AppText variant="body" color="secondary">
-        {workout?.exercises.length ?? 0} exercises planned
+        {formatCount(workout?.exercises.length ?? 0, 'exercise')} planned
       </AppText>
       <Button
         variant="secondary"
@@ -78,7 +79,7 @@ export default function GymDetailScreen() {
         <View key={exercise.id} style={styles.exerciseRow}>
           <AppText variant="callout">{exercise.name}</AppText>
           <AppText variant="caption" color="secondary">
-            {exercise.sets.length} sets · {exercise.restSeconds}s rest
+            {formatCount(exercise.sets.length, 'set')} · {exercise.restSeconds}s rest
           </AppText>
         </View>
       ))}

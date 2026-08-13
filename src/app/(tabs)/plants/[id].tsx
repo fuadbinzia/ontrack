@@ -26,6 +26,7 @@ import {
 import { usePlants } from '@/store/plants';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
+import { formatCount } from '@/utils/grammar';
 import { DAY_MS, formatDueLabel, formatMinutes, fromDateKey, toDateKey, todayKey } from '@/utils/date';
 import { openHttpsUrl } from '@/utils/safe-url';
 
@@ -34,7 +35,7 @@ function wateringCountdownLabel(dueKey: string) {
   if (days < 0) return `Overdue by ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'}`;
   if (days === 0) return 'Water check due today';
   if (days === 1) return 'Next watering in 1 day';
-  return `Next watering in ${days} days`;
+  return `Next watering in ${formatCount(days, 'day')}`;
 }
 
 export default function PlantDetailScreen() {
@@ -85,7 +86,10 @@ function PlantDetailContent() {
         </Button>
       </View>
 
-      <SectionHeader title="Watering schedule" detail={`Every ${plant.carePlan.watering.intervalDays} days`} />
+      <SectionHeader
+        title="Watering schedule"
+        detail={`Every ${formatCount(plant.carePlan.watering.intervalDays, 'day')}`}
+      />
       <Card style={styles.careCard}>
         <GlassPlate airy style={styles.scheduleBadge}>
           <AppText variant="heading" color="accent">{wateringCountdownLabel(dueKey)}</AppText>
@@ -198,10 +202,13 @@ function PlantDetailContent() {
       <Card style={styles.careCard}>
         <AppText>{plant.carePlan.pruning.reason}</AppText>
         {plant.carePlan.pruning.steps.map((item) => <AppText key={item} color="secondary">• {item}</AppText>)}
-        {plant.carePlan.pruning.urgency !== 'not-needed' ? <Button variant="secondary" onPress={() => { addPruningActivity(plant.id); appPrompt.alert('Added to Today', `Prune ${plant.nickname} is now on your schedule.`); }}>Add Pruning Task</Button> : null}
+        {plant.carePlan.pruning.urgency !== 'not-needed' ? <Button variant="secondary" onPress={() => { addPruningActivity(plant.id); appPrompt.alert('Added to Today', `“Prune ${plant.nickname}” is now on your schedule.`); }}>Add Pruning Task</Button> : null}
       </Card>
 
-      <SectionHeader title="History" detail={`${plant.wateringLogs.length} waterings · ${plant.checkIns.length} check-ins`} />
+      <SectionHeader
+        title="History"
+        detail={`${formatCount(plant.wateringLogs.length, 'watering')} · ${formatCount(plant.checkIns.length, 'check-in')}`}
+      />
       {plant.checkIns.slice().reverse().map((checkIn) => (
         <Card key={checkIn.id} style={styles.historyRow}>
           <Image source={plantImageSource(checkIn.photoUri)} style={styles.historyPhoto} contentFit="cover" />

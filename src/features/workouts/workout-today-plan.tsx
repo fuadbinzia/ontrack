@@ -16,6 +16,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type { Activity, Workout } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { activityTimingLabel } from '@/utils/activity-time';
+import { formatCount } from '@/utils/grammar';
 
 export function WorkoutTodayPlan({
   todaysWorkouts,
@@ -64,7 +65,7 @@ export function WorkoutTodayPlan({
                 <View style={styles.flex}>
                   <AppText variant="subheading" numberOfLines={1}>{activity.title}</AppText>
                   <AppText variant="caption" color="secondary">
-                    {activityTimingLabel(activity)} · {workout.exercises.length} exercises
+                    {activityTimingLabel(activity)} · {formatCount(workout.exercises.length, 'exercise')}
                   </AppText>
                 </View>
                 <Symbol name="chevron.right" size="sm" color={theme.textTertiary} />

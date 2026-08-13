@@ -6,6 +6,7 @@ import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import { useSchedule } from '@/store/schedule';
+import { formatCount } from '@/utils/grammar';
 
 export default function WorkDetailScreen() {
   const theme = useTheme();
@@ -49,7 +50,7 @@ export default function WorkDetailScreen() {
       </AppText>
       <AppText variant="title">{activity.title}</AppText>
       <AppText variant="body" color="secondary">
-        {doneCount} of {tasks.length} tasks complete · {session?.focusMinutes ?? 0}m focus logged
+        {doneCount} of {formatCount(tasks.length, 'task')} complete · {session?.focusMinutes ?? 0}m focus logged
       </AppText>
       <Button
         variant="secondary"

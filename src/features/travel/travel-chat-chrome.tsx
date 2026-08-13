@@ -8,6 +8,7 @@ import type { TravelChatMember } from '@/features/travel/chat';
 import { travelDialogPalette } from '@/features/travel/travel-dialog-chrome';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
+import { formatCount } from '@/utils/grammar';
 
 export function travelChatPalette(theme: ReturnType<typeof useTheme>) {
   const dialog = travelDialogPalette(theme);
@@ -47,7 +48,7 @@ export function TravelChatMemberStack({
   return (
     <View
       accessibilityRole="image"
-      accessibilityLabel={`${members.length} trip members`}
+      accessibilityLabel={formatCount(members.length, 'trip member')}
       style={[styles.memberStack, { width, height: size }]}>
       {visible.map((person, index) => (
         <View

@@ -21,6 +21,7 @@ import {
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 
 export function TimelineProgressStrip({
   summary,
@@ -51,7 +52,7 @@ export function TimelineProgressStrip({
   const trackHeight = Math.max(4, s(4));
   const chipSize = Math.max(22, s(22));
   const daysDoneLabel = fieldTitleCase(
-    `${summary.completedDays}/${summary.totalDays} days done`,
+    `${summary.completedDays}/${formatCount(summary.totalDays, 'day')} done`,
   );
   const [trackWidth, setTrackWidth] = useState(0);
   const progressAnim = useRef(new Animated.Value(traveler.progress)).current;

@@ -11,6 +11,7 @@ import { useSchedule } from '@/store/schedule';
 import type { WorkoutExercise } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
+import { formatCount } from '@/utils/grammar';
 
 export default function ActiveWorkoutScreen() {
   const theme = useTheme();
@@ -144,7 +145,7 @@ export default function ActiveWorkoutScreen() {
       </View>
 
       <Card airy padded={false} style={styles.setCard}>
-        <AppText variant="metric">{currentSet.reps} reps</AppText>
+        <AppText variant="metric">{formatCount(currentSet.reps, 'rep')}</AppText>
         <AppText variant="title" color="secondary">
           {currentSet.weightKg > 0 ? `${currentSet.weightKg} kg` : 'Bodyweight'}
         </AppText>

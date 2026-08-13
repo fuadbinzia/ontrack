@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type { ScheduledMeal } from '@/store/food-selectors';
 import { formatMinutes } from '@/utils/date';
 import { useAgentUiTarget } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 import { haptics } from '@/utils/haptics';
 
 export function scheduledMealCalories(entry: ScheduledMeal): number {
@@ -41,7 +42,7 @@ export function ScheduledMealRow({
       testID={agent.testID}
       onLayout={agent.onLayout}
       accessibilityRole="button"
-      accessibilityLabel={`${name}, ${time}${calories > 0 ? `, ${calories} calories` : ''}`}
+      accessibilityLabel={`${name}, ${time}${calories > 0 ? `, ${formatCount(calories, 'calorie')}` : ''}`}
       onPress={handlePress}
       style={({ pressed }) => [
         styles.row,

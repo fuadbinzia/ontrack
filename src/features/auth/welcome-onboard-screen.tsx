@@ -289,7 +289,7 @@ export function WelcomeOnboardScreen() {
               onPress={() => setShowSignIn((open) => !open)}
               style={({ pressed }) => [{ opacity: pressed ? 0.65 : 1 }]}>
               <AppText variant="caption" color="accent" align="center" fit>
-                {showSignIn ? 'Hide sign in' : 'Already have an account? Sign in'}
+                {showSignIn ? 'Hide sign-in form' : 'Already have an account? Sign in'}
               </AppText>
             </Pressable>
 

@@ -60,6 +60,13 @@ if [[ "${1:-}" == "--proof-flow" ]]; then
   PROOF_FLOW="$2"
 fi
 
+proof_flow_requires_account() {
+  case "${PROOF_FLOW}" in
+    open-developer) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # Hold the simulator lease for the whole dual run so another thread cannot
 # interleave between iOS and Android (children inherit AGENT_UI_LOCK_HELD).
 # Pipe refuse runs at the end of host.sh (before auto-lease).
@@ -120,6 +127,17 @@ run_ios() {
   local -a command=(verify "${ARGS[@]}")
   if [[ -n "${PROOF_FLOW}" ]]; then
     command=(once --flow "${PROOF_FLOW}")
+  fi
+  if proof_flow_requires_account; then
+    echo "verify-both: iOS flow ${PROOF_FLOW} requires agent account access" >&2
+    env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
+      AGENT_UI_PLATFORM=ios \
+      AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
+      AGENT_UI_LOCK_ACQUIRED=0 \
+      AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
+      AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+      ONTRACK_IOS_SIMULATOR_UDID="${ONTRACK_IOS_SIMULATOR_UDID:-}" \
+      "${ROOT}/scripts/agent-ui-login.sh" || return 1
   fi
   env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
     AGENT_UI_PLATFORM=ios \
@@ -248,6 +266,17 @@ run_android() {
   if [[ -n "${PROOF_FLOW}" ]]; then
     command=(once --flow "${PROOF_FLOW}")
   fi
+  if proof_flow_requires_account; then
+    echo "verify-both: Android flow ${PROOF_FLOW} requires agent account access" >&2
+    AGENT_UI_PLATFORM=android \
+      AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
+      AGENT_UI_LOCK_ACQUIRED=0 \
+      AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
+      AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+      ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
+      ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
+      "${ROOT}/scripts/agent-ui-login.sh" || return 1
+  fi
   AGENT_UI_PLATFORM=android \
     AGENT_UI_ANDROID_FORCE_LAND="${android_force_land}" \
     AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
@@ -276,6 +305,9 @@ release_agent_devmode() {
       AGENT_UI_PLATFORM=android AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" AGENT_UI_LOCK_ACQUIRED=0 "${ROOT}/scripts/agent-ui-goto.sh" travel >/dev/null 2>&1 || true
     fi
     AGENT_UI_PLATFORM=android \
+      AGENT_UI_SKIP_APP_UP=1 \
+      AGENT_UI_SKIP_HEAL=1 \
+      WAIT_SECS=5 \
       AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
       AGENT_UI_LOCK_ACQUIRED=0 \
       "${ROOT}/scripts/agent-ui-devmode.sh" release >/dev/null 2>&1 || true
@@ -287,6 +319,9 @@ release_agent_devmode() {
     fi
     env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
       AGENT_UI_PLATFORM=ios \
+      AGENT_UI_SKIP_APP_UP=1 \
+      AGENT_UI_SKIP_HEAL=1 \
+      WAIT_SECS=5 \
       AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
       AGENT_UI_LOCK_ACQUIRED=0 \
       "${ROOT}/scripts/agent-ui-devmode.sh" release >/dev/null 2>&1 || true

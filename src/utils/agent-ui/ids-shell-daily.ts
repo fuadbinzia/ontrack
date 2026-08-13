@@ -6,6 +6,8 @@ export const agentUiIdsShellDaily = {
     nextDay: 'ontrack.today.nextDay',
     /** Date title (weekday + long date) → Calendar tab. */
     openCalendar: 'ontrack.today.openCalendar',
+    /** State anchor mounted whenever the selected date is not today. */
+    nonToday: 'ontrack.today.nonToday',
     weather: 'ontrack.today.weather',
     /** Live GPS weather bar under Home when places differ (Today only). */
     currentLocation: 'ontrack.today.currentLocation',

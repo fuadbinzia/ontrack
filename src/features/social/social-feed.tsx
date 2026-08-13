@@ -12,6 +12,7 @@ import type { SocialFeedItem, SocialFeedScope } from '@/features/social/social-t
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 
 type FeedFilter = 'all' | 'friends' | 'groups';
 
@@ -283,7 +284,7 @@ function FeedCardBody({ item }: { item: Exclude<SocialFeedItem, { kind: 'poll' }
       )}
       <View style={[styles.storyCaption, { backgroundColor: chrome.mint }]}>
         <AppText variant="caption" bold fit>
-          Story · {item.viewerCount ?? 0} views
+          Story · {formatCount(item.viewerCount ?? 0, 'view')}
         </AppText>
       </View>
     </View>

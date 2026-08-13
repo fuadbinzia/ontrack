@@ -1,4 +1,8 @@
-import { activityBody, eventToActivity } from '@/services/calendar/google-mapping';
+import {
+  activityBody,
+  eventToActivity,
+  googleCalendarMetadata,
+} from '@/services/calendar/google-mapping';
 import type { GoogleCalendarLinkRow } from '@/services/calendar/google-types';
 import type { Activity } from '@/types/models';
 
@@ -30,6 +34,7 @@ it('uses the exclusive Google end date for multi-day all-day events', () => {
 
   expect(activity).toMatchObject({
     date: '2026-08-12',
+    allDay: true,
     startMinutes: 0,
     durationMinutes: 3 * 24 * 60,
   });
@@ -55,6 +60,49 @@ it('keeps one-day and malformed all-day ranges at a safe one-day minimum', () =>
   expect(reversed.durationMinutes).toBe(24 * 60);
 });
 
+it('preserves the recurring-series identity on imported Google occurrences', () => {
+  const activity = eventToActivity(
+    {
+      id: 'occurrence-1',
+      recurringEventId: 'weekly-series-1',
+      summary: 'Team sync',
+      start: { dateTime: '2026-08-12T10:00:00-04:00' },
+      end: { dateTime: '2026-08-12T10:30:00-04:00' },
+    },
+    undefined,
+    link,
+    'America/New_York',
+    syncedAt,
+  );
+
+  expect(activity.googleCalendar).toEqual(expect.objectContaining({
+    eventId: 'event-1',
+    recurringEventId: 'weekly-series-1',
+  }));
+});
+
+it('does not mark an ordinary Google event as recurring', () => {
+  const activity = eventToActivity(
+    { id: 'event-1', start: { date: '2026-08-12' }, end: { date: '2026-08-13' } },
+    undefined,
+    link,
+    'UTC',
+    syncedAt,
+  );
+
+  expect(activity.googleCalendar).not.toHaveProperty('recurringEventId');
+});
+
+it('keeps series identity while refreshing link metadata after local edits', () => {
+  expect(googleCalendarMetadata(link, syncedAt, 'weekly-series-1')).toEqual({
+    calendarId: 'primary',
+    eventId: 'event-1',
+    recurringEventId: 'weekly-series-1',
+    origin: 'google',
+    lastSyncedAt: syncedAt,
+  });
+});
+
 it('exports timed activities across midnight without losing the next date', () => {
   const activity: Activity = {
     id: 'activity-1',
@@ -72,4 +120,25 @@ it('exports timed activities across midnight without losing the next date', () =
     start: { dateTime: '2026-08-12T23:30:00' },
     end: { dateTime: '2026-08-13T01:30:00' },
   });
+});
+
+it('exports all-day activities with date-only boundaries and no invented time', () => {
+  const activity: Activity = {
+    id: 'activity-all-day',
+    date: '2026-08-12',
+    allDay: true,
+    title: 'Conference',
+    categoryId: 'personal',
+    startMinutes: 0,
+    durationMinutes: 3 * 24 * 60,
+    status: 'upcoming',
+    createdAt: syncedAt,
+    updatedAt: syncedAt,
+  };
+
+  expect(activityBody(activity, 'America/New_York')).toMatchObject({
+    start: { date: '2026-08-12' },
+    end: { date: '2026-08-15' },
+  });
+  expect(activityBody(activity, 'America/New_York')).not.toHaveProperty('start.dateTime');
 });

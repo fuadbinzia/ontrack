@@ -14,7 +14,7 @@ import type {
     Workout,
     WorkSession,
 } from '@/types/models';
-import { isDateKey } from '@/utils/date';
+import { addDays, DAY_MS, fromDateKey, isDateKey } from '@/utils/date';
 import { newId } from '@/utils/id';
 
 export { newId } from '@/utils/id';
@@ -43,6 +43,7 @@ function appendCalendarDeletions(
 
 export interface ActivityDraft {
   date: string;
+  allDay?: boolean;
   title: string;
   categoryId: string;
   startMinutes: number;
@@ -54,6 +55,8 @@ export interface ActivityDraft {
 
 export interface EventSavePayload {
   id?: string;
+  /** Defaults to one occurrence. Series updates require a stable series identity. */
+  editScope?: 'single' | 'series';
   activity: ActivityDraft & {
     status: ActivityStatus;
     photo?: string | number;
@@ -67,6 +70,35 @@ export interface EventSavePayload {
   workout?: Workout;
   workSession?: WorkSession;
   movie?: Movie;
+}
+
+function activitySeriesId(activity: Activity | undefined) {
+  if (!activity) return undefined;
+  if (activity.googleCalendar?.recurringEventId) {
+    return `google:${activity.googleCalendar.calendarId}:${activity.googleCalendar.recurringEventId}`;
+  }
+  return activity.recurrence?.seriesId
+    ? `ontrack:${activity.recurrence.seriesId}`
+    : undefined;
+}
+
+function cloneEventDetail<T extends { activityId: string }>(detail: T, activityId: string): T {
+  const cloned = { ...detail, activityId } as T & {
+    items?: unknown[];
+    exercises?: { sets: unknown[] }[];
+    tasks?: unknown[];
+    genres?: string[];
+  };
+  if (cloned.items) cloned.items = cloned.items.map((item) => ({ ...(item as object) }));
+  if (cloned.exercises) {
+    cloned.exercises = cloned.exercises.map((exercise) => ({
+      ...exercise,
+      sets: exercise.sets.map((set) => ({ ...(set as object) })),
+    }));
+  }
+  if (cloned.tasks) cloned.tasks = cloned.tasks.map((task) => ({ ...(task as object) }));
+  if (cloned.genres) cloned.genres = [...cloned.genres];
+  return cloned;
 }
 
 export interface ImportedEventDraft {
@@ -349,36 +381,67 @@ export const useSchedule = create<ScheduleState>()(
           id,
           createdAt: existing?.createdAt ?? now,
           updatedAt: now,
+          ...(existing?.recurrence ? { recurrence: existing.recurrence } : {}),
           ...payload.activity,
           ...(existing?.googleCalendar ? { googleCalendar: existing.googleCalendar } : {}),
         };
 
+        const seriesId = payload.editScope === 'series' ? activitySeriesId(existing) : undefined;
+        const targetIds = new Set(
+          seriesId
+            ? get().activities
+                .filter((item) => activitySeriesId(item) === seriesId)
+                .map((item) => item.id)
+            : [id],
+        );
+        const dateDelta = existing
+          ? Math.round((fromDateKey(activity.date).getTime() - fromDateKey(existing.date).getTime()) / DAY_MS)
+          : 0;
+
+        const replaceDetails = <T extends { activityId: string }>(
+          details: T[],
+          next: T | undefined,
+        ) => {
+          const retained = details.filter((item) => !targetIds.has(item.activityId));
+          return next
+            ? [...retained, ...[...targetIds].map((activityId) => cloneEventDetail(next, activityId))]
+            : retained;
+        };
+
         set((state) => ({
           activities: existing
-            ? state.activities.map((item) => (item.id === id ? activity : item))
+            ? state.activities.map((item) => {
+                if (item.id === id) return activity;
+                if (!targetIds.has(item.id)) return item;
+                return {
+                  ...item,
+                  ...payload.activity,
+                  id: item.id,
+                  date: addDays(item.date, dateDelta),
+                  status: item.status,
+                  recurrence: item.recurrence,
+                  googleCalendar: item.googleCalendar,
+                  createdAt: item.createdAt,
+                  updatedAt: now,
+                };
+              })
             : [...state.activities, activity],
           meals:
             payload.detailKind === 'food' && payload.meal
-              ? [...state.meals.filter((item) => item.activityId !== id), { ...payload.meal, activityId: id }]
-              : state.meals.filter((item) => item.activityId !== id),
+              ? replaceDetails(state.meals, payload.meal)
+              : replaceDetails(state.meals, undefined),
           workouts:
             payload.detailKind === 'gym' && payload.workout
-              ? [
-                  ...state.workouts.filter((item) => item.activityId !== id),
-                  { ...payload.workout, activityId: id },
-                ]
-              : state.workouts.filter((item) => item.activityId !== id),
+              ? replaceDetails(state.workouts, payload.workout)
+              : replaceDetails(state.workouts, undefined),
           workSessions:
             payload.detailKind === 'work' && payload.workSession
-              ? [
-                  ...state.workSessions.filter((item) => item.activityId !== id),
-                  { ...payload.workSession, activityId: id },
-                ]
-              : state.workSessions.filter((item) => item.activityId !== id),
+              ? replaceDetails(state.workSessions, payload.workSession)
+              : replaceDetails(state.workSessions, undefined),
           movies:
             payload.detailKind === 'movie' && payload.movie
-              ? [...state.movies.filter((item) => item.activityId !== id), { ...payload.movie, activityId: id }]
-              : state.movies.filter((item) => item.activityId !== id),
+              ? replaceDetails(state.movies, payload.movie)
+              : replaceDetails(state.movies, undefined),
         }));
 
         return activity;

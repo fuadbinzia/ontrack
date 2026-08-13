@@ -320,6 +320,8 @@ export const agentUiIdsShell = {
     analyzePhoto: 'ontrack.activityForm.analyzePhoto',
     removePhoto: 'ontrack.activityForm.removePhoto',
     save: 'ontrack.activityForm.save',
+    saveThisOccurrence: 'ontrack.activityForm.saveThisOccurrence',
+    saveSeries: 'ontrack.activityForm.saveSeries',
     /** Non-interactive swipe-down affordance at the top of the modal. */
     grabber: 'ontrack.activityForm.grabber',
     cancel: 'ontrack.activityForm.cancel',

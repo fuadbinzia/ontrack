@@ -1,7 +1,21 @@
 import type { Activity } from '@/types/models';
-import { isDateKey } from '@/utils/date';
+import { addDays, isDateKey } from '@/utils/date';
 
 import type { GoogleCalendarEvent, GoogleCalendarLinkRow } from './google-types';
+
+export function googleCalendarMetadata(
+  link: GoogleCalendarLinkRow,
+  syncedAt: string,
+  recurringEventId?: string,
+): NonNullable<Activity['googleCalendar']> {
+  return {
+    calendarId: link.calendar_id,
+    eventId: link.google_event_id,
+    ...(recurringEventId ? { recurringEventId } : {}),
+    origin: link.origin,
+    lastSyncedAt: syncedAt,
+  };
+}
 
 export function zonedDateParts(date: Date, timeZone: string) {
   const values: Record<string, string> = {};
@@ -35,17 +49,30 @@ export function eventToActivity(event: GoogleCalendarEvent, existing: Activity |
     title: event.summary?.trim() || 'Untitled event',
     notes: event.description?.trim() || undefined,
     date: start.date,
+    allDay: Boolean(allDay) || undefined,
     startMinutes: start.minutes,
     durationMinutes: duration,
     categoryId: existing?.categoryId ?? 'personal',
     status: existing?.status ?? 'upcoming',
     createdAt: existing?.createdAt ?? syncedAt,
     updatedAt: event.updated ?? syncedAt,
-    googleCalendar: { calendarId: link.calendar_id, eventId: link.google_event_id, origin: link.origin, lastSyncedAt: syncedAt },
+    googleCalendar: googleCalendarMetadata(link, syncedAt, event.recurringEventId),
   };
 }
 
 export function activityBody(activity: Activity, timeZone: string, eventId?: string) {
+  if (activity.allDay) {
+    const days = Math.max(1, Math.round(activity.durationMinutes / (24 * 60)));
+    return {
+      ...(eventId ? { id: eventId } : {}),
+      status: 'confirmed',
+      summary: activity.title,
+      description: activity.notes,
+      start: { date: activity.date },
+      end: { date: addDays(activity.date, days) },
+      extendedProperties: { private: { ontrackActivityId: activity.id } },
+    };
+  }
   const hours = Math.floor(activity.startMinutes / 60).toString().padStart(2, '0');
   const minutes = (activity.startMinutes % 60).toString().padStart(2, '0');
   const start = `${activity.date}T${hours}:${minutes}:00`;

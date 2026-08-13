@@ -87,6 +87,7 @@ export default function ActivityFormScreen() {
   const initialId = editId ?? 'draft';
   const initialDate = existing?.date ?? (typeof params.date === 'string' ? params.date : todayKey());
   const initialStartMinutes = existing?.startMinutes ?? nowMinutes();
+  const allDay = existing?.allDay === true;
   const [title, setTitle] = useState(existing?.title ?? '');
   const requestedCategory = typeof params.category === 'string' ? params.category : '';
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? requestedCategory);
@@ -108,6 +109,9 @@ export default function ActivityFormScreen() {
   const category = categories.find((item) => item.id === categoryId) ?? (editId ? categories[0] : undefined);
   const availableCategories = categories.filter((item) => isCategoryEnabled(item.id, enabledAddons));
   const isEditing = Boolean(editId && existing);
+  const isRecurringSeries = Boolean(
+    existing?.googleCalendar?.recurringEventId || existing?.recurrence?.seriesId,
+  );
   const missingActivity = Boolean(editId && !existing);
   const allowLeave = useRef(false);
   const signature = JSON.stringify({
@@ -115,6 +119,7 @@ export default function ActivityFormScreen() {
     categoryId,
     date,
     startMinutes,
+    allDay,
     duration,
     notes,
     photo,
@@ -331,11 +336,12 @@ export default function ActivityFormScreen() {
                   .join(' · ')
             : existing?.summary;
 
-    saveEvent({
+    const payload = {
       id: editId,
       detailKind: category.detailKind,
       activity: {
         date: dateKey,
+        allDay: allDay || undefined,
         title: title.trim(),
         categoryId,
         startMinutes,
@@ -360,9 +366,38 @@ export default function ActivityFormScreen() {
         category.detailKind === 'movie' && movie
           ? { ...movie, activityId: editId ?? savedDraftId }
           : undefined,
-    });
-    allowLeave.current = true;
-    close();
+    } as const;
+
+    const commitSave = (editScope: 'single' | 'series') => {
+      saveEvent({ ...payload, editScope });
+      allowLeave.current = true;
+      close();
+    };
+
+    if (isRecurringSeries) {
+      appPrompt.alert(
+        'Update Recurring Event?',
+        'Apply these changes to only this event or every event in the series?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'This Event',
+            style: 'secondary',
+            testID: AgentUiIds.activityForm.saveThisOccurrence,
+            onPress: () => commitSave('single'),
+          },
+          {
+            text: 'All Events',
+            style: 'primary',
+            testID: AgentUiIds.activityForm.saveSeries,
+            onPress: () => commitSave('series'),
+          },
+        ],
+      );
+      return;
+    }
+
+    commitSave('single');
   };
 
   const savedDraftId = initialId;
@@ -452,6 +487,7 @@ export default function ActivityFormScreen() {
         <ActivityFormScheduleCard
           date={date}
           onDateChange={setDate}
+          allDay={allDay}
           duration={duration}
           onDurationChange={setDuration}
           startMinutes={startMinutes}

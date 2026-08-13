@@ -1,7 +1,12 @@
 import type { Activity } from '@/types/models';
 
 import { buildGoogleBatchBody, parseGoogleBatchResponse, type GoogleBatchOperation } from './google-batch';
-import { activityBody, eventToActivity, googleEventIdForActivity } from './google-mapping';
+import {
+  activityBody,
+  eventToActivity,
+  googleCalendarMetadata,
+  googleEventIdForActivity,
+} from './google-mapping';
 import { fetchGoogleApi } from './google-fetch';
 import {
   decryptGoogleCalendarToken,
@@ -266,7 +271,16 @@ export async function syncGoogleCalendarServer(
         || new Date(event.updated ?? 0).getTime() >= new Date(existing.updatedAt).getTime()
       );
       if (remoteWins) local.set(link.activity_id, eventToActivity(event, existing, link, timeZone, syncedAt));
-      else if (existing) local.set(link.activity_id, { ...existing, googleCalendar: { calendarId: link.calendar_id, eventId: link.google_event_id, origin: link.origin, lastSyncedAt: syncedAt } });
+      else if (existing) {
+        local.set(link.activity_id, {
+          ...existing,
+          googleCalendar: googleCalendarMetadata(
+            link,
+            syncedAt,
+            event.recurringEventId ?? existing.googleCalendar?.recurringEventId,
+          ),
+        });
+      }
       link.google_updated_at = event.updated ?? syncedAt;
       if (remoteWins) link.local_updated_at = local.get(link.activity_id)?.updatedAt ?? syncedAt;
       discoveredLinks.push(link);
@@ -363,7 +377,16 @@ export async function syncGoogleCalendarServer(
     await upsertLinks(db, linksToUpsert);
     const nextActivities = activities.map((activity) => {
       const link = activityLinks.get(activity.id);
-      return link ? { ...activity, googleCalendar: { calendarId: link.calendar_id, eventId: link.google_event_id, origin: link.origin, lastSyncedAt: syncedAt } } : activity;
+      return link
+        ? {
+            ...activity,
+            googleCalendar: googleCalendarMetadata(
+              link,
+              syncedAt,
+              activity.googleCalendar?.recurringEventId,
+            ),
+          }
+        : activity;
     });
     const hasMore = deletedLinks.length + pendingActivities.length > mutations.length;
     if (hasMore) return { activities: nextActivities, acknowledgedDeletionIds: [...acknowledgedDeletionIds], imported, exported, updated, removed, lastSyncedAt: syncedAt, hasMore, nextPhase: 'push' as const };

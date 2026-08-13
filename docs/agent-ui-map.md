@@ -453,6 +453,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.activityForm.analyzePhoto`     | Re-run meal photo analysis             |
 | `ontrack.activityForm.removePhoto`      | Remove photo                           |
 | `ontrack.activityForm.save`             | Save the event                         |
+| `ontrack.activityForm.saveThisOccurrence` | Apply changes to only this occurrence |
+| `ontrack.activityForm.saveSeries`       | Apply changes to the recurring series  |
 | `ontrack.activityForm.grabber`          | Swipe-down dismiss grabber             |
 | `ontrack.activityForm.cancel`           | Cancel / dismiss                       |
 | `ontrack.activityForm.delete`           | Delete the event                       |

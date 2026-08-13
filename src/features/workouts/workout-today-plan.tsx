@@ -15,7 +15,7 @@ import { layout, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import type { Activity, Workout } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
-import { formatDuration, formatMinutes } from '@/utils/date';
+import { activityTimingLabel } from '@/utils/activity-time';
 
 export function WorkoutTodayPlan({
   todaysWorkouts,
@@ -64,7 +64,7 @@ export function WorkoutTodayPlan({
                 <View style={styles.flex}>
                   <AppText variant="subheading" numberOfLines={1}>{activity.title}</AppText>
                   <AppText variant="caption" color="secondary">
-                    {formatMinutes(activity.startMinutes)} · {formatDuration(activity.durationMinutes)} · {workout.exercises.length} exercises
+                    {activityTimingLabel(activity)} · {workout.exercises.length} exercises
                   </AppText>
                 </View>
                 <Symbol name="chevron.right" size="sm" color={theme.textTertiary} />

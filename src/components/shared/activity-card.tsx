@@ -6,7 +6,7 @@ import { AppText, Card, IconButton } from '@/components/primitives';
 import { borders, categoryColors, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import type { Activity, ActivityCategory } from '@/types/models';
-import { formatDuration, formatMinutes } from '@/utils/date';
+import { activityTimingLabel } from '@/utils/activity-time';
 import { haptics } from '@/utils/haptics';
 import { CategoryIcon } from './category-badge';
 
@@ -46,7 +46,7 @@ export function ActivityCard({
         onLongPress={onLongPress}
         padded={false}
         testID={testID}
-        accessibilityLabel={`${activity.title}, ${formatMinutes(activity.startMinutes)}, ${activity.status}`}
+        accessibilityLabel={`${activity.title}, ${activityTimingLabel(activity)}, ${activity.status}`}
         style={{
           ...styles.card,
           ...(isCurrent
@@ -64,7 +64,7 @@ export function ActivityCard({
               {activity.title}
             </AppText>
             <AppText variant="caption" color="secondary" numberOfLines={1}>
-              {formatMinutes(activity.startMinutes)} · {formatDuration(activity.durationMinutes)}
+              {activityTimingLabel(activity)}
               {activity.summary ? ` · ${activity.summary}` : ''}
             </AppText>
             {isCurrent ? (

@@ -59,6 +59,19 @@ describe('resolveDayTimeState', () => {
       ),
     ).toEqual({});
   });
+
+  it('does not treat an all-day event as happening now or as the next timed event', () => {
+    const allDay = { ...activity('all-day', 'Conference', 0, 24 * 60), allDay: true };
+
+    expect(resolveDayTimeState([allDay], '2026-08-12', now)).toEqual({});
+    expect(
+      resolveDayTimeState(
+        [allDay, activity('next', 'Lunch', 720, 30)],
+        '2026-08-12',
+        now,
+      ),
+    ).toEqual({ nowLine: 'Next · Lunch' });
+  });
 });
 
 describe('emptyDayTitle', () => {

@@ -24,6 +24,7 @@ export const activityFormGlassCardStyle = {
 export function ActivityFormScheduleCard({
   date,
   onDateChange,
+  allDay,
   duration,
   onDurationChange,
   startMinutes,
@@ -35,6 +36,7 @@ export function ActivityFormScheduleCard({
 }: {
   date: string;
   onDateChange: (value: string) => void;
+  allDay?: boolean;
   duration: string;
   onDurationChange: (value: string) => void;
   startMinutes: number;
@@ -47,7 +49,7 @@ export function ActivityFormScheduleCard({
   return (
     <GlassPlate airy style={activityFormGlassCardStyle}>
       <SectionHeader title="Schedule" />
-      <View style={[styles.twoColumns, { zIndex: 1 }]}>
+      <View style={[allDay ? styles.singleColumn : styles.twoColumns, { zIndex: 1 }]}>
         <View style={styles.flex}>
           <DateField
             label="Date"
@@ -58,7 +60,7 @@ export function ActivityFormScheduleCard({
             testID={AgentUiIds.activityForm.date}
           />
         </View>
-        <View style={styles.flex}>
+        {!allDay ? <View style={styles.flex}>
           <Input
             label="Duration (min)"
             value={duration}
@@ -68,16 +70,20 @@ export function ActivityFormScheduleCard({
             fieldBorderColor={fieldBorder}
             testID={AgentUiIds.activityForm.duration}
           />
-        </View>
+        </View> : null}
       </View>
-      <TimeField
+      {allDay ? (
+        <AppText variant="callout" color="secondary" fit>
+          All-day event
+        </AppText>
+      ) : <TimeField
         label="Start Time"
         value={startMinutes}
         onChange={onStartMinutesChange}
         fieldBackground={fieldFill}
         fieldBorderColor={fieldBorder}
         testID={AgentUiIds.activityForm.startTime}
-      />
+      />}
       <Input
         label="Notes"
         value={notes}
@@ -215,6 +221,7 @@ export function ActivityFormPhotoCard({
 
 const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
+  singleColumn: { width: '100%' },
   twoColumns: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   multiline: { minHeight: 96, textAlignVertical: 'top' },
   photo: { width: '100%', height: 220, borderRadius: radii.lg, zIndex: 1 },

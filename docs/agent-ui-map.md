@@ -835,6 +835,7 @@ portrait Travel screen.
 | `ontrack.travel.tripTools.back`             | Return to the trip itinerary                 |
 | `ontrack.travel.tripTools.backToTravel`     | Missing-trip fallback to Travel              |
 | `ontrack.travel.tripTools.section.<tripId>` | Trip Tools glass action-grid page anchor     |
+| `ontrack.travel.planDetail.section.tools`   | Compatibility anchor on the Trip Tools page  |
 | `ontrack.travel.dates.close`                     | Close the trip date-range calendar                        |
 | `ontrack.travel.dates.start`                     | Select the trip start-date endpoint                       |
 | `ontrack.travel.dates.end`                       | Select the trip end-date endpoint                         |

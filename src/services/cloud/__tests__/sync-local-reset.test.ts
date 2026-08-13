@@ -27,6 +27,7 @@ const mockClearThemeHistory = jest.fn();
 const mockResetTravelMap = jest.fn();
 const mockResetTravelPlanUi = jest.fn();
 const mockResetUsage = jest.fn();
+const mockResetFlowAnalytics = jest.fn();
 const mockResetAccountFlags = jest.fn();
 const mockSetPreferences = jest.fn();
 
@@ -112,6 +113,9 @@ jest.mock('@/store/travel-plan-ui', () => ({
 jest.mock('@/store/usage-analytics', () => ({
   useUsageAnalytics: { getState: () => ({ resetLocal: mockResetUsage }) },
 }));
+jest.mock('@/store/flow-analytics', () => ({
+  useFlowAnalytics: { getState: () => ({ reset: mockResetFlowAnalytics }) },
+}));
 
 jest.mock('@/services/cloud/supabase', () => ({ getSupabaseClient: () => ({}) }));
 jest.mock('@/services/cloud/sync-domains', () => ({
@@ -157,6 +161,7 @@ describe('local account data reset', () => {
       ['travel map', mockResetTravelMap],
       ['travel plan UI', mockResetTravelPlanUi],
       ['usage analytics', mockResetUsage],
+      ['flow analytics', mockResetFlowAnalytics],
     ] as const) {
       if (!reset.mock.calls.length) throw new Error(`${name} was not reset`);
     }
@@ -186,6 +191,7 @@ describe('local account data reset', () => {
         STORAGE_KEYS.travelPlanUi,
         STORAGE_KEYS.themeOverrides,
         STORAGE_KEYS.usageAnalytics,
+        STORAGE_KEYS.flowAnalytics,
       ]),
     );
     expect(mockRemovePersistedStorageItems).toHaveBeenNthCalledWith(

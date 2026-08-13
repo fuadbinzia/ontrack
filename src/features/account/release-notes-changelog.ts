@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.72',
+    date: '2026-08-13',
+    notes: [
+      'Ship live flow analytics and latency map.',
+      'Touched: features/account, features/analytics, features/auth.',
+    ],
+  },
+  {
     version: '1.0.71',
     date: '2026-08-13',
     notes: [

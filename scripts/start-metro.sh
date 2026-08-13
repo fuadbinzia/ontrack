@@ -73,6 +73,25 @@ export REACT_NATIVE_PACKAGER_HOSTNAME="${HOSTNAME_OVERRIDE:-127.0.0.1}"
 
 node ./scripts/assert-node.js
 
+# Expo Router API routes execute inside the Metro server during local native
+# development. Load only the analytics server credentials here; Expo exposes
+# only EXPO_PUBLIC_* values to the native bundle.
+ANALYTICS_ENV_FILE="$ROOT/.living-system-map/runtime-analytics.local"
+node "$ROOT/scripts/ensure-local-analytics-env.mjs"
+if [[ -f "$ANALYTICS_ENV_FILE" ]]; then
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    case "$line" in
+      SUPABASE_URL=*|SUPABASE_SERVICE_ROLE_KEY=*|ANALYTICS_INSTALL_HASH_SECRET=*)
+        key="${line%%=*}"
+        value="${line#*=}"
+        value="${value#\"}"; value="${value%\"}"
+        value="${value#\'}"; value="${value%\'}"
+        [[ -n "${!key:-}" ]] || export "$key=$value"
+        ;;
+    esac
+  done < "$ANALYTICS_ENV_FILE"
+fi
+
 # Node crawl + Watchman watch (Expo's null hybrid, fixed for SDK 56+/57).
 bash "$ROOT/scripts/patch-expo-metro-watchman.sh"
 

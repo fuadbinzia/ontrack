@@ -15,11 +15,25 @@ describe('new trip creation feedback', () => {
     expect(planActions).toMatch(/const saved = savePlan\(/);
     expect(planActions).toContain('creatingPlanRef');
     expect(planActions).toMatch(
-      /if \(!saved\) \{\s*creatingPlanRef\.current = false;\s*setError\([\s\S]*?\);\s*return;\s*\}/,
+      /if \(!saved\) \{\s*finishCreateTiming\('fail'\);\s*creatingPlanRef\.current = false;\s*setError\([\s\S]*?\);\s*return;\s*\}/,
     );
     expect(newTripSheet).toContain(
       '{error ? <ErrorMessage message={error} align="center" /> : null}',
     );
+  });
+
+  it('times successful and failed create and edit actions with stable analytics IDs', () => {
+    const planActions = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-plan-actions.ts'),
+      'utf8',
+    );
+
+    expect(planActions).toContain("beginFlowAction('travel.trip.create')");
+    expect(planActions).toContain("finishCreateTiming('fail')");
+    expect(planActions).toContain("finishCreateTiming('complete')");
+    expect(planActions).toContain("beginFlowAction('travel.trip.edit')");
+    expect(planActions).toContain("finishEditTiming('fail')");
+    expect(planActions).toContain("finishEditTiming('complete')");
   });
 
   it('disables pull-to-refresh while the form is open and targets the saved card', () => {

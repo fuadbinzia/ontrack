@@ -7,6 +7,7 @@ import { removePersistedStorageItems, STORAGE_KEYS } from '@/services/storage';
 import { deletePlant } from '@/services/plants/schedule';
 import { useAccountFlags } from '@/store/account-flags';
 import { useFoodProfile } from '@/store/food-profile';
+import { useFlowAnalytics } from '@/store/flow-analytics';
 import { useMealPlan } from '@/store/food-meal-plan';
 import { usePantry } from '@/store/food-pantry';
 import { useRecipes } from '@/store/food-recipes';
@@ -77,6 +78,7 @@ export async function resetLocalDomains() {
   useThemeOverrides.getState().resetAll();
   useThemeOverrides.getState().clearHistory();
   useUsageAnalytics.getState().resetLocal();
+  useFlowAnalytics.getState().reset();
   await clearFlightConfirmationAIMemory();
 
   // Removing the backing values as well as resetting live stores prevents an
@@ -99,6 +101,7 @@ export async function resetLocalDomains() {
     STORAGE_KEYS.foodMealPlan,
     STORAGE_KEYS.themeOverrides,
     STORAGE_KEYS.usageAnalytics,
+    STORAGE_KEYS.flowAnalytics,
   ]);
   await removePersistedStorageItems(
     [STORAGE_KEYS.health, STORAGE_KEYS.flightParserMemory],

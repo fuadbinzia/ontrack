@@ -15,6 +15,7 @@ import {
 } from '@/features/travel/travel-plan-details';
 import type { TravelPlan, TravelPlanMode } from '@/features/travel/types';
 import type { TravelDestinationLocation } from '@/features/travel/map/types';
+import { beginFlowAction } from '@/store/flow-analytics';
 import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 import { newId } from '@/utils/id';
 
@@ -141,8 +142,10 @@ export function useTravelHomePlanActions(args: Args) {
       createdAt: now,
       updatedAt: now,
     };
+    const finishCreateTiming = beginFlowAction('travel.trip.create');
     const saved = savePlan(basePlan);
     if (!saved) {
+      finishCreateTiming('fail');
       creatingPlanRef.current = false;
       setError(
         'Couldn’t create this trip. Your details are still here—please try again.',
@@ -160,6 +163,7 @@ export function useTravelHomePlanActions(args: Args) {
     setPendingCreatedTripId(planId);
     setShowForm(false);
     creatingPlanRef.current = false;
+    finishCreateTiming('complete');
   };
 
   const beginEditingDetails = (plan: TravelPlan) => {
@@ -201,6 +205,7 @@ export function useTravelHomePlanActions(args: Args) {
       plan.itinerary,
     );
     if (dateValidation.error) return setDetailsError(dateValidation.error);
+    const finishEditTiming = beginFlowAction('travel.trip.edit');
     let coverUris = editCoverUris
       .map((uri) => uri.trim())
       .filter(Boolean)
@@ -209,6 +214,7 @@ export function useTravelHomePlanActions(args: Args) {
       try {
         coverUris = await persistTravelCoverPhotos(coverUris, plan.id);
       } catch {
+        finishEditTiming('fail');
         return setDetailsError('Couldn’t save the cover photo. Try another image.');
       }
     }
@@ -228,6 +234,7 @@ export function useTravelHomePlanActions(args: Args) {
     savePlan(next);
     if (isOnCalendar) replaceTravelActivities(next.id, travelCalendarDrafts(next));
     setEditingDetailsPlanId(undefined);
+    finishEditTiming('complete');
   };
 
   const editingPlan = sortedPlans.find((plan) => plan.id === editingDetailsPlanId);

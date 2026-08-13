@@ -1,0 +1,392 @@
+{
+  "schemaVersion": 1,
+  "defaults": {
+    "directTests": [
+      "src/utils/agent-ui/__tests__/agent-ui-flows.test.ts"
+    ],
+    "surroundingTests": [
+      "scripts/__tests__/agent-ui-host-contract.test.ts"
+    ]
+  },
+  "flows": [
+    {
+      "id": "agent-ui:activity-demo",
+      "name": "activity-demo",
+      "label": "activity demo",
+      "e2eFlow": "activity-demo"
+    },
+    {
+      "id": "agent-ui:activity-demo-detail",
+      "name": "activity-demo-detail",
+      "label": "activity demo detail",
+      "e2eFlow": "activity-demo-detail"
+    },
+    {
+      "id": "agent-ui:activity-demo-edit",
+      "name": "activity-demo-edit",
+      "label": "activity demo edit",
+      "e2eFlow": "activity-demo-edit"
+    },
+    {
+      "id": "agent-ui:activity-form",
+      "name": "activity-form",
+      "label": "activity form",
+      "e2eFlow": "activity-form"
+    },
+    {
+      "id": "agent-ui:checklist-demo",
+      "name": "checklist-demo",
+      "label": "checklist demo",
+      "e2eFlow": "checklist-demo"
+    },
+    {
+      "id": "agent-ui:checklist-demo-list",
+      "name": "checklist-demo-list",
+      "label": "checklist demo list",
+      "e2eFlow": "checklist-demo-list"
+    },
+    {
+      "id": "agent-ui:checklist-demo-settings",
+      "name": "checklist-demo-settings",
+      "label": "checklist demo settings",
+      "e2eFlow": "checklist-demo-settings"
+    },
+    {
+      "id": "agent-ui:finance-tax",
+      "name": "finance-tax",
+      "label": "finance tax",
+      "e2eFlow": "finance-tax"
+    },
+    {
+      "id": "agent-ui:food-demo",
+      "name": "food-demo",
+      "label": "food demo",
+      "e2eFlow": "food-demo"
+    },
+    {
+      "id": "agent-ui:food-detail-demo",
+      "name": "food-detail-demo",
+      "label": "food detail demo",
+      "e2eFlow": "food-detail-demo"
+    },
+    {
+      "id": "agent-ui:games-balloon-pop",
+      "name": "games-balloon-pop",
+      "label": "games balloon pop",
+      "e2eFlow": "games-balloon-pop"
+    },
+    {
+      "id": "agent-ui:grocery-demo",
+      "name": "grocery-demo",
+      "label": "grocery demo",
+      "e2eFlow": "grocery-demo"
+    },
+    {
+      "id": "agent-ui:grocery-demo-combined",
+      "name": "grocery-demo-combined",
+      "label": "grocery demo combined",
+      "e2eFlow": "grocery-demo-combined"
+    },
+    {
+      "id": "agent-ui:grocery-demo-recipe-import",
+      "name": "grocery-demo-recipe-import",
+      "label": "grocery demo recipe import",
+      "e2eFlow": "grocery-demo-recipe-import"
+    },
+    {
+      "id": "agent-ui:grocery-demo-settings",
+      "name": "grocery-demo-settings",
+      "label": "grocery demo settings",
+      "e2eFlow": "grocery-demo-settings"
+    },
+    {
+      "id": "agent-ui:health-demo",
+      "name": "health-demo",
+      "label": "health demo",
+      "e2eFlow": "health-demo"
+    },
+    {
+      "id": "agent-ui:health-demo-mood",
+      "name": "health-demo-mood",
+      "label": "health demo mood",
+      "e2eFlow": "health-demo-mood"
+    },
+    {
+      "id": "agent-ui:health-mood",
+      "name": "health-mood",
+      "label": "health mood",
+      "e2eFlow": "health-mood"
+    },
+    {
+      "id": "agent-ui:health-settings",
+      "name": "health-settings",
+      "label": "health settings",
+      "e2eFlow": "health-settings"
+    },
+    {
+      "id": "agent-ui:open-avatar-editor",
+      "name": "open-avatar-editor",
+      "label": "open avatar editor",
+      "e2eFlow": "open-avatar-editor"
+    },
+    {
+      "id": "agent-ui:open-developer",
+      "name": "open-developer",
+      "label": "open developer",
+      "e2eFlow": "open-developer"
+    },
+    {
+      "id": "agent-ui:open-home-location",
+      "name": "open-home-location",
+      "label": "open home location",
+      "e2eFlow": "open-home-location"
+    },
+    {
+      "id": "agent-ui:open-new-checklist",
+      "name": "open-new-checklist",
+      "label": "open new checklist",
+      "e2eFlow": "open-new-checklist"
+    },
+    {
+      "id": "agent-ui:open-new-trip",
+      "name": "open-new-trip",
+      "label": "open new trip",
+      "e2eFlow": "open-new-trip"
+    },
+    {
+      "id": "agent-ui:open-profile-identity",
+      "name": "open-profile-identity",
+      "label": "open profile identity",
+      "e2eFlow": "open-profile-identity"
+    },
+    {
+      "id": "agent-ui:plants-demo",
+      "name": "plants-demo",
+      "label": "plants demo",
+      "e2eFlow": "plants-demo"
+    },
+    {
+      "id": "agent-ui:plants-demo-list",
+      "name": "plants-demo-list",
+      "label": "plants demo list",
+      "e2eFlow": "plants-demo-list"
+    },
+    {
+      "id": "agent-ui:plants-demo-log-watering",
+      "name": "plants-demo-log-watering",
+      "label": "plants demo log watering",
+      "e2eFlow": "plants-demo-log-watering"
+    },
+    {
+      "id": "agent-ui:plants-new",
+      "name": "plants-new",
+      "label": "plants new",
+      "e2eFlow": "plants-new"
+    },
+    {
+      "id": "agent-ui:profile-usage-analytics",
+      "name": "profile-usage-analytics",
+      "label": "profile usage analytics",
+      "e2eFlow": "profile-usage-analytics"
+    },
+    {
+      "id": "agent-ui:today-next-day",
+      "name": "today-next-day",
+      "label": "today next day",
+      "e2eFlow": "today-next-day"
+    },
+    {
+      "id": "agent-ui:today-prev-day",
+      "name": "today-prev-day",
+      "label": "today prev day",
+      "e2eFlow": "today-prev-day"
+    },
+    {
+      "id": "agent-ui:travel-demo",
+      "name": "travel-demo",
+      "label": "travel demo",
+      "e2eFlow": "travel-demo"
+    },
+    {
+      "id": "agent-ui:travel-demo-add-activity",
+      "name": "travel-demo-add-activity",
+      "label": "travel demo add activity",
+      "e2eFlow": "travel-demo-add-activity"
+    },
+    {
+      "id": "agent-ui:travel-demo-add-flight",
+      "name": "travel-demo-add-flight",
+      "label": "travel demo add flight",
+      "e2eFlow": "travel-demo-add-flight"
+    },
+    {
+      "id": "agent-ui:travel-demo-add-flight-connecting",
+      "name": "travel-demo-add-flight-connecting",
+      "label": "travel demo add flight connecting",
+      "e2eFlow": "travel-demo-add-flight-connecting"
+    },
+    {
+      "id": "agent-ui:travel-demo-add-flight-jetblue",
+      "name": "travel-demo-add-flight-jetblue",
+      "label": "travel demo add flight jetblue",
+      "e2eFlow": "travel-demo-add-flight-jetblue"
+    },
+    {
+      "id": "agent-ui:travel-demo-add-flight-roundtrip",
+      "name": "travel-demo-add-flight-roundtrip",
+      "label": "travel demo add flight roundtrip",
+      "e2eFlow": "travel-demo-add-flight-roundtrip"
+    },
+    {
+      "id": "agent-ui:travel-demo-edit-flight",
+      "name": "travel-demo-edit-flight",
+      "label": "travel demo edit flight",
+      "e2eFlow": "travel-demo-edit-flight"
+    },
+    {
+      "id": "agent-ui:travel-demo-hub",
+      "name": "travel-demo-hub",
+      "label": "travel demo hub",
+      "e2eFlow": "travel-demo-hub"
+    },
+    {
+      "id": "agent-ui:travel-demo-list",
+      "name": "travel-demo-list",
+      "label": "travel demo list",
+      "e2eFlow": "travel-demo-list"
+    },
+    {
+      "id": "agent-ui:travel-demo-timeline-add",
+      "name": "travel-demo-timeline-add",
+      "label": "travel demo timeline add",
+      "e2eFlow": "travel-demo-timeline-add"
+    },
+    {
+      "id": "agent-ui:travel-home",
+      "name": "travel-home",
+      "label": "travel home",
+      "e2eFlow": "travel-home"
+    },
+    {
+      "id": "agent-ui:travel-home-empty",
+      "name": "travel-home-empty",
+      "label": "travel home empty",
+      "e2eFlow": "travel-home-empty"
+    },
+    {
+      "id": "agent-ui:travel-home-iceland",
+      "name": "travel-home-iceland",
+      "label": "travel home iceland",
+      "e2eFlow": "travel-home-iceland"
+    },
+    {
+      "id": "agent-ui:travel-home-search",
+      "name": "travel-home-search",
+      "label": "travel home search",
+      "e2eFlow": "travel-home-search"
+    },
+    {
+      "id": "agent-ui:travel-list",
+      "name": "travel-list",
+      "label": "travel list",
+      "e2eFlow": "travel-list"
+    },
+    {
+      "id": "agent-ui:travel-map-demo",
+      "name": "travel-map-demo",
+      "label": "travel map demo",
+      "e2eFlow": "travel-map-demo"
+    },
+    {
+      "id": "agent-ui:travel-punta-cana",
+      "name": "travel-punta-cana",
+      "label": "travel punta cana",
+      "e2eFlow": "travel-punta-cana"
+    },
+    {
+      "id": "agent-ui:vehicle-demo",
+      "name": "vehicle-demo",
+      "label": "vehicle demo",
+      "e2eFlow": "vehicle-demo"
+    },
+    {
+      "id": "agent-ui:vehicle-demo-detail",
+      "name": "vehicle-demo-detail",
+      "label": "vehicle demo detail",
+      "e2eFlow": "vehicle-demo-detail"
+    },
+    {
+      "id": "agent-ui:vehicle-demo-expenses",
+      "name": "vehicle-demo-expenses",
+      "label": "vehicle demo expenses",
+      "e2eFlow": "vehicle-demo-expenses"
+    },
+    {
+      "id": "agent-ui:vehicles-new",
+      "name": "vehicles-new",
+      "label": "vehicles new",
+      "e2eFlow": "vehicles-new"
+    },
+    {
+      "id": "agent-ui:vision-board",
+      "name": "vision-board",
+      "label": "vision board",
+      "e2eFlow": "vision-board"
+    },
+    {
+      "id": "agent-ui:vision-board-categories",
+      "name": "vision-board-categories",
+      "label": "vision board categories",
+      "e2eFlow": "vision-board-categories"
+    },
+    {
+      "id": "agent-ui:vision-board-demo",
+      "name": "vision-board-demo",
+      "label": "vision board demo",
+      "e2eFlow": "vision-board-demo"
+    },
+    {
+      "id": "agent-ui:vision-board-demo-edit",
+      "name": "vision-board-demo-edit",
+      "label": "vision board demo edit",
+      "e2eFlow": "vision-board-demo-edit"
+    },
+    {
+      "id": "agent-ui:vision-board-demo-item-editor",
+      "name": "vision-board-demo-item-editor",
+      "label": "vision board demo item editor",
+      "e2eFlow": "vision-board-demo-item-editor"
+    },
+    {
+      "id": "agent-ui:workouts-demo",
+      "name": "workouts-demo",
+      "label": "workouts demo",
+      "e2eFlow": "workouts-demo"
+    },
+    {
+      "id": "agent-ui:workouts-demo-anatomy",
+      "name": "workouts-demo-anatomy",
+      "label": "workouts demo anatomy",
+      "e2eFlow": "workouts-demo-anatomy"
+    },
+    {
+      "id": "agent-ui:workouts-demo-explore",
+      "name": "workouts-demo-explore",
+      "label": "workouts demo explore",
+      "e2eFlow": "workouts-demo-explore"
+    },
+    {
+      "id": "agent-ui:workouts-demo-gym-active",
+      "name": "workouts-demo-gym-active",
+      "label": "workouts demo gym active",
+      "e2eFlow": "workouts-demo-gym-active"
+    },
+    {
+      "id": "agent-ui:workouts-demo-gym-detail",
+      "name": "workouts-demo-gym-detail",
+      "label": "workouts demo gym detail",
+      "e2eFlow": "workouts-demo-gym-detail"
+    }
+  ]
+}
+

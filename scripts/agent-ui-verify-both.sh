@@ -4,6 +4,8 @@
 # Usage (same flags as agent-ui-verify / once asserts):
 #   ./scripts/agent-ui-verify-both.sh --route /travel/trip-agent-ui-demo --flow travel-demo \
 #     --exists travel.planDetail.transportSection
+# Internal flow-proof mode:
+#   ./scripts/agent-ui-verify-both.sh --proof-flow travel-demo
 #
 # Default: run iOS + Android **in parallel** (daemon queues are platform:slot —
 # no cross-talk). Wall-clock ≈ max(ios, android) instead of sum.
@@ -33,6 +35,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 usage() {
   cat >&2 <<'EOF'
 usage: agent-ui-verify-both.sh --route <path> [--flow <name>] [--exists <id>|…]…
+       agent-ui-verify-both.sh --proof-flow <name>
 
 Same assert flags as agent-ui-verify / once. Runs iOS + Android in parallel
 (AGENT_UI_VERIFY_SERIAL=1 → sequential). Do NOT pipe through head/tail
@@ -49,6 +52,12 @@ done
 
 if [[ $# -lt 1 ]]; then
   usage
+fi
+
+PROOF_FLOW=""
+if [[ "${1:-}" == "--proof-flow" ]]; then
+  [[ $# -eq 2 && -n "${2:-}" ]] || usage
+  PROOF_FLOW="$2"
 fi
 
 # Hold the simulator lease for the whole dual run so another thread cannot
@@ -108,6 +117,10 @@ run_ios() {
 
   # Clear sticky android pin so default host stamp is ios.
   # Keep lease env so the child does not wait on our lockdir.
+  local -a command=(verify "${ARGS[@]}")
+  if [[ -n "${PROOF_FLOW}" ]]; then
+    command=(once --flow "${PROOF_FLOW}")
+  fi
   env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
     AGENT_UI_PLATFORM=ios \
     AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
@@ -119,7 +132,7 @@ run_ios() {
     ONTRACK_IOS_SIMULATOR="${ONTRACK_IOS_SIMULATOR:-}" \
     ONTRACK_IOS_SIMULATOR_UDID="${ONTRACK_IOS_SIMULATOR_UDID:-}" \
     ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
-    "${ROOT}/scripts/agent-ui.sh" verify "${ARGS[@]}"
+    "${ROOT}/scripts/agent-ui.sh" "${command[@]}"
 }
 
 run_android() {
@@ -231,6 +244,10 @@ run_android() {
       android_force_land=1
     fi
   fi
+  local -a command=(verify "${ARGS[@]}")
+  if [[ -n "${PROOF_FLOW}" ]]; then
+    command=(once --flow "${PROOF_FLOW}")
+  fi
   AGENT_UI_PLATFORM=android \
     AGENT_UI_ANDROID_FORCE_LAND="${android_force_land}" \
     AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
@@ -241,7 +258,7 @@ run_android() {
     AGENT_UI_EXPECTED_HMR_BEACON="${AGENT_UI_EXPECTED_HMR_BEACON:-}" \
     ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
     ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
-    "${ROOT}/scripts/agent-ui.sh" verify "${ARGS[@]}"
+    "${ROOT}/scripts/agent-ui.sh" "${command[@]}"
 }
 
 # Seeds/flows enter an agent Dev Mode sandbox — release it after close-out so

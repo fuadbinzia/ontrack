@@ -27,6 +27,7 @@ export const STORAGE_KEYS = {
   foodMealPlan: 'ontrack/food-meal-plan/v1',
   flightParserMemory: 'ontrack/travel-flight-parser-memory/v1',
   usageAnalytics: 'ontrack/usage-analytics/v1',
+  flowAnalytics: 'ontrack/flow-analytics/v1',
   /** Developer-only, device-local hourly process performance rollups. */
   performanceHistory: 'ontrack/performance-history/v1',
   /** Floating tab carousel order by last focus (device-local). */

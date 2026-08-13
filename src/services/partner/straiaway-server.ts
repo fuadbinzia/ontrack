@@ -1,5 +1,5 @@
 import { normalizeStayPackage, stayPackageKey } from '@/features/travel/stay-package';
-import type { StayPackage, StraiawayConnectResult, StraiawayLinkStatus } from '@/services/partner/types';
+import type { StayPackage, StraiAwayConnectResult, StraiAwayLinkStatus } from '@/services/partner/types';
 import { PARTNER_SCOPES, PARTNER_STRAIAWAY } from '@/services/partner/types';
 
 import {
@@ -53,10 +53,10 @@ function authorizeUrlForCode(code: string) {
   return `${native}&web=${encodeURIComponent(web)}`;
 }
 
-export async function createStraiawayConnect(
+export async function createStraiAwayConnect(
   userId: string,
   codeChallenge: string,
-): Promise<StraiawayConnectResult> {
+): Promise<StraiAwayConnectResult> {
   const challenge = codeChallenge.trim();
   if (challenge.length < 16) throw new Error('A PKCE code challenge is required.');
   const code = randomToken(32);
@@ -96,7 +96,7 @@ async function loadChallenge(code: string): Promise<ChallengeRow> {
   return row;
 }
 
-export async function exchangeStraiawayCode(
+export async function exchangeStraiAwayCode(
   request: Request,
   body: { code?: string; partnerUserId?: string; partnerDisplayName?: string },
 ) {
@@ -137,7 +137,7 @@ export async function exchangeStraiawayCode(
   };
 }
 
-export async function confirmStraiawayCallback(userId: string, code: string, codeVerifier: string) {
+export async function confirmStraiAwayCallback(userId: string, code: string, codeVerifier: string) {
   const codeHash = await sha256Base64url(code.trim());
   const { data, error } = await partnerAdmin()
     .from('partner_link_challenges')
@@ -153,7 +153,7 @@ export async function confirmStraiawayCallback(userId: string, code: string, cod
   return straiawayStatus(userId);
 }
 
-export async function straiawayStatus(userId: string): Promise<StraiawayLinkStatus> {
+export async function straiawayStatus(userId: string): Promise<StraiAwayLinkStatus> {
   const { data, error } = await partnerAdmin()
     .from('partner_links')
     .select('partner_user_id, partner_display_name, scopes, connected_at, last_synced_at')
@@ -167,8 +167,8 @@ export async function straiawayStatus(userId: string): Promise<StraiawayLinkStat
     connected: true,
     partnerUserId: row.partner_user_id,
     partnerDisplayName: row.partner_display_name ?? undefined,
-    scopes: (row.scopes ?? []).filter((scope): scope is StraiawayLinkStatus['scopes'][number] =>
-      PARTNER_SCOPES.includes(scope as StraiawayLinkStatus['scopes'][number]),
+    scopes: (row.scopes ?? []).filter((scope): scope is StraiAwayLinkStatus['scopes'][number] =>
+      PARTNER_SCOPES.includes(scope as StraiAwayLinkStatus['scopes'][number]),
     ),
     connectedAt: row.connected_at,
     lastSyncedAt: row.last_synced_at ?? undefined,
@@ -187,7 +187,7 @@ async function loadLink(userId: string): Promise<LinkRow> {
   return data as LinkRow;
 }
 
-export async function disconnectStraiaway(userId: string) {
+export async function disconnectStraiAway(userId: string) {
   const admin = partnerAdmin();
   await admin.from('partner_stay_packages').delete().eq('user_id', userId).eq('partner', PARTNER_STRAIAWAY);
   const { error } = await admin.from('partner_links').delete().eq('user_id', userId).eq('partner', PARTNER_STRAIAWAY);
@@ -230,7 +230,7 @@ async function listLocalPackages(userId: string): Promise<StayPackage[]> {
     .filter((pkg): pkg is StayPackage => Boolean(pkg));
 }
 
-async function callStraiaway(
+async function callStraiAway(
   outboundToken: string,
   method: 'GET' | 'POST',
   path: string,
@@ -256,20 +256,20 @@ async function callStraiaway(
   return payload;
 }
 
-export async function pushStraiawayStays(userId: string, packages: StayPackage[]) {
+export async function pushStraiAwayStays(userId: string, packages: StayPackage[]) {
   const link = await loadLink(userId);
   const normalized = packages.map(normalizeStayPackage).filter((pkg): pkg is StayPackage => Boolean(pkg));
   await upsertLocalPackages(userId, normalized);
   const outbound = await decryptPartnerToken(link.outbound_token_ciphertext);
-  await callStraiaway(outbound, 'POST', '/partner/ontrack/stays', { stays: normalized });
+  await callStraiAway(outbound, 'POST', '/partner/ontrack/stays', { stays: normalized });
   await markSynced(userId);
   return { pushed: normalized.length, lastSyncedAt: new Date().toISOString() };
 }
 
-export async function pullStraiawayStays(userId: string): Promise<{ stays: StayPackage[]; lastSyncedAt: string }> {
+export async function pullStraiAwayStays(userId: string): Promise<{ stays: StayPackage[]; lastSyncedAt: string }> {
   const link = await loadLink(userId);
   const outbound = await decryptPartnerToken(link.outbound_token_ciphertext);
-  const payload = await callStraiaway(outbound, 'GET', '/partner/ontrack/stays');
+  const payload = await callStraiAway(outbound, 'GET', '/partner/ontrack/stays');
   const remote = Array.isArray((payload as { stays?: unknown }).stays)
     ? (payload as { stays: unknown[] }).stays
     : Array.isArray(payload)
@@ -282,7 +282,7 @@ export async function pullStraiawayStays(userId: string): Promise<{ stays: StayP
   return { stays: merged, lastSyncedAt: new Date().toISOString() };
 }
 
-export async function inboundStraiawayStays(request: Request, packages: StayPackage[]) {
+export async function inboundStraiAwayStays(request: Request, packages: StayPackage[]) {
   const token = readPartnerSecret(request);
   if (!token) throw new Error('Partner token is required.');
   const tokenHash = await sha256Base64url(token);

@@ -1,7 +1,7 @@
 {
   "name": "ontrack",
   "main": "expo-router/entry",
-  "version": "1.0.62",
+  "version": "1.0.63",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -12,6 +12,7 @@
     "d3-geo": "^3.1.1",
     "expo": "~57.0.9",
     "expo-apple-authentication": "~57.0.1",
+    "expo-audio": "~57.0.3",
     "expo-blur": "~57.0.2",
     "expo-build-properties": "~57.0.10",
     "expo-clipboard": "~57.0.1",
@@ -36,6 +37,7 @@
     "expo-secure-store": "~57.0.1",
     "expo-sensors": "~57.0.2",
     "expo-sharing": "~57.0.8",
+    "expo-speech": "~57.0.1",
     "expo-splash-screen": "~57.0.5",
     "expo-status-bar": "~57.0.1",
     "expo-symbols": "~57.0.1",
@@ -125,7 +127,13 @@
     "packager:ensure": "bash ./scripts/ensure-packager.sh",
     "packager:ensure:start": "bash ./scripts/ensure-packager.sh --start",
     "packager:ensure:android": "bash ./scripts/ensure-packager.sh --start --android",
-    "agent-ui:sources": "bash ./scripts/agent-ui-sources.sh"
+    "agent-ui:sources": "bash ./scripts/agent-ui-sources.sh",
+    "system-map": "node ~/.codex/skills/living-system-map/scripts/atlas.mjs serve --repo .",
+    "system-map:scan": "node ~/.codex/skills/living-system-map/scripts/atlas.mjs scan --repo .",
+    "system-map:verify": "node ~/.codex/skills/living-system-map/scripts/atlas.mjs verify --repo .",
+    "system-map:coverage": "node ~/.codex/skills/living-system-map/scripts/atlas.mjs coverage --repo .",
+    "system-map:check": "node ~/.codex/skills/living-system-map/scripts/atlas.mjs check --repo .",
+    "system-map:baseline": "node ~/.codex/skills/living-system-map/scripts/atlas.mjs baseline --repo ."
   },
   "jest": {
     "preset": "jest-expo",

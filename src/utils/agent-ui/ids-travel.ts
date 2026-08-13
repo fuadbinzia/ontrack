@@ -157,7 +157,11 @@ export const agentUiIdsTravel = {
       tripWeather: (tripId: string) =>
         `ontrack.travel.list.tripWeather.${tripId}`,
       currency: (tripId: string) => `ontrack.travel.list.currency.${tripId}`,
+      translator: (tripId: string) =>
+        `ontrack.travel.list.translator.${tripId}`,
       expenses: (tripId: string) => `ontrack.travel.list.expenses.${tripId}`,
+      packingList: (tripId: string) =>
+        `ontrack.travel.list.packingList.${tripId}`,
       groupChat: (tripId: string) => `ontrack.travel.list.groupChat.${tripId}`,
       coTravelers: (tripId: string) =>
         `ontrack.travel.list.coTravelers.${tripId}`,
@@ -238,6 +242,29 @@ export const agentUiIdsTravel = {
       done: 'ontrack.travel.weather.done',
       /** Live conditions at the trip destination (layout anchor). */
       current: 'ontrack.travel.weather.current',
+    },
+    translator: {
+      sheet: 'ontrack.travel.translator.sheet',
+      close: 'ontrack.travel.translator.close',
+      homeLanguage: 'ontrack.travel.translator.language.home',
+      destinationLanguage: 'ontrack.travel.translator.language.destination',
+      swap: 'ontrack.travel.translator.language.swap',
+      input: 'ontrack.travel.translator.input',
+      translate: 'ontrack.travel.translator.translate',
+      directionHome: 'ontrack.travel.translator.direction.home',
+      directionDestination: 'ontrack.travel.translator.direction.destination',
+      microphoneHome: 'ontrack.travel.translator.microphone.home',
+      microphoneDestination: 'ontrack.travel.translator.microphone.destination',
+      stop: 'ontrack.travel.translator.microphone.stop',
+      quickPhrase: (index: number) =>
+        `ontrack.travel.translator.quickPhrase.${index}`,
+      copy: (turnId: string) =>
+        `ontrack.travel.translator.turn.${turnId}.copy`,
+      replay: (turnId: string) =>
+        `ontrack.travel.translator.turn.${turnId}.replay`,
+      retry: (turnId: string) =>
+        `ontrack.travel.translator.turn.${turnId}.retry`,
+      preferences: 'ontrack.travel.translator.preferences',
     },
     friendRow: {
       action: (target: string, action: string) =>

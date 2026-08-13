@@ -17,7 +17,7 @@ export const travelEditorialTextStyle: TextStyle = {
 
 /**
  * Horizontal gap between a leading icon/logo and its title — matches the
- * itinerary mock (suitcase / plane flush-but-breathing next to the label).
+ * itinerary mock (backpack / plane flush-but-breathing next to the label).
  * Scale with `s()` / `useResponsive().spacing.sm` at call sites.
  */
 export const TRAVEL_TITLE_ICON_GAP = 8;

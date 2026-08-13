@@ -33,6 +33,21 @@ describe('travel plan normalization', () => {
     expect(cleared?.coverUris).toBeUndefined();
   });
 
+  it('keeps a valid packing-list link and drops an empty one', () => {
+    expect(
+      normalizeTravelPlan({
+        ...legacyPlan,
+        packingListId: '  checklist-1  ',
+      })?.packingListId,
+    ).toBe('checklist-1');
+    expect(
+      normalizeTravelPlan({
+        ...legacyPlan,
+        packingListId: '   ',
+      })?.packingListId,
+    ).toBeUndefined();
+  });
+
   it('keeps durable coverUris (and coverUri alias) and drops invalid ones', () => {
     expect(
       normalizeTravelPlan({

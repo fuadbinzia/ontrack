@@ -28,7 +28,15 @@ import {
 } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { TodoListHeader } from '@/features/todos/todo-list-header';
-import { sortCategoriesForList } from '@/features/todos/checklist-category-helpers';
+import {
+  ALL_ASSIGNEES,
+  ANYONE_ASSIGNEE,
+  filterChecklistTasksByAssignee,
+} from '@/features/todos/checklist-assignee-filter';
+import {
+  partitionChecklistCategories,
+  sortCategoriesForList,
+} from '@/features/todos/checklist-category-helpers';
 import { ALL_CATEGORIES } from '@/features/todos/checklist-category-tabs';
 import {
   ChecklistTaskDetailsSheetHost,
@@ -46,6 +54,7 @@ import {
     canEditTodoContent,
     useTodos,
 } from '@/store/todos';
+import { useTravel } from '@/store/travel';
 import { useUI } from '@/store/ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
@@ -64,6 +73,9 @@ export function TodoListScreen({ listId }: { listId: string }) {
     layout.bottomNavBarBaseHeight + insets.bottom;
   const { user } = useAuthSession();
   const list = useTodos((state) => state.lists.find((item) => item.id === listId));
+  const linkedTrip = useTravel((state) =>
+    state.plans.find((plan) => plan.packingListId === listId),
+  );
   const tasks = useTodos(
     (state) => state.tasks.filter((task) => task.listId === listId),
     listReferenceEquality,
@@ -81,6 +93,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
   const toggleImportant = useTodos((state) => state.toggleImportant);
   const updateTask = useTodos((state) => state.updateTask);
   const deleteTask = useTodos((state) => state.deleteTask);
+  const deleteCategory = useTodos((state) => state.deleteCategory);
   const reorderTasks = useTodos((state) => state.reorderTasks);
   const clearCompleted = useTodos((state) => state.clearCompleted);
   const renameList = useTodos((state) => state.renameList);
@@ -93,21 +106,45 @@ export function TodoListScreen({ listId }: { listId: string }) {
   const [filter, setFilter] = useState<TodoFilter>('open');
   const [sort, setSort] = useState<TodoSort>('smart');
   const [selectedCategoryId, setSelectedCategoryId] = useState(ALL_CATEGORIES);
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState(ALL_ASSIGNEES);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [editingTaskIds, setEditingTaskIds] =
     useState<ReadonlySet<string> | null>(null);
   const [inlineEditingTaskId, setInlineEditingTaskId] = useState<string | null>(
     null,
   );
+  const categoryPartition = useMemo(
+    () => partitionChecklistCategories(categories, tasks),
+    [categories, tasks],
+  );
+  const populatedCategories = categoryPartition.populated;
 
   useEffect(() => {
     if (
       selectedCategoryId !== ALL_CATEGORIES &&
-      !categories.some((category) => category.id === selectedCategoryId)
+      !populatedCategories.some(
+        (category) => category.id === selectedCategoryId,
+      )
     ) {
       setSelectedCategoryId(ALL_CATEGORIES);
     }
-  }, [categories, selectedCategoryId]);
+  }, [populatedCategories, selectedCategoryId]);
+
+  useEffect(() => {
+    for (const categoryId of categoryPartition.emptyIds) {
+      deleteCategory(categoryId);
+    }
+  }, [categoryPartition.emptyIds, deleteCategory]);
+
+  useEffect(() => {
+    if (
+      selectedAssigneeId !== ALL_ASSIGNEES &&
+      selectedAssigneeId !== ANYONE_ASSIGNEE &&
+      !members.some((member) => member.userId === selectedAssigneeId)
+    ) {
+      setSelectedAssigneeId(ALL_ASSIGNEES);
+    }
+  }, [members, selectedAssigneeId]);
 
   const dismissChrome = () => {
     Keyboard.dismiss();
@@ -121,13 +158,27 @@ export function TodoListScreen({ listId }: { listId: string }) {
     () => sortTodoTasks(tasks.filter((task) => task.completed), sort, 'completed'),
     [sort, tasks],
   );
-  const statusTasks = filter === 'open' ? openTasks : completedTasks;
+  const assigneeOpenTasks = filterChecklistTasksByAssignee(
+    openTasks,
+    selectedAssigneeId,
+  );
+  const assigneeCompletedTasks = filterChecklistTasksByAssignee(
+    completedTasks,
+    selectedAssigneeId,
+  );
+  const statusTasks = filter === 'open'
+    ? assigneeOpenTasks
+    : assigneeCompletedTasks;
   const categoryOpenTasks = selectedCategoryId === ALL_CATEGORIES
-    ? openTasks
-    : openTasks.filter((task) => task.categoryId === selectedCategoryId);
+    ? assigneeOpenTasks
+    : assigneeOpenTasks.filter(
+        (task) => task.categoryId === selectedCategoryId,
+      );
   const categoryCompletedTasks = selectedCategoryId === ALL_CATEGORIES
-    ? completedTasks
-    : completedTasks.filter((task) => task.categoryId === selectedCategoryId);
+    ? assigneeCompletedTasks
+    : assigneeCompletedTasks.filter(
+        (task) => task.categoryId === selectedCategoryId,
+      );
   const visibleTasks = selectedCategoryId === ALL_CATEGORIES
     ? statusTasks
     : statusTasks.filter((task) => task.categoryId === selectedCategoryId);
@@ -162,6 +213,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
 
   const enterEditMode = () => {
     setSort('manual');
+    setSelectedAssigneeId(ALL_ASSIGNEES);
     setNameDraft(list?.name ?? '');
     setInlineEditingTaskId(null);
     setEditingTaskIds(new Set(visibleTasks.map((task) => task.id)));
@@ -186,6 +238,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
     setInlineEditingTaskId(null);
     setDraft('');
     setFilter('open');
+    setSelectedAssigneeId(ALL_ASSIGNEES);
     haptics.success();
   };
 
@@ -290,8 +343,9 @@ export function TodoListScreen({ listId }: { listId: string }) {
               <TodoListHeader
                 list={list}
                 tasks={tasks}
-                categories={categories}
+                categories={populatedCategories}
                 selectedCategoryId={selectedCategoryId}
+                selectedAssigneeId={selectedAssigneeId}
                 members={members}
                 owner={owner}
                 canEdit={canEdit}
@@ -340,14 +394,41 @@ export function TodoListScreen({ listId }: { listId: string }) {
                   setSelectedCategoryId(categoryId);
                   haptics.select();
                 }}
+                onAssigneeSelect={(assigneeId) => {
+                  dismissChrome();
+                  if (editMode) {
+                    commitListName();
+                    setEditingTaskIds(null);
+                    setInlineEditingTaskId(null);
+                  }
+                  setSelectedAssigneeId(assigneeId);
+                }}
                 onManageSettings={() => setSettingsVisible(true)}
                 onRemoveList={removeList}
+                linkedTripTitle={linkedTrip?.title}
+                onOpenLinkedTrip={linkedTrip
+                  ? () => {
+                      router.push({
+                        pathname: '/(tabs)/travel/[id]',
+                        params: { id: linkedTrip.id },
+                      } as never);
+                    }
+                  : undefined}
               />
             }
             ListEmptyComponent={
               <TodoEmptyState
                 filter={filter}
                 hasTasks={tasks.length > 0}
+                assigneeFilterLabel={
+                  selectedAssigneeId === ALL_ASSIGNEES
+                    ? undefined
+                    : selectedAssigneeId === ANYONE_ASSIGNEE
+                      ? 'Anyone'
+                      : members.find(
+                          (member) => member.userId === selectedAssigneeId,
+                        )?.displayName
+                }
                 onAddSuggestion={add}
                 onFocusComposer={() => inputRef.current?.focus()}
                 onShowCompleted={() => {
@@ -379,8 +460,10 @@ export function TodoListScreen({ listId }: { listId: string }) {
                   isActive={isActive}
                   listOwner={canEdit}
                   members={members}
-                  showCategory={categories.length > 0}
-                  categoryName={categories.find((category) => category.id === item.categoryId)?.name}
+                  showCategory={populatedCategories.length > 0}
+                  categoryName={populatedCategories.find(
+                    (category) => category.id === item.categoryId,
+                  )?.name}
                   testID={AgentUiIds.checklists.detail.task(item.id)}
                   onDragStart={drag}
                   onDelete={() => {

@@ -15,12 +15,14 @@ const QUICK_START_TASKS = [
 export function TodoEmptyState({
   filter,
   hasTasks,
+  assigneeFilterLabel,
   onAddSuggestion,
   onFocusComposer,
   onShowCompleted,
 }: {
   filter: TodoFilter;
   hasTasks: boolean;
+  assigneeFilterLabel?: string;
   onAddSuggestion: (title: string) => void;
   onFocusComposer: () => void;
   onShowCompleted: () => void;
@@ -31,6 +33,34 @@ export function TodoEmptyState({
   const plateBorder = dark
     ? glassMaterials.border.dark
     : glassMaterials.border.light;
+
+  if (assigneeFilterLabel) {
+    return (
+      <View style={styles.empty}>
+        <GlassPlate
+          airy
+          style={[styles.emptyIcon, { borderColor: plateBorder }]}>
+          <Symbol name="filter" size={24} color={theme.accentPrimary} />
+        </GlassPlate>
+        <AppText
+          variant="heading"
+          style={{ fontSize: s(21), lineHeight: s(26) }}>
+          No matching items
+        </AppText>
+        <AppText
+          variant="body"
+          color="secondary"
+          align="center"
+          style={[
+            styles.emptyBody,
+            { fontSize: s(14), lineHeight: s(20) },
+          ]}>
+          No {filter === 'completed' ? 'closed' : 'open'} items are assigned to{' '}
+          {assigneeFilterLabel}.
+        </AppText>
+      </View>
+    );
+  }
 
   if (filter === 'completed') {
     return (

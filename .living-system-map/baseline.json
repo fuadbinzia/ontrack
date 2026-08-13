@@ -1,0 +1,4462 @@
+{
+  "schemaVersion": 2,
+  "createdAt": "2026-08-13T01:58:26.817Z",
+  "git": {
+    "sha": "1b282bc",
+    "branch": "main",
+    "dirty": true
+  },
+  "assurance": {
+    "score": 100,
+    "categories": {
+      "regressions": {
+        "total": 29,
+        "protected": 29,
+        "pct": 100
+      },
+      "criticalNodes": {
+        "total": 28,
+        "protected": 28,
+        "pct": 100
+      },
+      "criticalConnections": {
+        "total": 1062,
+        "protected": 1062,
+        "pct": 100
+      },
+      "flows": {
+        "total": 101,
+        "protected": 101,
+        "pct": 100
+      }
+    },
+    "verifiedAt": "2026-08-13T01:56:14.714Z"
+  },
+  "obligations": {
+    "bugFixes": [
+      "11051a2b528dd5511aa087e7a8d4c3ebbec48ae1",
+      "1b21ef75c7f79a465258500be26e24b3901beaeb",
+      "240f33415bf880d11bfabe8ad1e7c0fe969f42be",
+      "2d1f0bf00dd89fc91a525b047975cabea0203cd8",
+      "3b420243a7ab694c2783c60bffa73d11580332c4",
+      "418ae4e6bc5751f6d1a59eacd0b5699e64359e99",
+      "4b40a42d9534b6aa155a844195b439b1a55f67b1",
+      "6dbfd0223344580ed98b5562bca6801234c0f631",
+      "78d14b50e129e104db28f332f0146fd013f88ad6",
+      "863b0befe2dfe6f3041c81739838c581254cf03c",
+      "8fd6a7d20b5123d3c89e6fc6b8b65337e8441105",
+      "9442697fabb8abf29794397e1584443d008aed6c",
+      "9877dfde45600728f22230dc4348d84a0882d088",
+      "990cbb89ef4f1a3f6fd71cdb3fb0abefc4d74d3f",
+      "99904037672ec3a0c23a31d526858ba029cf493d",
+      "a21a21c98b9086f5e746e23ac7075f585a6bd9c8",
+      "ae859abcff4eefb4026faf10407dfc5d6e6464af",
+      "b2132e91652cedf5e9786acdf3db00b4b5ba8bde",
+      "b7bf47d712ce8da476bb16096e450cf51bd67dc3",
+      "bfaaa2d80aee14dd1ddbd3250126896459d0e254",
+      "c9f38e0d6498a2ec1e6e9132f2c13b354cc858f2",
+      "ce20c41c3a210c1cf1e7f05dd34b16352fe6e409",
+      "d1b30bf5858fc8dc0f437685dc3cc899e3046865",
+      "d410ae971fcde92a44a1a6c19ce75f70606dc7b5",
+      "de021147b3ac8af564239452905f6899e7bdc106",
+      "de08471eb2e74310bc591a1500a872a6223e2b36",
+      "e9c1d1843a443f4bc6a5ae02cc94b35d310fb6ce",
+      "edbe1e69a47aaf62b7ab8f1967c1aafb221ba4f1",
+      "fc0903e076f295f3ddc741222d6e8e28bdb4f55d"
+    ],
+    "criticalNodes": [
+      "src/app/api/calendar/google/sync+api.ts",
+      "src/app/api/finance/coach+api.ts",
+      "src/app/api/finance/plaid/disconnect+api.ts",
+      "src/app/api/finance/plaid/exchange+api.ts",
+      "src/app/api/finance/plaid/link-token+api.ts",
+      "src/app/api/finance/plaid/sync+api.ts",
+      "src/app/api/usage/reset+api.ts",
+      "src/features/account/dev-access-gate.tsx",
+      "src/features/auth/auth-provider.tsx",
+      "src/features/finance/finance-subpage-header.tsx",
+      "src/features/travel/travel-remove-confirm-modal.tsx",
+      "src/services/cloud/sync-local-reset.ts",
+      "src/store/account-flags.ts",
+      "src/store/auth-access.ts",
+      "src/store/finance.ts",
+      "supabase/migrations/202607250001_app_sync.sql",
+      "supabase/migrations/202607270006_travel_invite_authenticated_only.sql",
+      "supabase/migrations/202607270007_all_accounts_test_trip_chat.sql",
+      "supabase/migrations/202608030001_delete_own_account.sql",
+      "supabase/migrations/202608050009_account_flags.sql",
+      "supabase/migrations/202608050010_account_flags_select_grant.sql",
+      "supabase/migrations/202608090001_account_flags_agent_test.sql",
+      "supabase/migrations/202608120001_google_calendar_sync.sql",
+      "supabase/migrations/202608120003_google_calendar_sync_direction.sql",
+      "supabase/migrations/202608120007_finance_addon.sql",
+      "supabase/migrations/202608120010_complete_account_data_purge.sql",
+      "supabase/migrations/202608120011_storage_api_account_purge.sql",
+      "supabase/migrations/202608120012_preserve_account_capabilities_on_reset.sql"
+    ],
+    "criticalConnections": [
+      {
+        "key": "account-sync-boundary:src/features/auth/auth-provider.tsx->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "behavior-test:src/app/api/finance/__tests__/coach-api.test.ts->src/app/api/finance/coach+api.ts",
+        "count": 1
+      },
+      {
+        "key": "behavior-test:src/app/api/usage/__tests__/reset-api.test.ts->src/app/api/usage/reset+api.ts",
+        "count": 1
+      },
+      {
+        "key": "behavior-test:src/features/todos/__tests__/todo-list-remove.test.ts->src/features/todos/todo-list-remove.ts",
+        "count": 1
+      },
+      {
+        "key": "behavior-test:src/services/calendar/__tests__/google-api-routes.test.ts->src/app/api/calendar/google/sync+api.ts",
+        "count": 1
+      },
+      {
+        "key": "collaboration-boundary:src/store/todos.ts->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "collaboration-boundary:src/store/vehicles.ts->src/services/vehicles/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "contract-test:scripts/__tests__/historical-bugfix-regressions.test.ts->app.json",
+        "count": 1
+      },
+      {
+        "key": "contract-test:src/components/primitives/__tests__/design-system-contract.test.ts->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "contract-test:src/features/account/__tests__/dev-access.test.ts->src/features/account/dev-access-gate.tsx",
+        "count": 1
+      },
+      {
+        "key": "contract-test:src/features/travel/__tests__/historical-bugfix-regressions.test.ts->src/features/travel/travel-remove-confirm-modal.tsx",
+        "count": 1
+      },
+      {
+        "key": "contract-test:src/services/cloud/__tests__/sign-out-rule.test.ts->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/features/auth/agent-account-login.ts->data:account_flags",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/features/travel/chat.ts->data:delete_travel_chat_message",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/analytics/sync.ts->data:analytics_product_summary",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/analytics/sync.ts->data:upsert_analytics_daily",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/calendar/google-oauth.ts->data:google_calendar_connections",
+        "count": 2
+      },
+      {
+        "key": "data-access:src/services/calendar/google-oauth.ts->data:google_calendar_event_links",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/calendar/google-sync.ts->data:google_calendar_connections",
+        "count": 4
+      },
+      {
+        "key": "data-access:src/services/calendar/google-sync.ts->data:google_calendar_event_links",
+        "count": 7
+      },
+      {
+        "key": "data-access:src/services/cloud/account-flags.ts->data:account_flags",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/cloud/account.ts->data:delete_own_account",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/cloud/account.ts->data:list_own_storage_objects",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/cloud/account.ts->data:reset_own_data",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/cloud/sync-account.ts->data:app_state",
+        "count": 2
+      },
+      {
+        "key": "data-access:src/services/cloud/sync-refresh.ts->data:app_state",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/cloud/sync-session.ts->data:app_state",
+        "count": 2
+      },
+      {
+        "key": "data-access:src/services/finance/plaid-server.ts->data:plaid_items",
+        "count": 4
+      },
+      {
+        "key": "data-access:src/services/finance/plaid-server.ts->data:plaid_link_sessions",
+        "count": 4
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:accept_todo_collaborator_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:accept_todo_email_invite",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:accept_todo_share_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:create_todo_collaborator_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:create_todo_email_invite",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:create_todo_share_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:list_todo_email_invites",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:resolve_todo_collaborator_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:resolve_todo_share_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:revoke_todo_collaborator_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:revoke_todo_email_invite",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:revoke_todo_share_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-invites.ts->data:todo_list_pending_invites",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-members.ts->data:add_todo_friend_editors",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-members.ts->data:delete_todo_list",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-members.ts->data:leave_todo_list",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-members.ts->data:remove_todo_member",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-members.ts->data:set_todo_member_role",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-members.ts->data:transfer_todo_list_ownership",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-mutations.ts->data:apply_todo_category_mutations",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-mutations.ts->data:apply_todo_mutations",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-mutations.ts->data:publish_todo_list",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-mutations.ts->data:set_todo_categories",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-mutations.ts->data:todo_list_snapshot",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/todos/collaboration-reload.ts->data:todo_shared_list_ids",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/expense-collaboration.ts->data:fetch_travel_trip_expenses",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/expense-collaboration.ts->data:fetch_travel_trip_expenses_by_access",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/expense-collaboration.ts->data:publish_travel_trip_expenses",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/expense-collaboration.ts->data:travel_trip_id_for_access",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/itinerary-collaboration.ts->data:delete_travel_trip_itinerary_items",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/itinerary-collaboration.ts->data:fetch_travel_trip_itinerary",
+        "count": 2
+      },
+      {
+        "key": "data-access:src/services/travel/itinerary-collaboration.ts->data:fetch_travel_trip_itinerary_by_access",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/itinerary-collaboration.ts->data:travel_trip_id_for_access",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/itinerary-collaboration.ts->data:upsert_travel_trip_itinerary_items",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/travel-map-collaboration.ts->data:apply_travel_map_mutations",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/travel-map-collaboration.ts->data:list_friend_travel_maps",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/travel-map-collaboration.ts->data:list_my_travel_map",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/travel-map-collaboration.ts->data:list_visible_friend_map_profiles",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/travel/travel-map-collaboration.ts->data:set_travel_map_visibility",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:accept_vehicle_share_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:apply_vehicle_mutations",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:create_vehicle_share_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:delete_shared_vehicle",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:leave_vehicle",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:publish_vehicle",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:remove_vehicle_member",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:resolve_vehicle_share_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:revoke_vehicle_share_link",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:transfer_vehicle_ownership",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:vehicle_shared_ids",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/vehicles/collaboration.ts->data:vehicle_snapshot",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/(tabs)/finance/_layout.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/(tabs)/profile/account.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/(tabs)/profile/calendar-sync.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/(tabs)/profile/calendar-sync.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/(tabs)/profile/calendar-sync.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/account.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/account.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/auth/callback.tsx->external:expo-linking",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/auth/callback.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/auth/callback.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/auth/callback.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/auth/data-choice.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/app/auth/data-choice.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/components/navigation/navigation-session-sync.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/components/navigation/navigation-session-sync.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/api-usage-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/api-usage-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/avatar-cache.ts->external:zustand",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/avatar-color-picker.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/avatar-color-picker.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/avatar-color-picker.tsx->external:reanimated-color-picker",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/city-autofind-settings-row.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/city-autofind-settings-row.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/city-autofind-suggestion-menu.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/city-autofind-suggestion-menu.tsx->external:react-native-reanimated",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/city-autofind-suggestion-menu.tsx->external:react-native-safe-area-context",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/cloud-account-card.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/cloud-account-card.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/cloud-account-card.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/dev-access-gate.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/dev-access-gate.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/developer-hub.tsx->external:expo-constants",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/developer-hub.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/developer-hub.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/developer-hub.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/developer-insights-panel.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/developer-release-notes-panel.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/developer-release-notes-panel.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/developer-storage.ts->external:@react-native-async-storage/async-storage",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/iconify-icon.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/iconify-icon.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/iconify-icon.tsx->external:react-native-svg",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/integrations-service-card.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/integrations-status-card.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/legal-document-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-avatar-editor-sheet.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-avatar-editor-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-avatar-media.ts->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-avatar-media.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-avatar.tsx->external:expo-image",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-avatar.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-avatar.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-identity-editor-sheet.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-identity-editor-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-location-preferences.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-location-preferences.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/release-notes-format.ts->external:expo-constants",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/self-display-name.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/use-city-autofind-suggestions.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/use-city-autofind-suggestions.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/app-boot-loader.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/app-boot-loader.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/app-boot-loader.tsx->external:react-native-reanimated",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/apple-provider-button.ios.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/apple-provider-button.ios.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/apple-provider-button.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/apple-provider-button.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-account-exit.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-atmosphere.tsx->external:expo-linear-gradient",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-atmosphere.tsx->external:react",
+        "count": 2
+      },
+      {
+        "key": "external:src/features/auth/auth-atmosphere.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-atmosphere.tsx->external:react-native-reanimated",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-brand-mark.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-constellation.tsx->external:react",
+        "count": 2
+      },
+      {
+        "key": "external:src/features/auth/auth-constellation.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-constellation.tsx->external:react-native-reanimated",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-context.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-context.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-hero.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-provider-effects.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-provider-effects.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-provider-effects.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-provider.tsx->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-provider.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-provider.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-session-snapshot.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/google-provider-button.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/google-provider-button.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/provider-button.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/provider-button.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/provider-marks.tsx->external:react-native-svg",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/session-lock.ts->external:expo-device",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/theme-mode-toggle.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/theme-mode-toggle.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/theme-mode-toggle.tsx->external:react-native-reanimated",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/welcome-onboard-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/welcome-onboard-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/welcome-onboard-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/welcome-preview.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-accounts-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-accounts-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-bills-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-bills-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-buckets-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-buckets-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-credit-sheet.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-credit-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-entities-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-entities-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-expense-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-expense-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-expense-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-progress-bar.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-subpage-header.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-tax-handoff-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-tax-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-tax-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-transactions-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-transactions-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-transactions-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/persist-finance-document.ts->external:expo-document-picker",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/persist-finance-document.ts->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/persist-finance-document.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/share-tax-package.ts->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/share-tax-package.ts->external:expo-sharing",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/share-tax-package.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/use-finance-coach.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/todos/use-voice-lists-sync.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/todos/use-voice-lists-sync.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/travel/chat.ts->external:@react-native-async-storage/async-storage",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/travel/destination-cover-fetch.ts->external:@react-native-async-storage/async-storage",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/travel/expenses/fx-rates.ts->external:@react-native-async-storage/async-storage",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/travel/map/use-travel-map-collaboration.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/travel/use-travel-friends-sheet-sync.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/travel/use-travel-home-atmosphere-image.ts->external:@react-native-async-storage/async-storage",
+        "count": 1
+      },
+      {
+        "key": "external:src/hooks/use-todo-collaboration.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/hooks/use-todo-collaboration.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/hooks/use-vehicle-collaboration.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/hooks/use-vehicle-collaboration.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/calendar/google-oauth.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/cloud/account.ts->external:expo-apple-authentication",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/cloud/account.ts->external:expo-crypto",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/cloud/account.ts->external:expo-linking",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/cloud/account.ts->external:expo-web-browser",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/cloud/account.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/cloud/sync-local-reset.ts->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/cloud/sync-local-reset.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/cloud/sync-session.ts->external:zustand",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/finance/plaid-server.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/finance/plaid.ts->external:expo-web-browser",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/finance/plaid.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/storage/index.ts->external:@react-native-async-storage/async-storage",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/storage/index.ts->external:expo-crypto",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/storage/index.ts->external:expo-secure-store",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/storage/index.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/storage/index.ts->external:zustand",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/todos/collaboration-members.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/travel/travel-collaboration-shared.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/vehicles/collaboration.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/store/account-flags.ts->external:zustand",
+        "count": 1
+      },
+      {
+        "key": "external:src/store/auth-access.ts->external:zustand",
+        "count": 2
+      },
+      {
+        "key": "external:src/store/finance.ts->external:zustand",
+        "count": 2
+      },
+      {
+        "key": "external:src/utils/agent-ui/AgentUiRouteSync.tsx->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/utils/agent-ui/AgentUiRouteSync.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/utils/agent-ui/AgentUiRouteSync.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/components/navigation/navigation-session-sync.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/features/auth/app-boot-loader.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/features/auth/guest-dirty-tracking.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/features/auth/welcome-preview.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/hooks/use-todo-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/hooks/use-vehicle-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/store/account-flags.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/_layout.tsx->src/utils/agent-ui/AgentUiRouteSync.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/_layout.tsx->src/features/auth/welcome-preview.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/_layout.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/accounts.tsx->src/features/finance/finance-accounts-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/bills.tsx->src/features/finance/finance-bills-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/buckets.tsx->src/features/finance/finance-buckets-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/entities.tsx->src/features/finance/finance-entities-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/expense.tsx->src/features/finance/finance-expense-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/index.tsx->src/features/finance/finance-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/tax.tsx->src/features/finance/finance-tax-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/transactions.tsx->src/features/finance/finance-transactions-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/food/community.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/account.tsx->src/utils/auth-return-to.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/api-usage.tsx->src/features/account/dev-access-gate.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/services/calendar/google-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/utils/confirm-destructive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/design-system.tsx->src/features/account/dev-access-gate.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/developer.tsx->src/features/account/dev-access-gate.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/developer.tsx->src/features/account/developer-hub.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/cloud-account-card.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/dev-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-avatar-editor-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-identity-editor-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-location-preferences.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/release-notes.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/integrations.tsx->src/features/account/api-usage-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/integrations.tsx->src/features/account/dev-access-gate.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/performance.tsx->src/features/account/dev-access-gate.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/straiaway.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/vehicles/[id]/settings.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/vehicles/[id]/settings.tsx->src/services/vehicles/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/account.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/account.tsx->src/features/auth/auth-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/account.tsx->src/utils/auth-return-to.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/calendar/google/sync+api.ts->src/services/calendar/google-api-route.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/calendar/google/sync+api.ts->src/services/calendar/google-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/calendar/google/sync+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/coach+api.ts->src/services/finance/coach-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/disconnect+api.ts->src/services/finance/plaid-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/disconnect+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/exchange+api.ts->src/services/finance/plaid-data.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/exchange+api.ts->src/services/finance/plaid-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/exchange+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/link-token+api.ts->src/services/finance/plaid-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/sync+api.ts->src/services/finance/plaid-data.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/sync+api.ts->src/services/finance/plaid-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/plaid/sync+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/usage/reset+api.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/callback.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/callback.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/callback.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/callback.tsx->src/services/cloud/account.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/data-choice.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/data-choice.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/data-choice.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/data-choice.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/auth/data-choice.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/f/[code].tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/privacy.tsx->src/features/account/legal-document-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/privacy.tsx->src/features/account/privacy-policy-content.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/terms.tsx->src/features/account/legal-document-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/terms.tsx->src/features/account/terms-of-use-content.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/v/[code].tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/v/[code].tsx->src/services/vehicles/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/welcome.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/welcome.tsx->src/features/auth/auth-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/welcome.tsx->src/features/auth/welcome-onboard-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/welcome.tsx->src/features/auth/welcome-preview.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/components/navigation/navigation-session-sync.tsx->src/utils/navigation-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/api-usage-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/api-usage-screen.tsx->src/features/account/integrations-service-card.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/api-usage-screen.tsx->src/features/account/integrations-sort.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/api-usage-screen.tsx->src/features/account/integrations-status-card.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/api-usage-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/api-usage-screen.tsx->src/services/http/api-usage-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/api-usage-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/avatar-cache.ts->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/avatar-color-picker.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/avatar-color-picker.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/avatar-color-picker.tsx->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/avatar-color-picker.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/avatar-color-picker.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/components/primitives/field-title-case.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/components/primitives/glass-icon-well.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/components/primitives/symbol.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/features/account/city-autofind-suggestion-menu.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/features/account/use-city-autofind-suggestions.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-settings-row.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-suggestion-menu.tsx->src/components/primitives/dropdown-layout.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-suggestion-menu.tsx->src/components/primitives/glass-plate.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-suggestion-menu.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-suggestion-menu.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-suggestion-menu.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-suggestion-menu.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-suggestion-menu.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/city-autofind-suggestion-menu.tsx->src/utils/city-lookup.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/cloud-account-card.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/cloud-account-card.tsx->src/features/account/account-provider-label.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/cloud-account-card.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/cloud-account-card.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/cloud-account-card.tsx->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/cloud-account-card.tsx->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/cloud-account-card.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/dev-access-gate.tsx->src/features/account/dev-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/dev-access.ts->src/store/account-flags.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/dev-mode-controller.ts->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/dev-mode-controller.ts->src/store/dev-mode.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/dev-mode-controller.ts->src/store/health.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/dev-mode-controller.ts->src/store/travel.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/features/account/dev-mode-controller.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/features/account/developer-insights-panel.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/features/account/developer-release-notes-panel.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/features/account/developer-storage.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/hooks/use-app-activity.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/services/http/api-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/services/http/api-url.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/store/dev-mode.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/utils/agent-ui/fixtures.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/utils/agent-ui/overlay.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/utils/agent-ui/route.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-hub.tsx->src/utils/defer-until-idle.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-insights-panel.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-insights-panel.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-insights-panel.tsx->src/services/analytics/surfaces.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-insights-panel.tsx->src/services/analytics/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-insights-panel.tsx->src/store/usage-analytics.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-insights-panel.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-release-notes-panel.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-release-notes-panel.tsx->src/features/account/release-notes.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-release-notes-panel.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-release-notes-panel.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/developer-storage.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/iconify-icon.tsx->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/iconify-search.ts->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/iconify-search.ts->src/services/http/fetch-with-timeout.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/iconify-search.ts->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/integrations-service-card.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/integrations-service-card.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/integrations-service-card.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/integrations-status-card.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/integrations-status-card.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/integrations-status-card.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/legal-document-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/legal-document-screen.tsx->src/constants/legal.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/legal-document-screen.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/legal-document-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/legal-document-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/privacy-policy-content.ts->src/constants/legal.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/features/account/avatar-color-picker.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/features/account/iconify-icon.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/features/account/iconify-search.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/features/account/profile-avatar-media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/services/friends/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/utils/haptics.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-editor-sheet.tsx->src/utils/pick-image.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-media.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-media.ts->src/services/friends/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-media.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-media.ts->src/utils/image-persist.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar-model.ts->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar.tsx->src/features/account/avatar-cache.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar.tsx->src/features/account/iconify-icon.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar.tsx->src/features/account/profile-avatar-media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar.tsx->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-avatar.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/services/friends/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-editor-sheet.tsx->src/utils/haptics.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/features/account/city-autofind-settings-row.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/features/travel/weather/provider.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/features/travel/weather/temperature-unit.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/hooks/use-current-place-label.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/utils/device-location.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/utils/haptics.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/release-notes-format.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/release-notes.ts->src/features/account/release-notes-changelog.ts",
+        "count": 2
+      },
+      {
+        "key": "import:src/features/account/release-notes.ts->src/features/account/release-notes-format.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/release-notes.ts->src/features/account/release-notes-types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/release-notes.ts->src/features/account/release-notes-user.ts",
+        "count": 2
+      },
+      {
+        "key": "import:src/features/account/self-display-name.ts->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/terms-of-use-content.ts->src/constants/legal.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/use-city-autofind-suggestions.ts->src/components/primitives/dropdown-layout.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/use-city-autofind-suggestions.ts->src/utils/city-lookup.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/analytics/usage-analytics-tracker.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/analytics/usage-analytics-tracker.tsx->src/services/analytics/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/agent-account-login.ts->src/services/cloud/account-flags.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/agent-account-login.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/app-boot-loader.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/app-boot-loader.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/app-boot-loader.tsx->src/hooks/use-performance-tier.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/app-boot-loader.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/app-boot-loader.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/apple-provider-button.ios.tsx->src/features/auth/auth-palette.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/apple-provider-button.ios.tsx->src/features/auth/provider-button.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/apple-provider-button.ios.tsx->src/features/auth/provider-marks.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/apple-provider-button.tsx->src/features/auth/auth-palette.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/apple-provider-button.tsx->src/features/auth/provider-button.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/apple-provider-button.tsx->src/features/auth/provider-marks.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-account-exit.ts->src/services/cloud/account.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-account-exit.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-account-exit.ts->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-account-exit.ts->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-account-exit.ts->src/store/friends.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-atmosphere.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-atmosphere.tsx->src/features/auth/auth-palette.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-atmosphere.tsx->src/hooks/use-performance-tier.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-atmosphere.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-brand-mark.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-brand-mark.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-brand-mark.tsx->src/features/auth/auth-palette.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-brand-mark.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-brand-mark.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-constellation.tsx->src/components/navigation/bottom-nav-tab-meta.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-constellation.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-constellation.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-constellation.tsx->src/features/auth/auth-canvas-extent.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-constellation.tsx->src/features/auth/auth-constellation-layout.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-constellation.tsx->src/hooks/use-performance-tier.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-constellation.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-constellation.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/features/auth/guest-dirty-tracking.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/addons.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/agents.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/food-meal-plan.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/food-pantry.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/food-profile.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/food-recipes.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/plants.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/schedule.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/travel.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/vehicles.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-guest-dirty.ts->src/store/vision-board.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-hero.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-hero.tsx->src/features/auth/auth-brand-mark.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-hero.tsx->src/features/auth/auth-constellation.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-hero.tsx->src/features/auth/theme-mode-toggle.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-hero.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-hero.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-hero.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/features/auth/agent-account-login.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/features/auth/auth-account-exit.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/features/auth/auth-guest-dirty.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/features/auth/auth-guest-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/features/auth/auth-session-snapshot.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/features/auth/session-lock.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/services/cloud/account-flags.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/services/cloud/account.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/store/friends.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider-effects.ts->src/utils/agent-ui/agent-login.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/features/auth/auth-account-exit.ts",
+        "count": 2
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/features/auth/auth-context.ts",
+        "count": 3
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/features/auth/auth-guest-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/features/auth/auth-phase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/features/auth/auth-provider-effects.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/features/auth/auth-session-snapshot.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/features/auth/session-lock.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/services/cloud/account.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-provider.tsx->src/store/friends.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/features/auth/apple-provider-button.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/features/auth/auth-atmosphere.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/features/auth/auth-constellation.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/features/auth/auth-hero.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/features/auth/google-provider-button.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/google-provider-button.tsx->src/features/auth/provider-button.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/google-provider-button.tsx->src/features/auth/provider-marks.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/provider-button.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/provider-button.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/session-lock.ts->src/store/dev-mode.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/theme-mode-toggle.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/theme-mode-toggle.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/theme-mode-toggle.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/theme-mode-toggle.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/theme-mode-toggle.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/theme-mode-toggle.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/apple-provider-button.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/auth-atmosphere.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/auth-brand-mark.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/auth-constellation.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/google-provider-button.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/theme-mode-toggle.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/welcome-preview.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-plaid-link.ts->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-plaid-link.ts->src/features/finance/plaid-account-kind.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-plaid-link.ts->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-plaid-link.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/coach.ts->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/coach.ts->src/features/finance/rate-context.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/create.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/features/finance/apply-plaid-link.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/services/finance/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/utils/confirm-destructive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/features/finance/finance-progress-bar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-buckets-screen.tsx->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-credit-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-credit-sheet.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-credit-sheet.tsx->src/features/finance/credit-providers.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-credit-sheet.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-credit-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-credit-sheet.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-credit-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-credit-sheet.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-entities-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-entities-screen.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-entities-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-entities-screen.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-entities-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-entities-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-entities-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-expense-screen.tsx->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-progress-bar.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-progress-bar.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/features/finance/finance-credit-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/features/finance/finance-progress-bar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/features/finance/use-finance-coach.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subpage-header.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subpage-header.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-handoff-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-handoff-sheet.tsx->src/features/finance/share-tax-package.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-handoff-sheet.tsx->src/features/finance/tax-export.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-handoff-sheet.tsx->src/features/finance/tax-handoff.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-handoff-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-handoff-sheet.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-handoff-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/features/finance/finance-tax-handoff-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/features/finance/persist-finance-document.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/features/finance/share-tax-package.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/features/finance/tax-export.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-tax-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/model.ts->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/model.ts->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/model.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/normalize.ts->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/normalize.ts->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/normalize.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/normalize.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/normalize.ts->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/persist-finance-document.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/plaid-holdings.ts->src/features/finance/plaid-account-kind.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/tax-export.ts->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/tax-export.ts->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/use-finance-coach.ts->src/features/finance/coach.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/use-finance-coach.ts->src/features/finance/rate-context.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/use-finance-coach.ts->src/services/finance/coach-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/use-finance-coach.ts->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/food/components/avatar-stack.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/food/components/food-post-card.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/food/plan-shopping.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/performance/performance-monitor-provider.tsx->src/store/account-flags.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/social/social-feed.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/social/social-friends-modal.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/social/social-hub-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/social/social-hub-sections.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/social/social-upcoming-together.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/checklist-task-details-sheet.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/grocery-list-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-collaborator-join-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-collaborator-join-screen.tsx->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-collaborators-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-collaborators-screen.tsx->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-invites-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-invites-screen.tsx->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-join-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-join-screen.tsx->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-list-card.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-list-remove.ts->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-list-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-list-settings-screen.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-list-settings-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-list-settings-screen.tsx->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-list-settings-sharing.tsx->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/todo-lists-overview.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/use-voice-lists-sync.ts->src/features/todos/voice-lists.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/todos/use-voice-lists-sync.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/expenses/expense-form.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/expenses/travel-expenses-sheet.tsx->src/services/travel/expense-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/invite-landing.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/invite-landing.tsx->src/services/travel/itinerary-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/map/travel-map-screen-chrome.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/map/travel-map-screen-chrome.tsx->src/services/travel/travel-map-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/map/travel-map-screen.tsx->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/map/travel-map-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/map/travel-map-screen.tsx->src/features/travel/map/use-travel-map-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/map/use-travel-map-collaboration.ts->src/services/travel/travel-map-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/open-join-landing.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/open-join-landing.tsx->src/services/travel/itinerary-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-chat-chrome.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-chat-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-cotraveler-stack.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-friends-roster-model.ts->src/services/travel/expense-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-friends-sheet.tsx->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-friends-sheet.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-friends-sheet.tsx->src/features/travel/use-travel-friends-sheet-sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-friends-sheet.tsx->src/services/travel/expense-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-home-screen-content.tsx->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-home-screen-content.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-home-traveler-stack.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-invite-api.ts->src/services/travel/itinerary-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-item-notes-sheet.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-open-join-api.ts->src/services/travel/itinerary-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-plan-detail.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-plan-detail.tsx->src/services/travel/itinerary-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-plan-trip-tools.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/travel-timeline-node.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/trip-friend-row.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/trip-roster.ts->src/features/account/avatar-cache.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-straiaway-stay-pull.ts->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-friends-sheet-actions.ts->src/services/travel/expense-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/features/travel/share.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/features/travel/trip-roster.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/features/travel/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/hooks/use-app-activity.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/services/travel/expense-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/store/travel.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-home-screen.ts->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/travel/use-travel-home-screen.ts->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-hydrated.ts->src/features/account/dev-mode-controller.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-hydrated.ts->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-meal-photo-migration.ts->src/features/auth/guest-dirty-tracking.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-pull-to-refresh.tsx->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-root-startup-effects.ts->src/features/todos/use-voice-lists-sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-todo-collaboration.ts->src/features/performance/runtime-activity.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-todo-collaboration.ts->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-todo-collaboration.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-vehicle-collaboration.ts->src/features/performance/runtime-activity.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-vehicle-collaboration.ts->src/services/vehicles/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-vehicle-collaboration.ts->src/store/vehicles.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/analytics/sync.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/analytics/sync.ts->src/store/usage-analytics.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/analytics/sync.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-api-route.ts->src/services/calendar/google-oauth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-api-route.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-oauth.ts->src/services/calendar/google-fetch.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-server.ts->src/services/calendar/google-oauth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-server.ts->src/services/calendar/google-sync-policy.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-server.ts->src/services/calendar/google-sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/google-batch.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/google-fetch.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/google-mapping.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/google-oauth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/google-sync-policy.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/account-flags.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/account-flags.ts->src/store/account-flags.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/account.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/entitlements.ts->src/services/cloud/account-flags.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/cloud/account-data-merge.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/cloud/data-ownership.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/cloud/entitlements.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/cloud/media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/cloud/sync-domains.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/cloud/sync-local-reset.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/cloud/sync-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-account.ts->src/store/nutrition.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/addons/registry.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/constants/travel.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/features/plants/sample.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/features/vision-board/selectors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/addons.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/agents.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/plants.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/schedule.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/travel.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/vehicles.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/vision-board.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/features/vision-board/media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/services/cloud/sync-domains.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/services/cloud/sync-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/services/plants/schedule.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/services/travel/flight-confirmation-ai-memory.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/account-flags.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/food-meal-plan.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/food-pantry.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/food-profile.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/food-recipes.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/health.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/nutrition.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/plants.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/theme-overrides.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/travel-map.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/travel-plan-ui.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/usage-analytics.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/cloud/entitlements.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/cloud/sync-account.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/cloud/sync-domains.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/cloud/sync-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/travel/expense-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/travel/itinerary-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/services/vehicles/collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-refresh.ts->src/store/friends.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-session.ts->src/features/performance/runtime-activity.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-session.ts->src/services/cloud/media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-session.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-session.ts->src/services/cloud/sync-domains.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-session.ts->src/store/dev-mode.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-session.ts->src/store/ui.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync.ts->src/services/cloud/sync-account.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync.ts->src/services/cloud/sync-domains.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync.ts->src/services/cloud/sync-local-reset.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync.ts->src/services/cloud/sync-refresh.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync.ts->src/services/cloud/sync-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync.ts->src/services/cloud/sync-types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/coach-client.ts->src/services/http/api-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/coach-client.ts->src/services/http/api-url.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/coach-server.ts->src/services/ai/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/coach-server.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/coach-server.ts->src/services/http/api-rate-limit.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/index.ts->src/services/finance/coach-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/index.ts->src/services/finance/plaid.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/plaid-data.ts->src/features/finance/plaid-account-kind.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/plaid-data.ts->src/services/finance/plaid-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/plaid-server.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/plaid-server.ts->src/services/http/api-rate-limit.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/plaid-server.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/plaid.ts->src/features/finance/plaid-account-kind.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/plaid.ts->src/services/http/api-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/plaid.ts->src/services/http/api-url.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/friends/index.ts->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/health/action-suggestions.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/http/api-auth.ts->src/services/http/dependency-guard.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/http/api-gate.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/http/api-usage.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/partner/straiaway-api-route.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-core.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-core.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-invites.ts->src/services/todos/collaboration-core.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-invites.ts->src/services/todos/collaboration-mutations.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-invites.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-members.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-members.ts->src/services/todos/collaboration-core.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-members.ts->src/services/todos/collaboration-mutations.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-members.ts->src/services/todos/recipe-media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-members.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-mutations.ts->src/services/todos/collaboration-core.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-mutations.ts->src/services/todos/recipe-media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-mutations.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-mutations.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-reload.ts->src/services/todos/collaboration-core.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-reload.ts->src/services/todos/collaboration-invites.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-reload.ts->src/services/todos/collaboration-mutations.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-reload.ts->src/store/todos.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration.ts->src/services/todos/collaboration-core.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration.ts->src/services/todos/collaboration-invites.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration.ts->src/services/todos/collaboration-members.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration.ts->src/services/todos/collaboration-mutations.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration.ts->src/services/todos/collaboration-reload.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/features/travel/chat.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/features/travel/expenses/expense-math.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/features/travel/normalize.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/features/travel/trip-roster.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/features/travel/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/services/travel/travel-collaboration-shared.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/store/travel.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/expense-collaboration.ts->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/flight-confirmation-ai-memory.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/itinerary-collaboration.ts->src/features/travel/chat.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/itinerary-collaboration.ts->src/features/travel/itinerary-visibility.ts",
+        "count": 2
+      },
+      {
+        "key": "import:src/services/travel/itinerary-collaboration.ts->src/features/travel/normalize.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/itinerary-collaboration.ts->src/services/travel/travel-collaboration-shared.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/itinerary-collaboration.ts->src/store/travel.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/itinerary-collaboration.ts->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/travel-collaboration-shared.ts->src/features/travel/chat.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/travel-collaboration-shared.ts->src/features/travel/trip-roster.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/travel-collaboration-shared.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/travel-map-collaboration.ts->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/travel-map-collaboration.ts->src/features/travel/map/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/travel-map-collaboration.ts->src/features/travel/map/normalize.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/travel-map-collaboration.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/travel/travel-map-collaboration.ts->src/store/travel-map.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/vehicles/collaboration.ts->src/features/vehicles/normalize.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/vehicles/collaboration.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/vehicles/collaboration.ts->src/store/vehicles.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/addons.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/agents.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/auth-access.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/auth-access.ts->src/utils/auth-return-to.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/dev-mode.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/features/finance/normalize.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/food-meal-plan.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/food-pantry.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/food-profile.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/food-recipes.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/friends.ts->src/features/account/avatar-cache.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/friends.ts->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/health.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/performance-history.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/plants.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/preferences.ts->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/preferences.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/preferences.ts->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/schedule.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/tab-pins.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/tab-recency.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/theme-overrides.ts->src/features/account/self-display-name.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/theme-overrides.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/todos-helpers.ts->src/features/auth/guest-dirty-tracking.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/todos-helpers.ts->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/todos-sync-actions.ts->src/store/todos-normalize.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/todos.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/todos.ts->src/store/todos-sync-actions.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/travel-map.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/travel-plan-ui.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/travel.ts->src/services/cloud/sync-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/travel.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/usage-analytics.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/vehicles.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/vision-board.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/AgentUiFabRestoreHost.tsx->src/features/account/dev-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/AgentUiRouteSync.tsx->src/hooks/use-app-activity.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/AgentUiRouteSync.tsx->src/utils/agent-ui/handle-agent-ui-url.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/AgentUiRouteSync.tsx->src/utils/agent-ui/http-bridge.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/AgentUiRouteSync.tsx->src/utils/agent-ui/persist.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/AgentUiRouteSync.tsx->src/utils/agent-ui/registry.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/AgentUiRouteSync.tsx->src/utils/agent-ui/route.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/ids.ts->src/utils/agent-ui/ids-finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/utils/agent-ui/index.ts->src/utils/agent-ui/AgentUiRouteSync.tsx",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202607250001_app_sync.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202607270006_travel_invite_authenticated_only.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202607270007_all_accounts_test_trip_chat.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608030001_delete_own_account.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608050009_account_flags.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608050010_account_flags_select_grant.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608090001_account_flags_agent_test.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608120001_google_calendar_sync.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608120003_google_calendar_sync_direction.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608120007_finance_addon.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608120010_complete_account_data_purge.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608120011_storage_api_account_purge.sql",
+        "count": 1
+      },
+      {
+        "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202608120012_preserve_account_capabilities_on_reset.sql",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.hub",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.tax",
+        "count": 1
+      }
+    ],
+    "flows": [
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.developer.devMode",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.hub",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.tax",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.games.balloonPop.play",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.games.hub.balloonPop",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.health.section.mind",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.plants.detail.logWatering",
+        "count": 3
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.plants.detail.undoWatering",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.plants.new.camera",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.profile.avatar",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.profile.avatar.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.profile.displayName",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.profile.identity.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.profile.usageAnalytics",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vehicles.detail.section.expenses",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vehicles.detail.settings",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vehicles.expenses.amount",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vehicles.new.nickname",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vision.category.addAffirmation",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vision.category.selection.edit",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vision.dashboard.filter",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vision.itemEditor.primary",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.explorer.anatomySex.female",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.explorer.muscle.chest",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.gym.start",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.gymActive.completeSet",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.calendar.",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.eventDetail.edit",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.food.detail.edit",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.food.home.section.suggestions",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.profile.homeLocation",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.profile.section.preferences",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.today.nextDay",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.today.prevDay",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.today.weather",
+        "count": 4
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.checklists.newListName",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.grocery.detail.copy",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.grocery.detail.settings",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.grocery.detail.view.combined",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.listSettings.addEditors",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.listSettings.name",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.recipeImport.url",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.",
+        "count": 20
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.chrome.skyDecor",
+        "count": 3
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.itineraryAdd.",
+        "count": 5
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.itineraryAdd.submit",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.list.empty.create",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.list.search",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.list.searchMinimize",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.map.section.world",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.newTrip.open",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.newTrip.title",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.planDetail.addToTimeline",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.planDetail.section.timeline",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.planDetail.section.tools",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.planDetail.section.transport",
+        "count": 2
+      }
+    ]
+  }
+}

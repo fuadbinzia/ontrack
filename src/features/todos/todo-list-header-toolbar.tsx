@@ -1,7 +1,18 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, GlassPlate } from '@/components/primitives';
+import {
+  AppText,
+  Dropdown,
+  GlassPlate,
+  IconButton,
+  Symbol,
+} from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
+import { ProfileAvatar } from '@/features/account/profile-avatar';
+import {
+  ALL_ASSIGNEES,
+  checklistAssigneeFilterChoices,
+} from '@/features/todos/checklist-assignee-filter';
 import { ChecklistPopoverMenu } from '@/features/todos/checklist-popover-menu';
 import { copyTodoListText } from '@/features/todos/share';
 import type { TodoFilter, TodoSort } from '@/features/todos/todo-sort';
@@ -58,6 +69,7 @@ export function TodoListHeaderToolbar({
   owner,
   canEdit,
   filter,
+  selectedAssigneeId,
   sort,
   editMode,
   openTasksCount,
@@ -65,6 +77,7 @@ export function TodoListHeaderToolbar({
   completedCount,
   editModeAgent,
   onFilterToggle,
+  onAssigneeSelect,
   onToggleEditMode,
   onSortChange,
   onClearDone,
@@ -77,6 +90,7 @@ export function TodoListHeaderToolbar({
   owner: boolean;
   canEdit: boolean;
   filter: TodoFilter;
+  selectedAssigneeId: string;
   sort: TodoSort;
   editMode: boolean;
   openTasksCount: number;
@@ -84,6 +98,7 @@ export function TodoListHeaderToolbar({
   completedCount: number;
   editModeAgent: AgentUiTargetApi;
   onFilterToggle: () => void;
+  onAssigneeSelect: (id: string) => void;
   onToggleEditMode: () => void;
   onSortChange: (sort: TodoSort) => void;
   onClearDone: () => void;
@@ -92,6 +107,23 @@ export function TodoListHeaderToolbar({
 }) {
   const theme = useTheme();
   const { s } = useResponsive();
+  const assigneeOptions = checklistAssigneeFilterChoices(members).map(
+    (choice) => ({
+      ...choice,
+      leading:
+        choice.value === ALL_ASSIGNEES ? (
+          <Symbol name="filter" size="sm" color={theme.textSecondary} />
+        ) : (
+          <ProfileAvatar
+            displayName={choice.label}
+            userId={choice.value}
+            size={28}
+          />
+        ),
+      testID: AgentUiIds.checklists.detail.assigneeOption(choice.value),
+    }),
+  );
+  const showAssigneeFilter = members.length > 0;
 
   return (
     <View style={styles.controls}>
@@ -143,6 +175,32 @@ export function TodoListHeaderToolbar({
         </GlassPlate>
       </Pressable>
       <View style={styles.toolbarMenus}>
+        {showAssigneeFilter ? (
+          <Dropdown
+            label="Assigned to"
+            value={selectedAssigneeId}
+            options={assigneeOptions}
+            onChange={onAssigneeSelect}
+            matchTriggerWidth={false}
+            accessibilityLabel="Filter checklist by assignee"
+            renderTrigger={({ onPress, fieldRef, selectedLabel }) => (
+              <View ref={fieldRef} collapsable={false}>
+                <IconButton
+                  icon="filter"
+                  size={36}
+                  color={
+                    selectedAssigneeId === ALL_ASSIGNEES
+                      ? theme.accentPrimary
+                      : theme.success
+                  }
+                  accessibilityLabel={`Filter by assignee: ${selectedLabel}`}
+                  testID={AgentUiIds.checklists.detail.assigneeFilter}
+                  onPress={onPress}
+                />
+              </View>
+            )}
+          />
+        ) : null}
         {owner || (canEdit && tasks.length > 0) ? (
           <Pressable
             ref={editModeAgent.ref}

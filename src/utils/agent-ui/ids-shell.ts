@@ -140,12 +140,16 @@ export const agentUiIdsShell = {
       newTask: 'ontrack.checklists.detail.newTask',
       addTask: 'ontrack.checklists.detail.addTask',
       sort: 'ontrack.checklists.detail.sort',
+      assigneeFilter: 'ontrack.checklists.detail.assigneeFilter',
+      assigneeOption: (assigneeId: string) =>
+        `ontrack.checklists.detail.assigneeOption.${assigneeId}`,
       actions: 'ontrack.checklists.detail.actions',
       actionsClose: 'ontrack.checklists.detail.actionsClose',
       action: (action: string) => `ontrack.checklists.detail.action.${action}`,
       categoryTabs: 'ontrack.checklists.detail.categoryTabs',
       category: (categoryId: string) => `ontrack.checklists.detail.category.${categoryId}`,
       editMode: 'ontrack.checklists.detail.editMode',
+      linkedTrip: 'ontrack.checklists.detail.linkedTrip',
       task: (taskId: string) => `ontrack.checklists.detail.task.${taskId}`,
     },
     itemDetails: {
@@ -273,6 +277,8 @@ export const agentUiIdsShell = {
     name: 'ontrack.listSettings.name',
     saveName: 'ontrack.listSettings.saveName',
     addEditors: 'ontrack.listSettings.addEditors',
+    editor: (userId: string) => `ontrack.listSettings.editor.${userId}`,
+    confirmEditors: 'ontrack.listSettings.confirmEditors',
     makeEditor: (userId: string) =>
       `ontrack.listSettings.makeEditor.${userId}`,
     makeMember: (userId: string) =>

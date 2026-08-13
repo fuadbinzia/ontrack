@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "name": "ontrack",
+    "accent": "#27d3a2"
+  },
+  "adapters": [
+    "generic",
+    "typescript",
+    "expo-router",
+    "jest-istanbul",
+    "supabase",
+    "native",
+    "ui-flows"
+  ],
+  "sourceRoots": [
+    "src"
+  ],
+  "additionalRoots": [
+    "supabase",
+    "modules",
+    "plugins",
+    "scripts"
+  ],
+  "ignore": [
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    "coverage",
+    ".expo",
+    ".living-system-map/generated"
+  ],
+  "coverage": {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "--coverage",
+      "--runInBand",
+      "--watchman=false",
+      "--coverageReporters=json-summary",
+      "--coverageReporters=text-summary",
+      "--collectCoverageFrom=src/**/*.{ts,tsx}",
+      "--collectCoverageFrom=!src/**/__tests__/**",
+      "--collectCoverageFrom=!src/**/*.d.ts"
+    ],
+    "summaryPath": "coverage/coverage-summary.json"
+  },
+  "domains": [
+    { "id": "account", "label": "Account", "paths": ["src/features/account"] },
+    { "id": "auth", "label": "Authentication", "paths": ["src/features/auth"] },
+    { "id": "calendar", "label": "Calendar", "paths": ["src/features/calendar", "src/features/calendar-import", "src/services/calendar"] },
+    { "id": "daily", "label": "Today", "paths": ["src/features/daily-tracking"] },
+    { "id": "finance", "label": "Finance", "paths": ["src/features/finance", "src/services/finance", "src/store/finance.ts"] },
+    { "id": "food", "label": "Food", "paths": ["src/features/food", "src/services/food", "src/services/nutrition", "src/services/recipes"] },
+    { "id": "games", "label": "Games", "paths": ["src/features/games"] },
+    { "id": "health", "label": "Health", "paths": ["src/features/health", "src/services/health", "src/store/health.ts"] },
+    { "id": "plants", "label": "Plants", "paths": ["src/features/plants", "src/services/plants", "src/store/plants.ts"] },
+    { "id": "social", "label": "Social", "paths": ["src/features/social", "src/services/friends", "src/store/friends.ts"] },
+    { "id": "todos", "label": "Lists", "paths": ["src/features/todos", "src/services/todos", "src/store/todos.ts", "src/store/todos-"] },
+    { "id": "travel", "label": "Travel", "paths": ["src/features/travel", "src/services/travel", "src/store/travel.ts", "src/store/travel-"] },
+    { "id": "vehicles", "label": "Vehicles", "paths": ["src/features/vehicles", "src/services/vehicles", "src/store/vehicles.ts"] },
+    { "id": "vision-board", "label": "Vision Board", "paths": ["src/features/vision-board", "src/store/vision-board.ts"] },
+    { "id": "workouts", "label": "Fitness", "paths": ["src/features/workouts"] },
+    { "id": "cloud", "label": "Cloud & Sync", "paths": ["src/services/cloud"] },
+    { "id": "platform", "label": "Platform", "paths": ["src/services/http", "src/services/storage", "src/services/notifications", "src/services/updates"] },
+    { "id": "design-system", "label": "Design System", "paths": ["src/design-system", "src/components/primitives"] },
+    { "id": "agent-ui", "label": "Agent UI", "paths": ["src/utils/agent-ui"] }
+  ],
+  "criticalPatterns": [
+    "auth",
+    "account",
+    "permission",
+    "sync",
+    "storage",
+    "payment",
+    "finance",
+    "delete",
+    "purge",
+    "collaboration"
+  ],
+  "semanticEdges": [
+    {
+      "source": "scripts/__tests__/historical-bugfix-regressions.test.ts",
+      "target": "app.json",
+      "kind": "contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/features/auth/auth-provider.tsx",
+      "target": "src/services/cloud/sync.ts",
+      "kind": "account-sync-boundary",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/store/todos.ts",
+      "target": "src/services/todos/collaboration.ts",
+      "kind": "collaboration-boundary",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/store/vehicles.ts",
+      "target": "src/services/vehicles/collaboration.ts",
+      "kind": "collaboration-boundary",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/app/api/usage/__tests__/reset-api.test.ts",
+      "target": "src/app/api/usage/reset+api.ts",
+      "kind": "behavior-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/app/api/finance/__tests__/coach-api.test.ts",
+      "target": "src/app/api/finance/coach+api.ts",
+      "kind": "behavior-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/features/travel/__tests__/historical-bugfix-regressions.test.ts",
+      "target": "src/features/travel/travel-remove-confirm-modal.tsx",
+      "kind": "contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/features/account/__tests__/dev-access.test.ts",
+      "target": "src/features/account/dev-access-gate.tsx",
+      "kind": "contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/sign-out-rule.test.ts",
+      "target": "src/features/auth/auth-provider.tsx",
+      "kind": "contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/components/primitives/__tests__/design-system-contract.test.ts",
+      "target": "src/features/finance/finance-subpage-header.tsx",
+      "kind": "contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/calendar/__tests__/google-api-routes.test.ts",
+      "target": "src/app/api/calendar/google/sync+api.ts",
+      "kind": "behavior-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/features/todos/__tests__/todo-list-remove.test.ts",
+      "target": "src/features/todos/todo-list-remove.ts",
+      "kind": "behavior-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608030001_delete_own_account.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608120010_complete_account_data_purge.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608120011_storage_api_account_purge.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608120012_preserve_account_capabilities_on_reset.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202607250001_app_sync.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202607270006_travel_invite_authenticated_only.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202607270007_all_accounts_test_trip_chat.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608050009_account_flags.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608050010_account_flags_select_grant.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608090001_account_flags_agent_test.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608120001_google_calendar_sync.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608120003_google_calendar_sync_direction.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/critical-migrations-contract.test.ts",
+      "target": "supabase/migrations/202608120007_finance_addon.sql",
+      "kind": "migration-contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/remaining-platform-contract.test.ts",
+      "target": "native-module:ontrack-healthkit",
+      "kind": "native-contract-test",
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/remaining-platform-contract.test.ts",
+      "target": "native-module:ontrack-performance",
+      "kind": "native-contract-test",
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/remaining-platform-contract.test.ts",
+      "target": "native-module:ontrack-voice-lists",
+      "kind": "native-contract-test",
+      "evidence": "proven"
+    },
+    {
+      "source": "src/services/cloud/__tests__/remaining-platform-contract.test.ts",
+      "target": "native-module:travel-document-reader",
+      "kind": "native-contract-test",
+      "evidence": "proven"
+    }
+  ]
+}

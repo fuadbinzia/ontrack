@@ -4,12 +4,12 @@ import { Platform } from 'react-native';
 
 import { resolveExpoApiUrl } from '@/services/http/api-url';
 import { apiRequest } from '@/services/http/api-client';
-import type { StayPackage, StraiawayConnectResult, StraiawayLinkStatus } from '@/services/partner/types';
+import type { StayPackage, StraiAwayConnectResult, StraiAwayLinkStatus } from '@/services/partner/types';
 
-export class StraiawayPartnerError extends Error {
+export class StraiAwayPartnerError extends Error {
   constructor(message: string, public code?: string, public status?: number) {
     super(message);
-    this.name = 'StraiawayPartnerError';
+    this.name = 'StraiAwayPartnerError';
   }
 }
 
@@ -25,19 +25,19 @@ function endpoint(path: string) {
     preferConfiguredFirst: useHostedApi || !__DEV__,
     requireHttpsInProduction: true,
     createNotConfiguredError: () =>
-      new StraiawayPartnerError('StraiAway connect is not configured in this build.', 'NOT_CONFIGURED'),
+      new StraiAwayPartnerError('StraiAway connect is not configured in this build.', 'NOT_CONFIGURED'),
   });
 }
 
 function request<T>(path: string, method: 'GET' | 'POST' = 'GET', body?: unknown) {
-  return apiRequest<T, StraiawayPartnerError>({
+  return apiRequest<T, StraiAwayPartnerError>({
     url: endpoint(path),
     method,
     body,
     timeoutMs: 20_000,
     offlineMessage: 'You appear to be offline. Reconnect and try again.',
     unavailableMessage: 'StraiAway connect is temporarily unavailable.',
-    createError: (message, code, status) => new StraiawayPartnerError(message, code, status),
+    createError: (message, code, status) => new StraiAwayPartnerError(message, code, status),
   });
 }
 
@@ -52,14 +52,14 @@ function randomVerifier() {
   return `${Crypto.randomUUID().replace(/-/g, '')}${Crypto.randomUUID().replace(/-/g, '')}`;
 }
 
-export function getStraiawayStatus() {
-  return request<StraiawayLinkStatus>('/api/partner/straiaway/status');
+export function getStraiAwayStatus() {
+  return request<StraiAwayLinkStatus>('/api/partner/straiaway/status');
 }
 
-export async function connectStraiaway() {
+export async function connectStraiAway() {
   const verifier = randomVerifier();
   const codeChallenge = await sha256Base64url(verifier);
-  const result = await request<StraiawayConnectResult>(
+  const result = await request<StraiAwayConnectResult>(
     '/api/partner/straiaway/connect',
     'POST',
     { codeChallenge },
@@ -80,23 +80,23 @@ export async function connectStraiaway() {
   return { ...result, verifier };
 }
 
-export function confirmStraiawayCallback(code: string, codeVerifier: string) {
-  return request<StraiawayLinkStatus>('/api/partner/straiaway/callback', 'POST', { code, codeVerifier });
+export function confirmStraiAwayCallback(code: string, codeVerifier: string) {
+  return request<StraiAwayLinkStatus>('/api/partner/straiaway/callback', 'POST', { code, codeVerifier });
 }
 
-export function disconnectStraiaway() {
+export function disconnectStraiAway() {
   return request<{ connected: false }>('/api/partner/straiaway/disconnect', 'POST', {});
 }
 
-export function pushStraiawayStays(stays: StayPackage[]) {
+export function pushStraiAwayStays(stays: StayPackage[]) {
   return request<{ pushed: number; lastSyncedAt: string }>('/api/partner/straiaway/stays', 'POST', { stays });
 }
 
-export function pullStraiawayStays() {
+export function pullStraiAwayStays() {
   return request<{ stays: StayPackage[]; lastSyncedAt: string }>('/api/partner/straiaway/stays');
 }
 
-export async function openStraiawayStay(reservationId?: string) {
+export async function openStraiAwayStay(reservationId?: string) {
   const native = reservationId
     ? `straiaway://stay/${encodeURIComponent(reservationId)}`
     : 'straiaway://partner/connect';

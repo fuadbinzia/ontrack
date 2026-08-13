@@ -3,13 +3,13 @@ import { useEffect, useRef } from 'react';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { applyStayPackagesToPlan } from '@/features/travel/stay-package';
 import type { TravelPlan } from '@/features/travel/types';
-import { getStraiawayStatus, pullStraiawayStays } from '@/services/partner/straiaway';
+import { getStraiAwayStatus, pullStraiAwayStays } from '@/services/partner/straiaway';
 import { useTravel } from '@/store/travel';
 
 const PULL_DEBOUNCE_MS = 1_200;
 
 /** When StraiAway is linked, pull StayPackages after the trip is focused. */
-export function useStraiawayStayPull(plan: TravelPlan | undefined) {
+export function useStraiAwayStayPull(plan: TravelPlan | undefined) {
   const { isGuest } = useAuthSession();
   const savePlan = useTravel((state) => state.savePlan);
   const lastKey = useRef<string | undefined>(undefined);
@@ -22,9 +22,9 @@ export function useStraiawayStayPull(plan: TravelPlan | undefined) {
     const timer = setTimeout(() => {
       void (async () => {
         try {
-          const status = await getStraiawayStatus();
+          const status = await getStraiAwayStatus();
           if (!status.connected || cancelled) return;
-          const { stays } = await pullStraiawayStays();
+          const { stays } = await pullStraiAwayStays();
           if (cancelled || !stays.length) return;
           const current = useTravel.getState().plans.find((item) => item.id === plan.id);
           if (!current) return;

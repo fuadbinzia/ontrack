@@ -133,9 +133,9 @@ describe('transport board section header', () => {
     'utf8',
   );
 
-  it('uses the suitcase glyph and subheading title for Transportation, Stays & Events', () => {
+  it('uses the backpack glyph and subheading title for Transportation, Stays & Events', () => {
     expect(source).toContain('title="Transportation, Stays & Events"');
-    expect(source).toContain('icon="suitcase"');
+    expect(source).toContain('icon="backpack"');
     expect(source).toContain('tightHeader');
     expect(source).toContain('titleVariant="subheading"');
   });

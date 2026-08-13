@@ -20,6 +20,7 @@ import {
   Symbol,
 } from '@/components/primitives';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
+import { ANYONE_ASSIGNEE } from '@/features/todos/checklist-assignee-filter';
 import { sortCategoriesForList } from '@/features/todos/checklist-category-helpers';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -33,7 +34,6 @@ import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 import { listReferenceEquality } from '@/utils/list-equality';
 
-const ANYONE_ID = 'anyone';
 const UNCATEGORIZED_ID = 'uncategorized';
 
 export type ChecklistTaskDetailsSheetHandle = {
@@ -128,8 +128,8 @@ function nextAssigneeSelection(
   next: readonly string[],
 ): string[] | undefined {
   const added = next.filter((value) => !previous.includes(value));
-  if (added.includes(ANYONE_ID) || next.length === 0) return undefined;
-  const people = next.filter((value) => value !== ANYONE_ID);
+  if (added.includes(ANYONE_ASSIGNEE) || next.length === 0) return undefined;
+  const people = next.filter((value) => value !== ANYONE_ASSIGNEE);
   return people.length > 0 ? people : undefined;
 }
 
@@ -211,16 +211,18 @@ export function ChecklistTaskDetailsSheet({
   const selectedAssigneeIds =
     task?.assigneeUserIds && task.assigneeUserIds.length > 0
       ? task.assigneeUserIds
-      : [ANYONE_ID];
+      : [ANYONE_ASSIGNEE];
   const selectedCategoryId = task?.categoryId ?? UNCATEGORIZED_ID;
   const assigneeOptions = selectedFirstAlphabetically([
     {
-      value: ANYONE_ID,
+      value: ANYONE_ASSIGNEE,
       label: 'Anyone',
       leading: (
         <Symbol name="people" size="sm" color={theme.textSecondary} />
       ),
-      testID: AgentUiIds.checklists.itemDetails.assigneeOption(ANYONE_ID),
+      testID: AgentUiIds.checklists.itemDetails.assigneeOption(
+        ANYONE_ASSIGNEE,
+      ),
     },
     ...members.map((member) => ({
       value: member.userId,

@@ -20,7 +20,6 @@ import {
 import { glassMaterials } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { useAuthSession } from '@/features/auth/auth-provider';
-import { PeoplePicker } from '@/features/social/people-picker';
 import { shareTodoInvite } from '@/features/todos/share';
 import { TodoListSettingsSharing } from '@/features/todos/todo-list-settings-sharing';
 import { performTodoListRemoval } from '@/features/todos/todo-list-remove';
@@ -81,6 +80,7 @@ export function TodoListSettingsSheet({
     () => members.map((member) => member.userId),
     [members],
   );
+  const friends = useFriends((state) => state.friends);
   const renameList = useTodos((state) => state.renameList);
   const setListKind = useTodos((state) => state.setListKind);
   const recipeCount = useTodos(
@@ -90,7 +90,6 @@ export function TodoListSettingsSheet({
   const [name, setName] = useState(list?.name ?? '');
   const [working, setWorking] = useState<string>();
   const [error, setError] = useState<string>();
-  const [pickingFriends, setPickingFriends] = useState(false);
   const hydrateFriends = useFriends((state) => state.hydrate);
 
   useEffect(() => {
@@ -111,12 +110,11 @@ export function TodoListSettingsSheet({
 
   // Hosted from the list screen (list already resolved). Missing list → render
   // nothing rather than an "Unavailable" Modal flash over the live checklist.
-  if (!visible || !list) return null;
+  if (!list) return null;
 
   const owner = list.role === 'owner';
   const cleanName = name.trim();
   const canSaveName = Boolean(cleanName) && cleanName !== list.name;
-
   const run = async (key: string, action: () => Promise<void>) => {
     setWorking(key);
     setError(undefined);
@@ -503,8 +501,10 @@ export function TodoListSettingsSheet({
             spacing={spacing}
             beginSharing={beginSharing}
             shareLink={shareLink}
-            run={run as any}
-            setPickingFriends={setPickingFriends}
+            run={run}
+            friends={friends}
+            excludeEditorIds={memberExcludeIds}
+            onAddEditors={addFriendEditors}
             requireSignIn={requireSignIn}
             user={user}
           />
@@ -541,14 +541,6 @@ export function TodoListSettingsSheet({
           </View>
         ) : null}
       </SheetScaffold>
-      <PeoplePicker
-        visible={pickingFriends}
-        title="Add Editors"
-        confirmLabel="Add Editors"
-        excludeIds={memberExcludeIds}
-        onClose={() => setPickingFriends(false)}
-        onConfirm={addFriendEditors}
-      />
     </>
   );
 }

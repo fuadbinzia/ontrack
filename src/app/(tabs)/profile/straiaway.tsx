@@ -17,21 +17,21 @@ import {
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { useResponsive } from '@/hooks/use-responsive';
 import {
-  confirmStraiawayCallback,
-  connectStraiaway,
-  disconnectStraiaway,
-  getStraiawayStatus,
-  openStraiawayStay,
+  confirmStraiAwayCallback,
+  connectStraiAway,
+  disconnectStraiAway,
+  getStraiAwayStatus,
+  openStraiAwayStay,
 } from '@/services/partner/straiaway';
-import type { StraiawayLinkStatus } from '@/services/partner/types';
+import type { StraiAwayLinkStatus } from '@/services/partner/types';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
-export default function StraiawayConnectScreen() {
+export default function StraiAwayConnectScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ connected?: string; code?: string; error?: string }>();
   const { isGuest } = useAuthSession();
   const { spacing } = useResponsive();
-  const [status, setStatus] = useState<StraiawayLinkStatus>({ connected: false, scopes: [] });
+  const [status, setStatus] = useState<StraiAwayLinkStatus>({ connected: false, scopes: [] });
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [message, setMessage] = useState<string>();
@@ -41,7 +41,7 @@ export default function StraiawayConnectScreen() {
   const refreshStatus = useCallback(async () => {
     if (isGuest) return;
     try {
-      setStatus(await getStraiawayStatus());
+      setStatus(await getStraiAwayStatus());
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'StraiAway status could not be loaded.');
     }
@@ -58,7 +58,7 @@ export default function StraiawayConnectScreen() {
       void refreshStatus();
     }
     if (typeof params.code === 'string' && pendingVerifier.current) {
-      void confirmStraiawayCallback(params.code, pendingVerifier.current)
+      void confirmStraiAwayCallback(params.code, pendingVerifier.current)
         .then((next) => {
           setStatus(next);
           setMessage(next.connected ? 'StraiAway is connected.' : 'Approve the link in StraiAway, then return here.');
@@ -78,7 +78,7 @@ export default function StraiawayConnectScreen() {
     setMessage(undefined);
     setError(undefined);
     try {
-      const result = await connectStraiaway();
+      const result = await connectStraiAway();
       pendingVerifier.current = result.verifier;
       setMessage('Approve the link in StraiAway, then return here.');
       await refreshStatus();
@@ -100,7 +100,7 @@ export default function StraiawayConnectScreen() {
             setMessage(undefined);
             setError(undefined);
             try {
-              await disconnectStraiaway();
+              await disconnectStraiAway();
               setStatus({ connected: false, scopes: [] });
               setMessage('Disconnected. Stays were kept in both apps.');
             } catch (caught) {
@@ -156,7 +156,7 @@ export default function StraiawayConnectScreen() {
           <Button
             testID={AgentUiIds.straiaway.open}
             disabled={busy}
-            onPress={() => void openStraiawayStay()}
+            onPress={() => void openStraiAwayStay()}
             accessibilityLabel="Open StraiAway">
             Open StraiAway
           </Button>

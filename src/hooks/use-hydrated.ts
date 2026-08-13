@@ -16,7 +16,7 @@ import { useVisionBoard } from '@/store/vision-board';
 
 /**
  * Survives Fast Refresh remounts so RootNavigator does not tear down the
- * Stack and bounce back to the default Today tab.
+ * Stack and bounce back to the default landing tab.
  */
 let sessionHydrated = false;
 

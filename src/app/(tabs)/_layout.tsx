@@ -33,6 +33,7 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      initialRouteName="overview"
       // Battery-first: inactive sections leave the native hierarchy and stop
       // rendering. Screens mount only after the user opens them.
       detachInactiveScreens

@@ -27,6 +27,7 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { DEFAULT_APP_LANDING_PATH } from '@/utils/navigation-session';
 
 import { AppleProviderButton } from './apple-provider-button';
 import { AuthAtmosphere } from './auth-atmosphere';
@@ -87,7 +88,7 @@ export function WelcomeOnboardScreen() {
       dismissForceWelcomePreview();
     }
     if (previewDismiss) {
-      router.replace((returnTo || '/') as never);
+      router.replace((returnTo || DEFAULT_APP_LANDING_PATH) as never);
       return;
     }
     const nextName = useDefaults ? DEFAULT_NAME : name.trim() || DEFAULT_NAME;
@@ -96,7 +97,7 @@ export function WelcomeOnboardScreen() {
       await continueAsGuest();
     }
     completeOnboarding({ name: nextName, goal: nextGoal });
-    router.replace((returnTo || '/') as never);
+    router.replace((returnTo || DEFAULT_APP_LANDING_PATH) as never);
   };
 
   const onGetStarted = () => {

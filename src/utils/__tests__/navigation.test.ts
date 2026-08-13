@@ -31,6 +31,15 @@ describe('goBackOrReplace', () => {
 });
 
 describe('feature route ownership', () => {
+  it('makes Overview the tab navigator landing destination', () => {
+    const tabsLayout = readFileSync(
+      join(process.cwd(), 'src/app/(tabs)/_layout.tsx'),
+      'utf8',
+    );
+
+    expect(tabsLayout).toContain('initialRouteName="overview"');
+  });
+
   it.each(['profile', 'workouts', 'plants', 'travel', 'vision-board', 'games', 'vehicles'])(
     'keeps /%s in the tab carousel without a duplicate root route',
     (feature) => {

@@ -2,13 +2,13 @@ import { usePathname, useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
 import {
-    consumeNavigationRestorePath,
     rememberNavigationPathname,
+    resolveInitialNavigationPath,
 } from '@/utils/navigation-session';
 
 /**
  * Remembers the last in-app route for this JS session and restores it when
- * Fast Refresh remounts the Stack on the default Today tab.
+ * Fast Refresh remounts the Stack. Cold root launches open Overview.
  */
 export function NavigationSessionSync() {
   const pathname = usePathname();
@@ -18,9 +18,9 @@ export function NavigationSessionSync() {
   useEffect(() => {
     if (!didBootstrapRestore.current) {
       didBootstrapRestore.current = true;
-      const restoreTo = consumeNavigationRestorePath(pathname);
-      if (restoreTo) {
-        router.replace(restoreTo as never);
+      const initialPath = resolveInitialNavigationPath(pathname);
+      if (initialPath) {
+        router.replace(initialPath as never);
         return;
       }
     }

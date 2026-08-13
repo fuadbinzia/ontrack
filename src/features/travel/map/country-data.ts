@@ -288,9 +288,12 @@ export function countryViewBox(country: AtlasCountry, aspectRatio = 1) {
   // can include tiny antimeridian fragments whose bounds span almost the whole
   // projection (the United States has one near the far-right map edge).
   const [[x0, y0], [x1, y1]] = country.bounds;
-  const countryWidth = Math.max(1, x1 - x0);
-  const countryHeight = Math.max(1, y1 - y0);
-  const padding = Math.max(4, Math.min(18, Math.max(countryWidth, countryHeight) * 0.14));
+  const countryWidth = Math.max(0.1, x1 - x0);
+  const countryHeight = Math.max(0.1, y1 - y0);
+  const countrySpan = Math.max(countryWidth, countryHeight);
+  // A fixed four-unit floor overwhelms microstates and island nations. Keep a
+  // small safety gutter, then scale padding with the actual country footprint.
+  const padding = Math.max(0.75, Math.min(18, countrySpan * 0.14));
   const centerX = (x0 + x1) / 2;
   const centerY = (y0 + y1) / 2;
   const safeAspectRatio = Math.max(0.35, Math.min(3, aspectRatio));

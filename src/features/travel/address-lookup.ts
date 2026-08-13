@@ -48,7 +48,7 @@ function asTrimmed(value: unknown): string | undefined {
   return trimmed || undefined;
 }
 
-function uniqueParts(parts: Array<string | undefined>): string[] {
+function uniqueParts(parts: (string | undefined)[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
   for (const part of parts) {
@@ -128,7 +128,8 @@ export function normalizeAddressSuggestions(body: unknown): AddressSuggestion[] 
   const features = (body as PhotonResponse).features;
   if (!Array.isArray(features)) return [];
 
-  const seen = new Set<string>();
+  const seenIds = new Set<string>();
+  const seenLabels = new Set<string>();
   const results: AddressSuggestion[] = [];
   for (const feature of features) {
     if (!feature || typeof feature !== 'object') continue;
@@ -138,9 +139,10 @@ export function normalizeAddressSuggestions(body: unknown): AddressSuggestion[] 
       photonFeature.geometry?.coordinates,
     );
     if (!suggestion) continue;
-    const key = `${suggestion.label}|${suggestion.secondary ?? ''}`.toLocaleLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
+    const labelKey = `${suggestion.label}|${suggestion.secondary ?? ''}`.toLocaleLowerCase();
+    if (seenIds.has(suggestion.id) || seenLabels.has(labelKey)) continue;
+    seenIds.add(suggestion.id);
+    seenLabels.add(labelKey);
     results.push(suggestion);
     if (results.length >= MAX_RESULTS) break;
   }

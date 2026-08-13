@@ -32,7 +32,7 @@ import {
   atlasCountryContainsCoordinate,
   TRAVEL_MAP_OCEAN_BOTTOM,
 } from './country-data';
-import { nearestAtlasCity } from './city-data';
+import { nearestAtlasCity, type TravelMapCity } from './city-data';
 import {
   createTravelMapVisit,
   createStandaloneTravelMapVisit,
@@ -48,6 +48,7 @@ import {
   TravelMapCanvas,
   type TravelMapPlaceSelection,
 } from './travel-map-canvas';
+import { TravelMapCityPicker } from './travel-map-city-picker';
 import { TravelMapCountryPicker } from './travel-map-country-picker';
 import { TravelMapPinSheet } from './travel-map-pin-sheet';
 import {
@@ -88,6 +89,8 @@ export function TravelMapScreen() {
   const [countryCode, setCountryCode] = useState<string>();
   const [selected, setSelected] = useState<TravelMapPlaceSelection>();
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [cityPickerOpen, setCityPickerOpen] = useState(false);
+  const [highlightedCity, setHighlightedCity] = useState<TravelMapCity>();
   const [pinSheetOpen, setPinSheetOpen] = useState(false);
   const [peoplePickerOpen, setPeoplePickerOpen] = useState(false);
   const [placingPin, setPlacingPin] = useState(false);
@@ -243,6 +246,7 @@ export function TravelMapScreen() {
     });
     saveVisit(visit);
     setCountryCode(country.code);
+    setHighlightedCity(undefined);
     setSuggestion(undefined);
   };
 
@@ -251,6 +255,8 @@ export function TravelMapScreen() {
     setSelected(undefined);
     setDraftTripId(undefined);
     setPlacingPin(false);
+    setCityPickerOpen(false);
+    setHighlightedCity(undefined);
   }, []);
 
   const selectedLocalPlan = selected
@@ -296,11 +302,13 @@ export function TravelMapScreen() {
             initialGlobeCoordinate={initialGlobeCoordinate}
             selectedCountryCode={countryCode}
             selectedPinId={selected?.pin.id}
+            highlightedCity={highlightedCity}
             placing={placingPin}
             worldMotionPaused={countryPickerOpen}
             onCountryPress={(code) => {
               setCountryCode(code);
               setSelected(undefined);
+              setHighlightedCity(undefined);
             }}
             onPlacePress={setSelected}
             onCoordinatePress={(coordinate) => {
@@ -330,6 +338,7 @@ export function TravelMapScreen() {
                 : coordinate;
               setPlacingPin(false);
               setSelected(undefined);
+              setHighlightedCity(nearestCity);
               setDraftCoordinate(pinCoordinate);
               setPinSheetOpen(true);
             }}
@@ -365,10 +374,10 @@ export function TravelMapScreen() {
               </GlassPlate>
               {countryCode ? (
                 <TravelMapIconButton
-                  testID={AgentUiIds.travel.map.close}
-                  label="Close travel atlas"
-                  icon="close"
-                  onPress={() => router.back()}
+                  testID={AgentUiIds.travel.map.citySearchOpen}
+                  label={`Find a city in ${selectedCountry?.name ?? 'this country'}`}
+                  icon="search"
+                  onPress={() => setCityPickerOpen(true)}
                 />
               ) : (
                 <TravelMapIconButton
@@ -406,6 +415,14 @@ export function TravelMapScreen() {
                 label="Back to world map"
                 icon="chevron-left"
                 onPress={returnToWorld}
+              />
+            ) : null}
+            {countryCode ? (
+              <TravelMapIconButton
+                testID={AgentUiIds.travel.map.citySearchOpen}
+                label={`Find a city in ${selectedCountry?.name ?? 'this country'}`}
+                icon="search"
+                onPress={() => setCityPickerOpen(true)}
               />
             ) : null}
             <TravelMapIconButton
@@ -486,12 +503,20 @@ export function TravelMapScreen() {
               icon="map-pin"
               testID={AgentUiIds.travel.map.pinPlace}
               onPress={() => {
-                setDraftCoordinate(undefined);
+                setDraftCoordinate(
+                  highlightedCity
+                    ? {
+                        latitude: highlightedCity.latitude,
+                        longitude: highlightedCity.longitude,
+                        label: highlightedCity.name,
+                      }
+                    : undefined,
+                );
                 setDraftTripId(undefined);
                 setPinSheetOpen(true);
               }}
             >
-              Pin a Place
+              {highlightedCity ? `Pin ${highlightedCity.name}` : 'Pin a Place'}
             </Button>
           </View>
         ) : null}
@@ -541,29 +566,43 @@ export function TravelMapScreen() {
         onSelect={(code) => {
           setCountryCode(code);
           setSelected(undefined);
+          setHighlightedCity(undefined);
         }}
       />
       {selectedCountry ? (
-        <TravelMapPinSheet
-          visible={pinSheetOpen}
-          countryCode={selectedCountry.code}
-          countryName={selectedCountry.name}
-          plans={plans}
-          initialTripId={draftTripId}
-          supportedOrientations={atlasModalOrientations}
-          initialCoordinate={draftCoordinate}
-          onClose={() => {
-            setPinSheetOpen(false);
-            setDraftCoordinate(undefined);
-            setDraftTripId(undefined);
-          }}
-          onPlaceOnMap={(tripId) => {
-            setPinSheetOpen(false);
-            setDraftTripId(tripId);
-            setPlacingPin(true);
-          }}
-          onSave={savePin}
-        />
+        <>
+          <TravelMapCityPicker
+            visible={cityPickerOpen}
+            countryCode={selectedCountry.code}
+            countryName={selectedCountry.name}
+            supportedOrientations={atlasModalOrientations}
+            onClose={() => setCityPickerOpen(false)}
+            onSelect={(city) => {
+              setSelected(undefined);
+              setHighlightedCity(city);
+            }}
+          />
+          <TravelMapPinSheet
+            visible={pinSheetOpen}
+            countryCode={selectedCountry.code}
+            countryName={selectedCountry.name}
+            plans={plans}
+            initialTripId={draftTripId}
+            supportedOrientations={atlasModalOrientations}
+            initialCoordinate={draftCoordinate}
+            onClose={() => {
+              setPinSheetOpen(false);
+              setDraftCoordinate(undefined);
+              setDraftTripId(undefined);
+            }}
+            onPlaceOnMap={(tripId) => {
+              setPinSheetOpen(false);
+              setDraftTripId(tripId);
+              setPlacingPin(true);
+            }}
+            onSave={savePin}
+          />
+        </>
       ) : null}
       <TravelMapPeoplePicker
         visible={peoplePickerOpen}

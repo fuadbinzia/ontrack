@@ -22,7 +22,6 @@ import {
 import Animated, {
   FadeIn,
   ReduceMotion,
-  SlideInDown,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -30,7 +29,6 @@ import {
   glassMaterials,
   motion,
   radii,
-  springs,
   type AppIconName,
 } from '@/design-system';
 import { useDockedKeyboardInset } from '@/hooks/use-docked-keyboard-inset';
@@ -204,12 +202,11 @@ export function SheetScaffold({
   // The tab dock hides while a sheet is open (modalSheetCount) so this pad is
   // clean frost — dock labels must never read through as a fake "gap".
   const bottomPad = Math.max(insets.bottom, spacing.md) + additionalBottomInset;
-  const sheetEntrance = SlideInDown.springify()
-    .damping(springs.sheet.damping)
-    .stiffness(springs.sheet.stiffness)
-    .mass(springs.sheet.mass)
-    .overshootClamping(1)
-    .reduceMotion(ReduceMotion.System);
+  // Mount at the final bottom-pinned geometry. Starting below the viewport can
+  // leave only the scrim visible if a native Modal drops the entrance frame.
+  const sheetEntrance = FadeIn.duration(motion.fade).reduceMotion(
+    ReduceMotion.System,
+  );
   useEffect(() => {
     if (!visible) {
       setLockedHeight(undefined);
@@ -252,9 +249,8 @@ export function SheetScaffold({
       */}
       <GestureHandlerRootView accessibilityViewIsModal style={styles.modalRoot}>
         {/*
-          Scrim fades in place; card rises from below. Native Modal slide
-          would drag the dim with the sheet. (Reanimated: SlideInDown =
-          start below viewport → settle at target.)
+          Scrim and card fade independently at their final geometry. Native
+          Modal slide would drag the dim and can strand the card off-screen.
         */}
         <Animated.View
           entering={FadeIn.duration(motion.fade).reduceMotion(

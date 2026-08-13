@@ -77,4 +77,40 @@ describe('address lookup', () => {
     expect(results[0]?.secondary).toBe('Boston, Massachusetts, United States');
     expect(results[0]?.countryName).toBe('United States');
   });
+
+  it('dedupes repeated Photon feature ids even when locality metadata differs', () => {
+    const results = normalizeAddressSuggestions({
+      features: [
+        {
+          properties: {
+            osm_id: 25820117,
+            osm_type: 'R',
+            name: 'Nevis',
+            state: 'Saint James Windward',
+            country: 'Saint Kitts and Nevis',
+            countrycode: 'kn',
+          },
+          geometry: { coordinates: [-62.58, 17.15] },
+        },
+        {
+          properties: {
+            osm_id: 25820117,
+            osm_type: 'R',
+            name: 'Nevis',
+            state: 'Saint George Gingerland',
+            country: 'Saint Kitts and Nevis',
+            countrycode: 'kn',
+          },
+          geometry: { coordinates: [-62.58, 17.15] },
+        },
+      ],
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({
+      id: 'R:25820117:Nevis',
+      label: 'Nevis',
+      countryCode: 'KN',
+    });
+  });
 });

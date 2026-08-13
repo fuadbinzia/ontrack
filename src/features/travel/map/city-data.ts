@@ -28,6 +28,26 @@ export function atlasCitiesForCountry(countryCode: string | undefined): readonly
   return countryCode ? citiesByCountry.get(countryCode.toUpperCase()) ?? [] : [];
 }
 
+function normalizeCitySearchValue(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase();
+}
+
+export function searchAtlasCities(
+  countryCode: string | undefined,
+  query: string,
+): readonly TravelMapCity[] {
+  const needle = normalizeCitySearchValue(query);
+  const countryCities = atlasCitiesForCountry(countryCode);
+  if (!needle) return countryCities;
+  return countryCities.filter((city) =>
+    normalizeCitySearchValue(city.name).includes(needle),
+  );
+}
+
 const toRadians = (degrees: number) => degrees * Math.PI / 180;
 
 function cityDistanceScore(

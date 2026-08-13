@@ -58,6 +58,27 @@ describe('travel atlas country geometry', () => {
     expect(countryWidth / viewBox.width).toBeGreaterThan(0.5);
   });
 
+  it.each(['KN', 'AG'])('makes tiny island countries readable in portrait (%s)', (code) => {
+    const country = atlasCountryByCode(code);
+    expect(country).toBeDefined();
+    if (!country) return;
+
+    const viewBox = countryViewBox(country, 0.5);
+    const countryWidth = country.bounds[1][0] - country.bounds[0][0];
+    const countryHeight = country.bounds[1][1] - country.bounds[0][1];
+    const paintedShare = Math.max(
+      countryWidth / viewBox.width,
+      countryHeight / viewBox.height,
+    );
+
+    expect(viewBox.width / viewBox.height).toBeCloseTo(0.5, 5);
+    expect(paintedShare).toBeGreaterThan(0.25);
+    expect(viewBox.x).toBeLessThan(country.bounds[0][0]);
+    expect(viewBox.y).toBeLessThan(country.bounds[0][1]);
+    expect(viewBox.x + viewBox.width).toBeGreaterThan(country.bounds[1][0]);
+    expect(viewBox.y + viewBox.height).toBeGreaterThan(country.bounds[1][1]);
+  });
+
   it('uses recognizable detail geometry for country drill-downs', () => {
     const iceland = atlasCountryByCode('IS');
     expect(iceland).toBeDefined();

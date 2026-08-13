@@ -42,7 +42,7 @@ import {
   projectTravelCoordinate,
   travelMapStrokeWidth,
 } from './country-data';
-import { atlasCitiesForCountry } from './city-data';
+import { atlasCitiesForCountry, type TravelMapCity } from './city-data';
 import {
   TRAVEL_GLOBE_INITIAL_ROTATION,
   travelGlobeRotationForCoordinate,
@@ -71,6 +71,7 @@ type Props = {
   renderedVisits: TravelMapRenderedVisit[];
   selectedCountryCode?: string;
   selectedPinId?: string;
+  highlightedCity?: TravelMapCity;
   initialGlobeCoordinate?: { latitude: number; longitude: number };
   placing?: boolean;
   worldMotionPaused?: boolean;
@@ -121,6 +122,7 @@ export function TravelMapCanvas({
   renderedVisits,
   selectedCountryCode,
   selectedPinId,
+  highlightedCity,
   initialGlobeCoordinate,
   placing = false,
   worldMotionPaused = false,
@@ -179,7 +181,7 @@ export function TravelMapCanvas({
     scale.value = withTiming(1, { duration: motion.page });
     translateX.value = withTiming(0, { duration: motion.page });
     translateY.value = withTiming(0, { duration: motion.page });
-  }, [placing, scale, selectedCountryCode, translateX, translateY]);
+  }, [highlightedCity?.name, placing, scale, selectedCountryCode, translateX, translateY]);
 
   const pan = Gesture.Pan()
     .enabled(Boolean(selectedCountry) && !placing)
@@ -237,7 +239,14 @@ export function TravelMapCanvas({
   const cityMarkers = useMemo(() => {
     if (!selectedCountryCode) return [];
     const occupied: { left: number; top: number }[] = [];
-    return atlasCitiesForCountry(selectedCountryCode).flatMap((city) => {
+    const countryCities = atlasCitiesForCountry(selectedCountryCode);
+    const orderedCities = highlightedCity
+      ? [
+          highlightedCity,
+          ...countryCities.filter((city) => city.name !== highlightedCity.name),
+        ]
+      : countryCities;
+    return orderedCities.flatMap((city) => {
       if (!atlasCountryContainsCoordinate(
         selectedCountryCode,
         city.latitude,
@@ -251,9 +260,13 @@ export function TravelMapCanvas({
       );
       if (overlaps) return [];
       occupied.push(position);
-      return [{ city, position }];
+      return [{
+        city,
+        position,
+        highlighted: city.name === highlightedCity?.name,
+      }];
     });
-  }, [layout, selectedCountryCode, viewBox]);
+  }, [highlightedCity, layout, selectedCountryCode, viewBox]);
   const selectedBorderWidth = travelMapStrokeWidth(viewBox, layout, 3);
   const mapUnit = travelMapStrokeWidth(viewBox, layout, 1);
 
@@ -349,7 +362,7 @@ export function TravelMapCanvas({
             />
 
             <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-              {cityMarkers.map(({ city, position }) => {
+              {cityMarkers.map(({ city, highlighted, position }) => {
                 const alignRight = position.left > layout.width * 0.72;
                 return (
                   <View
@@ -361,11 +374,22 @@ export function TravelMapCanvas({
                         ? { right: layout.width - position.left, top: position.top, flexDirection: 'row-reverse' }
                         : { left: position.left, top: position.top },
                     ]}>
-                    <View style={[styles.cityDot, city.capital && styles.capitalDot]} />
+                    <View
+                      style={[
+                        styles.cityDot,
+                        city.capital && styles.capitalDot,
+                        highlighted && styles.highlightedCityDot,
+                      ]}
+                    />
                     <AppText
                       variant="caption"
+                      color={highlighted ? 'accent' : undefined}
                       numberOfLines={1}
-                      style={[styles.cityName, alignRight && styles.cityNameRight]}>
+                      style={[
+                        styles.cityName,
+                        highlighted && styles.highlightedCityName,
+                        alignRight && styles.cityNameRight,
+                      ]}>
                       {city.name}
                     </AppText>
                   </View>
@@ -438,6 +462,16 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 4,
     backgroundColor: '#F17868',
+  },
+  highlightedCityDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    backgroundColor: '#FFF4C2',
+  },
+  highlightedCityName: {
+    fontWeight: '700',
   },
   cityName: {
     color: TRAVEL_MAP_INK,

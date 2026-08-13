@@ -58,6 +58,7 @@ export default function TabsLayout() {
         },
         tabBarBackground: () => null,
       })}>
+      <Tabs.Screen name="overview" />
       <Tabs.Screen
         name="(today)"
         listeners={{ tabPress: () => setSelectedDate(todayKey()) }}

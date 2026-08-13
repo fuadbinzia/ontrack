@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { typeConfig } from '@/design-system/typography';
 import { AgentUiIds } from '@/utils/agent-ui/ids';
+import { useAgentUiTarget } from '@/utils/agent-ui/use-agent-ui-target';
 import { sendCrashReport } from '@/utils/crash-report';
 
 /**
@@ -13,10 +14,11 @@ import { sendCrashReport } from '@/utils/crash-report';
  */
 export function RouteErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
   const [sendHint, setSendHint] = useState<string | undefined>();
 
   const onSendCrashReport = useCallback(() => {
-    if (sending) return;
+    if (sending || sent) return;
     setSending(true);
     setSendHint(undefined);
     void sendCrashReport({ error })
@@ -25,19 +27,32 @@ export function RouteErrorBoundary({ error, retry }: ErrorBoundaryProps) {
           setSendHint(result.reason);
           return;
         }
-        if (result.method === 'share') {
-          setSendHint('Choose Mail to send the attached crash log.');
-          return;
-        }
-        setSendHint(undefined);
+        setSent(true);
+        setSendHint(
+          'Thank you. We received the report and will review the issue promptly.',
+        );
       })
       .catch(() => {
-        setSendHint('Could not open a crash report. Try again.');
+        setSendHint(
+          'We could not send the report. Check your connection and try again.',
+        );
       })
       .finally(() => {
         setSending(false);
       });
-  }, [error, sending]);
+  }, [error, sending, sent]);
+  const onRetry = useCallback(() => void retry(), [retry]);
+  const retryTarget = useAgentUiTarget(AgentUiIds.errorBoundary.retry, {
+    label: 'Retry loading screen',
+    onPress: onRetry,
+  });
+  const sendReportTarget = useAgentUiTarget(
+    AgentUiIds.errorBoundary.sendReport,
+    {
+      label: sent ? 'Crash report sent' : 'Send crash report',
+      onPress: onSendCrashReport,
+    },
+  );
 
   return (
     <View style={styles.root} testID={AgentUiIds.errorBoundary.root}>
@@ -46,28 +61,39 @@ export function RouteErrorBoundary({ error, retry }: ErrorBoundaryProps) {
         {error.message || 'The screen failed to load. Try again.'}
       </Text>
       <Pressable
+        ref={retryTarget.ref}
+        onLayout={retryTarget.onLayout}
         accessibilityRole="button"
         accessibilityLabel="Retry loading screen"
-        testID={AgentUiIds.errorBoundary.retry}
-        onPress={() => void retry()}
+        testID={retryTarget.testID}
+        onPress={onRetry}
         style={({ pressed }) => [styles.retry, pressed && styles.retryPressed]}>
         <Text style={styles.retryLabel}>Try again</Text>
       </Pressable>
       <Pressable
+        ref={sendReportTarget.ref}
+        onLayout={sendReportTarget.onLayout}
         accessibilityRole="button"
-        accessibilityLabel="Send crash report by email"
-        testID={AgentUiIds.errorBoundary.sendReport}
-        disabled={sending}
+        accessibilityLabel={sent ? 'Crash report sent' : 'Send crash report'}
+        testID={sendReportTarget.testID}
+        disabled={sending || sent}
         onPress={onSendCrashReport}
         style={({ pressed }) => [
           styles.send,
-          (pressed || sending) && styles.sendPressed,
+          (pressed || sending || sent) && styles.sendPressed,
         ]}>
         <Text style={styles.sendLabel}>
-          {sending ? 'Preparing report…' : 'Send crash report'}
+          {sending ? 'Sending report…' : sent ? 'Report sent' : 'Send crash report'}
         </Text>
       </Pressable>
-      {sendHint ? <Text style={styles.hint}>{sendHint}</Text> : null}
+      {sendHint ? (
+        <Text
+          accessibilityLiveRegion="polite"
+          testID={AgentUiIds.errorBoundary.reportStatus}
+          style={styles.hint}>
+          {sendHint}
+        </Text>
+      ) : null}
     </View>
   );
 }

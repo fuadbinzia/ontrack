@@ -20,6 +20,7 @@ describe('tab-recency', () => {
 
   it('keeps DEFAULT_TAB_ORDER aligned with the tabs layout cold-start sequence', () => {
     expect([...DEFAULT_TAB_ORDER]).toEqual([
+      'overview',
       '(today)',
       'calendar',
       'to-do',
@@ -38,13 +39,13 @@ describe('tab-recency', () => {
     ]);
   });
 
-  it('puts never-focused catalog on the right of Today (browse-through)', () => {
+  it('puts never-focused catalog on the right of Overview (browse-through)', () => {
     const routes = DEFAULT_TAB_ORDER.map((name) => ({ name }));
     const ordered = orderRoutesByRecency(routes, {}).map((r) => r.name);
-    expect(ordered[0]).toBe('(today)');
+    expect(ordered[0]).toBe('overview');
     // No recents → right walks DEFAULT order; left wraps to Profile for new users.
-    expect(ordered[1]).toBe('calendar');
-    expect(ordered[2]).toBe('to-do');
+    expect(ordered[1]).toBe('(today)');
+    expect(ordered[2]).toBe('calendar');
     expect(ordered[ordered.length - 1]).toBe('profile');
   });
 
@@ -60,9 +61,9 @@ describe('tab-recency', () => {
     // Left = most recent prior (travel), then older (calendar)
     expect(ordered[ordered.length - 1]).toBe('travel');
     expect(ordered[ordered.length - 2]).toBe('calendar');
-    // Right = never-focused catalog starting at Today
-    expect(ordered[1]).toBe('(today)');
-    expect(ordered[2]).toBe('social');
+    // Right = never-focused catalog starting at Overview
+    expect(ordered[1]).toBe('overview');
+    expect(ordered[2]).toBe('(today)');
     expect(ordered[1]).not.toBe('health');
   });
 

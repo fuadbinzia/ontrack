@@ -9,6 +9,7 @@ export const TAB_META: Record<
   string,
   { label: string; icon: AppIconName; href: Href }
 > = {
+  overview: { label: 'Overview', icon: 'home', href: '/(tabs)/overview' },
   '(today)': { label: 'Today', icon: 'today', href: '/' },
   calendar: {
     label: 'Calendar',

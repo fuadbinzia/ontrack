@@ -6,10 +6,11 @@ describe('tab-pins store', () => {
   beforeEach(() => {
     useTabPins.setState({
       trackerOrder: [
-        'profile',
-        'calendar',
+        'overview',
         '(today)',
+        'calendar',
         'to-do',
+        'profile',
         'social',
         'travel',
       ],
@@ -19,33 +20,33 @@ describe('tab-pins store', () => {
 
   it('adds a tracker to nav when under the pin limit', () => {
     useTabPins.setState({
-      trackerOrder: ['profile', 'calendar', 'social', 'travel'],
+      trackerOrder: ['overview', 'calendar', 'social', 'travel'],
       pinnedCount: 2,
     });
     useTabPins.getState().addToNav('travel');
     expect(useTabPins.getState().pinnedCount).toBe(3);
     expect(useTabPins.getState().trackerOrder.slice(0, 3)).toEqual([
-      'profile',
+      'overview',
       'calendar',
       'travel',
     ]);
   });
 
   it('removes from nav but keeps at least one pin', () => {
-    useTabPins.getState().removeFromNav('profile');
+    useTabPins.getState().removeFromNav('(today)');
     expect(useTabPins.getState().pinnedCount).toBe(3);
     expect(useTabPins.getState().trackerOrder.slice(0, 3)).toEqual([
+      'overview',
       'calendar',
-      '(today)',
       'to-do',
     ]);
     useTabPins.setState({
-      trackerOrder: ['calendar', 'social', 'travel'],
+      trackerOrder: ['overview', 'social', 'travel'],
       pinnedCount: 1,
     });
-    useTabPins.getState().removeFromNav('calendar');
+    useTabPins.getState().removeFromNav('overview');
     expect(useTabPins.getState().pinnedCount).toBe(1);
-    expect(useTabPins.getState().trackerOrder[0]).toBe('calendar');
+    expect(useTabPins.getState().trackerOrder[0]).toBe('overview');
   });
 
   it('setInNavOrder writes the default pin set', () => {
@@ -61,17 +62,17 @@ describe('tab-pins store', () => {
     useTabPins.getState().promoteInMore('travel');
     expect(useTabPins.getState().pinnedCount).toBe(4);
     expect(useTabPins.getState().trackerOrder.slice(0, 5)).toEqual([
-      'profile',
-      'calendar',
+      'overview',
       '(today)',
+      'calendar',
       'to-do',
       'travel',
     ]);
     useTabPins.getState().promoteInMore('profile');
     expect(useTabPins.getState().trackerOrder.slice(0, 4)).toEqual([
-      'profile',
-      'calendar',
+      'overview',
       '(today)',
+      'calendar',
       'to-do',
     ]);
   });

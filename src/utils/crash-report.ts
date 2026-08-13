@@ -1,14 +1,11 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import { File, Paths } from 'expo-file-system';
-import * as Linking from 'expo-linking';
-import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
-import { ONTRACK_SUPPORT_EMAIL } from '@/constants/legal';
+import { resolveExpoApiUrl } from '@/services/http/api-url';
 
-const CRASH_LOG_FILENAME = 'ontrack-crash-report.txt';
-const MAX_MAILTO_BODY_CHARS = 1_800;
+const MAX_REPORT_CHARS = 40_000;
+const SEND_TIMEOUT_MS = 10_000;
 
 export type CrashReportInput = {
   error: Error;
@@ -17,8 +14,7 @@ export type CrashReportInput = {
 };
 
 export type CrashReportSendResult =
-  | { method: 'share' }
-  | { method: 'mailto' }
+  | { method: 'sent' }
   | { method: 'unavailable'; reason: string };
 
 function safeComponent(value: unknown): string {
@@ -27,7 +23,7 @@ function safeComponent(value: unknown): string {
   return '—';
 }
 
-/** Build plain-text crash diagnostics for support email attachment / body. */
+/** Build plain-text diagnostics for the server-delivered support email. */
 export function buildCrashLogText(input: CrashReportInput): string {
   const { error, context } = input;
   const appVersion = safeComponent(
@@ -70,87 +66,45 @@ export function crashReportSubject(error: Error): string {
   return `onTrack crash: ${short || 'Unknown error'}`;
 }
 
-export function crashReportBody(error: Error): string {
-  return [
-    'I hit a crash in onTrack. The crash log is attached.',
-    '',
-    `Error: ${error.message || error.name || 'Unknown error'}`,
-    '',
-    `Please send to: ${ONTRACK_SUPPORT_EMAIL}`,
-    '',
-    'What I was doing:',
-    '(please describe)',
-    '',
-  ].join('\n');
+function crashReportApiUrl(): string {
+  return resolveExpoApiUrl('/api/crash-report', {
+    configuredBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
+    requireHttpsInProduction: true,
+    createNotConfiguredError: () =>
+      new Error('Crash reporting is not configured for this build.'),
+  });
 }
 
-/** Write / overwrite the crash log under the app cache directory. */
-export function writeCrashLogFile(text: string): File {
-  const file = new File(Paths.cache, CRASH_LOG_FILENAME);
-  file.create({ overwrite: true, intermediates: true });
-  file.write(text);
-  return file;
-}
-
-function mailtoUrl(subject: string, body: string): string {
-  const params = new URLSearchParams();
-  params.set('subject', subject);
-  params.set('body', body.slice(0, MAX_MAILTO_BODY_CHARS));
-  return `mailto:${ONTRACK_SUPPORT_EMAIL}?${params.toString()}`;
-}
-
-/**
- * Share a crash log file (Mail can attach it) or fall back to mailto with the
- * log inlined. Uses modules already in the shipped native binary.
- */
+/** Deliver diagnostics without opening the device share sheet or email client. */
 export async function sendCrashReport(
   input: CrashReportInput,
 ): Promise<CrashReportSendResult> {
-  const text = buildCrashLogText(input);
-  const subject = crashReportSubject(input.error);
-  const body = crashReportBody(input.error);
-
-  let fileUri: string | undefined;
-  try {
-    fileUri = writeCrashLogFile(text).uri;
-  } catch {
-    fileUri = undefined;
-  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
 
   try {
-    if (fileUri && (await Sharing.isAvailableAsync())) {
-      await Sharing.shareAsync(fileUri, {
-        mimeType: 'text/plain',
-        dialogTitle: `Send crash log to ${ONTRACK_SUPPORT_EMAIL}`,
-        UTI: 'public.plain-text',
-      });
-      return { method: 'share' };
+    const response = await fetch(crashReportApiUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subject: crashReportSubject(input.error),
+        report: buildCrashLogText(input).slice(0, MAX_REPORT_CHARS),
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      return {
+        method: 'unavailable',
+        reason: 'We could not send the report. Check your connection and try again.',
+      };
     }
+    return { method: 'sent' };
   } catch {
-    // Fall through to mailto.
-  }
-
-  const mailtoBody = [
-    body,
-    fileUri
-      ? '(Could not attach the log file automatically. Paste is included below.)'
-      : null,
-    text,
-  ]
-    .filter(Boolean)
-    .join('\n\n');
-  try {
-    const url = mailtoUrl(subject, mailtoBody);
-    const canOpen = await Linking.canOpenURL(url);
-    if (!canOpen) {
-      return { method: 'unavailable', reason: 'No mail or share target available.' };
-    }
-    await Linking.openURL(url);
-    return { method: 'mailto' };
-  } catch (error) {
     return {
       method: 'unavailable',
-      reason: error instanceof Error ? error.message : 'Unable to open mail.',
+      reason: 'We could not send the report. Check your connection and try again.',
     };
+  } finally {
+    clearTimeout(timer);
   }
 }

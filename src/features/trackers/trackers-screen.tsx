@@ -21,10 +21,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { TAB_META } from '@/components/navigation/bottom-nav-tab-meta';
+import {
+  isTrackerRouteEnabled,
+  TAB_META,
+} from '@/components/navigation/bottom-nav-tab-meta';
 import {
   NAV_PIN_LIMIT,
   NAV_PIN_MIN,
+  PRIMARY_OVERVIEW_ROUTE,
   splitTrackerOrder,
 } from '@/components/navigation/tab-pins';
 import {
@@ -53,24 +57,6 @@ type TrackerRow = {
   label: string;
   section: 'inNav' | 'others';
 };
-
-function isEnabled(
-  routeName: string,
-  enabledAddons: Record<string, boolean>,
-): boolean {
-  if (routeName === 'workouts') return !!enabledAddons.fitness;
-  if (routeName === 'plants') return !!enabledAddons.plants;
-  if (routeName === 'travel') return !!enabledAddons.travel;
-  if (routeName === 'vision-board') return !!enabledAddons['vision-board'];
-  if (routeName === 'games') return !!enabledAddons.games;
-  if (routeName === 'vehicles') return !!enabledAddons.vehicles;
-  if (routeName === 'food') return !!enabledAddons.food;
-  if (routeName === 'finance') return !!enabledAddons.finance;
-  if (routeName === 'health') {
-    return process.env.EXPO_OS === 'ios' && !!enabledAddons.health;
-  }
-  return routeName in TAB_META && routeName !== 'trackers';
-}
 
 /**
  * Imperative spring bounce — layout `entering` is unreliable here (tab stays
@@ -168,7 +154,7 @@ export function TrackersScreen() {
   const enabledNames = useMemo(() => {
     const names = new Set<string>();
     for (const name of Object.keys(TAB_META)) {
-      if (!isEnabled(name, enabledAddons)) continue;
+      if (!isTrackerRouteEnabled(name, enabledAddons)) continue;
       names.add(name);
     }
     return names;
@@ -225,6 +211,7 @@ export function TrackersScreen() {
     if (!meta) return null;
     const inNavCount = inNav.length;
     const canAdd = item.section === 'others' && inNavCount < NAV_PIN_LIMIT;
+    const isOverview = item.id === PRIMARY_OVERVIEW_ROUTE;
 
     return (
       <ScaleDecorator activeScale={1.02}>
@@ -303,19 +290,27 @@ export function TrackersScreen() {
                   </AppText>
                 </Pressable>
               ) : null}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Drag to reorder ${item.label}`}
-                testID={AgentUiIds.trackers.drag(item.id)}
-                delayLongPress={160}
-                onLongPress={() => {
-                  haptics.heavy();
-                  drag();
-                }}
-                hitSlop={8}
-                style={styles.sideAction}>
-                <DragHandle size={s(20)} color={theme.textSecondary} />
-              </Pressable>
+              {isOverview ? (
+                <View style={styles.sideAction}>
+                  <AppText variant="caption" color="secondary" fit>
+                    First
+                  </AppText>
+                </View>
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Drag to reorder ${item.label}`}
+                  testID={AgentUiIds.trackers.drag(item.id)}
+                  delayLongPress={160}
+                  onLongPress={() => {
+                    haptics.heavy();
+                    drag();
+                  }}
+                  hitSlop={8}
+                  style={styles.sideAction}>
+                  <DragHandle size={s(20)} color={theme.textSecondary} />
+                </Pressable>
+              )}
             </GlassPlate>
           </TrackerRowBounce>
         </View>

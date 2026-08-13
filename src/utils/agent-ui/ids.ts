@@ -14,6 +14,8 @@ export const AgentUiIds = {
 
 export function tabTestIdForRoute(routeName: string): string | undefined {
   switch (routeName) {
+    case 'overview':
+      return AgentUiIds.tabs.overview;
     case 'index':
     case '(today)':
       return AgentUiIds.tabs.today;

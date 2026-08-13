@@ -14,4 +14,9 @@ describe('bumpPatchVersion', () => {
     assert.throws(() => bumpPatchVersion('v1'), /semver-like/);
     assert.throws(() => bumpPatchVersion(''), /semver-like/);
   });
+
+  it('keeps the patch segment numeric for Android version codes', () => {
+    assert.equal(Number(bumpPatchVersion('1.0.67').split('.')[2]), 68);
+    assert.equal(Number(bumpPatchVersion('2.4.9').split('.')[2]), 10);
+  });
 });

@@ -117,6 +117,10 @@ if [[ "$DO_BUILD" -eq 1 ]]; then
   APK_DEST="$ROOT/$APK_NAME"
 
   echo "==> Building release APK v${APP_VERSION} @ ${BUILD_STAMP} (commit $SHA)"
+  echo "==> Syncing app.json into the existing Android native project"
+  cd "$ROOT"
+  npx expo prebuild --platform android --no-install --no-clean
+  assert_device_channel_headers
   cd "$ROOT/android"
   GRADLE_ARGS=()
   if [[ "$CLEAN_NATIVE" -eq 1 ]]; then

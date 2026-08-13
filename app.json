@@ -35,6 +35,7 @@
       "appleTeamId": "F5HRXF5795"
     },
     "android": {
+      "versionCode": 68,
       "package": "com.imtihoss.ontracknow",
       "intentFilters": [
         {

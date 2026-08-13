@@ -9,6 +9,10 @@ const SCRIPT_NAME = '[onTrack] Re-sign simulator app for Keychain';
 const DEV_LAUNCHER_SCRIPT_NAME = '[Expo Dev Launcher] Strip Local Network Keys for Release';
 const SHARING_EXTENSION_TARGET = 'expo-sharing-extension';
 
+function xcodeName(value) {
+  return typeof value === 'string' ? value.replace(/^"|"$/g, '') : value;
+}
+
 const SHELL_SCRIPT = `set -e
 if [ "\${PLATFORM_NAME}" != "iphonesimulator" ]; then
   exit 0
@@ -72,7 +76,10 @@ function disableCcacheForSharingExtension(project) {
   const configurations = objects.XCBuildConfiguration || {};
 
   const target = Object.values(targets).find(
-    (candidate) => candidate && typeof candidate === 'object' && candidate.name === SHARING_EXTENSION_TARGET,
+    (candidate) =>
+      candidate &&
+      typeof candidate === 'object' &&
+      xcodeName(candidate.name) === SHARING_EXTENSION_TARGET,
   );
   const configurationList = target && configurationLists[target.buildConfigurationList];
 
@@ -91,9 +98,35 @@ function disableCcacheForSharingExtension(project) {
   return project;
 }
 
+function syncSharingExtensionVersion(project, version) {
+  const objects = project.hash.project.objects;
+  const targets = objects.PBXNativeTarget || {};
+  const configurationLists = objects.XCConfigurationList || {};
+  const configurations = objects.XCBuildConfiguration || {};
+
+  const target = Object.values(targets).find(
+    (candidate) =>
+      candidate &&
+      typeof candidate === 'object' &&
+      xcodeName(candidate.name) === SHARING_EXTENSION_TARGET,
+  );
+  const configurationList = target && configurationLists[target.buildConfigurationList];
+
+  for (const configurationRef of configurationList?.buildConfigurations || []) {
+    const configuration = configurations[configurationRef.value];
+    if (!configuration?.buildSettings) continue;
+    configuration.buildSettings.MARKETING_VERSION = version;
+  }
+
+  return project;
+}
+
 module.exports = function withSimulatorKeychainCodesign(config) {
   return withXcodeProject(config, (config) => {
-    config.modResults = disableCcacheForSharingExtension(ensureResignPhase(config.modResults));
+    config.modResults = syncSharingExtensionVersion(
+      disableCcacheForSharingExtension(ensureResignPhase(config.modResults)),
+      config.version,
+    );
     return config;
   });
 };

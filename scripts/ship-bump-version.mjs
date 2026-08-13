@@ -183,6 +183,11 @@ function main() {
   ];
 
   app.expo.version = next;
+  // Local Drive APKs use this value; EAS store builds still auto-increment from
+  // their remote version source. Keep the sideload binary upgradeable and make
+  // its embedded version match the release notes / filename.
+  app.expo.android ??= {};
+  app.expo.android.versionCode = Number(next.split('.')[2]);
   // Keep OTA clients on existing binaries; patch bumps are marketing/JS only.
   if (
     app.expo.runtimeVersion &&

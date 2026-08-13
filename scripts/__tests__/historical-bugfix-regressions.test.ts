@@ -41,6 +41,30 @@ describe('historical bug-fix regressions', () => {
     expect(testflightPublish).toBeGreaterThan(compatibilityCheck);
   });
 
+  it('syncs Expo config before building a correctly versioned Drive APK', () => {
+    const app = JSON.parse(read('app.json')) as {
+      expo: { version: string; android?: { versionCode?: number } };
+    };
+    const apkScript = read('scripts/android-release-to-drive.sh');
+    const patch = Number(app.expo.version.split('.')[2]);
+
+    expect(app.expo.android?.versionCode).toBe(patch);
+    expect(apkScript).toContain(
+      'npx expo prebuild --platform android --no-install --no-clean',
+    );
+    expect(apkScript).toMatch(
+      /expo prebuild --platform android --no-install --no-clean[\s\S]*assert_device_channel_headers/,
+    );
+  });
+
+  it('keeps the iOS sharing extension on the containing app version', () => {
+    const plugin = read('plugins/with-simulator-keychain-codesign.js');
+
+    expect(plugin).toContain('syncSharingExtensionVersion');
+    expect(plugin).toContain('configuration.buildSettings.MARKETING_VERSION = version');
+    expect(plugin).toContain('config.version');
+  });
+
   it('adds both Siri Swift sources through the supported Xcode helper', () => {
     const plugin = read('plugins/with-ontrack-voice-lists.js');
 

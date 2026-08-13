@@ -21,7 +21,6 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { useAddons } from '@/store/addons';
 import { useTabPins } from '@/store/tab-pins';
-import { useTodos } from '@/store/todos';
 import { useUI } from '@/store/ui';
 import {
   AgentTestId,
@@ -86,9 +85,6 @@ export function BottomNavBar({
   const enabledAddons = useAddons((store) => store.enabled);
   const trackerOrder = useTabPins((store) => store.trackerOrder);
   const pinnedCount = useTabPins((store) => store.pinnedCount);
-  const openTaskCount = useTodos(
-    (store) => store.tasks.filter((task) => !task.completed).length,
-  );
 
   const enabledNames = useMemo(() => {
     const names = new Set<string>();
@@ -286,7 +282,6 @@ export function BottomNavBar({
               const focused = pendingRouteName
                 ? pendingRouteName === slot.name
                 : navFocused;
-              const badge = slot.name === 'to-do' ? openTaskCount : 0;
               const tabIcon: AppIconName =
                 slot.name === '(today)' ? todayTabIcon : meta.icon;
               const accessibilityLabel =
@@ -377,13 +372,6 @@ export function BottomNavBar({
                     inactiveColor={theme.textSecondary}
                     iconSize={s(20)}
                     captionStyle={tabCaptionStyle}
-                    badge={badge}
-                    badgeColor={theme.danger}
-                    badgeMinWidth={s(20)}
-                    badgeHeight={s(18)}
-                    badgePadX={s(4)}
-                    badgeFontSize={s(10)}
-                    badgeLineHeight={s(13)}
                   />
                   {focused ? (
                     <View

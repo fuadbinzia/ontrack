@@ -15,16 +15,14 @@ import { formatMoney } from '@/features/travel/expenses/format-money';
 import { useResponsive } from '@/hooks/use-responsive';
 import {
   completePlaidLink,
-  createTellerLinkSession,
   createPlaidLinkToken,
   disconnectPlaidItem,
   disconnectTellerEnrollment,
   FinanceServiceError,
-  finishTellerLink,
   openPlaidHostedLink,
-  openTellerConnect,
   syncPlaidItem,
   syncTellerEnrollment,
+  type PlaidLinkPurpose,
 } from '@/services/finance';
 import { useFinance } from '@/store/finance';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -40,7 +38,6 @@ import { FinanceSubpageHeader } from './finance-subpage-header';
 import {
   FINANCE_ACCOUNT_KIND_LABEL,
   FINANCE_ACCOUNT_KINDS,
-  isFinanceInvestmentKind,
   type FinanceAccount,
   type FinanceAccountKind,
 } from './types';
@@ -83,7 +80,6 @@ export function FinanceAccountsScreen() {
     referenceSavingsApr != null ? String(referenceSavingsApr) : '',
   );
   const [linking, setLinking] = useState(false);
-  const [retiringPlaidBanks, setRetiringPlaidBanks] = useState(false);
   const [syncingId, setSyncingId] = useState<string>();
   const [error, setError] = useState<string>();
 
@@ -130,13 +126,13 @@ export function FinanceAccountsScreen() {
     );
   };
 
-  const startPlaidInvestmentLink = async () => {
+  const startPlaidLink = async (purpose: PlaidLinkPurpose) => {
     setLinking(true);
     try {
-      const tokenResult = await createPlaidLinkToken('investments');
+      const tokenResult = await createPlaidLinkToken(purpose);
       if (!tokenResult.ok) {
         appPrompt.alert(
-          'Investment linking unavailable',
+          purpose === 'investments' ? 'Investment linking unavailable' : 'Bank linking unavailable',
           tokenResult.configured
             ? tokenResult.error
             : 'Plaid is not configured for this build. Add accounts manually, or set PLAID_CLIENT_ID / PLAID_SECRET on the API host.',
@@ -150,41 +146,6 @@ export function FinanceAccountsScreen() {
       appPrompt.alert(
         'Link failed',
         linkError instanceof Error ? linkError.message : 'Plaid Link did not finish.',
-      );
-    } finally {
-      setLinking(false);
-    }
-  };
-
-  const startTellerBankLink = async () => {
-    setLinking(true);
-    try {
-      const session = await createTellerLinkSession();
-      if (!session.ok) {
-        appPrompt.alert(
-          'Bank linking unavailable',
-          session.configured
-            ? session.error
-            : 'Teller is not configured for this build. Add accounts manually, or configure Teller on the API host.',
-        );
-        return;
-      }
-      await openTellerConnect(session);
-      const synced = await finishTellerLink(session.sessionId);
-      if (!synced.ok || !personalId) {
-        appPrompt.alert('Link failed', synced.ok ? 'No personal entity found.' : synced.error);
-        return;
-      }
-      applyTellerSyncResult(synced, personalId, baseCurrency);
-      appPrompt.alert(
-        'Bank linked',
-        `Imported ${formatCount(synced.transactions.length, 'spending update')} with Teller.`,
-      );
-    } catch (linkError) {
-      if (linkError instanceof FinanceServiceError && linkError.code === 'CANCELLED') return;
-      appPrompt.alert(
-        'Link failed',
-        linkError instanceof Error ? linkError.message : 'Teller Connect did not finish.',
       );
     } finally {
       setLinking(false);
@@ -255,68 +216,14 @@ export function FinanceAccountsScreen() {
     }
   };
 
-  const legacyPlaidBanks = accounts.filter((account) => {
-    const provider = account.provider ?? (account.plaidItemId ? 'plaid' : undefined);
-    return provider === 'plaid' && !isFinanceInvestmentKind(account.kind);
-  });
-
-  const retirePlaidBanks = async () => {
-    setRetiringPlaidBanks(true);
-    const connectionIds = [...new Set(legacyPlaidBanks.flatMap((account) => {
-      const connectionId = account.connectionId ?? account.plaidItemId;
-      return connectionId ? [connectionId] : [];
-    }))];
-    try {
-      for (const connectionId of connectionIds) {
-        await disconnectPlaidItem(connectionId);
-        removePlaidItem(connectionId);
-      }
-      appPrompt.alert('Plaid banks removed', 'Reconnect your bank accounts with Teller.');
-    } catch (retireError) {
-      appPrompt.alert(
-        'Migration incomplete',
-        retireError instanceof Error
-          ? retireError.message
-          : 'A Plaid bank connection could not be revoked. Nothing unconfirmed was removed.',
-      );
-    } finally {
-      setRetiringPlaidBanks(false);
-    }
-  };
-
   return (
     <Screen refresh={false}>
       <AgentTestId testID={AgentUiIds.finance.accounts.screen} label="Accounts">
         <View style={{ gap: gap.md }}>
           <FinanceSubpageHeader
             title="Cards & Accounts"
-            subtitle="Track APR and balances with Teller, and investment holdings with Plaid."
+            subtitle="Link bank, card, and investment accounts securely with Plaid."
           />
-
-          {legacyPlaidBanks.length ? (
-            <Card testID={AgentUiIds.finance.accounts.plaidMigration}>
-              <View style={{ gap: gap.sm }}>
-                <AppText variant="callout" fit>Move bank connections to Teller</AppText>
-                <AppText variant="caption" color="secondary">
-                  Plaid is now reserved for investments. Remove its bank data, then reconnect through Teller.
-                </AppText>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={retiringPlaidBanks}
-                  onPress={() => confirmDestructiveAction({
-                    title: 'Remove Plaid bank connections?',
-                    message: 'This revokes Plaid bank access and removes its imported accounts and spending. Investment connections stay linked.',
-                    actionLabel: 'Remove bank links',
-                    confirmTestID: AgentUiIds.finance.accounts.confirmPlaidMigration,
-                    onConfirm: () => void retirePlaidBanks(),
-                  })}
-                  testID={AgentUiIds.finance.accounts.retirePlaidBanks}>
-                  {retiringPlaidBanks ? 'Removing…' : 'Remove Plaid bank links'}
-                </Button>
-              </View>
-            </Card>
-          ) : null}
 
           <Card>
             <Input
@@ -349,15 +256,15 @@ export function FinanceAccountsScreen() {
               size="sm"
               variant="secondary"
               disabled={linking}
-              onPress={() => void startTellerBankLink()}
+              onPress={() => void startPlaidLink('transactions')}
               testID={AgentUiIds.finance.accounts.linkBank}>
-              {linking ? 'Linking…' : 'Link bank with Teller'}
+              {linking ? 'Linking…' : 'Link bank with Plaid'}
             </Button>
             <Button
               size="sm"
               variant="secondary"
               disabled={linking}
-              onPress={() => void startPlaidInvestmentLink()}
+              onPress={() => void startPlaidLink('investments')}
               testID={AgentUiIds.finance.accounts.linkInvestments}>
               {linking ? 'Linking…' : 'Link investments with Plaid'}
             </Button>
@@ -480,7 +387,7 @@ export function FinanceAccountsScreen() {
             <EmptyState
               icon="finance"
               title="No accounts"
-              message="Add an account manually, link banks with Teller, or link investments with Plaid."
+              message="Add an account manually, or link banks and investments with Plaid."
             />
           )}
         </View>

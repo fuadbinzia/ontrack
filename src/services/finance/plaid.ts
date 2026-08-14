@@ -153,7 +153,7 @@ function normalizeResult(data: PlaidApiData): PlaidDataResult {
 }
 
 export async function createPlaidLinkToken(
-  purpose: Extract<PlaidLinkPurpose, 'investments'> = 'investments',
+  purpose: PlaidLinkPurpose = 'investments',
 ): Promise<PlaidLinkTokenResult> {
   try {
     const data = await request<{

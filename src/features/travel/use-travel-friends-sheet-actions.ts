@@ -462,8 +462,7 @@ export function useTravelFriendsSheetActions({
         const already = current.participants.some(
           (person) =>
             person.inviteCode === result.grantedInviteCode ||
-            (result.requesterEmail &&
-              person.email?.toLowerCase() === result.requesterEmail.toLowerCase()),
+            (result.requesterUserId && person.userId === result.requesterUserId),
         );
         if (!already) {
           const nextPlan = {
@@ -472,8 +471,8 @@ export function useTravelFriendsSheetActions({
               ...current.participants,
               {
                 id: newId('trip-person'),
+                userId: result.requesterUserId,
                 name: result.requesterName,
-                email: result.requesterEmail,
                 inviteCode: result.grantedInviteCode,
                 invitedAt: now,
                 acceptedAt: now,

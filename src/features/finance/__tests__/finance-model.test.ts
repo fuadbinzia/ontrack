@@ -49,6 +49,23 @@ describe('finance model', () => {
     ]);
   });
 
+  it('keeps transfers and adjustments visible without counting them as spend', () => {
+    const rows = [
+      txn({ id: 'expense', amount: 8, date: '2026-08-01', activity: 'expense' }),
+      txn({ id: 'refund', amount: -2, date: '2026-08-02', activity: 'refund' }),
+      txn({ id: 'funding', amount: 25, date: '2026-08-03', activity: 'transfer' }),
+      txn({ id: 'adjustment', amount: 4, date: '2026-08-04', activity: 'adjustment' }),
+    ];
+    expect(transactionsInMonth(rows, 2026, 7)).toHaveLength(4);
+    expect(sumAmounts(rows)).toBe(6);
+    expect(categoryBreakdown(rows)).toEqual([
+      expect.objectContaining({ categoryId: 'groceries', amount: 6 }),
+    ]);
+    expect(groupTransactionsByTaxBucket(rows)).toEqual([
+      expect.objectContaining({ amount: 6, count: 2 }),
+    ]);
+  });
+
   it('builds a monthly series and upcoming bills', () => {
     const series = monthlySpendSeries(
       [txn({ id: '1', amount: 40, date: '2026-08-10' })],

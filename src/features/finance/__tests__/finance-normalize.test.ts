@@ -16,14 +16,56 @@ describe('finance normalize', () => {
 
   it('drops invalid transactions', () => {
     expect(normalizeTransaction({ amount: 10, date: 'nope' })).toBeUndefined();
-    expect(
-      normalizeTransaction({
+    const legacy = normalizeTransaction({
         amount: 10,
         date: '2026-08-01',
         entityId: 'e1',
         merchant: 'Cafe',
-      })?.source,
-    ).toBe('manual');
+      });
+    expect(legacy?.source).toBe('manual');
+    expect(legacy?.activity).toBe('expense');
+    const replenishment = normalizeTransaction({
+      amount: 25,
+      date: '2026-08-02',
+      entityId: 'e1',
+      source: 'ezpass',
+      activity: 'transfer',
+      activityTime: '16:25:15',
+      categoryId: 'transport',
+    });
+    expect(replenishment?.activity).toBe('transfer');
+    expect(replenishment?.categoryId).toBe('ezpass_replenishment');
+    expect(replenishment?.activityTime).toBe('16:25:15');
+    expect(normalizeTransaction({
+      amount: 25,
+      date: '2026-08-02',
+      entityId: 'e1',
+      activityTime: '4:25 PM',
+    })?.activityTime).toBeUndefined();
+
+    const tagged = normalizeTransaction({
+      amount: 8,
+      date: '2026-08-03',
+      entityId: 'e1',
+      source: 'ezpass',
+      ezPassFriendId: 'friend-synthetic',
+      ezPassFriendName: 'Sample Friend',
+    });
+    expect(tagged).toEqual(expect.objectContaining({
+      ezPassFriendId: 'friend-synthetic',
+      ezPassFriendName: 'Sample Friend',
+    }));
+    expect(normalizeTransaction({
+      amount: 8,
+      date: '2026-08-03',
+      entityId: 'e1',
+      source: 'manual',
+      ezPassFriendId: 'friend-synthetic',
+      ezPassFriendName: 'Sample Friend',
+    })).toEqual(expect.objectContaining({
+      ezPassFriendId: undefined,
+      ezPassFriendName: undefined,
+    }));
   });
 
   it('keeps investment account kinds and balances', () => {

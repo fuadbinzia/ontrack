@@ -13,19 +13,18 @@ function key(value: string | undefined): string {
 }
 
 /**
- * Match a friend to canonical trip participants by email, with a narrow name
+ * Match a friend to canonical trip participants by opaque user id, with a narrow name
  * fallback for member copies where the friend is represented as the host.
  */
 export function socialTripMemberships(
-  friend: Pick<FriendProfile, 'displayName' | 'email'>,
+  friend: Pick<FriendProfile, 'userId' | 'displayName'>,
   plans: TravelPlan[],
 ): SocialTripMembership[] {
-  const friendEmail = key(friend.email);
   const friendName = key(friend.displayName);
 
   return plans.flatMap((plan) => {
     const participant = plan.participants.find(
-      (person) => friendEmail && key(person.email) === friendEmail,
+      (person) => person.userId === friend.userId,
     );
     if (participant) {
       return [{ plan, status: participant.acceptedAt ? 'member' : 'invited' } as const];

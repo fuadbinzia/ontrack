@@ -53,7 +53,8 @@ top-right X; it is not rendered as a second full-width button.
 - **Title Case:** field labels use `StackedFieldLabel` / `fieldTitleCase`; in-card panel titles use
   `PanelTitle`. `ScreenHeader`, `SectionHeader`, `FormSection`, `Button`, `GlassPrimaryAction`,
   `ActionChip`, and prompt actions title-case their labels automatically.
-  Do not hand-capitalize chrome titles or button labels in feature code.
+  `AppText variant="overline"` also title-cases text children and composed JSX fragments automatically; pass `titleCase`
+  for compact metadata rendered with another variant. Do not title-case body copy or user data.
 - UI text uses `AppText` on the UI face. Chrome is single-line with `fit`; body copy may wrap.
   Reserve `variant="mono"` for the design-system Type gallery — product screens do not use mono.
 - Colors come from `useTheme()`. Spacing, control sizes, and type come from `useResponsive()` or primitives.

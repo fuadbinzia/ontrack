@@ -6,9 +6,35 @@ import Vision
 
 public class TravelDocumentReaderModule: Module {
   private var previewSession: DocumentPreviewSession?
+  private var pendingDocumentObserver: NSObjectProtocol?
 
   public func definition() -> ModuleDefinition {
     Name("TravelDocumentReader")
+    Events("onDocumentOpened")
+
+    OnStartObserving("onDocumentOpened") {
+      guard self.pendingDocumentObserver == nil else { return }
+      self.pendingDocumentObserver = NotificationCenter.default.addObserver(
+        forName: TravelDocumentInbox.pendingChanged,
+        object: nil,
+        queue: .main
+      ) { [weak self] notification in
+        guard let url = notification.userInfo?["url"] as? String else { return }
+        self?.sendEvent("onDocumentOpened", ["url": url])
+      }
+    }
+
+    OnStopObserving("onDocumentOpened") {
+      self.removePendingDocumentObserver()
+    }
+
+    OnDestroy {
+      self.removePendingDocumentObserver()
+    }
+
+    AsyncFunction("takePendingDocumentUrlAsync") { () -> String? in
+      TravelDocumentInbox.takePendingUrl()
+    }
 
     AsyncFunction("recognizeTextAsync") { (uri: String) -> String in
       guard let url = URL(string: uri), url.isFileURL else {
@@ -48,6 +74,13 @@ public class TravelDocumentReaderModule: Module {
           }
         }
       }
+    }
+  }
+
+  private func removePendingDocumentObserver() {
+    if let pendingDocumentObserver {
+      NotificationCenter.default.removeObserver(pendingDocumentObserver)
+      self.pendingDocumentObserver = nil
     }
   }
 

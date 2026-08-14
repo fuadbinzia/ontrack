@@ -54,7 +54,8 @@ describe('AuthScreen locked variant', () => {
 
   it('offers providers to re-authenticate the locked account', () => {
     renderLocked();
-    expect(screen.getByText('Signed in as alex.rivera@example.com')).toBeTruthy();
+    expect(screen.getByText('This device is locked')).toBeTruthy();
+    expect(screen.queryByText('alex.rivera@example.com')).toBeNull();
 
     fireEvent.press(screen.getByTestId(AgentUiIds.auth.apple));
     expect(mockContinueWithProvider).toHaveBeenCalledWith('apple', undefined);

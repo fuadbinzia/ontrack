@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.79",
+    "version": "1.0.80",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -23,6 +23,21 @@
         "applinks:ontrack--links.expo.app"
       ],
       "infoPlist": {
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "E-ZPass Statement",
+            "CFBundleTypeRole": "Viewer",
+            "LSHandlerRank": "Alternate",
+            "LSItemContentTypes": [
+              "public.comma-separated-values-text",
+              "public.tab-separated-values-text",
+              "com.microsoft.excel.xls",
+              "org.openxmlformats.spreadsheetml.sheet",
+              "com.adobe.pdf"
+            ]
+          }
+        ],
+        "LSSupportsOpeningDocumentsInPlace": false,
         "NSCameraUsageDescription": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos.",
         "NSMicrophoneUsageDescription": "onTrack uses the microphone to translate short phrases you choose to record during a trip.",
         "NSPhotoLibraryUsageDescription": "onTrack accesses your photo library so you can attach meal, activity, plant-care, and vision-board photos.",
@@ -35,7 +50,7 @@
       "appleTeamId": "F5HRXF5795"
     },
     "android": {
-      "versionCode": 79,
+      "versionCode": 80,
       "package": "com.imtihoss.ontracknow",
       "intentFilters": [
         {
@@ -146,6 +161,7 @@
       ],
       "./plugins/with-ontrack-healthkit.js",
       "./plugins/with-ontrack-voice-lists.js",
+      "./plugins/with-ontrack-document-open.js",
       [
         "expo-location",
         {
@@ -176,9 +192,14 @@
             "enabled": true,
             "singleShareMimeTypes": [
               "text/plain",
+              "text/csv",
+              "text/tab-separated-values",
               "text/uri-list",
               "text/calendar",
               "application/ics",
+              "application/vnd.ms-excel",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "application/pdf",
               "image/*"
             ]
           }

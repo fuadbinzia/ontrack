@@ -72,7 +72,7 @@ describe('Plaid API routes', () => {
     mockDeletePlaidItemRecord.mockResolvedValue(undefined);
   });
 
-  it('binds Hosted Link to the authenticated user and stores its ownership session', async () => {
+  it('binds a transaction Link session to the authenticated user', async () => {
     mockPlaidRequest.mockResolvedValueOnce({
       link_token: 'link-token',
       hosted_link_url: 'https://secure.plaid.test/link',
@@ -86,7 +86,7 @@ describe('Plaid API routes', () => {
 
     expect(mockPlaidRequest).toHaveBeenCalledWith('/link/token/create', expect.objectContaining({
       user: { client_user_id: 'user-1' },
-      products: ['investments'],
+      products: ['transactions'],
       hosted_link: expect.objectContaining({
         completion_redirect_uri: 'ontrack://plaid/complete',
         is_mobile_app: true,
@@ -95,10 +95,45 @@ describe('Plaid API routes', () => {
     expect(mockStorePlaidLinkSession).toHaveBeenCalledWith({
       linkToken: 'link-token',
       userId: 'user-1',
-      purpose: 'investments',
+      purpose: 'transactions',
       expiration: '2026-08-12T18:00:00.000Z',
     });
     expect(result).toMatchObject({ link_token: 'link-token', configured: true });
+  });
+
+  it('keeps investment Link sessions isolated from transaction sessions', async () => {
+    mockPlaidRequest.mockResolvedValueOnce({
+      link_token: 'investment-link-token',
+      hosted_link_url: 'https://secure.plaid.test/link',
+      expiration: '2026-08-12T18:00:00.000Z',
+    });
+
+    await linkTokenRoute.POST(request('/link-token', {
+      purpose: 'investments',
+      native: true,
+    }));
+
+    expect(mockPlaidRequest).toHaveBeenCalledWith('/link/token/create', expect.objectContaining({
+      products: ['investments'],
+    }));
+    expect(mockStorePlaidLinkSession).toHaveBeenCalledWith(expect.objectContaining({
+      purpose: 'investments',
+    }));
+  });
+
+  it('rejects unknown Link purposes before contacting Plaid', async () => {
+    const response = await linkTokenRoute.POST(request('/link-token', {
+      purpose: 'identity',
+      native: true,
+    }));
+
+    expect(response).toBeInstanceOf(Response);
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: 'purpose must be transactions or investments.',
+    });
+    expect(mockPlaidRequest).not.toHaveBeenCalled();
+    expect(mockStorePlaidLinkSession).not.toHaveBeenCalled();
   });
 
   it('rejects exchange requests without a Link token before contacting Plaid', async () => {
@@ -185,21 +220,69 @@ describe('Plaid API routes', () => {
     });
   });
 
-  it('rejects legacy Plaid transaction syncs so banks migrate to Teller', async () => {
+  it('syncs Plaid bank transactions from the stored cursor and persists the next cursor', async () => {
     mockLoadPlaidItem.mockResolvedValueOnce({
       itemId: 'item-1',
       accessToken: 'server-access-token',
       purpose: 'transactions',
       cursor: 'cursor-before',
     });
-    await expect(syncRoute.POST(request('/sync', {
+    mockLoadPlaidAccounts.mockResolvedValueOnce([
+      { accountId: 'checking-1', name: 'Checking', kind: 'bank' },
+    ]);
+    mockSyncPlaidTransactionChanges.mockResolvedValueOnce({
+      transactions: [{
+        externalId: 'transaction-1',
+        accountId: 'checking-1',
+        amount: 12,
+        date: '2026-08-13',
+        merchant: 'Market',
+      }],
+      removedExternalIds: ['removed-1'],
+      cursor: 'cursor-after',
+      pending: false,
+    });
+
+    const result = await syncRoute.POST(request('/sync', {
       item_id: 'item-1',
       access_token: 'malicious-client-token',
-    }))).rejects.toMatchObject({ code: 'PROVIDER_MIGRATION_REQUIRED', status: 409 });
+    })) as unknown as Record<string, unknown>;
 
     expect(mockLoadPlaidItem).toHaveBeenCalledWith('user-1', 'item-1');
-    expect(mockSyncPlaidTransactionChanges).not.toHaveBeenCalled();
-    expect(mockUpdatePlaidCursor).not.toHaveBeenCalled();
+    expect(mockLoadPlaidAccounts).toHaveBeenCalledWith('server-access-token');
+    expect(mockSyncPlaidTransactionChanges).toHaveBeenCalledWith(
+      'server-access-token',
+      'cursor-before',
+    );
+    expect(mockUpdatePlaidCursor).toHaveBeenCalledWith('user-1', 'item-1', 'cursor-after');
+    expect(result).toMatchObject({
+      purpose: 'transactions',
+      sync_status: 'ready',
+      removed_external_ids: ['removed-1'],
+    });
+  });
+
+  it('reports a pending initial transaction sync while persisting its cursor', async () => {
+    mockLoadPlaidItem.mockResolvedValueOnce({
+      itemId: 'item-new',
+      accessToken: 'server-access-token',
+      purpose: 'transactions',
+      cursor: null,
+    });
+    mockLoadPlaidAccounts.mockResolvedValueOnce([]);
+    mockSyncPlaidTransactionChanges.mockResolvedValueOnce({
+      transactions: [],
+      removedExternalIds: [],
+      cursor: '',
+      pending: true,
+    });
+
+    const result = await syncRoute.POST(request('/sync', {
+      item_id: 'item-new',
+    })) as unknown as Record<string, unknown>;
+
+    expect(mockUpdatePlaidCursor).toHaveBeenCalledWith('user-1', 'item-new', '');
+    expect(result).toMatchObject({ purpose: 'transactions', sync_status: 'pending' });
   });
 
   it('loads an investment snapshot without using the transaction cursor endpoint', async () => {

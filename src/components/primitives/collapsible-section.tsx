@@ -144,7 +144,7 @@ export function CollapsibleSection({
             </AppText>
           </Pressable>
         ) : showDetail ? (
-          <AppText variant="caption" color="tertiary" style={styles.detail} fit>
+          <AppText variant="caption" color="tertiary" style={styles.detail} fit titleCase>
             {detail}
           </AppText>
         ) : null}

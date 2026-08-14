@@ -64,6 +64,7 @@ export function FinanceScreen() {
   const series = monthlySpendSeries(transactions, 4, now);
   const dueBills = upcomingBills(bills, 30, now).slice(0, 4);
   const assetsTotal = sumAssetBalances(accounts);
+  const ezPassActivities = transactions.filter((transaction) => transaction.source === 'ezpass');
   const currentTax = useMemo(() => {
     const year = now.getFullYear();
     return taxYears.find((t) => t.year === year) ?? taxYears[0];
@@ -306,6 +307,17 @@ export function FinanceScreen() {
         />
 
         <FinanceHubLink
+          testID={AgentUiIds.finance.openEzPass}
+          label="E-ZPass"
+          detail={
+            ezPassActivities.length
+              ? `${ezPassActivities.length} imported ${ezPassActivities.length === 1 ? 'activity' : 'activities'}`
+              : 'Upload toll transaction history'
+          }
+          onPress={() => router.push('/(tabs)/finance/ezpass')}
+        />
+
+        <FinanceHubLink
           testID={AgentUiIds.finance.openTax}
           label="Tax prep"
           detail={
@@ -340,7 +352,7 @@ function FinanceHubLink({
       <View style={styles.rowBetween}>
         <View style={{ flex: 1, minWidth: 0, gap: gap.xs }}>
           <PanelTitle>{label}</PanelTitle>
-          <AppText variant="caption" color="secondary" fit>
+          <AppText variant="caption" color="secondary" fit titleCase>
             {detail}
           </AppText>
         </View>

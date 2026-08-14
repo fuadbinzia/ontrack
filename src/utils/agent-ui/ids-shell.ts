@@ -38,15 +38,12 @@ export const agentUiIdsShell = {
     section: 'ontrack.overview.section.all',
     acknowledge: (key: string) =>
       `ontrack.overview.attention.acknowledge.${key.replace(/[^a-zA-Z0-9]+/g, '_')}`,
-    row: (routeName: string) =>
-      `ontrack.overview.row.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    row: (routeName: string) => `ontrack.overview.row.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
   },
   trackers: {
     screen: 'ontrack.trackers.screen',
-    row: (routeName: string) =>
-      `ontrack.trackers.row.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
-    add: (routeName: string) =>
-      `ontrack.trackers.add.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    row: (routeName: string) => `ontrack.trackers.row.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    add: (routeName: string) => `ontrack.trackers.add.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
     remove: (routeName: string) =>
       `ontrack.trackers.remove.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
     drag: (routeName: string) =>
@@ -67,14 +64,12 @@ export const agentUiIdsShell = {
     addPlaybook: 'ontrack.health.mind.addPlaybook',
     editPlaybook: (id: string) => `ontrack.health.playbook.${id}.edit`,
     startPlaybook: (id: string) => `ontrack.health.playbook.${id}.start`,
-    completePlaybook: (id: string) =>
-      `ontrack.health.playbookRun.${id}.complete`,
+    completePlaybook: (id: string) => `ontrack.health.playbookRun.${id}.complete`,
     cancelPlaybook: (id: string) => `ontrack.health.playbookRun.${id}.cancel`,
     call988: 'ontrack.health.support.call988',
     text988: 'ontrack.health.support.text988',
     emotion: (id: string) => `ontrack.health.checkIn.emotion.${id}`,
-    intensity: (id: string, value: number) =>
-      `ontrack.health.checkIn.intensity.${id}.${value}`,
+    intensity: (id: string, value: number) => `ontrack.health.checkIn.intensity.${id}.${value}`,
     factor: (id: string) => `ontrack.health.checkIn.factor.${id}`,
     note: 'ontrack.health.checkIn.note',
     customEmotion: 'ontrack.health.checkIn.customEmotion',
@@ -83,21 +78,18 @@ export const agentUiIdsShell = {
     valence: (value: string) => `ontrack.health.checkIn.valence.${value}`,
     saveCheckIn: 'ontrack.health.checkIn.save',
     factorName: 'ontrack.health.factor.name',
-    factorCategory: (category: string) =>
-      `ontrack.health.factor.category.${category}`,
+    factorCategory: (category: string) => `ontrack.health.factor.category.${category}`,
     factorEmotion: (id: string) => `ontrack.health.factor.emotion.${id}`,
     saveFactor: 'ontrack.health.factor.save',
     deleteFactor: 'ontrack.health.factor.delete',
     playbookName: 'ontrack.health.playbook.name',
-    playbookEmotion: (group: string, id: string) =>
-      `ontrack.health.playbook.${group}.${id}`,
+    playbookEmotion: (group: string, id: string) => `ontrack.health.playbook.${group}.${id}`,
     playbookSteps: 'ontrack.health.playbook.steps',
     playbookDuration: 'ontrack.health.playbook.duration',
     savePlaybook: 'ontrack.health.playbook.save',
     deletePlaybook: 'ontrack.health.playbook.delete',
     suggestPlaybook: 'ontrack.health.playbook.suggest',
-    useSuggestion: (index: number) =>
-      `ontrack.health.playbook.suggestion.${index}.use`,
+    useSuggestion: (index: number) => `ontrack.health.playbook.suggestion.${index}.use`,
     settingsConnect: 'ontrack.health.settings.connect',
     openAppleHealthSettings: 'ontrack.health.settings.openAppleHealth',
     stateSync: (value: string) => `ontrack.health.settings.stateSync.${value}`,
@@ -105,8 +97,7 @@ export const agentUiIdsShell = {
   },
   vehicles: {
     add: 'ontrack.vehicles.list.add',
-    vehicle: (vehicleId: string) =>
-      `ontrack.vehicles.list.vehicle.${vehicleId}`,
+    vehicle: (vehicleId: string) => `ontrack.vehicles.list.vehicle.${vehicleId}`,
     settings: 'ontrack.vehicles.detail.settings',
     section: (section: string) => `ontrack.vehicles.detail.section.${section}`,
     saveOdometer: 'ontrack.vehicles.detail.saveOdometer',
@@ -126,12 +117,10 @@ export const agentUiIdsShell = {
       title: 'ontrack.vehicles.expenses.title',
       amount: 'ontrack.vehicles.expenses.amount',
       date: 'ontrack.vehicles.expenses.date',
-      category: (category: string) =>
-        `ontrack.vehicles.expenses.category.${category}`,
+      category: (category: string) => `ontrack.vehicles.expenses.category.${category}`,
       notes: 'ontrack.vehicles.expenses.notes',
       add: 'ontrack.vehicles.expenses.add',
-      delete: (expenseId: string) =>
-        `ontrack.vehicles.expenses.delete.${expenseId}`,
+      delete: (expenseId: string) => `ontrack.vehicles.expenses.delete.${expenseId}`,
       confirmDelete: 'ontrack.vehicles.expenses.confirmDelete',
     },
   },
@@ -169,7 +158,8 @@ export const agentUiIdsShell = {
       assignee: 'ontrack.checklists.itemDetails.assignee',
       assigneeOption: (userId: string) => `ontrack.checklists.itemDetails.assigneeOption.${userId}`,
       category: 'ontrack.checklists.itemDetails.category',
-      categoryOption: (categoryId: string) => `ontrack.checklists.itemDetails.categoryOption.${categoryId}`,
+      categoryOption: (categoryId: string) =>
+        `ontrack.checklists.itemDetails.categoryOption.${categoryId}`,
       newCategoryName: 'ontrack.checklists.itemDetails.newCategoryName',
       createCategory: 'ontrack.checklists.itemDetails.createCategory',
     },
@@ -183,8 +173,7 @@ export const agentUiIdsShell = {
     view: (view: string) => `ontrack.grocery.detail.view.${view}`,
     recipe: (recipeId: string) => `ontrack.grocery.detail.recipe.${recipeId}`,
     task: (taskId: string) => `ontrack.grocery.detail.task.${taskId}`,
-    combinedItem: (groupId: string) =>
-      `ontrack.grocery.detail.combined.${groupId}`,
+    combinedItem: (groupId: string) => `ontrack.grocery.detail.combined.${groupId}`,
   },
   recipeImport: {
     cancel: 'ontrack.recipeImport.cancel',
@@ -231,6 +220,7 @@ export const agentUiIdsShell = {
   },
   peoplePicker: {
     close: 'ontrack.peoplePicker.close',
+    dropdown: 'ontrack.peoplePicker.dropdown',
     search: 'ontrack.peoplePicker.search',
     friend: (friendId: string) => `ontrack.peoplePicker.friend.${friendId}`,
     confirm: 'ontrack.peoplePicker.confirm',
@@ -238,18 +228,14 @@ export const agentUiIdsShell = {
   workouts: {
     customPlanner: 'ontrack.workouts.header.customPlanner',
     planFromScratch: 'ontrack.workouts.today.planFromScratch',
-    todayPlan: (activityId: string) =>
-      `ontrack.workouts.todayPlan.${activityId}`,
+    todayPlan: (activityId: string) => `ontrack.workouts.todayPlan.${activityId}`,
     builderClear: 'ontrack.workouts.builder.clear',
     addToToday: 'ontrack.workouts.builder.addToToday',
-    exerciseAdd: (exerciseId: string) =>
-      `ontrack.workouts.exercise.${exerciseId}.add`,
-    exercisePreview: (exerciseId: string) =>
-      `ontrack.workouts.exercise.${exerciseId}.preview`,
+    exerciseAdd: (exerciseId: string) => `ontrack.workouts.exercise.${exerciseId}.add`,
+    exercisePreview: (exerciseId: string) => `ontrack.workouts.exercise.${exerciseId}.preview`,
     anatomySex: (sex: string) => `ontrack.workouts.explorer.anatomySex.${sex}`,
     bodyView: (view: string) => `ontrack.workouts.explorer.bodyView.${view}`,
-    muscleChip: (muscleKey: string) =>
-      `ontrack.workouts.explorer.muscle.${muscleKey}`,
+    muscleChip: (muscleKey: string) => `ontrack.workouts.explorer.muscle.${muscleKey}`,
     gym: {
       edit: 'ontrack.workouts.gym.edit',
       start: 'ontrack.workouts.gym.start',
@@ -263,8 +249,7 @@ export const agentUiIdsShell = {
     dashboardAdd: 'ontrack.vision.dashboard.add',
     dashboardViewAll: 'ontrack.vision.dashboard.viewAll',
     dashboardEdit: 'ontrack.vision.dashboard.edit',
-    dashboardCategory: (categoryId: string) =>
-      `ontrack.vision.dashboard.category.${categoryId}`,
+    dashboardCategory: (categoryId: string) => `ontrack.vision.dashboard.category.${categoryId}`,
     consolidatedSearch: 'ontrack.vision.consolidated.search',
     consolidatedMore: 'ontrack.vision.consolidated.more',
     consolidatedCategory: (categoryId: string) =>
@@ -273,8 +258,7 @@ export const agentUiIdsShell = {
     addImage: 'ontrack.vision.category.addImage',
     addAffirmation: 'ontrack.vision.category.addAffirmation',
     addGoal: 'ontrack.vision.category.addGoal',
-    canvasItem: (itemId: string) =>
-      `ontrack.vision.category.canvasItem.${itemId}`,
+    canvasItem: (itemId: string) => `ontrack.vision.category.canvasItem.${itemId}`,
     selectionDeselect: 'ontrack.vision.category.selection.deselect',
     selectionEdit: 'ontrack.vision.category.selection.edit',
     selectionLayerBack: 'ontrack.vision.category.selection.layerBack',
@@ -292,10 +276,8 @@ export const agentUiIdsShell = {
     addEditors: 'ontrack.listSettings.addEditors',
     editor: (userId: string) => `ontrack.listSettings.editor.${userId}`,
     confirmEditors: 'ontrack.listSettings.confirmEditors',
-    makeEditor: (userId: string) =>
-      `ontrack.listSettings.makeEditor.${userId}`,
-    makeMember: (userId: string) =>
-      `ontrack.listSettings.makeMember.${userId}`,
+    makeEditor: (userId: string) => `ontrack.listSettings.makeEditor.${userId}`,
+    makeMember: (userId: string) => `ontrack.listSettings.makeMember.${userId}`,
   },
   ...agentUiIdsShellProfile,
   games: {
@@ -305,8 +287,7 @@ export const agentUiIdsShell = {
     balloonPopRetry: 'ontrack.games.balloonPop.retry',
     balloonPopBack: 'ontrack.games.balloonPop.back',
     balloonPopClose: 'ontrack.games.balloonPop.close',
-    balloon: (balloonId: string) =>
-      `ontrack.games.balloonPop.balloon.${balloonId}`,
+    balloon: (balloonId: string) => `ontrack.games.balloonPop.balloon.${balloonId}`,
   },
   prompt: {
     close: 'ontrack.prompt.close',
@@ -328,10 +309,8 @@ export const agentUiIdsShell = {
     ticket: 'ontrack.eventDetail.ticket',
   },
   activityForm: {
-    choice: (group: string, value: string) =>
-      `ontrack.activityForm.choice.${group}.${value}`,
-    category: (categoryId: string) =>
-      `ontrack.activityForm.category.${categoryId}`,
+    choice: (group: string, value: string) => `ontrack.activityForm.choice.${group}.${value}`,
+    category: (categoryId: string) => `ontrack.activityForm.category.${categoryId}`,
     guidedTitle: 'ontrack.activityForm.guidedTitle',
     title: 'ontrack.activityForm.title',
     scheduleSection: 'ontrack.activityForm.section.schedule',
@@ -369,10 +348,8 @@ export const agentUiIdsShell = {
       follow: (id: string) => `ontrack.activityForm.event.follow.${id}`,
       unfollow: (id: string) => `ontrack.activityForm.event.unfollow.${id}`,
       suggestion: (id: string) => `ontrack.activityForm.event.suggestion.${id}`,
-      acceptSuggestion: (id: string) =>
-        `ontrack.activityForm.event.suggestion.${id}.accept`,
-      dismissSuggestion: (id: string) =>
-        `ontrack.activityForm.event.suggestion.${id}.dismiss`,
+      acceptSuggestion: (id: string) => `ontrack.activityForm.event.suggestion.${id}.accept`,
+      dismissSuggestion: (id: string) => `ontrack.activityForm.event.suggestion.${id}.dismiss`,
       selected: 'ontrack.activityForm.event.section.selected',
       changeSelection: 'ontrack.activityForm.event.changeSelection',
       following: 'ontrack.activityForm.event.section.following',
@@ -413,8 +390,7 @@ export const agentUiIdsShell = {
     releaseNotesTab: (tab: string) => `ontrack.developer.releaseNotes.tab.${tab}`,
     releaseNotesList: 'ontrack.developer.releaseNotes.list',
     releaseNotesDay: (date: string) => `ontrack.developer.releaseNotes.day.${date}`,
-    releaseNotesVersion: (version: string) =>
-      `ontrack.developer.releaseNotes.version.${version}`,
+    releaseNotesVersion: (version: string) => `ontrack.developer.releaseNotes.version.${version}`,
     releaseNotesDate: 'ontrack.developer.releaseNotes.date',
     releaseNotesPrev: 'ontrack.developer.releaseNotes.prev',
     releaseNotesNext: 'ontrack.developer.releaseNotes.next',
@@ -519,16 +495,11 @@ export const agentUiIdsShell = {
     inviteShare: 'ontrack.social.invite.share',
     friendEmail: 'ontrack.social.friend.email',
     friendSend: 'ontrack.social.friend.send',
-    requestAccept: (requestId: string) =>
-      `ontrack.social.request.accept.${requestId}`,
-    requestDecline: (requestId: string) =>
-      `ontrack.social.request.decline.${requestId}`,
-    requestCancel: (requestId: string) =>
-      `ontrack.social.request.cancel.${requestId}`,
-    friendAddToTrip: (friendId: string) =>
-      `ontrack.social.friend.addToTrip.${friendId}`,
-    friendRemove: (friendId: string) =>
-      `ontrack.social.friend.remove.${friendId}`,
+    requestAccept: (requestId: string) => `ontrack.social.request.accept.${requestId}`,
+    requestDecline: (requestId: string) => `ontrack.social.request.decline.${requestId}`,
+    requestCancel: (requestId: string) => `ontrack.social.request.cancel.${requestId}`,
+    friendAddToTrip: (friendId: string) => `ontrack.social.friend.addToTrip.${friendId}`,
+    friendRemove: (friendId: string) => `ontrack.social.friend.remove.${friendId}`,
   },
   chrome: {
     back: 'ontrack.chrome.back',

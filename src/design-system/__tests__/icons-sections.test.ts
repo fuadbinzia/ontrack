@@ -21,4 +21,13 @@ describe('appIconSections', () => {
     }
     expect([...seen].sort()).toEqual(Object.keys(appIcons).sort());
   });
+
+  it('uses a file-upload glyph that stays distinct from sharing', () => {
+    expect(appIcons.upload).toEqual({
+      ios: 'tray.and.arrow.up.fill',
+      android: 'upload_file',
+      web: 'upload_file',
+    });
+    expect(appIcons.upload).not.toEqual(appIcons.share);
+  });
 });

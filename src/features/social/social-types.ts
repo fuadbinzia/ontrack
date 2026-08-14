@@ -39,7 +39,7 @@ export type SocialFeedScope = 'friend' | 'group';
 type SocialFeedBase = {
   id: string;
   scope: SocialFeedScope;
-  actor: Pick<FriendProfile, 'userId' | 'displayName' | 'email'>;
+  actor: Pick<FriendProfile, 'userId' | 'displayName'>;
   createdAt: string;
 };
 

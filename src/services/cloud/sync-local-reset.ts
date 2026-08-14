@@ -7,6 +7,7 @@ import { removePersistedStorageItems, STORAGE_KEYS } from '@/services/storage';
 import { deletePlant } from '@/services/plants/schedule';
 import { useAccountFlags } from '@/store/account-flags';
 import { useFoodProfile } from '@/store/food-profile';
+import { useFinanceEzPassStatements } from '@/store/finance-ezpass-statements';
 import { useFlowAnalytics } from '@/store/flow-analytics';
 import { useMealPlan } from '@/store/food-meal-plan';
 import { usePantry } from '@/store/food-pantry';
@@ -69,6 +70,7 @@ export async function resetLocalDomains() {
   // Device-only Health stays off cloud sync, but must not leak across accounts
   // on the same device after sign-out / delete / unexpected session expiry.
   useHealth.getState().reset();
+  useFinanceEzPassStatements.getState().reset();
   useFoodProfile.getState().reset();
   usePantry.getState().reset();
   useRecipes.getState().reset();
@@ -95,6 +97,7 @@ export async function resetLocalDomains() {
     STORAGE_KEYS.visionBoard,
     STORAGE_KEYS.vehicles,
     STORAGE_KEYS.finance,
+    STORAGE_KEYS.financeEzPassStatements,
     STORAGE_KEYS.foodProfile,
     STORAGE_KEYS.foodPantry,
     STORAGE_KEYS.foodRecipes,

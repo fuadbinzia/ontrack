@@ -69,7 +69,6 @@ const list: TodoList = {
 const friend: FriendProfile = {
   userId: 'friend-1',
   displayName: 'Alex Example',
-  email: 'alex@example.test',
   avatar: { kind: 'initials' },
 };
 

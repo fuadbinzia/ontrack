@@ -1,9 +1,10 @@
-import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
+  TextInput,
   useWindowDimensions,
   View,
   type ModalProps,
@@ -19,6 +20,7 @@ import {
 } from '@/components/primitives/field-leading-icon';
 import {
   borders,
+  glassFieldBackground,
   motion,
   radii,
   shadows,
@@ -33,21 +35,23 @@ import { haptics } from '@/utils/haptics';
 
 import { AppText } from './app-text';
 import { DisclosureChevron } from './disclosure-chevron';
-import {
-  placeDropdownMenu,
-  type DropdownAnchor,
-} from './dropdown-layout';
+import { filterDropdownOptions } from './dropdown-filter';
+import { placeDropdownMenu, type DropdownAnchor } from './dropdown-layout';
 import { fieldTitleCase } from './field-title-case';
 import { GlassPlate } from './glass-plate';
 import { Symbol } from './symbol';
 
 const ITEM_HEIGHT = 44;
+const DESCRIBED_ITEM_HEIGHT = 58;
 const MENU_MAX_HEIGHT = 280;
 const MENU_PADDING = spacing.xs;
 
 export type DropdownOption<T extends string = string> = {
   value: T;
   label: string;
+  description?: string;
+  /** Extra terms included when this dropdown is searchable. */
+  searchText?: string;
   testID?: string;
   leading?: ReactNode;
 };
@@ -84,6 +88,13 @@ type DropdownCommonProps<T extends string = string> = {
   supportedOrientations?: ModalProps['supportedOrientations'];
   /** Custom trigger — menu still overlays via Modal. */
   renderTrigger?: (props: DropdownTriggerRenderProps) => ReactNode;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  searchTestID?: string;
+  emptyMessage?: string;
+  placeholder?: string;
+  /** Preserve data casing for names and other user-authored option labels. */
+  preserveOptionCase?: boolean;
 };
 
 export type DropdownProps<T extends string = string> =
@@ -105,10 +116,12 @@ function DropdownOptionRow<T extends string>({
   option,
   selected,
   onSelect,
+  preserveCase,
 }: {
   option: DropdownOption<T>;
   selected: boolean;
   onSelect: () => void;
+  preserveCase: boolean;
 }) {
   const theme = useTheme();
   const handlePress = () => {
@@ -132,19 +145,22 @@ function DropdownOptionRow<T extends string>({
       style={({ pressed }) => [
         styles.option,
         {
-          backgroundColor:
-            selected || pressed ? theme.accentFaint : 'transparent',
+          backgroundColor: selected || pressed ? theme.accentFaint : 'transparent',
           opacity: pressed ? 0.78 : 1,
         },
-      ]}>
+      ]}
+    >
       {option.leading ? <View style={styles.optionLeading}>{option.leading}</View> : null}
-      <AppText
-        variant="callout"
-        color={selected ? 'accent' : 'primary'}
-        numberOfLines={1}
-        style={styles.optionLabel}>
-        {fieldTitleCase(option.label)}
-      </AppText>
+      <View style={styles.optionCopy}>
+        <AppText variant="callout" color={selected ? 'accent' : 'primary'} numberOfLines={1}>
+          {preserveCase ? option.label : fieldTitleCase(option.label)}
+        </AppText>
+        {option.description ? (
+          <AppText variant="caption" color="secondary" numberOfLines={1}>
+            {option.description}
+          </AppText>
+        ) : null}
+      </View>
       {selected ? <Symbol name="check" size="sm" color={theme.accentPrimary} /> : null}
     </Pressable>
   );
@@ -180,6 +196,12 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
     fieldStyle,
     supportedOrientations,
     renderTrigger,
+    searchable = false,
+    searchPlaceholder = 'Search Options',
+    searchTestID,
+    emptyMessage = 'No Matching Options',
+    placeholder = 'Select',
+    preserveOptionCase = false,
   } = props;
   const multiple = props.multiple === true;
   const theme = useTheme();
@@ -190,6 +212,7 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
   const fieldRef = useRef<View>(null);
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [anchor, setAnchor] = useState<DropdownAnchor>();
+  const [query, setQuery] = useState('');
   const isOpen = openProp ?? uncontrolledOpen;
   // RN Modal ignores soft-input — lift/re-place like SheetScaffold.
   const { keyboardInset } = useDockedKeyboardInset({
@@ -206,13 +229,13 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
     .filter((option) => selectedValues.includes(option.value))
     .map((option) => option.label);
   const fieldLabel = fieldTitleCase(label);
-  const selectedLabel = fieldTitleCase(
+  const rawSelectedLabel =
     selectedLabels.length > 0
       ? selectedLabels.join(', ')
       : multiple
-        ? ''
-        : String(value ?? ''),
-  );
+        ? placeholder
+        : String(value ?? '');
+  const selectedLabel = preserveOptionCase ? rawSelectedLabel : fieldTitleCase(rawSelectedLabel);
   const a11yLabel = accessibilityLabel ?? `${fieldLabel}: ${selectedLabel}`;
 
   const measureAnchor = () => {
@@ -225,6 +248,7 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
   useEffect(() => {
     if (!isOpen) {
       setAnchor(undefined);
+      setQuery('');
       return;
     }
     // Remeasure when the IME opens — parent sheets lift and stale anchors
@@ -270,8 +294,19 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
   };
 
   const footerHeight = menuFooter ? menuFooterHeight : 0;
+  const visibleOptions = useMemo(
+    () => (searchable ? filterDropdownOptions(options, query) : [...options]),
+    [options, query, searchable],
+  );
+  const itemHeight = options.some((option) => option.description)
+    ? DESCRIBED_ITEM_HEIGHT
+    : ITEM_HEIGHT;
+  const searchHeight = searchable ? Math.max(48, s(52)) : 0;
   const contentHeight =
-    options.length * ITEM_HEIGHT + footerHeight + MENU_PADDING * 2;
+    Math.max(ITEM_HEIGHT, visibleOptions.length * itemHeight) +
+    searchHeight +
+    footerHeight +
+    MENU_PADDING * 2;
   const placement =
     anchor &&
     placeDropdownMenu({
@@ -290,25 +325,24 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
       keyboardInset,
     });
   const listMaxHeight = placement
-    ? Math.max(ITEM_HEIGHT, placement.maxHeight - MENU_PADDING * 2 - footerHeight)
+    ? Math.max(ITEM_HEIGHT, placement.maxHeight - MENU_PADDING * 2 - footerHeight - searchHeight)
     : menuMaxHeight;
+
+  const searchAgent = useAgentUiTarget(searchTestID, {
+    label: searchPlaceholder,
+    value: query,
+  });
 
   const triggerAgent = useAgentUiTarget(testID, {
     label: a11yLabel,
     // Registry value for --contains (selected option value / label).
     value: String(
-      multiple
-        ? selectedValues.join(',') || selectedLabel || ''
-        : (value ?? selectedLabel ?? ''),
+      multiple ? selectedValues.join(',') || selectedLabel || '' : (value ?? selectedLabel ?? ''),
     ),
     onPress: toggle,
   });
 
-  const fieldBorderColor = isOpen
-    ? theme.accentSoft
-    : icon
-      ? 'transparent'
-      : theme.separator;
+  const fieldBorderColor = isOpen ? theme.accentSoft : icon ? 'transparent' : theme.separator;
   const useGlassField = !fieldBackground;
 
   const defaultTrigger = useGlassField ? (
@@ -319,7 +353,8 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
           borderColor: fieldBorderColor,
         },
         fieldStyle,
-      ]}>
+      ]}
+    >
       <Pressable
         ref={(node) => {
           fieldRef.current = node;
@@ -342,13 +377,10 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
             opacity: pressed ? 0.86 : 1,
           }),
           styles.fieldInner,
-        ]}>
+        ]}
+      >
         {icon ? (
-          <FieldLeadingIcon
-            name={icon}
-            backgroundColor={iconBackground}
-            color={iconColor}
-          />
+          <FieldLeadingIcon name={icon} backgroundColor={iconBackground} color={iconColor} />
         ) : null}
         <View style={styles.fieldCopy}>
           <AppText
@@ -360,12 +392,13 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
               icon
                 ? { color: labelColor, fontWeight: '600' }
                 : { fontSize: s(9), lineHeight: s(11), letterSpacing: 0.9 }
-            }>
-              {fieldLabel}
-            </AppText>
-            <AppText variant={icon ? 'body' : 'callout'} fit numberOfLines={1}>
-              {selectedLabel}
-            </AppText>
+            }
+          >
+            {fieldLabel}
+          </AppText>
+          <AppText variant={icon ? 'body' : 'callout'} fit numberOfLines={1}>
+            {selectedLabel}
+          </AppText>
         </View>
         <DisclosureChevron
           expanded={isOpen}
@@ -399,13 +432,10 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
           opacity: pressed ? 0.86 : 1,
         }),
         fieldStyle,
-      ]}>
+      ]}
+    >
       {icon ? (
-        <FieldLeadingIcon
-          name={icon}
-          backgroundColor={iconBackground}
-          color={iconColor}
-        />
+        <FieldLeadingIcon name={icon} backgroundColor={iconBackground} color={iconColor} />
       ) : null}
       <View style={styles.fieldCopy}>
         <AppText
@@ -417,19 +447,15 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
             icon
               ? { color: labelColor, fontWeight: '600' }
               : { fontSize: s(9), lineHeight: s(11), letterSpacing: 0.9 }
-          }>
-            {fieldLabel}
-          </AppText>
-          <AppText variant={icon ? 'body' : 'callout'} fit numberOfLines={1}>
-            {selectedLabel}
-          </AppText>
+          }
+        >
+          {fieldLabel}
+        </AppText>
+        <AppText variant={icon ? 'body' : 'callout'} fit numberOfLines={1}>
+          {selectedLabel}
+        </AppText>
       </View>
-      <DisclosureChevron
-        expanded={isOpen}
-        variant="down-up"
-        size="sm"
-        color={theme.textTertiary}
-      />
+      <DisclosureChevron expanded={isOpen} variant="down-up" size="sm" color={theme.textTertiary} />
     </Pressable>
   );
 
@@ -452,7 +478,8 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
         supportedOrientations={supportedOrientations}
         statusBarTranslucent
         transparent
-        visible={Boolean(isOpen && anchor && placement)}>
+        visible={Boolean(isOpen && anchor && placement)}
+      >
         <View style={styles.modalRoot}>
           <Pressable
             accessibilityElementsHidden
@@ -464,12 +491,8 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
             <Animated.View
               accessibilityLabel={`${fieldLabel} menu`}
               accessibilityViewIsModal
-              entering={FadeInDown.duration(motion.fade).reduceMotion(
-                ReduceMotion.System,
-              )}
-              exiting={FadeOutUp.duration(motion.fade).reduceMotion(
-                ReduceMotion.System,
-              )}
+              entering={FadeInDown.duration(motion.fade).reduceMotion(ReduceMotion.System)}
+              exiting={FadeOutUp.duration(motion.fade).reduceMotion(ReduceMotion.System)}
               style={[
                 styles.menu,
                 shadows.overlay,
@@ -480,34 +503,63 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
                   maxHeight: placement.maxHeight,
                   borderColor: theme.separator,
                 },
-              ]}>
+              ]}
+            >
               <GlassPlate style={StyleSheet.absoluteFill} />
+              {searchable ? (
+                <View
+                  style={[
+                    styles.searchWrap,
+                    {
+                      minHeight: searchHeight,
+                      borderBottomColor: theme.separator,
+                      backgroundColor: glassFieldBackground(theme.name),
+                    },
+                  ]}
+                >
+                  <Symbol name="search" size="sm" color={theme.textTertiary} />
+                  <TextInput
+                    ref={searchAgent.ref as never}
+                    testID={searchAgent.testID}
+                    onLayout={searchAgent.onLayout}
+                    value={query}
+                    onChangeText={setQuery}
+                    placeholder={searchPlaceholder}
+                    placeholderTextColor={theme.textTertiary}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    clearButtonMode="while-editing"
+                    style={[styles.searchInput, { color: theme.textPrimary, fontSize: s(16) }]}
+                  />
+                </View>
+              ) : null}
               <ScrollView
-                bounces={options.length * ITEM_HEIGHT > listMaxHeight}
+                bounces={visibleOptions.length * itemHeight > listMaxHeight}
                 keyboardShouldPersistTaps="handled"
                 nestedScrollEnabled
-                showsVerticalScrollIndicator={
-                  options.length * ITEM_HEIGHT > listMaxHeight
-                }
+                showsVerticalScrollIndicator={visibleOptions.length * itemHeight > listMaxHeight}
                 style={{
                   zIndex: 1,
                   maxHeight: listMaxHeight,
-                }}>
-                {options.map((option) => (
+                }}
+              >
+                {visibleOptions.map((option) => (
                   <DropdownOptionRow
                     key={`${listId}-${option.value}`}
                     option={option}
                     selected={selectedValues.includes(option.value)}
                     onSelect={() => choose(option.value)}
+                    preserveCase={preserveOptionCase}
                   />
                 ))}
+                {visibleOptions.length === 0 ? (
+                  <AppText variant="caption" color="secondary" style={styles.emptyMessage}>
+                    {emptyMessage}
+                  </AppText>
+                ) : null}
               </ScrollView>
               {menuFooter ? (
-                <View
-                  style={[
-                    styles.menuFooter,
-                    { borderTopColor: theme.separator, zIndex: 1 },
-                  ]}>
+                <View style={[styles.menuFooter, { borderTopColor: theme.separator, zIndex: 1 }]}>
                   {menuFooter}
                 </View>
               ) : null}
@@ -560,9 +612,28 @@ const styles = StyleSheet.create({
   optionLeading: {
     flexShrink: 0,
   },
-  optionLabel: {
+  optionCopy: {
     flex: 1,
     minWidth: 0,
+    gap: 1,
+  },
+  searchWrap: {
+    zIndex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  searchInput: {
+    minWidth: 0,
+    flex: 1,
+    paddingVertical: 0,
+  },
+  emptyMessage: {
+    minHeight: ITEM_HEIGHT,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   menuFooter: {
     gap: spacing.xs,

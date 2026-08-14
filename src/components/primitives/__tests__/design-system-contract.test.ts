@@ -106,6 +106,19 @@ describe('canonical design-system contract', () => {
     }
   });
 
+  it('title-cases overlines and compact metadata without forcing all caps', () => {
+    const appText = read('src/components/primitives/app-text.tsx');
+    const typography = read('src/design-system/typography.ts');
+    const sectionHeader = read('src/components/primitives/section-header.tsx');
+    const titleCaseRule = read('.cursor/rules/title-case.mdc');
+
+    expect(appText).toContain("titleCase || variant === 'overline'");
+    expect(appText).toContain('titleCaseTextChildren(children)');
+    expect(typography).not.toContain("textTransform: 'uppercase'");
+    expect(sectionHeader).toContain('fit titleCase');
+    expect(titleCaseRule).toContain('alwaysApply: true');
+  });
+
   it('routes stacked icon fields through StackedIconField / StackedFieldLabel', () => {
     expect(read('src/components/primitives/stacked-icon-field.tsx')).toContain(
       'StackedFieldLabel',

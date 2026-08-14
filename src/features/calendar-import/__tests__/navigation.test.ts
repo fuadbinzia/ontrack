@@ -2,8 +2,8 @@ import { redirectIncomingSystemPath } from '../navigation';
 
 describe('incoming share navigation', () => {
   it('redirects only the Expo sharing host', () => {
-    expect(redirectIncomingSystemPath('ontrack://expo-sharing')).toBe('/share-event');
-    expect(redirectIncomingSystemPath('ontrack://expo-sharing?id=1')).toBe('/share-event');
+    expect(redirectIncomingSystemPath('ontrack://expo-sharing')).toBe('/share-import');
+    expect(redirectIncomingSystemPath('ontrack://expo-sharing?id=1')).toBe('/share-import');
   });
 
   it('preserves existing app paths', () => {

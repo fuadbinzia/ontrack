@@ -18,6 +18,8 @@ export default function FinanceLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="transactions" />
       <Stack.Screen name="expense" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="ezpass" />
+      <Stack.Screen name="ezpass-import" />
       <Stack.Screen name="bills" />
       <Stack.Screen name="buckets" />
       <Stack.Screen name="entities" />

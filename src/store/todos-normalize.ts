@@ -264,9 +264,8 @@ export function normalizeInvite(value: unknown): TodoInvite | undefined {
   const listId = asNonEmptyString(candidate.listId);
   const listName = asNonEmptyString(candidate.listName);
   const inviterName = asNonEmptyString(candidate.inviterName);
-  const inviteeEmail = asNonEmptyString(candidate.inviteeEmail);
   const code = asNonEmptyString(candidate.code);
-  if (!id || !listId || !listName || !inviterName || !inviteeEmail || !code) {
+  if (!id || !listId || !listName || !inviterName || !code) {
     return undefined;
   }
   return {
@@ -274,7 +273,6 @@ export function normalizeInvite(value: unknown): TodoInvite | undefined {
     listId,
     listName,
     inviterName,
-    inviteeEmail: inviteeEmail.toLowerCase(),
     code,
     createdAt: asNonEmptyString(candidate.createdAt) ?? nowIso(),
   };

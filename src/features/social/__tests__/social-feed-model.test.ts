@@ -5,7 +5,6 @@ import type { FriendProfile } from '@/services/friends';
 const friend: FriendProfile = {
   userId: 'friend-1',
   displayName: 'Mina',
-  email: 'mina@example.com',
   friendsSince: '2026-07-01T12:00:00.000Z',
   avatar: { kind: 'initials', color: '#2E7D5A' },
 };
@@ -21,8 +20,8 @@ function plan(overrides: Partial<TravelPlan> = {}): TravelPlan {
     participants: [
       {
         id: 'person-1',
+        userId: friend.userId,
         name: 'Mina',
-        email: friend.email,
         inviteCode: 'invite-1',
         invitedAt: '2026-07-20T12:00:00.000Z',
       },
@@ -40,7 +39,7 @@ describe('social feed model', () => {
     const items = buildSocialFeedItems({
       friends: [friend],
       plans: [plan()],
-      self: { userId: 'self', displayName: 'Rocky', email: 'rocky@example.com' },
+      self: { userId: 'self', displayName: 'Rocky' },
     });
 
     expect(items.map((item) => item.kind)).toEqual(['trip', 'connection']);
@@ -52,7 +51,7 @@ describe('social feed model', () => {
     const items = buildSocialFeedItems({
       friends: [],
       plans: [plan({ participants: [] })],
-      self: { userId: 'self', displayName: 'You', email: '' },
+      self: { userId: 'self', displayName: 'You' },
     });
 
     expect(items).toEqual([]);

@@ -19,8 +19,8 @@ import { shareTodoCollaboratorInvite } from '@/features/todos/share';
 import { useTheme } from '@/hooks/use-theme';
 import type { FriendProfile } from '@/services/friends';
 import {
+  addTodoFriendEditors,
   createTodoCollaboratorLink,
-  createTodoEmailInvite,
   publishTodoList,
 } from '@/services/todos/collaboration';
 import { useTodos } from '@/store/todos';
@@ -101,9 +101,10 @@ export function TodoCollaboratorsScreen() {
     try {
       for (const list of selectedLists) {
         if (list.mode === 'private') await publishTodoList(list.id);
-        for (const friend of friends) {
-          await createTodoEmailInvite(list.id, friend.email);
-        }
+        await addTodoFriendEditors(
+          list.id,
+          friends.map((friend) => friend.userId),
+        );
       }
       appPrompt.alert(
         'Invitations Ready',

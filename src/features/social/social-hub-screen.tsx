@@ -23,7 +23,7 @@ import type {
   SocialPlaceholder,
   SocialQuickActionId,
 } from '@/features/social/social-types';
-import { shareTravelPlan } from '@/features/travel/share';
+import { shareTravelPlanWithFriend } from '@/features/travel/share';
 import type { TravelPlan } from '@/features/travel/types';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useRouteIsActive } from '@/hooks/use-app-activity';
@@ -93,10 +93,9 @@ export function SocialHubScreen() {
         self: {
           userId: user?.id ?? 'self',
           displayName: selfName,
-          email: user?.email ?? '',
         },
       }),
-    [friends, plans, selfName, user?.email, user?.id],
+    [friends, plans, selfName, user?.id],
   );
 
   const run = useCallback(async (key: string, action: () => Promise<void>) => {
@@ -181,8 +180,7 @@ export function SocialHubScreen() {
       const plan = plans[planIndex];
       if (!plan) return;
       const alreadyInvited = plan.participants.some(
-        (participant) =>
-          participant.email?.toLowerCase() === friend.email.toLowerCase(),
+        (participant) => participant.userId === friend.userId,
       );
       if (alreadyInvited) {
         appPrompt.alert(
@@ -193,9 +191,9 @@ export function SocialHubScreen() {
       }
 
       await run(`travel-${friend.userId}-${plan.id}`, async () => {
-        const code = await shareTravelPlan(plan, {
+        const code = await shareTravelPlanWithFriend(plan, {
+          userId: friend.userId,
           name: friend.displayName,
-          email: friend.email,
         });
         if (!code) return;
         const now = new Date().toISOString();
@@ -205,8 +203,8 @@ export function SocialHubScreen() {
             ...plan.participants,
             {
               id: newId('trip-person'),
+              userId: friend.userId,
               name: friend.displayName,
-              email: friend.email,
               inviteCode: code,
               invitedAt: now,
             },
@@ -292,7 +290,7 @@ export function SocialHubScreen() {
           {
             id: `friend-${friend.userId}`,
             title: friend.displayName,
-            message: `${friend.email}\nYou’re connected through onTrack and already traveling together.`,
+            message: 'You’re connected through onTrack and already traveling together.',
             icon: 'people',
             statusTitle: `${sharedCount} shared ${sharedCount === 1 ? 'trip' : 'trips'}`,
             statusMessage: sharedTripNames,
@@ -315,7 +313,7 @@ export function SocialHubScreen() {
           {
             id: `friend-${friend.userId}`,
             title: friend.displayName,
-            message: `${friend.email}\nYou’re connected through onTrack.`,
+            message: 'You’re connected through onTrack.',
             icon: 'people',
             statusTitle: 'Trip invitation pending',
             statusMessage: pendingTripNames,
@@ -333,7 +331,7 @@ export function SocialHubScreen() {
         {
           id: `friend-${friend.userId}`,
           title: friend.displayName,
-          message: `${friend.email}\nConnected through onTrack. Shared plans and invitations stay attached to this friendship.`,
+          message: 'Connected through onTrack. Shared plans and invitations stay attached to this friendship.',
           icon: 'people',
           primaryLabel: 'Invite to a Trip',
           statusTitle: 'Connected',

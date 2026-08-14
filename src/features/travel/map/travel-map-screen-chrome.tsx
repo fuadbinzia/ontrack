@@ -48,7 +48,7 @@ export function TravelMapPeoplePicker({
         !visibleFriendIds.has(friend.userId) ||
         selectedFriendIds.includes(friend.userId),
     )
-    .flatMap((friend) => [friend.userId, friend.email]);
+    .map((friend) => friend.userId);
 
   return (
     <PeoplePicker

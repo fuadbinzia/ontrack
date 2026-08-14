@@ -6,6 +6,7 @@ import {
   createFinanceEntity,
   createFinanceTransaction,
 } from '@/features/finance/create';
+import { deduplicateEzPassTransactions } from '@/features/finance/ezpass-deduplication';
 import { advanceBillDue } from '@/features/finance/model';
 import {
   normalizeFinanceSnapshot,
@@ -47,6 +48,8 @@ type FinanceState = FinanceStateSnapshot & {
   upsertHoldings: (holdings: FinanceHolding[]) => void;
   replacePlaidHoldings: (accountIds: string[], holdings: FinanceHolding[]) => void;
   saveTransaction: (transaction: FinanceTransaction) => void;
+  saveTransactions: (transactions: FinanceTransaction[]) => void;
+  repairEzPassDuplicates: () => void;
   removeTransaction: (id: string) => void;
   upsertPlaidTransactions: (transactions: FinanceTransaction[]) => void;
   reconcilePlaidTransactions: (
@@ -250,6 +253,29 @@ export const useFinance = create<FinanceState>()(
           }),
           updatedAt: now,
         });
+      },
+      saveTransactions: (transactions) => {
+        if (!transactions.length) return;
+        const now = touchUpdatedAt();
+        const next = [...get().transactions];
+        const indexById = new Map(next.map((transaction, index) => [transaction.id, index]));
+        for (const transaction of transactions) {
+          const updated = { ...transaction, updatedAt: now };
+          const index = indexById.get(transaction.id);
+          if (index === undefined) {
+            indexById.set(transaction.id, next.length);
+            next.push(updated);
+          } else {
+            next[index] = updated;
+          }
+        }
+        set({ transactions: deduplicateEzPassTransactions(next), updatedAt: now });
+      },
+      repairEzPassDuplicates: () => {
+        const current = get().transactions;
+        const repaired = deduplicateEzPassTransactions(current);
+        if (repaired.length === current.length) return;
+        set({ transactions: repaired, updatedAt: touchUpdatedAt() });
       },
       removeTransaction: (id) =>
         set({

@@ -130,9 +130,7 @@ function UpcomingCard({
       id: participant.id,
       name: participant.name,
       isSelf: false,
-      userId: friends.find(
-        (friend) => friend.email.toLowerCase() === participant.email?.toLowerCase(),
-      )?.userId,
+      userId: friends.find((friend) => friend.userId === participant.userId)?.userId,
     })),
   ];
   const visible = people.slice(0, 3);

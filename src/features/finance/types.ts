@@ -97,13 +97,27 @@ export const FINANCE_ACCOUNT_LINK_STATUSES: readonly FinanceAccountLinkStatus[] 
   'error',
 ] as const;
 
-export type FinanceTransactionSource = 'manual' | 'import' | 'plaid' | 'teller';
+export type FinanceTransactionSource = 'manual' | 'import' | 'plaid' | 'teller' | 'ezpass';
 
 export const FINANCE_TRANSACTION_SOURCES: readonly FinanceTransactionSource[] = [
   'manual',
   'import',
   'plaid',
   'teller',
+  'ezpass',
+] as const;
+
+export type FinanceTransactionActivity =
+  | 'expense'
+  | 'refund'
+  | 'transfer'
+  | 'adjustment';
+
+export const FINANCE_TRANSACTION_ACTIVITIES: readonly FinanceTransactionActivity[] = [
+  'expense',
+  'refund',
+  'transfer',
+  'adjustment',
 ] as const;
 
 export type FinanceBillKind =
@@ -288,8 +302,16 @@ export interface FinanceTransaction {
   notes?: string;
   receiptUri?: string;
   source: FinanceTransactionSource;
+  /** Spending treatment. Transfers and neutral adjustments stay visible but are excluded from spend/tax totals. */
+  activity?: FinanceTransactionActivity;
+  /** Local activity time printed by the source, normalized as HH:mm:ss without a timezone. */
+  activityTime?: string;
   /** External id when synced from Plaid. */
   externalId?: string;
+  /** Connected friend assigned to an imported E-ZPass activity. */
+  ezPassFriendId?: string;
+  /** Local display-name snapshot so the tag remains legible if the friend cache is unavailable. */
+  ezPassFriendName?: string;
   createdAt: string;
   updatedAt: string;
 }

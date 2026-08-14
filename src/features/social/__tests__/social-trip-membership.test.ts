@@ -8,7 +8,6 @@ import type { FriendProfile } from '@/services/friends';
 const friend: FriendProfile = {
   userId: 'jordan',
   displayName: 'Jordan Lee',
-  email: 'ftasmin1126@msn.com',
   avatar: { kind: 'initials', color: '#2E7D5A' },
 };
 
@@ -30,13 +29,13 @@ function plan(overrides: Partial<TravelPlan> = {}): TravelPlan {
 }
 
 describe('social trip membership', () => {
-  it('recognizes an accepted trip participant by normalized email', () => {
+  it('recognizes an accepted trip participant by opaque user id', () => {
     const iceland = plan({
       participants: [
         {
           id: 'participant-jordan',
+          userId: friend.userId,
           name: 'Jordan Lee',
-          email: ' FTASMIN1126@MSN.COM ',
           inviteCode: 'invite-jordan',
           invitedAt: '2026-08-01T12:00:00.000Z',
           acceptedAt: '2026-08-02T15:22:07.010Z',
@@ -54,8 +53,8 @@ describe('social trip membership', () => {
       participants: [
         {
           id: 'participant-jordan',
+          userId: friend.userId,
           name: 'Jordan Lee',
-          email: friend.email,
           inviteCode: 'invite-jordan',
           invitedAt: '2026-08-01T12:00:00.000Z',
         },

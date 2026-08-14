@@ -1,5 +1,4 @@
 import * as Linking from 'expo-linking';
-import { getSharedPayloads } from 'expo-sharing';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
@@ -7,6 +6,8 @@ import { Platform } from 'react-native';
 import { removeRuntimeActivity, setRuntimeActivity } from '@/features/performance/runtime-activity';
 import { useVoiceListsSync } from '@/features/todos/use-voice-lists-sync';
 import { useEventFollowSync } from '@/hooks/use-event-follow-sync';
+import { useIncomingShareRouting } from '@/hooks/use-incoming-share-routing';
+import { useIncomingEzPassDocument } from '@/hooks/use-incoming-ezpass-document';
 import { getNotificationsModule } from '@/services/notifications/runtime';
 import { configurePlantNotifications } from '@/services/plants/notifications';
 import { reconcilePlantSchedules } from '@/services/plants/schedule';
@@ -27,6 +28,7 @@ type UseRootStartupEffectsInput = {
   hydrated: boolean;
   appAccess: boolean;
   hasOnboarded: boolean;
+  appIsActive: boolean;
   phase: string;
   router: RootRouter;
 };
@@ -35,22 +37,21 @@ export function useRootStartupEffects({
   hydrated,
   appAccess,
   hasOnboarded,
+  appIsActive,
   phase,
   router,
 }: UseRootStartupEffectsInput) {
   useVoiceListsSync(hydrated && appAccess);
   useEventFollowSync(hydrated && appAccess && hasOnboarded);
 
-  useEffect(() => {
-    if (!hydrated || !appAccess || !hasOnboarded || Platform.OS === 'web') return;
-    try {
-      if (getSharedPayloads().length > 0) {
-        router.replace('/share-import' as never);
-      }
-    } catch {
-      // Older native builds do not include incoming sharing.
-    }
-  }, [appAccess, hasOnboarded, hydrated, router]);
+  useIncomingShareRouting(
+    hydrated && appAccess && hasOnboarded && appIsActive,
+    router,
+  );
+  useIncomingEzPassDocument(
+    hydrated && appAccess && hasOnboarded && appIsActive,
+    router,
+  );
 
   useEffect(() => {
     if (!hydrated || !appAccess) return;

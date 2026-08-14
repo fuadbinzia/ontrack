@@ -276,7 +276,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                         {request.otherDisplayName}
                       </AppText>
                       <AppText variant="caption" color="secondary" fit>
-                        {request.otherEmail || 'Wants to connect'}
+                        Wants to connect
                       </AppText>
                     </View>
                     <View style={[styles.requestActions, { gap: spacing.sm }]}>
@@ -372,7 +372,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                         {friend.displayName}
                       </AppText>
                       <AppText variant="caption" color="secondary" fit>
-                        {friend.email}
+                        Connected through onTrack
                       </AppText>
                     </View>
                     <Button

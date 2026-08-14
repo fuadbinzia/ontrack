@@ -26,25 +26,28 @@ describe('Plaid client service', () => {
     jest.clearAllMocks();
   });
 
-  it('creates an authenticated Hosted Link session for the requested product', async () => {
-    mockApiRequest.mockResolvedValueOnce({
-      link_token: 'link-token',
-      hosted_link_url: 'https://secure.plaid.test/link',
-      completion_redirect_uri: 'ontrack://plaid/complete',
-    });
+  it.each(['transactions', 'investments'] as const)(
+    'creates an authenticated Hosted Link session for %s',
+    async (purpose) => {
+      mockApiRequest.mockResolvedValueOnce({
+        link_token: 'link-token',
+        hosted_link_url: 'https://secure.plaid.test/link',
+        completion_redirect_uri: 'ontrack://plaid/complete',
+      });
 
-    await expect(createPlaidLinkToken('investments')).resolves.toEqual({
-      ok: true,
-      linkToken: 'link-token',
-      hostedLinkUrl: 'https://secure.plaid.test/link',
-      completionRedirectUri: 'ontrack://plaid/complete',
-    });
-    expect(mockApiRequest).toHaveBeenCalledWith(expect.objectContaining({
-      url: '/api/finance/plaid/link-token',
-      authenticate: true,
-      body: { purpose: 'investments', native: true },
-    }));
-  });
+      await expect(createPlaidLinkToken(purpose)).resolves.toEqual({
+        ok: true,
+        linkToken: 'link-token',
+        hostedLinkUrl: 'https://secure.plaid.test/link',
+        completionRedirectUri: 'ontrack://plaid/complete',
+      });
+      expect(mockApiRequest).toHaveBeenCalledWith(expect.objectContaining({
+        url: '/api/finance/plaid/link-token',
+        authenticate: true,
+        body: { purpose, native: true },
+      }));
+    },
+  );
 
   it('does not claim success when Hosted Link returns an incomplete response', async () => {
     mockApiRequest.mockResolvedValueOnce({ configured: true });

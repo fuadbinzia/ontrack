@@ -81,7 +81,7 @@ describe('event discovery selection', () => {
     fireEvent.press(screen.getByLabelText(`Select ${event.title}`));
 
     expect(onSelect).toHaveBeenCalledWith(event);
-    expect(screen.getByText('Selected event')).toBeTruthy();
+    expect(screen.getByText('Selected Event')).toBeTruthy();
     expect(screen.getByTestId('ontrack.activityForm.event.changeSelection')).toBeTruthy();
     expect(screen.queryByText('Matching events')).toBeNull();
   });

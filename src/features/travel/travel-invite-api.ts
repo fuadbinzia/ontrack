@@ -38,6 +38,11 @@ export interface TravelInvitee {
   email: string;
 }
 
+export interface TravelFriendInvitee {
+  userId: string;
+  name: string;
+}
+
 export async function publishTravelInvite(
   plan: TravelPlan,
   invitee: TravelInvitee,
@@ -50,6 +55,26 @@ export async function publishTravelInvite(
     invite_trip_id: plan.id,
     invitee_name: invitee.name.trim(),
     invitee_email: invitee.email.trim().toLowerCase(),
+  });
+  if (error || typeof data !== 'string' || !/^[a-f0-9]{20}$/.test(data)) {
+    throw new TravelInviteError(
+      error?.message ?? 'The invitation could not be created. Please try again.',
+    );
+  }
+  await publishTravelTripItinerary(plan).catch(() => undefined);
+  return data;
+}
+
+/** Creates an email-scoped invite without returning the friend's email to the client. */
+export async function publishTravelFriendInvite(
+  plan: TravelPlan,
+  invitee: TravelFriendInvitee,
+): Promise<string> {
+  const client = await requireAuthenticatedInviteClient();
+  const { data, error } = await client.rpc('create_travel_friend_invite', {
+    invite_payload: { invite: encodeTravelInvite(plan) },
+    invite_trip_id: plan.id,
+    invitee_user_id: invitee.userId,
   });
   if (error || typeof data !== 'string' || !/^[a-f0-9]{20}$/.test(data)) {
     throw new TravelInviteError(
@@ -125,7 +150,7 @@ export async function loadTravelInviteStatuses(
 function travelInviteShareContent(
   plan: TravelPlan,
   code: string,
-  invitee: TravelInvitee,
+  invitee: Pick<TravelInvitee, 'name'>,
 ) {
   const inviteUrl = createTravelInviteUrl(
     code,
@@ -148,7 +173,7 @@ function travelInviteShareContent(
 async function openTravelInviteShareSheet(
   plan: TravelPlan,
   code: string,
-  invitee: TravelInvitee,
+  invitee: Pick<TravelInvitee, 'name'>,
 ): Promise<boolean> {
   const { inviteUrl, message } = travelInviteShareContent(plan, code, invitee);
   const result = await Share.share(
@@ -172,6 +197,17 @@ export async function shareTravelPlan(
 
   // The invite was already published before the native sheet opened. Revoke it
   // when the sheet is dismissed so the host never has an untracked live invite.
+  await revokeTravelInvite(code);
+  return undefined;
+}
+
+export async function shareTravelPlanWithFriend(
+  plan: TravelPlan,
+  invitee: TravelFriendInvitee,
+): Promise<string | undefined> {
+  const code = await publishTravelFriendInvite(plan, invitee);
+  const shared = await openTravelInviteShareSheet(plan, code, invitee);
+  if (shared) return code;
   await revokeTravelInvite(code);
   return undefined;
 }

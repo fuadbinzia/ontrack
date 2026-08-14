@@ -199,8 +199,8 @@ export function TravelJoinRequestsPanel({
             <AppText variant="subheading" fit>
               {request.requesterName}
             </AppText>
-            <AppText variant="caption" color="secondary" selectable>
-              {request.requesterEmail}
+            <AppText variant="caption" color="secondary">
+              Requested to join this trip
             </AppText>
             <View style={styles.linkActions}>
               <Button

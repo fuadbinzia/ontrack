@@ -30,8 +30,8 @@ description: >-
 
 - Product chrome is glass (`Card` / `GlassPlate` defaults) — no paper fills.
 - Tax: prep + export + **File elsewhere** chooser only — never scrape IRS / claim in-app e-file.
-- Teller: bank/card balances + transactions through signed Connect sessions and the Cloudflare mTLS gateway; access tokens stay in the encrypted server vault.
-- Plaid: investments only through Hosted Link; access tokens stay in the encrypted server vault.
+- Plaid: current primary link provider for bank/card balances, transactions, and investments through Hosted Link; access tokens stay in the encrypted server vault.
+- Teller: integration remains available for existing connections and later reactivation; real-data calls use the Cloudflare mTLS gateway and encrypted server vault.
 - Credit score: manual track + official HTTPS deep links only — never scrape Credit Karma/Chase.
 - Money coach: local rate-aware heuristics + optional AI polish (`/api/finance/coach`).
 - Tips are educational, not personalized financial advice.

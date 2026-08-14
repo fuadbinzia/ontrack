@@ -18,7 +18,6 @@ export class FriendsError extends Error {
 export interface FriendProfile {
   userId: string;
   displayName: string;
-  email: string;
   friendsSince?: string;
   avatar: ProfileAvatarMeta;
 }
@@ -30,14 +29,12 @@ export interface FriendRequestItem {
   createdAt: string;
   otherUserId?: string;
   otherDisplayName: string;
-  otherEmail: string;
 }
 
 export interface FriendInvitePreview {
   code: string;
   fromUserId: string;
   displayName: string;
-  email: string;
   slug?: string;
   sharePath?: string;
 }
@@ -47,7 +44,6 @@ export interface MyFriendInvite {
   slug?: string;
   sharePath: string;
   displayName: string;
-  email: string;
 }
 
 export const ONTRACK_FRIEND_SHARE_URL =
@@ -75,12 +71,10 @@ function asFriend(row: Record<string, unknown>): FriendProfile | undefined {
   const userId = typeof row.user_id === 'string' ? row.user_id : undefined;
   const displayName =
     typeof row.display_name === 'string' ? row.display_name.trim() : '';
-  const email = typeof row.email === 'string' ? row.email.trim().toLowerCase() : '';
-  if (!userId || !displayName || !email) return undefined;
+  if (!userId || !displayName) return undefined;
   return {
     userId,
     displayName,
-    email,
     friendsSince:
       typeof row.friends_since === 'string' ? row.friends_since : undefined,
     avatar: avatarMetaFromProfileRow(row),
@@ -96,8 +90,6 @@ function asRequest(row: Record<string, unknown>): FriendRequestItem | undefined 
     typeof row.other_display_name === 'string'
       ? row.other_display_name.trim()
       : 'Friend';
-  const otherEmail =
-    typeof row.other_email === 'string' ? row.other_email.trim().toLowerCase() : '';
   if (!id || !direction) return undefined;
   return {
     id,
@@ -106,7 +98,6 @@ function asRequest(row: Record<string, unknown>): FriendRequestItem | undefined 
     createdAt: typeof row.created_at === 'string' ? row.created_at : new Date().toISOString(),
     otherUserId: typeof row.other_user_id === 'string' ? row.other_user_id : undefined,
     otherDisplayName: otherDisplayName || 'Friend',
-    otherEmail,
   };
 }
 
@@ -126,7 +117,6 @@ export async function ensureFriendProfile(input?: {
   const profile = asFriend({
     user_id: row.user_id,
     display_name: row.display_name,
-    email: row.email,
     avatar_kind: row.avatar_kind,
     avatar_color: row.avatar_color,
     avatar_icon_id: row.avatar_icon_id,
@@ -319,7 +309,6 @@ export async function getMyFriendInvite(): Promise<MyFriendInvite> {
     sharePath,
     displayName:
       typeof row.displayName === 'string' ? row.displayName.trim() : 'onTrack member',
-    email: typeof row.email === 'string' ? row.email.trim().toLowerCase() : '',
   };
 }
 
@@ -359,7 +348,6 @@ export async function resolveFriendInviteLink(
   const fromUserId = typeof row.fromUserId === 'string' ? row.fromUserId : '';
   const displayName =
     typeof row.displayName === 'string' ? row.displayName.trim() : 'onTrack member';
-  const email = typeof row.email === 'string' ? row.email.trim().toLowerCase() : '';
   const slug =
     typeof row.slug === 'string' && row.slug.trim()
       ? row.slug.trim().toLowerCase()
@@ -375,7 +363,6 @@ export async function resolveFriendInviteLink(
     code: inviteCode,
     fromUserId,
     displayName,
-    email,
     slug,
     sharePath,
   };

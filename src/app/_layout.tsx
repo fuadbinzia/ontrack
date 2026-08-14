@@ -207,6 +207,7 @@ function RootNavigator({
   useRootStartupEffects({
     hydrated,
     appAccess,
+    appIsActive,
     hasOnboarded,
     phase,
     router,

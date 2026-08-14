@@ -103,7 +103,6 @@ export interface TodoInvite {
   listId: string;
   listName: string;
   inviterName: string;
-  inviteeEmail: string;
   code: string;
   createdAt: string;
 }

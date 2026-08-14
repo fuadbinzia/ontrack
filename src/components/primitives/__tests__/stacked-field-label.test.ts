@@ -1,4 +1,4 @@
-import { fieldTitleCase } from '../field-title-case';
+import { fieldTitleCase, titleCaseTextChildren } from '../field-title-case';
 
 describe('fieldTitleCase', () => {
   it('title-cases multi-word field titles and keeps the required marker', () => {
@@ -30,6 +30,25 @@ describe('fieldTitleCase', () => {
     expect(fieldTitleCase('StraiAway')).toBe('StraiAway');
     expect(fieldTitleCase('Connect StraiAway')).toBe('Connect StraiAway');
     expect(fieldTitleCase('Open in onTrack for iOS')).toBe('Open in onTrack for iOS');
+    expect(fieldTitleCase('E-ZPass activity')).toBe('E-ZPass Activity');
+  });
+
+  it('title-cases compact count and activity metadata', () => {
+    expect(fieldTitleCase('2 activities')).toBe('2 Activities');
+    expect(fieldTitleCase('expense')).toBe('Expense');
+    expect(fieldTitleCase('$8.25 · 2 refunds')).toBe('$8.25 · 2 Refunds');
+  });
+
+  it('title-cases labels composed from multiple JSX text fragments', () => {
+    expect(titleCaseTextChildren(['expense', ' · ', 'Sample Friend'])).toEqual([
+      'Expense',
+      ' · ',
+      'Sample Friend',
+    ]);
+    expect(titleCaseTextChildren(['$150.84 tolls · ', '-$9.00 refunds'])).toEqual([
+      '$150.84 Tolls · ',
+      '-$9.00 Refunds',
+    ]);
   });
 
   it('keeps short prepositions lowercase unless first', () => {

@@ -41,6 +41,12 @@ export interface FinanceCategory {
   personalDefault?: boolean;
 }
 
+export const EZPASS_REPLENISHMENT_CATEGORY: FinanceCategory = {
+  id: 'ezpass_replenishment',
+  label: 'E-ZPass Replenishment',
+  taxBucket: 'personal',
+};
+
 export const FINANCE_CATEGORIES: readonly FinanceCategory[] = [
   { id: 'groceries', label: 'Groceries', taxBucket: 'personal', personalDefault: true },
   { id: 'dining', label: 'Dining', taxBucket: 'meals', personalDefault: true, businessDefault: true },
@@ -69,7 +75,9 @@ export const FINANCE_CATEGORIES: readonly FinanceCategory[] = [
   { id: 'other', label: 'Other', taxBucket: 'uncategorized', personalDefault: true, businessDefault: true, propertyDefault: true },
 ] as const;
 
-const BY_ID = new Map(FINANCE_CATEGORIES.map((c) => [c.id, c]));
+const BY_ID = new Map(
+  [...FINANCE_CATEGORIES, EZPASS_REPLENISHMENT_CATEGORY].map((category) => [category.id, category]),
+);
 
 export function financeCategoryById(id: string): FinanceCategory {
   return BY_ID.get(id) ?? {

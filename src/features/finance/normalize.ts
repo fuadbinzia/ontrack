@@ -8,6 +8,8 @@ import {
 } from '@/utils/parse';
 
 import { createDefaultPersonalEntity } from './create';
+import { EZPASS_REPLENISHMENT_CATEGORY } from './categories';
+import { deduplicateEzPassTransactions } from './ezpass-deduplication';
 import type {
   FinanceAccount,
   FinanceBucket,
@@ -34,6 +36,7 @@ import {
   FINANCE_DOCUMENT_KINDS,
   FINANCE_ENTITY_KINDS,
   FINANCE_TRANSACTION_SOURCES,
+  FINANCE_TRANSACTION_ACTIVITIES,
 } from './types';
 
 export { createDefaultPersonalEntity };
@@ -53,6 +56,11 @@ function idOrNew(value: unknown): string {
 
 function currencyCode(value: unknown, fallback = 'USD'): string {
   return (asString(value) ?? fallback).toUpperCase().slice(0, 3) || fallback;
+}
+
+function activityTime(value: unknown): string | undefined {
+  const time = asTrimmedString(value);
+  return time && /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(time) ? time : undefined;
 }
 
 function timestamps(o: Record<string, unknown>, now = isoNow()) {
@@ -189,19 +197,28 @@ export function normalizeTransaction(raw: unknown): FinanceTransaction | undefin
   const date = asString(o.date);
   const entityId = asString(o.entityId);
   if (amount === undefined || !date || !isDateKey(date) || !entityId) return undefined;
+  const source = asOneOf(o.source, FINANCE_TRANSACTION_SOURCES) ?? 'manual';
+  const activity = asOneOf(o.activity, FINANCE_TRANSACTION_ACTIVITIES) ?? 'expense';
   return {
     id: idOrNew(o.id),
     amount,
     currency: currencyCode(o.currency),
     date,
     merchant: asTrimmedString(o.merchant) || 'Expense',
-    categoryId: asString(o.categoryId) || 'other',
+    categoryId:
+      source === 'ezpass' && activity === 'transfer'
+        ? EZPASS_REPLENISHMENT_CATEGORY.id
+        : asString(o.categoryId) || 'other',
     entityId,
     accountId: asTrimmedString(o.accountId),
     notes: asTrimmedString(o.notes),
     receiptUri: cleanHttpsOrFileUri(asString(o.receiptUri)),
-    source: asOneOf(o.source, FINANCE_TRANSACTION_SOURCES) ?? 'manual',
+    source,
+    activity,
+    activityTime: activityTime(o.activityTime),
     externalId: asTrimmedString(o.externalId),
+    ezPassFriendId: source === 'ezpass' ? asTrimmedString(o.ezPassFriendId) : undefined,
+    ezPassFriendName: source === 'ezpass' ? asTrimmedString(o.ezPassFriendName) : undefined,
     ...timestamps(o),
   };
 }
@@ -313,7 +330,7 @@ export function normalizeFinanceSnapshot(raw: unknown): FinanceStateSnapshot {
     entities,
     accounts: mapDefined(o.accounts, normalizeAccount),
     holdings: mapDefined(o.holdings, normalizeHolding),
-    transactions: mapDefined(o.transactions, normalizeTransaction),
+    transactions: deduplicateEzPassTransactions(mapDefined(o.transactions, normalizeTransaction)),
     bills: mapDefined(o.bills, normalizeBill),
     buckets: mapDefined(o.buckets, normalizeBucket),
     taxYears: mapDefined(o.taxYears, normalizeTaxYear),

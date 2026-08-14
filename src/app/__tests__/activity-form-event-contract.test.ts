@@ -161,6 +161,17 @@ describe('Event activity form contract', () => {
     expect(fightCard).toContain('styles.taleRow');
   });
 
+  it('hides the complete comparison when fighter stats are unavailable', () => {
+    expect(fightCard).toContain(
+      'const availableTale = tale.filter((row) => row.left != null || row.right != null);',
+    );
+    expect(fightCard).toContain('{availableTale.length > 0 ? (');
+    expect(fightCard).toContain(
+      '{availableTale.map((row) => <TaleRow key={row.label} {...row} />)}',
+    );
+    expect(fightCard).not.toContain('{tale.map((row) => <TaleRow');
+  });
+
   it('keeps flags vertically centered and edge-aligned in mirrored fighter metadata', () => {
     expect(fightCard).toContain('fighterMetaOrder(align)');
     expect(fightCard).toContain('styles.fighterMetaRight');

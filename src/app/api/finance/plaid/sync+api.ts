@@ -1,12 +1,8 @@
-import {
-  loadPlaidAccounts,
-  loadPlaidHoldings,
-  syncPlaidTransactionChanges,
-} from '@/services/finance/plaid-data';
+import { loadPlaidHoldings } from '@/services/finance/plaid-data';
 import {
   loadPlaidItem,
+  PlaidServerError,
   plaidApiOptions,
-  updatePlaidCursor,
   withPlaidApiAuth,
 } from '@/services/finance/plaid-server';
 import { apiCorsHeaders } from '@/services/http/cors';
@@ -40,20 +36,10 @@ export async function POST(request: Request) {
         sync_status: 'ready',
       };
     }
-
-    const [accounts, changes] = await Promise.all([
-      loadPlaidAccounts(item.accessToken),
-      syncPlaidTransactionChanges(item.accessToken, item.cursor),
-    ]);
-    await updatePlaidCursor(userId, itemId, changes.cursor);
-    return {
-      configured: true,
-      purpose: item.purpose,
-      accounts,
-      holdings: [],
-      transactions: changes.transactions,
-      removed_external_ids: changes.removedExternalIds,
-      sync_status: changes.pending ? 'pending' : 'ready',
-    };
+    throw new PlaidServerError(
+      'Reconnect this bank with Teller. Plaid is now used only for investments.',
+      'PROVIDER_MIGRATION_REQUIRED',
+      409,
+    );
   });
 }

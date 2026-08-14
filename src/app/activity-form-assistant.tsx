@@ -3,6 +3,8 @@ import { Pressable, View } from 'react-native';
 import { ASSISTANT_COPY } from '@/app/activity-form-copy';
 import { activityFormGlassCardStyle } from '@/app/activity-form-sections';
 import { MovieEditor } from '@/app/activity-form-editors';
+import { EventDiscoveryEditor } from '@/features/events/event-discovery-editor';
+import type { EventSearchResult } from '@/services/events';
 import { activityFormStyles as styles } from '@/app/activity-form-styles';
 import {
   AppText,
@@ -20,6 +22,7 @@ export function ActivityFormAssistantSection(props: Record<string, any>) {
     setCategoryId,
     setTitle,
     setMovie,
+    setEventDetails,
     setError,
     category,
     title,
@@ -27,6 +30,11 @@ export function ActivityFormAssistantSection(props: Record<string, any>) {
     editId,
     savedDraftId,
     setDuration,
+    setDate,
+    setStartMinutes,
+    setAllDay,
+    setNotes,
+    eventDetails,
     theme,
     fieldFill,
     fieldBorder,
@@ -52,6 +60,7 @@ export function ActivityFormAssistantSection(props: Record<string, any>) {
                   setCategoryId(item.id);
                   setTitle('');
                   setMovie(undefined);
+                  setEventDetails(undefined);
                   setError(undefined);
                 };
                 const selected = item.id === categoryId;
@@ -88,6 +97,44 @@ export function ActivityFormAssistantSection(props: Record<string, any>) {
                       if (selected.runtimeMinutes) setDuration(String(selected.runtimeMinutes));
                     }}
                   />
+                ) : category.detailKind === 'event' ? (
+                  <View style={styles.followUpContent}>
+                    <EventDiscoveryEditor
+                      selected={eventDetails}
+                      onSelect={(selected: EventSearchResult) => {
+                        const now = new Date().toISOString();
+                        const dateTime = selected.startDateTime ? new Date(selected.startDateTime) : undefined;
+                        const hasDateTime = dateTime && !Number.isNaN(dateTime.getTime());
+                        const localDate = hasDateTime
+                          ? `${dateTime.getFullYear()}-${String(dateTime.getMonth() + 1).padStart(2, '0')}-${String(dateTime.getDate()).padStart(2, '0')}`
+                          : selected.date;
+                        setTitle(selected.title);
+                        setDate(localDate);
+                        setAllDay(!hasDateTime);
+                        if (hasDateTime) setStartMinutes(dateTime.getHours() * 60 + dateTime.getMinutes());
+                        setDuration(String(selected.durationMinutes));
+                        setNotes(selected.notes ?? '');
+                        const { title: _title, startDateTime: _start, date: _date, allDay: _allDay, durationMinutes: _duration, notes: _notes, ...details } = selected;
+                        setEventDetails({
+                          ...details,
+                          activityId: editId ?? savedDraftId,
+                          importMode: 'manual',
+                          syncState: 'linked',
+                          lastSyncedAt: now,
+                        });
+                      }}
+                    />
+                    <Input
+                      label="Event Title"
+                      value={title}
+                      onChangeText={setTitle}
+                      placeholder="Game, fight card, concert…"
+                      returnKeyType="next"
+                      fieldBackground={fieldFill}
+                      fieldBorderColor={fieldBorder}
+                      testID={AgentUiIds.activityForm.guidedTitle}
+                    />
+                  </View>
                 ) : (
                   <Input
                     key={category.id}

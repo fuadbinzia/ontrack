@@ -14,6 +14,7 @@ export { DateFieldCalendar } from './date-field-calendar';
 export { DestructiveSection } from './destructive-section';
 export { DisclosureChevron } from './disclosure-chevron';
 export { DragHandle } from './drag-handle';
+export { DurationField } from './duration-field';
 export { Dropdown } from './dropdown';
 export type {
     DropdownOption,
@@ -88,4 +89,3 @@ export { Symbol } from './symbol';
 export type { SymbolSize } from './symbol';
 export { TimeField } from './time-field';
 export type { TimeFieldProps } from './time-field.types';
-

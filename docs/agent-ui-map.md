@@ -424,6 +424,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.today.emptyAddActivity`    | Empty-state add          |
 | `ontrack.today.activity.<id>`       | Activity card            |
 | `ontrack.today.activityToggle.<id>` | Activity complete toggle |
+| `ontrack.today.detail.<kind>.close` | Dismiss a calendar-card detail sheet from its grabber |
+| `ontrack.today.detail.<kind>.backdrop` | Dismiss a calendar-card detail sheet from its backdrop |
 
 ## Calendar (`/(tabs)/calendar`)
 
@@ -441,8 +443,15 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | --------------------------------- | ----------------------------- |
 | `ontrack.eventDetail.edit`        | Open the event in the form    |
 | `ontrack.eventDetail.toggleComplete` | Mark complete / incomplete |
-| `ontrack.eventDetail.close`       | Close the detail screen       |
+| `ontrack.eventDetail.close`       | Dismiss the event sheet from its grabber |
+| `ontrack.eventDetail.backdrop`    | Dismiss the event sheet from its backdrop |
 | `ontrack.eventDetail.goBack`      | Go back when the event is missing |
+| `ontrack.eventDetail.section.fightCard` | Broadcast-style headliner and opposing-corner fight card |
+| `ontrack.eventDetail.fightCard.tab.<main|prelims|early-prelims>` | Show one fight-card section |
+| `ontrack.eventDetail.fightCard.bout.<boutId>` | Open a fight-card bout’s matchup modal |
+| `ontrack.eventDetail.fightCard.modal` | Visible full-name matchup modal |
+| `ontrack.eventDetail.section.metadata` | Imported venue details |
+| `ontrack.eventDetail.ticket`      | Open the provider ticket page     |
 
 ## Event form (`/activity-form`)
 
@@ -451,8 +460,10 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.activityForm.category.<id>`    | Pick an event type (new event)         |
 | `ontrack.activityForm.guidedTitle`      | Guided title field (new event)         |
 | `ontrack.activityForm.title`            | Title field (editing)                  |
+| `ontrack.activityForm.section.schedule` | Schedule glass section                 |
 | `ontrack.activityForm.date`             | Date field                             |
-| `ontrack.activityForm.duration`         | Duration (minutes)                     |
+| `ontrack.activityForm.duration.hours`   | Duration hours field                   |
+| `ontrack.activityForm.duration.mins`    | Duration minutes field                 |
 | `ontrack.activityForm.startTime`        | Start time                             |
 | `ontrack.activityForm.notes`            | Notes                                  |
 | `ontrack.activityForm.pickPhoto`        | Choose / replace photo                 |
@@ -462,9 +473,30 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.activityForm.saveThisOccurrence` | Apply changes to only this occurrence |
 | `ontrack.activityForm.saveSeries`       | Apply changes to the recurring series  |
 | `ontrack.activityForm.grabber`          | Swipe-down dismiss grabber             |
+| `ontrack.activityForm.backdrop`         | Dismiss by tapping outside the sheet   |
 | `ontrack.activityForm.cancel`           | Cancel / dismiss                       |
 | `ontrack.activityForm.delete`           | Delete the event                       |
 | `ontrack.activityForm.choice.<group>.<value>` | Editor choice chips (meal type, workout type, …) |
+| `ontrack.activityForm.event.tabs` | Sports / Music / Following discovery tabs |
+| `ontrack.activityForm.event.search` | Search the selected event source |
+| `ontrack.activityForm.event.sportFilter` | Choose a broad sport category |
+| `ontrack.activityForm.event.sportFilter.<sport>` | Select All sports, Basketball, Football, Baseball, Hockey, Soccer, Combat sports, or Motorsports |
+| `ontrack.activityForm.event.section.upcoming` | Upcoming suggestions for the selected broad sport or Music tab |
+| `ontrack.activityForm.event.section.followTargets` | Suggested teams, promotions, or artists to follow |
+| `ontrack.activityForm.event.result.<provider>.<id>` | Select an external event |
+| `ontrack.activityForm.event.followTarget.<provider>.<id>` | Follow a team, promotion, or artist |
+| `ontrack.activityForm.event.followMode.review` | Follow with review-first mode |
+| `ontrack.activityForm.event.followMode.auto` | Follow with automatic adds |
+| `ontrack.activityForm.event.loadMore` | Load another concert result page |
+| `ontrack.activityForm.event.refresh` | Refresh all followed schedules |
+| `ontrack.activityForm.event.unfollow.<id>` | Unfollow a target |
+| `ontrack.activityForm.event.suggestion.<id>` | Review suggestion row |
+| `ontrack.activityForm.event.suggestion.<id>.accept` | Add a reviewed event |
+| `ontrack.activityForm.event.suggestion.<id>.dismiss` | Suppress a reviewed event |
+| `ontrack.activityForm.event.section.selected` | Selected external event summary |
+| `ontrack.activityForm.event.changeSelection` | Return from the selected-event summary to discovery results |
+| `ontrack.activityForm.event.section.following` | Followed targets section |
+| `ontrack.activityForm.event.section.suggestions` | Pending review section |
 
 ## Checklists (`/(tabs)/to-do`)
 
@@ -568,6 +600,7 @@ Flow: `grocery-demo-recipe-import`.
 | `ontrack.plants.detail.undoWatering`     | Undo last watering         |
 | `ontrack.plants.detail.checkIn`          | Health photo check-in      |
 | `ontrack.plants.detail.delete`           | Delete plant               |
+| `ontrack.plants.calendarSheet.openDetails` | Open the full plant detail page from a calendar sheet |
 | `ontrack.plants.new.camera`              | New plant — camera         |
 | `ontrack.plants.new.library`             | New plant — library        |
 | `ontrack.plants.new.analyze`             | Identify and assess        |
@@ -1104,7 +1137,7 @@ Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flow `finance`
 | `ontrack.finance.bills.*` | Bills & subscriptions |
 | `ontrack.finance.buckets.*` | Savings buckets |
 | `ontrack.finance.entities.*` | Personal / business / property |
-| `ontrack.finance.accounts.*` | Manual accounts, hosted Plaid Link, whole-Item sync/disconnect confirmations, HYSA APR |
+| `ontrack.finance.accounts.*` | Manual accounts, Teller bank Link, Plaid investment Link, provider sync/disconnect, Plaid-bank migration, HYSA APR |
 | `ontrack.finance.credit.*` | Credit score card, edit sheet, free-provider links |
 | `ontrack.finance.tax.*` | Tax prep, doc vault, entity scope, export, File elsewhere |
 

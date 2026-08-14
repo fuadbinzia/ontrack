@@ -18,7 +18,19 @@ function routerWith() {
 }
 
 describe('goBackOrReplace', () => {
-  it('dismisses to the fallback instead of a blind POP / GO_BACK', () => {
+  it('dismisses only the top sheet when another route is underneath it', () => {
+    const { router } = routerWith();
+    jest.mocked(router.canDismiss).mockReturnValue(true);
+
+    goBackOrReplace(router, '/(tabs)/calendar');
+
+    expect(router.dismiss).toHaveBeenCalledTimes(1);
+    expect(router.dismissTo).not.toHaveBeenCalled();
+    expect(router.back).not.toHaveBeenCalled();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('dismisses to the fallback when a direct route has no sheet underneath it', () => {
     const { router } = routerWith();
 
     goBackOrReplace(router, '/(tabs)/calendar');
@@ -118,14 +130,15 @@ describe('root stack back button', () => {
     expect(tabsLayout).toContain('canGoBack()');
   });
 
-  it('avoids blind stack POP in goBackOrReplace', () => {
+  it('guards stack dismissal and preserves a safe fallback', () => {
     const navigation = readFileSync(
       join(process.cwd(), 'src/utils/navigation.ts'),
       'utf8',
     );
     const body = navigation.replace(/\/\*\*[\s\S]*?\*\//, '');
+    expect(body).toContain('if (router.canDismiss())');
+    expect(body).toContain('router.dismiss()');
     expect(body).toContain('dismissTo(fallback)');
-    expect(body).not.toMatch(/\.dismiss\(/);
     expect(body).not.toContain('router.back()');
     expect(body).not.toContain('router.replace(');
   });

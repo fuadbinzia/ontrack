@@ -64,6 +64,8 @@ export const AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID =
 /** Stable Today activity for agent deep-links. */
 export const AGENT_UI_DEMO_ACTIVITY_ID = 'activity-agent-ui-demo-mindfulness';
 export const AGENT_UI_DEMO_FOOD_ACTIVITY_ID = 'activity-agent-ui-demo-meal';
+export const AGENT_UI_DEMO_EVENT_ACTIVITY_ID = 'activity-agent-ui-demo-event';
+export const AGENT_UI_DEMO_EVENT_BOUT_ID = 'bout_agent_ui_demo_main';
 
 /** Stable gym activity for workouts Today’s Plan. */
 export const AGENT_UI_DEMO_WORKOUT_ACTIVITY_ID = 'activity-agent-ui-demo-workout';
@@ -109,6 +111,7 @@ export type AgentUiFixtureName =
   | 'vehicle-demo'
   | 'plants-demo'
   | 'activity-demo'
+  | 'event-demo'
   | 'home-weather'
   | 'food-demo'
   | 'workouts-demo'
@@ -162,6 +165,7 @@ export const AGENT_UI_FIXTURE_NAMES = [
   'vehicle-demo',
   'plants-demo',
   'activity-demo',
+  'event-demo',
   'home-weather',
   'food-demo',
   'workouts-demo',

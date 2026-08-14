@@ -17,10 +17,9 @@ export function OPTIONS(request: Request) {
 export async function POST(request: Request) {
   return withPlaidApiAuth(request, async (request, userId) => {
     const body = await request.json().catch(() => ({})) as {
-      purpose?: string;
       native?: boolean;
     };
-    const purpose = body.purpose === 'investments' ? 'investments' : 'transactions';
+    const purpose = 'investments' as const;
     const completionRedirectUri = body.native === false
       ? process.env.PLAID_WEB_COMPLETION_REDIRECT_URI?.trim() ||
         `${new URL(request.url).origin}/finance/accounts?plaid=complete`
@@ -44,7 +43,6 @@ export async function POST(request: Request) {
         is_mobile_app: body.native !== false,
         url_lifetime_seconds: 30 * 60,
       },
-      ...(purpose === 'transactions' ? { transactions: { days_requested: 30 } } : {}),
     });
     if (!result.link_token || !result.hosted_link_url || !result.expiration) {
       throw new PlaidServerError('Plaid did not return a Hosted Link session.', 'INVALID_RESPONSE');

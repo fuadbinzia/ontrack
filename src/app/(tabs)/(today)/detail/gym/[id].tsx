@@ -2,14 +2,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Screen, SectionHeader } from '@/components/primitives';
+import { AppText, Button, SectionHeader } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { spacing } from '@/design-system';
+import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
 import { aiProvider } from '@/services/ai';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import type { WorkoutRecommendation } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
+import { activityTimingLabel } from '@/utils/activity-time';
 import { formatCount } from '@/utils/grammar';
 
 export default function GymDetailScreen() {
@@ -44,23 +46,24 @@ export default function GymDetailScreen() {
 
   if (!activity) {
     return (
-      <Screen>
-        <AppText variant="title">Workout Not Found</AppText>
-        <Button onPress={() => router.back()} accessibilityLabel="Go Back">
-          Go Back
-        </Button>
-      </Screen>
+      <CalendarDetailSheet kind="gym" title="Workout Not Found" onClose={() => router.back()}>
+        <AppText variant="body" color="secondary">
+          This workout is no longer available.
+        </AppText>
+      </CalendarDetailSheet>
     );
   }
 
   const category = findCategory(categories, activity.categoryId);
 
   return (
-    <Screen>
-      <AppText variant="overline" color="tertiary">
-        {category.name}
-      </AppText>
-      <AppText variant="title">{workout?.name ?? activity.title}</AppText>
+    <CalendarDetailSheet
+      kind="gym"
+      eyebrow={category.name}
+      title={workout?.name ?? activity.title}
+      subtitle={activityTimingLabel(activity)}
+      subtitleIcon="clock"
+      onClose={() => router.back()}>
       <AppText variant="body" color="secondary">
         {formatCount(workout?.exercises.length ?? 0, 'exercise')} planned
       </AppText>
@@ -111,14 +114,7 @@ export default function GymDetailScreen() {
         accessibilityLabel="Start workout">
         Start workout
       </Button>
-      <Button
-        variant="ghost"
-        testID={AgentUiIds.workouts.gym.close}
-        onPress={() => router.back()}
-        accessibilityLabel="Close">
-        Close
-      </Button>
-    </Screen>
+    </CalendarDetailSheet>
   );
 }
 

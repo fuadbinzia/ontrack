@@ -35,7 +35,7 @@ iOS-first, local-first daily-life Expo app (schedule, food, fitness, plants, tra
 
 ## Agent close-out
 
-App-affecting → typecheck/tests. Do **not** run device, simulator, emulator, or dual-platform UI verification unless the user explicitly requests it in the current task. Stamp `ontrack.*` testIDs. Migrations → `supabase db push` same turn.
+App-affecting → typecheck/tests. Do **not** run device, simulator, emulator, or dual-platform UI verification unless the user explicitly requests it in the current task. Stamp `ontrack.*` testIDs. New or materially changed user journeys → add/update a named recipe in `src/utils/agent-ui/flows-*.ts`; the Living System Map discovers those recipes automatically. Migrations → `supabase db push` same turn.
 
 ## Non-negotiable UI
 

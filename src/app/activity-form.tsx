@@ -1,34 +1,24 @@
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRef, useState } from 'react';
+import { useWindowDimensions, View } from 'react-native';
 
 import { activityFormStyles as styles } from './activity-form-styles';
 
 import {
-  AppText,
-  AppPromptHost,
   appPrompt,
   Button,
   ErrorMessage,
-  GlassPlate,
   GlassPrimaryAction,
-  Input,
   Screen,
-  ScreenAtmosphere,
-  screenAtmosphereBottomColor,
-  SheetGrabber,
+  SheetScaffold,
 } from '@/components/primitives';
-import { CategoryBadge } from '@/components/shared';
 import { isCategoryEnabled } from '@/addons/registry';
-import {
-  glassFieldBackground,
-  glassFieldBorder,
-  radii,
-  spacing,
-} from '@/design-system';
+import { mergeDefaultCategories } from '@/constants/categories';
+import { glassFieldBackground, glassFieldBorder } from '@/design-system';
 import { usePendingImagePickerResult } from '@/hooks/use-pending-image-picker';
 import { useTheme } from '@/hooks/use-theme';
 import { analyzeMealPhoto, NutritionServiceError, persistMealPhoto } from '@/services/nutrition';
+import type { EventDetails } from '@/services/events';
 import { usePreferences } from '@/store/preferences';
 import { useAddons } from '@/store/addons';
 import { newId, useSchedule } from '@/store/schedule';
@@ -40,10 +30,6 @@ import type {
   WorkTask,
 } from '@/types/models';
 import {
-  FoodEditor,
-  MovieEditor,
-  WorkEditor,
-  WorkoutEditor,
   cloneMeal,
   cloneMovie,
   cloneWorkSession,
@@ -52,30 +38,31 @@ import {
 import {
   ActivityFormPhotoCard,
   ActivityFormScheduleCard,
-  activityFormGlassCardStyle,
 } from '@/app/activity-form-sections';
 import { pickLibraryImage } from '@/utils/pick-image';
-import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { isAllDayActivity } from '@/utils/activity-time';
 import { isDateKey, nowMinutes, todayKey } from '@/utils/date';
+import { durationPartsToMinutes, splitDurationMinutes } from '@/utils/duration';
 import { goBackOrReplace } from '@/utils/navigation';
 
-import { ASSISTANT_COPY } from '@/app/activity-form-copy';
 import { ActivityFormAssistantSection } from '@/app/activity-form-assistant';
+import { hasUnsavedActivityChanges } from '@/utils/activity-form-dirty';
 import { ActivityFormMissingScreen } from '@/app/activity-form-missing';
 import { ActivityFormDetailEditors } from '@/app/activity-form-detail-editors';
 
 export default function ActivityFormScreen() {
   const theme = useTheme();
+  const { height: windowHeight } = useWindowDimensions();
   const router = useRouter();
-  const navigation = useNavigation();
   const params = useLocalSearchParams<{ date?: string; id?: string; category?: string }>();
   const editId = typeof params.id === 'string' ? params.id : undefined;
   const aiEnabled = usePreferences((state) => state.aiEnabled);
   const enabledAddons = useAddons((state) => state.enabled);
 
-  const categories = useSchedule((state) => state.categories);
+  const storedCategories = useSchedule((state) => state.categories);
+  const categories = mergeDefaultCategories(storedCategories);
   const existing = useSchedule((state) => state.activities.find((activity) => activity.id === editId));
   const storedMeal = useSchedule((state) => state.meals.find((meal) => meal.activityId === editId));
   const storedWorkout = useSchedule((state) => state.workouts.find((workout) => workout.activityId === editId));
@@ -83,19 +70,22 @@ export default function ActivityFormScreen() {
     state.workSessions.find((session) => session.activityId === editId),
   );
   const storedMovie = useSchedule((state) => state.movies.find((movie) => movie.activityId === editId));
+  const storedEventDetails = useSchedule((state) => state.eventDetails.find((event) => event.activityId === editId));
   const saveEvent = useSchedule((state) => state.saveEvent);
   const deleteActivity = useSchedule((state) => state.deleteActivity);
 
   const initialId = editId ?? 'draft';
   const initialDate = existing?.date ?? (typeof params.date === 'string' ? params.date : todayKey());
   const initialStartMinutes = existing?.startMinutes ?? nowMinutes();
-  const allDay = existing ? isAllDayActivity(existing) : false;
+  const [allDay, setAllDay] = useState(existing ? isAllDayActivity(existing) : false);
   const [title, setTitle] = useState(existing?.title ?? '');
   const requestedCategory = typeof params.category === 'string' ? params.category : '';
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? requestedCategory);
   const [date, setDate] = useState(initialDate);
   const [startMinutes, setStartMinutes] = useState(initialStartMinutes);
-  const [duration, setDuration] = useState(String(existing?.durationMinutes ?? 60));
+  const initialDuration = splitDurationMinutes(existing?.durationMinutes ?? 60);
+  const [durationHours, setDurationHours] = useState(String(initialDuration.hours));
+  const [durationMinutes, setDurationMinutes] = useState(String(initialDuration.minutes));
   const status: ActivityStatus = existing?.status ?? 'upcoming';
   const [notes, setNotes] = useState(existing?.notes ?? '');
   const [photo, setPhoto] = useState<string | number | undefined>(existing?.photo);
@@ -103,39 +93,50 @@ export default function ActivityFormScreen() {
   const [workout, setWorkout] = useState(() => cloneWorkout(storedWorkout, initialId, existing?.title ?? ''));
   const [workSession, setWorkSession] = useState(() => cloneWorkSession(storedWorkSession, initialId));
   const [movie, setMovie] = useState(() => cloneMovie(storedMovie, initialId));
+  const [eventDetails, setEventDetails] = useState<EventDetails | undefined>(() =>
+    storedEventDetails ? { ...storedEventDetails, activityId: initialId } : undefined,
+  );
   const [error, setError] = useState<string>();
   const [analysisError, setAnalysisError] = useState<string>();
   const [analyzing, setAnalyzing] = useState(false);
   const analysisRequestRef = useRef(0);
 
   const category = categories.find((item) => item.id === categoryId) ?? (editId ? categories[0] : undefined);
-  const availableCategories = categories.filter((item) => isCategoryEnabled(item.id, enabledAddons));
+  const availableCategories = categories.filter((item) =>
+    isCategoryEnabled(item.id, enabledAddons),
+  );
   const isEditing = Boolean(editId && existing);
   const isRecurringSeries = Boolean(
     existing?.googleCalendar?.recurringEventId || existing?.recurrence?.seriesId,
   );
   const missingActivity = Boolean(editId && !existing);
   const allowLeave = useRef(false);
-  const signature = JSON.stringify({
+  const formSnapshot = {
     title,
     categoryId,
     date,
     startMinutes,
     allDay,
-    duration,
+    durationHours,
+    durationMinutes,
     notes,
     photo,
     meal,
     workout,
     workSession,
     movie,
-  });
-  const [initialSignature] = useState(signature);
-  const dirty = signature !== initialSignature;
+    eventDetails,
+  };
+  const [initialFormSnapshot] = useState(formSnapshot);
+  const dirty = hasUnsavedActivityChanges(
+    initialFormSnapshot,
+    formSnapshot,
+    isEditing,
+  );
 
   const leave = () => {
     allowLeave.current = true;
-    goBackOrReplace(router, '/(tabs)/calendar');
+    goBackOrReplace(router, '/');
   };
   const leaveAfterSave = () => {
     allowLeave.current = true;
@@ -150,22 +151,11 @@ export default function ActivityFormScreen() {
   const close = () => {
     if (allowLeave.current || !dirty) {
       leave();
-      return;
+      return true;
     }
     confirmDiscard(leave);
+    return false;
   };
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
-      if (allowLeave.current || !dirty) return;
-      event.preventDefault();
-      confirmDiscard(() => {
-        allowLeave.current = true;
-        navigation.dispatch(event.data.action);
-      });
-    });
-    return unsubscribe;
-  }, [dirty, navigation]);
 
   const selectMealPhoto = async (uri: string) => {
     try {
@@ -308,13 +298,23 @@ export default function ActivityFormScreen() {
       tasks: current.tasks.map((task) => (task.id === id ? { ...task, ...patch } : task)),
     }));
 
+  const setDuration = (totalMinutes: string | number) => {
+    const next = splitDurationMinutes(Number(totalMinutes));
+    setDurationHours(String(next.hours));
+    setDurationMinutes(String(next.minutes));
+  };
+
   const save = () => {
     setError(undefined);
     if (!title.trim()) return setError('Title is required.');
     if (!isDateKey(date)) return setError('Choose a valid date.');
     const dateKey = date;
     if (!category) return setError('Choose an event type.');
-    if (Number(duration) < 5 || !Number.isFinite(Number(duration))) {
+    const totalDurationMinutes = durationPartsToMinutes(durationHours, durationMinutes);
+    if (!Number.isFinite(totalDurationMinutes)) {
+      return setError('Enter hours and mins; mins must be between 0 and 59.');
+    }
+    if (totalDurationMinutes < 5) {
       return setError('Duration must be at least 5 minutes.');
     }
     if (category.detailKind === 'food' && meal.items.some((item) => !item.name.trim())) {
@@ -340,6 +340,11 @@ export default function ActivityFormScreen() {
               ? [movie.mediaType === 'tv' ? 'TV' : 'Movie', movie.releaseDate?.slice(0, 4), movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : undefined]
                   .filter(Boolean)
                   .join(' · ')
+            : category.detailKind === 'event' && eventDetails
+              ? [
+                  eventDetails.venue?.name,
+                  eventDetails.broadcasts.map((item) => item.name).join(', ') || undefined,
+                ].filter(Boolean).join(' · ')
             : existing?.summary;
 
     const payload = {
@@ -351,7 +356,7 @@ export default function ActivityFormScreen() {
         title: title.trim(),
         categoryId,
         startMinutes,
-        durationMinutes: Number(duration),
+        durationMinutes: totalDurationMinutes,
         status,
         notes: notes.trim() || undefined,
         photo: category.supportsPhotos ? photo : undefined,
@@ -371,6 +376,10 @@ export default function ActivityFormScreen() {
       movie:
         category.detailKind === 'movie' && movie
           ? { ...movie, activityId: editId ?? savedDraftId }
+          : undefined,
+      event:
+        category.detailKind === 'event' && eventDetails
+          ? { ...eventDetails, activityId: editId ?? savedDraftId }
           : undefined,
     } as const;
 
@@ -434,40 +443,34 @@ export default function ActivityFormScreen() {
   const fieldFill = glassFieldBackground(theme.name);
   const fieldBorder = glassFieldBorder(theme.name);
 
-  // Opaque atmosphere floor so BlurView frost can't see through the
-  // transparent modal card into the Today tab underneath (ghosting).
-  const atmosphereFloor = screenAtmosphereBottomColor(theme.name);
-
   if (missingActivity) {
     return (
       <ActivityFormMissingScreen
-        atmosphereFloor={atmosphereFloor}
+        atmosphereFloor={theme.backgroundPrimary}
         onLeave={leave}
       />
     );
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: atmosphereFloor }]}>
-      {/*
-        Modal cards sit above AppSafeArea chrome — paint atmosphere locally so
-        frosted plates/fields have chroma to blur (same idea as SheetScaffold).
-      */}
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <ScreenAtmosphere />
-      </View>
-      <Screen contentStyle={styles.screen} refresh={false}>
-        <View style={styles.header}>
-          <SheetGrabber
-            testID={AgentUiIds.activityForm.grabber}
-            onPress={close}
-            accessibilityLabel="Dismiss"
-          />
-          <AppText variant="title" style={styles.headerTitle} fit>
-            {isEditing ? editorTitle : 'Add Event'}
-          </AppText>
-        </View>
-
+    <SheetScaffold
+      visible
+      host="route"
+      title={isEditing ? editorTitle : 'Add Event'}
+      onClose={close}
+      closeAccessibilityLabel="Dismiss event form"
+      closeTestID={AgentUiIds.activityForm.grabber}
+      backdropTestID={AgentUiIds.activityForm.backdrop}
+      bodyScrollMode="external"
+      maxHeight={Math.round(windowHeight * 0.9)}
+      surface="glass">
+      <Screen
+        atmosphere={false}
+        bottomInset={false}
+        padded={false}
+        style={styles.sheetScreen}
+        contentStyle={styles.screen}
+        refresh={false}>
         <ActivityFormAssistantSection
           isEditing={isEditing}
           availableCategories={availableCategories}
@@ -475,6 +478,7 @@ export default function ActivityFormScreen() {
           setCategoryId={setCategoryId}
           setTitle={setTitle}
           setMovie={setMovie}
+          setEventDetails={setEventDetails}
           setError={setError}
           category={category}
           title={title}
@@ -482,6 +486,11 @@ export default function ActivityFormScreen() {
           editId={editId}
           savedDraftId={savedDraftId}
           setDuration={setDuration}
+          setDate={setDate}
+          setStartMinutes={setStartMinutes}
+          setAllDay={setAllDay}
+          setNotes={setNotes}
+          eventDetails={eventDetails}
           theme={theme}
           fieldFill={fieldFill}
           fieldBorder={fieldBorder}
@@ -493,14 +502,14 @@ export default function ActivityFormScreen() {
           date={date}
           onDateChange={setDate}
           allDay={allDay}
-          duration={duration}
-          onDurationChange={setDuration}
+          durationHours={durationHours}
+          onDurationHoursChange={setDurationHours}
+          durationMinutes={durationMinutes}
+          onDurationMinutesChange={setDurationMinutes}
           startMinutes={startMinutes}
           onStartMinutesChange={setStartMinutes}
           notes={notes}
           onNotesChange={setNotes}
-          fieldFill={fieldFill}
-          fieldBorder={fieldBorder}
         />
 
         {category.supportsPhotos ? (
@@ -580,7 +589,6 @@ export default function ActivityFormScreen() {
         </>
         ) : null}
       </Screen>
-      <AppPromptHost embedded />
-    </View>
+    </SheetScaffold>
   );
 }

@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 
 import { removeRuntimeActivity, setRuntimeActivity } from '@/features/performance/runtime-activity';
 import { useVoiceListsSync } from '@/features/todos/use-voice-lists-sync';
+import { useEventFollowSync } from '@/hooks/use-event-follow-sync';
 import { getNotificationsModule } from '@/services/notifications/runtime';
 import { configurePlantNotifications } from '@/services/plants/notifications';
 import { reconcilePlantSchedules } from '@/services/plants/schedule';
@@ -38,6 +39,7 @@ export function useRootStartupEffects({
   router,
 }: UseRootStartupEffectsInput) {
   useVoiceListsSync(hydrated && appAccess);
+  useEventFollowSync(hydrated && appAccess && hasOnboarded);
 
   useEffect(() => {
     if (!hydrated || !appAccess || !hasOnboarded || Platform.OS === 'web') return;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useLayoutEffect } from 'react';
 import { Keyboard } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import {
@@ -16,7 +16,8 @@ import { durations, easings, springs } from '@/design-system';
 
 type UseSheetDismissPanOptions = {
   visible: boolean;
-  onClose: () => void;
+  /** Return false when a guard keeps the sheet mounted (for example, discard confirmation). */
+  onClose: () => boolean | void;
 };
 
 /**
@@ -28,35 +29,88 @@ export function useSheetDismissPan({ visible, onClose }: UseSheetDismissPanOptio
   const reduceMotion = useReducedMotion();
   const dragY = useSharedValue(0);
   const sheetHeight = useSharedValue(480);
+  const entranceY = useSharedValue(0);
+  const entranceOpacity = useSharedValue(0);
+  const hasPresented = useSharedValue(false);
 
   const close = useCallback(() => {
     Keyboard.dismiss();
-    onClose();
-  }, [onClose]);
+    const shouldRemainOpen = onClose() === false;
+    if (!shouldRemainOpen) return;
 
-  useEffect(() => {
-    if (!visible) return;
+    // A guarded close kept the sheet mounted. Restore it only after the caller
+    // has opened its prompt; normal closes remain below the viewport through
+    // unmount so the settled sheet cannot flash for one frame.
+    dragY.value = reduceMotion
+      ? 0
+      : withSpring(0, {
+          damping: springs.sheet.damping,
+          stiffness: springs.sheet.stiffness,
+          mass: springs.sheet.mass,
+          overshootClamping: true,
+        });
+  }, [dragY, onClose, reduceMotion]);
+
+  useLayoutEffect(() => {
     dragY.value = 0;
-  }, [dragY, visible]);
+    entranceY.value = 0;
+    entranceOpacity.value = 0;
+    hasPresented.value = false;
+  }, [dragY, entranceOpacity, entranceY, hasPresented, visible]);
 
   const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: dragY.value }],
+    opacity: entranceOpacity.value,
+    transform: [{ translateY: entranceY.value + dragY.value }],
   }));
 
   const scrimStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      dragY.value,
-      [0, Math.max(sheetHeight.value, 1)],
-      [1, 0],
-      Extrapolation.CLAMP,
-    ),
+    opacity:
+      entranceOpacity.value *
+      interpolate(
+        dragY.value,
+        [0, Math.max(sheetHeight.value, 1)],
+        [1, 0],
+        Extrapolation.CLAMP,
+      ),
   }));
 
   const onSheetLayout = useCallback(
     (height: number) => {
-      if (height > 0) sheetHeight.value = height;
+      if (height <= 0) return;
+      sheetHeight.value = height;
+      if (hasPresented.value) return;
+      hasPresented.value = true;
+
+      if (reduceMotion) {
+        entranceY.value = 0;
+        entranceOpacity.value = 1;
+        return;
+      }
+
+      // Keep the native modal/card laid out at its final bottom pin, then reveal
+      // it from exactly one measured sheet-height below. Unlike a layout-entry
+      // animation, these explicit UI-thread values cannot strand the card off-screen
+      // if the modal host drops its first painted frame.
+      entranceY.value = height;
+      entranceOpacity.value = 0;
+      entranceY.value = withSpring(0, {
+        damping: springs.sheet.damping,
+        stiffness: springs.sheet.stiffness,
+        mass: springs.sheet.mass,
+        overshootClamping: true,
+      });
+      entranceOpacity.value = withTiming(1, {
+        duration: durations.fast,
+        easing: easings.enter,
+      });
     },
-    [sheetHeight],
+    [
+      entranceOpacity,
+      entranceY,
+      hasPresented,
+      reduceMotion,
+      sheetHeight,
+    ],
   );
 
   const panGesture = Gesture.Pan()

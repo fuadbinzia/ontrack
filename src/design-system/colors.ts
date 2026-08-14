@@ -80,6 +80,7 @@ export const categoryPalette = {
   mindfulness: { light: '#7A6494', dark: '#A990C2', tintLight: '#E7E0EE', tintDark: '#2B2333' },
   learning: { light: '#8A6B2F', dark: '#BA9A57', tintLight: '#EEE5D2', tintDark: '#302818' },
   appointment: { light: '#8A4F6D', dark: '#B87E9C', tintLight: '#EEDDE6', tintDark: '#301E28' },
+  event: { light: '#386F77', dark: '#73AAB1', tintLight: '#D8E9E9', tintDark: '#193033' },
   habit: { light: '#4E7A54', dark: '#7EA884', tintLight: '#DCE9DE', tintDark: '#1E2F21' },
   movie: { light: '#8B4A63', dark: '#C17C97', tintLight: '#F0DDE5', tintDark: '#321E26' },
   plant: { light: '#3F7650', dark: '#79AC88', tintLight: '#DCEADF', tintDark: '#1B3021' },

@@ -178,9 +178,10 @@ describe('glass plate contract', () => {
     expect(scaffold).toContain('glassMaterials.sheet.lightFillSolid');
     expect(scaffold).toContain('glassMaterials.sheet.darkFillSolid');
     expect(scaffold).not.toContain("rgba(255, 255, 255, 0.58)");
+    const assistant = read('src/app/activity-form-assistant.tsx');
     const sections = read('src/app/activity-form-sections.tsx');
-    expect(activity).toContain('GlassPlate');
-    expect(activity).toContain('ScreenAtmosphere');
+    expect(assistant).toContain('GlassPlate');
+    expect(activity).toContain('SheetScaffold');
     expect(activity).toContain('GlassPrimaryAction');
     expect(activity).toContain('glassFieldBackground');
     expect(activity).toContain('glassFieldBorder');

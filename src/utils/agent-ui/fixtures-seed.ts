@@ -1,6 +1,7 @@
 import {
   AGENT_UI_DEMO_ACTIVITY_ID,
   AGENT_UI_DEMO_CHECKLIST_LIST_ID,
+  AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
   AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
   AGENT_UI_DEMO_GROCERY_LIST_ID,
   AGENT_UI_DEMO_HEALTH_FACTOR_ID,
@@ -140,6 +141,13 @@ export function normalizeFixtureName(
     return 'activity-demo';
   }
   if (
+    key === 'event-demo' ||
+    key === 'event' ||
+    key === AGENT_UI_DEMO_EVENT_ACTIVITY_ID
+  ) {
+    return 'event-demo';
+  }
+  if (
     key === 'home-weather' ||
     key === 'today-weather' ||
     key === 'weather-home'
@@ -195,6 +203,7 @@ export function formatAgentUiSeedDetail(seeded: AgentUiSeedResult): string {
 /** Reserved Today / schedule activity ids from agent-ui demo seeds. */
 const AGENT_UI_DEMO_ACTIVITY_IDS = [
   AGENT_UI_DEMO_ACTIVITY_ID,
+  AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
   AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
   AGENT_UI_DEMO_WORKOUT_ACTIVITY_ID,
   AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID,

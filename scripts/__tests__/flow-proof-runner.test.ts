@@ -21,6 +21,12 @@ describe('dual-platform flow proof runner', () => {
     expect(source).not.toMatch(/SKIP_IOS|SKIP_ANDROID|AGENT_UI_SKIP_LEASE|ONTRACK_PACKAGER_TARGET/);
   });
 
+  it('discovers quoted and identifier-named flows so the atlas cannot silently omit app journeys', () => {
+    const source = read('scripts/agent-ui-flow-proof-batch.mjs');
+    expect(source).toContain("'([^']+)'|\"([^\"]+)\"|([a-zA-Z_$][\\w$]*)");
+    expect(source).toContain('match[1] ?? match[2] ?? match[3]');
+  });
+
   it('keeps agent devices warm only between batch flows and safely shuts down after the final flow', () => {
     const source = read('scripts/agent-ui-flow-proof-batch.mjs');
     expect(source).toContain("keepDevices ? { ...process.env, AGENT_UI_KEEP_DEVICES: '1' } : process.env");

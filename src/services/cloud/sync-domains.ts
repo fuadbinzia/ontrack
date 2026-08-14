@@ -1,6 +1,7 @@
 import { DEFAULT_ADDON_STATE } from '@/addons/registry';
 import type { AddonEnabledState } from '@/addons/types';
 import type { AgentConversations, AgentInstallations } from '@/agents/types';
+import { mergeDefaultCategories } from '@/constants/categories';
 import { ALL_ACCOUNTS_TEST_TRIP } from '@/constants/travel';
 import { ensurePlantSample } from '@/features/plants/sample';
 import {
@@ -135,7 +136,11 @@ export const domains: SyncDomain[] = [
         workouts: state.workouts,
         workSessions: state.workSessions,
         movies: state.movies,
-        categories: state.categories,
+        eventDetails: state.eventDetails,
+        eventFollows: state.eventFollows,
+        eventSuggestions: state.eventSuggestions,
+        suppressedExternalEvents: state.suppressedExternalEvents,
+        categories: mergeDefaultCategories(state.categories),
       };
     },
     write: (payload) => {
@@ -146,9 +151,17 @@ export const domains: SyncDomain[] = [
         workouts: Array.isArray(payload.workouts) ? payload.workouts : [],
         workSessions: Array.isArray(payload.workSessions) ? payload.workSessions : [],
         movies: Array.isArray(payload.movies) ? payload.movies : [],
-        categories: Array.isArray(payload.categories)
-          ? payload.categories
-          : useSchedule.getState().categories,
+        eventDetails: Array.isArray(payload.eventDetails) ? payload.eventDetails : [],
+        eventFollows: Array.isArray(payload.eventFollows) ? payload.eventFollows : [],
+        eventSuggestions: Array.isArray(payload.eventSuggestions) ? payload.eventSuggestions : [],
+        suppressedExternalEvents: Array.isArray(payload.suppressedExternalEvents)
+          ? payload.suppressedExternalEvents
+          : [],
+        categories: mergeDefaultCategories(
+          Array.isArray(payload.categories)
+            ? payload.categories
+            : useSchedule.getState().categories,
+        ),
       });
     },
     reset: () => useSchedule.getState().resetAll(),

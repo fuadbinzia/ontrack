@@ -380,9 +380,11 @@ function RootNavigator({
               <Stack.Screen
                 name="activity-form"
                 options={{
-                  presentation: 'modal',
-                  // In-content swipe grabber — hide native header so it can't
-                  // sit under the full-bleed ScrollView and eat taps / chrome.
+                  // SheetScaffold owns the backdrop and pan-down gesture so
+                  // dismissal stays identical across fresh and warm bundles.
+                  presentation: 'transparentModal',
+                  animation: 'none',
+                  gestureEnabled: false,
                   headerShown: false,
                   contentStyle: {
                     backgroundColor: 'transparent',

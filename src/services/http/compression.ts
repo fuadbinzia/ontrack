@@ -53,6 +53,9 @@ export async function compressResponse(
   appendVary(response.headers, 'Accept-Encoding');
   if (!acceptsGzip(request)) return response;
 
+  // Keep an untouched response available. Some local/native runtimes advertise
+  // gzip while lacking a working CompressionStream implementation.
+  const fallback = response.clone();
   const body = await response.arrayBuffer();
   if (body.byteLength < thresholdBytes) {
     return new Response(body, {
@@ -62,16 +65,20 @@ export async function compressResponse(
     });
   }
 
-  const compressedBody = await new Response(
-    new Blob([body]).stream().pipeThrough(new CompressionStream('gzip')),
-  ).arrayBuffer();
-  const headers = new Headers(response.headers);
-  headers.set('Content-Encoding', 'gzip');
-  headers.set('Content-Length', String(compressedBody.byteLength));
+  try {
+    const compressedBody = await new Response(
+      new Blob([body]).stream().pipeThrough(new CompressionStream('gzip')),
+    ).arrayBuffer();
+    const headers = new Headers(response.headers);
+    headers.set('Content-Encoding', 'gzip');
+    headers.set('Content-Length', String(compressedBody.byteLength));
 
-  return new Response(compressedBody, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
+    return new Response(compressedBody, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  } catch {
+    return fallback;
+  }
 }

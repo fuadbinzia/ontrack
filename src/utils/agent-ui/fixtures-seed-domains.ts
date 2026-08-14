@@ -1,6 +1,8 @@
 import {
   AGENT_UI_DEMO_ACTIVITY_ID,
   AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID,
+  AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
+  AGENT_UI_DEMO_EVENT_BOUT_ID,
   AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
   AGENT_UI_DEMO_GROCERY_TASK_TOMATOES_ID,
   AGENT_UI_DEMO_HEALTH_FACTOR_ID,
@@ -117,8 +119,7 @@ export function seedDomainAgentUiFixture(
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { todayKey } = require('@/utils/date') as typeof import('@/utils/date');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { useSchedule } =
-      require('@/store/schedule') as typeof import('@/store/schedule');
+    const { useSchedule } = require('@/store/schedule') as typeof import('@/store/schedule');
     const plant = {
       ...sample.createSamplePlant(),
       wateringActivityId: AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID,
@@ -189,6 +190,72 @@ export function seedDomainAgentUiFixture(
         durationMinutes: 30,
         status: 'upcoming',
         notes: 'Stable agent fixture.',
+      },
+    });
+    return {
+      fixture,
+      primaryId: activity.id,
+      activityId: activity.id,
+    };
+  }
+
+  if (fixture === 'event-demo') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { todayKey } = require('@/utils/date') as typeof import('@/utils/date');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useSchedule } =
+      require('@/store/schedule') as typeof import('@/store/schedule');
+    const activity = useSchedule.getState().saveEvent({
+      id: AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
+      detailKind: 'event',
+      activity: {
+        title: 'Agent UI Fight Night',
+        categoryId: 'event',
+        date: todayKey(),
+        startMinutes: 21 * 60,
+        durationMinutes: 240,
+        status: 'upcoming',
+      },
+      event: {
+        activityId: AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
+        provider: 'espn',
+        providerEventId: 'event-agent-ui-demo',
+        kind: 'sports',
+        sourceName: 'Agent UI',
+        participants: ['Alex Rivera', 'Jordan Lee'],
+        bouts: [{
+          providerCompetitionId: AGENT_UI_DEMO_EVENT_BOUT_ID,
+          cardSection: 'main',
+          weightClass: 'Welterweight',
+          title: 'Agent UI Welterweight Title',
+          status: 'Scheduled',
+          fighters: [
+            {
+              providerAthleteId: 'fighter-agent-ui-alex',
+              name: 'Alex Rivera',
+              record: '18-1-0',
+              age: 31,
+              height: `5' 11"`,
+              weight: '170 lbs',
+              reach: '72"',
+            },
+            {
+              providerAthleteId: 'fighter-agent-ui-jordan',
+              name: 'Jordan Lee',
+              record: '15-2-0',
+              age: 29,
+              height: `6' 1"`,
+              weight: '170 lbs',
+              reach: '74"',
+            },
+          ],
+        }],
+        venue: { name: 'Harbor Arena', city: 'Port City' },
+        broadcasts: [],
+        status: 'scheduled',
+        importMode: 'manual',
+        syncState: 'linked',
+        lastSyncedAt: new Date().toISOString(),
       },
     });
     return {

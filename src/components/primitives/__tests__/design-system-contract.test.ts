@@ -34,6 +34,9 @@ describe('canonical design-system contract', () => {
 
   it('uses SheetGrabber for bottom-sheet dismiss chrome (not header X)', () => {
     const sheet = read('src/components/primitives/sheet-scaffold.tsx');
+    const dismissPan = read(
+      'src/components/primitives/use-sheet-dismiss-pan.ts',
+    );
     expect(sheet).toContain('SheetGrabber');
     expect(sheet).toMatch(/function SheetHeader[\s\S]*?<SheetGrabber/);
     expect(sheet).not.toMatch(
@@ -43,21 +46,45 @@ describe('canonical design-system contract', () => {
     expect(sheet).toContain('GestureDetector');
     expect(sheet).toContain('useSheetDismissPan');
     expect(sheet).toContain('grabberInteractive={false}');
-    expect(
-      read('src/components/primitives/use-sheet-dismiss-pan.ts'),
-    ).toContain('Gesture.Exclusive');
+    expect(dismissPan).toContain('Gesture.Exclusive');
+    expect(dismissPan).toMatch(
+      /const shouldRemainOpen = onClose\(\) === false;[\s\S]*?if \(!shouldRemainOpen\) return;[\s\S]*?dragY\.value = reduceMotion/,
+    );
+    expect(dismissPan).not.toMatch(
+      /dragY\.value = 0;[\s\S]*?onClose\(\)/,
+    );
     expect(
       read('src/features/travel/travel-itinerary-add-sheet.tsx'),
     ).toContain('useSheetDismissPan');
     expect(read('src/features/travel/travel-sheet.tsx')).toContain(
       'SheetHeader',
     );
-    expect(read('src/app/activity-form.tsx')).toContain('SheetGrabber');
+    expect(read('src/app/activity-form.tsx')).toContain('SheetScaffold');
     expect(read('src/features/social/social-friends-modal.tsx')).toContain(
       'SheetGrabber',
     );
     expect(read('src/features/social/social-action-modal.tsx')).toContain(
       'SheetGrabber',
+    );
+  });
+
+  it('keeps a dismissed sheet off-screen unless a close guard explicitly keeps it mounted', () => {
+    const dismissPan = read(
+      'src/components/primitives/use-sheet-dismiss-pan.ts',
+    );
+    const activityForm = read('src/app/activity-form.tsx');
+
+    expect(dismissPan).toMatch(
+      /Keyboard\.dismiss\(\);[\s\S]*?onClose\(\) === false;[\s\S]*?withSpring\(0/,
+    );
+    expect(activityForm).toMatch(
+      /if \(allowLeave\.current \|\| !dirty\) \{[\s\S]*?leave\(\);[\s\S]*?return true;/,
+    );
+    expect(activityForm).toMatch(
+      /confirmDiscard\(leave\);[\s\S]*?return false;/,
+    );
+    expect(activityForm).toMatch(
+      /text: 'Discard', style: 'destructive', onPress: onDiscard/,
     );
   });
 
@@ -113,14 +140,27 @@ describe('canonical design-system contract', () => {
     }
   });
 
-  it('mounts sheet cards on-screen while fading the scrim independently', () => {
+  it('rises sheet cards from their measured bottom edge without a layout entrance', () => {
     const scaffold = read('src/components/primitives/sheet-scaffold.tsx');
-    // Both native and Reanimated slide entrances can strand the card below the
-    // viewport while leaving the scrim visible. Mount at the final bottom pin.
+    const dismissPan = read(
+      'src/components/primitives/use-sheet-dismiss-pan.ts',
+    );
+    // Keep the native host and card at their final geometry. The shared gesture
+    // transform supplies a measured UI-thread rise instead of SlideInDown.
     expect(scaffold).toContain('animationType="none"');
-    expect(scaffold).toContain('FadeIn');
-    expect(scaffold).toContain('const sheetEntrance = FadeIn.duration(motion.fade)');
     expect(scaffold).not.toContain('SlideInDown');
+    expect(scaffold).not.toContain('entering={sheetEntrance}');
+    expect(dismissPan).toContain('const entranceY = useSharedValue(0)');
+    expect(dismissPan).toContain('entranceY.value = height');
+    expect(dismissPan).toMatch(
+      /entranceY\.value = withSpring\(0, \{[\s\S]*?springs\.sheet\.damping/,
+    );
+    expect(dismissPan).toContain(
+      'transform: [{ translateY: entranceY.value + dragY.value }]',
+    );
+    expect(dismissPan).toMatch(
+      /if \(reduceMotion\) \{[\s\S]*?entranceY\.value = 0;[\s\S]*?entranceOpacity\.value = 1;/,
+    );
     expect(scaffold).toContain("position: 'absolute' as const");
     expect(scaffold).toContain('bottom: keyboardInset');
     expect(scaffold).toContain('overlayScrim');

@@ -96,13 +96,17 @@ export function AgentUiOverlay() {
     />
   );
 
+  // FullWindowOverlay is a native surface above the entire app. Even with a
+  // box-none child it can intercept iOS touches, so never mount the host while
+  // overlay paint is disabled.
+  if (!enabled) return probe;
+
   const layer = (
     <View style={styles.layer} pointerEvents="box-none" collapsable={false}>
       {fabVisible ? (
         <AgentUiOverlayToggle enabled={enabled} idCount={elements.length} />
       ) : null}
-      {enabled
-        ? elements.map((entry) => {
+      {elements.map((entry) => {
             const frame = entry.frame!;
             return (
               <View
@@ -123,8 +127,7 @@ export function AgentUiOverlay() {
                 </Text>
               </View>
             );
-          })
-        : null}
+          })}
     </View>
   );
 

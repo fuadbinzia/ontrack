@@ -83,6 +83,13 @@ export const FINANCE_ACCOUNT_KIND_LABEL: Record<FinanceAccountKind, string> = {
 
 export type FinanceAccountLinkStatus = 'manual' | 'pending' | 'linked' | 'error';
 
+export type FinanceConnectionProvider = 'plaid' | 'teller';
+
+export const FINANCE_CONNECTION_PROVIDERS: readonly FinanceConnectionProvider[] = [
+  'plaid',
+  'teller',
+] as const;
+
 export const FINANCE_ACCOUNT_LINK_STATUSES: readonly FinanceAccountLinkStatus[] = [
   'manual',
   'pending',
@@ -90,12 +97,13 @@ export const FINANCE_ACCOUNT_LINK_STATUSES: readonly FinanceAccountLinkStatus[] 
   'error',
 ] as const;
 
-export type FinanceTransactionSource = 'manual' | 'import' | 'plaid';
+export type FinanceTransactionSource = 'manual' | 'import' | 'plaid' | 'teller';
 
 export const FINANCE_TRANSACTION_SOURCES: readonly FinanceTransactionSource[] = [
   'manual',
   'import',
   'plaid',
+  'teller',
 ] as const;
 
 export type FinanceBillKind =
@@ -218,10 +226,18 @@ export interface FinanceAccount {
   balanceAsOf?: string;
   currency: string;
   linkStatus: FinanceAccountLinkStatus;
+  /** Provider-neutral connection metadata. Provider credentials remain server-side. */
+  provider?: FinanceConnectionProvider;
+  connectionId?: string;
+  institutionName?: string;
+  externalAccountId?: string;
   /** Opaque Plaid item id when linked (server-side tokens never stored here). */
+  /** @deprecated Read only for snapshots created before provider-neutral connections. */
   plaidItemId?: string;
+  /** @deprecated Use institutionName. */
   plaidInstitutionName?: string;
   /** Plaid account_id when linked (for holdings join). */
+  /** @deprecated Use externalAccountId. */
   plaidAccountId?: string;
   createdAt: string;
   updatedAt: string;

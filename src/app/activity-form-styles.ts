@@ -4,6 +4,7 @@ import { radii, spacing } from '@/design-system';
 
 export const activityFormStyles = StyleSheet.create({
   root: { flex: 1 },
+  sheetScreen: { backgroundColor: 'transparent' },
   screen: { gap: spacing.lg },
   header: { gap: spacing.sm },
   headerTitle: { alignSelf: 'stretch', minWidth: 0 },
@@ -13,4 +14,5 @@ export const activityFormStyles = StyleSheet.create({
   assistantHeading: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   assistantDot: { width: 8, height: 8, borderRadius: radii.pill },
   followUp: { gap: spacing.md, borderTopWidth: 1, paddingTop: spacing.lg, marginTop: spacing.xs },
+  followUpContent: { gap: spacing.md },
 });

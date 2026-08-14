@@ -2,10 +2,10 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Screen } from '@/components/primitives';
-import { CategoryBadge } from '@/components/shared';
+import { AppText, Button } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
+import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
 import { useSchedule } from '@/store/schedule';
 import { activityTimingLabel } from '@/utils/activity-time';
 import { openHttpsUrl } from '@/utils/safe-url';
@@ -20,10 +20,11 @@ export default function MovieDetailScreen() {
 
   if (!activity || !movie) {
     return (
-      <Screen>
-        <AppText variant="title">Movie Event Not Found</AppText>
-        <Button onPress={() => router.back()}>Go Back</Button>
-      </Screen>
+      <CalendarDetailSheet kind="movie" title="Movie Event Not Found" onClose={() => router.back()}>
+        <AppText variant="body" color="secondary">
+          This movie event is no longer available.
+        </AppText>
+      </CalendarDetailSheet>
     );
   }
 
@@ -31,8 +32,13 @@ export default function MovieDetailScreen() {
   const tmdbUrl = `https://www.themoviedb.org/${movie.mediaType === 'tv' ? 'tv' : 'movie'}/${movie.tmdbId}`;
 
   return (
-    <Screen>
-      <CategoryBadge category={category} />
+    <CalendarDetailSheet
+      kind="movie"
+      eyebrow={category.name}
+      title={activity.title}
+      subtitle={activityTimingLabel(activity)}
+      subtitleIcon="clock"
+      onClose={() => router.back()}>
       {movie.posterUrl ? (
         <Pressable
           accessibilityRole="link"
@@ -41,10 +47,6 @@ export default function MovieDetailScreen() {
           <Image source={movie.posterUrl} style={styles.poster} contentFit="cover" />
         </Pressable>
       ) : null}
-      <AppText variant="title">{activity.title}</AppText>
-      <AppText variant="callout" color="secondary">
-        {activityTimingLabel(activity)}
-      </AppText>
       <AppText variant="callout" color="secondary">
         {[movie.mediaType === 'tv' ? 'TV show' : 'Movie', movie.releaseDate, movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : undefined, movie.genres.join(', ') || undefined]
           .filter(Boolean)
@@ -64,9 +66,8 @@ export default function MovieDetailScreen() {
         <Button onPress={() => setStatus(activity.id, activity.status === 'completed' ? 'upcoming' : 'completed')}>
           {activity.status === 'completed' ? 'Mark Incomplete' : 'Mark Complete'}
         </Button>
-        <Button variant="ghost" onPress={() => router.back()}>Close</Button>
       </View>
-    </Screen>
+    </CalendarDetailSheet>
   );
 }
 

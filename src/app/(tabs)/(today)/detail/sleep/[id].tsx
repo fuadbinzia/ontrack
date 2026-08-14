@@ -1,10 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Card, Screen } from '@/components/primitives';
-import { CategoryBadge } from '@/components/shared';
+import { AppText, Button, Card } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { spacing } from '@/design-system';
+import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
 import { useSchedule } from '@/store/schedule';
 import { activityTimingLabel, isAllDayActivity } from '@/utils/activity-time';
 import { openSleepData } from '@/utils/open-sleep-data';
@@ -23,12 +23,11 @@ export default function SleepDetailScreen() {
 
   if (!activity) {
     return (
-      <Screen>
-        <AppText variant="title">Sleep Activity Not Found</AppText>
-        <Button onPress={() => router.back()} accessibilityLabel="Go Back">
-          Go Back
-        </Button>
-      </Screen>
+      <CalendarDetailSheet kind="sleep" title="Sleep Activity Not Found" onClose={() => router.back()}>
+        <AppText variant="body" color="secondary">
+          This sleep activity is no longer available.
+        </AppText>
+      </CalendarDetailSheet>
     );
   }
 
@@ -37,12 +36,13 @@ export default function SleepDetailScreen() {
   const healthDashboardEnabled = healthEnabled && process.env.EXPO_OS === 'ios';
 
   return (
-    <Screen contentStyle={styles.screen}>
-      <CategoryBadge category={category} />
-      <AppText variant="title">{activity.title}</AppText>
-      <AppText variant="callout" color="secondary">
-        {isAllDayActivity(activity) ? 'All day' : `${activityTimingLabel(activity)} planned`}
-      </AppText>
+    <CalendarDetailSheet
+      kind="sleep"
+      eyebrow={category.name}
+      title={activity.title}
+      subtitle={isAllDayActivity(activity) ? 'All day' : `${activityTimingLabel(activity)} planned`}
+      subtitleIcon="clock"
+      onClose={() => router.back()}>
 
       <Card variant="sunken" style={styles.healthCard}>
         <AppText variant="subheading">Your Recorded Sleep</AppText>
@@ -76,12 +76,11 @@ export default function SleepDetailScreen() {
           {activity.status === 'completed' ? 'Mark Incomplete' : 'Mark Complete'}
         </Button>
       </View>
-    </Screen>
+    </CalendarDetailSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { gap: spacing.md },
   healthCard: { gap: spacing.lg, marginTop: spacing.lg },
   actions: { gap: spacing.sm, marginTop: spacing.md },
 });

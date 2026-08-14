@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText, Button, SheetGrabber, Symbol } from '@/components/primitives';
 import { categoryColors, layout, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
+import { formatCount } from '@/utils/grammar';
 import { BenchPressAnimation } from './bench-press-animation';
 import { ExerciseAnatomyStill } from './exercise-anatomy-still';
 import {
@@ -142,7 +143,8 @@ function DemoContent({
                 <AppText variant="overline" color="accent">Anatomy in Motion</AppText>
                 <AppText variant="title">{exercise.name}</AppText>
                 <AppText variant="callout" color="secondary">
-                  {MOVEMENT_LABELS[pattern]} · {exercise.sets} sets × {exercise.reps} ·{' '}
+                  {MOVEMENT_LABELS[pattern]} · {formatCount(exercise.sets, 'set')} ×{' '}
+                  {formatCount(exercise.reps, 'rep')} ·{' '}
                   {anatomySex === 'female' ? 'Female' : 'Male'}
                 </AppText>
               </View>

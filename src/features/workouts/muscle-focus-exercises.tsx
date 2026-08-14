@@ -6,6 +6,7 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
+import { formatCount } from '@/utils/grammar';
 
 import {
   type ExerciseLoadKind,
@@ -259,13 +260,13 @@ function MuscleFocusExerciseCard({
         <View style={styles.metaItem}>
           <Symbol name="square.stack.3d.up" size="sm" color={theme.textTertiary} />
           <AppText variant="caption" color="secondary">
-            {exercise.sets} sets
+            {formatCount(exercise.sets, 'set')}
           </AppText>
         </View>
         <View style={styles.metaItem}>
           <Symbol name="repeat" size="sm" color={theme.textTertiary} />
           <AppText variant="caption" color="secondary">
-            {exercise.reps} reps
+            {formatCount(exercise.reps, 'rep')}
           </AppText>
         </View>
         <View style={styles.metaItem}>

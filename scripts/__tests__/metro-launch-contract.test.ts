@@ -366,15 +366,47 @@ describe('metro launch command contract', () => {
     expect(androidAlerts).toContain('showsAtLaunch');
     expect(androidAlerts).toContain('isOnboardingFinished');
     expect(androidAlerts).toContain('expo.modules.devmenu.sharedpreferences');
+    expect(androidAlerts).toContain('PERMISSION_CONTROLLER_PACKAGES');
+    expect(androidAlerts).toContain('PERMISSION_ALLOW_LABELS');
+    expect(androidAlerts).toContain('blocking_activity_active');
+    expect(androidAlerts).toContain('granting Android runtime permission');
+    expect(androidAlerts).toContain('DEV_LAUNCHER_PHRASES');
+    expect(androidAlerts).toContain('opening Android development server');
+    expect(androidAlerts).toContain('for _ in range(8)');
+    expect(androidAlerts).toContain('attempts = 10 if force else 4');
     const androidHost = read('scripts/lib/agent-ui-host.sh');
     expect(androidHost).toContain('agent_ui_ensure_android_system_alerts_clear');
     expect(androidHost).toContain('android_system_alert.py');
+    expect(androidHost).toContain('android_system_alert.py\" dismiss');
+    expect(ensure).toContain('android_system_alert.py\" dismiss');
+    expect(ensure).toContain('android_system_alert.py\" ensure');
     expect(androidHost).toContain('AGENT_UI_SKIP_ANDROID_ALERTS');
     const appJson = read('app.json');
     expect(appJson).toContain('expo-dev-client');
     expect(appJson).toContain('skipOnboarding');
     expect(appJson).toContain('showMenuAtLaunch');
     expect(appJson).toContain('toolsButton');
+  });
+
+  it('classifies Android runtime permission dialogs without confusing ordinary app UI', () => {
+    const classifier = [
+      'import importlib.util, json, sys',
+      "spec = importlib.util.spec_from_file_location('alerts', sys.argv[1])",
+      'module = importlib.util.module_from_spec(spec)',
+      'spec.loader.exec_module(module)',
+      'payload = json.load(sys.stdin)',
+      'print(json.dumps([module.classify(item) for item in payload]))',
+    ].join('; ');
+    const permissionXml = '<hierarchy><node package="com.google.android.permissioncontroller" text="Allow onTrack to access this device’s location?" content-desc=""><node package="com.google.android.permissioncontroller" text="While using the app" content-desc="" /></node></hierarchy>';
+    const ordinaryXml = '<hierarchy><node package="com.imtihoss.ontracknow" text="Allow friends to join" content-desc="" /></hierarchy>';
+    const introXml = '<hierarchy><node package="com.imtihoss.ontracknow" text="This is the developer menu. Useful tools in development." content-desc=""><node package="com.imtihoss.ontracknow" text="Continue" content-desc="" /></node></hierarchy>';
+    const launcherXml = '<hierarchy><node package="com.imtihoss.ontracknow" text="Development Build"/><node text="Development Servers"/><node text="http://192.168.1.2:8081" bounds="[10,20][200,80]"/><node text="New development server"/></hierarchy>';
+    const output = execFileSync(
+      'python3',
+      ['-c', classifier, join(root, 'scripts/lib/android_system_alert.py')],
+      { cwd: root, encoding: 'utf8', input: JSON.stringify([permissionXml, ordinaryXml, introXml, launcherXml]) },
+    );
+    expect(JSON.parse(output)).toEqual(['permission', null, 'intro', 'launcher']);
   });
 
   it('times out wedged simctl RPCs and serializes ensure-packager device ops', () => {

@@ -23,6 +23,7 @@ import { usePerformanceHistory } from '@/store/performance-history';
 import { usePerformanceRuntime } from '@/store/performance-runtime';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
+import { formatCount } from '@/utils/grammar';
 
 import {
   deriveRuntimeWarnings,
@@ -477,7 +478,7 @@ export function PerformanceMonitorScreen() {
                   },
                   {
                     label: 'Work',
-                    value: `${activity.operations} operations · ${activity.pending} pending`,
+                    value: `${formatCount(activity.operations, 'operation')} · ${activity.pending} pending`,
                   },
                   { label: 'Errors', value: String(activity.errors) },
                   {
@@ -495,7 +496,7 @@ export function PerformanceMonitorScreen() {
         <View style={{ gap: spacing.sm }}>
           <SectionHeader
             title="30-day history"
-            detail={`${dailyTrends.length} days · ${recentSessions.length} sessions`}
+            detail={`${formatCount(dailyTrends.length, 'day')} · ${formatCount(recentSessions.length, 'session')}`}
             flush
           />
           {recentRollups.length === 0 ? (

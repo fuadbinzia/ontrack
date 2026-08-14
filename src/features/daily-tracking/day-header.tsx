@@ -91,6 +91,10 @@ export function DayHeader({
     label: openCalendarLabel,
     onPress: openCalendar,
   });
+  useAgentUiTarget(
+    viewingToday ? undefined : AgentUiIds.today.nonToday,
+    { label: formatDateLong(date) },
+  );
   const showWeatherBar = Boolean(
     showWeather && weather && weatherAccessibilityLabel,
   );

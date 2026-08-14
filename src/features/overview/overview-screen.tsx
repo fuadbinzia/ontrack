@@ -42,6 +42,7 @@ import {
 } from '@/utils/date';
 import { getNumberFormatter } from '@/utils/intl-cache';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { formatCount, formatCountWithVerb } from '@/utils/grammar';
 
 import { OverviewSummaryRow, type OverviewRow } from './overview-summary-row';
 import {
@@ -52,10 +53,6 @@ import {
   remainingActivities,
   upcomingBills,
 } from './overview-summary';
-
-function plural(count: number, singular: string, pluralForm = `${singular}s`) {
-  return `${count} ${count === 1 ? singular : pluralForm}`;
-}
 
 function formatMoney(amount: number, currency: string) {
   try {
@@ -134,7 +131,7 @@ export function OverviewScreen() {
         label: 'Today',
         icon: TAB_META['(today)'].icon,
         headline: remaining.length
-          ? `${plural(remaining.length, 'item')} still in motion`
+          ? `${formatCount(remaining.length, 'item')} still in motion`
           : 'Your day is clear',
         detail: nextTodayActivity
           ? `${nextTodayActivity.allDay ? 'All day' : formatMinutes(nextTodayActivity.startMinutes)} · ${nextTodayActivity.title}`
@@ -156,10 +153,10 @@ export function OverviewScreen() {
         label: 'Checklists',
         icon: TAB_META['to-do'].icon,
         headline: openTasks.length
-          ? `${plural(openTasks.length, 'item')} open`
+          ? `${formatCount(openTasks.length, 'item')} open`
           : 'Everything checked off',
         detail: lists.length
-          ? `Across ${plural(lists.length, 'list')}.`
+          ? `Across ${formatCount(lists.length, 'list')}.`
           : 'Create a checklist or grocery list.',
         href: TAB_META['to-do'].href,
       },
@@ -168,9 +165,9 @@ export function OverviewScreen() {
         label: 'Finance',
         icon: TAB_META.finance.icon,
         headline: overdueBills.length
-          ? `${plural(overdueBills.length, 'bill')} due now`
+          ? `${formatCount(overdueBills.length, 'bill')} due now`
           : nextBills.length
-            ? `${plural(nextBills.length, 'bill')} coming up`
+            ? `${formatCount(nextBills.length, 'bill')} coming up`
             : 'No upcoming bills',
         detail: nextBills[0]
           ? `${nextBills[0].name} · ${formatMoney(nextBills[0].amount, nextBills[0].currency)} · ${formatDateKeyMedium(nextBills[0].nextDue)}`
@@ -182,10 +179,10 @@ export function OverviewScreen() {
         label: 'Plants',
         icon: TAB_META.plants.icon,
         headline: duePlants.length
-          ? `${plural(duePlants.length, 'plant')} need care`
+          ? `${formatCountWithVerb(duePlants.length, 'plant', 'needs', 'need')} care`
           : 'Care is on track',
         detail: plants.length
-          ? `${plural(plants.length, 'plant')} in your collection.`
+          ? `${formatCount(plants.length, 'plant')} in your collection.`
           : 'Add a plant to begin a care plan.',
         href: TAB_META.plants.href,
       },
@@ -194,7 +191,7 @@ export function OverviewScreen() {
         label: 'Fitness',
         icon: TAB_META.workouts.icon,
         headline: workoutsToday.length
-          ? `${plural(workoutsToday.length, 'workout')} today`
+          ? `${formatCount(workoutsToday.length, 'workout')} today`
           : 'No workout scheduled',
         detail:
           workoutsToday[0]?.title ?? 'Explore muscles or build a session.',
@@ -210,9 +207,9 @@ export function OverviewScreen() {
             : 'Your health pulse',
         detail:
           todayHealth?.exerciseMinutes !== undefined
-            ? `${plural(todayHealth.exerciseMinutes, 'active minute')}.`
+            ? `${formatCount(todayHealth.exerciseMinutes, 'active minute')}.`
             : moodEntries.length
-              ? `${plural(moodEntries.length, 'mind check-in')} recorded.`
+              ? `${formatCount(moodEntries.length, 'mind check-in')} recorded.`
               : 'Review body metrics or check in with your mind.',
         href: TAB_META.health.href,
       },
@@ -221,10 +218,10 @@ export function OverviewScreen() {
         label: 'Vehicles',
         icon: TAB_META.vehicles.icon,
         headline: dueMaintenance
-          ? `${plural(dueMaintenance, 'service item')} due`
+          ? `${formatCount(dueMaintenance, 'service item')} due`
           : 'Maintenance looks good',
         detail: vehicles.length
-          ? `${plural(vehicles.length, 'vehicle')} tracked.`
+          ? `${formatCount(vehicles.length, 'vehicle')} tracked.`
           : 'Add a vehicle to track service and costs.',
         href: TAB_META.vehicles.href,
       },
@@ -233,7 +230,7 @@ export function OverviewScreen() {
         label: 'Food',
         icon: TAB_META.food.icon,
         headline: mealsToday.length
-          ? `${plural(mealsToday.length, 'meal')} planned today`
+          ? `${formatCount(mealsToday.length, 'meal')} planned today`
           : 'Today’s menu is open',
         detail:
           mealsToday[0]?.freeformTitle ??
@@ -245,9 +242,9 @@ export function OverviewScreen() {
         label: 'Vision Board',
         icon: TAB_META['vision-board'].icon,
         headline: activeGoals.length
-          ? `${plural(activeGoals.length, 'goal')} in view`
+          ? `${formatCount(activeGoals.length, 'goal')} in view`
           : 'Make the future visible',
-        detail: `${plural(visionItems.length, 'idea')} across ${plural(visionCategories.length, 'board')}.`,
+        detail: `${formatCount(visionItems.length, 'idea')} across ${formatCount(visionCategories.length, 'board')}.`,
         href: TAB_META['vision-board'].href,
       },
       {
@@ -318,7 +315,7 @@ export function OverviewScreen() {
   ]);
 
   const heroTitle = summary.attentionCount
-    ? `${plural(summary.attentionCount, 'thing')} need your attention`
+    ? `${formatCountWithVerb(summary.attentionCount, 'thing', 'needs', 'need')} your attention`
     : 'Everything is moving smoothly';
 
   return (

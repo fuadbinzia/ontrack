@@ -11,6 +11,7 @@ import { applyPlantCarePlan } from '@/services/plants/schedule';
 import { usePlants } from '@/store/plants';
 import { newId } from '@/store/schedule';
 import type { PlantCheckIn } from '@/types/models';
+import { formatCount } from '@/utils/grammar';
 import { pickCameraImage, pickLibraryImage } from '@/utils/pick-image';
 
 export default function PlantCheckInScreen() {
@@ -97,7 +98,7 @@ export default function PlantCheckInScreen() {
           {result.proposedCarePlan ? (
             <Card style={styles.card}>
               <AppText variant="heading">Care-plan update suggested</AppText>
-              <AppText color="secondary">Check every {result.proposedCarePlan.watering.intervalDays} days, starting with {result.proposedCarePlan.watering.minMl}–{result.proposedCarePlan.watering.maxMl} mL after the soil check.</AppText>
+              <AppText color="secondary">Check every {formatCount(result.proposedCarePlan.watering.intervalDays, 'day')}, starting with {result.proposedCarePlan.watering.minMl}–{result.proposedCarePlan.watering.maxMl} mL after the soil check.</AppText>
               <Button onPress={() => void save(true)} disabled={busy}>Save and Update Care Plan</Button>
               <Button variant="secondary" onPress={() => void save(false)} disabled={busy}>Save check-in, keep current plan</Button>
             </Card>

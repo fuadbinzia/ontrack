@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Symbol } from '@/components/primitives';
+import { formatCount } from '@/utils/grammar';
 
 import { AgentUiIds } from './ids';
 import { dismissAgentUiFab, toggleAgentUiOverlay } from './overlay';
@@ -63,7 +64,7 @@ export function AgentUiOverlayToggle({ enabled, idCount }: Props) {
   }, []);
   const target = useAgentUiTarget(AgentUiIds.agentUi.overlayToggle, {
     label: enabled
-      ? `Hide agent UI overlay (${idCount} targets)`
+      ? `Hide agent UI overlay (${formatCount(idCount, 'target')})`
       : 'Show agent UI overlay',
     onPress: onToggle,
   });
@@ -130,7 +131,7 @@ export function AgentUiOverlayToggle({ enabled, idCount }: Props) {
         accessibilityRole="button"
         accessibilityLabel={
           enabled
-            ? `Hide agent UI overlay (${idCount} targets)`
+            ? `Hide agent UI overlay (${formatCount(idCount, 'target')})`
             : 'Show agent UI overlay'
         }
         accessibilityHint="Drag to move. Long-press to hide. With Dev Mode on, long-press anywhere to show again."

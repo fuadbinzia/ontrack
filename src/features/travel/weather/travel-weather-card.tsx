@@ -23,6 +23,7 @@ import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import type { DateDisplayFormat } from '@/utils/date';
 import { formatDateKey } from '@/utils/date';
 import { getDateTimeFormatter } from '@/utils/intl-cache';
+import { formatCount } from '@/utils/grammar';
 
 import {
     getDestinationCurrentWeather,
@@ -247,14 +248,14 @@ export function TravelWeatherCard({
           ))}
           {hiddenDayCount > 0 ? (
             <GlassMetaChip
-              accessibilityLabel={`Plus ${hiddenDayCount} more days`}
+              accessibilityLabel={`Plus ${formatCount(hiddenDayCount, 'more day', 'more days')}`}
               style={{
                 minWidth: Math.max(72, s(72)),
                 minHeight: Math.max(40, s(40)),
                 alignSelf: 'center',
               }}>
               <AppText variant="caption" color="accent" fit>
-                +{hiddenDayCount} days
+                +{formatCount(hiddenDayCount, 'day')}
               </AppText>
             </GlassMetaChip>
           ) : null}

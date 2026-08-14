@@ -6,6 +6,7 @@ import { AppText, Button } from '@/components/primitives';
 import { layout, radii, spacing } from '@/design-system';
 import type { ExerciseTemplate } from '@/features/workouts/muscle-data';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 
 interface WorkoutSessionBuilderProps {
   selectedExercises: ExerciseTemplate[];
@@ -98,7 +99,7 @@ export function WorkoutSessionBuilder({
           icon="calendar-add"
           testID={AgentUiIds.workouts.addToToday}
           onPress={onAddToToday}
-          accessibilityLabel={`Add ${selectedExercises.length} exercises to today`}>
+          accessibilityLabel={`Add ${formatCount(selectedExercises.length, 'exercise')} to today`}>
           Add workout to today
         </Button>
       </LinearGradient>

@@ -13,6 +13,7 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoListKind } from '@/store/todos';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 
 export function TodoListsOverviewHeader({
   listCount,
@@ -92,7 +93,7 @@ export function TodoListsOverviewHeader({
             testID={AgentUiIds.checklists.collaborators}
             accessibilityLabel={
               inviteCount
-                ? `Add collaborators, ${inviteCount} invitations waiting`
+                ? `Add collaborators, ${formatCount(inviteCount, 'invitation')} waiting`
                 : 'Add collaborators'
             }
             icon="invite"

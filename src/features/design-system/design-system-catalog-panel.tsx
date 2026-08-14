@@ -8,6 +8,7 @@ import {
 import { useResponsive } from '@/hooks/use-responsive';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
+import { formatCount } from '@/utils/grammar';
 
 import {
   catalogByGroup,
@@ -44,7 +45,7 @@ export function DesignSystemCatalogPanel({
         Every shared building block in onTrack, grouped by job. Tap a row to open its live demo.
       </AppText>
       <AppText variant="caption" color="tertiary" fit>
-        {DESIGN_CATALOG.length} elements
+        {formatCount(DESIGN_CATALOG.length, 'element')}
       </AppText>
 
       {DESIGN_CATALOG_GROUPS.map((group, index) => {

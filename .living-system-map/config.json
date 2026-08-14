@@ -61,6 +61,9 @@
     "defaultWindow": 7,
     "defaultEnvironment": "production"
   },
+  "runtimeAccounts": {
+    "command": ["node", "scripts/living-system-map-accounts.mjs"]
+  },
   "domains": [
     { "id": "account", "label": "Account", "paths": ["src/features/account"] },
     { "id": "auth", "label": "Authentication", "paths": ["src/features/auth"] },

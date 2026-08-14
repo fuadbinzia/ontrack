@@ -28,6 +28,26 @@ describe('dual-platform flow proof runner', () => {
     expect(source).toContain('keepDevices: index < flows.length - 1');
   });
 
+  it('checkpoints proof evidence after each flow so later failures do not erase passing work', () => {
+    const source = read('scripts/agent-ui-flow-proof-batch.mjs');
+    expect(source).toContain('function writeProgress()');
+    expect(source).toMatch(/fresh\.push\(\.\.\.runs\);\s*writeProgress\(\);/);
+    expect(source).toMatch(/writeProgress\(\);[\s\S]*?run\.exitCode === 3/);
+  });
+
+  it('supports explicitly excluding a blocked flow without weakening the default suite', () => {
+    const source = read('scripts/agent-ui-flow-proof-batch.mjs');
+    expect(source).toContain("arg === '--exclude'");
+    expect(source).toContain('!excluded.has(flow.name)');
+    expect(source).toContain("if (args.includes('--all')) return select(all)");
+  });
+
+  it('accepts repeated flow selectors for focused warm-device reruns', () => {
+    const source = read('scripts/agent-ui-flow-proof-batch.mjs');
+    expect(source).toContain("arg === '--flow'");
+    expect(source).toContain('requestedFlows.has(flow.name)');
+  });
+
   it('keeps a passing iOS result when Android bridge proof fails', () => {
     const output = [
       'error: Android app bridge not answering',

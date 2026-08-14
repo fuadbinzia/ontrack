@@ -107,4 +107,28 @@ describe('buildMealPlanGroceryRecipes', () => {
       describeMealPlanGeneration({ recipes: [], skippedExisting: [], skippedFreeform: [] }),
     ).toMatch(/plan some recipes/i);
   });
+
+  it('uses singular count grammar for one generated meal and ingredient', () => {
+    const result = buildMealPlanGroceryRecipes(
+      [entry('e1', PARFAIT.id, 1)],
+      [PARFAIT],
+      [],
+    );
+
+    expect(describeMealPlanGeneration(result)).toBe(
+      'Added 1 meal (1 ingredient).',
+    );
+  });
+
+  it('keeps plural count grammar for multiple generated ingredients', () => {
+    const result = buildMealPlanGroceryRecipes(
+      [entry('e1', TAGINE.id, 2)],
+      [TAGINE],
+      [],
+    );
+
+    expect(describeMealPlanGeneration(result)).toBe(
+      'Added 1 meal (2 ingredients).',
+    );
+  });
 });

@@ -25,6 +25,7 @@ import type { MealPlanEntry, MealType, Recipe } from '@/types/food';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { addDays, formatDateLong, formatWeekday, todayKey } from '@/utils/date';
 import { haptics } from '@/utils/haptics';
+import { formatCount } from '@/utils/grammar';
 
 const WEEK_DAYS = 7;
 const MAX_SERVINGS = 12;
@@ -310,7 +311,7 @@ function PlanEntrySheet({
             variant="heading"
             fit
             style={{ minWidth: s(44), textAlign: 'center' }}
-            accessibilityLabel={`${servings} servings`}>
+            accessibilityLabel={formatCount(servings, 'serving')}>
             {`${servings}`}
           </AppText>
           <IconButton

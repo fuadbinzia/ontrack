@@ -80,7 +80,7 @@ export function CloudAccountCard() {
             size="sm"
             testID={AgentUiIds.profile.createOrSignIn}
             onPress={() => router.push('/account' as never)}
-            accessibilityLabel="Create or Sign In to an account"
+            accessibilityLabel="Create or sign in to an account"
             style={styles.action}>
             Create or Sign In
           </Button>

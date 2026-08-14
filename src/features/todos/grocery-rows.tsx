@@ -15,6 +15,7 @@ import type { CombinedCompletion } from '@/features/todos/grocery-utils';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoRecipe, TodoTask } from '@/store/todos';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 import { openHttpsUrl, safeHttpsUrl } from '@/utils/safe-url';
 
 export function Checkbox({
@@ -156,7 +157,7 @@ export const MealCard = memo(function MealCard({
           <AppText variant="heading">{recipe.name}</AppText>
           <AppText variant="caption" color="secondary">
             {recipe.targetServings
-              ? `${recipe.targetServings} servings · `
+              ? `${formatCount(recipe.targetServings, 'serving')} · `
               : ''}
             {done} of {tasks.length} checked
           </AppText>

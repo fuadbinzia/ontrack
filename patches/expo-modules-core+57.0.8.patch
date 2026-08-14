@@ -1,3 +1,60 @@
+diff --git a/node_modules/expo-modules-core/ios/Core/AppContext.swift b/node_modules/expo-modules-core/ios/Core/AppContext.swift
+index 6c5d6ee..366ccad 100644
+--- a/node_modules/expo-modules-core/ios/Core/AppContext.swift
++++ b/node_modules/expo-modules-core/ios/Core/AppContext.swift
+@@ -660,20 +660,32 @@ public final class AppContext: NSObject, EXAppContextProtocol, @unchecked Sendab
+   /// release until the runtime is gone. The app context never holds the native state directly.
+   internal final class NativeState: JavaScriptNativeState {
+     internal let appContext: AppContext
++    internal let runtimeId: JavaScriptRuntime.ID
+ 
+     /// Whether releasing this native state should tear the app context down. Set only for the
+     /// main runtime; subordinate runtimes pin the app context and enable recovery without
+     /// destroying it.
+     internal let ownsLifecycle: Bool
+ 
+-    internal init(appContext: AppContext, ownsLifecycle: Bool) {
++    internal init(
++      appContext: AppContext,
++      runtimeId: JavaScriptRuntime.ID,
++      ownsLifecycle: Bool
++    ) {
+       self.appContext = appContext
++      self.runtimeId = runtimeId
+       self.ownsLifecycle = ownsLifecycle
+       super.init()
+       setDeallocator { nativeState in
+         guard let nativeState = nativeState as? NativeState, nativeState.ownsLifecycle else {
+           return
+         }
++        // Reload can attach this AppContext to a replacement runtime before the
++        // previous runtime releases its global.expo native state. The stale
++        // state must not destroy the context now backing the replacement.
++        guard nativeState.appContext._runtime?.id == nativeState.runtimeId else {
++          return
++        }
+         // `destroy()` asserts it runs on the JS thread (`JavaScriptActor.assumeIsolated`). That
+         // holds for the intended path, where the native state dies as the runtime finalizes on
+         // its own thread. A future cross-runtime sharing path that could drop this state's last
+diff --git a/node_modules/expo-modules-core/ios/JS/ExpoRuntimeInstaller.swift b/node_modules/expo-modules-core/ios/JS/ExpoRuntimeInstaller.swift
+index e85987d..a3d1b84 100644
+--- a/node_modules/expo-modules-core/ios/JS/ExpoRuntimeInstaller.swift
++++ b/node_modules/expo-modules-core/ios/JS/ExpoRuntimeInstaller.swift
+@@ -41,7 +41,13 @@ internal class ExpoRuntimeInstaller: EXJavaScriptRuntimeManager {
+       // Already attached.
+       return
+     }
+-    coreObject.setNativeState(AppContext.NativeState(appContext: appContext, ownsLifecycle: ownsLifecycle))
++    coreObject.setNativeState(
++      AppContext.NativeState(
++        appContext: appContext,
++        runtimeId: runtime.id,
++        ownsLifecycle: ownsLifecycle
++      )
++    )
+   }
+ 
+   /**
 diff --git a/node_modules/expo-modules-core/ios/Legacy/Services/Permissions/EXPermissionsService.m b/node_modules/expo-modules-core/ios/Legacy/Services/Permissions/EXPermissionsService.m
 index 00dbd94..ae3054c 100644
 --- a/node_modules/expo-modules-core/ios/Legacy/Services/Permissions/EXPermissionsService.m

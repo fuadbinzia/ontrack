@@ -14,6 +14,7 @@ import { shareTodoListText } from '@/features/todos/share';
 import { haptics } from '@/utils/haptics';
 import type { TodoList, TodoMember, TodoRecipe, TodoTask } from '@/store/todos';
 import { AgentUiIds, type AgentUiTarget } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 import { groceryListScreenStyles as styles } from './grocery-list-screen-styles';
 
 export type GroceryListHeaderProps = {
@@ -95,7 +96,7 @@ export function GroceryListHeader(props: GroceryListHeaderProps) {
                 </AppText>
                 <AppText variant="body" color="secondary">
                   {tasks.length
-                    ? `${completedCount} of ${tasks.length} ingredients and items checked`
+                    ? `${completedCount} of ${formatCount(tasks.length, 'item')} checked`
                     : 'Add a recipe or capture a one-off item.'}
                 </AppText>
               </View>

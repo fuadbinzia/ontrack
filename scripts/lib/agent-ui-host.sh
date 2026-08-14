@@ -307,7 +307,10 @@ agent_ui_simulator_booted() {
 agent_ui_app_installed() {
   if agent_ui_is_android; then
     agent_ui_pin_android_serial || return 1
-    android_emu_adb shell pm path "$BUNDLE_ID" 2>/dev/null | grep -q "package:"
+    android_emu_adb shell pm path "$BUNDLE_ID" 2>/dev/null | grep -q "package:" || return 1
+    # Agent UI is dev-only. A release APK can launch successfully while never
+    # mounting the HTTP bridge, which otherwise looks like a Metro timeout.
+    android_emu_adb shell run-as "$BUNDLE_ID" true >/dev/null 2>&1
     return $?
   fi
   agent_ui_ios_lib
@@ -513,6 +516,15 @@ agent_ui_soft_reconnect_dev_client() {
     agent_ui_android_lib
     android_emu_prepare_metro_dev_client || true
     agent_ui_open_dev_client_url "$url"
+    # Expo SDK 57 can land on the Development Build server picker after a
+    # cold install even when the custom URL was delivered. Select the visible
+    # Metro server semantically instead of waiting out the bridge budget.
+    AGENT_UI_ROOT="$(agent_ui_repo_root)" AGENT_UI_PLATFORM=android \
+    ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
+    ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-${ANDROID_SERIAL:-}}" \
+    BUNDLE_ID="${BUNDLE_ID}" \
+      python3 "$(agent_ui_repo_root)/scripts/lib/android_system_alert.py" dismiss \
+      >/dev/null || true
     return 0
   fi
   agent_ui_open_dev_client_url "$url"

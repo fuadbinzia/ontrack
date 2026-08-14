@@ -5,6 +5,7 @@ import { appIconSections, type AppIconName } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { formatCount } from '@/utils/grammar';
 
 export function DesignSystemIconsPanel() {
   const { spacing } = useResponsive();
@@ -55,7 +56,7 @@ function IconSection({
             {description}
           </AppText>
           <AppText variant="caption" color="tertiary" fit>
-            {icons.length} icons
+            {formatCount(icons.length, 'icon')}
           </AppText>
         </View>
 

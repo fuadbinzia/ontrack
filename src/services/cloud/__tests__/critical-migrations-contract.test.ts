@@ -145,4 +145,17 @@ describe('critical persistence migration boundaries', () => {
     expect(percentileFix).toContain('sample_count numeric');
     expect(percentileFix).toContain('grant execute on function public.analytics_latency_percentile(numeric');
   });
+
+  it('keeps per-account cost drivers server-only and excludes private payload content', () => {
+    const source = migration('202608130007_living_system_map_account_cost_summary.sql');
+    expect(source).toContain('living_system_map_account_cost_summary');
+    expect(source).toContain("object.metadata ->> 'size'");
+    expect(source).toContain('pg_column_size(state.payload)');
+    expect(source).toContain('public.plaid_items');
+    expect(source).toContain('public.google_calendar_connections');
+    expect(source).toContain('public.partner_links');
+    expect(source).toContain('revoke all on function public.living_system_map_account_cost_summary(integer) from public, anon, authenticated');
+    expect(source).toContain('grant execute on function public.living_system_map_account_cost_summary(integer) to service_role');
+    expect(source).not.toMatch(/grant execute .* to (anon|authenticated)/);
+  });
 });

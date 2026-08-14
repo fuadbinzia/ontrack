@@ -191,6 +191,7 @@ describe('agent-ui host scripts contract', () => {
   it('claims a dedicated agent device pool slot (max 2/platform) across entry points', () => {
     const host = read('scripts/lib/agent-ui-host.sh');
     const pool = read('scripts/lib/agent-ui-pool.sh');
+    const ensure = read('scripts/ensure-packager.sh');
     expect(host).toContain('agent-ui-pool.sh');
     expect(host).toContain('agent_ui_ensure_lease');
     expect(pool).toContain('agent_ui_release_lease');
@@ -266,6 +267,21 @@ describe('agent-ui host scripts contract', () => {
     expect(pool).toContain('ios_simctl_timed 90 install');
     expect(pool).not.toMatch(/^\s*xcrun simctl install /m);
     expect(pool).toContain('agent_ui_pool_clone_android_app');
+    // A stale release APK starts but cannot mount the dev-only agent bridge.
+    // Pool checks must require a debuggable app and replace only the agent AVD.
+    expect(host).toMatch(
+      /agent_ui_app_installed\(\)[\s\S]*?pm path[\s\S]*?run-as "\$BUNDLE_ID" true/,
+    );
+    expect(ensure).toMatch(
+      /app_installed\(\)[\s\S]*?pm path[\s\S]*?run-as "\$BUNDLE_ID" true/,
+    );
+    expect(pool).toContain('android/app/build/outputs/apk/debug/app-debug.apk');
+    expect(pool).toContain('installing local debug client');
+    expect(pool).toMatch(
+      /src_serial="\$\([\s\S]*?run-as "\$BUNDLE_ID" true/,
+    );
+    expect(pool).toContain('-s "$target_serial" uninstall "$BUNDLE_ID"');
+    expect(pool).toContain('no debuggable ${BUNDLE_ID} build is available');
     // ensure-packager sources pool.sh without host — clone must resolve ROOT alone.
     expect(pool).toContain('agent_ui_pool_repo_root');
 
@@ -283,6 +299,20 @@ describe('agent-ui host scripts contract', () => {
     expect(verifyBoth).toContain('soft reconnect');
     expect(verifyBoth).toContain('iOS app up but bridge quiet');
     expect(verifyBoth).not.toMatch(/ensure-packager\.sh" --start --android \|\| true/);
+    expect(verifyBoth).toMatch(
+      /proof_flow_requires_account\(\)[\s\S]*?open-developer/,
+    );
+    expect(verifyBoth).toContain('requires agent account access');
+    expect(verifyBoth).toContain('scripts/agent-ui-login.sh');
+    expect(verifyBoth).not.toMatch(/@[a-z0-9.-]+\.[a-z]{2,}/i);
+    // Cleanup follows a passing proof, so it must not recursively heal/relaunch
+    // each platform. A bounded direct release keeps batch close-out finite.
+    expect(verifyBoth).toMatch(
+      /AGENT_UI_PLATFORM=android[\s\S]*?AGENT_UI_SKIP_APP_UP=1[\s\S]*?AGENT_UI_SKIP_HEAL=1[\s\S]*?WAIT_SECS=5[\s\S]*?agent-ui-devmode\.sh" release/,
+    );
+    expect(verifyBoth).toMatch(
+      /AGENT_UI_PLATFORM=ios[\s\S]*?AGENT_UI_SKIP_APP_UP=1[\s\S]*?AGENT_UI_SKIP_HEAL=1[\s\S]*?WAIT_SECS=5[\s\S]*?agent-ui-devmode\.sh" release/,
+    );
     // Agents never touch the user's devices: no headed viewer handoff anywhere,
     // and no adopting a live headed Galaxy for an agent run.
     for (const script of [
@@ -358,7 +388,6 @@ describe('agent-ui host scripts contract', () => {
     expect(bridge).toContain('agent-ui-pin.json');
     expect(bridge).not.toContain('write_android_slot_pin_file');
 
-    const ensure = read('scripts/ensure-packager.sh');
     expect(ensure).toContain('AGENT_UI_SKIP_LEASE=1');
     expect(ensure).toContain('packager_pool_clone_app_if_needed');
     expect(ensure).toContain('Installed ${BUNDLE_ID} onto pool');
@@ -516,43 +545,6 @@ echo "agent account creds ok"
     expect(route).toContain('d.get("ok") and route');
     expect(route).toContain('allow_fail');
     expect(packager).toContain('android_emu_is_ready');
-  });
-
-  it('headed Android handoff heals blank SurfaceView before finish_app_up', () => {
-    const emu = read('scripts/lib/android-emulator.sh');
-    const host = read('scripts/lib/agent-ui-host.sh');
-    const surface = read('scripts/lib/android_emu_surface.py');
-    expect(emu).toContain('android_emu_ensure_app_surface');
-    expect(emu).toContain('android_emu_mark_ready');
-    expect(emu).toContain('Relaunching');
-    expect(emu).toContain('blank/white SurfaceView');
-    expect(host).toContain('android_emu_want_app_surface');
-    expect(host).toContain('android_emu_ensure_app_surface');
-    expect(host).toContain('app surface still blank/white');
-    expect(surface).toContain('near_white_pct');
-    expect(surface).toContain('is-blank');
-
-    // Functional: pure white PNG is blank; cream travel-home tone is not.
-    const surfacePy = join(root, 'scripts/lib/android_emu_surface.py');
-    const script = [
-      'from pathlib import Path',
-      'import tempfile',
-      'from PIL import Image',
-      'import importlib.util',
-      'spec = importlib.util.spec_from_file_location("android_emu_surface", ' +
-        JSON.stringify(surfacePy) +
-        ')',
-      'mod = importlib.util.module_from_spec(spec)',
-      'spec.loader.exec_module(mod)',
-      'td = tempfile.mkdtemp()',
-      'white = Path(td) / "white.png"',
-      'cream = Path(td) / "cream.png"',
-      'Image.new("RGB", (64, 64), (255, 255, 255)).save(white)',
-      'Image.new("RGB", (64, 64), (231, 220, 204)).save(cream)',
-      'assert mod.near_white_pct(white.read_bytes()) >= 85',
-      'assert mod.near_white_pct(cream.read_bytes()) < 85',
-    ].join('\n');
-    execFileSync('python3', ['-c', script], { encoding: 'utf8', timeout: 15_000 });
   });
 
   it('batch/flow/seed/assert/once scripts support fixtures and asserts', () => {

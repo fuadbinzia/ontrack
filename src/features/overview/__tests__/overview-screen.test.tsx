@@ -4,6 +4,12 @@ import { useFinance } from "@/store/finance";
 
 import { OverviewScreen } from "../overview-screen";
 
+let mockPlants: {
+  id: string;
+  nickname: string;
+  nextWateringAt: string;
+}[] = [];
+
 jest.mock("react-native-reanimated", () => {
   const { View } = jest.requireActual("react-native");
   const transition = {
@@ -127,8 +133,9 @@ jest.mock("@/store/overview-attention", () => ({
   ) => selector({ acknowledgedKeys: [], acknowledge: jest.fn() }),
 }));
 jest.mock("@/store/plants", () => ({
-  usePlants: (selector: (state: { plants: never[] }) => unknown) =>
-    selector({ plants: [] }),
+  usePlants: (
+    selector: (state: { plants: typeof mockPlants }) => unknown,
+  ) => selector({ plants: mockPlants }),
 }));
 jest.mock("@/store/schedule", () => ({
   useSchedule: (
@@ -195,7 +202,10 @@ function bill(nextDue: string, active = true) {
 }
 
 describe("OverviewScreen finance integration", () => {
-  beforeEach(() => useFinance.getState().reset());
+  beforeEach(() => {
+    mockPlants = [];
+    useFinance.getState().reset();
+  });
   afterEach(() => {
     cleanup();
     useFinance.getState().reset();
@@ -219,8 +229,18 @@ describe("OverviewScreen finance integration", () => {
     expect(
       screen.getByText(/Finance\|1 bill due now\|Internet · .*80.*2026-08-13/),
     ).toBeTruthy();
-    expect(screen.getByText("1 thing need your attention")).toBeTruthy();
+    expect(screen.getByText("1 thing needs your attention")).toBeTruthy();
     expect(screen.getByText("• Internet · Bill due")).toBeTruthy();
+  });
+
+  it("uses plural noun and verb forms when multiple items need attention", () => {
+    useFinance.setState({
+      bills: [bill("2026-08-12"), { ...bill("2026-08-13"), id: "bill-two" }],
+    });
+
+    render(<OverviewScreen />);
+
+    expect(screen.getByText("2 things need your attention")).toBeTruthy();
   });
 
   it("shows a future active bill without adding overdue attention", () => {
@@ -235,5 +255,55 @@ describe("OverviewScreen finance integration", () => {
     ).toBeTruthy();
     expect(screen.getByText("Everything is moving smoothly")).toBeTruthy();
     expect(screen.queryByText("• Internet · Bill due")).toBeNull();
+  });
+});
+
+describe("OverviewScreen plant grammar", () => {
+  beforeEach(() => {
+    mockPlants = [];
+    useFinance.getState().reset();
+  });
+
+  afterEach(cleanup);
+
+  it("uses singular noun and verb forms for one plant needing care", () => {
+    mockPlants = [
+      {
+        id: "plant-one",
+        nickname: "Fern",
+        nextWateringAt: "2026-08-13T08:00:00.000Z",
+      },
+    ];
+
+    render(<OverviewScreen />);
+
+    expect(
+      screen.getByText(
+        "Plants|1 plant needs care|1 plant in your collection.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("uses plural noun and verb forms for multiple plants needing care", () => {
+    mockPlants = [
+      {
+        id: "plant-one",
+        nickname: "Fern",
+        nextWateringAt: "2026-08-13T08:00:00.000Z",
+      },
+      {
+        id: "plant-two",
+        nickname: "Palm",
+        nextWateringAt: "2026-08-12T08:00:00.000Z",
+      },
+    ];
+
+    render(<OverviewScreen />);
+
+    expect(
+      screen.getByText(
+        "Plants|2 plants need care|2 plants in your collection.",
+      ),
+    ).toBeTruthy();
   });
 });

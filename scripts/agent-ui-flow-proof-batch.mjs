@@ -27,8 +27,12 @@ function discover() {
 
 function selectedFlows(all) {
   const args = process.argv.slice(2);
-  const flowIndex = args.indexOf('--flow');
-  if (flowIndex >= 0) return all.filter((flow) => flow.name === args[flowIndex + 1]);
+  const excluded = new Set(args.flatMap((arg, index) => arg === '--exclude' ? [args[index + 1]] : []).filter(Boolean));
+  const select = (flows) => flows.filter((flow) => !excluded.has(flow.name));
+  const requestedFlows = new Set(
+    args.flatMap((arg, index) => arg === '--flow' ? [args[index + 1]] : []).filter(Boolean),
+  );
+  if (requestedFlows.size) return select(all.filter((flow) => requestedFlows.has(flow.name)));
   const changedIndex = args.indexOf('--changed');
   if (changedIndex >= 0) {
     const base = args[changedIndex + 1];
@@ -38,9 +42,9 @@ function selectedFlows(all) {
     const changed = new Set(diff.stdout.split(/\r?\n/).filter(Boolean));
     if (![...changed].some((file) => file.startsWith('src/') || file.startsWith('scripts/') || file.startsWith('modules/'))) return [];
     const touchedFlowFiles = new Set([...changed].filter((file) => /src\/utils\/agent-ui\/flows-[^.]+\.ts$/.test(file)));
-    return touchedFlowFiles.size ? all.filter((flow) => touchedFlowFiles.has(flow.source)) : all;
+    return select(touchedFlowFiles.size ? all.filter((flow) => touchedFlowFiles.has(flow.source)) : all);
   }
-  if (args.includes('--all')) return all;
+  if (args.includes('--all')) return select(all);
   throw new Error('Use --all, --flow <name>, or --changed <git-ref>.');
 }
 
@@ -84,16 +88,18 @@ fs.mkdirSync(path.dirname(resultPath), { recursive: true });
 let previous = { schemaVersion: 1, runs: [] };
 try { previous = JSON.parse(fs.readFileSync(resultPath, 'utf8')); } catch {}
 const fresh = [];
+function writeProgress() {
+  const replaced = new Set(fresh.map((run) => `${run.flowId}:${run.platform}`));
+  const runs = [...previous.runs.filter((run) => !replaced.has(`${run.flowId}:${run.platform}`)), ...fresh];
+  fs.writeFileSync(resultPath, `${JSON.stringify({ schemaVersion: 1, generatedAt: new Date().toISOString(), runs }, null, 2)}\n`);
+}
 for (const [index, flow] of flows.entries()) {
   process.stdout.write(`\nflow-proof: ${flow.name} (${flow.digest})\n`);
   const runs = await runFlow(flow, { keepDevices: index < flows.length - 1 });
   fresh.push(...runs);
+  writeProgress();
   if (runs.some((run) => run.exitCode === 3)) {
-    fs.writeFileSync(resultPath, `${JSON.stringify({ schemaVersion: 1, generatedAt: new Date().toISOString(), runs: [...previous.runs, ...fresh] }, null, 2)}\n`);
     process.exit(3);
   }
 }
-const replaced = new Set(fresh.map((run) => `${run.flowId}:${run.platform}`));
-const runs = [...previous.runs.filter((run) => !replaced.has(`${run.flowId}:${run.platform}`)), ...fresh];
-fs.writeFileSync(resultPath, `${JSON.stringify({ schemaVersion: 1, generatedAt: new Date().toISOString(), runs }, null, 2)}\n`);
 process.exit(fresh.every((run) => run.status === 'passed') ? 0 : 1);

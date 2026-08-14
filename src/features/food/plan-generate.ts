@@ -1,6 +1,7 @@
 import { scaleIngredients } from '@/features/todos/grocery-utils';
 import type { TodoIngredientInput, TodoRecipeInput } from '@/store/todos';
 import type { MealPlanEntry, Recipe, RecipeIngredient } from '@/types/food';
+import { formatCount } from '@/utils/grammar';
 
 /**
  * "Generate from meal plan" bridge: turns a week of `useMealPlan` entries
@@ -92,7 +93,7 @@ export function describeMealPlanGeneration(result: MealPlanGroceryResult): strin
     0,
   );
   const parts = [
-    `Added ${result.recipes.length} ${result.recipes.length === 1 ? 'meal' : 'meals'} (${ingredientCount} ingredients).`,
+    `Added ${formatCount(result.recipes.length, 'meal')} (${formatCount(ingredientCount, 'ingredient')}).`,
   ];
   if (result.skippedExisting.length > 0) {
     parts.push(`Already in the list: ${result.skippedExisting.join(', ')}.`);

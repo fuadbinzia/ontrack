@@ -26,6 +26,7 @@ import { useFinance } from '@/store/finance';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { todayKey } from '@/utils/date';
+import { formatCount } from '@/utils/grammar';
 import { parseFiniteNumber } from '@/utils/parse';
 
 import { applyPlaidExchangeResult, applyPlaidSyncResult } from './apply-plaid-link';
@@ -164,7 +165,7 @@ export function FinanceAccountsScreen() {
         synced.syncStatus === 'pending' ? 'Sync pending' : 'Synced',
         synced.syncStatus === 'pending'
           ? 'Plaid is still preparing this connection. Try Sync again shortly.'
-          : `Reconciled ${count} ${synced.purpose === 'investments' ? 'holdings' : 'spending updates'}.`,
+          : `Reconciled ${formatCount(count, synced.purpose === 'investments' ? 'holding' : 'spending update')}.`,
       );
     } finally {
       setSyncingId(undefined);
@@ -309,7 +310,7 @@ export function FinanceAccountsScreen() {
                       {account.balance != null
                         ? ` · ${formatMoney(account.balance, account.currency)}`
                         : ''}
-                      {holdingCount ? ` · ${holdingCount} holdings` : ''}
+                      {holdingCount ? ` · ${formatCount(holdingCount, 'holding')}` : ''}
                       {account.plaidInstitutionName
                         ? ` · ${account.plaidInstitutionName}`
                         : ''}

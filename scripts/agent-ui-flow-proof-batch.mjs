@@ -17,10 +17,10 @@ function discover() {
   return flowFiles.flatMap((file) => {
     const source = fs.readFileSync(file, 'utf8');
     const relative = path.relative(root, file).replaceAll(path.sep, '/');
-    return [...source.matchAll(/^\s{2}'([^']+)'\s*:\s*\[/gm)].map((match) => ({
-      name: match[1],
+    return [...source.matchAll(/^\s{2}(?:'([^']+)'|"([^"]+)"|([a-zA-Z_$][\w$]*))\s*:\s*\[/gm)].map((match) => ({
+      name: match[1] ?? match[2] ?? match[3],
       source: relative,
-      digest: createHash('sha256').update(`${relative}\0${match[1]}\0${source}`).digest('hex').slice(0, 16),
+      digest: createHash('sha256').update(`${relative}\0${match[1] ?? match[2] ?? match[3]}\0${source}`).digest('hex').slice(0, 16),
     }));
   }).sort((a, b) => a.name.localeCompare(b.name));
 }

@@ -50,27 +50,32 @@
         "activityForm.delete"
       ]
     },
-    "ontrack.activityForm.duration": {
+    "ontrack.activityForm.duration.hours": {
       "feature": "activityForm",
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/(today)/detail/generic/[id].tsx",
-        "src/app/(tabs)/(today)/detail/movie/[id].tsx",
-        "src/app/(tabs)/(today)/detail/sleep/[id].tsx",
-        "src/app/(tabs)/workouts.tsx",
+        "src/components/primitives/duration-field.tsx",
         "src/app/activity-form-sections.tsx",
-        "src/app/activity-form.tsx",
-        "src/app/share-event.tsx",
-        "src/components/navigation/bottom-nav-tab-item.tsx",
-        "src/components/primitives/app-prompt.tsx",
-        "src/components/primitives/collapsible-body.tsx",
-        "src/components/primitives/disclosure-chevron.tsx",
-        "src/components/primitives/dropdown.tsx"
+        "src/app/activity-form.tsx"
       ],
       "keyPaths": [
-        "activityForm.duration",
-        "duration"
+        "activityForm.durationHours",
+        "durationHours"
+      ]
+    },
+    "ontrack.activityForm.duration.mins": {
+      "feature": "activityForm",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/components/primitives/duration-field.tsx",
+        "src/app/activity-form-sections.tsx",
+        "src/app/activity-form.tsx"
+      ],
+      "keyPaths": [
+        "activityForm.durationMinutes",
+        "durationMinutes"
       ]
     },
     "ontrack.activityForm.grabber": {
@@ -154,6 +159,17 @@
       ],
       "keyPaths": [
         "activityForm.save"
+      ]
+    },
+    "ontrack.activityForm.section.schedule": {
+      "feature": "activityForm",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/app/activity-form-sections.tsx"
+      ],
+      "keyPaths": [
+        "activityForm.scheduleSection"
       ]
     },
     "ontrack.activityForm.startTime": {
@@ -10802,13 +10818,15 @@
         "ontrack.activityForm.cancel",
         "ontrack.activityForm.date",
         "ontrack.activityForm.delete",
-        "ontrack.activityForm.duration",
+        "ontrack.activityForm.duration.hours",
+        "ontrack.activityForm.duration.mins",
         "ontrack.activityForm.grabber",
         "ontrack.activityForm.guidedTitle",
         "ontrack.activityForm.notes",
         "ontrack.activityForm.pickPhoto",
         "ontrack.activityForm.removePhoto",
         "ontrack.activityForm.save",
+        "ontrack.activityForm.section.schedule",
         "ontrack.activityForm.startTime",
         "ontrack.activityForm.title"
       ]

@@ -40,6 +40,7 @@ type FinanceState = FinanceStateSnapshot & {
   removeEntity: (id: string) => void;
   saveAccount: (account: FinanceAccount) => void;
   removeAccount: (id: string) => void;
+  removeConnection: (provider: 'plaid' | 'teller', connectionId: string) => void;
   removePlaidItem: (itemId: string) => void;
   saveHolding: (holding: FinanceHolding) => void;
   removeHolding: (id: string) => void;
@@ -51,6 +52,12 @@ type FinanceState = FinanceStateSnapshot & {
   reconcilePlaidTransactions: (
     transactions: FinanceTransaction[],
     removedExternalIds: string[],
+  ) => void;
+  reconcileLinkedTransactions: (
+    provider: 'plaid' | 'teller',
+    accountIds: string[],
+    transactions: FinanceTransaction[],
+    refreshedFrom?: string,
   ) => void;
   saveBill: (bill: FinanceRecurringBill) => void;
   removeBill: (id: string) => void;
@@ -132,7 +139,34 @@ export const useFinance = create<FinanceState>()(
           holdings: get().holdings.filter((h) => h.accountId !== id),
           updatedAt: touchUpdatedAt(),
         }),
+      removeConnection: (provider, connectionId) => {
+        const accountIds = new Set(
+          get().accounts
+            .filter((account) =>
+              account.provider === provider && account.connectionId === connectionId,
+            )
+            .map((account) => account.id),
+        );
+        const now = touchUpdatedAt();
+        set({
+          accounts: get().accounts.filter((account) => !accountIds.has(account.id)),
+          holdings: get().holdings.filter((holding) => !accountIds.has(holding.accountId)),
+          transactions: get().transactions.flatMap((transaction) => {
+            if (!transaction.accountId || !accountIds.has(transaction.accountId)) return [transaction];
+            if (transaction.source === provider) return [];
+            return [{ ...transaction, accountId: undefined, updatedAt: now }];
+          }),
+          updatedAt: now,
+        });
+      },
       removePlaidItem: (itemId) => {
+        const normalized = get().accounts.find(
+          (account) => account.provider === 'plaid' && account.connectionId === itemId,
+        );
+        if (normalized) {
+          get().removeConnection('plaid', itemId);
+          return;
+        }
         const accountIds = new Set(
           get().accounts.filter((account) => account.plaidItemId === itemId).map((account) => account.id),
         );
@@ -225,7 +259,7 @@ export const useFinance = create<FinanceState>()(
       upsertPlaidTransactions: (incoming) => {
         const byExternal = new Map(
           get()
-            .transactions.filter((t) => t.externalId)
+            .transactions.filter((t) => t.source === 'plaid' && t.externalId)
             .map((t) => [t.externalId!, t]),
         );
         let next = [...get().transactions];
@@ -243,11 +277,49 @@ export const useFinance = create<FinanceState>()(
         const now = touchUpdatedAt();
         const removed = new Set(removedExternalIds);
         let next = get().transactions.filter(
-          (transaction) => !transaction.externalId || !removed.has(transaction.externalId),
+          (transaction) =>
+            transaction.source !== 'plaid' ||
+            !transaction.externalId ||
+            !removed.has(transaction.externalId),
         );
         const byExternal = new Map(
           next
-            .filter((transaction) => transaction.externalId)
+            .filter((transaction) => transaction.source === 'plaid' && transaction.externalId)
+            .map((transaction) => [transaction.externalId!, transaction]),
+        );
+        for (const transaction of incoming) {
+          const existing = transaction.externalId
+            ? byExternal.get(transaction.externalId)
+            : undefined;
+          next = upsertById(next, {
+            ...existing,
+            ...transaction,
+            id: existing?.id ?? transaction.id,
+            createdAt: existing?.createdAt ?? transaction.createdAt,
+            updatedAt: now,
+          });
+        }
+        set({ transactions: next, updatedAt: now });
+      },
+      reconcileLinkedTransactions: (provider, accountIds, incoming, refreshedFrom) => {
+        const now = touchUpdatedAt();
+        const scopedAccountIds = new Set(accountIds);
+        const incomingExternalIds = new Set(
+          incoming.flatMap((transaction) =>
+            transaction.externalId ? [transaction.externalId] : [],
+          ),
+        );
+        let next = get().transactions.filter((transaction) => {
+          if (transaction.source !== provider || !transaction.accountId) return true;
+          if (!scopedAccountIds.has(transaction.accountId)) return true;
+          if (refreshedFrom && transaction.date < refreshedFrom) return true;
+          return Boolean(
+            transaction.externalId && incomingExternalIds.has(transaction.externalId),
+          );
+        });
+        const byExternal = new Map(
+          next
+            .filter((transaction) => transaction.source === provider && transaction.externalId)
             .map((transaction) => [transaction.externalId!, transaction]),
         );
         for (const transaction of incoming) {

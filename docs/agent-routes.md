@@ -90,6 +90,7 @@ Pin is required when iOS Simulator and Android Emulator are both running — oth
 ./scripts/agent-ui-flow.sh health-demo
 ./scripts/agent-ui-flow.sh plants-demo
 ./scripts/agent-ui-flow.sh activity-demo-edit
+./scripts/agent-ui.sh once --flow activity-form-dismiss --assert-route /
 ./scripts/agent-ui-flow.sh workouts-demo
 ./scripts/agent-ui-flow.sh vision-board-demo-edit
 ./scripts/agent-ui-flow.sh vehicle-demo-detail
@@ -171,9 +172,11 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `plants-demo` | Seed Monstera sample → plant detail (log watering ready) |
 | `plants-demo-list` | Seed → plants list with sample card |
 | `plants-demo-log-watering` | Seed → log watering → undo control ready |
+| `plant-calendar-detail` | Seed → Today plant card → watering bottom sheet |
 | `activity-demo` | Seed mindfulness activity → Today card |
 | `activity-demo-detail` | Seed → open generic event detail |
 | `activity-demo-edit` | Seed → open activity form editor |
+| `activity-form-dismiss` | Today → open Add Event → choose a vibe → dismiss through the outside backdrop → remain on Today |
 | `workouts-demo` | Seed gym activity → Today’s Plan card |
 | `workouts-demo-explore` | Seed → Muscle Explorer (incline-curl add ready) |
 | `workouts-demo-anatomy` | Seed → Female + Side anatomy controls (chest chip) |

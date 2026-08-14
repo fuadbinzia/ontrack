@@ -33,6 +33,21 @@ export function mergeEntityArrays(cloud: unknown, device: unknown): unknown[] {
   return extras.length === 0 ? cloudList : [...cloudList, ...extras];
 }
 
+/** Cloud wins collisions; append device rows keyed by a non-`id` string field. */
+export function mergeEntityArraysByKey(cloud: unknown, device: unknown, key: string): unknown[] {
+  const cloudList = Array.isArray(cloud) ? cloud : [];
+  const deviceList = Array.isArray(device) ? device : [];
+  const known = new Set(
+    cloudList.map((item) => isRecord(item) && typeof item[key] === 'string' ? item[key] : undefined),
+  );
+  const extras = deviceList.filter((item) => {
+    if (!isRecord(item) || typeof item[key] !== 'string' || known.has(item[key])) return false;
+    known.add(item[key]);
+    return true;
+  });
+  return extras.length ? [...cloudList, ...extras] : cloudList;
+}
+
 /** Cloud keys win; device-only keys are added. */
 export function mergeKeyedRecords(cloud: unknown, device: unknown): JsonObject {
   const base = isRecord(cloud) ? { ...cloud } : {};
@@ -84,6 +99,15 @@ export function mergeDomainPayload(
         workouts: mergeEntityArrays(cloud.workouts, device.workouts),
         workSessions: mergeEntityArrays(cloud.workSessions, device.workSessions),
         movies: mergeEntityArrays(cloud.movies, device.movies),
+        eventDetails: mergeEntityArraysByKey(cloud.eventDetails, device.eventDetails, 'activityId'),
+        eventFollows: mergeEntityArrays(cloud.eventFollows, device.eventFollows),
+        eventSuggestions: mergeEntityArrays(cloud.eventSuggestions, device.eventSuggestions),
+        suppressedExternalEvents: [
+          ...new Set([
+            ...(Array.isArray(cloud.suppressedExternalEvents) ? cloud.suppressedExternalEvents : []),
+            ...(Array.isArray(device.suppressedExternalEvents) ? device.suppressedExternalEvents : []),
+          ]),
+        ],
         categories: mergeEntityArrays(cloud.categories, device.categories),
       };
     case 'plants':

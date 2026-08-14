@@ -5,6 +5,7 @@ import {
     AGENT_UI_DEMO_CHECKLIST_LIST_ID,
     AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID,
     AGENT_UI_DEMO_FLIGHT_ID,
+    AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
     AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
     AGENT_UI_DEMO_GROCERY_LIST_ID,
     AGENT_UI_DEMO_GROCERY_RECIPE_ID,
@@ -420,6 +421,28 @@ describe('agent-ui fixtures', () => {
     });
     expect(mockSaveEvent).toHaveBeenCalledWith(
       expect.objectContaining({ id: AGENT_UI_DEMO_ACTIVITY_ID }),
+    );
+
+    expect(seedAgentUiFixture('event-demo')).toEqual({
+      fixture: 'event-demo',
+      primaryId: AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
+      activityId: AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
+    });
+    expect(mockSaveEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
+        detailKind: 'event',
+        event: expect.objectContaining({
+          bouts: expect.arrayContaining([
+            expect.objectContaining({
+              cardSection: 'main',
+              fighters: expect.arrayContaining([
+                expect.objectContaining({ age: expect.any(Number), reach: expect.any(String) }),
+              ]),
+            }),
+          ]),
+        }),
+      }),
     );
 
     expect(seedAgentUiFixture('food-demo')).toEqual({

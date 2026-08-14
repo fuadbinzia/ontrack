@@ -187,6 +187,30 @@ export interface CategoryColors {
   tint: string;
 }
 
+export interface UfcFightCardColors {
+  board: string;
+  boardBorder: string;
+  header: string;
+  headerText: string;
+  primaryText: string;
+  secondaryText: string;
+  divider: string;
+}
+
+/** High-contrast broadcast colors scoped to UFC cards in either app theme. */
+export function ufcFightCardColors(theme: Theme): UfcFightCardColors {
+  const dark = theme.name === 'dark';
+  return {
+    board: dark ? '#07090C' : '#F4F6F8',
+    boardBorder: dark ? '#343A43' : '#C8CDD3',
+    header: '#D71920',
+    headerText: '#FFFFFF',
+    primaryText: dark ? '#FFFFFF' : '#171A1F',
+    secondaryText: dark ? '#DCE2E9' : '#525A64',
+    divider: dark ? '#3A414B' : '#D2D6DB',
+  };
+}
+
 export function categoryColors(theme: Theme, key: CategoryColorKey): CategoryColors {
   const c = categoryPalette[key];
   return theme.name === 'light'

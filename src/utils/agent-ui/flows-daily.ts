@@ -1,6 +1,9 @@
 import {
     AGENT_UI_DEMO_ACTIVITY_ID,
+    AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
+    AGENT_UI_DEMO_EVENT_BOUT_ID,
     AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
+    AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID,
 } from './fixtures';
 
 import { AGENT_UI_WAIT_TIMEOUT_MS } from './flows-waits';
@@ -83,6 +86,34 @@ export const AGENT_UI_DAILY_FLOWS = {
       id: 'ontrack.food.detail.edit',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
+    {
+      op: 'wait',
+      id: 'ontrack.today.detail.food.close',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  'plant-calendar-detail': [
+    { op: 'seed', to: 'plants-demo' },
+    { op: 'goto', to: 'today' },
+    {
+      op: 'wait',
+      id: `ontrack.today.activity.${AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID}`,
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'tap',
+      id: `ontrack.today.activity.${AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID}`,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.today.detail.plant.close',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.plants.detail.logWatering',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
   ],
   'activity-demo-detail': [
     { op: 'seed', to: 'activity-demo' },
@@ -101,6 +132,34 @@ export const AGENT_UI_DAILY_FLOWS = {
       id: 'ontrack.eventDetail.edit',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
+    {
+      op: 'wait',
+      id: 'ontrack.eventDetail.close',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  'event-bout-detail': [
+    { op: 'seed', to: 'event-demo' },
+    { op: 'goto', to: `detail/generic/${AGENT_UI_DEMO_EVENT_ACTIVITY_ID}` },
+    {
+      op: 'wait',
+      id: `ontrack.eventDetail.fightCard.bout.${AGENT_UI_DEMO_EVENT_BOUT_ID}`,
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'tap',
+      id: `ontrack.eventDetail.fightCard.bout.${AGENT_UI_DEMO_EVENT_BOUT_ID}`,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.eventDetail.fightCard.modal',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.prompt.close',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
   ],
   'activity-form': [
     { op: 'goto', to: 'activityForm' },
@@ -109,5 +168,26 @@ export const AGENT_UI_DAILY_FLOWS = {
       prefix: 'ontrack.activityForm.',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
+  ],
+  'activity-form-dismiss': [
+    { op: 'goto', to: 'today' },
+    {
+      op: 'wait',
+      id: 'ontrack.today.addActivity',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.today.addActivity' },
+    {
+      op: 'wait',
+      id: 'ontrack.activityForm.category.mindfulness',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.activityForm.category.mindfulness' },
+    {
+      op: 'wait',
+      id: 'ontrack.activityForm.backdrop',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.activityForm.backdrop' },
   ],
 } as const satisfies Record<string, readonly import('./flows').AgentUiFlowStep[]>;

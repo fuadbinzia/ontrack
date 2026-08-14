@@ -21,6 +21,7 @@ import {
     radii,
     spacing,
     springs,
+    type AppIconName,
     type Theme,
 } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
@@ -51,6 +52,7 @@ interface PromptRequest {
   actions: PromptAction[];
   cancelable: boolean;
   scrollableMessage?: boolean;
+  icon?: AppIconName | null;
   theme?: Theme;
   onDismiss?: () => void;
   supportedOrientations?: ModalProps['supportedOrientations'];
@@ -68,6 +70,8 @@ interface PromptState {
 interface AppAlertOptions {
   cancelable?: boolean;
   scrollableMessage?: boolean;
+  /** Prompt header mark. Pass null when custom content owns the visual identity. */
+  icon?: AppIconName | null;
   content?: ReactNode;
   theme?: Theme;
   onDismiss?: () => void;
@@ -127,6 +131,7 @@ export const appPrompt = {
         options?.cancelable === true ||
         resolvedActions.some((action) => action.style === 'cancel'),
       scrollableMessage: options?.scrollableMessage,
+      icon: options?.icon,
       theme: options?.theme,
       onDismiss: options?.onDismiss,
       supportedOrientations: options?.supportedOrientations,
@@ -302,9 +307,11 @@ export function AppPromptHost({ embedded = false }: { embedded?: boolean }) {
             </GlassPlate>
           </Pressable>
         ) : null}
-        <GlassIconWell size={46} borderRadius={radii.pill} style={styles.brandMark}>
-          <Symbol name="smart" size={22} color={theme.accentPrimary} />
-        </GlassIconWell>
+        {request.icon !== null ? (
+          <GlassIconWell size={46} borderRadius={radii.pill} style={styles.brandMark}>
+            <Symbol name={request.icon ?? 'smart'} size={22} color={theme.accentPrimary} />
+          </GlassIconWell>
+        ) : null}
         <View style={styles.copy}>
           <AppText
             accessibilityRole="header"

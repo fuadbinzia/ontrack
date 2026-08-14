@@ -2,6 +2,8 @@ import {
     AGENT_UI_DEMO_ACTIVITY_ID,
     AGENT_UI_DEMO_CHASE_OUTBOUND_ID,
     AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID,
+    AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
+    AGENT_UI_DEMO_EVENT_BOUT_ID,
     AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
     AGENT_UI_DEMO_GROCERY_LIST_ID,
     AGENT_UI_DEMO_HEALTH_MOOD_ID,
@@ -35,6 +37,7 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('vehicle-demo-detail');
     expect(listAgentUiFlowNames()).toContain('plants-demo');
     expect(listAgentUiFlowNames()).toContain('activity-demo-edit');
+    expect(listAgentUiFlowNames()).toContain('event-bout-detail');
     expect(listAgentUiFlowNames()).toContain('grocery-demo-recipe-import');
     expect(listAgentUiFlowNames()).toContain('workouts-demo');
     expect(listAgentUiFlowNames()).toContain('vision-board-demo-edit');
@@ -178,6 +181,42 @@ describe('agent-ui flows', () => {
       op: 'goto',
       to: `activityForm?id=${AGENT_UI_DEMO_ACTIVITY_ID}`,
     });
+    expect(resolveAgentUiFlow('event-bout-detail')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'goto',
+          to: `detail/generic/${AGENT_UI_DEMO_EVENT_ACTIVITY_ID}`,
+        }),
+        expect.objectContaining({
+          op: 'tap',
+          id: `ontrack.eventDetail.fightCard.bout.${AGENT_UI_DEMO_EVENT_BOUT_ID}`,
+        }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.eventDetail.fightCard.modal',
+        }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('activity-form-dismiss')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'goto',
+          to: 'today',
+        }),
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.today.addActivity',
+        }),
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.activityForm.category.mindfulness',
+        }),
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.activityForm.backdrop',
+        }),
+      ]),
+    );
     expect(resolveAgentUiFlow('workouts-demo')).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

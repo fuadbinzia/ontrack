@@ -89,6 +89,8 @@ export type ApiUsageConfigKey =
   | 'ollama'
   | 'usda'
   | 'tmdb'
+  | 'thesportsdb'
+  | 'ticketmaster'
   | 'amadeus'
   | 'aerodatabox'
   | 'supabase'
@@ -208,6 +210,26 @@ export const API_USAGE_CATALOG: readonly ApiUsageCatalogEntry[] = [
     configKey: 'tmdb',
     guardNames: ['tmdb'],
     healthProbe: { kind: 'tmdb' },
+  },
+  {
+    id: 'thesportsdb',
+    name: 'TheSportsDB',
+    provider: 'TheSportsDB',
+    usedBy: ['NBA schedules', 'UFC events', 'US broadcast listings'],
+    metering: 'app-rate-limit',
+    bucket: 'events',
+    configKey: 'thesportsdb',
+    guardNames: ['thesportsdb'],
+  },
+  {
+    id: 'ticketmaster-events',
+    name: 'Ticketmaster Discovery',
+    provider: 'Ticketmaster',
+    usedBy: ['Concert discovery', 'Artist follows', 'Ticket links'],
+    metering: 'app-rate-limit',
+    bucket: 'events',
+    configKey: 'ticketmaster',
+    guardNames: ['ticketmaster'],
   },
   {
     id: 'amadeus',
@@ -415,6 +437,11 @@ export function resolveApiUsageConfigured(
       return Boolean(process.env.USDA_FDC_API_KEY?.trim());
     case 'tmdb':
       return Boolean(process.env.TMDB_READ_ACCESS_TOKEN?.trim());
+    case 'thesportsdb':
+      return Boolean(process.env.THESPORTSDB_API_KEY?.trim()) ||
+        process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+    case 'ticketmaster':
+      return Boolean(process.env.TICKETMASTER_API_KEY?.trim());
     case 'amadeus':
       return Boolean(
         process.env.AMADEUS_CLIENT_ID?.trim() && process.env.AMADEUS_CLIENT_SECRET?.trim(),

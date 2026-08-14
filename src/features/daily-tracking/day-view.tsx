@@ -16,6 +16,7 @@ import {
 import { ActivityCard } from '@/components/shared';
 import { findCategory } from '@/constants/categories';
 import { layout, spacing } from '@/design-system';
+import { resolveEventCalendarArtwork } from '@/features/events/event-calendar-artwork';
 import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useTheme } from '@/hooks/use-theme';
@@ -91,10 +92,20 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
     [dayActivities, enabledAddons],
   );
   const categories = useSchedule((s) => s.categories);
+  const eventDetails = useSchedule((s) => s.eventDetails);
+  const eventFollows = useSchedule((s) => s.eventFollows);
   const setStatus = useSchedule((s) => s.setStatus);
   const deleteActivity = useSchedule((s) => s.deleteActivity);
   const duplicateActivity = useSchedule((s) => s.duplicateActivity);
   const moveActivityToDate = useSchedule((s) => s.moveActivityToDate);
+  const eventDetailsByActivityId = useMemo(
+    () => new Map(eventDetails.map((details) => [details.activityId, details])),
+    [eventDetails],
+  );
+  const eventFollowsById = useMemo(
+    () => new Map(eventFollows.map((follow) => [follow.id, follow])),
+    [eventFollows],
+  );
 
   const completion = useMemo(() => {
     const counted = activities.filter((a) => a.status !== 'skipped');
@@ -200,7 +211,7 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
         router.push({ pathname: '/detail/sleep/[id]', params: { id: activity.id } });
         break;
       case 'plant':
-        if (activity.plantId) router.push({ pathname: '/plants/[id]', params: { id: activity.plantId } });
+        if (activity.plantId) router.push({ pathname: '/detail/plant/[id]', params: { id: activity.id } });
         else router.push({ pathname: '/detail/generic/[id]', params: { id: activity.id } });
         break;
       default:
@@ -239,26 +250,33 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
             </View>
           </View>
         }
-        renderItem={({ item: activity, index }) => (
-          <View style={styles.rowPad}>
-            <ActivityCard
-              activity={activity}
-              category={findCategory(categories, activity.categoryId)}
-              isCurrent={activity.id === currentId}
-              index={index}
-              testID={AgentUiIds.today.activity(activity.id)}
-              toggleTestID={AgentUiIds.today.activityToggle(activity.id)}
-              onPress={() => openActivity(activity)}
-              onLongPress={activity.plantId ? undefined : () =>
-                showActivityActions({
-                  activity,
-                  onAction: (action) => handleActivityAction(activity, action),
-                })
-              }
-              onToggleComplete={() => void toggleComplete(activity)}
-            />
-          </View>
-        )}
+        renderItem={({ item: activity, index }) => {
+          const details = eventDetailsByActivityId.get(activity.id);
+          const follow = details?.followId
+            ? eventFollowsById.get(details.followId)
+            : undefined;
+          return (
+            <View style={styles.rowPad}>
+              <ActivityCard
+                activity={activity}
+                category={findCategory(categories, activity.categoryId)}
+                leadingArtwork={resolveEventCalendarArtwork(activity.title, details, follow)}
+                isCurrent={activity.id === currentId}
+                index={index}
+                testID={AgentUiIds.today.activity(activity.id)}
+                toggleTestID={AgentUiIds.today.activityToggle(activity.id)}
+                onPress={() => openActivity(activity)}
+                onLongPress={activity.plantId ? undefined : () =>
+                  showActivityActions({
+                    activity,
+                    onAction: (action) => handleActivityAction(activity, action),
+                  })
+                }
+                onToggleComplete={() => void toggleComplete(activity)}
+              />
+            </View>
+          );
+        }}
       />
 
       <View style={[styles.fab, { bottom: tabBarHeight + spacing.lg }]}>

@@ -1,9 +1,17 @@
 import { persist } from 'zustand/middleware';
 import { createWithEqualityFn as create } from 'zustand/traditional';
 
-import { DEFAULT_CATEGORIES } from '@/constants/categories';
+import { DEFAULT_CATEGORIES, mergeDefaultCategories } from '@/constants/categories';
 import { buildSeedData } from '@/constants/seed';
 import type { GoogleCalendarDeletion } from '@/services/calendar/google-types';
+import type {
+    EventDetails,
+    EventFollow,
+    EventFollowMode,
+    EventFollowSyncResponse,
+    EventFollowTarget,
+    EventSuggestion,
+} from '@/services/events';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import type {
     Activity,
@@ -17,6 +25,7 @@ import type {
 import { isAllDayActivity } from '@/utils/activity-time';
 import { addDays, DAY_MS, fromDateKey, isDateKey } from '@/utils/date';
 import { newId } from '@/utils/id';
+import { createScheduleEventActions, eventSyncStateAfterSave } from './schedule-events';
 
 export { newId } from '@/utils/id';
 
@@ -71,6 +80,7 @@ export interface EventSavePayload {
   workout?: Workout;
   workSession?: WorkSession;
   movie?: Movie;
+  event?: EventDetails;
 }
 
 function activitySeriesId(activity: Activity | undefined) {
@@ -121,13 +131,17 @@ export interface ImportedEventDraft {
   categoryId: string;
 }
 
-interface ScheduleState {
+export interface ScheduleState {
   seeded: boolean;
   activities: Activity[];
   meals: Meal[];
   workouts: Workout[];
   workSessions: WorkSession[];
   movies: Movie[];
+  eventDetails: EventDetails[];
+  eventFollows: EventFollow[];
+  eventSuggestions: EventSuggestion[];
+  suppressedExternalEvents: string[];
   categories: ActivityCategory[];
   googleCalendarDeletions: GoogleCalendarDeletion[];
 
@@ -150,6 +164,12 @@ interface ScheduleState {
   upsertWorkout: (workout: Workout) => void;
   upsertWorkSession: (session: WorkSession) => void;
   addCategory: (category: ActivityCategory) => void;
+  addEventFollow: (target: EventFollowTarget, mode: EventFollowMode) => EventFollow;
+  removeEventFollow: (id: string, removeFuture: boolean) => void;
+  applyEventFollowSync: (response: EventFollowSyncResponse) => void;
+  markEventFollowSyncError: (message: string) => void;
+  acceptEventSuggestion: (id: string) => Activity | undefined;
+  dismissEventSuggestion: (id: string) => void;
   resetAll: () => void;
 }
 
@@ -162,6 +182,10 @@ export const useSchedule = create<ScheduleState>()(
       workouts: [],
       workSessions: [],
       movies: [],
+      eventDetails: [],
+      eventFollows: [],
+      eventSuggestions: [],
+      suppressedExternalEvents: [],
       categories: DEFAULT_CATEGORIES,
       googleCalendarDeletions: [],
 
@@ -268,6 +292,7 @@ export const useSchedule = create<ScheduleState>()(
             workouts: state.workouts.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
             workSessions: state.workSessions.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
             movies: state.movies.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
+            eventDetails: state.eventDetails.filter((item) => retainedIds.has(item.activityId) || incomingIds.has(item.activityId)),
           };
         }),
 
@@ -297,6 +322,7 @@ export const useSchedule = create<ScheduleState>()(
             workouts: state.workouts.filter((item) => !removedIds.has(item.activityId)),
             workSessions: state.workSessions.filter((item) => !removedIds.has(item.activityId)),
             movies: state.movies.filter((item) => !removedIds.has(item.activityId)),
+            eventDetails: state.eventDetails.filter((item) => !removedIds.has(item.activityId)),
           };
         }),
 
@@ -453,6 +479,17 @@ export const useSchedule = create<ScheduleState>()(
             payload.detailKind === 'movie' && payload.movie
               ? replaceDetails(state.movies, payload.movie)
               : replaceDetails(state.movies, undefined),
+          eventDetails:
+            payload.detailKind === 'event' && payload.event
+              ? replaceDetails(state.eventDetails, {
+                  ...payload.event,
+                  syncState: eventSyncStateAfterSave(
+                    existing,
+                    state.eventDetails.find((detail) => detail.activityId === id),
+                    payload.activity,
+                  ),
+                })
+              : replaceDetails(state.eventDetails, undefined),
         }));
 
         return activity;
@@ -468,6 +505,7 @@ export const useSchedule = create<ScheduleState>()(
       deleteActivity: (id) =>
         set((s) => {
           const deleted = s.activities.find((activity) => activity.id === id);
+          const deletedEvent = s.eventDetails.find((detail) => detail.activityId === id);
           const deletion = deleted ? calendarDeletion(deleted) : undefined;
           return {
             activities: s.activities.filter((a) => a.id !== id),
@@ -475,6 +513,14 @@ export const useSchedule = create<ScheduleState>()(
             workouts: s.workouts.filter((w) => w.activityId !== id),
             workSessions: s.workSessions.filter((w) => w.activityId !== id),
             movies: s.movies.filter((movie) => movie.activityId !== id),
+            eventDetails: s.eventDetails.filter((detail) => detail.activityId !== id),
+            suppressedExternalEvents: (() => {
+              if (!deletedEvent) return s.suppressedExternalEvents;
+              const key = `${deletedEvent.provider}:${deletedEvent.providerEventId}`;
+              return s.suppressedExternalEvents.includes(key)
+                ? s.suppressedExternalEvents
+                : [...s.suppressedExternalEvents, key];
+            })(),
             googleCalendarDeletions: deletion && deleted
               ? appendCalendarDeletions(s.googleCalendarDeletions, [deleted])
               : s.googleCalendarDeletions,
@@ -582,6 +628,7 @@ export const useSchedule = create<ScheduleState>()(
         })),
 
       addCategory: (category) => set((s) => ({ categories: [...s.categories, category] })),
+      ...createScheduleEventActions(get, set),
 
       resetAll: () =>
         set({
@@ -591,6 +638,10 @@ export const useSchedule = create<ScheduleState>()(
           workouts: [],
           workSessions: [],
           movies: [],
+          eventDetails: [],
+          eventFollows: [],
+          eventSuggestions: [],
+          suppressedExternalEvents: [],
           categories: DEFAULT_CATEGORIES,
           googleCalendarDeletions: [],
         }),
@@ -609,17 +660,16 @@ export const useSchedule = create<ScheduleState>()(
       },
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<ScheduleState>;
-        const savedCategories = persisted.categories ?? [];
-        const defaultIds = new Set(DEFAULT_CATEGORIES.map((category) => category.id));
         return {
           ...currentState,
           ...persisted,
           movies: persisted.movies ?? [],
+          eventDetails: persisted.eventDetails ?? [],
+          eventFollows: persisted.eventFollows ?? [],
+          eventSuggestions: persisted.eventSuggestions ?? [],
+          suppressedExternalEvents: persisted.suppressedExternalEvents ?? [],
           googleCalendarDeletions: persisted.googleCalendarDeletions ?? [],
-          categories: [
-            ...DEFAULT_CATEGORIES,
-            ...savedCategories.filter((category) => !defaultIds.has(category.id)),
-          ],
+          categories: mergeDefaultCategories(persisted.categories),
         };
       },
     },

@@ -32,12 +32,12 @@ function upsertLinkedAccounts(
   const saveAccount = useFinance.getState().saveAccount;
   const existing = useFinance.getState().accounts;
   const existingForItem = existing.filter(
-    (account) => account.plaidItemId === result.itemId,
+    (account) => account.connectionId === result.itemId || account.plaidItemId === result.itemId,
   );
   const byPlaid = new Map(
     existingForItem
-      .filter((account) => account.plaidAccountId)
-      .map((account) => [account.plaidAccountId!, account]),
+      .filter((account) => account.externalAccountId || account.plaidAccountId)
+      .map((account) => [(account.externalAccountId ?? account.plaidAccountId)!, account]),
   );
   const accountIds = new Map<string, string>();
   const linkStatus = linkStatusForSync(result.syncStatus);
@@ -53,6 +53,10 @@ function upsertLinkedAccounts(
       balanceAsOf: row.balance != null ? asOf : prior?.balanceAsOf,
       currency: row.currency || prior?.currency || baseCurrency,
       linkStatus,
+      provider: 'plaid',
+      connectionId: result.itemId,
+      institutionName: result.institutionName ?? prior?.institutionName,
+      externalAccountId: row.accountId,
       plaidItemId: result.itemId,
       plaidInstitutionName: result.institutionName ?? prior?.plaidInstitutionName,
       plaidAccountId: row.accountId,
@@ -64,14 +68,17 @@ function upsertLinkedAccounts(
   }
 
   if (result.accounts.length) {
-    for (const placeholder of existingForItem.filter((account) => !account.plaidAccountId)) {
+    for (const placeholder of existingForItem.filter(
+      (account) => !account.externalAccountId && !account.plaidAccountId,
+    )) {
       useFinance.getState().removeAccount(placeholder.id);
     }
   }
 
   if (!result.accounts.length) {
     for (const prior of existingForItem) {
-      if (prior.plaidAccountId) accountIds.set(prior.plaidAccountId, prior.id);
+      const externalAccountId = prior.externalAccountId ?? prior.plaidAccountId;
+      if (externalAccountId) accountIds.set(externalAccountId, prior.id);
       else accountIds.set('default', prior.id);
       if (prior.linkStatus !== linkStatus) saveAccount({ ...prior, linkStatus });
     }
@@ -82,6 +89,9 @@ function upsertLinkedAccounts(
       kind: result.purpose === 'investments' ? 'other_investment' : 'bank',
       currency: baseCurrency,
       linkStatus,
+      provider: 'plaid',
+      connectionId: result.itemId,
+      institutionName: result.institutionName,
       plaidItemId: result.itemId,
       plaidInstitutionName: result.institutionName,
     });
@@ -100,7 +110,9 @@ function reconcileHoldings(
   const localAccountIds = [...new Set([
     ...accountIds.values(),
     ...useFinance.getState().accounts
-      .filter((account) => account.plaidItemId === result.itemId)
+      .filter((account) =>
+        account.connectionId === result.itemId || account.plaidItemId === result.itemId,
+      )
       .map((account) => account.id),
   ])];
   const fallbackAccountId = localAccountIds[0];
@@ -182,8 +194,9 @@ export function applyPlaidSyncResult(
   entityId: string,
   baseCurrency: string,
 ): void {
-  const institutionName = useFinance.getState().accounts.find(
-    (account) => account.plaidItemId === itemId,
-  )?.plaidInstitutionName;
+  const linkedAccount = useFinance.getState().accounts.find(
+    (account) => account.connectionId === itemId || account.plaidItemId === itemId,
+  );
+  const institutionName = linkedAccount?.institutionName ?? linkedAccount?.plaidInstitutionName;
   applyPlaidData({ ...result, itemId, institutionName }, entityId, baseCurrency);
 }

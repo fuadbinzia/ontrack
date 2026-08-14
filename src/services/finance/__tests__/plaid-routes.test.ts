@@ -80,7 +80,7 @@ describe('Plaid API routes', () => {
     });
 
     const result = await linkTokenRoute.POST(request('/link-token', {
-      purpose: 'investments',
+      purpose: 'transactions',
       native: true,
     })) as unknown as Record<string, unknown>;
 
@@ -185,36 +185,21 @@ describe('Plaid API routes', () => {
     });
   });
 
-  it('syncs transactions from the server-owned cursor and persists the next cursor', async () => {
+  it('rejects legacy Plaid transaction syncs so banks migrate to Teller', async () => {
     mockLoadPlaidItem.mockResolvedValueOnce({
       itemId: 'item-1',
       accessToken: 'server-access-token',
       purpose: 'transactions',
       cursor: 'cursor-before',
     });
-    mockLoadPlaidAccounts.mockResolvedValueOnce([]);
-    mockSyncPlaidTransactionChanges.mockResolvedValueOnce({
-      transactions: [],
-      removedExternalIds: ['removed-1'],
-      cursor: 'cursor-after',
-      pending: false,
-    });
-
-    const result = await syncRoute.POST(request('/sync', {
+    await expect(syncRoute.POST(request('/sync', {
       item_id: 'item-1',
       access_token: 'malicious-client-token',
-    })) as unknown as Record<string, unknown>;
+    }))).rejects.toMatchObject({ code: 'PROVIDER_MIGRATION_REQUIRED', status: 409 });
 
     expect(mockLoadPlaidItem).toHaveBeenCalledWith('user-1', 'item-1');
-    expect(mockSyncPlaidTransactionChanges).toHaveBeenCalledWith(
-      'server-access-token',
-      'cursor-before',
-    );
-    expect(mockUpdatePlaidCursor).toHaveBeenCalledWith('user-1', 'item-1', 'cursor-after');
-    expect(result).toMatchObject({
-      removed_external_ids: ['removed-1'],
-      sync_status: 'ready',
-    });
+    expect(mockSyncPlaidTransactionChanges).not.toHaveBeenCalled();
+    expect(mockUpdatePlaidCursor).not.toHaveBeenCalled();
   });
 
   it('loads an investment snapshot without using the transaction cursor endpoint', async () => {

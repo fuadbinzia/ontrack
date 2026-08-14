@@ -8,6 +8,6 @@ export const ASSISTANT_COPY: Record<string, { question: string; label: string; p
   mindfulness: { question: 'How are we finding a little calm? 🌿', label: 'Practice', placeholder: 'Meditation, breathing break…' },
   learning: { question: 'What are we curious about today? 📚', label: 'Learning', placeholder: 'Spanish lesson, read chapter 3…' },
   appointment: { question: 'Who are we meeting, and what for?', label: 'Appointment', placeholder: 'Dentist, coffee with Alex…' },
+  event: { question: 'What do you want to catch?', label: 'Event', placeholder: 'Game, fight card, concert…' },
   habit: { question: 'Which tiny win are we keeping alive? 🌟', label: 'Habit', placeholder: 'Stretch, journal…' },
 };
-

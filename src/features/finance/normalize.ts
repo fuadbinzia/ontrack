@@ -25,6 +25,7 @@ import type {
 import {
   FINANCE_ACCOUNT_KINDS,
   FINANCE_ACCOUNT_LINK_STATUSES,
+  FINANCE_CONNECTION_PROVIDERS,
   FINANCE_BILL_CADENCES,
   FINANCE_BILL_KINDS,
   FINANCE_CREDIT_BUREAUS,
@@ -105,6 +106,9 @@ export function normalizeAccount(raw: unknown): FinanceAccount | undefined {
   if (!o) return undefined;
   const last4 = (asString(o.last4) ?? '').replace(/\D/g, '').slice(-4) || undefined;
   const balanceAsOf = asString(o.balanceAsOf);
+  const legacyPlaidItemId = asTrimmedString(o.plaidItemId);
+  const legacyPlaidInstitutionName = asTrimmedString(o.plaidInstitutionName);
+  const legacyPlaidAccountId = asTrimmedString(o.plaidAccountId);
   return {
     id: idOrNew(o.id),
     name: asTrimmedString(o.name) || 'Account',
@@ -115,9 +119,15 @@ export function normalizeAccount(raw: unknown): FinanceAccount | undefined {
     balanceAsOf: balanceAsOf && isDateKey(balanceAsOf) ? balanceAsOf : undefined,
     currency: currencyCode(o.currency),
     linkStatus: asOneOf(o.linkStatus, FINANCE_ACCOUNT_LINK_STATUSES) ?? 'manual',
-    plaidItemId: asTrimmedString(o.plaidItemId),
-    plaidInstitutionName: asTrimmedString(o.plaidInstitutionName),
-    plaidAccountId: asTrimmedString(o.plaidAccountId),
+    provider:
+      asOneOf(o.provider, FINANCE_CONNECTION_PROVIDERS) ??
+      (legacyPlaidItemId ? 'plaid' : undefined),
+    connectionId: asTrimmedString(o.connectionId) ?? legacyPlaidItemId,
+    institutionName: asTrimmedString(o.institutionName) ?? legacyPlaidInstitutionName,
+    externalAccountId: asTrimmedString(o.externalAccountId) ?? legacyPlaidAccountId,
+    plaidItemId: legacyPlaidItemId,
+    plaidInstitutionName: legacyPlaidInstitutionName,
+    plaidAccountId: legacyPlaidAccountId,
     ...timestamps(o),
   };
 }

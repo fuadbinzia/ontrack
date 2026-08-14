@@ -18,6 +18,8 @@ export const agentUiIdsShellDaily = {
     activity: (activityId: string) => `ontrack.today.activity.${activityId}`,
     activityToggle: (activityId: string) =>
       `ontrack.today.activityToggle.${activityId}`,
+    detailClose: (kind: string) => `ontrack.today.detail.${kind}.close`,
+    detailBackdrop: (kind: string) => `ontrack.today.detail.${kind}.backdrop`,
   },
   calendar: {
     jumpToday: 'ontrack.calendar.jumpToday',

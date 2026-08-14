@@ -58,4 +58,26 @@ describe('compressResponse', () => {
     );
     expect(refused.headers.get('Content-Encoding')).toBeNull();
   });
+
+  it('returns the original large response when runtime gzip support fails', async () => {
+    const original = global.CompressionStream;
+    global.CompressionStream = class BrokenCompressionStream {
+      constructor() {
+        throw new Error('CompressionStream unavailable');
+      }
+    } as typeof CompressionStream;
+    try {
+      const value = { results: Array.from({ length: 200 }, () => 'event result') };
+      const response = await compressResponse(
+        new Request('https://example.test/api', {
+          headers: { 'Accept-Encoding': 'gzip' },
+        }),
+        Response.json(value),
+      );
+      expect(response.headers.get('Content-Encoding')).toBeNull();
+      await expect(response.json()).resolves.toEqual(value);
+    } finally {
+      global.CompressionStream = original;
+    }
+  });
 });

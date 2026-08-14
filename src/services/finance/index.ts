@@ -8,3 +8,11 @@ export {
   syncPlaidItem,
   type PlaidLinkPurpose,
 } from './plaid';
+export {
+  createTellerLinkSession,
+  disconnectTellerEnrollment,
+  finishTellerLink,
+  openTellerConnect,
+  syncTellerEnrollment,
+  type TellerSyncResult,
+} from './teller';

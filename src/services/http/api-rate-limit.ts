@@ -9,6 +9,7 @@ export type PaidApiBucket =
   | 'food'
   | 'plant'
   | 'movies'
+  | 'events'
   | 'flights'
   | 'health'
   | 'finance'
@@ -20,6 +21,7 @@ export const PAID_API_BUCKETS: readonly PaidApiBucket[] = [
   'food',
   'plant',
   'movies',
+  'events',
   'flights',
   'health',
   'finance',
@@ -32,6 +34,7 @@ export const PAID_API_LIMITS: Record<PaidApiBucket, { max: number; windowMs: num
   food: { max: 30, windowMs: 60 * 60 * 1000 },
   plant: { max: 40, windowMs: 60 * 60 * 1000 },
   movies: { max: 120, windowMs: 60 * 60 * 1000 },
+  events: { max: 120, windowMs: 60 * 60 * 1000 },
   flights: { max: 40, windowMs: 60 * 60 * 1000 },
   health: { max: 20, windowMs: 60 * 60 * 1000 },
   finance: { max: 30, windowMs: 60 * 60 * 1000 },

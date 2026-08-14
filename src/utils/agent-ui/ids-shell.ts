@@ -216,6 +216,9 @@ export const agentUiIdsShell = {
       checkIn: 'ontrack.plants.detail.checkIn',
       delete: 'ontrack.plants.detail.delete',
     },
+    calendarSheet: {
+      openDetails: 'ontrack.plants.calendarSheet.openDetails',
+    },
     new: {
       camera: 'ontrack.plants.new.camera',
       library: 'ontrack.plants.new.library',
@@ -314,7 +317,15 @@ export const agentUiIdsShell = {
     edit: 'ontrack.eventDetail.edit',
     toggleComplete: 'ontrack.eventDetail.toggleComplete',
     close: 'ontrack.eventDetail.close',
+    backdrop: 'ontrack.eventDetail.backdrop',
     goBack: 'ontrack.eventDetail.goBack',
+    fightCard: 'ontrack.eventDetail.section.fightCard',
+    fightCardTab: (section: string) => `ontrack.eventDetail.fightCard.tab.${section}`,
+    fightCardBout: (boutId: string) =>
+      `ontrack.eventDetail.fightCard.bout.${boutId.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    fightCardModal: 'ontrack.eventDetail.fightCard.modal',
+    metadata: 'ontrack.eventDetail.section.metadata',
+    ticket: 'ontrack.eventDetail.ticket',
   },
   activityForm: {
     choice: (group: string, value: string) =>
@@ -323,8 +334,10 @@ export const agentUiIdsShell = {
       `ontrack.activityForm.category.${categoryId}`,
     guidedTitle: 'ontrack.activityForm.guidedTitle',
     title: 'ontrack.activityForm.title',
+    scheduleSection: 'ontrack.activityForm.section.schedule',
     date: 'ontrack.activityForm.date',
-    duration: 'ontrack.activityForm.duration',
+    durationHours: 'ontrack.activityForm.duration.hours',
+    durationMinutes: 'ontrack.activityForm.duration.mins',
     startTime: 'ontrack.activityForm.startTime',
     notes: 'ontrack.activityForm.notes',
     pickPhoto: 'ontrack.activityForm.pickPhoto',
@@ -333,10 +346,38 @@ export const agentUiIdsShell = {
     save: 'ontrack.activityForm.save',
     saveThisOccurrence: 'ontrack.activityForm.saveThisOccurrence',
     saveSeries: 'ontrack.activityForm.saveSeries',
-    /** Non-interactive swipe-down affordance at the top of the modal. */
+    /** Swipe-down / tap affordance at the top of the modal. */
     grabber: 'ontrack.activityForm.grabber',
+    backdrop: 'ontrack.activityForm.backdrop',
     cancel: 'ontrack.activityForm.cancel',
     delete: 'ontrack.activityForm.delete',
+    event: {
+      tabs: 'ontrack.activityForm.event.tabs',
+      search: 'ontrack.activityForm.event.search',
+      sportFilter: 'ontrack.activityForm.event.sportFilter',
+      sportOption: (sport: string) => `ontrack.activityForm.event.sportFilter.${sport}`,
+      upcoming: 'ontrack.activityForm.event.section.upcoming',
+      followTargets: 'ontrack.activityForm.event.section.followTargets',
+      result: (provider: string, id: string) =>
+        `ontrack.activityForm.event.result.${provider}.${id}`,
+      followTarget: (provider: string, id: string) =>
+        `ontrack.activityForm.event.followTarget.${provider}.${id}`,
+      followModeReview: 'ontrack.activityForm.event.followMode.review',
+      followModeAuto: 'ontrack.activityForm.event.followMode.auto',
+      loadMore: 'ontrack.activityForm.event.loadMore',
+      refresh: 'ontrack.activityForm.event.refresh',
+      follow: (id: string) => `ontrack.activityForm.event.follow.${id}`,
+      unfollow: (id: string) => `ontrack.activityForm.event.unfollow.${id}`,
+      suggestion: (id: string) => `ontrack.activityForm.event.suggestion.${id}`,
+      acceptSuggestion: (id: string) =>
+        `ontrack.activityForm.event.suggestion.${id}.accept`,
+      dismissSuggestion: (id: string) =>
+        `ontrack.activityForm.event.suggestion.${id}.dismiss`,
+      selected: 'ontrack.activityForm.event.section.selected',
+      changeSelection: 'ontrack.activityForm.event.changeSelection',
+      following: 'ontrack.activityForm.event.section.following',
+      suggestions: 'ontrack.activityForm.event.section.suggestions',
+    },
   },
   apiUsage: {
     screen: 'ontrack.apiUsage.screen',

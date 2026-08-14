@@ -11,7 +11,7 @@ export interface ActivityCategory {
   supportsPhotos: boolean;
   supportsTimer: boolean;
   /** Which detail experience opens when tapped */
-  detailKind: 'food' | 'gym' | 'work' | 'movie' | 'sleep' | 'plant' | 'generic';
+  detailKind: 'food' | 'gym' | 'work' | 'movie' | 'sleep' | 'plant' | 'event' | 'generic';
   isCustom?: boolean;
 }
 

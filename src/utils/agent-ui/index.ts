@@ -19,6 +19,7 @@ export {
     AGENT_UI_DEMO_CHECKLIST_LIST_ID,
     AGENT_UI_DEMO_CHECKLIST_TASK_PACK_ID,
     AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID,
+    AGENT_UI_DEMO_EVENT_ACTIVITY_ID, AGENT_UI_DEMO_EVENT_BOUT_ID,
     AGENT_UI_DEMO_FLIGHT_ID, AGENT_UI_DEMO_FOOD_ACTIVITY_ID, AGENT_UI_DEMO_GROCERY_LIST_ID,
     AGENT_UI_DEMO_GROCERY_RECIPE_ID,
     AGENT_UI_DEMO_GROCERY_TASK_PASTA_ID,
@@ -129,4 +130,3 @@ export {
 export { scrollAgentUiTargetIntoView } from './scroll-into-view';
 export { useAgentUiScrollContainer } from './use-agent-ui-scroll-container';
 export { useAgentUiTarget, type AgentUiTarget } from './use-agent-ui-target';
-

@@ -1,11 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { AppText, Button, GlassPlate, Screen, SectionHeader } from '@/components/primitives';
+import { AppText, Button, GlassPlate, SectionHeader } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
+import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
 import { useTheme } from '@/hooks/use-theme';
 import { useSchedule } from '@/store/schedule';
+import { activityTimingLabel } from '@/utils/activity-time';
 import { formatCount } from '@/utils/grammar';
 
 export default function WorkDetailScreen() {
@@ -21,12 +23,11 @@ export default function WorkDetailScreen() {
 
   if (!activity) {
     return (
-      <Screen>
-        <AppText variant="title">Work Session Not Found</AppText>
-        <Button onPress={() => router.back()} accessibilityLabel="Go Back">
-          Go Back
-        </Button>
-      </Screen>
+      <CalendarDetailSheet kind="work" title="Work Session Not Found" onClose={() => router.back()}>
+        <AppText variant="body" color="secondary">
+          This work session is no longer available.
+        </AppText>
+      </CalendarDetailSheet>
     );
   }
 
@@ -44,11 +45,13 @@ export default function WorkDetailScreen() {
   const doneCount = tasks.filter((t) => t.done).length;
 
   return (
-    <Screen>
-      <AppText variant="overline" color="tertiary">
-        {category.name}
-      </AppText>
-      <AppText variant="title">{activity.title}</AppText>
+    <CalendarDetailSheet
+      kind="work"
+      eyebrow={category.name}
+      title={activity.title}
+      subtitle={activityTimingLabel(activity)}
+      subtitleIcon="clock"
+      onClose={() => router.back()}>
       <AppText variant="body" color="secondary">
         {doneCount} of {formatCount(tasks.length, 'task')} complete · {session?.focusMinutes ?? 0}m focus logged
       </AppText>
@@ -86,11 +89,7 @@ export default function WorkDetailScreen() {
           </Pressable>
         </GlassPlate>
       ))}
-
-      <Button variant="ghost" onPress={() => router.back()} accessibilityLabel="Close">
-        Close
-      </Button>
-    </Screen>
+    </CalendarDetailSheet>
   );
 }
 

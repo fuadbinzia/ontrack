@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Image } from 'expo-image';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
@@ -5,6 +6,7 @@ import {
   AppText,
   Button,
   DateField,
+  DurationField,
   ErrorMessage,
   GlassPlate,
   Input,
@@ -13,7 +15,7 @@ import {
 } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
 import type { Meal } from '@/types/models';
-import { AgentUiIds } from '@/utils/agent-ui';
+import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
 export const activityFormGlassCardStyle = {
   gap: spacing.md,
@@ -21,81 +23,109 @@ export const activityFormGlassCardStyle = {
   borderRadius: radii.lg,
 } as const;
 
+function ActivityFormGlassField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.glassFieldGroup}>
+      <AppText variant="overline" color="tertiary" fit>
+        {label}
+      </AppText>
+      <GlassPlate airy style={styles.glassFieldPlate}>
+        {children}
+      </GlassPlate>
+    </View>
+  );
+}
+
 export function ActivityFormScheduleCard({
   date,
   onDateChange,
   allDay,
-  duration,
-  onDurationChange,
+  durationHours,
+  onDurationHoursChange,
+  durationMinutes,
+  onDurationMinutesChange,
   startMinutes,
   onStartMinutesChange,
   notes,
   onNotesChange,
-  fieldFill,
-  fieldBorder,
 }: {
   date: string;
   onDateChange: (value: string) => void;
   allDay?: boolean;
-  duration: string;
-  onDurationChange: (value: string) => void;
+  durationHours: string;
+  onDurationHoursChange: (value: string) => void;
+  durationMinutes: string;
+  onDurationMinutesChange: (value: string) => void;
   startMinutes: number;
   onStartMinutesChange: (value: number) => void;
   notes: string;
   onNotesChange: (value: string) => void;
-  fieldFill: string;
-  fieldBorder: string;
 }) {
   return (
-    <GlassPlate airy style={activityFormGlassCardStyle}>
+    <AgentTestId
+      testID={AgentUiIds.activityForm.scheduleSection}
+      label="Schedule section"
+      style={styles.glassSection}>
       <SectionHeader title="Schedule" />
       <View style={[allDay ? styles.singleColumn : styles.twoColumns, { zIndex: 1 }]}>
         <View style={styles.flex}>
-          <DateField
-            label="Date"
-            value={date}
-            onChange={onDateChange}
-            fieldBackground={fieldFill}
-            fieldBorderColor={fieldBorder}
-            testID={AgentUiIds.activityForm.date}
-          />
+          <ActivityFormGlassField label="Date">
+            <DateField
+              value={date}
+              onChange={onDateChange}
+              fieldBackground="transparent"
+              fieldBorderColor="transparent"
+              testID={AgentUiIds.activityForm.date}
+            />
+          </ActivityFormGlassField>
         </View>
-        {!allDay ? <View style={styles.flex}>
-          <Input
-            label="Duration (min)"
-            value={duration}
-            onChangeText={onDurationChange}
-            keyboardType="number-pad"
-            fieldBackground={fieldFill}
-            fieldBorderColor={fieldBorder}
-            testID={AgentUiIds.activityForm.duration}
-          />
-        </View> : null}
+        {!allDay ? (
+          <View style={styles.flex}>
+            <ActivityFormGlassField label="Start Time">
+              <TimeField
+                value={startMinutes}
+                onChange={onStartMinutesChange}
+                fieldBackground="transparent"
+                fieldBorderColor="transparent"
+                testID={AgentUiIds.activityForm.startTime}
+              />
+            </ActivityFormGlassField>
+          </View>
+        ) : null}
       </View>
       {allDay ? (
         <AppText variant="callout" color="secondary" fit>
           All-day event
         </AppText>
-      ) : <TimeField
-        label="Start Time"
-        value={startMinutes}
-        onChange={onStartMinutesChange}
-        fieldBackground={fieldFill}
-        fieldBorderColor={fieldBorder}
-        testID={AgentUiIds.activityForm.startTime}
-      />}
-      <Input
-        label="Notes"
-        value={notes}
-        onChangeText={onNotesChange}
-        placeholder="Optional context"
-        multiline
-        style={styles.multiline}
-        fieldBackground={fieldFill}
-        fieldBorderColor={fieldBorder}
-        testID={AgentUiIds.activityForm.notes}
-      />
-    </GlassPlate>
+      ) : (
+        <DurationField
+          hours={durationHours}
+          onHoursChange={onDurationHoursChange}
+          minutes={durationMinutes}
+          onMinutesChange={onDurationMinutesChange}
+          hoursTestID={AgentUiIds.activityForm.durationHours}
+          minutesTestID={AgentUiIds.activityForm.durationMinutes}
+        />
+      )}
+      <ActivityFormGlassField label="Notes">
+        <Input
+          value={notes}
+          onChangeText={onNotesChange}
+          placeholder="Optional context"
+          multiline
+          style={styles.multiline}
+          fieldBackground="transparent"
+          fieldBorderColor="transparent"
+          testID={AgentUiIds.activityForm.notes}
+        />
+      </ActivityFormGlassField>
+    </AgentTestId>
   );
 }
 
@@ -221,6 +251,9 @@ export function ActivityFormPhotoCard({
 
 const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
+  glassSection: { gap: spacing.md },
+  glassFieldGroup: { gap: spacing.sm },
+  glassFieldPlate: { borderRadius: radii.md },
   singleColumn: { width: '100%' },
   twoColumns: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   multiline: { minHeight: 96, textAlignVertical: 'top' },

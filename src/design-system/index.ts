@@ -52,8 +52,9 @@ export {
 } from './theme-overrides';
 export {
     categoryColors, darkFoodTheme, darkPlantTheme, darkTheme, darkTravelTheme, darkVehicleTheme, hexWithAlpha, lightFoodTheme, lightPlantTheme, lightTheme, lightTravelTheme, lightVehicleTheme, resolveBaseTheme, timeOfDayGradient,
+    ufcFightCardColors,
     timeOfDaySafeAreaBackground, type CategoryColors, type Theme,
-    type ThemeAppearance,
+    type ThemeAppearance, type UfcFightCardColors,
     type ThemeFeatureScope
 } from './themes';
 export {
@@ -61,4 +62,3 @@ export {
     appTextStyleSheet, fontFamilies,
     typeConfig, typography, type AppFontWeight, type AppTextStyleOptions, type AppTextToken, type TypeVariant
 } from './typography';
-

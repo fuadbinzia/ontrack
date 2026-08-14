@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ontrack-teller-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "vars": {
+    "TELLER_USE_MTLS": "true"
+  },
+  "mtls_certificates": [
+    {
+      "binding": "TELLER_MTLS",
+      "certificate_id": "REPLACE_WITH_TELLER_CERTIFICATE_ID"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "TELLER_REPLAY",
+      "id": "REPLACE_WITH_REPLAY_KV_NAMESPACE_ID"
+    }
+  ]
+}

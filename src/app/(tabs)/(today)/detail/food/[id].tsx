@@ -3,9 +3,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
-import { AppText, appPrompt, Button, EmptyState, ErrorMessage, Input, Screen, SectionHeader } from '@/components/primitives';
+import { AppText, appPrompt, Button, EmptyState, ErrorMessage, Input, SectionHeader } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
+import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
 import { MealAnalysisReview } from '@/features/nutrition/analysis-review';
 import { usePendingImagePickerResult } from '@/hooks/use-pending-image-picker';
 import {
@@ -21,6 +22,7 @@ import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import type { Meal, MealAnalysis } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
+import { activityTimingLabel } from '@/utils/activity-time';
 import { pickCameraImage, pickLibraryImage } from '@/utils/pick-image';
 
 export default function FoodDetailScreen() {
@@ -199,11 +201,25 @@ export default function FoodDetailScreen() {
     }
   };
 
-  if (!activity) return <Screen><AppText variant="title">Meal Not Found</AppText></Screen>;
+  if (!activity) {
+    return (
+      <CalendarDetailSheet kind="food" title="Meal Not Found" onClose={() => router.back()}>
+        <AppText variant="body" color="secondary">
+          This meal is no longer available.
+        </AppText>
+      </CalendarDetailSheet>
+    );
+  }
   const category = findCategory(categories, activity.categoryId);
 
   return (
-    <Screen>
+    <CalendarDetailSheet
+      kind="food"
+      eyebrow={category.name}
+      title={meal?.name ?? activity.title}
+      subtitle={activityTimingLabel(activity)}
+      subtitleIcon="clock"
+      onClose={() => router.back()}>
       {displayPhoto ? (
         <Image
           source={displayPhoto}
@@ -212,8 +228,6 @@ export default function FoodDetailScreen() {
           transition={160}
         />
       ) : null}
-      <AppText variant="overline" color="tertiary">{category.name}</AppText>
-      <AppText variant="title">{meal?.name ?? activity.title}</AppText>
 
       {!displayAnalysis && !analyzing ? (
         <EmptyState
@@ -294,11 +308,8 @@ export default function FoodDetailScreen() {
           onPress={() => router.push({ pathname: '/activity-form', params: { id: activity.id } })}>
           Edit Meal Manually
         </Button>
-        <Button variant="ghost" testID={AgentUiIds.food.close} onPress={() => router.back()}>
-          Close
-        </Button>
       </View>
-    </Screen>
+    </CalendarDetailSheet>
   );
 }
 

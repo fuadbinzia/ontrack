@@ -51,6 +51,29 @@ describe('mergeDomainPayload', () => {
     });
   });
 
+  it('merges event details by activityId and unions provider suppressions', () => {
+    expect(mergeDomainPayload(
+      'schedule',
+      {
+        eventDetails: [{ activityId: 'cloud-event', providerEventId: 'one' }],
+        suppressedExternalEvents: ['thesportsdb:one'],
+      },
+      {
+        eventDetails: [
+          { activityId: 'cloud-event', providerEventId: 'device-clash' },
+          { activityId: 'device-event', providerEventId: 'two' },
+        ],
+        suppressedExternalEvents: ['thesportsdb:one', 'ticketmaster:two'],
+      },
+    )).toMatchObject({
+      eventDetails: [
+        { activityId: 'cloud-event', providerEventId: 'one' },
+        { activityId: 'device-event', providerEventId: 'two' },
+      ],
+      suppressedExternalEvents: ['thesportsdb:one', 'ticketmaster:two'],
+    });
+  });
+
   it('keeps device-only checklist categories when merging todo data', () => {
     expect(
       mergeDomainPayload(

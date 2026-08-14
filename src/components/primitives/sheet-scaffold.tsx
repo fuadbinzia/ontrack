@@ -19,15 +19,11 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import Animated, {
-  FadeIn,
-  ReduceMotion,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   glassMaterials,
-  motion,
   radii,
   type AppIconName,
 } from '@/design-system';
@@ -50,7 +46,8 @@ export interface SheetHeaderProps {
   subtitle?: string;
   subtitleIcon?: AppIconName;
   decoration?: ReactNode;
-  onClose: () => void;
+  /** Return false when a close guard keeps the sheet mounted. */
+  onClose: () => boolean | void;
   closeAccessibilityLabel?: string;
   closeTestID?: string;
   style?: StyleProp<ViewStyle>;
@@ -99,6 +96,12 @@ export function SheetHeader({
 
 export interface SheetScaffoldProps extends PropsWithChildren {
   visible: boolean;
+  /**
+   * `modal` creates its own native Modal for in-tree sheets.
+   * `route` renders inside an existing transparent-modal route so native modal
+   * hosts are never nested (nested hosts can strand an invisible touch layer).
+   */
+  host?: 'modal' | 'route';
   eyebrow?: string;
   title: string;
   subtitle?: string;
@@ -139,6 +142,7 @@ export interface SheetScaffoldProps extends PropsWithChildren {
 /** Canonical modal sheet: safe areas, swipe grabber, scroll body, and in-scroll CTA. */
 export function SheetScaffold({
   visible,
+  host = 'modal',
   eyebrow,
   title,
   subtitle,
@@ -177,6 +181,10 @@ export function SheetScaffold({
       visible,
       onClose,
     });
+  const backdropAgent = useAgentUiTarget(backdropTestID, {
+    label: `${title} backdrop`,
+    onPress: close,
+  });
   // Modal ignores Android soft-input — lift on both platforms.
   const { keyboardInset } = useDockedKeyboardInset({
     enabled: visible,
@@ -202,11 +210,6 @@ export function SheetScaffold({
   // The tab dock hides while a sheet is open (modalSheetCount) so this pad is
   // clean frost — dock labels must never read through as a fake "gap".
   const bottomPad = Math.max(insets.bottom, spacing.md) + additionalBottomInset;
-  // Mount at the final bottom-pinned geometry. Starting below the viewport can
-  // leave only the scrim visible if a native Modal drops the entrance frame.
-  const sheetEntrance = FadeIn.duration(motion.fade).reduceMotion(
-    ReduceMotion.System,
-  );
   useEffect(() => {
     if (!visible) {
       setLockedHeight(undefined);
@@ -228,6 +231,228 @@ export function SheetScaffold({
   // and makes the next navigation feel stuck under an invisible overlay.
   if (!visible) return null;
 
+  const content = (
+    <GestureHandlerRootView accessibilityViewIsModal style={styles.modalRoot}>
+      {/* The shared sheet gesture fades the scrim independently of the card rise. */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: theme.overlayScrim },
+          scrimStyle,
+        ]}
+      />
+      {/*
+        Soft chroma wash under glass sheets so BlurView / frosted CTAs catch
+        color instead of milking a flat dim scrim into opaque beige paper.
+      */}
+      {glass ? (
+        <View pointerEvents="none" style={styles.atmosphereUnderlay}>
+          <ScreenAtmosphere />
+        </View>
+      ) : null}
+      {dismissOnBackdropPress ? (
+        <Pressable
+          ref={backdropAgent.ref}
+          testID={backdropAgent.testID}
+          onLayout={backdropAgent.onLayout}
+          accessibilityRole="button"
+          accessibilityLabel={closeAccessibilityLabel}
+          onPress={close}
+          style={[StyleSheet.absoluteFill, styles.dismissLayer]}
+        />
+      ) : null}
+      <KeyboardAvoidingView
+        // Inset lift owns avoidance — KAV padding double-counts with absolute
+        // bottom sheets (and Android never honored behavior here anyway).
+        behavior={undefined}
+        keyboardVerticalOffset={0}
+        pointerEvents="box-none"
+        // Absolute fill (not flex-end). Short fitContent plates must pin with
+        // bottom:0 to the modal root — flex-end hosts can leave a dock-sized gap.
+        style={[styles.avoid, { paddingTop: insets.top }]}
+      >
+        <Animated.View
+          ref={plateAgent.ref}
+          testID={plateAgent.testID}
+          onLayout={(event) => {
+            plateAgent.onLayout?.(event);
+            const next = Math.round(event.nativeEvent.layout.height);
+            onSheetLayout(next);
+            if (!lockHeight || lockedHeight != null) return;
+            if (next > 0) setLockedHeight(next);
+          }}
+          pointerEvents="auto"
+          style={[
+            styles.sheet,
+            glass ? styles.sheetGlass : null,
+            {
+              backgroundColor: glass
+                ? 'transparent'
+                : theme.backgroundElevated,
+              borderColor: glass
+                ? dark
+                  ? glassMaterials.border.darkStrong
+                  : glassMaterials.border.lightStrong
+                : 'transparent',
+              maxHeight: sheetMaxHeight,
+              minHeight: sheetMinHeight,
+              height:
+                bodyScrollMode === 'external'
+                  ? sheetMaxHeight
+                  : lockHeight
+                    ? lockedHeight
+                    : undefined,
+              paddingHorizontal: layout.screenPadding,
+              // Lift flush-bottom sheet above docked IME (chat / add-sheet pattern).
+              // Keep an explicit absolute pin — flex-end alone can float the plate.
+              position: 'absolute' as const,
+              left: 0,
+              right: 0,
+              bottom: keyboardInset,
+            },
+            sheetStyle,
+          ]}
+        >
+          {/*
+            Glass underlay is a Fabric sibling of header/body — never wrap
+            remounting chrome inside BlurView (unmountChildComponentView).
+            Always mount BlurView when glass (intensity 0 when blur gated).
+          */}
+          {glass ? (
+            Platform.OS === 'android' ? (
+              <View
+                pointerEvents="none"
+                style={[
+                  StyleSheet.absoluteFill,
+                  dark ? styles.androidGlassDark : styles.androidGlassLight,
+                ]}
+              />
+            ) : (
+              <>
+                <BlurView
+                  intensity={allowsBlur ? 64 : 0}
+                  tint={dark ? 'dark' : 'light'}
+                  pointerEvents="none"
+                  style={StyleSheet.absoluteFill}
+                />
+                <View
+                  pointerEvents="none"
+                  style={[
+                    StyleSheet.absoluteFill,
+                    {
+                      backgroundColor: dark
+                        ? allowsBlur
+                          ? glassMaterials.sheet.darkFillBlur
+                          : glassMaterials.sheet.darkFillSolid
+                        : allowsBlur
+                          ? glassMaterials.sheet.lightFillBlur
+                          : glassMaterials.sheet.lightFillSolid,
+                    },
+                  ]}
+                />
+              </>
+            )
+          ) : null}
+          <GestureDetector gesture={headerGesture}>
+            <Animated.View
+              style={styles.headerSlot}
+              onStartShouldSetResponder={() => {
+                Keyboard.dismiss();
+                return false;
+              }}
+            >
+              <SheetHeader
+                eyebrow={eyebrow}
+                title={title}
+                subtitle={subtitle}
+                subtitleIcon={subtitleIcon}
+                decoration={decoration}
+                onClose={close}
+                closeAccessibilityLabel={closeAccessibilityLabel}
+                closeTestID={closeTestID}
+                grabberInteractive={false}
+              />
+            </Animated.View>
+          </GestureDetector>
+          {/*
+            Bound the ScrollView viewport so tall forms scroll under maxHeight
+            (Android Yoga especially). CTA lives in-scroll — never pinned under
+            the tab dock / home indicator.
+          */}
+          {fitContent ? (
+            <View
+              style={[
+                styles.fitContentBody,
+                {
+                  gap: spacing.lg,
+                  // Plate pins flush to the physical bottom; keep a small lip
+                  // under the last row. Safe-area clearance is the plate itself
+                  // covering the home indicator — not an empty frosted band.
+                  paddingBottom: bottomPad,
+                },
+                contentContainerStyle,
+              ]}
+            >
+              {children}
+              {footer ? (
+                <View style={{ paddingTop: spacing.xs }}>{footer}</View>
+              ) : null}
+            </View>
+          ) : (
+            <View style={styles.body}>
+              {bodyScrollMode === 'external' ? (
+                <View
+                  style={[
+                    styles.externalContent,
+                    { paddingBottom: bottomPad },
+                    contentContainerStyle,
+                  ]}
+                >
+                  {children}
+                  {footer ? (
+                    <View style={{ paddingTop: spacing.xs }}>{footer}</View>
+                  ) : null}
+                </View>
+              ) : (
+                <ScrollView
+                  key={scrollKey ?? 'sheet'}
+                  ref={scrollRef}
+                  scrollEnabled={scrollEnabled}
+                  // Sheet lifts via keyboardInset — extra scroll insets would double-pad.
+                  automaticallyAdjustKeyboardInsets={false}
+                  contentInsetAdjustmentBehavior="never"
+                  keyboardDismissMode={
+                    Platform.OS === 'ios' ? 'interactive' : 'on-drag'
+                  }
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  style={styles.scroll}
+                  contentContainerStyle={[
+                    styles.content,
+                    {
+                      gap: spacing.lg,
+                      paddingBottom: bottomPad,
+                    },
+                    contentContainerStyle,
+                  ]}
+                >
+                  {children}
+                  {footer ? (
+                    <View style={{ paddingTop: spacing.xs }}>{footer}</View>
+                  ) : null}
+                </ScrollView>
+              )}
+            </View>
+          )}
+        </Animated.View>
+      </KeyboardAvoidingView>
+      <AppPromptHost embedded />
+    </GestureHandlerRootView>
+  );
+
+  if (host === 'route') return content;
+
   return (
     <Modal
       // Present the native host immediately. Reanimated owns the visible
@@ -243,232 +468,7 @@ export function SheetScaffold({
       transparent
       visible
     >
-      {/*
-        Modal hosts its own native root — gestures need a GH root inside the
-        Modal (app-root GestureHandlerRootView does not cover this tree).
-      */}
-      <GestureHandlerRootView accessibilityViewIsModal style={styles.modalRoot}>
-        {/*
-          Scrim and card fade independently at their final geometry. Native
-          Modal slide would drag the dim and can strand the card off-screen.
-        */}
-        <Animated.View
-          entering={FadeIn.duration(motion.fade).reduceMotion(
-            ReduceMotion.System,
-          )}
-          pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: theme.overlayScrim },
-            scrimStyle,
-          ]}
-        />
-        {/*
-          Soft chroma wash under glass sheets so BlurView / frosted CTAs catch
-          color instead of milking a flat dim scrim into opaque beige paper.
-        */}
-        {glass ? (
-          <View pointerEvents="none" style={styles.atmosphereUnderlay}>
-            <ScreenAtmosphere />
-          </View>
-        ) : null}
-        {dismissOnBackdropPress ? (
-          <Pressable
-            testID={backdropTestID}
-            accessibilityRole="button"
-            accessibilityLabel={closeAccessibilityLabel}
-            onPress={close}
-            style={[StyleSheet.absoluteFill, styles.dismissLayer]}
-          />
-        ) : null}
-        <KeyboardAvoidingView
-          // Inset lift owns avoidance — KAV padding double-counts with absolute
-          // bottom sheets (and Android never honored behavior here anyway).
-          behavior={undefined}
-          keyboardVerticalOffset={0}
-          pointerEvents="box-none"
-          // Absolute fill (not flex-end). Short fitContent plates must pin with
-          // bottom:0 to the modal root — flex-end hosts can leave a dock-sized gap.
-          style={[styles.avoid, { paddingTop: insets.top }]}
-        >
-          <Animated.View
-            entering={sheetEntrance}
-            ref={plateAgent.ref}
-            testID={plateAgent.testID}
-            onLayout={(event) => {
-              plateAgent.onLayout?.(event);
-              const next = Math.round(event.nativeEvent.layout.height);
-              onSheetLayout(next);
-              if (!lockHeight || lockedHeight != null) return;
-              if (next > 0) setLockedHeight(next);
-            }}
-            pointerEvents="auto"
-            style={[
-              styles.sheet,
-              glass ? styles.sheetGlass : null,
-              {
-                backgroundColor: glass
-                  ? 'transparent'
-                  : theme.backgroundElevated,
-                borderColor: glass
-                  ? dark
-                    ? glassMaterials.border.darkStrong
-                    : glassMaterials.border.lightStrong
-                  : 'transparent',
-                maxHeight: sheetMaxHeight,
-                minHeight: sheetMinHeight,
-                height:
-                  bodyScrollMode === 'external'
-                    ? sheetMaxHeight
-                    : lockHeight
-                      ? lockedHeight
-                      : undefined,
-                paddingHorizontal: layout.screenPadding,
-                // Lift flush-bottom sheet above docked IME (chat / add-sheet pattern).
-                // Keep an explicit absolute pin — flex-end alone can float the plate.
-                position: 'absolute' as const,
-                left: 0,
-                right: 0,
-                bottom: keyboardInset,
-              },
-              sheetStyle,
-            ]}
-          >
-            {/*
-              Glass underlay is a Fabric sibling of header/body — never wrap
-              remounting chrome inside BlurView (unmountChildComponentView).
-              Always mount BlurView when glass (intensity 0 when blur gated).
-            */}
-            {glass ? (
-              Platform.OS === 'android' ? (
-                <View
-                  pointerEvents="none"
-                  style={[
-                    StyleSheet.absoluteFill,
-                    dark ? styles.androidGlassDark : styles.androidGlassLight,
-                  ]}
-                />
-              ) : (
-                <>
-                  <BlurView
-                    intensity={allowsBlur ? 64 : 0}
-                    tint={dark ? 'dark' : 'light'}
-                    pointerEvents="none"
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <View
-                    pointerEvents="none"
-                    style={[
-                      StyleSheet.absoluteFill,
-                      {
-                        backgroundColor: dark
-                          ? allowsBlur
-                            ? glassMaterials.sheet.darkFillBlur
-                            : glassMaterials.sheet.darkFillSolid
-                          : allowsBlur
-                            ? glassMaterials.sheet.lightFillBlur
-                            : glassMaterials.sheet.lightFillSolid,
-                      },
-                    ]}
-                  />
-                </>
-              )
-            ) : null}
-            <GestureDetector gesture={headerGesture}>
-              <Animated.View
-                style={styles.headerSlot}
-                onStartShouldSetResponder={() => {
-                  Keyboard.dismiss();
-                  return false;
-                }}
-              >
-                <SheetHeader
-                  eyebrow={eyebrow}
-                  title={title}
-                  subtitle={subtitle}
-                  subtitleIcon={subtitleIcon}
-                  decoration={decoration}
-                  onClose={close}
-                  closeAccessibilityLabel={closeAccessibilityLabel}
-                  closeTestID={closeTestID}
-                  grabberInteractive={false}
-                />
-              </Animated.View>
-            </GestureDetector>
-            {/*
-              Bound the ScrollView viewport so tall forms scroll under maxHeight
-              (Android Yoga especially). CTA lives in-scroll — never pinned under
-              the tab dock / home indicator.
-            */}
-            {fitContent ? (
-              <View
-                style={[
-                  styles.fitContentBody,
-                  {
-                    gap: spacing.lg,
-                    // Plate pins flush to the physical bottom; keep a small lip
-                    // under the last row. Safe-area clearance is the plate itself
-                    // covering the home indicator — not an empty frosted band.
-                    paddingBottom: bottomPad,
-                  },
-                  contentContainerStyle,
-                ]}
-              >
-                {children}
-                {footer ? (
-                  <View style={{ paddingTop: spacing.xs }}>{footer}</View>
-                ) : null}
-              </View>
-            ) : (
-              <View style={styles.body}>
-                {bodyScrollMode === 'external' ? (
-                  <View
-                    style={[
-                      styles.externalContent,
-                      { paddingBottom: bottomPad },
-                      contentContainerStyle,
-                    ]}
-                  >
-                    {children}
-                    {footer ? (
-                      <View style={{ paddingTop: spacing.xs }}>{footer}</View>
-                    ) : null}
-                  </View>
-                ) : (
-                  <ScrollView
-                    key={scrollKey ?? 'sheet'}
-                    ref={scrollRef}
-                    scrollEnabled={scrollEnabled}
-                    // Sheet lifts via keyboardInset — extra scroll insets would double-pad.
-                    automaticallyAdjustKeyboardInsets={false}
-                    contentInsetAdjustmentBehavior="never"
-                    keyboardDismissMode={
-                      Platform.OS === 'ios' ? 'interactive' : 'on-drag'
-                    }
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                    style={styles.scroll}
-                    contentContainerStyle={[
-                      styles.content,
-                      {
-                        gap: spacing.lg,
-                        paddingBottom: bottomPad,
-                      },
-                      contentContainerStyle,
-                    ]}
-                  >
-                    {children}
-                    {footer ? (
-                      <View style={{ paddingTop: spacing.xs }}>{footer}</View>
-                    ) : null}
-                  </ScrollView>
-                )}
-              </View>
-            )}
-          </Animated.View>
-        </KeyboardAvoidingView>
-        <AppPromptHost embedded />
-      </GestureHandlerRootView>
+      {content}
     </Modal>
   );
 }

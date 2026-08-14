@@ -28,6 +28,7 @@ Keep this file short on purpose. Load detail only when the task needs it.
 - **Dev Mode** → off by default (cold start clears hub + agent sandboxes). Seeds/flows may turn it on for mock data; `verify-both` / `agent-ui.sh devmode release` turn agent sandboxes off again. Do not leave it on.
 - **Glyph / icon orientation** → fix from source (`Symbol`, `design-system/icons.ts`, platform maps, transforms). Never screenshot→vision loops for micro-glyphs; do not force-reconnect to “re-check” icons.
 - **New/edited interactive controls** → `ontrack.*` `testID` + `ids.ts` + `docs/agent-ui-map.md` in the same change.
+- **New/edited user journeys** → add/update the named recipe in `src/utils/agent-ui/flows-*.ts`; the Living System Map watches these sources and adds the ordered journey plus its testing gaps automatically.
 - **Dump = debt** → ≤1 dump to discover; same turn stamp id/map and/or named flow so that dump is never needed again (agent-ui skill).
 - **Metro** → `npm run packager:ensure:start` (never `npm start` in agent shells). Prefer Fast Refresh; do not kill Metro / `--clear` / force-stop / `--force-reconnect` after routine edits. Node 24.
 - **Stuck / slow / device timeout** → stop grinding. Benchmark first → classify once via stuck-check / agent-ui skill; fix the cause so it does not recur.

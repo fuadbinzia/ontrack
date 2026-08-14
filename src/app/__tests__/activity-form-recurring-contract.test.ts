@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const source = readFileSync(join(process.cwd(), 'src/app/activity-form.tsx'), 'utf8');
+const sheetSource = readFileSync(
+  join(process.cwd(), 'src/components/primitives/sheet-scaffold.tsx'),
+  'utf8',
+);
 
 describe('recurring event edit prompt', () => {
   it('offers a choice between one occurrence and the whole series before saving', () => {
@@ -12,11 +16,9 @@ describe('recurring event edit prompt', () => {
     expect(source).toContain('AgentUiIds.activityForm.saveSeries');
   });
 
-  it('hosts the recurring choice inside the native activity form modal', () => {
-    expect(source).toContain('AppPromptHost,');
-    expect(source).toMatch(
-      /<View style=\{\[styles\.root,[\s\S]*?<Screen[\s\S]*?<\/Screen>\s*<AppPromptHost embedded \/>\s*<\/View>/,
-    );
+  it('hosts the recurring choice inside the canonical activity form sheet', () => {
+    expect(source).toContain('<SheetScaffold');
+    expect(sheetSource).toContain('<AppPromptHost embedded />');
   });
 
   it('keeps ordinary events on the direct single-save path', () => {

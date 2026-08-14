@@ -19,6 +19,11 @@ import {
     Symbol,
 } from '@/components/primitives';
 import { layout, radii, spacing } from '@/design-system';
+import { ezPassAssetsFromSharedPayloads } from '@/features/finance/ezpass-shared-statement';
+import {
+  hasIncomingSharePayloads,
+  shouldConfirmShareDiscard,
+} from '@/features/share-import/share-session';
 import { useTheme } from '@/hooks/use-theme';
 import { useTodos } from '@/store/todos';
 
@@ -51,15 +56,32 @@ export default function ShareImportScreen() {
   const [payloads] = useState(() => getSharedPayloads());
   const [mode, setMode] = useState<'destination' | 'recipe'>();
   const [newListName, setNewListName] = useState('Groceries');
-  const allowLeave = useRef(false);
+  const allowLeave = useRef(!hasIncomingSharePayloads(payloads));
   const calendarOnly =
     payloads.length > 0 && payloads.every(isCalendarPayload);
+  const ezPassOnly = ezPassAssetsFromSharedPayloads(payloads).length > 0;
 
   useEffect(() => {
-    if (!calendarOnly) return;
+    if (!hasIncomingSharePayloads(payloads)) {
+      clearSharedPayloads();
+      allowLeave.current = true;
+      if (navigation.isFocused()) {
+        appPrompt.dismiss();
+        router.replace('/(tabs)/overview');
+      }
+      return;
+    }
+    if (!calendarOnly && !ezPassOnly) return;
     allowLeave.current = true;
-    router.replace('/share-event');
-  }, [calendarOnly, router]);
+    router.replace(
+      ezPassOnly
+        ? {
+            pathname: '/(tabs)/finance/ezpass-import',
+            params: { source: 'share' },
+          } as never
+        : '/share-event',
+    );
+  }, [calendarOnly, ezPassOnly, navigation, payloads, router]);
 
   const discard = useCallback(
     (action?: NavigationAction) => {
@@ -92,11 +114,11 @@ export default function ShareImportScreen() {
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (event) => {
-        if (allowLeave.current) return;
+        if (!shouldConfirmShareDiscard(payloads, allowLeave.current)) return;
         event.preventDefault();
         confirmDiscard(event.data.action);
       }),
-    [confirmDiscard, navigation],
+    [confirmDiscard, navigation, payloads],
   );
 
   const preview = useMemo(
@@ -112,11 +134,25 @@ export default function ShareImportScreen() {
     } as never);
   };
 
-  if (calendarOnly) {
+  if (!hasIncomingSharePayloads(payloads)) {
     return (
       <Screen contentStyle={styles.center} refresh={false}>
-        <Symbol name="calendar" size={36} color={theme.accentPrimary} />
-        <AppText variant="subheading">Opening Calendar…</AppText>
+        <AppText variant="subheading">Closing Empty Share…</AppText>
+      </Screen>
+    );
+  }
+
+  if (calendarOnly || ezPassOnly) {
+    return (
+      <Screen contentStyle={styles.center} refresh={false}>
+        <Symbol
+          name={ezPassOnly ? 'finance' : 'calendar'}
+          size={36}
+          color={theme.accentPrimary}
+        />
+        <AppText variant="subheading">
+          {ezPassOnly ? 'Opening E-ZPass Import…' : 'Opening Calendar…'}
+        </AppText>
       </Screen>
     );
   }
@@ -126,10 +162,10 @@ export default function ShareImportScreen() {
       <View style={styles.header}>
         <View style={styles.headerCopy}>
           <AppText variant="overline" color="accent">
-            Incoming share
+            Incoming Share
           </AppText>
           <AppText variant="display">
-            {mode === 'recipe' ? 'Choose a Grocery List' : 'What are you adding?'}
+            {mode === 'recipe' ? 'Choose a Grocery List' : 'What Are You Adding?'}
           </AppText>
           <AppText variant="body" color="secondary">
             The shared payload stays available until you save it or confirm
@@ -144,7 +180,7 @@ export default function ShareImportScreen() {
       {preview ? (
         <Card variant="sunken" style={styles.preview}>
           <AppText variant="overline" color="tertiary">
-            Shared content
+            Shared Content
           </AppText>
           <AppText variant="caption" color="secondary" numberOfLines={5}>
             {preview}
@@ -208,7 +244,7 @@ export default function ShareImportScreen() {
             </Card>
           ))}
           <Card style={styles.newList}>
-            <AppText variant="subheading">Create a Grocery list</AppText>
+            <AppText variant="subheading">Create a Grocery List</AppText>
             <Input
               label="List Name"
               value={newListName}
@@ -221,7 +257,7 @@ export default function ShareImportScreen() {
                 const list = createList(newListName, 'grocery');
                 if (list) openRecipe(list.id);
               }}>
-              Create and continue
+              Create and Continue
             </Button>
           </Card>
           <Button variant="ghost" onPress={() => setMode(undefined)}>

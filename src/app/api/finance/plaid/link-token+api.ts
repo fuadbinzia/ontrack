@@ -5,6 +5,7 @@ import {
   storePlaidLinkSession,
   withPlaidApiAuth,
 } from '@/services/finance/plaid-server';
+import { apiCorsHeaders } from '@/services/http/cors';
 
 const METHODS = 'POST, OPTIONS';
 const NATIVE_COMPLETION_URI = 'ontrack://plaid/complete';
@@ -18,8 +19,19 @@ export async function POST(request: Request) {
   return withPlaidApiAuth(request, async (request, userId) => {
     const body = await request.json().catch(() => ({})) as {
       native?: boolean;
+      purpose?: unknown;
     };
-    const purpose = 'investments' as const;
+    if (
+      body.purpose !== undefined &&
+      body.purpose !== 'transactions' &&
+      body.purpose !== 'investments'
+    ) {
+      return Response.json(
+        { error: 'purpose must be transactions or investments.' },
+        { status: 400, headers: apiCorsHeaders(request, METHODS) },
+      );
+    }
+    const purpose = body.purpose === 'transactions' ? 'transactions' : 'investments';
     const completionRedirectUri = body.native === false
       ? process.env.PLAID_WEB_COMPLETION_REDIRECT_URI?.trim() ||
         `${new URL(request.url).origin}/finance/accounts?plaid=complete`

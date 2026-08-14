@@ -59,7 +59,7 @@ export function TodoInvitesScreen() {
         <AppText variant="overline" color="accent">To Do</AppText>
         <AppText variant="display">Invitations</AppText>
         <AppText variant="body" color="secondary">
-          Lists shared directly with {user.email ?? 'your account'} appear here.
+          Lists shared directly with your account appear here.
         </AppText>
       </View>
 

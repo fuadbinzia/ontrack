@@ -196,6 +196,8 @@ export interface TravelItemNote {
 
 export interface TravelParticipant {
   id: string;
+  /** Opaque account identity used for friend/roster matching without exposing email. */
+  userId?: string;
   name: string;
   email?: string;
   inviteCode: string;
@@ -306,8 +308,8 @@ export interface TravelOpenJoinPreview {
 
 export interface TravelOpenJoinRequest {
   id: string;
+  requesterUserId: string;
   requesterName: string;
-  requesterEmail: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   grantedInviteCode?: string;

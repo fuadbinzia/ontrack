@@ -52,10 +52,7 @@ export function TodoListSettingsSharing({
   const previousWorking = useRef(working);
   const eligibleFriends = useMemo(() => {
     const excluded = new Set(excludeEditorIds);
-    return friends.filter(
-      (friend) =>
-        !excluded.has(friend.userId) && !excluded.has(friend.email),
-    );
+    return friends.filter((friend) => !excluded.has(friend.userId));
   }, [excludeEditorIds, friends]);
   const editorOptions = useMemo(
     () =>

@@ -1,3 +1,5 @@
+import { Children, type ReactNode } from 'react';
+
 /**
  * Title-case chrome labels (fields, headers, buttons, chips).
  * Preserves punctuation, required markers, and hyphen/paren boundaries.
@@ -37,7 +39,7 @@ export function fieldTitleCase(label: string): string {
 
   return label.replace(WORD_RE, (word, offset: number) => {
     const lower = word.toLowerCase();
-    const hasIntentionalInternalCapital = /[a-z][A-Z]/.test(word);
+    const hasIntentionalInternalCapital = /[a-z][A-Z]|^[A-Z]{2}[a-z]/.test(word);
     if (hasIntentionalInternalCapital) return word;
     // Small words stay lowercase mid-title — including single-letter "a".
     if (offset !== firstOffset && TITLE_SMALL_WORDS.has(lower)) return lower;
@@ -46,4 +48,11 @@ export function fieldTitleCase(label: string): string {
 
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
   });
+}
+
+/** Title-case every text fragment while preserving nested elements and numbers. */
+export function titleCaseTextChildren(children: ReactNode): ReactNode {
+  return Children.map(children, (child) =>
+    typeof child === 'string' ? fieldTitleCase(child) : child,
+  );
 }

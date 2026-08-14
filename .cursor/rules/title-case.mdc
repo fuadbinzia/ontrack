@@ -1,0 +1,13 @@
+---
+description: Product chrome uses Title Case consistently
+alwaysApply: true
+---
+
+# Title Case (mandatory)
+
+- Use Title Case for screen, section, panel, field, button, chip, and compact metadata labels.
+- Prefer shared primitives that enforce it: `ScreenHeader`, `SectionHeader`, `PanelTitle`, `FormSection`, `StackedFieldLabel`, `Button`, `ActionChip`, and `ChipRow`.
+- `AppText variant="overline"` title-cases text children automatically, including labels composed from multiple JSX fragments. For other compact chrome rendered with `AppText`, pass `titleCase`.
+- Use `fieldTitleCase` when composing a label before it reaches a primitive.
+- Do not title-case body copy, explanatory sentences, user-entered text, merchant names, or other content data.
+- Preserve intentional product casing and acronyms such as `onTrack`, `StraiAway`, `iOS`, `API`, `FX`, and `E-ZPass`.

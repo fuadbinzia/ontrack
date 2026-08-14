@@ -15,6 +15,8 @@ import { useFinance } from '@/store/finance';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
 import { financeCategoryById } from './categories';
+import { displayEzPassMerchantName } from './ezpass-locations';
+import { formatEzPassActivityTime } from './ezpass-model';
 import { FinanceSubpageHeader } from './finance-subpage-header';
 
 export function FinanceTransactionsScreen() {
@@ -37,12 +39,21 @@ export function FinanceTransactionsScreen() {
           <FinanceSubpageHeader
             title="Transactions"
             trailing={
-              <Button
-                size="sm"
-                onPress={() => router.push('/(tabs)/finance/expense')}
-                testID={AgentUiIds.finance.transactions.add}>
-                Add
-              </Button>
+              <View style={{ flexDirection: 'row', gap: gap.sm }}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onPress={() => router.push('/(tabs)/finance/ezpass')}
+                  testID={AgentUiIds.finance.transactions.importEzPass}>
+                  E-ZPass
+                </Button>
+                <Button
+                  size="sm"
+                  onPress={() => router.push('/(tabs)/finance/expense')}
+                  testID={AgentUiIds.finance.transactions.add}>
+                  Add
+                </Button>
+              </View>
             }
           />
           {sorted.length ? (
@@ -51,10 +62,15 @@ export function FinanceTransactionsScreen() {
                 <View style={{ flexDirection: 'row', gap: gap.sm, alignItems: 'center' }}>
                   <View style={{ flex: 1, minWidth: 0, gap: gap.xs }}>
                     <AppText variant="callout" fit numberOfLines={1}>
-                      {txn.merchant}
+                      {txn.source === 'ezpass'
+                        ? displayEzPassMerchantName(txn.merchant)
+                        : txn.merchant}
                     </AppText>
                     <AppText variant="caption" color="secondary" fit>
-                      {txn.date} · {financeCategoryById(txn.categoryId).label} · {txn.source}
+                      {txn.date}
+                      {txn.activityTime ? ` · ${formatEzPassActivityTime(txn.activityTime)}` : ''}
+                      {' · '}{financeCategoryById(txn.categoryId).label} · {txn.source}
+                      {txn.activity && txn.activity !== 'expense' ? ` · ${txn.activity}` : ''}
                     </AppText>
                   </View>
                   <AppText variant="callout" fit>

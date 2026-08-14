@@ -84,7 +84,7 @@ export function SectionHeader({
           </AppText>
         </Pressable>
       ) : detail ? (
-        <AppText variant="caption" color="tertiary" style={styles.detail} fit>
+        <AppText variant="caption" color="tertiary" style={styles.detail} fit titleCase>
           {detail}
         </AppText>
       ) : null}

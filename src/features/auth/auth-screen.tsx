@@ -35,7 +35,6 @@ export function AuthScreen({
   const {
     phase,
     session,
-    lockedEmail,
     workingProvider,
     error,
     continueWithProvider,
@@ -180,7 +179,7 @@ export function AuthScreen({
             ]}>
             {locked ? (
               <AppText variant="caption" color="secondary" align="center">
-                {lockedEmail ? `Signed in as ${lockedEmail}` : 'This device is locked'}
+                This device is locked
               </AppText>
             ) : null}
 

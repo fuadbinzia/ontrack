@@ -1,9 +1,9 @@
 # Teller bank sync
 
-onTrack uses Teller for bank and credit-card balances/transactions. Plaid is
-restricted to investment holdings. Teller access tokens are encrypted in the
-server-only Supabase vault and all real-data API calls pass through a dedicated
-Cloudflare Worker because Teller requires outbound mTLS.
+Teller support remains installed for existing bank and credit-card connections,
+but new bank/card and investment links currently use Plaid. Teller access tokens
+are encrypted in the server-only Supabase vault and all real-data API calls pass
+through a dedicated Cloudflare Worker because Teller requires outbound mTLS.
 
 ## Teller dashboard
 

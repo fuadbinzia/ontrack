@@ -24,8 +24,7 @@ export async function loadTodoInvites(): Promise<TodoInvite[]> {
           typeof item.id !== 'string' ||
           typeof item.list_id !== 'string' ||
           typeof item.list_name !== 'string' ||
-          typeof item.inviter_name !== 'string' ||
-          typeof item.invitee_email !== 'string'
+          typeof item.inviter_name !== 'string'
         ) {
           return [];
         }
@@ -34,7 +33,6 @@ export async function loadTodoInvites(): Promise<TodoInvite[]> {
           listId: item.list_id,
           listName: item.list_name,
           inviterName: item.inviter_name,
-          inviteeEmail: item.invitee_email,
           code: item.id,
           createdAt:
             typeof item.created_at === 'string'
@@ -65,7 +63,6 @@ export async function createTodoEmailInvite(
 
 export interface PendingTodoEmailInvite {
   id: string;
-  email: string;
   createdAt: string;
 }
 
@@ -84,11 +81,9 @@ export async function loadTodoListPendingInvites(
   return Array.isArray(data)
     ? data.flatMap((row) =>
         row &&
-        typeof row.id === 'string' &&
-        typeof row.invitee_email === 'string'
+        typeof row.id === 'string'
           ? [{
               id: row.id,
-              email: row.invitee_email,
               createdAt:
                 typeof row.created_at === 'string'
                   ? row.created_at

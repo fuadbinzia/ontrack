@@ -4,7 +4,7 @@ import type { SocialFeedItem } from '@/features/social/social-types';
 import type { FriendProfile } from '@/services/friends';
 import { formatDateLong } from '@/utils/date';
 
-type FeedActor = Pick<FriendProfile, 'userId' | 'displayName' | 'email'>;
+type FeedActor = Pick<FriendProfile, 'userId' | 'displayName'>;
 
 function isUsefulIso(value: string | undefined): value is string {
   return Boolean(value && !Number.isNaN(Date.parse(value)));

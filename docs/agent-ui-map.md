@@ -100,8 +100,8 @@ Dump/status/command files live in the app Documents directory:
 
 `DateField` and `TimeField` derive their picker ids from the field's own `testID`:
 
-| testID                     | Control                                  |
-| -------------------------- | ---------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `<field>`                  | Open the picker                          |
 | `<field>.day.<YYYY-MM-DD>` | Select a day (`DateField`)                |
 | `<field>.previousMonth`    | Show the previous month (`DateField`)     |
@@ -163,8 +163,8 @@ Dump/status/command files live in the app Documents directory:
 
 ### Food Home (`/(tabs)/food`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.home.section.suggestions`           | Home suggestions layout anchor (not tappable; `food-demo` waits here) |
 | `ontrack.food.home.search`                        | Search affordance → Recipes with search focus                        |
 | `ontrack.food.home.hero.<recipeId>`               | Suggestion hero carousel page → recipe detail                        |
@@ -182,8 +182,8 @@ Dump/status/command files live in the app Documents directory:
 
 ### Recipes (`/(tabs)/food/recipes`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.recipes.search`                     | Recipe search field                                                  |
 | `ontrack.food.recipes.filter.<filterId>`          | Filter chip (`all`, `quick`, `healthy`, `halal`, `kosher`, `vegetarian`, `vegan`, `high-protein`, `saved`) |
 | `ontrack.food.recipes.featured`                   | Featured recipe hero → recipe detail                                 |
@@ -195,8 +195,8 @@ Dump/status/command files live in the app Documents directory:
 
 ### Recipe detail (`/(tabs)/food/recipes/<id>`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.recipeDetail.back`                  | Back over the hero image                                             |
 | `ontrack.food.recipeDetail.favorite`              | Save (favorite) toggle                                               |
 | `ontrack.food.recipeDetail.share`                 | Open Share Recipe sheet (community post or system share)             |
@@ -211,8 +211,8 @@ Dump/status/command files live in the app Documents directory:
 
 ### Meal tracker (`/(tabs)/food/tracker`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.tracker.prevDay` / `.nextDay`       | Step the tracked day                                                 |
 | `ontrack.food.tracker.today`                      | Jump back to today (shown only when off today)                       |
 | `ontrack.food.tracker.section.meals`              | Meals region anchor — renders on empty days too (not tappable)       |
@@ -224,8 +224,8 @@ Dump/status/command files live in the app Documents directory:
 
 ### Diet & Preferences (`/food/preferences`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.preferences.section.diet`           | Dietary-preference chip grid anchor (not tappable)                   |
 | `ontrack.food.preferences.diet.<preference>`      | Dietary preference toggle chip (`halal`, `vegan`, …)                 |
 | `ontrack.food.preferences.section.allergies`      | Allergy list anchor (not tappable)                                   |
@@ -244,8 +244,8 @@ Dump/status/command files live in the app Documents directory:
 
 ### Plan & Shopping (`/food/plan`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.plan.section.week`                  | Week meal-plan panel anchor (not tappable)                           |
 | `ontrack.food.plan.day.<YYYY-MM-DD>.add`          | Per-day add → Plan a Meal sheet                                      |
 | `ontrack.food.plan.entry.<id>`                    | Plan entry row → recipe detail (when the entry has a recipe)         |
@@ -268,8 +268,8 @@ Dump/status/command files live in the app Documents directory:
 
 ### Community (`/food/community`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.community.tab.<tab>`                | Feed tab (`forYou`, `following`)                                     |
 | `ontrack.food.community.section.feed`             | Feed anchor (not tappable)                                           |
 | `ontrack.food.community.compose`                  | Header + → Post Composer sheet                                       |
@@ -286,8 +286,8 @@ Dump/status/command files live in the app Documents directory:
 
 ### Shared food surfaces
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.ingredients.row.<key>`              | Ingredient safety row (key = canonical key / slugged name)           |
 | `ontrack.food.ingredients.country.<countryCode>`  | Country restriction row (lowercase ISO code)                         |
 | `ontrack.food.sheet.<name>.close`                 | Close any Food sheet (`FoodSheet` preset stamps automatically)       |
@@ -298,8 +298,8 @@ Demo: flow `food-demo` seeds the food profile / pantry / recipes / meal plan
 
 ### AI recipe ideas (`/food/ai-ideas`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.aiIdeas.input`                      | Multiline "what ingredients do you have" prompt                      |
 | `ontrack.food.aiIdeas.chip.<key>`                 | Pantry/recent ingredient toggle chip (canonical key)                 |
 | `ontrack.food.aiIdeas.mealType.<type>`            | Meal-type chip (`breakfast`, `lunch`, `dinner`, `snack`)             |
@@ -313,8 +313,8 @@ Demo: flow `food-demo` seeds the food profile / pantry / recipes / meal plan
 
 ### Ingredient scanner (`/food/scan`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.scan.section.frame`                 | Viewfinder frame / photo preview anchor (not tappable)               |
 | `ontrack.food.scan.capture`                       | Take a label photo (system camera) / reset for another scan          |
 | `ontrack.food.scan.gallery`                       | Pick a label photo from the library                                  |
@@ -330,8 +330,8 @@ Demo: flow `food-demo` seeds the food profile / pantry / recipes / meal plan
 
 ### Ingredient info (`/food/ingredients`, `/food/ingredients/<key>`)
 
-| testID                                            | Control                                                              |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.ingredients.search`                 | Knowledge search field (names, E-numbers, aliases)                   |
 | `ontrack.food.ingredients.section.list`           | Knowledge list layout anchor (not tappable)                          |
 | `ontrack.food.ingredients.row.<key>`              | Knowledge row → ingredient detail                                    |
@@ -341,8 +341,8 @@ Demo: flow `food-demo` seeds the food profile / pantry / recipes / meal plan
 
 ## Food detail (`/detail/food/<id>`)
 
-| testID                              | Control                 |
-| ----------------------------------- | ----------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.food.detail.analyze`       | Add meal nutrition CTA  |
 | `ontrack.food.detail.link`          | Meal link field         |
 | `ontrack.food.detail.findMeal`      | Resolve link            |
@@ -356,8 +356,8 @@ Demo: `activity-agent-ui-demo-meal` via `food-detail-demo`.
 
 ## Social
 
-| testID                                              | Control                                 |
-| --------------------------------------------------- | --------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.social.header.addFriend`                   | Open add-friend flow                    |
 | `ontrack.social.header.messages`                    | Open Social messages                    |
 | `ontrack.social.friends.close`                      | Close friend-management modal           |
@@ -389,8 +389,8 @@ Demo: `activity-agent-ui-demo-meal` via `food-detail-demo`.
 
 ## Games
 
-| testID                                  | Control                    |
-| --------------------------------------- | -------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.games.hub.challengeFriend`     | Challenge a Friend         |
 | `ontrack.games.hub.balloonPop`          | Open Balloon Pop card      |
 | `ontrack.games.balloonPop.play`         | Start Balloon Pop          |
@@ -401,9 +401,10 @@ Demo: `activity-agent-ui-demo-meal` via `food-detail-demo`.
 
 ## People picker (shared sheet)
 
-| testID                                  | Control              |
-| --------------------------------------- | -------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.peoplePicker.close`            | Close sheet          |
+| `ontrack.peoplePicker.dropdown`          | Open friend dropdown |
 | `ontrack.peoplePicker.search`           | Search field         |
 | `ontrack.peoplePicker.friend.<friendId>`| Select friend row    |
 | `ontrack.peoplePicker.confirm`          | Confirm selection    |
@@ -412,8 +413,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 
 ## Today (`/(tabs)/` index)
 
-| testID                              | Control                  |
-| ----------------------------------- | ------------------------ |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.today.prevDay`             | Previous day             |
 | `ontrack.today.nextDay`             | Next day                 |
 | `ontrack.today.openCalendar`        | Date title (weekday + long date) → Calendar tab |
@@ -429,8 +430,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 
 ## Calendar (`/(tabs)/calendar`)
 
-| testID                              | Control             |
-| ----------------------------------- | ------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.calendar.jumpToday`        | Jump to Today       |
 | `ontrack.calendar.prevMonth`        | Previous month      |
 | `ontrack.calendar.nextMonth`        | Next month          |
@@ -439,8 +440,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 
 ## Event detail (`/detail/generic/<activityId>`)
 
-| testID                            | Control                       |
-| --------------------------------- | ----------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.eventDetail.edit`        | Open the event in the form    |
 | `ontrack.eventDetail.toggleComplete` | Mark complete / incomplete |
 | `ontrack.eventDetail.close`       | Dismiss the event sheet from its grabber |
@@ -455,8 +456,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 
 ## Event form (`/activity-form`)
 
-| testID                                  | Control                                |
-| --------------------------------------- | -------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.activityForm.category.<id>`    | Pick an event type (new event)         |
 | `ontrack.activityForm.guidedTitle`      | Guided title field (new event)         |
 | `ontrack.activityForm.title`            | Title field (editing)                  |
@@ -500,8 +501,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 
 ## Checklists (`/(tabs)/to-do`)
 
-| testID                                    | Control                               |
-| ----------------------------------------- | ------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.checklists.editMode`             | Edit / Done lists                     |
 | `ontrack.checklists.collaborators`        | Collaborators                         |
 | `ontrack.checklists.newListName`          | New list name field                   |
@@ -538,8 +539,8 @@ Demo fixture: `list-agent-ui-demo-checklist` / `task-agent-ui-demo-plan` via `./
 
 ## Grocery (`/(tabs)/to-do/<groceryListId>`)
 
-| testID                                         | Control                          |
-| ---------------------------------------------- | -------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.grocery.detail.back`                  | Back to lists (chevron + eyebrow) |
 | `ontrack.grocery.detail.addRecipe`             | Add Recipe                       |
 | `ontrack.grocery.detail.settings`              | List settings                    |
@@ -555,8 +556,8 @@ Demo fixture: `list-agent-ui-demo-grocery` / `recipe-agent-ui-demo-pasta` via `.
 
 ## List settings (`/todos/<listId>/settings` — bottom sheet)
 
-| testID                         | Control      |
-| ------------------------------ | ------------ |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.listSettings.close`   | Grabber / dismiss |
 | `ontrack.listSettings.name`    | List name    |
 | `ontrack.listSettings.saveName`| Save name (trailing check) |
@@ -568,8 +569,8 @@ Demo fixture: `list-agent-ui-demo-grocery` / `recipe-agent-ui-demo-pasta` via `.
 
 ## Recipe import (`/todos/<listId>/recipe-import`)
 
-| testID                                              | Control                |
-| --------------------------------------------------- | ---------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.recipeImport.cancel`                       | Cancel / discard       |
 | `ontrack.recipeImport.stop`                         | Stop analysis          |
 | `ontrack.recipeImport.url`                          | Recipe URL field       |
@@ -589,8 +590,8 @@ Flow: `grocery-demo-recipe-import`.
 
 ## Plants (`/(tabs)/plants`)
 
-| testID                                   | Control                    |
-| ---------------------------------------- | -------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.plants.list.add`                | Add plant                  |
 | `ontrack.plants.list.plant.<plantId>`    | Open plant card            |
 | `ontrack.plants.detail.edit`             | Edit plant                 |
@@ -613,8 +614,8 @@ Demo fixture: `plant-sample-monstera` via `./scripts/agent-ui-seed.sh plants-dem
 
 ## Workouts (`/(tabs)/workouts`)
 
-| testID                                              | Control                         |
-| --------------------------------------------------- | ------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.workouts.header.customPlanner`             | Custom planner header control   |
 | `ontrack.workouts.today.planFromScratch`            | Plan from scratch               |
 | `ontrack.workouts.todayPlan.<activityId>`           | Open today’s workout card       |
@@ -624,116 +625,116 @@ Demo fixture: `plant-sample-monstera` via `./scripts/agent-ui-seed.sh plants-dem
 | `ontrack.workouts.exercise.<exerciseId>.preview`    | Preview anatomy animation       |
 | `ontrack.workouts.explorer.anatomySex.male\|female` | Male / Female anatomy toggle    |
 | `ontrack.workouts.explorer.bodyView.front\|side\|back` | Body plate tabs              |
-| `ontrack.workouts.explorer.muscle.<muscleKey>`      | Muscle group chip               |
-| `ontrack.workouts.gym.edit` / `.start` / `.close`   | Gym detail                      |
-| `ontrack.workouts.gymActive.completeSet` / `.finish`| Active workout                  |
+| `ontrack.workouts.explorer.muscle.<muscleKey>`         | Muscle group chip             |
+| `ontrack.workouts.gym.edit` / `.start` / `.close`      | Gym detail                    |
+| `ontrack.workouts.gymActive.completeSet` / `.finish`   | Active workout                |
 
 Demo fixture: `activity-agent-ui-demo-workout` via `workouts-demo`; explorer wait target `incline-curl`. Flows: `workouts-demo-anatomy`, `workouts-demo-gym-detail`, `workouts-demo-gym-active`.
 
 ## Vision board (`/(tabs)/vision-board`)
 
-| testID                                                    | Control                      |
-| --------------------------------------------------------- | ---------------------------- |
-| `ontrack.vision.dashboard.filter`                         | Show populated / all filter  |
-| `ontrack.vision.dashboard.add`                            | Add category                 |
-| `ontrack.vision.dashboard.viewAll`                        | Open consolidated board      |
-| `ontrack.vision.dashboard.edit`                           | Edit categories              |
-| `ontrack.vision.dashboard.category.<categoryId>`          | Open category card           |
-| `ontrack.vision.consolidated.search`                      | Search toggle                |
-| `ontrack.vision.consolidated.more`                        | Options menu                 |
-| `ontrack.vision.consolidated.category.<categoryId>`       | Category filter chip         |
-| `ontrack.vision.category.mode`                            | Edit Board / Gallery toggle  |
-| `ontrack.vision.category.addImage`                        | Add image                    |
-| `ontrack.vision.category.addAffirmation`                  | Add affirmation              |
-| `ontrack.vision.category.addGoal`                         | Add goal                     |
-| `ontrack.vision.category.canvasItem.<itemId>`             | Select canvas item           |
-| `ontrack.vision.category.selection.deselect`              | Deselect selected item       |
-| `ontrack.vision.category.selection.edit`                  | Edit selected item           |
-| `ontrack.vision.category.selection.layerBack`             | Send selected backward       |
-| `ontrack.vision.category.selection.layerForward`          | Bring selected forward       |
-| `ontrack.vision.category.selection.delete`                | Delete selected item         |
-| `ontrack.vision.itemEditor.primary`                       | Affirmation / goal / caption |
-| `ontrack.vision.itemEditor.secondary`                     | Optional note / attribution  |
-| `ontrack.vision.itemEditor.save`                          | Save item                    |
-| `ontrack.vision.itemEditor.close`                         | Close editor                 |
+| testID                                              | Control                      |
+| --------------------------------------------------- | ---------------------------- |
+| `ontrack.vision.dashboard.filter`                   | Show populated / all filter  |
+| `ontrack.vision.dashboard.add`                      | Add category                 |
+| `ontrack.vision.dashboard.viewAll`                  | Open consolidated board      |
+| `ontrack.vision.dashboard.edit`                     | Edit categories              |
+| `ontrack.vision.dashboard.category.<categoryId>`    | Open category card           |
+| `ontrack.vision.consolidated.search`                | Search toggle                |
+| `ontrack.vision.consolidated.more`                  | Options menu                 |
+| `ontrack.vision.consolidated.category.<categoryId>` | Category filter chip         |
+| `ontrack.vision.category.mode`                      | Edit Board / Gallery toggle  |
+| `ontrack.vision.category.addImage`                  | Add image                    |
+| `ontrack.vision.category.addAffirmation`            | Add affirmation              |
+| `ontrack.vision.category.addGoal`                   | Add goal                     |
+| `ontrack.vision.category.canvasItem.<itemId>`       | Select canvas item           |
+| `ontrack.vision.category.selection.deselect`        | Deselect selected item       |
+| `ontrack.vision.category.selection.edit`            | Edit selected item           |
+| `ontrack.vision.category.selection.layerBack`       | Send selected backward       |
+| `ontrack.vision.category.selection.layerForward`    | Bring selected forward       |
+| `ontrack.vision.category.selection.delete`          | Delete selected item         |
+| `ontrack.vision.itemEditor.primary`                 | Affirmation / goal / caption |
+| `ontrack.vision.itemEditor.secondary`               | Optional note / attribution  |
+| `ontrack.vision.itemEditor.save`                    | Save item                    |
+| `ontrack.vision.itemEditor.close`                   | Close editor                 |
 
 Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` / `vision-board-demo-edit` / `vision-board-demo-item-editor`.
 
 ## Profile (`/(tabs)/profile`)
 
-| testID                                              | Control                             |
-| --------------------------------------------------- | ----------------------------------- |
-| `ontrack.profile.avatar`                            | Customize avatar                    |
-| `ontrack.profile.displayName`                       | Hero name — opens identity editor   |
-| `ontrack.profile.blurb`                             | Hero blurb — opens identity editor  |
-| `ontrack.profile.avatar.close`                      | Avatar editor close                 |
-| `ontrack.profile.avatar.save`                       | Avatar editor save                  |
-| `ontrack.profile.avatar.mode.<initials\|icon\|photo>` | Avatar editor mode segment        |
-| `ontrack.profile.avatar.takePhoto`                  | Avatar editor take photo            |
-| `ontrack.profile.avatar.chooseLibrary`              | Avatar editor choose from library   |
-| `ontrack.profile.avatar.searchIcons`                | Avatar editor icon search           |
-| `ontrack.profile.identity.close`                    | Name & blurb editor close           |
-| `ontrack.profile.identity.save`                     | Name & blurb editor save            |
-| `ontrack.profile.identity.name`                     | Name field in identity editor       |
-| `ontrack.profile.identity.goal`                     | Blurb field in identity editor      |
-| `ontrack.profile.guestStatus`                       | (legacy) Guest caption — unused; Account card covers guest CTA |
-| `ontrack.profile.section.account`                   | Account section anchor              |
-| `ontrack.profile.section.accountSyncing`            | Account Syncing section anchor      |
-| `ontrack.profile.section.appearance`                | Appearance section anchor           |
-| `ontrack.profile.section.developer`                 | Developer section anchor            |
-| `ontrack.profile.section.preferences`               | Expand/collapse Preferences section |
-| `ontrack.profile.section.features`                  | Expand/collapse Features section    |
-| `ontrack.profile.section.addons`                    | Expand/collapse Add-ons section     |
-| `ontrack.profile.section.legal`                     | Legal section anchor                |
-| `ontrack.profile.section.dangerZone`                | Danger Zone (reset / delete)        |
-| `ontrack.profile.section.disclaimers`               | Disclaimers footer section anchor   |
-| `ontrack.profile.section.appInformation`            | App Information footer section      |
-| `ontrack.profile.version`                           | App version row in App Information  |
-| `ontrack.profile.theme.system` / `.light` / `.dark` | Theme segment                       |
-| `ontrack.profile.homeLocation`                      | Home location inline field (Open-Meteo city autocomplete) |
-| `ontrack.profile.currentLocation`                   | Current location override field (never writes Home) |
-| `ontrack.profile.currentLocationLocate`             | Far-right locate — clear override + fill from device GPS |
-| `ontrack.profile.*.suggestion.<n>`                  | City suggestion row                     |
-| `ontrack.profile.*.suggestionsDismiss`              | Dismiss city suggestions                |
-| `ontrack.profile.agents`                            | Manage Agents                       |
-| `ontrack.profile.nutrition`                         | Nutrition profiles                  |
-| `ontrack.profile.calendarSync`                      | Google Calendar sync settings       |
-| `ontrack.profile.straiaway`                         | StraiAway partner connect settings  |
-| `ontrack.straiaway.connect`                         | Connect StraiAway                   |
-| `ontrack.straiaway.disconnect`                      | Disconnect StraiAway                |
-| `ontrack.straiaway.open`                            | Open StraiAway                      |
-| `ontrack.straiaway.landing`                         | Partner connect landing             |
-| `ontrack.straiaway.openOntrack`                     | Open partner link in onTrack        |
-| `ontrack.calendarSync.connect`                      | Connect Google Calendar             |
-| `ontrack.calendarSync.reconnect`                    | Renew Google Calendar permissions   |
-| `ontrack.calendarSync.sync`                         | Preview Google Calendar sync        |
-| `ontrack.calendarSync.confirmSync`                  | Confirm previewed calendar changes  |
-| `ontrack.calendarSync.disconnectKeep`               | Disconnect and keep synced copies   |
-| `ontrack.calendarSync.disconnectRemove`             | Disconnect and remove synced copies |
-| `ontrack.calendarSync.confirmDisconnectRemove`      | Confirm removal of synced copies    |
-| `ontrack.calendarSync.direction.twoWay`             | Select two-way calendar sync        |
-| `ontrack.calendarSync.direction.toGoogle`           | Select one-way sync to Google       |
-| `ontrack.calendarSync.direction.fromGoogle`         | Select one-way sync from Google     |
-| `ontrack.profile.privacy`                           | Privacy Policy                      |
-| `ontrack.profile.terms`                             | Terms of Use                        |
-| `ontrack.legal.document`                            | Privacy / Terms document body       |
-| `ontrack.profile.tmdb`                              | TMDB attribution link (footer)      |
-| `ontrack.profile.signOut`                           | Sign Out (signed-in)                |
-| `ontrack.profile.accountProviders`                  | Active SSO line (Apple or Google)   |
-| `ontrack.profile.createOrSignIn`                    | Create or Sign In (guest)           |
-| `ontrack.profile.deleteAccount`                     | Delete Account (signed-in)          |
-| `ontrack.profile.resetData`                         | Reset All Data                      |
-| `ontrack.nutritionProfile.addDependent`             | Create and immediately edit a dependent profile |
-| `ontrack.nutritionProfile.profile.<id>`              | Select a nutrition profile          |
-| `ontrack.nutritionProfile.name`                      | Nutrition profile name              |
-| `ontrack.nutritionProfile.dateOfBirth`               | Nutrition profile birth date        |
-| `ontrack.nutritionProfile.heightCm` / `.weightKg`    | Nutrition body measurements         |
-| `ontrack.nutritionProfile.preferences` / `.allergies` | Nutrition preference fields        |
-| `ontrack.nutritionProfile.<equationSex\|activity\|goal>.<value>` | Nutrition choice chip |
-| `ontrack.nutritionProfile.guardianAcknowledgment`    | Toggle guardian acknowledgment      |
-| `ontrack.nutritionProfile.calculate`                 | Calculate starting targets          |
-| `ontrack.nutritionProfile.target.<name>`             | Edit a calculated nutrition target  |
-| `ontrack.nutritionProfile.saveTargets`               | Save the current target version      |
+| testID                                                           | Control                                                        |
+| ---------------------------------------------------------------- | -------------------------------------------------------------- |
+| `ontrack.profile.avatar`                                         | Customize avatar                                               |
+| `ontrack.profile.displayName`                                    | Hero name — opens identity editor                              |
+| `ontrack.profile.blurb`                                          | Hero blurb — opens identity editor                             |
+| `ontrack.profile.avatar.close`                                   | Avatar editor close                                            |
+| `ontrack.profile.avatar.save`                                    | Avatar editor save                                             |
+| `ontrack.profile.avatar.mode.<initials\|icon\|photo>`            | Avatar editor mode segment                                     |
+| `ontrack.profile.avatar.takePhoto`                               | Avatar editor take photo                                       |
+| `ontrack.profile.avatar.chooseLibrary`                           | Avatar editor choose from library                              |
+| `ontrack.profile.avatar.searchIcons`                             | Avatar editor icon search                                      |
+| `ontrack.profile.identity.close`                                 | Name & blurb editor close                                      |
+| `ontrack.profile.identity.save`                                  | Name & blurb editor save                                       |
+| `ontrack.profile.identity.name`                                  | Name field in identity editor                                  |
+| `ontrack.profile.identity.goal`                                  | Blurb field in identity editor                                 |
+| `ontrack.profile.guestStatus`                                    | (legacy) Guest caption — unused; Account card covers guest CTA |
+| `ontrack.profile.section.account`                                | Account section anchor                                         |
+| `ontrack.profile.section.accountSyncing`                         | Account Syncing section anchor                                 |
+| `ontrack.profile.section.appearance`                             | Appearance section anchor                                      |
+| `ontrack.profile.section.developer`                              | Developer section anchor                                       |
+| `ontrack.profile.section.preferences`                            | Expand/collapse Preferences section                            |
+| `ontrack.profile.section.features`                               | Expand/collapse Features section                               |
+| `ontrack.profile.section.addons`                                 | Expand/collapse Add-ons section                                |
+| `ontrack.profile.section.legal`                                  | Legal section anchor                                           |
+| `ontrack.profile.section.dangerZone`                             | Danger Zone (reset / delete)                                   |
+| `ontrack.profile.section.disclaimers`                            | Disclaimers footer section anchor                              |
+| `ontrack.profile.section.appInformation`                         | App Information footer section                                 |
+| `ontrack.profile.version`                                        | App version row in App Information                             |
+| `ontrack.profile.theme.system` / `.light` / `.dark`              | Theme segment                                                  |
+| `ontrack.profile.homeLocation`                                   | Home location inline field (Open-Meteo city autocomplete)      |
+| `ontrack.profile.currentLocation`                                | Current location override field (never writes Home)            |
+| `ontrack.profile.currentLocationLocate`                          | Far-right locate — clear override + fill from device GPS       |
+| `ontrack.profile.*.suggestion.<n>`                               | City suggestion row                                            |
+| `ontrack.profile.*.suggestionsDismiss`                           | Dismiss city suggestions                                       |
+| `ontrack.profile.agents`                                         | Manage Agents                                                  |
+| `ontrack.profile.nutrition`                                      | Nutrition profiles                                             |
+| `ontrack.profile.calendarSync`                                   | Google Calendar sync settings                                  |
+| `ontrack.profile.straiaway`                                      | StraiAway partner connect settings                             |
+| `ontrack.straiaway.connect`                                      | Connect StraiAway                                              |
+| `ontrack.straiaway.disconnect`                                   | Disconnect StraiAway                                           |
+| `ontrack.straiaway.open`                                         | Open StraiAway                                                 |
+| `ontrack.straiaway.landing`                                      | Partner connect landing                                        |
+| `ontrack.straiaway.openOntrack`                                  | Open partner link in onTrack                                   |
+| `ontrack.calendarSync.connect`                                   | Connect Google Calendar                                        |
+| `ontrack.calendarSync.reconnect`                                 | Renew Google Calendar permissions                              |
+| `ontrack.calendarSync.sync`                                      | Preview Google Calendar sync                                   |
+| `ontrack.calendarSync.confirmSync`                               | Confirm previewed calendar changes                             |
+| `ontrack.calendarSync.disconnectKeep`                            | Disconnect and keep synced copies                              |
+| `ontrack.calendarSync.disconnectRemove`                          | Disconnect and remove synced copies                            |
+| `ontrack.calendarSync.confirmDisconnectRemove`                   | Confirm removal of synced copies                               |
+| `ontrack.calendarSync.direction.twoWay`                          | Select two-way calendar sync                                   |
+| `ontrack.calendarSync.direction.toGoogle`                        | Select one-way sync to Google                                  |
+| `ontrack.calendarSync.direction.fromGoogle`                      | Select one-way sync from Google                                |
+| `ontrack.profile.privacy`                                        | Privacy Policy                                                 |
+| `ontrack.profile.terms`                                          | Terms of Use                                                   |
+| `ontrack.legal.document`                                         | Privacy / Terms document body                                  |
+| `ontrack.profile.tmdb`                                           | TMDB attribution link (footer)                                 |
+| `ontrack.profile.signOut`                                        | Sign Out (signed-in)                                           |
+| `ontrack.profile.accountProviders`                               | Active SSO line (Apple or Google)                              |
+| `ontrack.profile.createOrSignIn`                                 | Create or Sign In (guest)                                      |
+| `ontrack.profile.deleteAccount`                                  | Delete Account (signed-in)                                     |
+| `ontrack.profile.resetData`                                      | Reset All Data                                                 |
+| `ontrack.nutritionProfile.addDependent`                          | Create and immediately edit a dependent profile                |
+| `ontrack.nutritionProfile.profile.<id>`                          | Select a nutrition profile                                     |
+| `ontrack.nutritionProfile.name`                                  | Nutrition profile name                                         |
+| `ontrack.nutritionProfile.dateOfBirth`                           | Nutrition profile birth date                                   |
+| `ontrack.nutritionProfile.heightCm` / `.weightKg`                | Nutrition body measurements                                    |
+| `ontrack.nutritionProfile.preferences` / `.allergies`            | Nutrition preference fields                                    |
+| `ontrack.nutritionProfile.<equationSex\|activity\|goal>.<value>` | Nutrition choice chip                                          |
+| `ontrack.nutritionProfile.guardianAcknowledgment`                | Toggle guardian acknowledgment                                 |
+| `ontrack.nutritionProfile.calculate`                             | Calculate starting targets                                     |
+| `ontrack.nutritionProfile.target.<name>`                         | Edit a calculated nutrition target                             |
+| `ontrack.nutritionProfile.saveTargets`                           | Save the current target version                                |
 
 ## Welcome / first-run (`/welcome`)
 
@@ -741,22 +742,22 @@ Single celestial first-run (constellation + name/goal + Get Started). Legacy
 `/onboarding` redirects here. Profile upgrade SSO is root `/account` (no tab
 dock); legacy `/(tabs)/profile/account` redirects there.
 
-| testID                                | Control                                    |
-| ------------------------------------- | ------------------------------------------ |
-| `ontrack.auth.section.hero`           | Hero anchor (brand row + constellation)    |
-| `ontrack.auth.section.constellation`  | Orbit canvas + welcome copy                |
-| `ontrack.onboarding.name`             | Display name field                         |
-| `ontrack.onboarding.goal`             | Primary goal field                         |
-| `ontrack.onboarding.getStarted`       | Get Started (guest + complete onboarding)  |
-| `ontrack.onboarding.skip`             | I want to try the app out first (defaults + guest + complete) |
-| `ontrack.auth.guest`                  | First-run try-first / Skip alias (not on SSO `/welcome` shell) |
-| `ontrack.onboarding.signIn`           | Reveal Apple / Google on welcome           |
-| `ontrack.auth.section.providers`      | Apple / Google (welcome expand + Profile upgrade) |
-| `ontrack.auth.apple`                  | Continue with Apple                        |
-| `ontrack.auth.google`                 | Continue with Google                       |
-| `ontrack.auth.switchAccount`          | Use a different account (locked gate only) |
-| `ontrack.auth.dismissError`           | Dismiss sign-in error                      |
-| `ontrack.auth.privacy`                | Privacy Policy link (upgrade / locked)     |
+| testID                                  | Control                                                        |
+| --------------------------------------- | -------------------------------------------------------------- |
+| `ontrack.auth.section.hero`             | Hero anchor (brand row + constellation)                        |
+| `ontrack.auth.section.constellation`    | Orbit canvas + welcome copy                                    |
+| `ontrack.onboarding.name`               | Display name field                                             |
+| `ontrack.onboarding.goal`               | Primary goal field                                             |
+| `ontrack.onboarding.getStarted`         | Get Started (guest + complete onboarding)                      |
+| `ontrack.onboarding.skip`               | I want to try the app out first (defaults + guest + complete)  |
+| `ontrack.auth.guest`                    | First-run try-first / Skip alias (not on SSO `/welcome` shell) |
+| `ontrack.onboarding.signIn`             | Reveal Apple / Google on welcome                               |
+| `ontrack.auth.section.providers`        | Apple / Google (welcome expand + Profile upgrade)              |
+| `ontrack.auth.apple`                    | Continue with Apple                                            |
+| `ontrack.auth.google`                   | Continue with Google                                           |
+| `ontrack.auth.switchAccount`            | Use a different account (locked gate only)                     |
+| `ontrack.auth.dismissError`             | Dismiss sign-in error                                          |
+| `ontrack.auth.privacy`                  | Privacy Policy link (upgrade / locked)                         |
 | `ontrack.auth.terms`                  | Terms of Use link (upgrade / locked)       |
 | `ontrack.auth.themeMode`              | Light/dark toggle (welcome)                |
 | `ontrack.auth.dataChoice.merge`       | Merge device into cloud (existing account) |
@@ -784,8 +785,8 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 
 **Verify (H18):** empty guest has no Your Trips section — use `--route /travel --flow travel-home --exists travel.list.section.yourTrips` (optional `travel.newTrip.open`) for seeded cards, or `--flow travel-home-empty --exists travel.list.empty.create` for the zero-trip welcome. Bare goto alone is not a smoke. Bench: `docs/agent-ui-verify-benchmark.md`.
 
-| testID                                           | Control                                                   |
-| ------------------------------------------------ | --------------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.chrome.flightPath`               | Layout anchor — flight-path flourish on itinerary hero only |
 | `ontrack.travel.chrome.skyDecor`                 | Layout anchor — weather sky + location ground (stars/moon, sun/clouds, town/trees) behind titles |
 | `ontrack.travel.list.section.yourTrips`          | Layout anchor — Your Trips section (`travel.home.section.yourTrips` alias) |
@@ -823,8 +824,8 @@ The atlas is a root full-screen route. The named flow seeds Iceland and Antigua
 pins, opens the world view, and verification cleanup returns devices to a
 portrait Travel screen.
 
-| testID | Control |
-| --- | --- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.map.open` / `.close` | Travel Home globe entry / close atlas from the world view |
 | `ontrack.travel.map.section.world` / `.country` | World and drilled country canvas anchors |
 | `ontrack.travel.map.section.globe` | Interactive orthographic world globe anchor |
@@ -855,16 +856,16 @@ portrait Travel screen.
 
 ### Travel trip hub (`/travel/<id>/hub`) — redirects to Trip Tools
 
-| testID                                      | Control                          |
-| ------------------------------------------- | -------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.hub.close`                  | Close trip tools (empty state)   |
 | `ontrack.travel.hub.backToTravel`           | Empty-state back to Travel       |
 | `ontrack.travel.hub.section.<tripId>`       | Legacy hub anchor (unused)       |
 
 ### Trip Tools (`/travel/<id>/tools`)
 
-| testID                                      | Control                                      |
-| ------------------------------------------- | -------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.tripTools.back`             | Return to the trip itinerary                 |
 | `ontrack.travel.tripTools.backToTravel`     | Missing-trip fallback to Travel              |
 | `ontrack.travel.tripTools.section.<tripId>` | Trip Tools glass action-grid page anchor     |
@@ -887,8 +888,8 @@ portrait Travel screen.
 
 ### Travel canonical actions
 
-| testID                                            | Control                                            |
-| ------------------------------------------------- | -------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.newTrip.open`                     | Open the new-trip bottom sheet                     |
 | `ontrack.travel.newTrip.cancel`                   | Close the new-trip bottom sheet                    |
 | `ontrack.travel.newTrip.title`                    | New-trip title field                               |
@@ -966,8 +967,8 @@ portrait Travel screen.
 
 Deep link example: `ontrack://design-system` / Expo route `/design-system`
 
-| testID                             | Control                                   |
-| ---------------------------------- | ----------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.profile.designSystem`     | Open the development gallery from Profile (also via Developer Tools) |
 | `ontrack.profile.apiUsage`         | Open Integrations (also via Developer Tools) |
 | `ontrack.profile.developer`        | Open Developer Tools hub |
@@ -1028,7 +1029,7 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 ### Performance Monitor (`/(tabs)/profile/performance`, `developer_tools` only)
 
 | testID | Purpose |
-|---|---|
+| --- | --- |
 | `ontrack.performance.back` | Return to Developer Tools |
 | `ontrack.performance.section.live` | Live process metrics and memory breakdown |
 | `ontrack.performance.processDetails` | Process, pressure, and heap detail card |
@@ -1087,16 +1088,16 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 
 ## Activity form
 
-| testID                                        | Control                                    |
-| --------------------------------------------- | ------------------------------------------ |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.activityForm.choice.<group>.<value>` | Select a meal, workout, or priority option |
 
 ## Health
 
 Deep link: `ontrack://health` / Expo route `/(tabs)/health`
 
-| testID                                                 | Control                             |
-| ------------------------------------------------------ | ----------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.tabs.health`                                  | Open Health tab                     |
 | `ontrack.health.section.body` / `.mind`                | Switch Health section               |
 | `ontrack.health.body.connect`                          | Request Apple Health access         |
@@ -1121,10 +1122,10 @@ Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scr
 
 ## Finance
 
-Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flow `finance`
+Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flows `finance`, `finance-ezpass`, `finance-ezpass-import`, `finance-ezpass-add-friend`, `finance-ezpass-saved-statements`
 
-| testID | Control |
-| --- | --- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.tabs.finance` | Open Finance tab |
 | `ontrack.finance.hub` | Finance hub |
 | `ontrack.finance.back` | Eyebrow back on Finance nested screens |
@@ -1134,17 +1135,25 @@ Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flow `finance`
 | `ontrack.finance.coach.<id>` | Money coach insight card |
 | `ontrack.finance.expense.*` | Expense form (`form` + fields / save / cancel) |
 | `ontrack.finance.transactions.*` | Transactions list |
+| `ontrack.finance.transactions.importEzPass`                                                                  | Open E-ZPass activity import                                                                              |
+| `ontrack.finance.hub.ezpass`                                                                                 | Open the E-ZPass area from Finance                                                                        |
+| `ontrack.finance.ezpass.home` / `.summary` / `.monthChart` / `.monthDetail` / `.month.<YYYY-MM>` / `.share` / `.upload` | E-ZPass dashboard, road-spend summary, tappable six-month graph, selected-month totals, share action, and upload action |
+| `ontrack.finance.ezpass.statements` / `.statements.toggle` / `.statement.<id>`                              | Bottom collapsible uploaded-statement list and reopenable saved source file                               |
+| `ontrack.finance.ezpass.roadActivity` / `.replenishments` / `.day.<YYYY-MM-DD>` / `.activity.<id>`           | Combined toll/refund activity, separate replenishments, newest-first day groups, and imported activity    |
+| `ontrack.finance.ezpass.driver.<all-or-mine-or-friend:id>` / `.friendTag.<transactionId>` / `.friendClear`  | Filter E-ZPass activity by driver, assign/change a shared driver, or mark the activity as mine             |
+| `ontrack.finance.ezpass.ledger.<id>`                                                                         | Owned/shared ledger selection                                                                               |
+| `ontrack.finance.ezpass.officialSite` / `.file` / `.screenshots` / `.ai` / `.row.<id>` / `.confirm`          | Official E-ZPass NY handoff, source picker, review rows, optional AI fallback, and import confirmation    |
 | `ontrack.finance.bills.*` | Bills & subscriptions |
 | `ontrack.finance.buckets.*` | Savings buckets |
 | `ontrack.finance.entities.*` | Personal / business / property |
-| `ontrack.finance.accounts.*` | Manual accounts, Teller bank Link, Plaid investment Link, provider sync/disconnect, Plaid-bank migration, HYSA APR |
+| `ontrack.finance.accounts.*`                                                                                 | Manual accounts, Plaid bank/investment Link, provider sync/disconnect, HYSA APR                           |
 | `ontrack.finance.credit.*` | Credit score card, edit sheet, free-provider links |
 | `ontrack.finance.tax.*` | Tax prep, doc vault, entity scope, export, File elsewhere |
 
 ## Travel plan detail
 
-| testID                                         | Control                                                                  |
-| ---------------------------------------------- | ------------------------------------------------------------------------ |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | ~~`ontrack.travel.planDetail.weather`~~        | **Unused** — use `list.tripWeather.<tripId>` on the travel list          |
 | ~~`ontrack.travel.planDetail.currency`~~       | **Unused** — use `list.currency.<tripId>` on the travel list             |
 | `ontrack.travel.planDetail.addToTimeline`      | Add to Timeline                                                          |
@@ -1166,8 +1175,8 @@ Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flow `finance`
 
 ### Destination translator
 
-| testID | Control |
-| --- | --- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.translator.sheet` | Destination translator glass sheet |
 | `ontrack.travel.translator.close` | Close translator and stop active audio/network work |
 | `ontrack.travel.translator.language.home` / `.destination` | Choose either conversation language |
@@ -1227,8 +1236,8 @@ Deep link: `ontrack://travel/<planId>` → `/travel/[id]`
 
 ## Flight search (`/travel/[id]/flights`)
 
-| testID                                      | Control                            |
-| ------------------------------------------- | ---------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.flightSearch.back`          | Back to trip                       |
 | `ontrack.travel.flightSearch.from`          | From                               |
 | `ontrack.travel.flightSearch.to`            | To                                 |
@@ -1241,8 +1250,8 @@ Deep link: `ontrack://travel/<planId>` → `/travel/[id]`
 
 ## Stay search (`/travel/[id]/stays`)
 
-| testID                                           | Control      |
-| ------------------------------------------------ | ------------ |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.staySearch.back`                 | Back to trip |
 | `ontrack.travel.staySearch.provider.booking`     | Booking.com  |
 | `ontrack.travel.staySearch.provider.airbnb`      | Airbnb       |
@@ -1250,8 +1259,8 @@ Deep link: `ontrack://travel/<planId>` → `/travel/[id]`
 
 ## Modals / sheets
 
-| testID                                         | Control                                               |
-| ---------------------------------------------- | ----------------------------------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.addPhotos.close`               | Dismiss grabber                                       |
 | `ontrack.travel.addPhotos.takePhoto`           | Take Photo                                            |
 | `ontrack.travel.addPhotos.chooseFromPhotos`    | Choose from Photos                                    |
@@ -1276,8 +1285,8 @@ Deep link: `ontrack://travel/<planId>` → `/travel/[id]`
 
 ## Group chat (`/travel/[id]/chat`)
 
-| testID                                    | Control               |
-| ----------------------------------------- | --------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.travel.chat.close`               | Close Group Chat      |
 | `ontrack.travel.chat.enableNotifications` | Turn On notifications |
 | `ontrack.travel.chat.dismissNotifications`| Dismiss alerts banner |
@@ -1298,8 +1307,8 @@ Deep link: `ontrack://travel/<planId>/chat` → `/travel/[id]/chat`
 
 ## Chrome
 
-| testID                      | Control                    |
-| --------------------------- | -------------------------- |
+| testID                            | Control                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.chrome.back`       | `BackButton` default       |
 | `ontrack.chrome.headerBack` | `HeaderBackButton` default |
 
@@ -1308,8 +1317,8 @@ Deep link: `ontrack://travel/<planId>/chat` → `/travel/[id]/chat`
 | testID                            | Control                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.agentUi.overlay.root`    | Overlay host (`./scripts/agent-ui-overlay.sh on` paints framed testIDs) |
-| `ontrack.agentUi.overlay.toggle`  | White circular FAB (Travel `+` style; default bottom-right) — tap toggles overlay; drag to move; long-press hides. On = target count. Restore: page long-press (Dev Mode + developer account) or Diagnostics → Overlay (__DEV__) |
-| `ontrack.dev.themeToggle`         | White circular FAB (Travel `+` style; default bottom-right, left of overlay) — tap flips Light ↔ Dark (moon/sun). Hidden by default; triple-tap the page to show/hide (__DEV__) |
+| `ontrack.agentUi.overlay.toggle` | White circular FAB (Travel `+` style; default bottom-right) — tap toggles overlay; drag to move; long-press hides. On = target count. Restore: page long-press (Dev Mode + developer account) or Diagnostics → Overlay (**DEV**) |
+| `ontrack.dev.themeToggle`        | White circular FAB (Travel `+` style; default bottom-right, left of overlay) — tap flips Light ↔ Dark (moon/sun). Hidden by default; triple-tap the page to show/hide (**DEV**)                                                  |
 
 ## Source of truth
 

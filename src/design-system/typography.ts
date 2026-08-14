@@ -41,7 +41,6 @@ type VariantMetrics = {
   fontSize: number;
   lineHeight: number;
   letterSpacing?: number;
-  textTransform?: 'uppercase';
 };
 
 const variantMetrics = {
@@ -58,7 +57,6 @@ const variantMetrics = {
     fontSize: 11.5,
     lineHeight: 15,
     letterSpacing: 1.4,
-    textTransform: 'uppercase' as const,
   },
   metric: { fontSize: 38, lineHeight: 43 },
   mono: { fontSize: 13, lineHeight: 18 },
@@ -78,7 +76,6 @@ export type AppTextToken = {
   lineHeight: number;
   fontWeight: AppFontWeight;
   letterSpacing?: number;
-  textTransform?: 'uppercase';
 };
 
 function faceFor(variant: TypeVariant): string {
@@ -103,9 +100,6 @@ export function appTextStyle(variant: TypeVariant, options?: AppTextStyleOptions
   };
   if ('letterSpacing' in metrics && metrics.letterSpacing != null) {
     token.letterSpacing = metrics.letterSpacing;
-  }
-  if ('textTransform' in metrics && metrics.textTransform) {
-    token.textTransform = metrics.textTransform;
   }
   return token;
 }

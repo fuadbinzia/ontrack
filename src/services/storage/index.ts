@@ -21,6 +21,8 @@ export const STORAGE_KEYS = {
   vehicles: 'ontrack/vehicles/v1',
   health: 'ontrack/health/v1',
   finance: 'ontrack/finance/v1',
+  /** Device-local index of durable E-ZPass source files; never cloud-synced. */
+  financeEzPassStatements: 'ontrack/finance-ezpass-statements/v1',
   foodProfile: 'ontrack/food-profile/v1',
   foodPantry: 'ontrack/food-pantry/v1',
   foodRecipes: 'ontrack/food-recipes/v1',

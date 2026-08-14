@@ -1,5 +1,5 @@
 import { financeCategoryById, taxBucketLabel } from './categories';
-import { groupTransactionsByTaxBucket } from './model';
+import { groupTransactionsByTaxBucket, isSpendingTransaction } from './model';
 import type {
   FinanceDocument,
   FinanceEntity,
@@ -31,7 +31,10 @@ export function buildTaxExportPackage(input: {
       : input.entities.map((e) => e.id),
   );
   const scoped = input.transactions.filter(
-    (t) => entityIds.has(t.entityId) && t.date.startsWith(String(input.taxYear.year)),
+    (t) =>
+      entityIds.has(t.entityId) &&
+      t.date.startsWith(String(input.taxYear.year)) &&
+      isSpendingTransaction(t),
   );
   const entityName = (id: string) =>
     input.entities.find((e) => e.id === id)?.name ?? id;

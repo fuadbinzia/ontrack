@@ -51,6 +51,19 @@ describe('tax handoff + export', () => {
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',
       },
+      {
+        id: 'funding',
+        amount: 25,
+        currency: 'USD',
+        date: '2026-03-05',
+        merchant: 'E-ZPass Replenishment',
+        categoryId: 'transport',
+        entityId: 'e1',
+        source: 'ezpass',
+        activity: 'transfer',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
     ];
     const pack = buildTaxExportPackage({
       taxYear,
@@ -60,6 +73,8 @@ describe('tax handoff + export', () => {
     });
     expect(pack.csv).toContain('Office Depot');
     expect(pack.csv).toContain('Office Expense');
+    expect(pack.csv).not.toContain('E-ZPass Replenishment');
+    expect(pack.summaryText).toContain('Total categorized spend: 42.50');
     expect(pack.summaryText).toContain('does not e-file');
   });
 });

@@ -5,6 +5,8 @@ import { typeConfig, type TypeVariant } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 
+import { titleCaseTextChildren } from './field-title-case';
+
 export interface AppTextProps extends TextProps {
   variant?: TypeVariant;
   color?: 'primary' | 'secondary' | 'tertiary' | 'accent' | 'onAccent' | 'danger' | 'success';
@@ -21,6 +23,8 @@ export interface AppTextProps extends TextProps {
   fit?: boolean;
   /** Floor when `fit` is set (default 0.72). */
   fitMinimumScale?: number;
+  /** Title-case compact chrome. Automatically enabled for the overline variant. */
+  titleCase?: boolean;
 }
 
 export const AppText = forwardRef<Text, AppTextProps>(function AppText(
@@ -31,7 +35,9 @@ export const AppText = forwardRef<Text, AppTextProps>(function AppText(
     bold = false,
     fit = false,
     fitMinimumScale = 0.72,
+    titleCase = false,
     style,
+    children,
     numberOfLines,
     adjustsFontSizeToFit,
     minimumFontScale,
@@ -53,6 +59,8 @@ export const AppText = forwardRef<Text, AppTextProps>(function AppText(
   }[color];
 
   const shouldFit = fit || adjustsFontSizeToFit === true;
+  const shouldTitleCase = titleCase || variant === 'overline';
+  const content = shouldTitleCase ? titleCaseTextChildren(children) : children;
 
   return (
     <Text
@@ -70,7 +78,8 @@ export const AppText = forwardRef<Text, AppTextProps>(function AppText(
         shouldFit && { flexShrink: 1, minWidth: 0 },
         style,
       ]}
-      {...rest}
-    />
+      {...rest}>
+      {content}
+    </Text>
   );
 });

@@ -53,7 +53,11 @@ export function createFinanceTransaction(input: {
   notes?: string;
   receiptUri?: string;
   source?: FinanceTransaction['source'];
+  activity?: FinanceTransaction['activity'];
+  activityTime?: string;
   externalId?: string;
+  ezPassFriendId?: string;
+  ezPassFriendName?: string;
 }): FinanceTransaction {
   const now = isoNow();
   return {
@@ -68,7 +72,11 @@ export function createFinanceTransaction(input: {
     notes: input.notes,
     receiptUri: input.receiptUri,
     source: input.source ?? 'manual',
+    activity: input.activity ?? 'expense',
+    activityTime: input.activityTime,
     externalId: input.externalId,
+    ezPassFriendId: input.ezPassFriendId,
+    ezPassFriendName: input.ezPassFriendName,
     createdAt: now,
     updatedAt: now,
   };

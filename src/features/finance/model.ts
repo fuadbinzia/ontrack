@@ -37,8 +37,20 @@ export function transactionsInMonth(
   return transactions.filter((t) => t.date.startsWith(prefix));
 }
 
+export function isSpendingTransaction(transaction: FinanceTransaction): boolean {
+  return (
+    transaction.activity === undefined ||
+    transaction.activity === 'expense' ||
+    transaction.activity === 'refund'
+  );
+}
+
 export function sumAmounts(transactions: FinanceTransaction[]): number {
-  return transactions.reduce((sum, t) => sum + t.amount, 0);
+  return transactions.reduce(
+    (sum, transaction) =>
+      isSpendingTransaction(transaction) ? sum + transaction.amount : sum,
+    0,
+  );
 }
 
 export function categoryBreakdown(
@@ -46,6 +58,7 @@ export function categoryBreakdown(
 ): { categoryId: string; label: string; amount: number }[] {
   const map = new Map<string, number>();
   for (const t of transactions) {
+    if (!isSpendingTransaction(t)) continue;
     map.set(t.categoryId, (map.get(t.categoryId) ?? 0) + t.amount);
   }
   return [...map.entries()]
@@ -140,6 +153,7 @@ export function groupTransactionsByTaxBucket(
 ): { bucket: FinanceTaxBucket; label: string; amount: number; count: number }[] {
   const map = new Map<FinanceTaxBucket, { amount: number; count: number }>();
   for (const t of transactions) {
+    if (!isSpendingTransaction(t)) continue;
     const bucket = financeCategoryById(t.categoryId).taxBucket;
     const prev = map.get(bucket) ?? { amount: 0, count: 0 };
     map.set(bucket, { amount: prev.amount + t.amount, count: prev.count + 1 });

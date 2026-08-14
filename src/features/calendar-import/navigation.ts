@@ -12,7 +12,7 @@ function isSharePath(pathname: string): boolean {
 export function redirectIncomingSystemPath(path: string): string {
   try {
     const url = new URL(path, 'ontrack://app');
-    if (url.hostname === 'expo-sharing') return '/share-event';
+    if (url.hostname === 'expo-sharing') return '/share-import';
 
     // Universal / App Links arrive as full https://… URLs. Strip the host so
     // Expo Router always lands on the shared route (`/l/…`, `/i/…`, …).

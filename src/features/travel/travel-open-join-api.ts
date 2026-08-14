@@ -167,8 +167,8 @@ export async function listTravelOpenJoinRequests(
     const item = row as Record<string, unknown>;
     if (
       typeof item.id !== 'string' ||
+      typeof item.requester_user_id !== 'string' ||
       typeof item.requester_name !== 'string' ||
-      typeof item.requester_email !== 'string' ||
       typeof item.status !== 'string' ||
       typeof item.created_at !== 'string'
     ) {
@@ -184,8 +184,8 @@ export async function listTravelOpenJoinRequests(
     return [
       {
         id: item.id,
+        requesterUserId: item.requester_user_id,
         requesterName: item.requester_name,
-        requesterEmail: item.requester_email,
         status: item.status,
         createdAt: item.created_at,
         grantedInviteCode:
@@ -206,7 +206,7 @@ export async function decideTravelOpenJoin(
   requestId: string;
   grantedInviteCode?: string;
   requesterName?: string;
-  requesterEmail?: string;
+  requesterUserId?: string;
 }> {
   const client = await requireAuthenticatedInviteClient();
   const { data, error } = await client.rpc('decide_travel_open_join', {
@@ -233,8 +233,8 @@ export async function decideTravelOpenJoin(
         : undefined,
     requesterName:
       typeof row.requesterName === 'string' ? row.requesterName : undefined,
-    requesterEmail:
-      typeof row.requesterEmail === 'string' ? row.requesterEmail : undefined,
+    requesterUserId:
+      typeof row.requesterUserId === 'string' ? row.requesterUserId : undefined,
   };
 }
 

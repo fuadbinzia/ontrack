@@ -39,7 +39,6 @@ jest.mock('@/hooks/use-theme', () => ({
 }));
 
 jest.mock('@/utils/agent-ui', () => {
-  const React = jest.requireActual('react');
   return {
     AgentTestId: ({ children }: { children?: React.ReactNode }) => children,
     AgentUiIds: { overview: { row: (route: string) => route } },
@@ -63,15 +62,15 @@ describe('OverviewSummaryRow navigation', () => {
 
   it('runs the row preparation before navigating', () => {
     const order: string[] = [];
-    const onOpen = jest.fn(() => order.push('prepare'));
+    const beforeNavigate = jest.fn(() => order.push('prepare'));
     mockNavigate.mockImplementation(() => order.push('navigate'));
-    render(<OverviewSummaryRow row={{ ...baseRow, onOpen }} isLast />);
+    render(<OverviewSummaryRow row={{ ...baseRow, beforeNavigate }} isLast />);
 
     fireEvent.press(
       screen.getByLabelText('Today. Your day is clear. Open the timeline.'),
     );
 
-    expect(onOpen).toHaveBeenCalledTimes(1);
+    expect(beforeNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith('/');
     expect(order).toEqual(['prepare', 'navigate']);
   });

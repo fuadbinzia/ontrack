@@ -32,12 +32,7 @@ import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 
 type DisplayBout = EventBout & { billing?: 'Main Event' | 'Co-Main' };
-
-type FightCardContext = {
-  eventTitle?: string;
-  eventTiming?: string;
-};
-
+type FightCardContext = { eventTitle?: string; eventTiming?: string };
 const sectionOrder: EventCardSection[] = ['main', 'prelims', 'early-prelims'];
 function sameMatchup(names: readonly string[], participants: readonly string[]) {
   if (names.length < 2 || participants.length < 2) return false;
@@ -119,13 +114,16 @@ function FighterPortrait({ fighter, featured }: {
           width: size,
           height: size,
           borderRadius: size / 2,
+          backgroundColor: colors.portraitMatte,
+          borderColor: colors.portraitRim,
         },
       ]}>
       {fighter.imageUrl && !failed ? (
         <Image
           source={fighter.imageUrl}
           cachePolicy="disk"
-          contentFit="contain"
+          contentFit="cover"
+          contentPosition={{ bottom: '0%', left: '50%' }}
           transition={150}
           onError={() => setFailed(true)}
           style={StyleSheet.absoluteFill}

@@ -195,6 +195,8 @@ export interface UfcFightCardColors {
   primaryText: string;
   secondaryText: string;
   divider: string;
+  portraitMatte: string;
+  portraitRim: string;
 }
 
 /** High-contrast broadcast colors scoped to UFC cards in either app theme. */
@@ -208,6 +210,8 @@ export function ufcFightCardColors(theme: Theme): UfcFightCardColors {
     primaryText: dark ? '#FFFFFF' : '#171A1F',
     secondaryText: dark ? '#DCE2E9' : '#525A64',
     divider: dark ? '#3A414B' : '#D2D6DB',
+    portraitMatte: dark ? '#D8DDE1' : '#E1E4E6',
+    portraitRim: dark ? '#AEB6BD' : '#BCC3C9',
   };
 }
 

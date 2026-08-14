@@ -17,6 +17,13 @@ let mockPlants: {
 let mockTodayKey = "2026-08-13";
 const mockSetSelectedDate = jest.fn();
 
+function resetOverviewTestState() {
+  mockPlants = [];
+  mockTodayKey = "2026-08-13";
+  mockSetSelectedDate.mockClear();
+  useFinance.getState().reset();
+}
+
 jest.mock("react-native-reanimated", () => {
   const { View } = jest.requireActual("react-native");
   const transition = {
@@ -97,12 +104,15 @@ jest.mock("../overview-summary-row", () => {
         label: string;
         headline: string;
         detail: string;
-        onOpen?: () => void;
+        beforeNavigate?: () => void;
       };
     }) =>
       React.createElement(
         Pressable,
-        { accessibilityLabel: `Open ${row.label}`, onPress: row.onOpen },
+        {
+          accessibilityLabel: `Open ${row.label}`,
+          onPress: row.beforeNavigate,
+        },
         React.createElement(
           Text,
           null,
@@ -182,7 +192,6 @@ jest.mock("@/store/vision-board", () => ({
 }));
 
 jest.mock("@/utils/agent-ui", () => {
-  const React = jest.requireActual("react");
   return {
     AgentTestId: ({ children }: { children?: React.ReactNode }) => children,
     AgentUiIds: {
@@ -222,12 +231,7 @@ function bill(nextDue: string, active = true) {
 }
 
 describe("OverviewScreen finance integration", () => {
-  beforeEach(() => {
-    mockPlants = [];
-    mockTodayKey = "2026-08-13";
-    mockSetSelectedDate.mockClear();
-    useFinance.getState().reset();
-  });
+  beforeEach(resetOverviewTestState);
   afterEach(() => {
     cleanup();
     useFinance.getState().reset();
@@ -281,12 +285,7 @@ describe("OverviewScreen finance integration", () => {
 });
 
 describe("OverviewScreen Today navigation", () => {
-  beforeEach(() => {
-    mockPlants = [];
-    mockTodayKey = "2026-08-13";
-    mockSetSelectedDate.mockClear();
-    useFinance.getState().reset();
-  });
+  beforeEach(resetOverviewTestState);
 
   afterEach(cleanup);
 
@@ -317,10 +316,7 @@ describe("OverviewScreen Today navigation", () => {
 });
 
 describe("OverviewScreen plant grammar", () => {
-  beforeEach(() => {
-    mockPlants = [];
-    useFinance.getState().reset();
-  });
+  beforeEach(resetOverviewTestState);
 
   afterEach(cleanup);
 

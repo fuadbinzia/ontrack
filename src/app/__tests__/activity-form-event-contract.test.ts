@@ -203,6 +203,28 @@ describe('Event activity form contract', () => {
     expect(fightCard).not.toContain('colors.blueCorner');
   });
 
+  it('grounds transparent fighter cutouts on a neutral circular photo matte', () => {
+    expect(fightCard).toContain('backgroundColor: colors.portraitMatte');
+    expect(fightCard).toContain('borderColor: colors.portraitRim');
+    expect(fightCard).toContain("contentPosition={{ bottom: '0%', left: '50%' }}");
+  });
+
+  it('fills the portrait circle so wide headshots do not leave empty space above the fighter', () => {
+    const portrait = fightCard.slice(
+      fightCard.indexOf('function FighterPortrait'),
+      fightCard.indexOf('function FighterMeta'),
+    );
+    expect(portrait).toContain('contentFit="cover"');
+    expect(portrait).not.toContain('contentFit="contain"');
+  });
+
+  it('keeps the edge-to-edge crop circular across featured and standard bouts', () => {
+    expect(fightCard).toContain('const size = s(featured ? 68 : 54)');
+    expect(fightCard).toContain('borderRadius: size / 2');
+    expect(fightCard).toContain("contentPosition={{ bottom: '0%', left: '50%' }}");
+    expect(fightCard).toContain("useEffect(() => setFailed(false), [fighter.imageUrl])");
+  });
+
   it('clips the complete UFC board and its header into one rounded glass card', () => {
     expect(fightCard).toContain('borderRadius: radii.lg');
     expect(fightCard).toContain('cardBanner: {');

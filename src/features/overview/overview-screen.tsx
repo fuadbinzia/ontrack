@@ -139,7 +139,7 @@ export function OverviewScreen() {
           ? `${nextTodayActivity.allDay ? 'All day' : formatMinutes(nextTodayActivity.startMinutes)} · ${nextTodayActivity.title}`
           : 'Open the timeline to plan what comes next.',
         href: TAB_META['(today)'].href,
-        onOpen: () => setSelectedDate(todayKey()),
+        beforeNavigate: () => setSelectedDate(todayKey()),
       },
       {
         routeName: 'travel',

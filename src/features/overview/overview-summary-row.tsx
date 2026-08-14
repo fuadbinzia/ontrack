@@ -16,7 +16,7 @@ export type OverviewRow = {
   headline: string;
   detail: string;
   href: Href;
-  onOpen?: () => void;
+  beforeNavigate?: () => void;
 };
 
 export function OverviewSummaryRow({
@@ -30,7 +30,7 @@ export function OverviewSummaryRow({
   const theme = useTheme();
   const { spacing, s, layout } = useResponsive();
   const open = () => {
-    row.onOpen?.();
+    row.beforeNavigate?.();
     router.navigate(row.href);
   };
 

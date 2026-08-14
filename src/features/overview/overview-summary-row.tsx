@@ -16,6 +16,7 @@ export type OverviewRow = {
   headline: string;
   detail: string;
   href: Href;
+  onOpen?: () => void;
 };
 
 export function OverviewSummaryRow({
@@ -28,7 +29,10 @@ export function OverviewSummaryRow({
   const router = useRouter();
   const theme = useTheme();
   const { spacing, s, layout } = useResponsive();
-  const open = () => router.navigate(row.href);
+  const open = () => {
+    row.onOpen?.();
+    router.navigate(row.href);
+  };
 
   return (
     <AgentTestId

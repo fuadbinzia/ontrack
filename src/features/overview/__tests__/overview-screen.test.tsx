@@ -1,4 +1,9 @@
-import { cleanup, render, screen } from "@testing-library/react-native";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react-native";
 
 import { useFinance } from "@/store/finance";
 
@@ -9,6 +14,8 @@ let mockPlants: {
   nickname: string;
   nextWateringAt: string;
 }[] = [];
+let mockTodayKey = "2026-08-13";
+const mockSetSelectedDate = jest.fn();
 
 jest.mock("react-native-reanimated", () => {
   const { View } = jest.requireActual("react-native");
@@ -81,17 +88,26 @@ jest.mock("@/components/primitives", () => {
 
 jest.mock("../overview-summary-row", () => {
   const React = jest.requireActual("react");
-  const { Text } = jest.requireActual("react-native");
+  const { Pressable, Text } = jest.requireActual("react-native");
   return {
     OverviewSummaryRow: ({
       row,
     }: {
-      row: { label: string; headline: string; detail: string };
+      row: {
+        label: string;
+        headline: string;
+        detail: string;
+        onOpen?: () => void;
+      };
     }) =>
       React.createElement(
-        Text,
-        null,
-        `${row.label}|${row.headline}|${row.detail}`,
+        Pressable,
+        { accessibilityLabel: `Open ${row.label}`, onPress: row.onOpen },
+        React.createElement(
+          Text,
+          null,
+          `${row.label}|${row.headline}|${row.detail}`,
+        ),
       ),
   };
 });
@@ -151,6 +167,10 @@ jest.mock("@/store/travel", () => ({
   useTravel: (selector: (state: { plans: never[] }) => unknown) =>
     selector({ plans: [] }),
 }));
+jest.mock("@/store/ui", () => ({
+  useUI: (selector: (state: { setSelectedDate: jest.Mock }) => unknown) =>
+    selector({ setSelectedDate: mockSetSelectedDate }),
+}));
 jest.mock("@/store/vehicles", () => ({
   useVehicles: (selector: (state: { vehicles: never[] }) => unknown) =>
     selector({ vehicles: [] }),
@@ -181,7 +201,7 @@ jest.mock("@/utils/date", () => ({
   formatMinutes: (minutes: number) => `${minutes}`,
   formatTripDateRangeLabel: (start: string, end: string) => `${start}-${end}`,
   nowMinutes: () => 600,
-  todayKey: () => "2026-08-13",
+  todayKey: () => mockTodayKey,
 }));
 
 function bill(nextDue: string, active = true) {
@@ -204,6 +224,8 @@ function bill(nextDue: string, active = true) {
 describe("OverviewScreen finance integration", () => {
   beforeEach(() => {
     mockPlants = [];
+    mockTodayKey = "2026-08-13";
+    mockSetSelectedDate.mockClear();
     useFinance.getState().reset();
   });
   afterEach(() => {
@@ -255,6 +277,42 @@ describe("OverviewScreen finance integration", () => {
     ).toBeTruthy();
     expect(screen.getByText("Everything is moving smoothly")).toBeTruthy();
     expect(screen.queryByText("• Internet · Bill due")).toBeNull();
+  });
+});
+
+describe("OverviewScreen Today navigation", () => {
+  beforeEach(() => {
+    mockPlants = [];
+    mockTodayKey = "2026-08-13";
+    mockSetSelectedDate.mockClear();
+    useFinance.getState().reset();
+  });
+
+  afterEach(cleanup);
+
+  it("resets the timeline to the current date when Today is opened", () => {
+    render(<OverviewScreen />);
+
+    fireEvent.press(screen.getByLabelText("Open Today"));
+
+    expect(mockSetSelectedDate).toHaveBeenCalledWith("2026-08-13");
+  });
+
+  it("uses the current date at tap time instead of a date captured during render", () => {
+    render(<OverviewScreen />);
+    mockTodayKey = "2026-08-14";
+
+    fireEvent.press(screen.getByLabelText("Open Today"));
+
+    expect(mockSetSelectedDate).toHaveBeenCalledWith("2026-08-14");
+  });
+
+  it("does not change the timeline date when another Overview row is opened", () => {
+    render(<OverviewScreen />);
+
+    fireEvent.press(screen.getByLabelText("Open Travel"));
+
+    expect(mockSetSelectedDate).not.toHaveBeenCalled();
   });
 });
 

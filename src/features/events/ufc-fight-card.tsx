@@ -291,6 +291,7 @@ function BoutDetailContent({
     { label: 'Weight', left: first?.weight, right: second?.weight },
     { label: 'Reach', left: first?.reach, right: second?.reach },
   ];
+  const availableTale = tale.filter((row) => row.left != null || row.right != null);
 
   return (
     <AgentTestId
@@ -323,17 +324,19 @@ function BoutDetailContent({
         {second ? <ModalFighter fighter={second} /> : <View style={styles.modalFighter} />}
       </View>
 
-      <View
-        style={[
-          styles.tale,
-          {
-            borderColor: theme.separator,
-            gap: responsiveSpacing.xs,
-            paddingVertical: responsiveSpacing.md,
-          },
-        ]}>
-        {tale.map((row) => <TaleRow key={row.label} {...row} />)}
-      </View>
+      {availableTale.length > 0 ? (
+        <View
+          style={[
+            styles.tale,
+            {
+              borderColor: theme.separator,
+              gap: responsiveSpacing.xs,
+              paddingVertical: responsiveSpacing.md,
+            },
+          ]}>
+          {availableTale.map((row) => <TaleRow key={row.label} {...row} />)}
+        </View>
+      ) : null}
 
       {status ? (
         <View style={[styles.modalMeta, { gap: responsiveSpacing.sm }]}>

@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.77',
+    date: '2026-08-14',
+    notes: [
+      'Polish UFC fight details and hide unavailable stats.',
+      'Touched: app routes, features/events.',
+    ],
+  },
+  {
     version: '1.0.76',
     date: '2026-08-14',
     notes: [

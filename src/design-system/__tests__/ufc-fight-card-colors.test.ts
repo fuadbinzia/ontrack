@@ -29,6 +29,12 @@ describe.each([lightTheme, darkTheme])('UFC fight-card colors in $name mode', (t
     expect(colors).not.toHaveProperty('redCorner');
     expect(colors).not.toHaveProperty('blueCorner');
   });
+
+  it('uses a light neutral portrait matte with a quieter defining rim', () => {
+    expect(relativeLuminanceFromColor(colors.portraitMatte)).toBeGreaterThan(0.65);
+    expect(contrast(colors.portraitMatte, colors.portraitRim)).toBeLessThan(1.8);
+    expect(colors.portraitMatte).not.toBe(colors.board);
+  });
 });
 
 it('uses a light board in light mode and a dark board in dark mode', () => {

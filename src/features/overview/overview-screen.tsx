@@ -31,6 +31,7 @@ import { usePlants } from '@/store/plants';
 import { useSchedule } from '@/store/schedule';
 import { useTodos } from '@/store/todos';
 import { useTravel } from '@/store/travel';
+import { useUI } from '@/store/ui';
 import { useVehicles } from '@/store/vehicles';
 import { useVisionBoard } from '@/store/vision-board';
 import {
@@ -89,6 +90,7 @@ export function OverviewScreen() {
   const acknowledgeAttention = useOverviewAttention(
     (state) => state.acknowledge,
   );
+  const setSelectedDate = useUI((state) => state.setSelectedDate);
 
   const summary = useMemo(() => {
     const today = todayKey();
@@ -137,6 +139,7 @@ export function OverviewScreen() {
           ? `${nextTodayActivity.allDay ? 'All day' : formatMinutes(nextTodayActivity.startMinutes)} · ${nextTodayActivity.title}`
           : 'Open the timeline to plan what comes next.',
         href: TAB_META['(today)'].href,
+        onOpen: () => setSelectedDate(todayKey()),
       },
       {
         routeName: 'travel',
@@ -308,6 +311,7 @@ export function OverviewScreen() {
     moodEntries.length,
     plans,
     plants,
+    setSelectedDate,
     tasks,
     vehicles,
     visionCategories.length,

@@ -279,6 +279,27 @@ describe('schedule event saves', () => {
     expect(state.activities[0].categoryId).toBe('work');
   });
 
+  it('does not prefill calendar data for first-run setup', () => {
+    useSchedule.setState({
+      seeded: false,
+      activities: [activity],
+      meals: [meal],
+      workouts: [],
+      workSessions: [],
+      movies: [],
+    });
+
+    useSchedule.getState().seedIfNeeded();
+
+    expect(useSchedule.getState()).toEqual(expect.objectContaining({
+      seeded: true,
+      activities: [],
+      meals: [],
+      workouts: [],
+      workSessions: [],
+    }));
+  });
+
   it('keeps processed meal photos in sync with their activity thumbnails', () => {
     useSchedule.setState({
       activities: [{ ...activity, photo: 'file:///original.jpg' }],
@@ -422,5 +443,53 @@ describe('schedule persistence migrations', () => {
 
     expect(useSchedule.getState().categories.some((category) => category.id === 'movie')).toBe(true);
     expect(useSchedule.getState().movies).toEqual([]);
+  });
+
+  it('removes legacy seeded calendar data when migrating to the non-prefilled store shape', async () => {
+    const seededActivity: Activity = {
+      ...activity,
+      id: 'seed-1',
+      title: 'Breakfast',
+    };
+    const userActivity: Activity = {
+      ...activity,
+      id: 'user-1',
+      title: 'Custom',
+      date: '2026-07-12',
+    };
+    const seededMeal: Meal = {
+      activityId: seededActivity.id,
+      mealType: 'breakfast',
+      name: 'Seed Meal',
+      items: [],
+    };
+    const userMeal: Meal = {
+      activityId: userActivity.id,
+      mealType: 'lunch',
+      name: 'User Meal',
+      items: [],
+    };
+
+    await mockAsyncStorage.setItem(
+      STORAGE_KEYS.schedule,
+      JSON.stringify({
+        state: {
+          seeded: false,
+          activities: [seededActivity, userActivity],
+          meals: [seededMeal, userMeal],
+          workouts: [],
+          workSessions: [],
+          categories: DEFAULT_CATEGORIES,
+        },
+        version: 1,
+      }),
+    );
+
+    await useSchedule.persist.rehydrate();
+
+    expect(useSchedule.getState().activities).toEqual([userActivity]);
+    expect(useSchedule.getState().meals).toEqual([userMeal]);
+    expect(useSchedule.getState().workSessions).toEqual([]);
+    expect(useSchedule.getState().seeded).toBe(true);
   });
 });

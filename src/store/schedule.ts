@@ -2,7 +2,6 @@ import { persist } from 'zustand/middleware';
 import { createWithEqualityFn as create } from 'zustand/traditional';
 
 import { DEFAULT_CATEGORIES, mergeDefaultCategories } from '@/constants/categories';
-import { buildSeedData } from '@/constants/seed';
 import type { GoogleCalendarDeletion } from '@/services/calendar/google-types';
 import type {
     EventDetails,
@@ -28,6 +27,35 @@ import { newId } from '@/utils/id';
 import { createScheduleEventActions, eventSyncStateAfterSave } from './schedule-events';
 
 export { newId } from '@/utils/id';
+
+const seedPattern = /^seed-\d+$/;
+
+interface ScheduleSeedData {
+  activities?: Activity[];
+  meals?: Meal[];
+  workouts?: Workout[];
+  workSessions?: WorkSession[];
+}
+
+function stripLegacySeedData(state: ScheduleSeedData) {
+  const activities = state.activities ?? [];
+  const seedIds = new Set(
+    activities
+      .filter((activity) => seedPattern.test(activity.id))
+      .map((activity) => activity.id),
+  );
+  if (seedIds.size === 0) return state;
+
+  return {
+    ...state,
+    activities: activities.filter((activity) => !seedPattern.test(activity.id)),
+    meals: (state.meals ?? []).filter((meal) => !seedIds.has(meal.activityId)),
+    workouts: (state.workouts ?? []).filter((workout) => !seedIds.has(workout.activityId)),
+    workSessions: (state.workSessions ?? []).filter(
+      (session) => !seedIds.has(session.activityId),
+    ),
+  };
+}
 
 function calendarDeletion(activity: Activity): GoogleCalendarDeletion | undefined {
   const metadata = activity.googleCalendar;
@@ -192,13 +220,12 @@ export const useSchedule = create<ScheduleState>()(
 
       seedIfNeeded: () => {
         if (get().seeded) return;
-        const seed = buildSeedData();
         set({
           seeded: true,
-          activities: seed.activities,
-          meals: seed.meals,
-          workouts: seed.workouts,
-          workSessions: seed.workSessions,
+          activities: [],
+          meals: [],
+          workouts: [],
+          workSessions: [],
           movies: [],
         });
       },
@@ -650,14 +677,24 @@ export const useSchedule = create<ScheduleState>()(
     {
       name: STORAGE_KEYS.schedule,
       storage: createPersistStorage(),
-      version: 1,
+      version: 2,
       migrate: (persistedState, version) => {
         const persisted = persistedState as Partial<ScheduleState>;
-        if (version >= 1 || !persisted.activities) return persisted;
-        return {
-          ...persisted,
-          activities: migrateLegacyGoogleAllDayActivities(persisted.activities),
-        };
+        if (!persisted.activities) return persisted;
+        let next = persisted;
+        if (version < 1) {
+          next = {
+            ...next,
+            activities: migrateLegacyGoogleAllDayActivities(next.activities),
+          };
+        }
+        if (version < 2) {
+          next = {
+            ...stripLegacySeedData(next),
+            seeded: true,
+          };
+        }
+        return next;
       },
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<ScheduleState>;

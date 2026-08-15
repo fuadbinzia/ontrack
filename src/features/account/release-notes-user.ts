@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.89',
+    date: '2026-08-15',
+    notes: [
+      'Keep push releases OTA-only.',
+    ],
+  },
+  {
     version: '1.0.88',
     date: '2026-08-15',
     notes: [

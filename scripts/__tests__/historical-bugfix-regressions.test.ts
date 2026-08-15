@@ -29,14 +29,21 @@ describe('historical bug-fix regressions', () => {
     expect(app.expo.runtimeVersion).not.toBe(app.expo.version);
   });
 
-  it('builds a compatible TestFlight binary before publishing an orphaned runtime', () => {
+  it('never starts a binary build while guarding TestFlight OTA compatibility', () => {
     const ship = read('scripts/ship-push.sh');
-    const compatibilityCheck = ship.indexOf('ensure_testflight_runtime');
+    const executableLines = ship
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('#'))
+      .join('\n');
+    const compatibilityCheck = ship.indexOf('require_compatible_testflight_runtime');
     const testflightPublish = ship.indexOf('npm run update:testflight');
 
     expect(ship).toContain('--build-profile testflight');
     expect(ship).toContain('--status finished');
-    expect(ship).toContain('npm run build:testflight');
+    expect(ship).toContain('builds?.[0]?.runtime?.version');
+    expect(ship).toContain('ship:push is OTA-only');
+    expect(ship).not.toContain('npm run build:testflight');
+    expect(executableLines).not.toMatch(/(?:eas|eas-cli@latest)\s+build(?:\s|$)/m);
     expect(compatibilityCheck).toBeGreaterThan(-1);
     expect(testflightPublish).toBeGreaterThan(compatibilityCheck);
   });

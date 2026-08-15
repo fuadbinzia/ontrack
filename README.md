@@ -132,9 +132,18 @@ follow-up check-ins. With the existing `MEAL_AI_PROVIDER=ollama` and `LOCAL_MEAL
 setup, plants work without additional provider configuration. Alternatively set
 `PLANT_AI_PROVIDER=ollama`, `LOCAL_PLANT_AI_ENABLED=true`, and optionally
 `OLLAMA_PLANT_MODEL=qwen3-vl:2b`. Plant and check-in photos are normalized into the app documents directory; analysis
-copies are resized and re-encoded to remove EXIF metadata. Optional room photos are sent only for
-the loopback Ollama care-plan request and are not persisted by the app. General horticultural
+copies are resized and re-encoded to remove EXIF metadata. Optional room photos are sent only to
+the selected analysis provider for the care-plan request and are not persisted by the app. General horticultural
 reference links are attached by the server rather than invented by the local model.
+
+Production can use the free Cloudflare Workers AI allocation through
+`cloudflare/plant-ai-gateway`. Deploy that Worker, store the same generated shared secret as the
+Worker secret `PLANT_AI_GATEWAY_SHARED_SECRET` and the EAS Hosting **sensitive** variable
+`CLOUDFLARE_PLANT_AI_SHARED_SECRET`, then set `PLANT_AI_PROVIDER=cloudflare`,
+`PLANT_AI_ENABLED=true`, and `CLOUDFLARE_PLANT_AI_URL` to the Worker origin. The shared secret and
+plant photos remain server-side; never prefix either secret with `EXPO_PUBLIC_`. EAS Hosting cannot
+deploy variables with `secret` visibility, so use `sensitive` visibility for its copy of the shared
+secret.
 
 Watering reminders are one-off local notifications. Each logged watering advances the next check
 from the actual watering date and creates the next Today/Calendar activity. Guidance is an editable

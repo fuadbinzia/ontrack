@@ -29,6 +29,9 @@ const TITLE_SMALL_WORDS = new Set([
   'with',
 ]);
 
+// SI and customary unit symbols are case-sensitive and stay lowercase in labels.
+const TITLE_UNIT_SYMBOLS = new Set(['kg', 'lb']);
+
 // ASCII + typographic apostrophes so possessives (“Imtiaz’s”) stay one word.
 const WORD_RE = /[A-Za-z][A-Za-z'’]*/g;
 
@@ -41,6 +44,7 @@ export function fieldTitleCase(label: string): string {
     const lower = word.toLowerCase();
     const hasIntentionalInternalCapital = /[a-z][A-Z]|^[A-Z]{2}[a-z]/.test(word);
     if (hasIntentionalInternalCapital) return word;
+    if (TITLE_UNIT_SYMBOLS.has(lower)) return lower;
     // Small words stay lowercase mid-title — including single-letter "a".
     if (offset !== firstOffset && TITLE_SMALL_WORDS.has(lower)) return lower;
     if (word.length <= 1) return word.toUpperCase();

@@ -5,6 +5,12 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { AppText, Button, ErrorMessage, GlassPlate, IconButton, Input, LoadingBlock, SectionHeader, SegmentedControl } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
+import {
+  deviceWorkoutWeightUnit,
+  workoutWeightInputValue,
+  workoutWeightLabel,
+  workoutWeightToKilograms,
+} from '@/features/workouts/weight-unit';
 import { getMovieDetails, searchMovies, type MovieSearchResult } from '@/services/movies';
 import type {
   FoodItem,
@@ -101,6 +107,8 @@ export function FoodEditor({ meal, setMeal, updateItem, addItem, removeItem }: {
 }
 
 export function WorkoutEditor({ workout, setWorkout, updateExercise, addExercise, addSet, updateSet, removeSet }: { workout: Workout; setWorkout: React.Dispatch<React.SetStateAction<Workout>>; updateExercise: (id: string, patch: Partial<WorkoutExercise>) => void; addExercise: () => void; addSet: (id: string) => void; updateSet: (exerciseId: string, setId: string, patch: Partial<WorkoutSet>) => void; removeSet: (exerciseId: string, setId: string) => void }) {
+  const weightUnit = deviceWorkoutWeightUnit();
+  const weightLabel = workoutWeightLabel(weightUnit);
   return (
     <View>
       <SectionHeader title="Workout Details" />
@@ -115,7 +123,7 @@ export function WorkoutEditor({ workout, setWorkout, updateExercise, addExercise
             <View key={set.id} style={styles.setRow}>
               <AppText variant="caption">Set {index + 1}</AppText>
               <View style={styles.setInput}><Input label="Reps" value={String(set.reps)} onChangeText={(value) => updateSet(exercise.id, set.id, { reps: numberValue(value) })} keyboardType="number-pad" /></View>
-              <View style={styles.setInput}><Input label="Weight kg" value={String(set.weightKg)} onChangeText={(value) => updateSet(exercise.id, set.id, { weightKg: numberValue(value) })} keyboardType="decimal-pad" /></View>
+              <View style={styles.setInput}><Input label={weightLabel} value={workoutWeightInputValue(set.weightKg, weightUnit)} onChangeText={(value) => updateSet(exercise.id, set.id, { weightKg: workoutWeightToKilograms(numberValue(value), weightUnit) })} keyboardType="decimal-pad" /></View>
               <IconButton icon="delete" accessibilityLabel={`Remove set ${index + 1}`} onPress={() => removeSet(exercise.id, set.id)} />
             </View>
           ))}

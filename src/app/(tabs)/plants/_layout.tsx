@@ -27,9 +27,27 @@ function PlantsStack() {
       }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="[id]" />
-      <Stack.Screen name="new" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="[id]/edit" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="[id]/check-in" options={{ presentation: 'modal' }} />
+      <Stack.Screen
+        name="new"
+        options={{
+          presentation: 'modal',
+          contentStyle: { backgroundColor: theme.backgroundPrimary },
+        }}
+      />
+      <Stack.Screen
+        name="[id]/edit"
+        options={{
+          presentation: 'modal',
+          contentStyle: { backgroundColor: theme.backgroundPrimary },
+        }}
+      />
+      <Stack.Screen
+        name="[id]/check-in"
+        options={{
+          presentation: 'modal',
+          contentStyle: { backgroundColor: theme.backgroundPrimary },
+        }}
+      />
     </Stack>
   );
 }

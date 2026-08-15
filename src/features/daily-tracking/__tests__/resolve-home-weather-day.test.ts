@@ -254,6 +254,28 @@ describe('formatHomeWeather labels', () => {
     );
   });
 
+  it('keeps a visible H/L row when the live daily forecast is unavailable', () => {
+    const currentOnly = {
+      ...live,
+      temperatureHigh: undefined,
+      temperatureLow: undefined,
+    };
+
+    expect(formatHomeWeatherRangeLabel(currentOnly)).toBe('H — · L —');
+    expect(formatHomeWeatherTemperatureLabel(currentOnly)).toBe(
+      '88°F · Clear · H — · L —',
+    );
+  });
+
+  it('preserves whichever live range value is available', () => {
+    expect(
+      formatHomeWeatherRangeLabel({ ...live, temperatureLow: undefined }),
+    ).toBe('H 94° · L —');
+    expect(
+      formatHomeWeatherRangeLabel({ ...live, temperatureHigh: undefined }),
+    ).toBe('H — · L 72°');
+  });
+
   it('formats daily high/low on the primary line', () => {
     expect(
       formatHomeWeatherPrimaryLabel({

@@ -349,7 +349,40 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'workouts' },
     {
       op: 'wait',
-      prefix: 'ontrack.workouts.',
+      id: 'ontrack.workouts.selectedDay.section',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  'workouts-plan-day': [
+    { op: 'goto', to: 'workouts' },
+    {
+      op: 'wait',
+      id: 'ontrack.workouts.selectedDay.plan',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.workouts.selectedDay.plan' },
+    {
+      op: 'wait',
+      id: 'ontrack.workouts.dayPlanner.section',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.workouts.dayPlanner.close',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  'workouts-change-day': [
+    { op: 'goto', to: 'workouts' },
+    {
+      op: 'wait',
+      id: 'ontrack.workouts.selectedDay.next',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.workouts.selectedDay.next' },
+    {
+      op: 'wait',
+      id: 'ontrack.workouts.selectedDay.previous',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],
@@ -358,7 +391,21 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'workouts' },
     {
       op: 'wait',
-      id: `ontrack.workouts.todayPlan.${AGENT_UI_DEMO_WORKOUT_ACTIVITY_ID}`,
+      id: `ontrack.workouts.selectedDay.editWorkout.${AGENT_UI_DEMO_WORKOUT_ACTIVITY_ID}`,
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'tap',
+      id: `ontrack.workouts.selectedDay.editWorkout.${AGENT_UI_DEMO_WORKOUT_ACTIVITY_ID}`,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.workouts.dayPlanner.section',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.workouts.dayPlanner.close',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],

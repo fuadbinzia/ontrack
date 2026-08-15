@@ -6,6 +6,7 @@ import { AppText, Button } from '@/components/primitives';
 import { layout, radii, spacing } from '@/design-system';
 import type { ExerciseTemplate } from '@/features/workouts/muscle-data';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { formatWeekday, isToday } from '@/utils/date';
 import { formatCount } from '@/utils/grammar';
 
 interface WorkoutSessionBuilderProps {
@@ -13,7 +14,8 @@ interface WorkoutSessionBuilderProps {
   selectedSetCount: number;
   estimatedDuration: number;
   onClear: () => void;
-  onAddToToday: () => void;
+  targetDate: string;
+  onAddToDate: () => void;
 }
 
 /** Dark session-builder panel for the workouts planner tab. */
@@ -22,7 +24,8 @@ export function WorkoutSessionBuilder({
   selectedSetCount,
   estimatedDuration,
   onClear,
-  onAddToToday,
+  targetDate,
+  onAddToDate,
 }: WorkoutSessionBuilderProps) {
   // Hooks must run even when the builder is empty (not yet selected).
   const clearAgent = useAgentUiTarget(
@@ -33,6 +36,7 @@ export function WorkoutSessionBuilder({
     },
   );
   if (selectedExercises.length === 0) return null;
+  const targetLabel = isToday(targetDate) ? 'Today' : formatWeekday(targetDate);
 
   return (
     <Animated.View entering={FadeInUp.duration(260)} style={styles.pagePadding}>
@@ -97,10 +101,10 @@ export function WorkoutSessionBuilder({
         <Button
           size="lg"
           icon="calendar-add"
-          testID={AgentUiIds.workouts.addToToday}
-          onPress={onAddToToday}
-          accessibilityLabel={`Add ${formatCount(selectedExercises.length, 'exercise')} to today`}>
-          Add workout to today
+          testID={AgentUiIds.workouts.addToDay}
+          onPress={onAddToDate}
+          accessibilityLabel={`Add ${formatCount(selectedExercises.length, 'exercise')} to ${targetLabel}`}>
+          Add Workout to {targetLabel}
         </Button>
       </LinearGradient>
     </Animated.View>

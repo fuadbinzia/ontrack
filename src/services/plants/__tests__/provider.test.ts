@@ -1,4 +1,16 @@
-import { assertPlantAnalysisEnabled, validateLocalCarePlan } from '@/services/plants/server';
+jest.mock('@/services/ai/cloudflare-workers-ai', () => ({
+  cloudflarePlantAIConfigured: jest.fn(() => true),
+  fetchCloudflarePlantJson: jest.fn(),
+}));
+
+import { fetchCloudflarePlantJson } from '@/services/ai/cloudflare-workers-ai';
+import {
+  assertPlantAnalysisEnabled,
+  identifyPlantImage,
+  validateLocalCarePlan,
+} from '@/services/plants/server';
+
+const mockFetchCloudflarePlantJson = jest.mocked(fetchCloudflarePlantJson);
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -27,6 +39,45 @@ describe('plant AI provider selection', () => {
     process.env.LOCAL_MEAL_AI_ENABLED = 'false';
     process.env.LOCAL_PLANT_AI_ENABLED = 'false';
     expect(assertPlantAnalysisEnabled()).toMatchObject({ status: 503 });
+  });
+
+  it('enables the free hosted provider without requiring local Ollama', () => {
+    process.env.PLANT_AI_PROVIDER = 'cloudflare';
+    process.env.PLANT_AI_ENABLED = 'true';
+    process.env.LOCAL_MEAL_AI_ENABLED = 'false';
+    expect(assertPlantAnalysisEnabled()).toBeUndefined();
+  });
+
+  it('uses Cloudflare vision for hosted identification', async () => {
+    process.env.PLANT_AI_PROVIDER = 'cloudflare';
+    mockFetchCloudflarePlantJson.mockResolvedValue({
+      identity: { commonName: 'Snake Plant', scientificName: 'Dracaena trifasciata', confidence: 0.94 },
+      health: {
+        status: 'healthy', summary: 'Leaves appear firm.', visibleSigns: [], possibleCauses: [],
+        actions: ['Continue monitoring.'], confidence: 0.88,
+      },
+    });
+
+    await expect(identifyPlantImage('data:image/jpeg;base64,AA==')).resolves.toMatchObject({
+      identity: { commonName: 'Snake Plant', scientificName: 'Dracaena trifasciata' },
+      health: { status: 'healthy' },
+    });
+    expect(mockFetchCloudflarePlantJson).toHaveBeenCalledWith(expect.objectContaining({
+      imageDataUrl: 'data:image/jpeg;base64,AA==',
+    }));
+  });
+
+  it('still requests another photo when hosted identification is uncertain', async () => {
+    process.env.PLANT_AI_PROVIDER = 'cloudflare';
+    mockFetchCloudflarePlantJson.mockResolvedValue({
+      identity: { commonName: 'Unknown Plant', scientificName: 'Unknown species', confidence: 0.4 },
+      health: {
+        status: 'watch', summary: 'The image is unclear.', visibleSigns: [], possibleCauses: [],
+        actions: ['Retake the photo.'], confidence: 0.4,
+      },
+    });
+
+    await expect(identifyPlantImage('data:image/jpeg;base64,AA==')).rejects.toThrow('UNCLEAR_IMAGE');
   });
 
   it('attaches fixed references and normalizes contradictory local pruning output', () => {

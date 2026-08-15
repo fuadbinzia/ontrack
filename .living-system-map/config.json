@@ -20,7 +20,22 @@
     "supabase",
     "modules",
     "plugins",
-    "scripts"
+    "scripts",
+    "cloudflare"
+  ],
+  "assetRoots": [
+    "assets",
+    "public"
+  ],
+  "projectFiles": [
+    "app.json",
+    "package.json",
+    "eas.json",
+    "babel.config.js",
+    "metro.config.js",
+    "eslint.config.js",
+    "tsconfig.json",
+    "tsconfig.test.json"
   ],
   "ignore": [
     "node_modules",
@@ -41,11 +56,22 @@
       "--watchman=false",
       "--coverageReporters=json-summary",
       "--coverageReporters=text-summary",
+      "--json",
+      "--outputFile=.living-system-map/generated/jest-results.json",
+      "--testLocationInResults",
       "--collectCoverageFrom=src/**/*.{ts,tsx}",
       "--collectCoverageFrom=!src/**/__tests__/**",
       "--collectCoverageFrom=!src/**/*.d.ts"
     ],
     "summaryPath": "coverage/coverage-summary.json"
+  },
+  "testResults": {
+    "format": "jest-json",
+    "path": ".living-system-map/generated/jest-results.json"
+  },
+  "health": {
+    "lineCoverageWarning": 80,
+    "branchCoverageWarning": 70
   },
   "flowProtection": {
     "manifestPath": ".living-system-map/flows.json",

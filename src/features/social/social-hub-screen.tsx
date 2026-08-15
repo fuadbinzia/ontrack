@@ -1,6 +1,5 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Platform } from 'react-native';
 
 import { appPrompt, ErrorMessage, Screen } from '@/components/primitives';
 import { useAuthSession } from '@/features/auth/auth-provider';
@@ -13,17 +12,13 @@ import {
   SocialQuickActions,
   SocialUpcomingTogether,
 } from '@/features/social/social-hub-sections';
-import {
-  SocialFriendsModal,
-  type SocialFriendsModalMode,
-} from '@/features/social/social-friends-modal';
+import { SocialFriendsModal } from '@/features/social/social-friends-modal';
 import { socialTripMemberships } from '@/features/social/social-trip-membership';
 import type {
   SocialFeedItem,
   SocialPlaceholder,
   SocialQuickActionId,
 } from '@/features/social/social-types';
-import { shareTravelPlanWithFriend } from '@/features/travel/share';
 import type { TravelPlan } from '@/features/travel/types';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useRouteIsActive } from '@/hooks/use-app-activity';
@@ -41,7 +36,6 @@ import { useFriends } from '@/store/friends';
 import { usePreferences } from '@/store/preferences';
 import { useTravel } from '@/store/travel';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
-import { newId } from '@/utils/id';
 
 /** Social hub backed by the existing friend, profile, and travel stores. */
 export function SocialHubScreen() {
@@ -63,11 +57,8 @@ export function SocialHubScreen() {
   const cancelRequest = useFriends((state) => state.cancelRequest);
   const removeFriend = useFriends((state) => state.remove);
   const plans = useTravel((state) => state.plans);
-  const savePlan = useTravel((state) => state.savePlan);
 
   const [friendsModalVisible, setFriendsModalVisible] = useState(false);
-  const [friendsModalMode, setFriendsModalMode] =
-    useState<SocialFriendsModalMode>('add');
   const [email, setEmail] = useState('');
   const [working, setWorking] = useState<string>();
   const [localError, setLocalError] = useState<string>();
@@ -139,8 +130,7 @@ export function SocialHubScreen() {
     await Promise.all([refreshFriends(), loadInvite()]);
   }, [loadInvite, refreshFriends, signedIn]);
 
-  const openFriends = useCallback((mode: SocialFriendsModalMode) => {
-    setFriendsModalMode(mode);
+  const openFriends = useCallback(() => {
     setFriendsModalVisible(true);
   }, []);
 
@@ -174,97 +164,6 @@ export function SocialHubScreen() {
       params: { returnTo: '/(tabs)/social' },
     } as never);
   }, [router]);
-
-  const addFriendToTrip = useCallback(
-    async (friend: FriendProfile, planIndex: number) => {
-      const plan = plans[planIndex];
-      if (!plan) return;
-      const alreadyInvited = plan.participants.some(
-        (participant) => participant.userId === friend.userId,
-      );
-      if (alreadyInvited) {
-        appPrompt.alert(
-          'Already Invited',
-          `${friend.displayName} is already on the invitation list for ${plan.title}.`,
-        );
-        return;
-      }
-
-      await run(`travel-${friend.userId}-${plan.id}`, async () => {
-        const code = await shareTravelPlanWithFriend(plan, {
-          userId: friend.userId,
-          name: friend.displayName,
-        });
-        if (!code) return;
-        const now = new Date().toISOString();
-        savePlan({
-          ...plan,
-          participants: [
-            ...plan.participants,
-            {
-              id: newId('trip-person'),
-              userId: friend.userId,
-              name: friend.displayName,
-              inviteCode: code,
-              invitedAt: now,
-            },
-          ],
-          updatedAt: now,
-        });
-        appPrompt.alert(
-          'Invitation Ready',
-          `${friend.displayName} was added to ${plan.title}.`,
-        );
-      });
-    },
-    [plans, run, savePlan],
-  );
-
-  const chooseTripForFriend = useCallback(
-    (friend: FriendProfile) => {
-      if (plans.length === 0) {
-        appPrompt.alert(
-          'No Trips Yet',
-          'Create a trip first, then invite friends from here.',
-          [
-            {
-              text: 'Go to Travel',
-              onPress: () => {
-                setFriendsModalVisible(false);
-                closePlaceholder();
-                router.push('/(tabs)/travel' as never);
-              },
-            },
-            { text: 'Not Now', style: 'cancel' },
-          ],
-        );
-        return;
-      }
-      const options = [...plans.map((plan) => plan.title), 'Cancel'];
-      const select = (index: number) => {
-        if (index < plans.length) void addFriendToTrip(friend, index);
-      };
-      if (Platform.OS === 'ios') {
-        appPrompt.actionSheet(
-          {
-            title: `Add ${friend.displayName} to…`,
-            options,
-            cancelButtonIndex: plans.length,
-          },
-          select,
-        );
-      } else {
-        appPrompt.alert(`Add ${friend.displayName} to…`, undefined, [
-          ...plans.map((plan, index) => ({
-            text: plan.title,
-            onPress: () => void addFriendToTrip(friend, index),
-          })),
-          { text: 'Cancel', style: 'cancel' },
-        ]);
-      }
-    },
-    [addFriendToTrip, closePlaceholder, plans, router],
-  );
 
   const openFriendProfile = useCallback(
     (friend: FriendProfile) => {
@@ -333,19 +232,18 @@ export function SocialHubScreen() {
           title: friend.displayName,
           message: 'Connected through onTrack. Shared plans and invitations stay attached to this friendship.',
           icon: 'people',
-          primaryLabel: 'Invite to a Trip',
+          primaryLabel: 'Open Travel',
           statusTitle: 'Connected',
           statusMessage:
-            'Invite this friend into a trip or shared plan whenever you’re ready.',
+            'Open a trip to manage its friends and travelers.',
         },
         () => {
           closePlaceholder();
-          chooseTripForFriend(friend);
+          router.push('/(tabs)/travel' as never);
         },
       );
     },
     [
-      chooseTripForFriend,
       closePlaceholder,
       openPlan,
       plans,
@@ -395,7 +293,7 @@ export function SocialHubScreen() {
         return;
       }
       if (action === 'invite-trip') {
-        openFriends('trip');
+        router.push('/(tabs)/travel' as never);
         return;
       }
       if (action === 'chat') {
@@ -543,7 +441,7 @@ export function SocialHubScreen() {
       >
         <SocialHeader
           pendingCount={incoming.length}
-          onAddFriend={() => openFriends('add')}
+          onAddFriend={openFriends}
           onMessages={openMessages}
         />
 
@@ -554,8 +452,8 @@ export function SocialHubScreen() {
         <SocialFriendsCard
           friends={friends}
           loading={loading}
-          onAddFriend={() => openFriends('add')}
-          onSeeAll={() => openFriends('all')}
+          onAddFriend={openFriends}
+          onSeeAll={openFriends}
           onOpenFriend={openFriendProfile}
         />
 
@@ -574,7 +472,6 @@ export function SocialHubScreen() {
 
       <SocialFriendsModal
         visible={friendsModalVisible}
-        mode={friendsModalMode}
         signedIn={signedIn}
         friends={friends}
         incoming={incoming}
@@ -625,7 +522,6 @@ export function SocialHubScreen() {
         onAccept={accept}
         onDecline={decline}
         onCancel={cancel}
-        onAddToTrip={chooseTripForFriend}
         onRemove={remove}
       />
 

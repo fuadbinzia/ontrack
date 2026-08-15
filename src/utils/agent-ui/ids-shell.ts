@@ -463,6 +463,15 @@ export const agentUiIdsShell = {
     confirmRestoreFonts: 'ontrack.designSystem.confirmRestoreFonts',
   },
   social: {
+    friendInvite: {
+      signIn: 'ontrack.social.friendInvite.signIn',
+      accept: 'ontrack.social.friendInvite.accept',
+      notNow: 'ontrack.social.friendInvite.notNow',
+      openSocial: 'ontrack.social.friendInvite.openSocial',
+      section: {
+        card: 'ontrack.social.friendInvite.section.card',
+      },
+    },
     header: {
       addFriend: 'ontrack.social.header.addFriend',
       messages: 'ontrack.social.header.messages',

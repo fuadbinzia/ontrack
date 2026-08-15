@@ -311,13 +311,13 @@ export function WelcomeOnboardScreen() {
                     dark={theme.name === 'dark'}
                     disabled={busy}
                     testID={AgentUiIds.auth.apple}
-                    onPress={() => void continueWithProvider('apple')}
+                    onPress={() => void continueWithProvider('apple', landingPath)}
                   />
                   <GoogleProviderButton
                     dark={theme.name === 'dark'}
                     disabled={busy}
                     testID={AgentUiIds.auth.google}
-                    onPress={() => void continueWithProvider('google')}
+                    onPress={() => void continueWithProvider('google', landingPath)}
                   />
                 </AgentTestId>
                 {workingProvider ? (

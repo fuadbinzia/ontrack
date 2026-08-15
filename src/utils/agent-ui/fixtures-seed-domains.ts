@@ -8,6 +8,8 @@ import {
   AGENT_UI_DEMO_GROCERY_TASK_TOMATOES_ID,
   AGENT_UI_DEMO_HEALTH_FACTOR_ID,
   AGENT_UI_DEMO_HEALTH_MOOD_ID,
+  AGENT_UI_DEMO_JOURNAL_PAGE_ID,
+  AGENT_UI_DEMO_JOURNAL_TEXT_ID,
   AGENT_UI_DEMO_HOME_LOCATION,
   AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID,
   AGENT_UI_DEMO_VEHICLE_ID,
@@ -328,6 +330,42 @@ export function seedDomainAgentUiFixture(
       fixture,
       primaryId: transaction.id,
       itemId: transaction.id,
+    };
+  }
+
+  if (fixture === 'journal-demo') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useJournal } = require('@/store/journal') as typeof import('@/store/journal');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { todayKey } = require('@/utils/date') as typeof import('@/utils/date');
+    const now = new Date().toISOString();
+    const dateKey = todayKey();
+    useJournal.setState((state) => ({
+      pages: [
+        ...state.pages.filter(
+          (page) => page.id !== AGENT_UI_DEMO_JOURNAL_PAGE_ID && page.dateKey !== dateKey,
+        ),
+        {
+          id: AGENT_UI_DEMO_JOURNAL_PAGE_ID,
+          dateKey,
+          blocks: [
+            {
+              id: AGENT_UI_DEMO_JOURNAL_TEXT_ID,
+              kind: 'text',
+              text: 'Stable agent fixture.',
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    }));
+    return {
+      fixture,
+      primaryId: AGENT_UI_DEMO_JOURNAL_PAGE_ID,
+      pageId: AGENT_UI_DEMO_JOURNAL_PAGE_ID,
     };
   }
 

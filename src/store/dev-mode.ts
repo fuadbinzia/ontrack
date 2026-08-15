@@ -13,6 +13,7 @@ export type DevModeLiveSnapshot = {
   capturedAt: string;
   domains: Partial<Record<SyncDomainName, JsonObject>>;
   health?: JsonObject;
+  journal?: JsonObject;
 };
 
 interface DevModeState {

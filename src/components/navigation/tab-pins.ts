@@ -29,6 +29,7 @@ export const DEFAULT_TRACKER_ORDER = [
   'vehicles',
   'health',
   'finance',
+  'journal',
   'food',
 ] as const;
 

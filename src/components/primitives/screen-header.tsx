@@ -17,10 +17,14 @@ import { Symbol } from './symbol';
 
 export interface ScreenHeaderProps {
   title: string;
+  /** Secondary label on the title line (e.g. a date). */
+  titleMeta?: string;
   eyebrow?: string;
   subtitle?: string;
   subtitleIcon?: AppIconName;
   leading?: ReactNode;
+  /** Actions on the far right of the title line. */
+  titleTrailing?: ReactNode;
   trailing?: ReactNode;
   /** Optional decorative layer behind the title copy. */
   decoration?: ReactNode;
@@ -38,10 +42,12 @@ type LeadingWithLabel = { label?: string };
 /** Shared page/sheet hierarchy. Feature themes can recolor it but cannot restyle its actions. */
 export function ScreenHeader({
   title,
+  titleMeta,
   eyebrow,
   subtitle,
   subtitleIcon,
   leading,
+  titleTrailing,
   trailing,
   decoration,
   onClose,
@@ -87,7 +93,16 @@ export function ScreenHeader({
     </View>
   ) : null;
 
-  const titleBlock = (
+  const titleBlock = titleMeta ? (
+    <View style={[styles.titleWithMeta, { gap: spacing.sm }]}>
+      <AppText variant="title" fit style={styles.titleText}>
+        {fieldTitleCase(title)}
+      </AppText>
+      <AppText variant="callout" color="secondary" fit style={styles.titleMeta}>
+        {titleMeta}
+      </AppText>
+    </View>
+  ) : (
     <AppText variant="title" fit>
       {fieldTitleCase(title)}
     </AppText>
@@ -103,6 +118,19 @@ export function ScreenHeader({
     </View>
   ) : (
     titleBlock
+  );
+
+  const titleTrailingSlot = titleTrailing ? (
+    <View style={[styles.actions, { gap: spacing.xs }]}>{titleTrailing}</View>
+  ) : null;
+
+  const titleBand = titleTrailingSlot ? (
+    <View style={[styles.titleRow, { gap: spacing.sm, alignItems: 'center' }]}>
+      <View style={styles.copy}>{decoratedTitle}</View>
+      {titleTrailingSlot}
+    </View>
+  ) : (
+    decoratedTitle
   );
 
   // Eyebrow band hosts leading/close so title + subtitle use the full sheet width.
@@ -129,7 +157,7 @@ export function ScreenHeader({
           {trailingSlot ? <View style={styles.eyebrowSpacer} /> : null}
           {trailingSlot}
         </View>
-        {decoratedTitle}
+        {titleBand}
         {subtitleBlock}
       </View>
     );
@@ -140,7 +168,7 @@ export function ScreenHeader({
     <View style={[styles.stack, { gap: spacing.sm }, style]}>
       <View style={[styles.titleRow, { gap: spacing.sm }]}>
         {leading ? <View style={styles.action}>{leading}</View> : null}
-        <View style={styles.copy}>{decoratedTitle}</View>
+        <View style={styles.copy}>{titleBand}</View>
         {trailingSlot}
       </View>
       {subtitleBlock}
@@ -183,6 +211,20 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     flexShrink: 1,
+  },
+  titleWithMeta: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    minWidth: 0,
+    flexShrink: 1,
+  },
+  titleText: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  titleMeta: {
+    flexShrink: 1,
+    minWidth: 0,
   },
   copyDecorated: {
     position: 'relative',

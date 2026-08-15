@@ -97,6 +97,7 @@ describe('authentication navigation invariants', () => {
     expect(hydrated).toContain("from '@/store/vision-board'");
     expect(hydrated).toContain('useVisionBoard.persist.rehydrate()');
     expect(hydrated).toContain('useHealth.persist.rehydrate()');
+    expect(hydrated).toContain('useJournal.persist.rehydrate()');
     // Never seal while rehydrates are still in flight (no timeout escape hatch).
     expect(hydrated).not.toContain('setTimeout(release');
     expect(hydrated).not.toContain('HYDRATION_TIMEOUT_MS');

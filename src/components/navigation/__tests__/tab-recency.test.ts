@@ -34,6 +34,7 @@ describe('tab-recency', () => {
       'vehicles',
       'health',
       'finance',
+      'journal',
       'food',
       'profile',
     ]);

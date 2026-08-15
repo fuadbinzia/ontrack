@@ -19,6 +19,7 @@ const mockResetMealPlan = jest.fn();
 const mockResetPantry = jest.fn();
 const mockResetRecipes = jest.fn();
 const mockResetHealth = jest.fn();
+const mockResetJournal = jest.fn();
 const mockResetNutrition = jest.fn();
 const mockResetPlants = jest.fn();
 const mockResetPreferences = jest.fn();
@@ -81,6 +82,9 @@ jest.mock('@/store/food-recipes', () => ({
 }));
 jest.mock('@/store/health', () => ({
   useHealth: { getState: () => ({ reset: mockResetHealth }) },
+}));
+jest.mock('@/store/journal', () => ({
+  useJournal: { getState: () => ({ reset: mockResetJournal }) },
 }));
 jest.mock('@/store/nutrition', () => ({
   useNutrition: { getState: () => ({ reset: mockResetNutrition }) },
@@ -153,6 +157,7 @@ describe('local account data reset', () => {
       ['pantry', mockResetPantry],
       ['recipes', mockResetRecipes],
       ['health', mockResetHealth],
+      ['journal', mockResetJournal],
       ['nutrition', mockResetNutrition],
       ['plants', mockResetPlants],
       ['preferences', mockResetPreferences],
@@ -176,6 +181,7 @@ describe('local account data reset', () => {
         'travel-confirmations',
         'travel-moments',
         'finance-docs',
+        'journal-voice',
       ]),
     );
 
@@ -196,7 +202,7 @@ describe('local account data reset', () => {
     );
     expect(mockRemovePersistedStorageItems).toHaveBeenNthCalledWith(
       2,
-      [STORAGE_KEYS.health, STORAGE_KEYS.flightParserMemory],
+      [STORAGE_KEYS.health, STORAGE_KEYS.journal, STORAGE_KEYS.flightParserMemory],
       { sensitive: true },
     );
   });

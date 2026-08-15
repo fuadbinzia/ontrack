@@ -94,6 +94,15 @@ describe('critical persistence migration boundaries', () => {
     expect(source).toContain('grant execute on function public.upsert_google_calendar_event_links(jsonb) to service_role');
   });
 
+  it('adds Journal to entitlements only, without an app_state sync domain', () => {
+    const source = migration('202608150001_journal_addon.sql');
+    expect(source).toContain('alter table public.addon_entitlements');
+    expect(source).toContain('add constraint addon_entitlements_addon_id_check');
+    expect(source).toContain("'journal'");
+    expect(source).not.toContain('app_state_domain_check');
+    expect(source).not.toMatch(/grant\s+(insert|update|delete)/);
+  });
+
   it('adds Finance only to the existing owner-scoped sync and entitlement constraints', () => {
     const source = migration('202608120007_finance_addon.sql');
     expect(source).toContain('alter table public.app_state');

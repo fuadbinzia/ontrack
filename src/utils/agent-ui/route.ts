@@ -29,6 +29,7 @@ export const AGENT_UI_ROUTE_ALIASES = {
   vehicles: '/vehicles',
   health: '/health',
   finance: '/finance',
+  journal: '/journal',
   agents: '/agents',
   designSystem: '/design-system',
   'design-system': '/design-system',

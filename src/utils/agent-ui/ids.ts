@@ -2,6 +2,7 @@
 
 import { agentUiIdsFinance } from './ids-finance';
 import { agentUiIdsFood } from './ids-food';
+import { agentUiIdsJournal } from './ids-journal';
 import { agentUiIdsShell } from './ids-shell';
 import { agentUiIdsTravel } from './ids-travel';
 
@@ -10,6 +11,7 @@ export const AgentUiIds = {
   ...agentUiIdsFood,
   ...agentUiIdsTravel,
   ...agentUiIdsFinance,
+  ...agentUiIdsJournal,
 } as const;
 
 export function tabTestIdForRoute(routeName: string): string | undefined {
@@ -45,6 +47,8 @@ export function tabTestIdForRoute(routeName: string): string | undefined {
       return AgentUiIds.tabs.health;
     case 'finance':
       return AgentUiIds.tabs.finance;
+    case 'journal':
+      return AgentUiIds.tabs.journal;
     case 'food':
       return AgentUiIds.tabs.food;
     case 'trackers':

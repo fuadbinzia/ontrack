@@ -1155,6 +1155,34 @@ Deep link: `ontrack://health` / Expo route `/(tabs)/health`
 
 Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scripts/agent-ui-seed.sh health-demo` or flow `health-demo`.
 
+## Journal
+
+Deep link: `ontrack://journal` / Expo route `/(tabs)/journal` · flows `journal`, `journal-demo`, `journal-prev-day`, `journal-next-day`
+
+| testID | Control |
+| --- | --- |
+| `ontrack.tabs.journal` | Open Journal tab |
+| `ontrack.journal.today` | Today’s page canvas |
+| `ontrack.journal.screen` | Past-day page canvas |
+| `ontrack.journal.back` | Back from a past day |
+| `ontrack.journal.prevDay` / `ontrack.journal.nextDay` | Day chevrons on the Journal line (far right); next disabled on today |
+| `ontrack.journal.section.earlier` | Earlier pages list |
+| `ontrack.journal.earlier.<YYYY-MM-DD>` | Open a past page |
+| `ontrack.journal.empty` | Empty today canvas |
+| `ontrack.journal.undo` / `ontrack.journal.redo` | Undo/redo text-block edits (left of Edit) |
+| `ontrack.journal.editMode` | Header Edit (left of plus); shows delete on blocks |
+| `ontrack.journal.dismissEdit` | Tap-out target that closes the inline editor |
+| `ontrack.journal.block.<id>` | Text, voice, or link block (tap text to edit) |
+| `ontrack.journal.block.<id>.edit` / `.save` | Inline text edit + save |
+| `ontrack.journal.block.<id>.delete` / `.remove` | Delete control + confirm |
+| `ontrack.journal.block.<id>.play` | Play a voice note |
+| `ontrack.journal.link.<id>` | Open a linked section |
+| `ontrack.journal.composer.menu` / `.dictate` / `.voiceNote` / `.link` | Header plus menu (dictate, voice note, link) |
+| `ontrack.journal.composer.input` / `.send` / `.stop` | Docked page composer (send in the field) |
+| `ontrack.journal.sections.sheet` / `.close` / `.<section>` | Link-a-section sheet |
+
+Demo fixture: `journal-agent-ui-demo-page` / `jtext-agent-ui-demo` via `./scripts/agent-ui-seed.sh journal-demo` or flow `journal-demo`.
+
 ## Finance
 
 Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flows `finance`, `finance-transactions`, `finance-transaction-filter-sort`, `finance-transaction-categorize`, `finance-rewards`, `finance-subscriptions` (combined recurring expenses), `finance-ezpass`, `finance-ezpass-import`, `finance-ezpass-add-friend`, `finance-ezpass-saved-statements`

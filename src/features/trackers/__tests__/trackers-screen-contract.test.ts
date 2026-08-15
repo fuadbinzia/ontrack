@@ -31,4 +31,16 @@ describe('trackers screen contract', () => {
     expect(screen).not.toContain('router.navigate(meta.href)');
     expect(layout).toContain('freezeOnBlur: route.name !== MORE_TAB_ROUTE');
   });
+
+  it('does not flash the settled list then replay the entrance bounce', () => {
+    const screen = read('src/features/trackers/trackers-screen.tsx');
+
+    expect(screen).toContain('trackerRowMountPose');
+    expect(screen).toContain('useSharedValue(mount.scale)');
+    expect(screen).toContain('played.current');
+    expect(screen).toContain('trackerRowDragPose');
+    expect(screen).not.toContain('setEntranceKey');
+    expect(screen).not.toContain('useFocusEffect');
+    expect(screen).not.toContain('entranceKey');
+  });
 });

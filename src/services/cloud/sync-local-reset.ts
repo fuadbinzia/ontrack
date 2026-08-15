@@ -13,6 +13,7 @@ import { useMealPlan } from '@/store/food-meal-plan';
 import { usePantry } from '@/store/food-pantry';
 import { useRecipes } from '@/store/food-recipes';
 import { useHealth } from '@/store/health';
+import { useJournal } from '@/store/journal';
 import { useNutrition } from '@/store/nutrition';
 import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
@@ -48,6 +49,7 @@ export async function deleteAppOwnedMedia(options?: {
     ...(clearEveryDirectory ? ['travel-confirmations'] : []),
     ...(clearEveryDirectory ? ['travel-moments'] : []),
     ...(clearEveryDirectory ? ['finance-docs'] : []),
+    ...(clearEveryDirectory ? ['journal-voice'] : []),
   ];
   for (const name of directories) {
     const directory = new Directory(Paths.document, name);
@@ -70,6 +72,7 @@ export async function resetLocalDomains() {
   // Device-only Health stays off cloud sync, but must not leak across accounts
   // on the same device after sign-out / delete / unexpected session expiry.
   useHealth.getState().reset();
+  useJournal.getState().reset();
   useFinanceEzPassStatements.getState().reset();
   useFoodProfile.getState().reset();
   usePantry.getState().reset();
@@ -107,7 +110,7 @@ export async function resetLocalDomains() {
     STORAGE_KEYS.flowAnalytics,
   ]);
   await removePersistedStorageItems(
-    [STORAGE_KEYS.health, STORAGE_KEYS.flightParserMemory],
+    [STORAGE_KEYS.health, STORAGE_KEYS.journal, STORAGE_KEYS.flightParserMemory],
     { sensitive: true },
   );
 }

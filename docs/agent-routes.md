@@ -170,6 +170,10 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `grocery-demo-recipe-import` | Seed → recipe import URL field ready |
 | `grocery-demo-settings` | Seed → grocery detail → settings (list name field) |
 | `health-demo` | Seed mood factor + entry → Health Mind section |
+| `journal` | Goto Journal hub |
+| `journal-demo` | Seed today’s page → Journal hub |
+| `journal-prev-day` | Seed → Journal hub → previous day |
+| `journal-next-day` | Seed → previous day → back to today |
 | `health-demo-mood` | Seed → mood check-in with demo factor chip |
 | `plants-demo` | Seed Monstera sample → plant detail (log watering ready) |
 | `plants-demo-list` | Seed → plants list with sample card |
@@ -199,7 +203,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `food-demo` | Seed food profile/pantry/recipes/meal plan + meal activity → Food home |
 | `food-detail-demo` | Seed → meal detail (edit ready; former `food-demo` landing) |
 | `games-balloon-pop` | Games hub → Balloon Pop Play ready |
-| `travel-list` / `calendar` / `today` / `checklists` / `health` / `health-mood` / `health-settings` / `activity-form` / `profile` / `vehicles` / `vehicles-new` / `social` / `workouts` / `plants` / `plants-new` / `vision-board` / `games` | Goto + settle |
+| `travel-list` / `calendar` / `today` / `checklists` / `health` / `health-mood` / `health-settings` / `activity-form` / `profile` / `vehicles` / `vehicles-new` / `social` / `workouts` / `plants` / `plants-new` / `vision-board` / `games` / `journal` | Goto + settle |
 
 Demo IDs (`src/utils/agent-ui/fixtures.ts`): travel `trip-agent-ui-demo` / `item-agent-ui-demo-flight` / chase outbound+return; checklist `list-agent-ui-demo-checklist` / `task-agent-ui-demo-plan`; grocery `list-agent-ui-demo-grocery` / `recipe-agent-ui-demo-pasta`; health `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm`; vehicle `vehicle-agent-ui-demo`; plant `plant-sample-monstera`; activity `activity-agent-ui-demo-mindfulness`; workout `activity-agent-ui-demo-workout`; vision `vision-mindset` / `vision-sample-forest`; food meal `activity-agent-ui-demo-meal` + `recipe-agent-ui-food-*` / `pantry-agent-ui-food-*` / `plan-agent-ui-food-*` (`src/features/food/fixtures.ts`).
 
@@ -229,6 +233,7 @@ Host bridge notes:
 ./scripts/agent-ui-open.sh travel
 ./scripts/agent-ui-open.sh profile
 ./scripts/agent-ui-open.sh health
+./scripts/agent-ui-open.sh journal
 ./scripts/agent-ui-open.sh design-system
 ./scripts/agent-ui-open.sh integrations
 ./scripts/agent-ui-open.sh reset
@@ -310,6 +315,7 @@ Tap/goto no longer rewrite the dump by default.
 | `games` | `/games` | `ontrack:///games` |
 | `vehicles` | `/vehicles` | `ontrack:///vehicles` |
 | `health` | `/health` | `ontrack:///health` |
+| `journal` | `/journal` | `ontrack:///journal` |
 | `agents` | `/agents` | `ontrack:///agents` |
 | `designSystem` / `design-system` | `/design-system` | `ontrack:///design-system` |
 | `integrations` / `apiUsage` / `api-usage` | `/integrations` | `ontrack:///integrations` |

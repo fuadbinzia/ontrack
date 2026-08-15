@@ -24,21 +24,20 @@ import {
   TravelTranslatorError,
 } from '@/services/travel/translator-client';
 import { newId } from '@/utils/id';
+import {
+  loadOptionalExpoAudio,
+  recordingOptionsFor,
+  type ExpoAudioApi,
+} from '@/utils/optional-expo-audio';
 
 const MAX_TURNS = 50;
 const MAX_RECORDING_SECONDS = 30;
 
-type ExpoAudioApi = typeof import('expo-audio');
 type ExpoSpeechApi = typeof import('expo-speech');
 type AudioRecorderHook = ExpoAudioApi['useAudioRecorder'];
 
 // Keep Travel usable on OTA-updated binaries that predate the native voice modules.
-// Metro includes these packages, but evaluates them only when the matching native
-// module is actually present in the installed app binary.
-const audioApi = requireOptionalNativeModule('ExpoAudio')
-  ? // eslint-disable-next-line @typescript-eslint/no-require-imports
-    (require('expo-audio') as ExpoAudioApi)
-  : undefined;
+const audioApi = loadOptionalExpoAudio();
 const speechApi = requireOptionalNativeModule('ExpoSpeech')
   ? // eslint-disable-next-line @typescript-eslint/no-require-imports
     (require('expo-speech') as ExpoSpeechApi)
@@ -128,9 +127,7 @@ export function useTravelTranslator({
   homeLocale: string;
 }) {
   const homeFallback = useMemo(() => languageFromLocale(homeLocale), [homeLocale]);
-  const recorder = useCompatibleAudioRecorder(
-    audioApi?.RecordingPresets.HIGH_QUALITY ?? ({} as never),
-  );
+  const recorder = useCompatibleAudioRecorder(recordingOptionsFor(audioApi));
   const [homeLanguage, setHomeLanguage] =
     useState<TravelTranslatorLanguage>(homeFallback);
   const [destinationLanguage, setDestinationLanguage] =

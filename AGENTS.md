@@ -70,6 +70,7 @@ Domain depth → `.cursor/skills/` (**travel**, **todos**, **workouts**, **visio
 | Vehicles | `app/(tabs)/vehicles/index.tsx`, `features/vehicles/`, `store/vehicles.ts` |
 | Health | `app/(tabs)/health/index.tsx`, `features/health/`, `store/health.ts` → **health** |
 | Finance | `app/(tabs)/finance/`, `features/finance/`, `store/finance.ts` → **finance** |
+| Journal | `app/(tabs)/journal/`, `features/journal/`, `store/journal.ts` → **journal** |
 | StraiAway partner | `app/(tabs)/profile/straiaway`, `services/partner/`, `features/travel/stay-package.ts` |
 | Games | `app/(tabs)/games.tsx`, `features/games/` |
 | Auth / guest | `features/auth/` |

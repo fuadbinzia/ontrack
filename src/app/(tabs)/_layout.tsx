@@ -76,6 +76,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="vehicles" />
       <Tabs.Screen name="health" />
       <Tabs.Screen name="finance" />
+      <Tabs.Screen name="journal" />
       <Tabs.Screen name="food" />
       <Tabs.Screen name="profile" />
       <Tabs.Screen name="trackers" />

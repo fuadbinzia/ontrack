@@ -13,7 +13,8 @@ export type AddonId =
   | 'games'
   | 'vehicles'
   | 'health'
-  | 'finance';
+  | 'finance'
+  | 'journal';
 
 export interface AddonDefinition {
   id: AddonId;
@@ -29,7 +30,8 @@ export interface AddonDefinition {
     | 'vehicles'
     | 'health'
     | 'food'
-    | 'finance';
+    | 'finance'
+    | 'journal';
 }
 
 export type AddonEnabledState = Record<AddonId, boolean>;

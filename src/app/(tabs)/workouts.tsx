@@ -17,13 +17,14 @@ import { MuscleExplorer } from '@/features/workouts/muscle-explorer';
 import { MuscleFocusExercises } from '@/features/workouts/muscle-focus-exercises';
 import { MuscleSummaryPanel } from '@/features/workouts/muscle-summary-panel';
 import { useMuscleExplorerState } from '@/features/workouts/use-muscle-explorer-state';
+import { WorkoutDayNavigator } from '@/features/workouts/workout-calendar';
+import { workoutsByDate } from '@/features/workouts/workout-calendar-model';
 import { WorkoutSessionBuilder } from '@/features/workouts/workout-session-builder';
-import { WorkoutTodayPlan } from '@/features/workouts/workout-today-plan';
 import { WorkoutsScreenHeader } from '@/features/workouts/workouts-screen-header';
 import { useTheme } from '@/hooks/use-theme';
 import { newId, useSchedule } from '@/store/schedule';
 import type { WorkoutExercise } from '@/types/models';
-import { nowMinutes, todayKey } from '@/utils/date';
+import { formatWeekday, nowMinutes, todayKey } from '@/utils/date';
 import { haptics } from '@/utils/haptics';
 
 const ExerciseAnatomyDemo = lazy(() =>
@@ -48,7 +49,8 @@ interface ExercisePreview {
 export default function WorkoutsScreen() {
   const router = useRouter();
   const theme = useTheme();
-  const date = todayKey();
+  const today = todayKey();
+  const [selectedDate, setSelectedDate] = useState(today);
   const [selectedExerciseIds, setSelectedExerciseIds] = useState<string[]>([]);
   const [selectedExerciseSources, setSelectedExerciseSources] = useState<
     Record<string, ExerciseSource>
@@ -73,13 +75,11 @@ export default function WorkoutsScreen() {
   const selectedSetCount = selectedExercises.reduce((total, exercise) => total + exercise.sets, 0);
   const estimatedDuration = Math.max(20, selectedExercises.length * 8);
 
-  const todaysWorkouts = useMemo(() => {
-    const workoutsByActivityId = new Map(workouts.map((workout) => [workout.activityId, workout]));
-    return activities
-      .filter((activity) => activity.date === date && workoutsByActivityId.has(activity.id))
-      .sort((a, b) => a.startMinutes - b.startMinutes)
-      .map((activity) => ({ activity, workout: workoutsByActivityId.get(activity.id)! }));
-  }, [activities, date, workouts]);
+  const scheduledWorkouts = useMemo(
+    () => workoutsByDate(activities, workouts),
+    [activities, workouts],
+  );
+  const todaysCount = scheduledWorkouts.get(today)?.length ?? 0;
 
   const toggleExercise = (exerciseId: string, source?: ExerciseSource) => {
     haptics.select();
@@ -122,10 +122,23 @@ export default function WorkoutsScreen() {
   };
 
   const openCustomPlanner = () => {
-    router.push({ pathname: '/activity-form', params: { date } });
+    router.push({
+      pathname: '/activity-form',
+      params: { date: selectedDate, category: gymCategory?.id },
+    });
   };
 
-  const addWorkoutToToday = () => {
+  const saveDayWorkout = (payload: Parameters<typeof saveEvent>[0]) => {
+    const activity = saveEvent(payload);
+    setSavedMessage(
+      payload.id
+        ? `${activity.title} was updated.`
+        : `${activity.title} was added to ${formatWeekday(activity.date)}.`,
+    );
+    haptics.success();
+  };
+
+  const addWorkoutToSelectedDate = () => {
     if (!gymCategory || selectedExercises.length === 0) return;
 
     const muscleLabels = Array.from(
@@ -157,10 +170,10 @@ export default function WorkoutsScreen() {
     saveEvent({
       detailKind: 'gym',
       activity: {
-        date,
+        date: selectedDate,
         title,
         categoryId: gymCategory.id,
-        startMinutes: nowMinutes(),
+        startMinutes: selectedDate === today ? nowMinutes() : 18 * 60,
         durationMinutes: estimatedDuration,
         status: 'upcoming',
         summary: `${selectedExercises.length} exercise${selectedExercises.length === 1 ? '' : 's'} · ${estimatedDuration} min`,
@@ -174,7 +187,7 @@ export default function WorkoutsScreen() {
     });
 
     clearSelectedExercises();
-    setSavedMessage(`${title} was added to today.`);
+    setSavedMessage(`${title} was added to ${formatWeekday(selectedDate)}.`);
     haptics.success();
   };
 
@@ -182,11 +195,24 @@ export default function WorkoutsScreen() {
     <Screen padded={false} contentStyle={styles.content}>
       <View style={styles.pagePadding}>
         <WorkoutsScreenHeader
-          todaysCount={todaysWorkouts.length}
+          todaysCount={todaysCount}
           gymColors={gymColors}
           onOpenCustomPlanner={openCustomPlanner}
         />
       </View>
+
+      <WorkoutDayNavigator
+        selectedDate={selectedDate}
+        workoutsByDate={scheduledWorkouts}
+        gymColors={gymColors}
+        savedMessage={savedMessage}
+        onSelectDate={(dateKey) => {
+          setSelectedDate(dateKey);
+          setSavedMessage(undefined);
+        }}
+        gymCategoryId={gymCategory?.id}
+        onSaveWorkout={saveDayWorkout}
+      />
 
       <View style={styles.pagePadding}>
         <MuscleExplorer
@@ -237,14 +263,8 @@ export default function WorkoutsScreen() {
         selectedSetCount={selectedSetCount}
         estimatedDuration={estimatedDuration}
         onClear={clearSelectedExercises}
-        onAddToToday={addWorkoutToToday}
-      />
-
-      <WorkoutTodayPlan
-        todaysWorkouts={todaysWorkouts}
-        gymColors={gymColors}
-        savedMessage={savedMessage}
-        onOpenCustomPlanner={openCustomPlanner}
+        targetDate={selectedDate}
+        onAddToDate={addWorkoutToSelectedDate}
       />
 
       <Suspense fallback={null}>

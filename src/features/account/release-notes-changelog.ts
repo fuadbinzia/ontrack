@@ -7,6 +7,7 @@ export const CHANGELOG: VersionNotesEntry[] = [
     date: '2026-08-15',
     notes: [
       'Fix plant modal dark-mode contrast.',
+      'Ship queued updates.',
       'Touched: app routes.',
     ],
   },

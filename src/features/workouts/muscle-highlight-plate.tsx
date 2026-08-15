@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
 import type { AnatomySex, BodyView } from './muscle-data';
@@ -9,6 +10,7 @@ interface MuscleHighlightPlateProps {
   anatomySex: AnatomySex;
   /** Muscle target / atlas highlight id used to pick the pre-rendered plate. */
   muscleId?: string;
+  isDarkMode?: boolean;
 }
 
 /**
@@ -18,6 +20,7 @@ export function MuscleHighlightPlate({
   bodyView,
   anatomySex,
   muscleId,
+  isDarkMode = false,
 }: MuscleHighlightPlateProps) {
   const source = highlightImageForMuscle(muscleId, bodyView, anatomySex);
 
@@ -31,6 +34,18 @@ export function MuscleHighlightPlate({
         style={StyleSheet.absoluteFill}
         transition={0}
       />
+      {isDarkMode ? (
+        <LinearGradient
+          colors={[
+            'rgba(0, 0, 0, 0.35)',
+            'rgba(0, 0, 0, 0.15)',
+            'rgba(0, 0, 0, 0.3)',
+          ]}
+          locations={[0, 0.5, 1]}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
     </View>
   );
 }

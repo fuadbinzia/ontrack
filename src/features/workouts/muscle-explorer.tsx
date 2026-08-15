@@ -63,6 +63,7 @@ export function MuscleExplorer({
   onSelectAtlasMuscle: (muscle: MuscleAtlasEntry) => void;
 }) {
   const theme = useTheme();
+  const anatomyCanvas = theme.name === 'dark' ? theme.backgroundSunken : ANATOMY_BEIGE;
 
   return (
     <View style={styles.root}>
@@ -74,9 +75,9 @@ export function MuscleExplorer({
       <View
         style={[
           styles.bodyExperience,
-          { backgroundColor: ANATOMY_BEIGE, borderColor: theme.separator },
+          { backgroundColor: anatomyCanvas, borderColor: theme.separator },
         ]}>
-        <View style={[styles.bodyChromeBar, { backgroundColor: ANATOMY_BEIGE }]}>
+        <View style={[styles.bodyChromeBar, { backgroundColor: anatomyCanvas }]}>
           <View style={styles.bodyChromeTopRow}>
             <GlassPlate
               style={[

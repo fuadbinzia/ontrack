@@ -26,6 +26,11 @@ describe('fieldTitleCase', () => {
     expect(fieldTitleCase('API key')).toBe('API Key');
   });
 
+  it('preserves lowercase weight unit symbols', () => {
+    expect(fieldTitleCase('Weight (kg)')).toBe('Weight (kg)');
+    expect(fieldTitleCase('Weight (lb)')).toBe('Weight (lb)');
+  });
+
   it('preserves intentional camel casing in product and platform names', () => {
     expect(fieldTitleCase('StraiAway')).toBe('StraiAway');
     expect(fieldTitleCase('Connect StraiAway')).toBe('Connect StraiAway');

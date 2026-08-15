@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import type { AppIconName } from '@/design-system';
@@ -10,6 +11,7 @@ import { haptics } from '@/utils/haptics';
 import { AppText } from './app-text';
 import { GlassPlate } from './glass-plate';
 import { Symbol } from './symbol';
+import { planWrappedSegmentGrid } from './segmented-control-layout';
 
 export interface SegmentedControlOption<T extends string> {
   value: T;
@@ -33,11 +35,13 @@ function Segment<T extends string>({
   selected,
   onSelect,
   wrap,
+  wrappedWidth,
 }: {
   option: SegmentedControlOption<T>;
   selected: boolean;
   onSelect: () => void;
   wrap: boolean;
+  wrappedWidth?: number;
 }) {
   const theme = useTheme();
   const { spacing, layout, s } = useResponsive();
@@ -62,7 +66,9 @@ function Segment<T extends string>({
       disabled={option.disabled}
       onPress={handlePress}
       style={({ pressed }) => [
-        wrap ? styles.segmentWrapped : styles.segmentRow,
+        wrap
+          ? [styles.segmentWrapped, { width: wrappedWidth ?? '100%' }]
+          : styles.segmentRow,
         {
           opacity: option.disabled ? 0.4 : pressed ? 0.72 : 1,
         },
@@ -120,7 +126,14 @@ export function SegmentedControl<T extends string>({
   wrap = false,
   style,
 }: SegmentedControlProps<T>) {
-  const { spacing } = useResponsive();
+  const { spacing, s } = useResponsive();
+  const [rowWidth, setRowWidth] = useState(0);
+  const wrappedGrid = planWrappedSegmentGrid(
+    options.length,
+    rowWidth,
+    spacing.sm,
+    s(104),
+  );
   return (
     <View style={[styles.root, { gap: spacing.sm }, style]}>
       {label ? (
@@ -130,13 +143,24 @@ export function SegmentedControl<T extends string>({
       ) : null}
       <View
         accessibilityRole="radiogroup"
+        onLayout={
+          wrap
+            ? (event) => {
+                const nextWidth = event.nativeEvent.layout.width;
+                setRowWidth((current) =>
+                  Math.abs(current - nextWidth) < 0.5 ? current : nextWidth,
+                );
+              }
+            : undefined
+        }
         style={[styles.row, { gap: spacing.sm, flexWrap: wrap ? 'wrap' : 'nowrap' }]}>
-        {options.map((option) => (
+        {options.map((option, index) => (
           <Segment
             key={option.value}
             option={option}
             selected={option.value === value}
             wrap={wrap}
+            wrappedWidth={wrap ? wrappedGrid.widths[index] : undefined}
             onSelect={() => onChange(option.value)}
           />
         ))}
@@ -163,12 +187,10 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   /**
-   * Wrapped chips: grow into a readable grid (≈3 per row on phones) instead of
-   * crushing six labels onto one line with `fit`.
+   * Exact measured widths reserve the row's gaps before sizing each cell.
    */
   segmentWrapped: {
-    flexGrow: 1,
+    flexGrow: 0,
     flexShrink: 0,
-    flexBasis: '30%',
   },
 });

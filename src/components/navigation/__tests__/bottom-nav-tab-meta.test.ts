@@ -1,4 +1,6 @@
-import { isTrackerRouteEnabled } from '../bottom-nav-tab-meta';
+import { ADDONS } from '@/addons/registry';
+
+import { isTrackerRouteEnabled, TAB_META } from '../bottom-nav-tab-meta';
 
 describe('bottom-nav-tab-meta eager routes', () => {
   const addonsOff = {
@@ -19,5 +21,16 @@ describe('bottom-nav-tab-meta eager routes', () => {
     expect(isTrackerRouteEnabled('(today)', addonsOff)).toBe(true);
     expect(isTrackerRouteEnabled('to-do', addonsOff)).toBe(true);
     expect(isTrackerRouteEnabled('travel', addonsOff)).toBe(false);
+  });
+
+  it('labels the workouts route as Fitness to match the add-on catalog', () => {
+    const fitnessAddon = ADDONS.find((addon) => addon.id === 'fitness');
+
+    expect(TAB_META.workouts).toMatchObject({
+      label: 'Fitness',
+      icon: 'gym',
+      href: '/(tabs)/workouts',
+    });
+    expect(TAB_META.workouts.label).toBe(fitnessAddon?.name);
   });
 });

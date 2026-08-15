@@ -631,10 +631,21 @@ Demo fixture: `plant-sample-monstera` via `./scripts/agent-ui-seed.sh plants-dem
 | testID                            | Control                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.workouts.header.customPlanner`             | Custom planner header control   |
-| `ontrack.workouts.today.planFromScratch`            | Plan from scratch               |
-| `ontrack.workouts.todayPlan.<activityId>`           | Open today’s workout card       |
+| `ontrack.workouts.selectedDay.section`              | Selected-day workout section    |
+| `ontrack.workouts.selectedDay.previous` / `.next`   | Change the selected day         |
+| `ontrack.workouts.selectedDay.editWorkout.<activityId>` | Edit a workout in the Fitness sheet |
+| `ontrack.workouts.selectedDay.plan`                 | Plan the selected day           |
+| `ontrack.workouts.dayPlanner.section`               | Selected-day workout bottom sheet |
+| `ontrack.workouts.dayPlanner.close` / `.backdrop` / `.save` | Dismiss or save the workout sheet |
+| `ontrack.workouts.dayPlanner.title` / `.startTime`  | Session name and gym start time |
+| `ontrack.workouts.dayPlanner.durationHours` / `.durationMinutes` | Time-at-gym fields |
+| `ontrack.workouts.dayPlanner.type.<type>`           | Workout type choice             |
+| `ontrack.workouts.dayPlanner.exercise.<exerciseId>.name` / `.rest` | Exercise name and rest time |
+| `ontrack.workouts.dayPlanner.exercise.<exerciseId>.addSet` / `.remove` | Add a set or remove an exercise |
+| `ontrack.workouts.dayPlanner.set.<setId>.reps` / `.weight` / `.remove` | Set details and removal |
+| `ontrack.workouts.dayPlanner.addExercise`           | Add another exercise            |
 | `ontrack.workouts.builder.clear`                    | Clear session builder           |
-| `ontrack.workouts.builder.addToToday`               | Add workout to today            |
+| `ontrack.workouts.builder.addToDay`                 | Add workout to selected day     |
 | `ontrack.workouts.exercise.<exerciseId>.add`        | Add/remove catalog exercise     |
 | `ontrack.workouts.exercise.<exerciseId>.preview`    | Preview anatomy animation       |
 | `ontrack.workouts.explorer.anatomySex.male\|female` | Male / Female anatomy toggle    |
@@ -643,7 +654,7 @@ Demo fixture: `plant-sample-monstera` via `./scripts/agent-ui-seed.sh plants-dem
 | `ontrack.workouts.gym.edit` / `.start` / `.close`      | Gym detail                    |
 | `ontrack.workouts.gymActive.completeSet` / `.finish`   | Active workout                |
 
-Demo fixture: `activity-agent-ui-demo-workout` via `workouts-demo`; explorer wait target `incline-curl`. Flows: `workouts-demo-anatomy`, `workouts-demo-gym-detail`, `workouts-demo-gym-active`.
+Demo fixture: `activity-agent-ui-demo-workout` via `workouts-demo`; explorer wait target `incline-curl`. Flows: `workouts-plan-day`, `workouts-change-day`, `workouts-demo-anatomy`, `workouts-demo-gym-detail`, `workouts-demo-gym-active`.
 
 ## Vision board (`/(tabs)/vision-board`)
 

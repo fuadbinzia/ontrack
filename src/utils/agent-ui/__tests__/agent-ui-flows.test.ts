@@ -44,6 +44,7 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('overview-event-updates');
     expect(listAgentUiFlowNames()).toContain('grocery-demo-recipe-import');
     expect(listAgentUiFlowNames()).toContain('workouts-demo');
+    expect(listAgentUiFlowNames()).toContain('workouts-change-day');
     expect(listAgentUiFlowNames()).toContain('vision-board-demo-edit');
     expect(listAgentUiFlowNames()).toContain('vision-board-categories');
     expect(listAgentUiFlowNames()).toContain('profile');
@@ -92,7 +93,7 @@ describe('agent-ui flows', () => {
     const workouts = resolveAgentUiFlow('workouts');
     expect(
       workouts?.some(
-        (s) => s.op === 'wait' && s.prefix === 'ontrack.workouts.',
+        (s) => s.op === 'wait' && s.id === 'ontrack.workouts.selectedDay.section',
       ),
     ).toBe(true);
     expect(resolveAgentUiFlow('finance-transaction-categorize')).toEqual(
@@ -291,8 +292,24 @@ describe('agent-ui flows', () => {
     expect(resolveAgentUiFlow('workouts-demo')).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
+          op: 'tap',
+          id: `ontrack.workouts.selectedDay.editWorkout.${AGENT_UI_DEMO_WORKOUT_ACTIVITY_ID}`,
+        }),
+        expect.objectContaining({
           op: 'wait',
-          id: `ontrack.workouts.todayPlan.${AGENT_UI_DEMO_WORKOUT_ACTIVITY_ID}`,
+          id: 'ontrack.workouts.dayPlanner.section',
+        }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('workouts-change-day')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.workouts.selectedDay.next',
+        }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.workouts.selectedDay.previous',
         }),
       ]),
     );

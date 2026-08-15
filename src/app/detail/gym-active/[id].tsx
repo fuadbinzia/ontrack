@@ -9,11 +9,16 @@ import { useTheme } from '@/hooks/use-theme';
 import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useSchedule } from '@/store/schedule';
 import type { WorkoutExercise } from '@/types/models';
+import {
+  deviceWorkoutWeightUnit,
+  workoutWeightInputValue,
+} from '@/features/workouts/weight-unit';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 import { formatCount } from '@/utils/grammar';
 
 export default function ActiveWorkoutScreen() {
+  const weightUnit = deviceWorkoutWeightUnit();
   const theme = useTheme();
   const routeIsActive = useRouteIsActive();
   const router = useRouter();
@@ -147,7 +152,9 @@ export default function ActiveWorkoutScreen() {
       <Card airy padded={false} style={styles.setCard}>
         <AppText variant="metric">{formatCount(currentSet.reps, 'rep')}</AppText>
         <AppText variant="title" color="secondary">
-          {currentSet.weightKg > 0 ? `${currentSet.weightKg} kg` : 'Bodyweight'}
+          {currentSet.weightKg > 0
+            ? `${workoutWeightInputValue(currentSet.weightKg, weightUnit)} ${weightUnit}`
+            : 'Bodyweight'}
         </AppText>
         {current.previousBest ? (
           <AppText variant="caption" color="tertiary">

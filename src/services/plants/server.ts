@@ -5,6 +5,10 @@ import {
   fetchOpenAIResponses,
   parseOpenAIJsonResponse,
 } from '@/services/ai/vision-transport';
+import {
+  cloudflarePlantAIConfigured,
+  fetchCloudflarePlantJson,
+} from '@/services/ai/cloudflare-workers-ai';
 import { gatePaidApiRequest } from '@/services/http/api-gate';
 import { apiCorsHeaders } from '@/services/http/cors';
 import type { PlantCarePlan, PlantHealthAssessment, PlantIdentity, RoomProfile } from '@/types/models';
@@ -12,7 +16,7 @@ import type { PlantServiceErrorCode } from './types';
 import { hasConfidentPlantIdentity, validatePlantCarePlan, validatePlantHealth, validatePlantIdentity } from './validate';
 
 const MAX_IMAGE_LENGTH = 5_500_000;
-type PlantAIProvider = 'ollama' | 'openai';
+type PlantAIProvider = 'cloudflare' | 'ollama' | 'openai';
 
 const LOCAL_CARE_SOURCES = [
   { title: 'University of Minnesota Extension — Houseplants', url: 'https://extension.umn.edu/houseplants' },
@@ -21,6 +25,7 @@ const LOCAL_CARE_SOURCES = [
 
 function plantAIProvider(): PlantAIProvider {
   const configured = process.env.PLANT_AI_PROVIDER ?? process.env.MEAL_AI_PROVIDER;
+  if (configured === 'cloudflare') return 'cloudflare';
   return configured === 'openai' ? 'openai' : 'ollama';
 }
 
@@ -77,6 +82,15 @@ export async function assertPlantAuthenticated(request: Request) {
 }
 
 export function assertPlantAnalysisEnabled() {
+  if (plantAIProvider() === 'cloudflare') {
+    if (process.env.PLANT_AI_ENABLED !== 'true') {
+      return plantError('Cloud plant analysis is disabled for this environment.', 'NOT_CONFIGURED', 503);
+    }
+    if (!cloudflarePlantAIConfigured()) {
+      return plantError('Cloudflare plant analysis is not configured.', 'NOT_CONFIGURED', 503);
+    }
+    return undefined;
+  }
   if (plantAIProvider() === 'ollama') {
     if (process.env.LOCAL_PLANT_AI_ENABLED !== 'true' && process.env.LOCAL_MEAL_AI_ENABLED !== 'true') {
       return plantError(
@@ -214,9 +228,12 @@ Do not choose an exact ginger species unless diagnostic flowers, rhizomes, or ot
 are visible. Report confidence of 0.8 or higher only when at least three compatible diagnostic features are
 clearly visible; otherwise return a lower confidence so the app requests another photo. Assess visible health,
 separating visible signs from possible causes. Do not diagnose disease or invent unseen conditions. Use concise plain language.`;
-  const output = plantAIProvider() === 'ollama'
+  const provider = plantAIProvider();
+  const output = provider === 'ollama'
     ? await ollamaStructuredResponse(prompt, IDENTIFY_SCHEMA, [imageDataUrl])
-    : parseBody(await openAIResponse({
+    : provider === 'cloudflare'
+      ? await fetchCloudflarePlantJson({ prompt, schema: IDENTIFY_SCHEMA, imageDataUrl })
+      : parseBody(await openAIResponse({
       input: [{ role: 'user', content: [
       { type: 'input_text', text: prompt },
       { type: 'input_image', image_url: imageDataUrl, detail: 'high' },
@@ -257,10 +274,21 @@ export function validateLocalCarePlan(value: unknown): PlantCarePlan | null {
   });
 }
 
+function validateCloudflareCarePlan(value: unknown): PlantCarePlan | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const raw = value as Record<string, unknown>;
+  return validatePlantCarePlan({
+    ...raw,
+    sources: LOCAL_CARE_SOURCES,
+    disclaimer: 'AI-generated starting guidance based on the details you provided. Indoor conditions vary; verify uncertain or worsening issues with a qualified horticulturist.',
+  });
+}
+
 export async function createCarePlan(input: {
   identity: PlantIdentity; health: PlantHealthAssessment; room: RoomProfile; roomImageDataUrl?: string;
 }): Promise<PlantCarePlan> {
-  if (plantAIProvider() === 'ollama') {
+  const provider = plantAIProvider();
+  if (provider === 'ollama') {
     const prompt = carePrompt(input.identity, input.health, input.room) +
       ' Keep pruning urgency logically consistent: use not-needed whenever the reason says pruning is unnecessary. Complete every schema field. The app will attach general horticultural references after generation; use placeholder HTTPS sources in the required sources field.';
     const raw = await ollamaStructuredResponse(
@@ -269,6 +297,17 @@ export async function createCarePlan(input: {
       input.roomImageDataUrl ? [input.roomImageDataUrl] : [],
     );
     const plan = validateLocalCarePlan(raw);
+    if (!plan) throw new Error('INVALID_ANALYSIS');
+    return plan;
+  }
+  if (provider === 'cloudflare') {
+    const raw = await fetchCloudflarePlantJson({
+      prompt: carePrompt(input.identity, input.health, input.room) +
+        ' Keep pruning urgency logically consistent: use not-needed whenever the reason says pruning is unnecessary. Complete every schema field. Use placeholder HTTPS sources; the app replaces them with fixed horticultural references.',
+      schema: CARE_SCHEMA,
+      imageDataUrl: input.roomImageDataUrl,
+    });
+    const plan = validateCloudflareCarePlan(raw);
     if (!plan) throw new Error('INVALID_ANALYSIS');
     return plan;
   }
@@ -292,13 +331,20 @@ export async function checkPlantHealth(input: {
   currentCarePlan: PlantCarePlan; room: RoomProfile;
 }) {
   const prompt = `Reassess this known ${input.identity.scientificName}. Previous assessment: ${input.previousHealth.summary}. Compare only supported visible changes. Propose a complete replacement care plan only when the visible evidence justifies it. ${carePrompt(input.identity, input.previousHealth, input.room)}`;
-  const output = plantAIProvider() === 'ollama'
+  const provider = plantAIProvider();
+  const output = provider === 'ollama'
     ? await ollamaStructuredResponse(
       prompt + ' Complete every schema field. The app will attach general horticultural references to any proposed care plan; use placeholder HTTPS sources in the required sources field.',
       CHECK_IN_SCHEMA,
       [input.imageDataUrl],
     )
-    : parseBody(await openAIResponse({
+    : provider === 'cloudflare'
+      ? await fetchCloudflarePlantJson({
+        prompt: prompt + ' Complete every schema field. Use placeholder HTTPS sources for any proposed care plan; the app replaces them with fixed horticultural references.',
+        schema: CHECK_IN_SCHEMA,
+        imageDataUrl: input.imageDataUrl,
+      })
+      : parseBody(await openAIResponse({
     tools: [{ type: 'web_search', search_context_size: 'low' }],
     input: [{ role: 'user', content: [
       { type: 'input_text', text: prompt + ' Use trustworthy horticultural web sources for any proposed change.' },
@@ -309,7 +355,11 @@ export async function checkPlantHealth(input: {
   const parsed = output as Record<string, unknown>;
   const health = validatePlantHealth(parsed.health);
   const carePlan = parsed.careShouldChange
-    ? (plantAIProvider() === 'ollama' ? validateLocalCarePlan(parsed.carePlan) : validatePlantCarePlan(parsed.carePlan))
+    ? (provider === 'ollama'
+      ? validateLocalCarePlan(parsed.carePlan)
+      : provider === 'cloudflare'
+        ? validateCloudflareCarePlan(parsed.carePlan)
+        : validatePlantCarePlan(parsed.carePlan))
     : null;
   if (!health || (parsed.careShouldChange === true && !carePlan)) throw new Error('INVALID_ANALYSIS');
   return { health, proposedCarePlan: carePlan ?? undefined };

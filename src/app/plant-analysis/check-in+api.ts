@@ -41,6 +41,13 @@ export async function POST(request: Request) {
         503,
       );
     }
+    if (error instanceof Error && error.message === 'CLOUDFLARE_AI_UNAVAILABLE') {
+      return plantError(
+        'Plant check-in analysis is temporarily unavailable. Try again shortly.',
+        'PROVIDER_FAILURE',
+        503,
+      );
+    }
     return plantError('Plant check-in analysis is temporarily unavailable.', 'PROVIDER_FAILURE', 502);
   }
 }

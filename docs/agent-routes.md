@@ -92,6 +92,8 @@ Pin is required when iOS Simulator and Android Emulator are both running — oth
 ./scripts/agent-ui-flow.sh activity-demo-edit
 ./scripts/agent-ui.sh once --flow activity-form-dismiss --assert-route /
 ./scripts/agent-ui-flow.sh workouts-demo
+./scripts/agent-ui-flow.sh workouts-plan-day
+./scripts/agent-ui-flow.sh workouts-change-day
 ./scripts/agent-ui-flow.sh vision-board-demo-edit
 ./scripts/agent-ui-flow.sh vehicle-demo-detail
 ./scripts/agent-ui-flow.sh --list
@@ -180,7 +182,9 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `activity-demo-edit` | Seed → open activity form editor |
 | `event-demo-edit-review-invite` | Seed invited fight event → detail → edit → Save & Review Invite → Google Calendar review |
 | `activity-form-dismiss` | Today → open Add Event → choose a vibe → dismiss through the outside backdrop → remain on Today |
-| `workouts-demo` | Seed gym activity → Today’s Plan card |
+| `workouts-demo` | Seed gym activity → open its Fitness edit sheet |
+| `workouts-plan-day` | Fitness selected day → open the workout planner |
+| `workouts-change-day` | Fitness selected day → advance one day with the header arrow |
 | `workouts-demo-explore` | Seed → Muscle Explorer (incline-curl add ready) |
 | `workouts-demo-anatomy` | Seed → Female + Side anatomy controls (chest chip) |
 | `workouts-demo-gym-detail` | Seed → gym detail (Start workout) |

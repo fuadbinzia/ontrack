@@ -45,6 +45,7 @@ coverage/
 # local env files
 .env
 .env*.local
+.dev.vars
 .secrets/
 .living-system-map/runtime-analytics.local
 

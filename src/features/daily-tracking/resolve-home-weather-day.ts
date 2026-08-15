@@ -66,8 +66,14 @@ export function formatHomeWeatherPrimaryLabel(weather: HomeWeatherSnapshot): str
  * Uses bare ° so it stays lighter under the primary unit.
  */
 export function formatHomeWeatherRangeLabel(weather: HomeWeatherSnapshot): string | undefined {
-  if (!weather.isLive || !hasTemperatureRange(weather)) return undefined;
-  return `H ${weather.temperatureHigh}° · L ${weather.temperatureLow}°`;
+  if (!weather.isLive) return undefined;
+  const high = typeof weather.temperatureHigh === 'number'
+    ? `${weather.temperatureHigh}°`
+    : '—';
+  const low = typeof weather.temperatureLow === 'number'
+    ? `${weather.temperatureLow}°`
+    : '—';
+  return `H ${high} · L ${low}`;
 }
 
 /** Accessibility / assert string covering primary + optional range. */

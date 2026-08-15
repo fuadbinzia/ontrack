@@ -37,7 +37,7 @@ export const TAB_META: Record<
     href: '/(tabs)/profile',
   },
   workouts: {
-    label: 'Workout',
+    label: 'Fitness',
     icon: 'gym',
     href: '/(tabs)/workouts',
   },

@@ -2,6 +2,8 @@ import {
   enrichTimeTbaUfcEvent,
   normalizeEspnUfcAthleteProfile,
   normalizeEspnUfcEvent,
+  parseEspnUfcScoreboard,
+  usesEspnUfcDiscovery,
 } from '@/services/events/espn-ufc';
 import type { EventSearchResult } from '@/services/events/types';
 
@@ -194,6 +196,30 @@ describe('ESPN UFC time enrichment', () => {
       broadcasts: [{ name: 'Paramount+', countryCode: 'US' }],
       sourceName: 'TheSportsDB · ESPN',
     });
+  });
+
+  it('skips a broken scoreboard row so one bad fight cannot blank discovery', () => {
+    const results = parseEspnUfcScoreboard({
+      events: [
+        { name: 'Missing id and date' },
+        {
+          id: '600059185',
+          name: 'UFC 330: Makhachev vs. Machado Garry',
+          date: '2026-08-15T21:30Z',
+          competitions: [{ date: '2026-08-16T01:00Z' }],
+        },
+      ],
+    }, 'UFC');
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ providerEventId: '600059185', date: '2026-08-15' });
+  });
+
+  it('routes combat and UFC searches through ESPN discovery', () => {
+    expect(usesEspnUfcDiscovery('sports', 'UFC', 'combat')).toBe(true);
+    expect(usesEspnUfcDiscovery('sports', '', 'combat')).toBe(true);
+    expect(usesEspnUfcDiscovery('ufc', '', 'all')).toBe(true);
+    expect(usesEspnUfcDiscovery('sports', 'Lakers', 'basketball')).toBe(false);
+    expect(usesEspnUfcDiscovery('concert', 'UFC', 'all')).toBe(false);
   });
 
   it('does not apply a different numbered UFC event or overwrite known times', () => {

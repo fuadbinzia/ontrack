@@ -7,6 +7,8 @@ import {
   asString,
 } from '@/utils/parse';
 
+import { searchEspnUfcFromDevice } from './espn-ufc-client';
+import { usesEspnUfcDiscovery } from './espn-ufc';
 import type {
   EventBroadcast,
   EventFighter,
@@ -281,7 +283,7 @@ function request<T>(path: string, options: { method?: 'GET' | 'POST'; body?: unk
   });
 }
 
-export function searchEvents(
+export async function searchEvents(
   kind: EventKind,
   query: string,
   page = 0,
@@ -289,7 +291,15 @@ export function searchEvents(
   sport: EventSport = 'all',
 ) {
   const params = new URLSearchParams({ kind, q: query.trim(), page: String(page), sport });
-  return request<EventSearchResponse>(`/api/events/search?${params}`, { signal });
+  const hostedSearch = () =>
+    request<EventSearchResponse>(`/api/events/search?${params}`, { signal });
+  if (!usesEspnUfcDiscovery(kind, query, sport)) return hostedSearch();
+  try {
+    return await searchEspnUfcFromDevice(query, signal);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') throw error;
+    return hostedSearch();
+  }
 }
 
 export function fetchLiveUfcEvents(date: string, signal?: AbortSignal) {

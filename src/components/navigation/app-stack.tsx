@@ -10,13 +10,28 @@ type StackProps = ComponentProps<typeof Stack>;
 type ScreenOptions = NonNullable<StackProps['screenOptions']>;
 type ScreenLayout = NonNullable<StackProps['screenLayout']>;
 
+const isAndroid =
+  process.env.EXPO_OS === 'android' || Platform.OS === 'android';
+
+/**
+ * iOS 26 maps `default` / `ios_from_right` onto Apple's
+ * `interactiveContentPopGestureRecognizer`, which loses to ScrollView and
+ * hidden headers. `simple_push` is a custom animation, so screens uses its
+ * own full-screen pan instead.
+ */
+export const IOS_SWIPE_BACK_ANIMATION = 'simple_push' as const;
+export const ANDROID_SWIPE_BACK_ANIMATION = 'ios_from_right' as const;
+
+export const appStackSwipeAnimation = isAndroid
+  ? ANDROID_SWIPE_BACK_ANIMATION
+  : IOS_SWIPE_BACK_ANIMATION;
+
 export const appStackScreenOptions = {
   headerShown: false,
+  gestureEnabled: true,
   fullScreenGestureEnabled: true,
-  animation:
-    process.env.EXPO_OS === 'android' || Platform.OS === 'android'
-      ? ('ios_from_right' as const)
-      : ('default' as const),
+  animationMatchesGesture: true,
+  animation: appStackSwipeAnimation,
   animationDuration: motion.page,
   contentStyle: { backgroundColor: 'transparent' },
 };

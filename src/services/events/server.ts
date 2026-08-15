@@ -9,9 +9,12 @@ import {
   normalizeTicketmasterEvent,
 } from './normalize';
 import {
+  ESPN_UFC_REQUEST_HEADERS,
+  ESPN_UFC_SCOREBOARD_URL,
   enrichTimeTbaUfcEvent,
   normalizeEspnUfcAthleteProfile,
-  normalizeEspnUfcEvent,
+  parseEspnUfcScoreboard,
+  usesEspnUfcDiscovery,
 } from './espn-ufc';
 import type {
   EventFollow,
@@ -23,7 +26,6 @@ import type {
 
 const SPORTSDB_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
 const TICKETMASTER_BASE_URL = 'https://app.ticketmaster.com/discovery/v2';
-const ESPN_UFC_SCOREBOARD_URL = 'https://site.web.api.espn.com/apis/site/v2/sports/mma/ufc/scoreboard';
 const ESPN_UFC_ATHLETE_URL = 'https://sports.core.api.espn.com/v2/sports/mma/leagues/ufc/athletes';
 const MAX_RESULTS = 20;
 const ROLLING_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
@@ -95,13 +97,7 @@ async function providerJson(provider: 'thesportsdb' | 'ticketmaster' | 'espn-ufc
     const response = await guardedFetch(provider, url, {
       headers: {
         Accept: 'application/json',
-        ...(provider === 'espn-ufc'
-          ? {
-              'Accept-Language': 'en-US,en;q=0.9',
-              Referer: 'https://www.espn.com/',
-              'User-Agent': 'Mozilla/5.0 (compatible; onTrack event discovery)',
-            }
-          : {}),
+        ...(provider === 'espn-ufc' ? ESPN_UFC_REQUEST_HEADERS : {}),
       },
     }, {
       timeoutMs: 8_000,
@@ -179,9 +175,7 @@ export async function liveUfcEvents(date: string) {
     ESPN_LIVE_CACHE_MS,
     'live',
   );
-  return bodyList(body, 'events')
-    .map(normalizeEspnUfcEvent)
-    .filter((item): item is EventSearchResult => Boolean(item));
+  return parseEspnUfcScoreboard(body);
 }
 
 /** Fetch only the two opened-bout profiles; failures degrade to available card data. */
@@ -230,10 +224,6 @@ function compactDate(date: Date) {
   return date.toISOString().slice(0, 10).replaceAll('-', '');
 }
 
-function isGenericUfcQuery(query: string) {
-  return /^\s*(ufc|ultimate fighting championship)\s*$/i.test(query);
-}
-
 async function espnUfcEvents(query: string) {
   const now = new Date();
   const end = new Date(now.getTime() + ROLLING_WINDOW_MS);
@@ -247,13 +237,7 @@ async function espnUfcEvents(query: string) {
     // event, so a transient range/payload failure should not blank discovery.
     body = await cachedEspnJson(ESPN_UFC_SCOREBOARD_URL);
   }
-  const normalizedQuery = query.trim().toLowerCase();
-  return bodyList(body, 'events')
-    .map(normalizeEspnUfcEvent)
-    .filter((item): item is EventSearchResult => Boolean(item))
-    .filter((item) => !normalizedQuery || isGenericUfcQuery(query) ||
-      item.title.toLowerCase().includes(normalizedQuery))
-    .slice(0, MAX_RESULTS);
+  return parseEspnUfcScoreboard(body, query);
 }
 
 export function sportsLeagueId(sport: Exclude<EventSport, 'all'> | 'nba' | 'ufc') {
@@ -327,7 +311,12 @@ async function defaultSportsEvents(kind: SportsEventKind, sport: EventSport) {
 
 async function sportsEvents(kind: SportsEventKind, query: string, sport: EventSport) {
   const selectedSport = sportForLegacyKind(kind, sport);
-  if (kind === 'ufc' || /\bufc\b/i.test(query)) return espnUfcEvents(query);
+  if (
+    usesEspnUfcDiscovery(kind, query, selectedSport)
+    || configForQuery(query)?.[0] === 'combat'
+  ) {
+    return espnUfcEvents(query);
+  }
   if (query.trim()) {
     const aliasConfig = configForQuery(query);
     if (aliasConfig) return defaultSportsEvents(kind, aliasConfig[0]);

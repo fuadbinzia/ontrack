@@ -4,6 +4,14 @@ import { CHANGELOG_ARCHIVE } from './release-notes-changelog-archive';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.99',
+    date: '2026-08-15',
+    notes: [
+      'Read UFC events from ESPN on the device first so discovery works without a hosted SportsDB key, and keep iOS swipe-back on simple_push so stacked screens still gesture from anywhere.',
+      'Ship via ship:push (TestFlight + device OTA).',
+    ],
+  },
+  {
     version: '1.0.98',
     date: '2026-08-15',
     notes: [

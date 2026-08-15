@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.99',
+    date: '2026-08-15',
+    notes: [
+      'Read UFC events from ESPN on the device first so discovery works without a hosted SportsDB key, and keep iOS swipe-back on simple_push so stacked screens still gesture from anywhere.',
+    ],
+  },
+  {
     version: '1.0.98',
     date: '2026-08-15',
     notes: [

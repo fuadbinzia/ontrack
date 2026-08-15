@@ -159,13 +159,15 @@ const NESTED_STACK_LAYOUTS = [
 ] as const;
 
 describe('full-screen swipe-back stacks', () => {
-  it('enables iOS full-screen pop and Android ios_from_right on AppStack', () => {
+  it('enables iOS full-screen pop via simple_push so iOS 26 does not use Apple content-pop', () => {
     const appStack = readFileSync(
       join(process.cwd(), 'src/components/navigation/app-stack.tsx'),
       'utf8',
     );
     expect(appStack).toContain('fullScreenGestureEnabled: true');
-    expect(appStack).toContain("'ios_from_right'");
+    expect(appStack).toContain('animationMatchesGesture: true');
+    expect(appStack).toContain("IOS_SWIPE_BACK_ANIMATION = 'simple_push'");
+    expect(appStack).toContain("ANDROID_SWIPE_BACK_ANIMATION = 'ios_from_right'");
     expect(appStack).toContain('composeSwipeBackScreenLayout');
   });
 

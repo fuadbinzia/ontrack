@@ -34,6 +34,23 @@ describe('default sports discovery', () => {
     expect(nbaSeasonForDate(new Date('2027-02-01T12:00:00Z'))).toBe('2026-2027');
   });
 
+  it('uses ESPN for Combat Sports even when the query is empty', async () => {
+    fetchMock.mockResolvedValue(Response.json({
+      events: [{
+        id: '600059185',
+        name: 'UFC 330: Makhachev vs. Machado Garry',
+        date: '2026-08-15T21:30Z',
+        competitions: [{ date: '2026-08-16T01:00Z' }],
+      }],
+    }));
+
+    const results = await searchProviderEvents('sports', '', 0, 'combat');
+
+    expect(results[0]).toMatchObject({ provider: 'espn', providerEventId: '600059185' });
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('site.web.api.espn.com');
+    expect(String(fetchMock.mock.calls[0]?.[0])).not.toContain('thesportsdb.com');
+  });
+
   it('searches UFC through one free scoreboard request without exhausting TheSportsDB', async () => {
     fetchMock.mockResolvedValue(Response.json({
       events: [{

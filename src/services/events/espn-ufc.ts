@@ -4,8 +4,52 @@ import type {
   EventCardSection,
   EventFighter,
   EventFighterProfile,
+  EventKind,
   EventSearchResult,
+  EventSport,
 } from './types';
+
+export const ESPN_UFC_SCOREBOARD_URL =
+  'https://site.web.api.espn.com/apis/site/v2/sports/mma/ufc/scoreboard';
+export const ESPN_UFC_SCOREBOARD_FALLBACK_URL =
+  'https://site.api.espn.com/apis/site/v2/sports/mma/ufc/scoreboard';
+export const ESPN_UFC_REQUEST_HEADERS = {
+  Accept: 'application/json',
+  'Accept-Language': 'en-US,en;q=0.9',
+  Referer: 'https://www.espn.com/',
+  'User-Agent': 'Mozilla/5.0 (compatible; onTrack event discovery)',
+} as const;
+
+const ESPN_UFC_MAX_RESULTS = 20;
+const ESPN_UFC_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
+
+function compactDate(date: Date) {
+  return date.toISOString().slice(0, 10).replaceAll('-', '');
+}
+
+export function isGenericUfcQuery(query: string) {
+  return /^\s*(ufc|ultimate fighting championship)\s*$/i.test(query);
+}
+
+export function usesEspnUfcDiscovery(
+  kind: EventKind,
+  query: string,
+  sport: EventSport,
+) {
+  if (kind === 'concert') return false;
+  return kind === 'ufc' || sport === 'combat' || /\bufc\b/i.test(query);
+}
+
+export function espnUfcScoreboardUrls(now = new Date()) {
+  const end = new Date(now.getTime() + ESPN_UFC_WINDOW_MS);
+  const ranged = `?dates=${compactDate(now)}-${compactDate(end)}&limit=100`;
+  return [
+    `${ESPN_UFC_SCOREBOARD_URL}${ranged}`,
+    ESPN_UFC_SCOREBOARD_URL,
+    `${ESPN_UFC_SCOREBOARD_FALLBACK_URL}${ranged}`,
+    ESPN_UFC_SCOREBOARD_FALLBACK_URL,
+  ];
+}
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -211,6 +255,25 @@ function eventBouts(event: UnknownRecord): EventBout[] {
       return section || b.sourceIndex - a.sourceIndex;
     })
     .map((item) => item.bout);
+}
+
+export function safeNormalizeEspnUfcEvent(value: unknown): EventSearchResult | undefined {
+  try {
+    return normalizeEspnUfcEvent(value);
+  } catch {
+    return undefined;
+  }
+}
+
+export function parseEspnUfcScoreboard(body: unknown, query = ''): EventSearchResult[] {
+  const events = record(body).events;
+  const normalizedQuery = query.trim().toLowerCase();
+  return list(events)
+    .map(safeNormalizeEspnUfcEvent)
+    .filter((item): item is EventSearchResult => Boolean(item))
+    .filter((item) => !normalizedQuery || isGenericUfcQuery(query) ||
+      item.title.toLowerCase().includes(normalizedQuery))
+    .slice(0, ESPN_UFC_MAX_RESULTS);
 }
 
 export function normalizeEspnUfcEvent(value: unknown): EventSearchResult | undefined {

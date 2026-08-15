@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.93',
+    date: '2026-08-15',
+    notes: [
+      'Keep Build Care Plan working when the plant model fails.',
+      'Touched: app routes.',
+    ],
+  },
+  {
     version: '1.0.92',
     date: '2026-08-15',
     notes: [

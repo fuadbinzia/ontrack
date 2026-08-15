@@ -409,6 +409,14 @@ describe('glass plate contract', () => {
     }
   });
 
+  it('keeps add-plant photo placeholder on GlassPlate', () => {
+    const addPlant = read('src/app/(tabs)/plants/new.tsx');
+    expect(addPlant).toContain('GlassPlate');
+    expect(addPlant).not.toContain("backgroundColor: 'rgba(");
+    expect(addPlant).not.toContain('backgroundElevated');
+    expect(addPlant).not.toContain('backgroundSunken');
+  });
+
   it('keeps Today weather/empty CTA/FAB on frosted glass', () => {
     const header = read('src/features/daily-tracking/day-header.tsx');
     const weatherBar = read('src/features/daily-tracking/day-weather-bar.tsx');

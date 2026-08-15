@@ -13,15 +13,11 @@ import { gatePaidApiRequest } from '@/services/http/api-gate';
 import { apiCorsHeaders } from '@/services/http/cors';
 import type { PlantCarePlan, PlantHealthAssessment, PlantIdentity, RoomProfile } from '@/types/models';
 import type { PlantServiceErrorCode } from './types';
+import { buildFallbackCarePlan, HOUSEPLANT_CARE_SOURCES } from './fallback-care';
 import { hasConfidentPlantIdentity, validatePlantCarePlan, validatePlantHealth, validatePlantIdentity } from './validate';
 
 const MAX_IMAGE_LENGTH = 5_500_000;
 type PlantAIProvider = 'cloudflare' | 'ollama' | 'openai';
-
-const LOCAL_CARE_SOURCES = [
-  { title: 'University of Minnesota Extension — Houseplants', url: 'https://extension.umn.edu/houseplants' },
-  { title: 'Royal Horticultural Society — Houseplants', url: 'https://www.rhs.org.uk/plants/types/houseplants' },
-];
 
 function plantAIProvider(): PlantAIProvider {
   const configured = process.env.PLANT_AI_PROVIDER ?? process.env.MEAL_AI_PROVIDER;
@@ -269,7 +265,7 @@ export function validateLocalCarePlan(value: unknown): PlantCarePlan | null {
   return validatePlantCarePlan({
     ...raw,
     pruning: normalizedPruning,
-    sources: LOCAL_CARE_SOURCES,
+    sources: HOUSEPLANT_CARE_SOURCES,
     disclaimer: 'Generated locally by qwen3-vl as a starting point. Indoor conditions vary; verify uncertain or worsening issues with a qualified horticulturist.',
   });
 }
@@ -279,7 +275,7 @@ function validateCloudflareCarePlan(value: unknown): PlantCarePlan | null {
   const raw = value as Record<string, unknown>;
   return validatePlantCarePlan({
     ...raw,
-    sources: LOCAL_CARE_SOURCES,
+    sources: HOUSEPLANT_CARE_SOURCES,
     disclaimer: 'AI-generated starting guidance based on the details you provided. Indoor conditions vary; verify uncertain or worsening issues with a qualified horticulturist.',
   });
 }
@@ -287,43 +283,45 @@ function validateCloudflareCarePlan(value: unknown): PlantCarePlan | null {
 export async function createCarePlan(input: {
   identity: PlantIdentity; health: PlantHealthAssessment; room: RoomProfile; roomImageDataUrl?: string;
 }): Promise<PlantCarePlan> {
-  const provider = plantAIProvider();
-  if (provider === 'ollama') {
-    const prompt = carePrompt(input.identity, input.health, input.room) +
-      ' Keep pruning urgency logically consistent: use not-needed whenever the reason says pruning is unnecessary. Complete every schema field. The app will attach general horticultural references after generation; use placeholder HTTPS sources in the required sources field.';
-    const raw = await ollamaStructuredResponse(
-      prompt,
-      CARE_SCHEMA,
-      input.roomImageDataUrl ? [input.roomImageDataUrl] : [],
-    );
-    const plan = validateLocalCarePlan(raw);
-    if (!plan) throw new Error('INVALID_ANALYSIS');
-    return plan;
+  try {
+    const provider = plantAIProvider();
+    if (provider === 'ollama') {
+      const prompt = carePrompt(input.identity, input.health, input.room) +
+        ' Keep pruning urgency logically consistent: use not-needed whenever the reason says pruning is unnecessary. Complete every schema field. The app will attach general horticultural references after generation; use placeholder HTTPS sources in the required sources field.';
+      const raw = await ollamaStructuredResponse(
+        prompt,
+        CARE_SCHEMA,
+        input.roomImageDataUrl ? [input.roomImageDataUrl] : [],
+      );
+      const plan = validateLocalCarePlan(raw);
+      if (plan) return plan;
+    } else if (provider === 'cloudflare') {
+      const raw = await fetchCloudflarePlantJson({
+        prompt: carePrompt(input.identity, input.health, input.room) +
+          ' Keep pruning urgency logically consistent: use not-needed whenever the reason says pruning is unnecessary. Complete every schema field. Use placeholder HTTPS sources; the app replaces them with fixed horticultural references.',
+        schema: CARE_SCHEMA,
+        imageDataUrl: input.roomImageDataUrl,
+      });
+      const plan = validateCloudflareCarePlan(raw);
+      if (plan) return plan;
+    } else {
+      const content: Record<string, unknown>[] = [{ type: 'input_text', text: carePrompt(input.identity, input.health, input.room) }];
+      if (input.roomImageDataUrl) content.push({ type: 'input_image', image_url: input.roomImageDataUrl, detail: 'low' });
+      const body = await openAIResponse({
+        tools: [{ type: 'web_search', search_context_size: 'medium' }],
+        input: [{ role: 'user', content: [
+          ...content,
+          { type: 'input_text', text: 'Use trustworthy university extension, botanical garden, or recognized horticultural sources and return their direct HTTPS URLs.' },
+        ] }],
+        text: { format: { type: 'json_schema', name: 'plant_care_plan', strict: true, schema: CARE_SCHEMA } },
+      });
+      const plan = validatePlantCarePlan(parseBody(body));
+      if (plan) return plan;
+    }
+  } catch {
+    // Model or transport failure — still return an editable starting plan.
   }
-  if (provider === 'cloudflare') {
-    const raw = await fetchCloudflarePlantJson({
-      prompt: carePrompt(input.identity, input.health, input.room) +
-        ' Keep pruning urgency logically consistent: use not-needed whenever the reason says pruning is unnecessary. Complete every schema field. Use placeholder HTTPS sources; the app replaces them with fixed horticultural references.',
-      schema: CARE_SCHEMA,
-      imageDataUrl: input.roomImageDataUrl,
-    });
-    const plan = validateCloudflareCarePlan(raw);
-    if (!plan) throw new Error('INVALID_ANALYSIS');
-    return plan;
-  }
-  const content: Record<string, unknown>[] = [{ type: 'input_text', text: carePrompt(input.identity, input.health, input.room) }];
-  if (input.roomImageDataUrl) content.push({ type: 'input_image', image_url: input.roomImageDataUrl, detail: 'low' });
-  const body = await openAIResponse({
-    tools: [{ type: 'web_search', search_context_size: 'medium' }],
-    input: [{ role: 'user', content: [
-      ...content,
-      { type: 'input_text', text: 'Use trustworthy university extension, botanical garden, or recognized horticultural sources and return their direct HTTPS URLs.' },
-    ] }],
-    text: { format: { type: 'json_schema', name: 'plant_care_plan', strict: true, schema: CARE_SCHEMA } },
-  });
-  const plan = validatePlantCarePlan(parseBody(body));
-  if (!plan) throw new Error('INVALID_ANALYSIS');
-  return plan;
+  return buildFallbackCarePlan(input);
 }
 
 export async function checkPlantHealth(input: {

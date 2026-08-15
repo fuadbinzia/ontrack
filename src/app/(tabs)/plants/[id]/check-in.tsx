@@ -6,7 +6,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { AppText, Button, Card, ErrorMessage, Screen, SectionHeader } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
 import type { PlantCheckInResponse } from '@/services/plants';
-import { analyzePlantCheckIn, persistPlantPhoto, PlantServiceError } from '@/services/plants';
+import { analyzePlantCheckIn, persistPlantPhoto, plantServiceErrorMessage } from '@/services/plants';
 import { applyPlantCarePlan } from '@/services/plants/schedule';
 import { usePlants } from '@/store/plants';
 import { newId } from '@/store/schedule';
@@ -56,7 +56,7 @@ export default function PlantCheckInScreen() {
         currentCarePlan: plant.carePlan, room: plant.room,
       }));
     } catch (caught) {
-      setError(caught instanceof PlantServiceError ? caught.message : 'The check-in could not be analyzed.');
+      setError(plantServiceErrorMessage(caught, 'The check-in could not be analyzed.'));
     } finally { setBusy(false); }
   };
 

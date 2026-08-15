@@ -314,14 +314,22 @@ export function useTravelTranslator({
     if (recordingTimerRef.current) clearTimeout(recordingTimerRef.current);
     recordingTimerRef.current = undefined;
     activeVoiceRef.current = null;
-    setActiveVoice(null);
+    if (mountedRef.current) setActiveVoice(null);
     stopPlayback();
-    try {
-      if (recorder.isRecording) await recorder.stop();
-    } catch {
-      // Recorder may already have stopped at its duration limit.
+
+    let recordedUri: string | null = null;
+    if (mountedRef.current) {
+      try {
+        if (recorder.isRecording) await recorder.stop();
+        // expo-audio releases the shared recorder before this hook's unmount
+        // cleanup. Re-check the lifecycle after awaiting stop so we never read
+        // a released native object's properties.
+        if (mountedRef.current) recordedUri = recorder.uri;
+      } catch {
+        // Recorder may already have stopped or been released while stopping.
+      }
     }
-    deleteRecordedAudio(recorder.uri);
+    deleteRecordedAudio(recordedUri);
     try {
       await audioApi?.setAudioModeAsync({ allowsRecording: false });
     } catch {

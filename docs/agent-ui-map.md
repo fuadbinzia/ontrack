@@ -363,6 +363,11 @@ Named flow: `social-friends-invite-tools` (signed-in session) opens Friends, the
 | `ontrack.social.header.addFriend`                   | Open add-friend flow                    |
 | `ontrack.social.header.messages`                    | Open Social messages                    |
 | `ontrack.social.friends.close`                      | Close friend-management modal           |
+| `ontrack.social.friendInvite.signIn`                | Sign in from a public friend invite     |
+| `ontrack.social.friendInvite.accept`                | Accept a resolved friend invite         |
+| `ontrack.social.friendInvite.notNow`                | Leave a resolved invite for later       |
+| `ontrack.social.friendInvite.openSocial`            | Leave an unavailable invite for Social  |
+| `ontrack.social.friendInvite.section.card`          | Friend invite composition anchor         |
 | `ontrack.social.friends.signIn`                     | Sign in from friend-management modal    |
 | `ontrack.social.friends.seeAll`                     | Open complete friends list              |
 | `ontrack.social.friends.add`                        | Open add-friend flow from Friends card  |

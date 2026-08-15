@@ -5,6 +5,10 @@ const modal = readFileSync(
   join(process.cwd(), 'src/features/social/social-friends-modal.tsx'),
   'utf8',
 );
+const hub = readFileSync(
+  join(process.cwd(), 'src/features/social/social-hub-screen.tsx'),
+  'utf8',
+);
 
 describe('social friends modal polish', () => {
   it('moves invite controls into an in-tree bottom sheet over atmosphere-backed glass', () => {
@@ -28,6 +32,31 @@ describe('social friends modal polish', () => {
       mainModal?.indexOf('props.incoming') ?? 0,
     );
     expect(mainModal).not.toContain('testID={AgentUiIds.social.friendEmail}');
+  });
+
+  it('shows friend names without the redundant connection subtitle', () => {
+    const mainModal = modal.match(
+      /export function SocialFriendsModal[\s\S]*?function SocialInviteToolsSheet/,
+    )?.[0];
+
+    expect(mainModal).toBeDefined();
+    expect(mainModal).not.toContain('Connected through onTrack');
+    expect(mainModal).toContain(
+      '<SocialIdentityName>{friend.displayName}</SocialIdentityName>',
+    );
+    expect(mainModal).toContain('Wants to connect');
+    expect(mainModal).toContain('Request pending');
+  });
+
+  it('keeps trip invitations inside Travel instead of friend rows', () => {
+    expect(modal).not.toContain('Add to Trip');
+    expect(modal).not.toContain('onAddToTrip');
+    expect(modal).not.toContain('friendAddToTrip');
+    expect(hub).toMatch(
+      /if \(action === 'invite-trip'\) \{[\s\S]*?router\.push\('\/\(tabs\)\/travel'/,
+    );
+    expect(hub).not.toContain('shareTravelPlanWithFriend');
+    expect(hub).not.toContain('chooseTripForFriend');
   });
 
   it('gives an empty friend list a playful path into the same invite sheet', () => {

@@ -311,6 +311,20 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'social' },
     { op: 'wait', prefix: 'ontrack.social.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
+  'friend-invite-sign-in': [
+    { op: 'goto', to: 'f/agent-ui-friend-invite' },
+    {
+      op: 'wait',
+      id: 'ontrack.social.friendInvite.signIn',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.social.friendInvite.signIn' },
+    {
+      op: 'wait',
+      id: 'ontrack.auth.section.providers',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   'social-friends-invite-tools': [
     { op: 'goto', to: 'social' },
     {

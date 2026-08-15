@@ -1,7 +1,7 @@
 {
   "name": "ontrack",
   "main": "expo-router/entry",
-  "version": "1.0.86",
+  "version": "1.0.87",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -149,6 +149,9 @@
     "testMatch": [
       "**/__tests__/**/*.(test|spec).(ts|tsx)"
     ],
+    "transform": {
+      "\\.mjs$": "babel-jest"
+    },
     "transformIgnorePatterns": [
       "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|d3-geo|d3-array|internmap))",
       "/node_modules/react-native-reanimated/plugin/",

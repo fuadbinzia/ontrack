@@ -1,3 +1,4 @@
+/* eslint-disable import/first -- Jest mocks must initialize before the hook module. */
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 const mockRequestLanguages = jest.fn();
@@ -9,14 +10,30 @@ const mockSpeechSpeak = jest.fn();
 const mockGetVoices = jest.fn();
 const mockClipboard = jest.fn();
 const mockRecorder = {
-  isRecording: false,
-  uri: null as string | null,
+  released: false,
+  invalidNativeReads: 0,
+  recording: false,
+  recordingUri: null as string | null,
+  get isRecording() {
+    if (this.released) {
+      this.invalidNativeReads += 1;
+      throw new Error('Native shared recorder has been released.');
+    }
+    return this.recording;
+  },
+  get uri() {
+    if (this.released) {
+      this.invalidNativeReads += 1;
+      throw new Error('Native shared recorder has been released.');
+    }
+    return this.recordingUri;
+  },
   prepareToRecordAsync: jest.fn(),
   record: jest.fn(() => {
-    mockRecorder.isRecording = true;
+    mockRecorder.recording = true;
   }),
   stop: jest.fn(async () => {
-    mockRecorder.isRecording = false;
+    mockRecorder.recording = false;
   }),
 };
 
@@ -30,7 +47,16 @@ jest.mock('expo-audio', () => ({
   RecordingPresets: { HIGH_QUALITY: {} },
   requestRecordingPermissionsAsync: (...args: unknown[]) => mockPermission(...args),
   setAudioModeAsync: (...args: unknown[]) => mockSetAudioMode(...args),
-  useAudioRecorder: () => mockRecorder,
+  useAudioRecorder: () => {
+    const { useEffect } = jest.requireActual<typeof import('react')>('react');
+    useEffect(
+      () => () => {
+        mockRecorder.released = true;
+      },
+      [],
+    );
+    return mockRecorder;
+  },
 }));
 
 jest.mock('expo-speech', () => ({
@@ -71,8 +97,10 @@ const plan = {
 describe('useTravelTranslator', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRecorder.isRecording = false;
-    mockRecorder.uri = null;
+    mockRecorder.released = false;
+    mockRecorder.invalidNativeReads = 0;
+    mockRecorder.recording = false;
+    mockRecorder.recordingUri = null;
     mockPermission.mockResolvedValue({ granted: true });
     mockSetAudioMode.mockResolvedValue(undefined);
     mockSpeechStop.mockResolvedValue(undefined);
@@ -158,10 +186,40 @@ describe('useTravelTranslator', () => {
     await waitFor(() => expect(result.current.statusMessage).toContain('voice is installed'));
 
     await act(async () => result.current.startVoice('home-to-destination'));
-    expect(mockRecorder.isRecording).toBe(true);
+    expect(mockRecorder.recording).toBe(true);
     rerender({ visible: false });
     await waitFor(() => expect(mockRecorder.stop).toHaveBeenCalled());
     expect(mockSpeechStop).toHaveBeenCalled();
+    unmount();
+  });
+
+  it('does not read the native recorder after expo-audio releases it on unmount', async () => {
+    const { result, unmount } = renderHook(() =>
+      useTravelTranslator({ plan, visible: true, aiEnabled: true, homeLocale: 'en-US' }),
+    );
+    await waitFor(() => expect(result.current.destinationLanguage).toEqual(spanish));
+    await act(async () => result.current.startVoice('home-to-destination'));
+
+    unmount();
+    await act(async () => Promise.resolve());
+
+    expect(mockRecorder.released).toBe(true);
+    expect(mockRecorder.invalidNativeReads).toBe(0);
+    expect(mockSetAudioMode).toHaveBeenLastCalledWith({ allowsRecording: false });
+  });
+
+  it('still stops and reads the recorder safely when cancelled before unmount', async () => {
+    const { result, unmount } = renderHook(() =>
+      useTravelTranslator({ plan, visible: true, aiEnabled: true, homeLocale: 'en-US' }),
+    );
+    await waitFor(() => expect(result.current.destinationLanguage).toEqual(spanish));
+    await act(async () => result.current.startVoice('home-to-destination'));
+
+    await act(async () => result.current.cancelActiveWork());
+
+    expect(mockRecorder.stop).toHaveBeenCalledTimes(1);
+    expect(mockRecorder.invalidNativeReads).toBe(0);
+    expect(mockRecorder.recording).toBe(false);
     unmount();
   });
 });

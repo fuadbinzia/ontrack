@@ -30,11 +30,8 @@ import { useTheme } from '@/hooks/use-theme';
 import type { FriendProfile, FriendRequestItem } from '@/services/friends';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
-export type SocialFriendsModalMode = 'add' | 'all' | 'trip';
-
 type SocialFriendsModalProps = {
   visible: boolean;
-  mode: SocialFriendsModalMode;
   signedIn: boolean;
   friends: FriendProfile[];
   incoming: FriendRequestItem[];
@@ -56,7 +53,6 @@ type SocialFriendsModalProps = {
   onAccept: (request: FriendRequestItem) => void;
   onDecline: (request: FriendRequestItem) => void;
   onCancel: (request: FriendRequestItem) => void;
-  onAddToTrip: (friend: FriendProfile) => void;
   onRemove: (friend: FriendProfile) => void;
 };
 
@@ -66,7 +62,6 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
   const insets = useSafeAreaInsets();
   const { spacing, s } = useResponsive();
   const [inviteToolsVisible, setInviteToolsVisible] = useState(false);
-  const title = props.mode === 'trip' ? 'Invite to a Trip' : 'Friends';
   useScreenAtmosphereChrome(props.visible);
 
   useEffect(() => {
@@ -100,7 +95,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                 Your circle
               </AppText>
               <AppText variant="heading" bold fit>
-                {title}
+                Friends
               </AppText>
             </View>
             {props.signedIn ? (
@@ -142,25 +137,6 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
             }}>
             {props.error ? <ErrorMessage message={props.error} /> : null}
 
-            {props.mode === 'trip' ? (
-              <GlassPlate
-                accent="green"
-                style={[
-                  styles.tripHint,
-                  { padding: spacing.md, gap: spacing.sm },
-                ]}>
-                <Symbol name="flight" size="md" color={chrome.primary} />
-                <View style={styles.tripHintCopy}>
-                  <AppText variant="callout" bold fit>
-                    Choose someone to invite
-                  </AppText>
-                  <AppText variant="caption" color="secondary">
-                    Tap “Add to Trip,” then pick one of your existing plans.
-                  </AppText>
-                </View>
-              </GlassPlate>
-            ) : null}
-
             <AgentTestId
               testID={AgentUiIds.social.friends.listSection}
               label="Friends list"
@@ -198,18 +174,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                     />
                     <View style={styles.friendCopy}>
                       <SocialIdentityName>{friend.displayName}</SocialIdentityName>
-                      <AppText variant="caption" color="secondary" fit>
-                        Connected through onTrack
-                      </AppText>
                     </View>
-                    <Button
-                      testID={AgentUiIds.social.friendAddToTrip(friend.userId)}
-                      variant="secondary"
-                      disabled={Boolean(props.working)}
-                      onPress={() => props.onAddToTrip(friend)}
-                      style={styles.tripButton}>
-                      Add to Trip
-                    </Button>
                     <IconButton
                       testID={AgentUiIds.social.friendRemove(friend.userId)}
                       icon="delete"
@@ -530,17 +495,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 20,
   },
-  tripHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radii.lg,
-    borderCurve: 'continuous',
-  },
-  tripHintCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
   addCard: {
     borderRadius: radii.xl,
     borderCurve: 'continuous',
@@ -639,10 +593,6 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     gap: 2,
-  },
-  tripButton: {
-    minHeight: 44,
-    paddingHorizontal: 12,
   },
   emptyFriends: {
     minHeight: 180,

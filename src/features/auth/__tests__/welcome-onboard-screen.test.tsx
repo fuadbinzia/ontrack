@@ -10,6 +10,7 @@ const METRICS = {
 };
 
 const mockContinueAsGuest = jest.fn(async () => undefined);
+const mockContinueWithProvider = jest.fn(async () => undefined);
 const mockCompleteOnboarding = jest.fn();
 const mockReplace = jest.fn();
 let mockReturnTo: unknown;
@@ -35,7 +36,7 @@ jest.mock('@/features/auth/auth-provider', () => ({
     phase: 'welcome',
     session: null,
     workingProvider: undefined,
-    continueWithProvider: jest.fn(),
+    continueWithProvider: mockContinueWithProvider,
     continueAsGuest: mockContinueAsGuest,
   }),
 }));
@@ -56,6 +57,7 @@ jest.mock('@/store/preferences', () => ({
 describe('WelcomeOnboardScreen', () => {
   beforeEach(() => {
     mockContinueAsGuest.mockClear();
+    mockContinueWithProvider.mockClear();
     mockCompleteOnboarding.mockClear();
     mockReplace.mockClear();
     mockReturnTo = undefined;
@@ -110,6 +112,23 @@ describe('WelcomeOnboardScreen', () => {
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith('/l/secure-code');
     });
+  });
+
+  it('preserves a friend invite return route when signing in from first run', () => {
+    mockReturnTo = '/f/friend-code';
+    render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <WelcomeOnboardScreen />
+      </SafeAreaProvider>,
+    );
+
+    fireEvent.press(screen.getByTestId(AgentUiIds.onboarding.signIn));
+    fireEvent.press(screen.getByTestId(AgentUiIds.auth.google));
+
+    expect(mockContinueWithProvider).toHaveBeenCalledWith(
+      'google',
+      '/f/friend-code',
+    );
   });
 
   it.each([

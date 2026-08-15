@@ -2,8 +2,25 @@ const http = require('http');
 const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 
+const apiRouteTestBlockList = /[\\/]app[\\/].*[\\/]__tests__[\\/].*\+api\.test\.ts$/;
+
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
+const previousGetTransformOptions = config.transformer?.getTransformOptions;
+
+config.transformer = {
+  ...(config.transformer ?? {}),
+  getTransformOptions: async (args) => {
+    const baseOptions = previousGetTransformOptions ? await previousGetTransformOptions(args) : {};
+    return {
+      ...baseOptions,
+      transform: {
+        ...(baseOptions.transform ?? {}),
+        inlineRequires: true,
+      },
+    };
+  },
+};
 
 // Expo null hybrid (Node crawl + Watchman watch). Requires
 // scripts/patch-expo-metro-watchman.sh — without it, Expo coerces null→NativeWatcher
@@ -29,6 +46,11 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   }
   return context.resolveRequest(context, moduleName, platform);
 };
+
+config.resolver.blockList = [
+  ...(config.resolver.blockList ?? []),
+  apiRouteTestBlockList,
+];
 
 config.watcher.healthCheck = {
   ...(config.watcher.healthCheck ?? {}),

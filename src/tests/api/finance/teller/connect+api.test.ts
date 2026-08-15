@@ -17,7 +17,7 @@ jest.mock('@/services/finance/teller-server', () => ({
   },
 }));
 
-import * as route from '../connect+api';
+import * as route from '@/app/api/finance/teller/connect+api';
 import { TellerServerError } from '@/services/finance/teller-server';
 
 describe('Teller Connect capability page', () => {

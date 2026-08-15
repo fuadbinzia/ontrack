@@ -38,6 +38,24 @@ export const AGENT_UI_LIST_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],
+  'checklist-demo-item-details': [
+    { op: 'seed', to: 'checklist-demo' },
+    { op: 'goto', to: `checklists/${AGENT_UI_DEMO_CHECKLIST_LIST_ID}` },
+    {
+      op: 'wait',
+      id: `ontrack.checklists.detail.task.${AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID}`,
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'tap',
+      id: `ontrack.checklists.detail.task.${AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID}`,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.checklists.itemDetails.category',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   'checklist-demo-list': [
     { op: 'seed', to: 'checklist-demo' },
     { op: 'goto', to: 'checklists' },

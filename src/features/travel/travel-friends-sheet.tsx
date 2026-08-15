@@ -198,6 +198,7 @@ export function TravelFriendsSheet({
     plan,
     onSavePlan,
     selfUserId: user?.id,
+    canManage,
     openJoinCode,
     setOpenJoinCode,
     setOpenJoinBusy,
@@ -408,4 +409,3 @@ export function TravelFriendsSheet({
     </>
   );
 }
-

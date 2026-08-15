@@ -55,4 +55,18 @@ describe('collaboration email privacy', () => {
     expect(authScreen).not.toMatch(/Signed in as \$\{lockedEmail\}/);
     expect(profile).toMatch(/user\?\.email/);
   });
+
+  it('keeps friend-list emails hidden and renders every identity name at one text size', () => {
+    const friendsModal = source('src/features/social/social-friends-modal.tsx');
+    const identityName = friendsModal.match(
+      /function SocialIdentityName[\s\S]*?\n}/,
+    )?.[0];
+
+    expect(identityName).toBeDefined();
+    expect(identityName).toMatch(/variant="callout"/);
+    expect(identityName).toMatch(/numberOfLines=\{1}/);
+    expect(identityName).not.toMatch(/\bfit\b|adjustsFontSizeToFit/);
+    expect(friendsModal.match(/<SocialIdentityName>/g)).toHaveLength(3);
+    expect(friendsModal).not.toMatch(/friend\.email|request\.otherEmail/);
+  });
 });

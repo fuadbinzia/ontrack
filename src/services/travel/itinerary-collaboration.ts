@@ -103,16 +103,19 @@ export function parseItinerarySnapshot(
 export function itemsForPublish(
   plan: TravelPlan,
   localUserId: string,
-): Array<{
+  canManageTrip = false,
+): {
   itemId: string;
   shareMode: string;
   sharedWithUserIds: string[];
   updatedAt: string;
   payload: TravelItineraryItem;
-}> {
+}[] {
   const now = new Date().toISOString();
   return plan.itinerary
-    .filter((item) => isItineraryItemOwnedBy(item, localUserId))
+    .filter(
+      (item) => canManageTrip || isItineraryItemOwnedBy(item, localUserId),
+    )
     .map((item) => {
       const owned: TravelItineraryItem = {
         ...item,
@@ -130,6 +133,26 @@ export function itemsForPublish(
         payload: compact,
       };
     });
+}
+
+export function itineraryItemIdsToDelete(input: {
+  remoteItems: TravelItineraryItem[];
+  localItemIds: Set<string>;
+  localUserId: string;
+  canManageTrip: boolean;
+  explicitlyDeletedIds?: readonly string[];
+}): string[] {
+  const explicitlyDeleted = new Set(input.explicitlyDeletedIds ?? []);
+  return input.remoteItems
+    .filter(
+      (item) =>
+        item.ownerUserId === input.localUserId ||
+        (input.canManageTrip && explicitlyDeleted.has(item.id)),
+    )
+    .map((item) => item.id)
+    .filter(
+      (id) => !input.localItemIds.has(id) || explicitlyDeleted.has(id),
+    );
 }
 
 /**
@@ -193,6 +216,7 @@ export function mergeItinerarySnapshot(
 
 export async function publishTravelTripItinerary(
   plan: TravelPlan,
+  options: { deletedItemIds?: readonly string[] } = {},
 ): Promise<TravelItinerarySnapshot | undefined> {
   if (!shouldSyncTravelItinerary(plan)) return undefined;
   const { client, userId } = await authenticatedClient();
@@ -207,11 +231,12 @@ export async function publishTravelTripItinerary(
     tripId = mapped.trim();
   }
 
-  const ownedLocalIds = new Set(
-    plan.itinerary
-      .filter((item) => isItineraryItemOwnedBy(item, userId))
-      .map((item) => item.id),
-  );
+  const { data: managerData } = await client.rpc('is_travel_trip_manager', {
+    requested_trip_id: tripId,
+  });
+  const canManageTrip = managerData === true;
+
+  const localItemIds = new Set(plan.itinerary.map((item) => item.id));
 
   // Ensure owned items have ownerUserId + timestamps before publish.
   const stampedPlan: TravelPlan = {
@@ -228,7 +253,7 @@ export async function publishTravelTripItinerary(
     }),
   };
 
-  const publishItems = itemsForPublish(stampedPlan, userId);
+  const publishItems = itemsForPublish(stampedPlan, userId, canManageTrip);
   const { error: upsertError } = await client.rpc(
     'upsert_travel_trip_itinerary_items',
     {
@@ -242,7 +267,9 @@ export async function publishTravelTripItinerary(
     );
   }
 
-  // Delete remote owned items that were removed locally.
+  // Delete the actor's removed items plus manager deletions explicitly observed
+  // in this edit. Never treat a stale co-host snapshot as authoritative for
+  // peer items it has not seen.
   const { data: remoteData, error: fetchError } = await client.rpc(
     'fetch_travel_trip_itinerary',
     { requested_trip_id: tripId },
@@ -254,16 +281,19 @@ export async function publishTravelTripItinerary(
   }
   const remoteSnapshot = parseItinerarySnapshot(remoteData);
   if (remoteSnapshot) {
-    const remoteOwnedIds = remoteSnapshot.items
-      .filter((item) => item.ownerUserId === userId)
-      .map((item) => item.id)
-      .filter((id) => !ownedLocalIds.has(id));
-    if (remoteOwnedIds.length) {
+    const remoteDeleteIds = itineraryItemIdsToDelete({
+      remoteItems: remoteSnapshot.items,
+      localItemIds,
+      localUserId: userId,
+      canManageTrip,
+      explicitlyDeletedIds: options.deletedItemIds,
+    });
+    if (remoteDeleteIds.length) {
       const { error: deleteError } = await client.rpc(
         'delete_travel_trip_itinerary_items',
         {
           requested_trip_id: tripId,
-          requested_item_ids: remoteOwnedIds,
+          requested_item_ids: remoteDeleteIds,
         },
       );
       if (deleteError) {

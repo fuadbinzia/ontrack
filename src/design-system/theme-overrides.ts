@@ -6,19 +6,33 @@ export const THEME_SCOPES = ['default', 'travel', 'plants', 'vehicles', 'food'] 
 
 /** Tokens editable from the Design System gallery. */
 export type EditableThemeToken =
+  | 'backgroundPrimary'
+  | 'backgroundSecondary'
+  | 'backgroundElevated'
+  | 'textPrimary'
+  | 'textSecondary'
+  | 'textTertiary'
   | 'accentPrimary'
   | 'accentSoft'
   | 'accentFaint'
   | 'textOnAccent'
   | 'backgroundSunken'
+  | 'separator'
   | 'danger';
 
 export const EDITABLE_THEME_TOKENS = [
+  'backgroundPrimary',
+  'backgroundSecondary',
+  'backgroundElevated',
+  'textPrimary',
+  'textSecondary',
+  'textTertiary',
   'accentPrimary',
   'accentSoft',
   'accentFaint',
   'textOnAccent',
   'backgroundSunken',
+  'separator',
   'danger',
 ] as const satisfies readonly EditableThemeToken[];
 
@@ -103,6 +117,7 @@ export type ThemeOverrideHistoryAction =
   | 'clear'
   | 'resetScope'
   | 'resetAll'
+  | 'applyPreset'
   | 'setFont'
   | 'resetFonts';
 
@@ -130,11 +145,18 @@ export const THEME_SCOPE_LABELS: Record<ThemeScope, string> = {
 };
 
 export const THEME_TOKEN_LABELS: Record<EditableThemeToken, string> = {
+  backgroundPrimary: 'Page Background',
+  backgroundSecondary: 'Background Wash',
+  backgroundElevated: 'Containers',
+  backgroundSunken: 'Secondary Containers',
+  textPrimary: 'Primary Text',
+  textSecondary: 'Secondary Text',
+  textTertiary: 'Muted Text',
   accentPrimary: 'Accent',
   accentSoft: 'Soft accent',
   accentFaint: 'Faint accent',
   textOnAccent: 'Text on accent',
-  backgroundSunken: 'Secondary fill',
+  separator: 'Dividers',
   danger: 'Danger',
 };
 
@@ -143,6 +165,7 @@ const HISTORY_ACTIONS = new Set<ThemeOverrideHistoryAction>([
   'clear',
   'resetScope',
   'resetAll',
+  'applyPreset',
   'setFont',
   'resetFonts',
 ]);

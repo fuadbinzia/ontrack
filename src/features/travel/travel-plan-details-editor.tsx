@@ -55,6 +55,7 @@ interface TravelPlanDetailsEditorProps {
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  canDelete?: boolean;
   /** DEV: auto-open Trip Cover Photo picker. */
   initialCoverPickerOpen?: boolean;
 }
@@ -78,6 +79,7 @@ export function TravelPlanDetailsEditor({
   onSave,
   onCancel,
   onDelete,
+  canDelete = true,
   initialCoverPickerOpen = false,
 }: TravelPlanDetailsEditorProps) {
   const theme = useTheme();
@@ -196,20 +198,22 @@ export function TravelPlanDetailsEditor({
               onPress={onSave}>
               Save Details
             </Button>
-            <DangerZone
-              title={null}
-              testID={AgentUiIds.travel.editTrip.dangerZone}>
-              <DestructiveSection
-                flush
-                icon={null}
-                descriptionAlign="center"
-                label="Delete Trip"
-                description="Permanently removes this trip and its itinerary from this device."
-                testID={AgentUiIds.travel.removeConfirm.open}
-                accessibilityLabel={`Delete ${plan.title}`}
-                onPress={openDeleteTrip}
-              />
-            </DangerZone>
+            {canDelete ? (
+              <DangerZone
+                title={null}
+                testID={AgentUiIds.travel.editTrip.dangerZone}>
+                <DestructiveSection
+                  flush
+                  icon={null}
+                  descriptionAlign="center"
+                  label="Delete Trip"
+                  description="Permanently removes this trip and its itinerary from this device."
+                  testID={AgentUiIds.travel.removeConfirm.open}
+                  accessibilityLabel={`Delete ${plan.title}`}
+                  onPress={openDeleteTrip}
+                />
+              </DangerZone>
+            ) : null}
           </View>
         </View>
       </TravelSurfaceCard>

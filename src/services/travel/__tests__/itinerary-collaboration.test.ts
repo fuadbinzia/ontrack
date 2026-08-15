@@ -1,6 +1,7 @@
 import { markInviteSnapshotItinerary } from '@/features/travel/itinerary-visibility';
 import type { TravelItineraryItem, TravelPlan } from '@/features/travel/types';
 import {
+  itineraryItemIdsToDelete,
   itemsForPublish,
   mergeItinerarySnapshot,
   parseRemoteItineraryItem,
@@ -105,6 +106,46 @@ describe('itinerary collaboration merge', () => {
     expect(rows[0]?.payload.flight?.seat).toBeUndefined();
     expect(rows[0]?.payload.bookingUrl).toBeUndefined();
     expect(rows[0]?.shareMode).toBe('trip');
+  });
+
+  it('lets a co-host publish edits to every trip itinerary item', () => {
+    const rows = itemsForPublish(
+      planWith([
+        item({ id: 'mine', ownerUserId: 'user-me' }),
+        item({ id: 'hosts', ownerUserId: 'user-host', title: 'Updated flight' }),
+      ]),
+      'user-me',
+      true,
+    );
+
+    expect(rows.map((row) => row.itemId)).toEqual(['mine', 'hosts']);
+    expect(rows[1]?.payload).toMatchObject({
+      ownerUserId: 'user-host',
+      title: 'Updated flight',
+    });
+  });
+
+  it('does not let a stale co-host snapshot delete a peer item implicitly', () => {
+    expect(
+      itineraryItemIdsToDelete({
+        remoteItems: [item({ id: 'peer-new', ownerUserId: 'user-peer' })],
+        localItemIds: new Set(),
+        localUserId: 'user-me',
+        canManageTrip: true,
+      }),
+    ).toEqual([]);
+  });
+
+  it('lets a co-host explicitly delete another traveler’s itinerary item', () => {
+    expect(
+      itineraryItemIdsToDelete({
+        remoteItems: [item({ id: 'peer-stop', ownerUserId: 'user-peer' })],
+        localItemIds: new Set(),
+        localUserId: 'user-me',
+        canManageTrip: true,
+        explicitlyDeletedIds: ['peer-stop'],
+      }),
+    ).toEqual(['peer-stop']);
   });
 
   it('marks invite snapshot items as trip-shared for the host', () => {

@@ -35,11 +35,15 @@ describe('calendar event-card bottom sheets', () => {
 
   it('routes plant calendar cards to the calendar sheet while preserving the full Plants page', () => {
     const dayView = read('src/features/daily-tracking/day-view.tsx');
+    const detailRoute = read(
+      'src/features/daily-tracking/activity-detail-route.ts',
+    );
     const plantSheet = read('src/app/(tabs)/(today)/detail/plant/[id].tsx');
     const plantPage = read('src/app/(tabs)/plants/[id].tsx');
 
-    expect(dayView).toContain("pathname: '/detail/plant/[id]'");
-    expect(dayView).not.toMatch(
+    expect(dayView).toContain('activityDetailPath(activity, category)');
+    expect(detailRoute).toContain("return activity.plantId ? '/detail/plant/[id]'");
+    expect(detailRoute).not.toMatch(
       /case 'plant':[\s\S]*?pathname: '\/plants\/\[id\]'[\s\S]*?break;/,
     );
     expect(plantSheet).toContain('AgentUiIds.plants.calendarSheet.openDetails');

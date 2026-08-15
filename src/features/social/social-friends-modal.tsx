@@ -1,4 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
+import { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,9 +11,12 @@ import {
   ErrorMessage,
   GlassIconWell,
   GlassPlate,
+  GlassTonePill,
   IconButton,
   Input,
   LoadingBlock,
+  ScreenAtmosphere,
+  SheetScaffold,
   SheetGrabber,
   Symbol,
   useScreenAtmosphereChrome,
@@ -24,7 +28,7 @@ import { SocialPressable } from '@/features/social/social-pressable';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { FriendProfile, FriendRequestItem } from '@/services/friends';
-import { AgentUiIds } from '@/utils/agent-ui';
+import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
 export type SocialFriendsModalMode = 'add' | 'all' | 'trip';
 
@@ -61,8 +65,13 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
   const chrome = socialChrome(theme);
   const insets = useSafeAreaInsets();
   const { spacing, s } = useResponsive();
-  const title = props.mode === 'trip' ? 'Invite to a Trip' : props.mode === 'all' ? 'Your Friends' : 'Add Friends';
+  const [inviteToolsVisible, setInviteToolsVisible] = useState(false);
+  const title = props.mode === 'trip' ? 'Invite to a Trip' : 'Friends';
   useScreenAtmosphereChrome(props.visible);
+
+  useEffect(() => {
+    if (!props.visible) setInviteToolsVisible(false);
+  }, [props.visible]);
 
   return (
     <Modal
@@ -78,19 +87,31 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
             paddingBottom: insets.bottom + spacing.sm,
           },
         ]}>
+        <ScreenAtmosphere />
         <View style={[styles.header, { paddingHorizontal: spacing.lg, gap: spacing.md }]}>
           <SheetGrabber
             testID={AgentUiIds.social.friends.close}
             accessibilityLabel="Close friends"
             onPress={props.onClose}
           />
-          <View style={styles.headerCopy}>
-            <AppText variant="overline" style={{ color: chrome.primary }} fit>
-              Your circle
-            </AppText>
-            <AppText variant="heading" bold fit>
-              {title}
-            </AppText>
+          <View style={[styles.headerTitleRow, { gap: spacing.md }]}>
+            <View style={styles.headerCopy}>
+              <AppText variant="overline" style={{ color: chrome.primary }} fit>
+                Your circle
+              </AppText>
+              <AppText variant="heading" bold fit>
+                {title}
+              </AppText>
+            </View>
+            {props.signedIn ? (
+              <IconButton
+                testID={AgentUiIds.social.friends.openInviteTools}
+                icon="invite"
+                color={chrome.primary}
+                accessibilityLabel="Add Friends"
+                onPress={() => setInviteToolsVisible(true)}
+              />
+            ) : null}
           </View>
         </View>
 
@@ -103,8 +124,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
             />
             <Button
               testID={AgentUiIds.social.friends.signIn}
-              onPress={props.onSignIn}
-              style={{ backgroundColor: chrome.primary }}>
+              onPress={props.onSignIn}>
               Sign In
             </Button>
           </View>
@@ -123,10 +143,11 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
             {props.error ? <ErrorMessage message={props.error} /> : null}
 
             {props.mode === 'trip' ? (
-              <View
+              <GlassPlate
+                accent="green"
                 style={[
                   styles.tripHint,
-                  { backgroundColor: chrome.mint, padding: spacing.md, gap: spacing.sm },
+                  { padding: spacing.md, gap: spacing.sm },
                 ]}>
                 <Symbol name="flight" size="md" color={chrome.primary} />
                 <View style={styles.tripHintCopy}>
@@ -137,126 +158,71 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                     Tap “Add to Trip,” then pick one of your existing plans.
                   </AppText>
                 </View>
-              </View>
+              </GlassPlate>
             ) : null}
 
-            <GlassPlate
-              style={[
-                styles.addCard,
-                {
-                  padding: spacing.lg,
-                  gap: spacing.md,
-                  ...socialShadow(chrome.shadow, 'raised'),
-                },
-              ]}>
-              <View style={styles.sectionTitleRow}>
-                <GlassIconWell size={40} borderRadius={14} style={styles.sectionIcon}>
-                  <Symbol name="invite" size="sm" color={chrome.primary} />
-                </GlassIconWell>
-                <View style={styles.sectionTitleCopy}>
-                  <AppText variant="subheading" bold fit>
-                    Add by email
-                  </AppText>
-                  <AppText variant="caption" color="secondary" fit>
-                    Send a direct friend request
-                  </AppText>
-                </View>
-              </View>
-              <Input
-                testID={AgentUiIds.social.friendEmail}
-                accessibilityLabel="Friend account email"
-                label="Account email"
-                value={props.email}
-                onChangeText={props.onEmailChange}
-                placeholder="friend@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <Button
-                testID={AgentUiIds.social.friendSend}
-                icon="send"
-                disabled={!props.email.trim() || Boolean(props.working)}
-                loading={props.working === 'send'}
-                onPress={props.onSendRequest}
-                style={{ backgroundColor: chrome.primary }}>
-                Send Request
-              </Button>
-            </GlassPlate>
-
-            <View
-              style={[
-                styles.inviteCard,
-                {
-                  backgroundColor: chrome.primaryDeep,
-                  padding: spacing.lg,
-                  gap: spacing.md,
-                },
-              ]}>
-              <View style={styles.sectionTitleRow}>
-                <View style={styles.inviteCopy}>
-                  <AppText variant="subheading" color="onAccent" bold fit>
-                    Your invite link
-                  </AppText>
-                  <AppText variant="caption" color="onAccent" style={styles.faded}>
-                    Pick a memorable link, then share it anywhere.
-                  </AppText>
-                </View>
-                <Symbol name="link" size="md" color="#F7FFFA" />
-              </View>
-              <View style={[styles.slugRow, { gap: spacing.sm }]}>
-                <AppText variant="callout" color="onAccent" fit style={styles.slugPrefix}>
-                  /f/
-                </AppText>
-                <View style={styles.slugField}>
-                  <Input
-                    testID={AgentUiIds.social.inviteSlug}
-                    accessibilityLabel="Custom invite link name"
-                    value={props.slugDraft}
-                    onChangeText={props.onSlugChange}
-                    placeholder="yourname"
-                    placeholderTextColor="rgba(247,255,250,0.56)"
-                    fieldBackground="rgba(247,255,250,0.14)"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    autoComplete="off"
+            <AgentTestId
+              testID={AgentUiIds.social.friends.listSection}
+              label="Friends list"
+              style={{ gap: spacing.sm }}>
+              <SocialModalSectionTitle title="Friends" count={props.friends.length} />
+              {props.loading && props.friends.length === 0 ? (
+                <LoadingBlock label="Loading friends…" />
+              ) : props.friends.length === 0 ? (
+                <GlassPlate style={styles.emptyFriends}>
+                  <EmptyState
+                    icon="people"
+                    title="Your Circle Is Ready for a Plot Twist"
+                    message="Bring in your first friend, then start planning something worth talking about."
+                    actionLabel="Add Your First Friend"
+                    actionTestID={AgentUiIds.social.friends.emptyAdd}
+                    onAction={() => setInviteToolsVisible(true)}
                   />
-                </View>
-              </View>
-              <Button
-                testID={AgentUiIds.social.inviteSave}
-                variant="secondary"
-                disabled={Boolean(props.working) || props.slugDraft === (props.savedSlug ?? '')}
-                loading={props.working === 'slug'}
-                onPress={props.onSaveSlug}
-                style={{ backgroundColor: '#F4FBF6' }}>
-                Save Link Name
-              </Button>
-              {props.inviteUrl ? (
-                <SocialPressable
-                  testID={AgentUiIds.social.inviteCopy}
-                  accessibilityLabel="Copy invite link"
-                  onPress={() => {
-                    void Clipboard.setStringAsync(props.inviteUrl ?? '');
-                    appPrompt.alert('Copied', 'Invite link copied to the clipboard.');
-                  }}
-                  style={styles.inviteUrl}>
-                  <AppText variant="caption" color="onAccent" numberOfLines={2}>
-                    {props.inviteUrl}
-                  </AppText>
-                  <Symbol name="copy" size="sm" color="#F7FFFA" />
-                </SocialPressable>
-              ) : null}
-              <Button
-                testID={AgentUiIds.social.inviteShare}
-                icon="share"
-                disabled={Boolean(props.working)}
-                loading={props.working === 'link'}
-                onPress={props.onShareInvite}
-                style={{ backgroundColor: chrome.primary }}>
-                Share Invite Link
-              </Button>
-            </View>
+                </GlassPlate>
+              ) : (
+                props.friends.map((friend) => (
+                  <GlassPlate
+                    key={friend.userId}
+                    style={[
+                      styles.friendRow,
+                      {
+                        minHeight: Math.max(74, s(80)),
+                        paddingHorizontal: spacing.md,
+                        gap: spacing.md,
+                      },
+                    ]}>
+                    <ProfileAvatar
+                      displayName={friend.displayName}
+                      userId={friend.userId}
+                      size={Math.max(42, s(46))}
+                    />
+                    <View style={styles.friendCopy}>
+                      <SocialIdentityName>{friend.displayName}</SocialIdentityName>
+                      <AppText variant="caption" color="secondary" fit>
+                        Connected through onTrack
+                      </AppText>
+                    </View>
+                    <Button
+                      testID={AgentUiIds.social.friendAddToTrip(friend.userId)}
+                      variant="secondary"
+                      disabled={Boolean(props.working)}
+                      onPress={() => props.onAddToTrip(friend)}
+                      style={styles.tripButton}>
+                      Add to Trip
+                    </Button>
+                    <IconButton
+                      testID={AgentUiIds.social.friendRemove(friend.userId)}
+                      icon="delete"
+                      color={theme.danger}
+                      background="transparent"
+                      accessibilityLabel={`Remove ${friend.displayName}`}
+                      disabled={Boolean(props.working)}
+                      onPress={() => props.onRemove(friend)}
+                    />
+                  </GlassPlate>
+                ))
+              )}
+            </AgentTestId>
 
             {props.incoming.length > 0 ? (
               <View style={{ gap: spacing.sm }}>
@@ -272,9 +238,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                       },
                     ]}>
                     <View style={styles.requestCopy}>
-                      <AppText variant="callout" bold fit>
-                        {request.otherDisplayName}
-                      </AppText>
+                      <SocialIdentityName>{request.otherDisplayName}</SocialIdentityName>
                       <AppText variant="caption" color="secondary" fit>
                         Wants to connect
                       </AppText>
@@ -284,7 +248,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                         testID={AgentUiIds.social.requestAccept(request.id)}
                         disabled={Boolean(props.working)}
                         onPress={() => props.onAccept(request)}
-                        style={{ flex: 1, backgroundColor: chrome.primary }}>
+                        style={styles.flexButton}>
                         Accept
                       </Button>
                       <Button
@@ -316,9 +280,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                       },
                     ]}>
                     <View style={styles.requestCopy}>
-                      <AppText variant="callout" bold fit>
-                        {request.otherDisplayName}
-                      </AppText>
+                      <SocialIdentityName>{request.otherDisplayName}</SocialIdentityName>
                       <AppText variant="caption" color="secondary" fit>
                         Request pending
                       </AppText>
@@ -335,71 +297,192 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
               </View>
             ) : null}
 
-            <View style={{ gap: spacing.sm }}>
-              <SocialModalSectionTitle title="Friends" count={props.friends.length} />
-              {props.loading && props.friends.length === 0 ? (
-                <LoadingBlock label="Loading friends…" />
-              ) : props.friends.length === 0 ? (
-                <GlassPlate
-                  style={[
-                    styles.emptyFriends,
-                  ]}>
-                  <EmptyState
-                    icon="people"
-                    title="No friends yet"
-                    message="Send a request or share your personal invite link above."
-                  />
-                </GlassPlate>
-              ) : (
-                props.friends.map((friend) => (
-                  <GlassPlate
-                    key={friend.userId}
-                    style={[
-                      styles.friendRow,
-                      {
-                        minHeight: Math.max(74, s(80)),
-                        paddingHorizontal: spacing.md,
-                        gap: spacing.md,
-                      },
-                    ]}>
-                    <ProfileAvatar
-                      displayName={friend.displayName}
-                      userId={friend.userId}
-                      size={Math.max(42, s(46))}
-                    />
-                    <View style={styles.friendCopy}>
-                      <AppText variant="callout" bold fit>
-                        {friend.displayName}
-                      </AppText>
-                      <AppText variant="caption" color="secondary" fit>
-                        Connected through onTrack
-                      </AppText>
-                    </View>
-                    <Button
-                      testID={AgentUiIds.social.friendAddToTrip(friend.userId)}
-                      variant="secondary"
-                      disabled={Boolean(props.working)}
-                      onPress={() => props.onAddToTrip(friend)}
-                      style={styles.tripButton}>
-                      Add to Trip
-                    </Button>
-                    <IconButton
-                      testID={AgentUiIds.social.friendRemove(friend.userId)}
-                      icon="delete"
-                      color={theme.danger}
-                      background="transparent"
-                      accessibilityLabel={`Remove ${friend.displayName}`}
-                      disabled={Boolean(props.working)}
-                      onPress={() => props.onRemove(friend)}
-                    />
-                  </GlassPlate>
-                ))
-              )}
-            </View>
           </ScrollView>
         )}
+
+        <SocialInviteToolsSheet
+          visible={inviteToolsVisible}
+          friendsProps={props}
+          onClose={() => setInviteToolsVisible(false)}
+        />
       </View>
     </Modal>
+  );
+}
+
+function SocialInviteToolsSheet({
+  visible,
+  friendsProps,
+  onClose,
+}: {
+  visible: boolean;
+  friendsProps: SocialFriendsModalProps;
+  onClose: () => void;
+}) {
+  const theme = useTheme();
+  const chrome = socialChrome(theme);
+  const { spacing } = useResponsive();
+
+  if (!visible) return null;
+
+  return (
+    <View style={styles.inviteToolsHost}>
+      <SheetScaffold
+        host="route"
+        visible
+        eyebrow="Grow Your Circle"
+        title="Add Friends"
+        subtitle="Send a request or share your personal link—whichever feels more you."
+        onClose={onClose}
+        closeAccessibilityLabel="Close Add Friends"
+        closeTestID={AgentUiIds.social.friends.inviteToolsClose}
+        surface="glass"
+        contentContainerStyle={{ gap: spacing.lg }}>
+        {friendsProps.error ? <ErrorMessage message={friendsProps.error} /> : null}
+
+        <GlassPlate
+          style={[
+            styles.addCard,
+            {
+              padding: spacing.lg,
+              gap: spacing.md,
+              ...socialShadow(chrome.shadow, 'raised'),
+            },
+          ]}>
+          <View style={styles.sectionTitleRow}>
+            <GlassIconWell size={40} borderRadius={14} style={styles.sectionIcon}>
+              <Symbol name="invite" size="sm" color={chrome.primary} />
+            </GlassIconWell>
+            <View style={styles.sectionTitleCopy}>
+              <AppText variant="subheading" bold fit>
+                Add by Email
+              </AppText>
+              <AppText variant="caption" color="secondary" fit>
+                Send a direct friend request
+              </AppText>
+            </View>
+          </View>
+          <Input
+            testID={AgentUiIds.social.friendEmail}
+            accessibilityLabel="Friend account email"
+            label="Account Email"
+            value={friendsProps.email}
+            onChangeText={friendsProps.onEmailChange}
+            placeholder="friend@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Button
+            testID={AgentUiIds.social.friendSend}
+            icon="send"
+            size="lg"
+            disabled={!friendsProps.email.trim() || Boolean(friendsProps.working)}
+            loading={friendsProps.working === 'send'}
+            onPress={friendsProps.onSendRequest}>
+            Send Request
+          </Button>
+        </GlassPlate>
+
+        <GlassPlate
+          inverted
+          tintColor={chrome.primaryDeep}
+          style={[
+            styles.inviteCard,
+            {
+              padding: spacing.lg,
+              gap: spacing.lg,
+              ...socialShadow(chrome.shadow, 'overlay'),
+            },
+          ]}>
+          <View style={styles.sectionTitleRow}>
+            <GlassIconWell size={44} borderRadius={15}>
+              <Symbol name="link" size="sm" color="#F7FFFA" />
+            </GlassIconWell>
+            <View style={styles.inviteCopy}>
+              <AppText variant="subheading" color="onAccent" bold fit>
+                Your Invite Link
+              </AppText>
+              <AppText variant="caption" color="onAccent" style={styles.faded}>
+                Pick a memorable link, then share it anywhere.
+              </AppText>
+            </View>
+          </View>
+          <View style={[styles.slugRow, { gap: spacing.sm }]}>
+            <AppText variant="callout" color="onAccent" style={styles.slugPrefix}>
+              /f/
+            </AppText>
+            <View style={styles.slugField}>
+              <Input
+                testID={AgentUiIds.social.inviteSlug}
+                accessibilityLabel="Custom invite link name"
+                value={friendsProps.slugDraft}
+                onChangeText={friendsProps.onSlugChange}
+                placeholder="yourname"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+              />
+            </View>
+          </View>
+          <Button
+            testID={AgentUiIds.social.inviteSave}
+            variant="secondary"
+            disabled={
+              Boolean(friendsProps.working) ||
+              friendsProps.slugDraft === (friendsProps.savedSlug ?? '')
+            }
+            loading={friendsProps.working === 'slug'}
+            onPress={friendsProps.onSaveSlug}>
+            Save Link Name
+          </Button>
+          {friendsProps.inviteUrl ? (
+            <GlassPlate mist style={styles.inviteUrlPlate}>
+              <SocialPressable
+                testID={AgentUiIds.social.inviteCopy}
+                accessibilityLabel="Copy invite link"
+                onPress={() => {
+                  void Clipboard.setStringAsync(friendsProps.inviteUrl ?? '');
+                  appPrompt.alert('Copied', 'Invite link copied to the clipboard.');
+                }}
+                style={[styles.inviteUrl, { gap: spacing.sm }]}>
+                <View style={styles.inviteUrlCopy}>
+                  <AppText variant="overline" color="onAccent" style={styles.faded} fit>
+                    Ready to Share
+                  </AppText>
+                  <AppText
+                    variant="caption"
+                    color="onAccent"
+                    numberOfLines={1}
+                    ellipsizeMode="middle"
+                    style={styles.inviteUrlText}>
+                    {friendsProps.inviteUrl}
+                  </AppText>
+                </View>
+                <Symbol name="copy" size="sm" color="#F7FFFA" />
+              </SocialPressable>
+            </GlassPlate>
+          ) : null}
+          <Button
+            testID={AgentUiIds.social.inviteShare}
+            icon="share"
+            size="lg"
+            disabled={Boolean(friendsProps.working)}
+            loading={friendsProps.working === 'link'}
+            onPress={friendsProps.onShareInvite}>
+            Share Invite Link
+          </Button>
+        </GlassPlate>
+      </SheetScaffold>
+    </View>
+  );
+}
+
+function SocialIdentityName({ children }: { children: string }) {
+  return (
+    <AppText variant="callout" bold numberOfLines={1} ellipsizeMode="tail">
+      {children}
+    </AppText>
   );
 }
 
@@ -411,11 +494,11 @@ function SocialModalSectionTitle({ title, count }: { title: string; count: numbe
       <AppText variant="subheading" bold fit>
         {title}
       </AppText>
-      <View style={[styles.countPill, { backgroundColor: chrome.mint }]}>
-        <AppText variant="caption" bold fit style={{ color: chrome.primary }}>
-          {count}
-        </AppText>
-      </View>
+      <GlassTonePill
+        label={String(count)}
+        toneColor={chrome.primary}
+        showDot={false}
+      />
     </View>
   );
 }
@@ -427,10 +510,20 @@ const styles = StyleSheet.create({
   header: {
     alignSelf: 'stretch',
   },
+  headerTitleRow: {
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   headerCopy: {
+    flex: 1,
     alignSelf: 'stretch',
     minWidth: 0,
     gap: 2,
+  },
+  inviteToolsHost: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 20,
   },
   signedOut: {
     flex: 1,
@@ -484,20 +577,35 @@ const styles = StyleSheet.create({
   },
   slugRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
   slugPrefix: {
-    paddingBottom: 14,
+    minWidth: 30,
   },
   slugField: {
     flex: 1,
     minWidth: 0,
   },
   inviteUrl: {
-    minHeight: 44,
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  inviteUrlCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  inviteUrlPlate: {
+    borderRadius: radii.lg,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
+  },
+  inviteUrlText: {
+    flexShrink: 1,
+    minWidth: 0,
   },
   requestCard: {
     borderRadius: radii.lg,
@@ -520,14 +628,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 10,
-  },
-  countPill: {
-    minWidth: 32,
-    height: 28,
-    paddingHorizontal: 8,
-    borderRadius: radii.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   friendRow: {
     flexDirection: 'row',

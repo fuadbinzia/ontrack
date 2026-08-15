@@ -175,6 +175,10 @@ function TravelPlanDetailLoaded({
 
   const updatePlan = (next: TravelPlan) => {
     const stamped = stampOwnedItineraryDefaults(next, localUserId);
+    const nextItemIds = new Set(stamped.itinerary.map((item) => item.id));
+    const deletedItemIds = plan.itinerary
+      .map((item) => item.id)
+      .filter((id) => !nextItemIds.has(id));
     const saved = savePlan(stamped);
     if (!saved) return;
     // Calendar membership is opt-in from the Travel tab — never auto-create
@@ -183,7 +187,9 @@ function TravelPlanDetailLoaded({
       replaceTravelActivities(stamped.id, travelCalendarDrafts(stamped));
     }
     if (shouldSyncTravelItinerary(stamped)) {
-      void publishTravelTripItinerary(stamped).catch(() => undefined);
+      void publishTravelTripItinerary(stamped, { deletedItemIds }).catch(
+        () => undefined,
+      );
     }
   };
   const form = useTravelPlanDetailAddForm({

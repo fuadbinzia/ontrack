@@ -33,6 +33,7 @@ import { addDays, toDateKey, todayKey } from '@/utils/date';
 import { listReferenceEquality } from '@/utils/list-equality';
 
 import { emptyDayTitle, resolveDayTimeState } from './day-view-model';
+import { activityDetailPath } from './activity-detail-route';
 
 interface DayViewProps {
   date: string;
@@ -194,29 +195,10 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
 
   const openActivity = (activity: Activity) => {
     const category = findCategory(categories, activity.categoryId);
-    switch (category.detailKind) {
-      case 'food':
-        router.push({ pathname: '/detail/food/[id]', params: { id: activity.id } });
-        break;
-      case 'gym':
-        router.push({ pathname: '/detail/gym/[id]', params: { id: activity.id } });
-        break;
-      case 'work':
-        router.push({ pathname: '/detail/work/[id]', params: { id: activity.id } });
-        break;
-      case 'movie':
-        router.push({ pathname: '/detail/movie/[id]', params: { id: activity.id } });
-        break;
-      case 'sleep':
-        router.push({ pathname: '/detail/sleep/[id]', params: { id: activity.id } });
-        break;
-      case 'plant':
-        if (activity.plantId) router.push({ pathname: '/detail/plant/[id]', params: { id: activity.id } });
-        else router.push({ pathname: '/detail/generic/[id]', params: { id: activity.id } });
-        break;
-      default:
-        router.push({ pathname: '/detail/generic/[id]', params: { id: activity.id } });
-    }
+    router.push({
+      pathname: activityDetailPath(activity, category),
+      params: { id: activity.id },
+    });
   };
 
   return (

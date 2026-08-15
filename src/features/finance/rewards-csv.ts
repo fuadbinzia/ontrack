@@ -1,4 +1,7 @@
+import { isDateKey } from '@/utils/date';
+
 import { createFinanceTransaction } from './create';
+import { stableFinanceHash } from './stable-hash';
 import type { FinanceTransaction } from './types';
 
 export interface FinanceRewardsCsvMapping {
@@ -63,33 +66,22 @@ export function previewFinanceRewardsCsv(text: string): FinanceRewardsCsvPreview
 
 function dateKey(value: string): string | undefined {
   const trimmed = value.trim();
-  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
-  if (iso) return trimmed;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return isDateKey(trimmed) ? trimmed : undefined;
+  }
   const us = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(trimmed);
   if (!us) return undefined;
   const year = us[3].length === 2 ? 2000 + Number(us[3]) : Number(us[3]);
   const month = Number(us[1]);
   const day = Number(us[2]);
   const candidate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  const parsed = new Date(`${candidate}T00:00:00Z`);
-  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() + 1 === month && parsed.getUTCDate() === day
-    ? candidate
-    : undefined;
+  return isDateKey(candidate) ? candidate : undefined;
 }
 
 function amountValue(value: string): number | undefined {
   const normalized = value.replace(/[$,\s]/g, '').replace(/^\((.+)\)$/, '-$1');
   const amount = Number(normalized);
   return Number.isFinite(amount) && amount !== 0 ? amount : undefined;
-}
-
-function hash(value: string): string {
-  let output = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    output ^= value.charCodeAt(index);
-    output = Math.imul(output, 16777619);
-  }
-  return (output >>> 0).toString(36);
 }
 
 export function importFinanceRewardsCsv(input: {
@@ -120,7 +112,7 @@ export function importFinanceRewardsCsv(input: {
     const categoryHint = input.mapping.category
       ? (row[input.mapping.category] ?? '').trim()
       : undefined;
-    const externalId = `rewards-csv:${hash([
+    const externalId = `rewards-csv:${stableFinanceHash([
       input.accountId,
       date,
       merchant.toLowerCase(),
@@ -148,4 +140,3 @@ export function importFinanceRewardsCsv(input: {
   }
   return { transactions, skippedRows, duplicateRows };
 }
-

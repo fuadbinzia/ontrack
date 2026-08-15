@@ -10,13 +10,18 @@ import {
     IconButton,
     Screen,
 } from '@/components/primitives';
+import { findCategory } from '@/constants/categories';
 import { layout, radii, spacing } from '@/design-system';
+import { calendarActivitiesForDate } from '@/features/calendar/calendar-day-events';
+import { CalendarEventRow } from '@/features/calendar/calendar-event-row';
 import { CalendarShine } from '@/features/calendar/calendar-shine';
 import { MonthGrid } from '@/features/calendar/month-grid';
+import { activityDetailPath } from '@/features/daily-tracking/activity-detail-route';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useAddons } from '@/store/addons';
 import { useSchedule } from '@/store/schedule';
 import { useUI } from '@/store/ui';
+import type { Activity } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
 import {
     formatDateLong,
@@ -32,6 +37,7 @@ export default function CalendarScreen() {
   const isFocused = useIsFocused();
   const { spacing: rs } = useResponsive();
   const activities = useSchedule((state) => state.activities);
+  const categories = useSchedule((state) => state.categories);
   const enabledAddons = useAddons((state) => state.enabled);
   const selectedDate = useUI((state) => state.selectedDate);
   const setSelectedDate = useUI((state) => state.setSelectedDate);
@@ -62,10 +68,11 @@ export default function CalendarScreen() {
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
 
-  const dayCount = useMemo(
-    () => (activitiesByDate[selected] ?? []).length,
+  const dayActivities = useMemo(
+    () => calendarActivitiesForDate(activitiesByDate, selected),
     [activitiesByDate, selected],
   );
+  const dayCount = dayActivities.length;
   const dayLabel = formatDateLong(selected, { year: true });
 
   const shiftMonth = (delta: number) => {
@@ -76,6 +83,14 @@ export default function CalendarScreen() {
   const openDay = () => {
     setSelectedDate(selected);
     router.navigate('/');
+  };
+
+  const openActivity = (activity: Activity) => {
+    const category = findCategory(categories, activity.categoryId);
+    router.push({
+      pathname: activityDetailPath(activity, category),
+      params: { id: activity.id },
+    });
   };
 
   return (
@@ -155,6 +170,20 @@ export default function CalendarScreen() {
           {dayLabel}
         </Button>
       </GlassPlate>
+
+      {dayActivities.length > 0 ? (
+        <View style={[styles.eventList, { marginTop: rs.md, gap: rs.sm }]}>
+          {dayActivities.map((activity) => (
+            <CalendarEventRow
+              key={activity.id}
+              activity={activity}
+              category={findCategory(categories, activity.categoryId)}
+              testID={AgentUiIds.calendar.activity(activity.id)}
+              onPress={() => openActivity(activity)}
+            />
+          ))}
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -186,6 +215,9 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.sm,
   },
   summary: {
+    width: '100%',
+  },
+  eventList: {
     width: '100%',
   },
 });

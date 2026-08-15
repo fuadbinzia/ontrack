@@ -3,8 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 import {
+  beginExpoRecording,
   loadOptionalExpoAudio,
   recordingOptionsFor,
+  voiceStartErrorMessage,
   type ExpoAudioApi,
 } from '@/utils/optional-expo-audio';
 
@@ -133,24 +135,24 @@ export function useJournalRecorder() {
           setStatusMessage('Microphone permission is required for voice. Typing still works.');
           return false;
         }
-        await audioApi.setAudioModeAsync({
-          allowsRecording: true,
-          playsInSilentMode: true,
-          interruptionMode: 'doNotMix',
-        });
-        await recorder.prepareToRecordAsync();
+        await beginExpoRecording(audioApi, recorder);
         modeRef.current = nextMode;
         startedAtRef.current = Date.now();
         setMode(nextMode);
-        recorder.record({ forDuration: MAX_RECORDING_SECONDS });
         timerRef.current = setTimeout(() => {
           finishingRef.current = true;
         }, MAX_RECORDING_SECONDS * 1_000);
         return true;
-      } catch {
+      } catch (error) {
         modeRef.current = null;
         setMode(null);
-        setStatusMessage('Voice recording is unavailable on this device.');
+        try {
+          if (recorder.isRecording) await recorder.stop();
+          await audioApi?.setAudioModeAsync({ allowsRecording: false });
+        } catch {
+          // Reset is best-effort so the next tap can try again.
+        }
+        setStatusMessage(voiceStartErrorMessage(error));
         return false;
       }
     },

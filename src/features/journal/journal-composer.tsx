@@ -5,10 +5,12 @@ import {
   appPrompt,
   AppText,
   Dropdown,
+  GlassPlate,
   IconButton,
   Input,
   Symbol,
 } from '@/components/primitives';
+import { radii } from '@/design-system';
 import { useAutoGrowingNote } from '@/features/travel/use-auto-growing-note';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -204,9 +206,11 @@ export function JournalComposer({
   onFieldFocus?: () => void;
 }) {
   const theme = useTheme();
-  const { spacing } = useResponsive();
+  const { spacing, s } = useResponsive();
   const { draft, setDraft, grow, busy, recording, canSend, controlSize, recorder } =
     session;
+  const dark = theme.name === 'dark';
+  const plateRadius = Math.max(radii.lg, s(18));
 
   return (
     <View style={[styles.dock, { gap: spacing.xs }]}>
@@ -215,46 +219,59 @@ export function JournalComposer({
           {recorder.statusMessage}
         </AppText>
       ) : null}
-      <Input
-        value={draft}
-        onChangeText={(next) => {
-          setDraft(next);
-          grow.collapseWhenEmpty(next);
-        }}
-        onContentSizeChange={grow.onContentSizeChange}
-        placeholder="Write this page…"
-        multiline
-        testID={AgentUiIds.journal.composer.input}
-        containerStyle={styles.field}
-        style={grow.style}
-        editable={!recording && !busy}
-        onFocus={onFieldFocus}
-        trailing={
-          recording ? (
-            <IconButton
-              icon="stop"
-              color={theme.danger}
-              accessibilityLabel="Stop Recording"
-              testID={AgentUiIds.journal.composer.stop}
-              loading={busy}
-              size={controlSize}
-              onPress={session.stopRecording}
-            />
-          ) : (
-            <IconButton
-              icon="send"
-              accessibilityLabel="Add Text"
-              testID={AgentUiIds.journal.composer.send}
-              disabled={!canSend}
-              color={canSend ? theme.textOnAccent : theme.textTertiary}
-              background={canSend ? theme.accentPrimary : undefined}
-              appearance={canSend ? 'solid' : 'glass'}
-              size={controlSize}
-              onPress={session.sendText}
-            />
-          )
-        }
-      />
+      <GlassPlate
+        intensity={dark ? 56 : 70}
+        style={[
+          styles.plate,
+          {
+            borderRadius: plateRadius,
+          },
+        ]}>
+        <Input
+          value={draft}
+          onChangeText={(next) => {
+            setDraft(next);
+            grow.collapseWhenEmpty(next);
+          }}
+          onContentSizeChange={grow.onContentSizeChange}
+          placeholder="Write this page…"
+          placeholderTextColor={theme.textSecondary}
+          fieldBackground="transparent"
+          fieldBorderColor="transparent"
+          fieldBorderRadius={plateRadius}
+          multiline
+          testID={AgentUiIds.journal.composer.input}
+          containerStyle={styles.field}
+          style={grow.style}
+          editable={!recording && !busy}
+          onFocus={onFieldFocus}
+          trailing={
+            recording ? (
+              <IconButton
+                icon="stop"
+                color={theme.danger}
+                accessibilityLabel="Stop Recording"
+                testID={AgentUiIds.journal.composer.stop}
+                loading={busy}
+                size={controlSize}
+                onPress={session.stopRecording}
+              />
+            ) : (
+              <IconButton
+                icon="send"
+                accessibilityLabel="Add Text"
+                testID={AgentUiIds.journal.composer.send}
+                disabled={!canSend}
+                color={canSend ? theme.textOnAccent : theme.textSecondary}
+                background={canSend ? theme.accentPrimary : undefined}
+                appearance={canSend ? 'solid' : 'glass'}
+                size={controlSize}
+                onPress={session.sendText}
+              />
+            )
+          }
+        />
+      </GlassPlate>
     </View>
   );
 }
@@ -262,6 +279,10 @@ export function JournalComposer({
 const styles = StyleSheet.create({
   dock: {
     width: '100%',
+  },
+  plate: {
+    width: '100%',
+    borderCurve: 'continuous',
   },
   field: {
     width: '100%',

@@ -27,6 +27,8 @@ import {
   JournalComposer,
   useJournalComposer,
 } from './journal-composer';
+import { useJournalLandingAtmosphere } from './journal-landing-atmosphere';
+import { JournalPageEmpty } from './journal-page-empty';
 import { JournalSectionLinkSheet } from './journal-section-link-sheet';
 import {
   canShiftJournalDate,
@@ -54,6 +56,7 @@ export function JournalPageScreen({ dateKey }: { dateKey: string }) {
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const [managing, setManaging] = useState(false);
   const composer = useJournalComposer(dateKey, () => setLinkOpen(true));
+  useJournalLandingAtmosphere({ variant: 'page' });
   const dismissEdit = useCallback((reason: 'tap-out' | 'composer-focus' = 'tap-out') => {
     const next = journalEditDismissFor(reason);
     if (next.hideKeyboard) Keyboard.dismiss();
@@ -98,12 +101,16 @@ export function JournalPageScreen({ dateKey }: { dateKey: string }) {
     openJournalDate(shiftJournalDate(dateKey, delta, today));
   };
 
+  const blocks = page?.blocks ?? [];
+
   return (
-    <Screen
-      scroll={false}
-      refresh={false}
-      bottomInset={false}
-      contentStyle={styles.page}>
+    <View style={styles.fill}>
+      <Screen
+        scroll={false}
+        refresh={false}
+        bottomInset={false}
+        style={styles.transparentScreen}
+        contentStyle={styles.page}>
       <Pressable onPress={() => dismissEdit('tap-out')}>
         <ScreenHeader
           title="Journal"
@@ -177,15 +184,19 @@ export function JournalPageScreen({ dateKey }: { dateKey: string }) {
         showsVerticalScrollIndicator={false}>
         <View style={{ gap: spacing.md }}>
           <View testID={isToday ? AgentUiIds.journal.today : AgentUiIds.journal.screen}>
-            <JournalBlockList
-              blocks={page?.blocks ?? []}
-              editingBlockId={editingBlockId}
-              onEditingBlockIdChange={setEditingBlockId}
-              onOpenLink={openSection}
-              onRemove={(blockId) => removeBlock(dateKey, blockId)}
-              onUpdateText={(blockId, text) => updateText(dateKey, blockId, text)}
-              showDeletes={managing}
-            />
+            {blocks.length ? (
+              <JournalBlockList
+                blocks={blocks}
+                editingBlockId={editingBlockId}
+                onEditingBlockIdChange={setEditingBlockId}
+                onOpenLink={openSection}
+                onRemove={(blockId) => removeBlock(dateKey, blockId)}
+                onUpdateText={(blockId, text) => updateText(dateKey, blockId, text)}
+                showDeletes={managing}
+              />
+            ) : (
+              <JournalPageEmpty isToday={isToday} />
+            )}
           </View>
         </View>
         <Pressable
@@ -212,11 +223,18 @@ export function JournalPageScreen({ dateKey }: { dateKey: string }) {
           setLinkOpen(false);
         }}
       />
-    </Screen>
+      </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+  },
+  transparentScreen: {
+    backgroundColor: 'transparent',
+  },
   page: {
     flex: 1,
     paddingBottom: 0,

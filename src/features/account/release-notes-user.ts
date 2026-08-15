@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.97',
+    date: '2026-08-15',
+    notes: [
+      'Keep dated journal pages on the meadow with a quiet empty, glass composer, and voice that starts instead of claiming the mic is unavailable.',
+    ],
+  },
+  {
     version: '1.0.96',
     date: '2026-08-15',
     notes: [

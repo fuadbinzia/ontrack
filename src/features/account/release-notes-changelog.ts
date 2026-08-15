@@ -4,6 +4,14 @@ import { CHANGELOG_ARCHIVE } from './release-notes-changelog-archive';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.97',
+    date: '2026-08-15',
+    notes: [
+      'Keep dated journal pages on the meadow with a quiet empty, glass composer, and voice that starts instead of claiming the mic is unavailable.',
+      'Touched: features/journal.',
+    ],
+  },
+  {
     version: '1.0.96',
     date: '2026-08-15',
     notes: [

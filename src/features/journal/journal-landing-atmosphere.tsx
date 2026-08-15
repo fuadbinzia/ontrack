@@ -20,15 +20,28 @@ export const journalLandingFontFamily = Platform.select({
   default: 'Times New Roman',
 }) as string;
 
-function JournalLandingScrim({ dark }: { dark: boolean }) {
+export type JournalAtmosphereVariant = 'landing' | 'page';
+
+function JournalAtmosphereScrim({
+  dark,
+  variant,
+}: {
+  dark: boolean;
+  variant: JournalAtmosphereVariant;
+}) {
+  const page = variant === 'page';
   const colors = dark
-    ? (['rgba(8,16,24,0.58)', 'rgba(8,16,24,0.22)', 'rgba(8,16,24,0)'] as const)
-    : (['rgba(255,255,255,0.38)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0)'] as const);
+    ? page
+      ? (['rgba(8,16,24,0.70)', 'rgba(8,16,24,0.42)', 'rgba(8,16,24,0.58)'] as const)
+      : (['rgba(8,16,24,0.58)', 'rgba(8,16,24,0.22)', 'rgba(8,16,24,0)'] as const)
+    : page
+      ? (['rgba(248,252,255,0.55)', 'rgba(248,252,255,0.22)', 'rgba(248,252,255,0.48)'] as const)
+      : (['rgba(255,255,255,0.38)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0)'] as const);
   return (
     <LinearGradient
       pointerEvents="none"
       colors={[...colors]}
-      locations={[0, 0.58, 1]}
+      locations={page ? [0, 0.4, 1] : [0, 0.58, 1]}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
       style={StyleSheet.absoluteFill}
@@ -36,7 +49,9 @@ function JournalLandingScrim({ dark }: { dark: boolean }) {
   );
 }
 
-export function useJournalLandingAtmosphere(): {
+export function useJournalLandingAtmosphere(options?: {
+  variant?: JournalAtmosphereVariant;
+}): {
   dark: boolean;
   ink: string;
   muted: string;
@@ -45,18 +60,24 @@ export function useJournalLandingAtmosphere(): {
   const theme = useTheme();
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const variant = options?.variant ?? 'landing';
   const dark = theme.name === 'dark';
   const ink = dark ? '#FFFFFF' : '#000000';
   const muted = dark ? 'rgba(255,255,255,0.82)' : '#1A1A1A';
-  const scrim = useMemo(() => <JournalLandingScrim dark={dark} />, [dark]);
+  const scrim = useMemo(
+    () => <JournalAtmosphereScrim dark={dark} variant={variant} />,
+    [dark, variant],
+  );
+  const overlayHeight =
+    variant === 'page' ? Math.round(windowHeight) : insets.top + 220;
 
   useSafeAreaChrome(JOURNAL_HOME_SKY_COLOR, {
     backgroundImage: JOURNAL_HOME_ATMOSPHERE,
     backgroundImageHeight: Math.round(windowHeight),
-    backgroundImageBlurRadius: 0,
+    backgroundImageBlurRadius: variant === 'page' ? 10 : 0,
     priority: 1,
   });
-  useSafeAreaChromeOverlay(scrim, insets.top + 220, { priority: 1 });
+  useSafeAreaChromeOverlay(scrim, overlayHeight, { priority: 1 });
   usePageSurfaceBackground(JOURNAL_HOME_SKY_COLOR, { priority: 1 });
 
   return { dark, ink, muted, scrim };

@@ -5,7 +5,6 @@ import {
   ActionChip,
   AppText,
   Card,
-  EmptyState,
   GlassIconWell,
   GlassMetaChip,
   IconButton,
@@ -13,7 +12,7 @@ import {
 } from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
 import { loadOptionalExpoAudio } from '@/utils/optional-expo-audio';
@@ -195,17 +194,7 @@ export function JournalBlockList({
 }) {
   const { spacing, s } = useResponsive();
 
-  if (!blocks.length) {
-    return (
-      <AgentTestId testID={AgentUiIds.journal.empty}>
-        <EmptyState
-          icon="journal"
-          title="Today Is Open"
-          message="Type a thought, dictate, or drop a voice note. Link a section when you want to jump."
-        />
-      </AgentTestId>
-    );
-  }
+  if (!blocks.length) return null;
 
   return (
     <View style={{ gap: spacing.sm }}>

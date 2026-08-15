@@ -6,7 +6,7 @@
 # Usage (from repo root):
 #   npm run android:release-to-drive
 #   ./scripts/android-release-to-drive.sh
-#   ./scripts/android-release-to-drive.sh --upload-only   # reuse newest local APK
+#   ./scripts/android-release-to-drive.sh --upload-only   # reuse newest staged APK
 #   ./scripts/android-release-to-drive.sh --no-upload     # build only
 #
 # Prerequisites:
@@ -37,6 +37,7 @@ if [[ -z "$APP_VERSION" ]]; then
   exit 1
 fi
 APK_SRC="$ROOT/android/app/build/outputs/apk/release/app-release.apk"
+APK_OUTPUT_DIR="$ROOT/.eas-local-build/apks"
 JAVA_HOME_DEFAULT="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
 
 DO_BUILD=1
@@ -74,11 +75,11 @@ fi
 
 SHA="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
-# Newest repo-root sideload APK (timestamped or legacy name).
+# Newest staged sideload APK.
 newest_local_apk() {
   local newest=""
   shopt -s nullglob
-  local candidates=( "$ROOT"/onTrack-*.apk )
+  local candidates=( "$APK_OUTPUT_DIR"/onTrack-*.apk )
   shopt -u nullglob
   ((${#candidates[@]})) || { printf ''; return 0; }
   # shellcheck disable=SC2012
@@ -114,7 +115,7 @@ assert_device_channel_headers
 if [[ "$DO_BUILD" -eq 1 ]]; then
   BUILD_STAMP="$(date +%Y%m%d-%H%M%S)"
   APK_NAME="onTrack-${APP_VERSION}-${BUILD_STAMP}-android-release.apk"
-  APK_DEST="$ROOT/$APK_NAME"
+  APK_DEST="$APK_OUTPUT_DIR/$APK_NAME"
 
   echo "==> Building release APK v${APP_VERSION} @ ${BUILD_STAMP} (commit $SHA)"
   echo "==> Syncing app.json into the existing Android native project"
@@ -138,6 +139,7 @@ if [[ "$DO_BUILD" -eq 1 ]]; then
     echo "error: expected APK missing: $APK_SRC" >&2
     exit 1
   fi
+  mkdir -p "$APK_OUTPUT_DIR"
   cp -f "$APK_SRC" "$APK_DEST"
   echo "Built $(du -h "$APK_DEST" | awk '{print $1}') → $APK_DEST"
 else
@@ -145,11 +147,12 @@ else
   if [[ -z "$APK_DEST" && -f "$APK_SRC" ]]; then
     BUILD_STAMP="$(date +%Y%m%d-%H%M%S)"
     APK_NAME="onTrack-${APP_VERSION}-${BUILD_STAMP}-android-release.apk"
-    APK_DEST="$ROOT/$APK_NAME"
+    APK_DEST="$APK_OUTPUT_DIR/$APK_NAME"
+    mkdir -p "$APK_OUTPUT_DIR"
     cp -f "$APK_SRC" "$APK_DEST"
   fi
   if [[ -z "$APK_DEST" || ! -f "$APK_DEST" ]]; then
-    echo "error: no local APK in $ROOT (run without --upload-only first)" >&2
+    echo "error: no local APK in $APK_OUTPUT_DIR (run without --upload-only first)" >&2
     exit 1
   fi
   APK_NAME="$(basename "$APK_DEST")"

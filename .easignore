@@ -16,6 +16,9 @@ supabase/
 **/__tests__/
 *.md
 *.log
+*.apk
+*.aab
+*.ipa
 *.tsbuildinfo
 .env*.local
 .living-system-map/runtime-analytics.local

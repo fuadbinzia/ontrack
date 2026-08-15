@@ -12,6 +12,54 @@ export type TravelFriendsHostPerson = {
   userId?: string;
 };
 
+function normalizedEmail(value?: string): string | undefined {
+  const normalized = value?.trim().toLowerCase();
+  return normalized || undefined;
+}
+
+/** Stable identity match between a saved invite row and the server roster. */
+export function travelParticipantMatchesRosterMember(
+  participant: TravelParticipant,
+  member: TravelTripRosterPerson,
+): boolean {
+  if (participant.userId && participant.userId === member.userId) return true;
+  if (
+    participant.inviteCode &&
+    member.inviteCode &&
+    participant.inviteCode === member.inviteCode
+  ) {
+    return true;
+  }
+  const participantEmail = normalizedEmail(participant.email);
+  const memberEmail = normalizedEmail(member.email);
+  return Boolean(
+    participantEmail && memberEmail && participantEmail === memberEmail,
+  );
+}
+
+/**
+ * After a revoke, remove accepted local rows that no longer exist as either a
+ * live invite or a roster member. Pending invitations remain intact.
+ */
+export function pruneRevokedTravelParticipants({
+  participants,
+  inviteStatuses,
+  roster,
+}: {
+  participants: TravelParticipant[];
+  inviteStatuses: Record<string, string>;
+  roster: TravelTripRosterPerson[];
+}): TravelParticipant[] {
+  return participants.filter(
+    (participant) =>
+      !participant.acceptedAt ||
+      Boolean(inviteStatuses[participant.inviteCode]) ||
+      roster.some((member) =>
+        travelParticipantMatchesRosterMember(participant, member),
+      ),
+  );
+}
+
 /** Roster members from server, or expense-sync fallback before roster RPC exists. */
 export function resolveTravelFriendsRosterMembers({
   roster,
@@ -124,6 +172,17 @@ export function filterTravelFriendsVisibleParticipants({
       .map((person) => person.email?.trim().toLowerCase())
       .filter((value): value is string => Boolean(value)),
   );
+  const rosterUserIds = new Set(roster.map((person) => person.userId));
+  const rosterInviteCodes = new Set(
+    roster
+      .map((person) => person.inviteCode)
+      .filter((value): value is string => Boolean(value)),
+  );
+  const rosterNameCounts = new Map<string, number>();
+  for (const person of roster) {
+    const name = person.displayName.trim().toLowerCase();
+    if (name) rosterNameCounts.set(name, (rosterNameCounts.get(name) ?? 0) + 1);
+  }
   return participants.filter((person) => {
     const email = person.email?.trim().toLowerCase();
     const name = person.name.trim().toLowerCase();
@@ -140,7 +199,19 @@ export function filterTravelFriendsVisibleParticipants({
     // Member copies: once the server roster is in, hide stale accepted
     // local rows (they duplicate host/friends under prior names).
     if (memberPlan && rosterLoaded && person.acceptedAt) return false;
+    if (person.acceptedAt && person.userId && rosterUserIds.has(person.userId)) {
+      return false;
+    }
+    if (person.acceptedAt && rosterInviteCodes.has(person.inviteCode)) {
+      return false;
+    }
     if (email && rosterEmails.has(email) && person.acceptedAt) return false;
+    // Privacy-safe roster responses omit email. An older accepted invite can
+    // also have a different code, so use the display name only when it maps to
+    // exactly one roster account; equal-name travelers remain separate.
+    if (person.acceptedAt && name && rosterNameCounts.get(name) === 1) {
+      return false;
+    }
     return true;
   });
 }

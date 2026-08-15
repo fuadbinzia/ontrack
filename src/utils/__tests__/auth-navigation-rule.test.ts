@@ -23,14 +23,14 @@ describe('authentication navigation invariants', () => {
 
   it('keeps the OAuth callback outside protected route groups', () => {
     expect(rootLayout).toContain('name="auth/callback"');
-    const protectedGroups = rootLayout.match(/<Stack\.Protected[\s\S]*?<\/Stack\.Protected>/g) ?? [];
+    const protectedGroups = rootLayout.match(/<AppStack\.Protected[\s\S]*?<\/AppStack\.Protected>/g) ?? [];
     expect(protectedGroups.every((group) => !group.includes('name="auth/callback"'))).toBe(true);
   });
 
   it('protects welcome, conflict resolution, and app routes with distinct guards', () => {
-    expect(rootLayout).toContain('<Stack.Protected guard={welcomeAccess}>');
-    expect(rootLayout).toContain("<Stack.Protected guard={phase === 'resolving-data'}>");
-    expect(rootLayout).toContain('<Stack.Protected guard={appAccess}>');
+    expect(rootLayout).toContain('<AppStack.Protected guard={welcomeAccess}>');
+    expect(rootLayout).toContain("<AppStack.Protected guard={phase === 'resolving-data'}>");
+    expect(rootLayout).toContain('<AppStack.Protected guard={appAccess}>');
   });
 
   it('keeps the name/goal canvas behind shouldShowWelcome on /welcome', () => {
@@ -42,7 +42,7 @@ describe('authentication navigation invariants', () => {
 
   it('keeps every user-facing app route in the authenticated-or-guest group', () => {
     const appGroup = rootLayout.match(
-      /<Stack\.Protected guard=\{appAccess\}>([\s\S]*?)<\/Stack\.Protected>/,
+      /<AppStack\.Protected guard=\{appAccess\}>([\s\S]*?)<\/AppStack\.Protected>/,
     )?.[1];
     expect(appGroup).toBeDefined();
     for (const route of [
@@ -85,7 +85,7 @@ describe('authentication navigation invariants', () => {
     expect(rootLayout).toContain('AppBootLoader');
     expect(rootLayout).toContain('SplashScreen');
     expect(rootLayout.indexOf("if (!hydrated || phase === 'loading')")).toBeLessThan(
-      rootLayout.indexOf('<Stack'),
+      rootLayout.indexOf('<AppStack'),
     );
   });
 

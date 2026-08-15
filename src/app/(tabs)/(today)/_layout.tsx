@@ -1,6 +1,4 @@
-import { Stack } from 'expo-router';
-
-import { motion } from '@/design-system';
+import { AppStack } from '@/components/navigation/app-stack';
 
 export const unstable_settings = {
   anchor: 'index',
@@ -18,16 +16,13 @@ const CALENDAR_DETAIL_SHEET_ROUTES = [
 
 export default function TodayTabLayout() {
   return (
-    <Stack
+    <AppStack
       screenOptions={{
-        headerShown: false,
-        animation: process.env.EXPO_OS === 'android' ? 'fade_from_bottom' : 'default',
-        animationDuration: motion.page,
         contentStyle: { backgroundColor: 'transparent' },
       }}>
-      <Stack.Screen name="index" />
+      <AppStack.Screen name="index" />
       {CALENDAR_DETAIL_SHEET_ROUTES.map((name) => (
-        <Stack.Screen
+        <AppStack.Screen
           key={name}
           name={name}
           options={{
@@ -42,6 +37,6 @@ export default function TodayTabLayout() {
           }}
         />
       ))}
-    </Stack>
+    </AppStack>
   );
 }

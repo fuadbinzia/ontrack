@@ -244,24 +244,8 @@ export function DaySun({
   showRays: boolean;
   animate: boolean;
 }) {
-  const idle = useSharedValue(0.8);
-  useEffect(() => {
-    if (!animate) {
-      idle.value = 0.92;
-      return;
-    }
-    idle.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.75, { duration: 2600, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-  }, [animate, idle]);
-
   const style = useAnimatedStyle(() => ({
-    opacity: interpolate(motion.energy.value, [0, 1], [idle.value, 1]),
+    opacity: interpolate(motion.energy.value, [0, 1], [0.92, 1]),
     transform: [
       { translateX: motion.tiltX.value * 6 },
       { translateY: motion.tiltY.value * 4 },

@@ -50,6 +50,9 @@ describe('collapsible motion contract', () => {
   });
 
   it('keeps stack page transitions on a shared settle duration', () => {
+    const appStack = read('src/components/navigation/app-stack.tsx');
+    expect(appStack).toContain('motion.page');
+    expect(appStack).toContain('animationDuration');
     for (const relative of [
       'src/app/_layout.tsx',
       'src/app/(tabs)/travel/_layout.tsx',
@@ -59,9 +62,7 @@ describe('collapsible motion contract', () => {
       'src/app/(tabs)/to-do/_layout.tsx',
       'src/app/(tabs)/vision-board/_layout.tsx',
     ]) {
-      const source = read(relative);
-      expect(source).toContain('motion.page');
-      expect(source).toContain('animationDuration');
+      expect(read(relative)).toContain('AppStack');
     }
   });
 });

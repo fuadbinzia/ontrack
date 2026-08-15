@@ -98,6 +98,25 @@ describe('travel header sky décor', () => {
     expect(day).toContain('condition.lightning');
   });
 
+  it('locks sky brightness to time of day (no looping pulse)', () => {
+    const aurora = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-sky-aurora.tsx'),
+      'utf8',
+    );
+    const motion = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-sky-motion-layer.tsx'),
+      'utf8',
+    );
+    const hero = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-plan-hero.tsx'),
+      'utf8',
+    );
+    expect(aurora).toContain('auroraVeilOpacity');
+    expect(aurora).not.toContain('const pulse');
+    expect(motion).not.toContain("'breathe'");
+    expect(hero).toContain('atmosphere.timeOfDay');
+  });
+
   it('animates birds, sun rays, meteors, and destination accents', () => {
     expect(day).toContain('FlyingBird');
     expect(dayFx).toContain('SunRays');

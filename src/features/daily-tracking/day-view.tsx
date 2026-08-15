@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -159,47 +159,99 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
 
   const summaryLine = canSummarize && summary?.date === date ? summary.line : undefined;
 
-  const handleActivityAction = (activity: Activity, action: ActivityAction) => {
-    switch (action) {
-      case 'edit':
-        router.push({ pathname: '/activity-form', params: { id: activity.id } });
-        break;
-      case 'skip':
-        setStatus(activity.id, 'skipped');
-        break;
-      case 'unskip':
-        setStatus(activity.id, 'upcoming');
-        break;
-      case 'duplicate':
-        duplicateActivity(activity.id);
-        break;
-      case 'move-tomorrow':
-        moveActivityToDate(activity.id, addDays(activity.date, 1));
-        break;
-      case 'delete':
-        confirmDeleteActivity(activity.title, () => deleteActivity(activity.id));
-        break;
-    }
-  };
+  const handleActivityAction = useCallback(
+    (activity: Activity, action: ActivityAction) => {
+      switch (action) {
+        case 'edit':
+          router.push({ pathname: '/activity-form', params: { id: activity.id } });
+          break;
+        case 'skip':
+          setStatus(activity.id, 'skipped');
+          break;
+        case 'unskip':
+          setStatus(activity.id, 'upcoming');
+          break;
+        case 'duplicate':
+          duplicateActivity(activity.id);
+          break;
+        case 'move-tomorrow':
+          moveActivityToDate(activity.id, addDays(activity.date, 1));
+          break;
+        case 'delete':
+          confirmDeleteActivity(activity.title, () => deleteActivity(activity.id));
+          break;
+      }
+    },
+    [addDays, confirmDeleteActivity, deleteActivity, duplicateActivity, moveActivityToDate, router, setStatus],
+  );
 
-  const toggleComplete = async (activity: Activity) => {
-    if (activity.plantId && activity.careKind === 'watering') {
-      if (activity.status === 'completed') await undoPlantWatering(activity.id);
-      else await logPlantWatering(activity.plantId);
-      return;
-    }
-    if (activity.status === 'completed') setStatus(activity.id, 'upcoming');
-    else if (activity.status === 'skipped') setStatus(activity.id, 'upcoming');
-    else setStatus(activity.id, 'completed');
-  };
+  const toggleComplete = useCallback(
+    async (activity: Activity) => {
+      if (activity.plantId && activity.careKind === 'watering') {
+        if (activity.status === 'completed') await undoPlantWatering(activity.id);
+        else await logPlantWatering(activity.plantId);
+        return;
+      }
+      if (activity.status === 'completed') setStatus(activity.id, 'upcoming');
+      else if (activity.status === 'skipped') setStatus(activity.id, 'upcoming');
+      else setStatus(activity.id, 'completed');
+    },
+    [logPlantWatering, setStatus, undoPlantWatering],
+  );
 
-  const openActivity = (activity: Activity) => {
-    const category = findCategory(categories, activity.categoryId);
-    router.push({
-      pathname: activityDetailPath(activity, category),
-      params: { id: activity.id },
-    });
-  };
+  const openActivity = useCallback(
+    (activity: Activity) => {
+      const category = findCategory(categories, activity.categoryId);
+      router.push({
+        pathname: activityDetailPath(activity, category),
+        params: { id: activity.id },
+      });
+    },
+    [categories, router],
+  );
+
+  const renderActivityItem = useCallback(
+    ({ item: activity, index }: { item: Activity; index: number }) => {
+      const details = eventDetailsByActivityId.get(activity.id);
+      const follow = details?.followId
+        ? eventFollowsById.get(details.followId)
+        : undefined;
+
+      return (
+        <View style={styles.rowPad}>
+          <ActivityCard
+            activity={activity}
+            category={findCategory(categories, activity.categoryId)}
+            leadingArtwork={resolveEventCalendarArtwork(activity.title, details, follow)}
+            isCurrent={activity.id === currentId}
+            index={index}
+            testID={AgentUiIds.today.activity(activity.id)}
+            toggleTestID={AgentUiIds.today.activityToggle(activity.id)}
+            onPress={() => openActivity(activity)}
+            onLongPress={
+              activity.plantId
+                ? undefined
+                : () =>
+                    showActivityActions({
+                      activity,
+                      onAction: (action) => handleActivityAction(activity, action),
+                    })
+            }
+            onToggleComplete={() => void toggleComplete(activity)}
+          />
+        </View>
+      );
+    },
+    [
+      categories,
+      currentId,
+      eventDetailsByActivityId,
+      eventFollowsById,
+      handleActivityAction,
+      openActivity,
+      toggleComplete,
+    ],
+  );
 
   return (
     <SafeAreaView
@@ -232,33 +284,7 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
             </View>
           </View>
         }
-        renderItem={({ item: activity, index }) => {
-          const details = eventDetailsByActivityId.get(activity.id);
-          const follow = details?.followId
-            ? eventFollowsById.get(details.followId)
-            : undefined;
-          return (
-            <View style={styles.rowPad}>
-              <ActivityCard
-                activity={activity}
-                category={findCategory(categories, activity.categoryId)}
-                leadingArtwork={resolveEventCalendarArtwork(activity.title, details, follow)}
-                isCurrent={activity.id === currentId}
-                index={index}
-                testID={AgentUiIds.today.activity(activity.id)}
-                toggleTestID={AgentUiIds.today.activityToggle(activity.id)}
-                onPress={() => openActivity(activity)}
-                onLongPress={activity.plantId ? undefined : () =>
-                  showActivityActions({
-                    activity,
-                    onAction: (action) => handleActivityAction(activity, action),
-                  })
-                }
-                onToggleComplete={() => void toggleComplete(activity)}
-              />
-            </View>
-          );
-        }}
+        renderItem={renderActivityItem}
       />
 
       <View style={[styles.fab, { bottom: tabBarHeight + spacing.lg }]}>

@@ -17,7 +17,7 @@ jest.mock('@/services/http/cors', () => ({
   apiOptionsResponse: (request: Request) => mockApiOptionsResponse(request),
 }));
 
-import * as route from '../parse+api';
+import * as route from '@/app/api/finance/ezpass/parse+api';
 
 function request(body: string): Request {
   return new Request('https://ontrack.example/api/finance/ezpass/parse', {

@@ -1,7 +1,5 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
-import * as XLSX from 'xlsx';
-
 import { recognizeDocumentText } from '@/services/document-text';
 import { pickLibraryImages } from '@/utils/pick-image';
 
@@ -14,6 +12,20 @@ import {
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 const MAX_SCREENSHOTS = 6;
+type XlsxModule = typeof import('xlsx');
+let xlsxModulePromise: Promise<XlsxModule> | null = null;
+
+async function getXlsxModule(): Promise<XlsxModule> {
+  if (!xlsxModulePromise) {
+    xlsxModulePromise = import('xlsx').then((module) => {
+      if ('default' in module && module.default && 'read' in module.default) {
+        return module.default as XlsxModule;
+      }
+      return module as XlsxModule;
+    });
+  }
+  return xlsxModulePromise;
+}
 
 export interface EzPassImportAsset {
   uri: string;
@@ -79,6 +91,7 @@ function assertImportLimits(assets: EzPassImportAsset[]) {
 }
 
 export async function parseEzPassWorkbookBytes(bytes: ArrayBuffer): Promise<EzPassParseResult> {
+  const XLSX = await getXlsxModule();
   const workbook = XLSX.read(bytes, { type: 'array', cellDates: false });
   const activities = [];
   let skippedRows = 0;

@@ -27,5 +27,6 @@ export const agentUiIdsShellDaily = {
     nextMonth: 'ontrack.calendar.nextMonth',
     openDay: 'ontrack.calendar.openDay',
     day: (dateKey: string) => `ontrack.calendar.day.${dateKey}`,
+    activity: (activityId: string) => `ontrack.calendar.activity.${activityId}`,
   },
 } as const;

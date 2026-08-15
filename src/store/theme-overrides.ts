@@ -25,6 +25,7 @@ import {
   type ThemeScope,
   type ThemeTokenOverrides,
 } from '@/design-system/theme-overrides';
+import { isThemePresetId, type ThemePresetId } from '@/design-system/theme-presets';
 import { resolveSelfDisplayName } from '@/features/account/self-display-name';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import { usePreferences } from '@/store/preferences';
@@ -32,9 +33,11 @@ import { newId } from '@/utils/id';
 
 interface ThemeOverridesState {
   overrides: ThemeOverridesByScope;
+  presetId: ThemePresetId | 'custom';
   fonts: FontOverrides;
   history: ThemeOverrideHistoryEntry[];
   setToken: (scope: ThemeScope, key: EditableThemeToken, hex: string) => boolean;
+  applyPreset: (presetId: ThemePresetId, colors: ThemeTokenOverrides) => void;
   clearToken: (scope: ThemeScope, key: EditableThemeToken) => void;
   resetScope: (scope: ThemeScope) => void;
   setFont: (role: FontRole, presetId: string) => boolean;
@@ -95,6 +98,7 @@ export const useThemeOverrides = create<ThemeOverridesState>()(
   persist(
     (set, get) => ({
       overrides: emptyThemeOverrides(),
+      presetId: 'classic',
       fonts: emptyFontOverrides(),
       history: [],
       setToken: (scope, key, hex) => {
@@ -113,9 +117,22 @@ export const useThemeOverrides = create<ThemeOverridesState>()(
         });
         set({
           overrides: withScope(get().overrides, scope, { ...current, [key]: normalized }),
+          presetId: 'custom',
           history: prependThemeOverrideHistory(get().history, entry),
         });
         return true;
+      },
+      applyPreset: (presetId, colors) => {
+        const normalized = sanitizeThemeOverridesByScope({ default: colors });
+        const entry = historyEntry({
+          action: 'applyPreset',
+          summary: `Applied ${presetId} theme preset`,
+        });
+        set({
+          overrides: normalized,
+          presetId,
+          history: prependThemeOverrideHistory(get().history, entry),
+        });
       },
       clearToken: (scope, key) => {
         const current = get().overrides[scope] ?? {};
@@ -123,6 +140,7 @@ export const useThemeOverrides = create<ThemeOverridesState>()(
         const previous = current[key] ?? null;
         const next = { ...current };
         delete next[key];
+        const nextOverrides = withScope(get().overrides, scope, next);
         const entry = historyEntry({
           action: 'clear',
           scope,
@@ -132,7 +150,8 @@ export const useThemeOverrides = create<ThemeOverridesState>()(
           summary: `Restored ${THEME_SCOPE_LABELS[scope]} · ${THEME_TOKEN_LABELS[key]} to default`,
         });
         set({
-          overrides: withScope(get().overrides, scope, next),
+          overrides: nextOverrides,
+          presetId: hasColorOverrides(nextOverrides) ? 'custom' : 'classic',
           history: prependThemeOverrideHistory(get().history, entry),
         });
       },
@@ -146,8 +165,10 @@ export const useThemeOverrides = create<ThemeOverridesState>()(
           to: null,
           summary: `Restored ${THEME_SCOPE_LABELS[scope]} defaults`,
         });
+        const nextOverrides = withScope(get().overrides, scope, {});
         set({
-          overrides: withScope(get().overrides, scope, {}),
+          overrides: nextOverrides,
+          presetId: hasColorOverrides(nextOverrides) ? 'custom' : 'classic',
           history: prependThemeOverrideHistory(get().history, entry),
         });
       },
@@ -186,13 +207,14 @@ export const useThemeOverrides = create<ThemeOverridesState>()(
       resetAll: () => {
         const colors = hasColorOverrides(get().overrides);
         const fonts = hasFontOverrides(get().fonts);
-        if (!colors && !fonts) return;
+        if (!colors && !fonts && get().presetId === 'classic') return;
         const entry = historyEntry({
           action: 'resetAll',
           summary: 'Restored all theme defaults',
         });
         set({
           overrides: emptyThemeOverrides(),
+          presetId: 'classic',
           fonts: emptyFontOverrides(),
           history: prependThemeOverrideHistory(get().history, entry),
         });
@@ -208,6 +230,13 @@ export const useThemeOverrides = create<ThemeOverridesState>()(
           ...currentState,
           ...persisted,
           overrides: sanitizeThemeOverridesByScope(persisted?.overrides),
+          presetId: isThemePresetId(persisted?.presetId)
+            ? persisted.presetId
+            : Object.values(sanitizeThemeOverridesByScope(persisted?.overrides)).some(
+                (scope) => Object.keys(scope).length > 0,
+              )
+              ? 'custom'
+              : 'classic',
           fonts: sanitizeFontOverrides(persisted?.fonts),
           history: sanitizeThemeOverrideHistory(persisted?.history),
         };

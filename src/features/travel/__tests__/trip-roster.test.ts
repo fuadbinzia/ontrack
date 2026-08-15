@@ -1,4 +1,5 @@
 import {
+    canDeleteTravelPlan,
     canonicalTravelTripId,
     isTravelMemberPlan,
     resolveIsTravelSoleHost,
@@ -57,6 +58,25 @@ describe('trip roster helpers', () => {
     ).toBe(true);
     expect(
       resolveIsTravelSoleHost({ myRosterRole: 'member', memberPlan: false }),
+    ).toBe(false);
+  });
+
+  it('reserves permanent trip deletion for the host copy', () => {
+    expect(canDeleteTravelPlan(base)).toBe(true);
+    expect(
+      canDeleteTravelPlan({
+        ...base,
+        chatAccessCode: 'cohost-access',
+        hostTripId: 'trip-host-9',
+        hostDisplayName: 'Alex',
+      }),
+    ).toBe(false);
+    expect(
+      canDeleteTravelPlan({
+        ...base,
+        hostTripId: 'trip-host-9',
+        hostDisplayName: 'Alex',
+      }),
     ).toBe(false);
   });
 });

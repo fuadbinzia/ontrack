@@ -27,10 +27,6 @@ export function UsageAnalyticsTracker() {
   const route = canonicalizeAnalyticsRoute(pathname);
   const activeRef = useRef<{ surface: AnalyticsSurface; startedAt: number } | null>(null);
   const sessionOpenRef = useRef(false);
-  const routeRenderRef = useRef({ route, startedAt: performance.now() });
-  if (routeRenderRef.current.route !== route) {
-    routeRenderRef.current = { route, startedAt: performance.now() };
-  }
 
   useEffect(() => {
     useUsageAnalytics.getState().ensureInstallId();
@@ -55,13 +51,14 @@ export function UsageAnalyticsTracker() {
     const flowStore = useFlowAnalytics.getState();
     const fromRoute = flowStore.session?.currentRoute;
     flowStore.visitRoute(route);
+    const routeCommittedAt = performance.now();
     let secondFrame = 0;
     const firstFrame = requestAnimationFrame(() => {
       secondFrame = requestAnimationFrame(() => {
         useFlowAnalytics.getState().recordPageLoad(
           route,
           fromRoute && fromRoute !== route ? fromRoute : undefined,
-          performance.now() - routeRenderRef.current.startedAt,
+          performance.now() - routeCommittedAt,
         );
       });
     });

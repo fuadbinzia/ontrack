@@ -55,6 +55,7 @@ import {
     validateTravelPlanDetails,
 } from '@/features/travel/travel-plan-details';
 import { TravelPlanDetailsEditor } from '@/features/travel/travel-plan-details-editor';
+import { canDeleteTravelPlan } from '@/features/travel/trip-roster';
 import { useTravelPageStyle } from '@/features/travel/travel-surface';
 import type { TravelPlan, TravelPlanMode } from '@/features/travel/types';
 import { useTravelHomeAtmosphereImage } from '@/features/travel/use-travel-home-atmosphere-image';
@@ -216,6 +217,7 @@ export function TravelScreenContent() {
           onCoverUrisChange={setEditCoverUris}
           onSave={() => void saveEditedDetails(editingPlan)}
           onCancel={() => setEditingDetailsPlanId(undefined)}
+          canDelete={canDeleteTravelPlan(editingPlan)}
           onDelete={() => {
             removePlan(editingPlan.id);
             setEditingDetailsPlanId(undefined);

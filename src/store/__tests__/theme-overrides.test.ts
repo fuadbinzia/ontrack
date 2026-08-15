@@ -11,6 +11,7 @@ describe('useThemeOverrides store', () => {
       usePreferences.setState({ name: 'Rocky' });
       useThemeOverrides.setState({
         overrides: emptyThemeOverrides(),
+        presetId: 'classic',
         fonts: emptyFontOverrides(),
         history: [],
       });
@@ -66,6 +67,25 @@ describe('useThemeOverrides store', () => {
       useThemeOverrides.getState().clearHistory();
     });
     expect(useThemeOverrides.getState().history).toEqual([]);
+  });
+
+  it('applies a full preset atomically and marks later edits custom', () => {
+    act(() => {
+      useThemeOverrides.getState().applyPreset('coast', {
+        backgroundPrimary: '#EAF3F5',
+        accentPrimary: '#18758A',
+        textPrimary: '#132D35',
+      });
+    });
+    expect(useThemeOverrides.getState().presetId).toBe('coast');
+    expect(useThemeOverrides.getState().overrides.default.backgroundPrimary).toBe('#EAF3F5');
+    expect(useThemeOverrides.getState().overrides.travel).toEqual({});
+    expect(useThemeOverrides.getState().history[0]?.action).toBe('applyPreset');
+
+    act(() => {
+      useThemeOverrides.getState().setToken('default', 'accentPrimary', '#123456');
+    });
+    expect(useThemeOverrides.getState().presetId).toBe('custom');
   });
 
   it('sets and restores fonts with history', () => {

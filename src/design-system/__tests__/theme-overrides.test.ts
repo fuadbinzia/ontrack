@@ -56,7 +56,10 @@ describe('sanitizeThemeOverridesByScope', () => {
       plants: null,
       unknown: { accentPrimary: '#000000' },
     });
-    expect(sanitized.default).toEqual({ accentPrimary: '#AABBCC' });
+    expect(sanitized.default).toEqual({
+      accentPrimary: '#AABBCC',
+      backgroundPrimary: '#000000',
+    });
     expect(sanitized.travel).toEqual({ accentSoft: '#4D96C5' });
     expect(sanitized.plants).toEqual({});
     expect(sanitized.vehicles).toEqual({});

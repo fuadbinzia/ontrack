@@ -2,6 +2,7 @@ import { addDays, DAY_MS, fromDateKey, todayKey } from '@/utils/date';
 
 import { advanceBillDue } from './model';
 import { financeBillCategoryForKind } from './create';
+import { stableFinanceHash } from './stable-hash';
 import type {
   FinanceAccount,
   FinanceBillCadence,
@@ -32,6 +33,15 @@ export function editRecurringExpense(
 }
 
 type RecurringCadence = Exclude<FinanceBillCadence, 'once'>;
+
+const MONTHLY_CADENCE_MULTIPLIER: Record<FinanceBillCadence, number> = {
+  weekly: 52 / 12,
+  biweekly: 26 / 12,
+  monthly: 1,
+  quarterly: 1 / 3,
+  yearly: 1 / 12,
+  once: 0,
+};
 
 const NON_EXPENSE_CATEGORY_TERMS = [
   'income',
@@ -66,15 +76,6 @@ const EXPLICIT_RECURRING_TERMS = [
   'recurring',
   'subscription',
 ];
-
-function stableHash(value: string): string {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(36);
-}
 
 export function normalizeSubscriptionMerchant(value: string): string {
   return value
@@ -204,7 +205,7 @@ function localCandidate(
   const identity = `${provider}|${account.connectionId ?? ''}|${account.id}|${last.currency}|${merchantKey}`;
 
   return {
-    id: `subscription:local:${stableHash(identity)}`,
+    id: `subscription:local:${stableFinanceHash(identity)}`,
     source: 'local',
     status: 'pending',
     provider,
@@ -249,7 +250,9 @@ export function detectLocalSubscriptionCandidates(
     const merchant = normalizeSubscriptionMerchant(transaction.merchant);
     if (!merchant) continue;
     const key = `${transaction.accountId}|${transaction.currency}|${merchant}`;
-    groups.set(key, [...(groups.get(key) ?? []), transaction]);
+    const group = groups.get(key);
+    if (group) group.push(transaction);
+    else groups.set(key, [transaction]);
   }
 
   const authoritativeKeys = new Set(authoritativeCandidates.map(candidateMatchKey));
@@ -267,15 +270,7 @@ export function monthlyRecurringAmount(
 ): number {
   return recurringExpenses.reduce((total, expense) => {
     if (!expense.active) return total;
-    const multiplier: Record<FinanceBillCadence, number> = {
-      weekly: 52 / 12,
-      biweekly: 26 / 12,
-      monthly: 1,
-      quarterly: 1 / 3,
-      yearly: 1 / 12,
-      once: 0,
-    };
-    return total + expense.amount * multiplier[expense.cadence];
+    return total + expense.amount * MONTHLY_CADENCE_MULTIPLIER[expense.cadence];
   }, 0);
 }
 

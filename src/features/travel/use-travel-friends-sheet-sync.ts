@@ -32,6 +32,7 @@ export function useTravelFriendsSheetSync({
   plan,
   onSavePlan,
   selfUserId,
+  canManage,
   openJoinCode,
   setOpenJoinCode,
   setOpenJoinBusy,
@@ -52,6 +53,7 @@ export function useTravelFriendsSheetSync({
   plan: TravelPlan;
   onSavePlan: (plan: TravelPlan) => void;
   selfUserId?: string;
+  canManage: boolean;
   openJoinCode?: string;
   setOpenJoinCode: SetOptStr;
   setOpenJoinBusy: Dispatch<SetStateAction<boolean>>;
@@ -293,7 +295,7 @@ export function useTravelFriendsSheetSync({
 
     refreshFriends();
 
-    if (!isMember) {
+    if (canManage) {
       const alreadyHaveCode = Boolean(latest.openJoinCode);
       const alreadyEnsured = ensuredOpenJoinForPlanRef.current === plan.id;
       if (!alreadyHaveCode && !alreadyEnsured) {
@@ -339,7 +341,7 @@ export function useTravelFriendsSheetSync({
     const poll = setInterval(() => {
       if (!active) return;
       refreshFriends();
-      if (!isMember) void refreshJoinRequests(canonicalId);
+      if (canManage) void refreshJoinRequests(canonicalId);
     }, 5000);
 
     return () => {
@@ -352,6 +354,7 @@ export function useTravelFriendsSheetSync({
     plan,
     onSavePlan,
     selfUserId,
+    canManage,
     refreshJoinRequests,
     refreshRoster,
     setCopiedCode,

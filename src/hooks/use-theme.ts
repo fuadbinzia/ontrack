@@ -35,10 +35,12 @@ export function useTheme(): Theme {
   const preference = usePreferences((s) => s.themePreference);
   const resolved = preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;
   const feature = useContext(FeatureThemeContext);
-  const overrides = useThemeOverrides((s) => s.overrides[feature]);
+  const globalOverrides = useThemeOverrides((s) => s.overrides.default);
+  const featureOverrides = useThemeOverrides((s) => s.overrides[feature]);
   const merge = useContext(ThemeMergeContext);
   return useMemo(() => {
-    const base = applyThemeOverrides(resolveBaseTheme(feature, resolved), overrides);
+    const global = applyThemeOverrides(resolveBaseTheme(feature, resolved), globalOverrides);
+    const base = feature === 'default' ? global : applyThemeOverrides(global, featureOverrides);
     return merge ? { ...base, ...merge } : base;
-  }, [feature, merge, overrides, resolved]);
+  }, [feature, featureOverrides, globalOverrides, merge, resolved]);
 }

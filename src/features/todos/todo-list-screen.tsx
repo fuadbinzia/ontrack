@@ -42,6 +42,7 @@ import {
   ChecklistTaskDetailsSheetHost,
   type ChecklistTaskDetailsSheetHandle,
 } from '@/features/todos/checklist-task-details-sheet';
+import { createChecklistTaskAndOpenDetails } from '@/features/todos/checklist-task-creation';
 import { TodoEmptyState } from '@/features/todos/todo-empty-state';
 import { confirmRemoveTodoList } from '@/features/todos/todo-list-remove';
 import { TodoListSettingsSheet } from '@/features/todos/todo-list-settings-screen';
@@ -227,11 +228,14 @@ export function TodoListScreen({ listId }: { listId: string }) {
   };
 
   const add = (title = draft) => {
-    const task = addTask(
+    const task = createChecklistTaskAndOpenDetails({
+      addTask,
+      categoryId:
+        selectedCategoryId === ALL_CATEGORIES ? undefined : selectedCategoryId,
       listId,
+      openDetails: (taskId) => detailsSheetRef.current?.open(taskId),
       title,
-      selectedCategoryId === ALL_CATEGORIES ? undefined : selectedCategoryId,
-    );
+    });
     if (!task) return;
     if (editMode) commitListName();
     setEditingTaskIds(null);

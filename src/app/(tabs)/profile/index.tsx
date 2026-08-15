@@ -20,6 +20,7 @@ import {
     SettingsRow,
     SettingsToggleRow,
 } from '@/components/primitives';
+import { THEME_PRESETS } from '@/design-system';
 import { CloudAccountCard } from '@/features/account/cloud-account-card';
 import { useCanUseDeveloperTools } from '@/features/account/dev-access';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
@@ -36,6 +37,7 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useAddons } from '@/store/addons';
 import { useAgents } from '@/store/agents';
 import { usePreferences, type ThemePreference } from '@/store/preferences';
+import { useThemeOverrides } from '@/store/theme-overrides';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { deferAfterPageLoad } from '@/utils/defer-after-page-load';
@@ -90,6 +92,7 @@ export default function ProfileSettingsScreen() {
   const name = usePreferences((state) => state.name);
   const goal = usePreferences((state) => state.goal);
   const themePreference = usePreferences((state) => state.themePreference);
+  const themePresetId = useThemeOverrides((state) => state.presetId);
   const aiEnabled = usePreferences((state) => state.aiEnabled);
   const hapticsEnabled = usePreferences((state) => state.hapticsEnabled);
   const usageAnalyticsEnabled = usePreferences((state) => state.usageAnalyticsEnabled);
@@ -275,6 +278,20 @@ export default function ProfileSettingsScreen() {
             onChange={setThemePreference}
           />
         </Card>
+        <SettingsGroup>
+          <SettingsActionRow
+            label="Customize App Theme"
+            detail={
+              themePresetId === 'custom'
+                ? 'Custom colors active'
+                : `${THEME_PRESETS.find((preset) => preset.id === themePresetId)?.name ?? 'Classic'} preset · backgrounds, buttons, containers, and text`
+            }
+            icon="smart"
+            testID={AgentUiIds.profile.appearance.open}
+            onPress={() => router.push('/(tabs)/profile/appearance' as never)}
+            accessibilityLabel="Customize App Theme"
+          />
+        </SettingsGroup>
       </AgentTestId>
 
       {showDeveloperSection ? (

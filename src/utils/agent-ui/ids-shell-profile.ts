@@ -49,6 +49,17 @@ export const agentUiIdsShellProfile = {
     terms: 'ontrack.profile.terms',
     tmdb: 'ontrack.profile.tmdb',
     theme: (themeId: string) => `ontrack.profile.theme.${themeId}`,
+    appearance: {
+      open: 'ontrack.profile.appearance.open',
+      back: 'ontrack.profile.appearance.back',
+      preview: 'ontrack.profile.appearance.preview',
+      preset: (presetId: string) => `ontrack.profile.appearance.preset.${presetId}`,
+      color: (token: string) => `ontrack.profile.appearance.color.${token}`,
+      colorClose: 'ontrack.profile.appearance.color.close',
+      colorHex: 'ontrack.profile.appearance.color.hex',
+      colorSave: 'ontrack.profile.appearance.color.save',
+      reset: 'ontrack.profile.appearance.reset',
+    },
     addon: (addonId: string) => `ontrack.profile.addon.${addonId}`,
     version: 'ontrack.profile.version',
     section: {

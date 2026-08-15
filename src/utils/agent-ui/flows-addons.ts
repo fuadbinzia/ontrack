@@ -53,6 +53,14 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'profile' },
     { op: 'wait', prefix: 'ontrack.profile.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
+  'profile-appearance': [
+    { op: 'goto', to: 'profile/appearance' },
+    {
+      op: 'wait',
+      id: 'ontrack.profile.appearance.preview',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   'open-avatar-editor': [
     { op: 'dismiss', prefix: 'ontrack.profile.avatar.' },
     { op: 'goto', to: 'profile' },
@@ -302,6 +310,26 @@ export const AGENT_UI_ADDON_FLOWS = {
   social: [
     { op: 'goto', to: 'social' },
     { op: 'wait', prefix: 'ontrack.social.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
+  'social-friends-invite-tools': [
+    { op: 'goto', to: 'social' },
+    {
+      op: 'wait',
+      id: 'ontrack.social.header.addFriend',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.social.header.addFriend' },
+    {
+      op: 'wait',
+      id: 'ontrack.social.friends.openInviteTools',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.social.friends.openInviteTools' },
+    {
+      op: 'wait',
+      id: 'ontrack.social.friends.inviteTools.close',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
   ],
   workouts: [
     { op: 'goto', to: 'workouts' },

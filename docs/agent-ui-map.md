@@ -356,6 +356,8 @@ Demo: `activity-agent-ui-demo-meal` via `food-detail-demo`.
 
 ## Social
 
+Named flow: `social-friends-invite-tools` (signed-in session) opens Friends, then the Add Friends bottom sheet.
+
 | testID                            | Control                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.social.header.addFriend`                   | Open add-friend flow                    |
@@ -364,6 +366,10 @@ Demo: `activity-agent-ui-demo-meal` via `food-detail-demo`.
 | `ontrack.social.friends.signIn`                     | Sign in from friend-management modal    |
 | `ontrack.social.friends.seeAll`                     | Open complete friends list              |
 | `ontrack.social.friends.add`                        | Open add-friend flow from Friends card  |
+| `ontrack.social.friends.openInviteTools`            | Open Add Friends bottom sheet           |
+| `ontrack.social.friends.inviteTools.close`          | Close Add Friends bottom sheet          |
+| `ontrack.social.friends.empty.add`                  | Add the first friend from empty state   |
+| `ontrack.social.friends.section.list`               | Primary friends-list section            |
 | `ontrack.social.friends.friend.<friendId>`          | Open a friend’s Social profile          |
 | `ontrack.social.quickAction.<actionId>`             | Open a Social quick action              |
 | `ontrack.social.upcoming.seeAll`                    | Open all trips                          |
@@ -437,6 +443,7 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.calendar.nextMonth`        | Next month          |
 | `ontrack.calendar.openDay`          | Open selected day (date + chevron) |
 | `ontrack.calendar.day.<YYYY-MM-DD>` | Month grid day cell |
+| `ontrack.calendar.activity.<id>`    | Open a selected-day event detail sheet |
 
 ## Event detail (`/detail/generic/<activityId>`)
 
@@ -973,6 +980,15 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 | `ontrack.profile.apiUsage`         | Open Integrations (also via Developer Tools) |
 | `ontrack.profile.developer`        | Open Developer Tools hub |
 | `ontrack.profile.usageAnalytics`   | Toggle first-party usage analytics |
+| `ontrack.profile.appearance.open` | Open App Appearance from Profile |
+| `ontrack.profile.appearance.back` | Return to Profile |
+| `ontrack.profile.appearance.preview` | Live app-theme preview |
+| `ontrack.profile.appearance.preset.<presetId>` | Apply a complete theme preset |
+| `ontrack.profile.appearance.color.<token>` | Open the custom picker for a theme token |
+| `ontrack.profile.appearance.color.close` | Close the custom color picker |
+| `ontrack.profile.appearance.color.hex` | Enter an exact custom hex color |
+| `ontrack.profile.appearance.color.save` | Apply the selected custom color |
+| `ontrack.profile.appearance.reset` | Restore the Classic theme |
 
 ### Route error boundary (recoverable crash shell)
 

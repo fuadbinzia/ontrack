@@ -13,6 +13,21 @@ export const AGENT_UI_DAILY_FLOWS = {
     { op: 'goto', to: 'calendar' },
     { op: 'wait', prefix: 'ontrack.calendar.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
+  'calendar-activity-demo': [
+    { op: 'seed', to: 'activity-demo' },
+    { op: 'goto', to: 'calendar' },
+    {
+      op: 'wait',
+      id: 'ontrack.calendar.jumpToday',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.calendar.jumpToday' },
+    {
+      op: 'wait',
+      id: `ontrack.calendar.activity.${AGENT_UI_DEMO_ACTIVITY_ID}`,
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   today: [
     { op: 'goto', to: 'today' },
     { op: 'wait', prefix: 'ontrack.today.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },

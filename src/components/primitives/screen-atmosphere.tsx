@@ -2,8 +2,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
-import { glassMaterials } from '@/design-system/glass';
+import { colorWithAlpha, glassMaterials } from '@/design-system/glass';
 import { useTheme } from '@/hooks/use-theme';
+import { useThemeOverrides } from '@/store/theme-overrides';
 
 import {
     usePageSurfaceBackground,
@@ -23,12 +24,22 @@ export function ScreenAtmosphere() {
   const theme = useTheme();
   const { width, height } = useWindowDimensions();
   const a = glassMaterials.atmosphere;
+  const customCanvas = useThemeOverrides((state) => {
+    const colors = state.overrides.default;
+    return Boolean(colors.backgroundPrimary || colors.backgroundSecondary);
+  });
   const dark = theme.name === 'dark';
-  const colors = dark
+  const colors = customCanvas
+    ? ([theme.backgroundSecondary, theme.backgroundPrimary, theme.backgroundPrimary] as const)
+    : dark
     ? ([a.darkTop, a.darkMid, a.darkBottom] as const)
     : ([a.lightTop, a.lightMid, a.lightBottom] as const);
-  const orb = dark ? a.darkOrb : a.lightOrb;
-  const cool = dark ? a.darkCool : a.lightCool;
+  const orb = customCanvas
+    ? colorWithAlpha(theme.accentPrimary, dark ? 0.2 : 0.14)
+    : dark ? a.darkOrb : a.lightOrb;
+  const cool = customCanvas
+    ? colorWithAlpha(theme.accentSoft, dark ? 0.16 : 0.11)
+    : dark ? a.darkCool : a.lightCool;
   const orbSize = Math.max(width, height) * 0.72;
 
   return (
@@ -104,9 +115,13 @@ export function screenAtmosphereBottomColor(
  */
 export function useScreenAtmosphereChrome(enabled = true) {
   const theme = useTheme();
+  const customCanvas = useThemeOverrides((state) => {
+    const colors = state.overrides.default;
+    return Boolean(colors.backgroundPrimary || colors.backgroundSecondary);
+  });
   const { height } = useWindowDimensions();
-  const top = screenAtmosphereTopColor(theme.name);
-  const bottom = screenAtmosphereBottomColor(theme.name);
+  const top = customCanvas ? theme.backgroundSecondary : screenAtmosphereTopColor(theme.name);
+  const bottom = customCanvas ? theme.backgroundPrimary : screenAtmosphereBottomColor(theme.name);
   const overlay = useMemo(
     () => (enabled ? <ScreenAtmosphere /> : undefined),
     [enabled],

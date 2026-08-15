@@ -32,11 +32,13 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('open-developer');
     expect(listAgentUiFlowNames()).toContain('profile-usage-analytics');
     expect(listAgentUiFlowNames()).toContain('checklist-demo');
+    expect(listAgentUiFlowNames()).toContain('checklist-demo-item-details');
     expect(listAgentUiFlowNames()).toContain('grocery-demo');
     expect(listAgentUiFlowNames()).toContain('health-demo');
     expect(listAgentUiFlowNames()).toContain('vehicle-demo-detail');
     expect(listAgentUiFlowNames()).toContain('plants-demo');
     expect(listAgentUiFlowNames()).toContain('activity-demo-edit');
+    expect(listAgentUiFlowNames()).toContain('calendar-activity-demo');
     expect(listAgentUiFlowNames()).toContain('event-bout-detail');
     expect(listAgentUiFlowNames()).toContain('grocery-demo-recipe-import');
     expect(listAgentUiFlowNames()).toContain('workouts-demo');
@@ -170,6 +172,18 @@ describe('agent-ui flows', () => {
         }),
       ]),
     );
+    expect(resolveAgentUiFlow('checklist-demo-item-details')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'tap',
+          id: `ontrack.checklists.detail.task.${AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID}`,
+        }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.checklists.itemDetails.category',
+        }),
+      ]),
+    );
     expect(resolveAgentUiFlow('grocery-demo-combined')).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -214,6 +228,14 @@ describe('agent-ui flows', () => {
       op: 'goto',
       to: `activityForm?id=${AGENT_UI_DEMO_ACTIVITY_ID}`,
     });
+    expect(resolveAgentUiFlow('calendar-activity-demo')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'wait',
+          id: `ontrack.calendar.activity.${AGENT_UI_DEMO_ACTIVITY_ID}`,
+        }),
+      ]),
+    );
     expect(resolveAgentUiFlow('event-bout-detail')).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

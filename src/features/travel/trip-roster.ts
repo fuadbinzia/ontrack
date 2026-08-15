@@ -35,6 +35,20 @@ export function isTravelMemberPlan(
   return Boolean(plan.hostDisplayName?.trim());
 }
 
+/**
+ * Only the sole host may permanently delete a trip. Joined copies belong to a
+ * member or co-host and can be removed only through the explicit Leave Trip
+ * flow, which preserves the shared trip for everyone else.
+ */
+export function canDeleteTravelPlan(
+  plan: Pick<
+    TravelPlan,
+    'id' | 'chatAccessCode' | 'hostTripId' | 'hostDisplayName'
+  >,
+): boolean {
+  return !isTravelMemberPlan(plan);
+}
+
 export type TravelTripRosterRole = 'host' | 'cohost' | 'member';
 
 /**

@@ -174,6 +174,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `plants-demo-log-watering` | Seed → log watering → undo control ready |
 | `plant-calendar-detail` | Seed → Today plant card → watering bottom sheet |
 | `activity-demo` | Seed mindfulness activity → Today card |
+| `calendar-activity-demo` | Seed mindfulness activity → Calendar selected-day event row |
 | `activity-demo-detail` | Seed → open generic event detail |
 | `activity-demo-edit` | Seed → open activity form editor |
 | `activity-form-dismiss` | Today → open Add Event → choose a vibe → dismiss through the outside backdrop → remain on Today |

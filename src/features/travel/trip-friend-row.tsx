@@ -127,6 +127,9 @@ export function TripFriendRow({
   const avatarName =
     avatarLabel.replace(/\s*\(You\)\s*$/i, '').trim() || avatarLabel;
   const avatarSize = Math.max(40, s(42));
+  const roleBadgeWidth = Math.max(72, s(72));
+  const roleBadgeLabel =
+    badge === 'host' ? 'Host' : badge === 'cohost' ? 'Co-host' : 'Pending';
   const header = (
     <View
       style={[
@@ -188,25 +191,14 @@ export function TripFriendRow({
               {displayName}
             </AppText>
           </View>
-          {badge === 'host' ? (
+          {badge ? (
             <GlassTonePill
-              label="Host"
-              toneColor={theme.accentPrimary}
+              label={roleBadgeLabel}
+              toneColor={
+                badge === 'host' ? theme.accentPrimary : theme.textSecondary
+              }
               showDot={false}
-            />
-          ) : null}
-          {badge === 'cohost' ? (
-            <GlassTonePill
-              label="Co-host"
-              toneColor={theme.textSecondary}
-              showDot={false}
-            />
-          ) : null}
-          {badge === 'pending' ? (
-            <GlassTonePill
-              label="Pending"
-              toneColor={theme.textSecondary}
-              showDot={false}
+              style={{ width: roleBadgeWidth, alignSelf: 'center' }}
             />
           ) : null}
           {canOpenMenu ? (

@@ -3,6 +3,7 @@ import { useColorScheme } from 'react-native';
 
 import {
     applyThemeOverrides,
+    resolveThemePresetColors,
     resolveBaseTheme,
     type Theme,
     type ThemeScope,
@@ -36,11 +37,14 @@ export function useTheme(): Theme {
   const resolved = preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;
   const feature = useContext(FeatureThemeContext);
   const globalOverrides = useThemeOverrides((s) => s.overrides.default);
+  const presetId = useThemeOverrides((s) => s.presetId);
   const featureOverrides = useThemeOverrides((s) => s.overrides[feature]);
   const merge = useContext(ThemeMergeContext);
   return useMemo(() => {
-    const global = applyThemeOverrides(resolveBaseTheme(feature, resolved), globalOverrides);
+    const activeGlobalOverrides =
+      presetId === 'custom' ? globalOverrides : resolveThemePresetColors(presetId, resolved);
+    const global = applyThemeOverrides(resolveBaseTheme(feature, resolved), activeGlobalOverrides);
     const base = feature === 'default' ? global : applyThemeOverrides(global, featureOverrides);
     return merge ? { ...base, ...merge } : base;
-  }, [feature, featureOverrides, globalOverrides, merge, resolved]);
+  }, [feature, featureOverrides, globalOverrides, merge, presetId, resolved]);
 }

@@ -20,6 +20,7 @@ import {
   normalizeHexColor,
   radii,
   resolveBaseTheme,
+  resolveThemePresetColors,
   THEME_PRESETS,
   THEME_TOKEN_LABELS,
   type EditableThemeToken,
@@ -78,16 +79,17 @@ export default function AppearanceScreen() {
   const [pickerDragging, setPickerDragging] = useState(false);
   const appearance = preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;
   const base = resolveBaseTheme('default', appearance);
+  const presetColors =
+    presetId === 'custom' ? overrides : resolveThemePresetColors(presetId, appearance);
   const activePresetName = THEME_PRESETS.find((preset) => preset.id === presetId)?.name;
 
   const choosePreset = (preset: ThemePreset) => {
     haptics.success();
-    applyPreset(preset.id, preset.colors);
-    setPreference(preset.appearance);
+    applyPreset(preset.id);
   };
   const openColor = (token: EditableThemeToken) => {
     setEditingToken(token);
-    setDraft(overrides[token] ?? base[token]);
+    setDraft(presetColors[token] ?? base[token]);
   };
   const closeColor = () => {
     setEditingToken(undefined);
@@ -97,7 +99,7 @@ export default function AppearanceScreen() {
     if (!editingToken) return;
     const normalized = normalizeHexColor(draft);
     if (!normalized) return;
-    setToken('default', editingToken, normalized);
+    setToken('default', editingToken, normalized, presetColors);
     haptics.success();
     closeColor();
   };
@@ -229,6 +231,7 @@ export default function AppearanceScreen() {
                   <View key={preset.id} style={styles.presetCell}>
                     <PresetCard
                       preset={preset}
+                      appearance={appearance}
                       selected={presetId === preset.id}
                       onPress={() => choosePreset(preset)}
                     />
@@ -247,7 +250,7 @@ export default function AppearanceScreen() {
             </AppText>
             <SettingsGroup>
               {group.tokens.map((token) => {
-                const value = overrides[token] ?? base[token];
+                const value = presetColors[token] ?? base[token];
                 return (
                   <SettingsRow
                     key={token}
@@ -334,19 +337,22 @@ export default function AppearanceScreen() {
 
 function PresetCard({
   preset,
+  appearance,
   selected,
   onPress,
 }: {
   preset: ThemePreset;
+  appearance: 'light' | 'dark';
   selected: boolean;
   onPress: () => void;
 }) {
   const theme = useTheme();
   const { spacing, s } = useResponsive();
-  const fallback = resolveBaseTheme('default', preset.appearance);
-  const background = preset.colors.backgroundPrimary ?? fallback.backgroundPrimary;
-  const accent = preset.colors.accentPrimary ?? fallback.accentPrimary;
-  const text = preset.colors.textPrimary ?? fallback.textPrimary;
+  const fallback = resolveBaseTheme('default', appearance);
+  const colors = preset.colors[appearance];
+  const background = colors.backgroundPrimary ?? fallback.backgroundPrimary;
+  const accent = colors.accentPrimary ?? fallback.accentPrimary;
+  const text = colors.textPrimary ?? fallback.textPrimary;
   return (
     <Card
       onPress={onPress}

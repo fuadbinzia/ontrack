@@ -14,6 +14,7 @@ import {
     normalizeHexColor,
     palette,
     resolveBaseTheme,
+    resolveThemePresetColors,
     THEME_TOKEN_LABELS,
     type EditableThemeToken,
     type ThemeScope,
@@ -157,8 +158,11 @@ function ScopeEditor({ config }: { config: ScopeConfig }) {
   const appearance = preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;
   const base = resolveBaseTheme(config.scope, appearance);
   const scopeOverrides = useThemeOverrides((s) => s.overrides[config.scope]);
+  const presetId = useThemeOverrides((s) => s.presetId);
   const setToken = useThemeOverrides((s) => s.setToken);
   const clearToken = useThemeOverrides((s) => s.clearToken);
+  const presetColors =
+    presetId === 'custom' ? undefined : resolveThemePresetColors(presetId, appearance);
 
   return (
     <AgentTestId
@@ -174,7 +178,10 @@ function ScopeEditor({ config }: { config: ScopeConfig }) {
         </View>
 
         {config.tokens.map((token) => {
-          const effective = scopeOverrides[token] ?? base[token];
+          const effective =
+            scopeOverrides[token] ??
+            (config.scope === 'default' ? presetColors?.[token] : undefined) ??
+            base[token];
           const isOverridden = Boolean(scopeOverrides[token]);
           return (
             <TokenEditor
@@ -186,7 +193,7 @@ function ScopeEditor({ config }: { config: ScopeConfig }) {
               defaultValue={base[token]}
               overridden={isOverridden}
               presets={config.presets[token] ?? []}
-              onCommit={(hex) => setToken(config.scope, token, hex)}
+              onCommit={(hex) => setToken(config.scope, token, hex, presetColors)}
               onReset={() => clearToken(config.scope, token)}
             />
           );

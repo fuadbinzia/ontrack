@@ -51,7 +51,7 @@ export {
     type ThemeTokenOverrides
 } from './theme-overrides';
 export {
-    isThemePresetId, THEME_PRESETS, type ThemePreset, type ThemePresetId
+    findThemePreset, isThemePresetId, resolveThemePresetColors, THEME_PRESETS, type ThemePreset, type ThemePresetId
 } from './theme-presets';
 export {
     categoryColors, darkFoodTheme, darkPlantTheme, darkTheme, darkTravelTheme, darkVehicleTheme, hexWithAlpha, lightFoodTheme, lightPlantTheme, lightTheme, lightTravelTheme, lightVehicleTheme, resolveBaseTheme, timeOfDayGradient,

@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Full ship flow for onTrack:
 #   patch-bump version + release notes/changelog → commit → branch → PR →
-#   merge main → delete branch → ensure compatible TestFlight binary →
+#   merge main → delete branch → verify OTA runtime compatibility →
 #   TestFlight + device OTA
+#
+# HARD CONSTRAINT: this script publishes OTA updates only. It must never start,
+# queue, or submit an iOS/Android binary build. Binary builds require a separate,
+# explicit build command from the user.
 #
 # Agent / human phrases that mean this script:
 #   "push" · "run the push script" · "push script" · "ship push" · "ship:push"
@@ -84,7 +88,9 @@ latest_testflight_runtime() {
       process.stdin.on("end", () => {
         try {
           const builds = JSON.parse(input);
-          process.stdout.write(String(builds?.[0]?.runtimeVersion || ""));
+          process.stdout.write(String(
+            builds?.[0]?.runtime?.version || builds?.[0]?.runtimeVersion || ""
+          ));
         } catch {
           process.exit(1);
         }
@@ -92,7 +98,7 @@ latest_testflight_runtime() {
     '
 }
 
-ensure_testflight_runtime() {
+require_compatible_testflight_runtime() {
   local required_runtime latest_runtime
   required_runtime="$(
     node -e "const a=require('${ROOT}/app.json'); process.stdout.write(String(a?.expo?.runtimeVersion||''))"
@@ -101,7 +107,7 @@ ensure_testflight_runtime() {
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
     echo "[dry-run] compare latest finished TestFlight runtime with $required_runtime"
-    echo "[dry-run] npm run build:testflight when no compatible binary exists"
+    echo "[dry-run] stop without publishing when no compatible binary exists"
     return 0
   fi
 
@@ -119,8 +125,7 @@ ensure_testflight_runtime() {
     echo "    no finished TestFlight binary found"
   fi
   echo "    required OTA runtime: $required_runtime"
-  echo "==> Building and submitting a compatible TestFlight binary"
-  npm run build:testflight
+  die "no compatible TestFlight binary; ship:push is OTA-only and will never start a binary build. Run an explicit binary-build command first, then retry push"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -275,7 +280,7 @@ OTA_MSG="$MESSAGE"
 [[ -n "$OTA_MSG" ]] || OTA_MSG="Ship $(git rev-parse --short HEAD)"
 
 if [[ "$SKIP_OTA" -eq 0 ]]; then
-  ensure_testflight_runtime
+  require_compatible_testflight_runtime
   echo "==> Publishing TestFlight OTA (iOS)"
   run npm run update:testflight -- --message "$OTA_MSG" --non-interactive
   echo "==> Publishing device OTA (Android sideload)"

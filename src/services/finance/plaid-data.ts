@@ -3,6 +3,8 @@ import { mapPlaidAccountKind } from '@/features/finance/plaid-account-kind';
 import type {
   PlaidLinkedAccount,
   PlaidLinkedHolding,
+  PlaidRecurringStatus,
+  PlaidRecurringOutflow,
   PlaidLinkedTransaction,
 } from './plaid';
 import { PlaidServerError, plaidRequest } from './plaid-server';
@@ -32,8 +34,82 @@ type PlaidTransactionRow = {
   iso_currency_code?: string;
   unofficial_currency_code?: string;
   category?: string[];
-  personal_finance_category?: { primary?: string };
+  personal_finance_category?: { primary?: string; detailed?: string };
 };
+
+type PlaidRecurringStreamRow = {
+  stream_id?: string;
+  account_id?: string;
+  description?: string;
+  merchant_name?: string | null;
+  predicted_next_date?: string | null;
+  frequency?: string;
+  average_amount?: number | {
+    amount?: number;
+    iso_currency_code?: string | null;
+    unofficial_currency_code?: string | null;
+  };
+  last_amount?: number | {
+    amount?: number;
+    iso_currency_code?: string | null;
+    unofficial_currency_code?: string | null;
+  };
+  is_active?: boolean;
+  personal_finance_category?: { primary?: string; detailed?: string };
+};
+
+function recurringAmount(value: PlaidRecurringStreamRow['last_amount']): {
+  amount?: number;
+  currency?: string;
+} {
+  if (typeof value === 'number') return { amount: value };
+  return {
+    amount: value?.amount,
+    currency: value?.iso_currency_code || value?.unofficial_currency_code || undefined,
+  };
+}
+
+function recurringFrequency(value: string | undefined): PlaidRecurringOutflow['frequency'] | undefined {
+  switch (value?.toUpperCase()) {
+    case 'WEEKLY': return 'weekly';
+    case 'BIWEEKLY': return 'biweekly';
+    case 'MONTHLY': return 'monthly';
+    case 'ANNUALLY': return 'yearly';
+    default: return undefined;
+  }
+}
+
+export function mapPlaidRecurringOutflows(
+  rows: PlaidRecurringStreamRow[] | undefined,
+): PlaidRecurringOutflow[] {
+  return (rows ?? []).flatMap((row) => {
+    const frequency = recurringFrequency(row.frequency);
+    const last = recurringAmount(row.last_amount);
+    const average = recurringAmount(row.average_amount);
+    const amount = last.amount ?? average.amount;
+    if (
+      !row.stream_id ||
+      !row.account_id ||
+      !row.predicted_next_date ||
+      !frequency ||
+      typeof amount !== 'number' ||
+      !Number.isFinite(amount) ||
+      amount <= 0
+    ) return [];
+    return [{
+      streamId: row.stream_id,
+      accountId: row.account_id,
+      name: row.merchant_name || row.description || 'Subscription',
+      amount,
+      currency: last.currency || average.currency,
+      frequency,
+      predictedNextDate: row.predicted_next_date,
+      categoryHint:
+        row.personal_finance_category?.detailed || row.personal_finance_category?.primary,
+      active: row.is_active !== false,
+    }];
+  });
+}
 
 export function mapPlaidAccounts(rows: PlaidAccountRow[] | undefined): PlaidLinkedAccount[] {
   return (rows ?? []).map((row) => ({
@@ -70,7 +146,10 @@ function mapExpenseTransaction(row: PlaidTransactionRow): PlaidLinkedTransaction
     currency: row.iso_currency_code || row.unofficial_currency_code || undefined,
     date: row.date,
     merchant: row.merchant_name || row.name || 'Transaction',
-    categoryHint: row.personal_finance_category?.primary || row.category?.[0],
+    categoryHint:
+      row.personal_finance_category?.detailed ||
+      row.personal_finance_category?.primary ||
+      row.category?.[0],
   };
 }
 
@@ -217,3 +296,38 @@ export async function loadPlaidAccounts(accessToken: string): Promise<PlaidLinke
   return mapPlaidAccounts(body.accounts);
 }
 
+export async function loadPlaidRecurringOutflows(
+  accessToken: string,
+): Promise<PlaidRecurringOutflow[]> {
+  const body = await plaidRequest<{ outflow_streams?: PlaidRecurringStreamRow[] }>(
+    '/transactions/recurring/get',
+    {
+      access_token: accessToken,
+      options: { personal_finance_category_version: 'v2' },
+    },
+  );
+  return mapPlaidRecurringOutflows(body.outflow_streams);
+}
+
+export async function loadPlaidRecurringResult(accessToken: string): Promise<{
+  outflows: PlaidRecurringOutflow[];
+  status: PlaidRecurringStatus;
+}> {
+  try {
+    return { outflows: await loadPlaidRecurringOutflows(accessToken), status: 'ready' };
+  } catch (error) {
+    if (error instanceof PlaidServerError && error.code === 'PRODUCT_NOT_READY') {
+      return { outflows: [], status: 'pending' };
+    }
+    const unavailableCodes = new Set([
+      'ADDITIONAL_CONSENT_REQUIRED',
+      'INVALID_PRODUCT',
+      'PRODUCTS_NOT_SUPPORTED',
+      'RECURRING_TRANSACTIONS_NOT_SUPPORTED',
+    ]);
+    if (error instanceof PlaidServerError && error.code && unavailableCodes.has(error.code)) {
+      return { outflows: [], status: 'unavailable' };
+    }
+    return { outflows: [], status: 'error' };
+  }
+}

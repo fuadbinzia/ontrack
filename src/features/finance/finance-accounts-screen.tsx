@@ -6,6 +6,7 @@ import {
   AppText,
   Button,
   Card,
+  Dropdown,
   EmptyState,
   Input,
   Screen,
@@ -59,6 +60,7 @@ function plaidLinkResultMessage(
 export function FinanceAccountsScreen() {
   const { spacing: gap } = useResponsive();
   const accounts = useFinance((s) => s.accounts);
+  const rewardProfiles = useFinance((s) => s.rewardProfiles);
   const holdings = useFinance((s) => s.holdings);
   const entities = useFinance((s) => s.entities);
   const baseCurrency = useFinance((s) => s.baseCurrency);
@@ -342,6 +344,25 @@ export function FinanceAccountsScreen() {
                         : ''}
                       {account.provider ? ` · ${account.provider === 'teller' ? 'Teller' : 'Plaid'}` : ''}
                     </AppText>
+                    {account.kind === 'card' && rewardProfiles.length ? (
+                      <Dropdown
+                        label="Rewards Profile"
+                        icon="finance"
+                        value={account.rewardProfileId ?? ''}
+                        options={[
+                          { value: '', label: 'No Rewards Profile' },
+                          ...rewardProfiles.map((profile) => ({
+                            value: profile.id,
+                            label: profile.name,
+                          })),
+                        ]}
+                        onChange={(rewardProfileId) => saveAccount({
+                          ...account,
+                          rewardProfileId: rewardProfileId || undefined,
+                        })}
+                        testID={AgentUiIds.finance.accounts.rewardProfile(account.id)}
+                      />
+                    ) : null}
                     <View style={{ flexDirection: 'row', gap: gap.sm, flexWrap: 'wrap' }}>
                       {account.linkStatus !== 'manual' && (account.connectionId || account.plaidItemId) ? (
                         <Button

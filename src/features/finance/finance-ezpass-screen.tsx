@@ -21,19 +21,26 @@ import { useEzPassCollaboration } from '@/hooks/use-ezpass-collaboration';
 import { useResponsive } from '@/hooks/use-responsive';
 import {
   addEzPassFriendMembers,
+  removeEzPassMember,
+  setEzPassMemberRole,
   tagEzPassSharedTransaction,
+  type EzPassSharedMember,
 } from '@/services/finance/ezpass-collaboration';
 import { useFinanceEzPassStatements } from '@/store/finance-ezpass-statements';
 import { useFinance } from '@/store/finance';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { formatDateLong, formatWeekday } from '@/utils/date';
+import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 
 import {
+  ezPassAssignableFriendIds,
   ezPassLedgerLabel,
+  ezPassTagPressIntent,
   sharedEzPassActivities,
   type EzPassLedgerActivity,
 } from './ezpass-collaboration-model';
 import { FinanceEzPassFriendTag } from './finance-ezpass-friend-tag';
+import { FinanceEzPassMemberManagement } from './finance-ezpass-member-management';
 import { FinanceEzPassOverviewCard } from './finance-ezpass-overview-card';
 import { FinanceEzPassStatementFiles } from './finance-ezpass-statement-files';
 import { displayEzPassMerchantName } from './ezpass-locations';
@@ -62,6 +69,7 @@ export function FinanceEzPassScreen() {
   const [pickingMembers, setPickingMembers] = useState(false);
   const [requestedLedgerId, setRequestedLedgerId] = useState<string>();
   const [requestedMonthKey, setRequestedMonthKey] = useState<string>();
+  const [memberMutationId, setMemberMutationId] = useState<string>();
   const now = useMemo(() => new Date(), []);
 
   useEffect(() => {
@@ -91,9 +99,10 @@ export function FinanceEzPassScreen() {
     () =>
       ezPassFriendFilterOptions(
         summary.activities,
-        activeLedger?.members.filter((member) => member.role === 'member') ?? [],
+        activeLedger?.members.filter((member) => member.role !== 'owner') ?? [],
+        collaboration.userId,
       ),
-    [activeLedger?.members, summary.activities],
+    [activeLedger?.members, collaboration.userId, summary.activities],
   );
   const activeDriverFilter = driverOptions.some((option) => option.value === driverFilter)
     ? driverFilter
@@ -102,7 +111,11 @@ export function FinanceEzPassScreen() {
     () =>
       activeLedger?.role === 'member' && activeDriverFilter === 'mine' && collaboration.userId
         ? filterEzPassActivitiesByDriver(summary.activities, `friend:${collaboration.userId}`)
-        : filterEzPassActivitiesByDriver(summary.activities, activeDriverFilter),
+        : filterEzPassActivitiesByDriver(
+            summary.activities,
+            activeDriverFilter,
+            collaboration.userId,
+          ),
     [activeDriverFilter, activeLedger?.role, collaboration.userId, summary.activities],
   );
   const filteredSummary = useMemo(
@@ -169,33 +182,88 @@ export function FinanceEzPassScreen() {
   };
 
   const openTagging = (transaction: EzPassLedgerActivity) => {
-    if (activeLedger?.role !== 'member') {
+    const intent = ezPassTagPressIntent({
+      ledgerRole: activeLedger?.role,
+      currentUserId: collaboration.userId,
+      assignedUserId: transaction.ezPassFriendId,
+    });
+    if (intent.action === 'open-picker') {
       setTaggingTransactionId(transaction.id);
       return;
     }
-    if (!collaboration.userId) return;
-    if (transaction.ezPassFriendId && transaction.ezPassFriendId !== collaboration.userId) {
+    if (intent.action === 'blocked') {
       appPrompt.alert('Already Tagged', 'That activity belongs to another driver.');
       return;
     }
-    void updateSharedTag(
-      transaction,
-      transaction.ezPassFriendId === collaboration.userId ? undefined : collaboration.userId,
-    );
+    if (intent.action === 'update') void updateSharedTag(transaction, intent.userId);
   };
 
-  const clearFriendTag = () => {
-    if (!taggingTransaction) return;
+  const assignTagToCurrentHost = () => {
+    if (
+      !taggingTransaction ||
+      !activeLedger ||
+      activeLedger.role === 'member' ||
+      !collaboration.userId
+    ) return;
+    const owner = activeLedger.members.find(
+      (member) => member.userId === collaboration.userId,
+    );
     if (taggingTransaction.ezPassLedgerId) {
-      void updateSharedTag(taggingTransaction, undefined);
+      void updateSharedTag(taggingTransaction, collaboration.userId);
     } else {
       saveTransaction({
         ...taggingTransaction,
-        ezPassFriendId: undefined,
-        ezPassFriendName: undefined,
+        ezPassFriendId: collaboration.userId,
+        ezPassFriendName: owner?.displayName ?? 'Me',
       });
     }
     setTaggingTransactionId(undefined);
+  };
+
+  const changeMemberRole = async (member: EzPassSharedMember) => {
+    if (!activeLedger || activeLedger.role === 'member') return;
+    setMemberMutationId(member.userId);
+    try {
+      await setEzPassMemberRole({
+        ledgerId: activeLedger.id,
+        userId: member.userId,
+        role: member.role === 'cohost' ? 'member' : 'cohost',
+      });
+      await collaboration.refresh();
+    } catch (caught) {
+      appPrompt.alert(
+        'Access Not Changed',
+        caught instanceof Error ? caught.message : 'That access level could not be changed.',
+      );
+    } finally {
+      setMemberMutationId(undefined);
+    }
+  };
+
+  const removeMember = (member: EzPassSharedMember) => {
+    if (!activeLedger || activeLedger.role === 'member') return;
+    confirmDestructiveAction({
+      title: 'Remove From E-ZPass?',
+      message: `${member.displayName} will lose access to this E-ZPass ledger. Their transaction assignments will be cleared.`,
+      actionLabel: 'Remove',
+      confirmTestID: AgentUiIds.finance.ezpass.memberConfirmRemove(member.userId),
+      onConfirm: () => {
+        void (async () => {
+          setMemberMutationId(member.userId);
+          try {
+            await removeEzPassMember({ ledgerId: activeLedger.id, userId: member.userId });
+            await collaboration.refresh();
+          } catch (caught) {
+            appPrompt.alert(
+              'Member Not Removed',
+              caught instanceof Error ? caught.message : 'That member could not be removed.',
+            );
+          } finally {
+            setMemberMutationId(undefined);
+          }
+        })();
+      },
+    });
   };
 
   const activityRows = (rows: EzPassLedgerActivity[]) => (
@@ -372,24 +440,27 @@ export function FinanceEzPassScreen() {
           }
         }}
         multi={false}
-        includeIds={activeLedger?.members
-          .filter((member) => member.role === 'member')
-          .map((member) => member.userId)}
+        includeIds={ezPassAssignableFriendIds(activeLedger, collaboration.userId)}
         title="Who Used This Pass?"
         confirmLabel="Assign"
         headerContent={
-          taggingTransaction?.ezPassFriendId ? (
+          activeLedger &&
+          activeLedger.role !== 'member' &&
+          collaboration.userId &&
+          taggingTransaction?.ezPassFriendId !== collaboration.userId ? (
             <Button
               size="sm"
               variant="secondary"
-              onPress={clearFriendTag}
-              testID={AgentUiIds.finance.ezpass.friendClear}
+              onPress={assignTagToCurrentHost}
+              testID={AgentUiIds.finance.ezpass.assignSelf}
             >
-              Mark As Mine
+              Assign To Me
             </Button>
           ) : (
             <AppText variant="caption" color="secondary">
-              Choose a driver who has access to this E-ZPass ledger.
+              {taggingTransaction?.ezPassFriendId === collaboration.userId
+                ? 'This activity is assigned to you.'
+                : 'Choose a driver who has access to this E-ZPass ledger.'}
             </AppText>
           )
         }
@@ -401,8 +472,13 @@ export function FinanceEzPassScreen() {
         onConfirm={(friends) => {
           void (async () => {
             try {
-              await addEzPassFriendMembers(friends.map((friend) => friend.userId));
-              await collaboration.refresh({ syncOwned: true });
+              await addEzPassFriendMembers({
+                ledgerId: activeLedger?.id,
+                userIds: friends.map((friend) => friend.userId),
+              });
+              await collaboration.refresh({
+                syncOwned: !activeLedger || activeLedger.role === 'owner',
+              });
               appPrompt.alert(
                 'Friend Added',
                 'They can now open this E-ZPass ledger on their own device and tag themselves.',
@@ -420,9 +496,20 @@ export function FinanceEzPassScreen() {
         confirmLabel="Add"
         presentation="searchable-dropdown"
         headerContent={
-          <AppText variant="caption" color="secondary">
-            Added friends can see this E-ZPass activity on their device and may tag only themselves.
-          </AppText>
+          <View style={{ gap: gap.md }}>
+            <AppText variant="caption" color="secondary">
+              Members can tag themselves. Co-hosts can manage people and every transaction.
+            </AppText>
+            {activeLedger && activeLedger.role !== 'member' ? (
+              <FinanceEzPassMemberManagement
+                members={activeLedger.members}
+                currentUserId={collaboration.userId}
+                busyUserId={memberMutationId}
+                onChangeRole={(member) => void changeMemberRole(member)}
+                onRemove={removeMember}
+              />
+            ) : null}
+          </View>
         }
       />
     </>

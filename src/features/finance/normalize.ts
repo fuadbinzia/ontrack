@@ -10,6 +10,7 @@ import {
 import { createDefaultPersonalEntity } from './create';
 import { EZPASS_REPLENISHMENT_CATEGORY } from './categories';
 import { deduplicateEzPassTransactions } from './ezpass-deduplication';
+import { harmonizeFinanceMerchantCategories } from './finance-merchant-category';
 import type {
   FinanceAccount,
   FinanceBucket,
@@ -20,10 +21,17 @@ import type {
   FinanceEntity,
   FinanceHolding,
   FinanceRecurringBill,
+  FinanceSubscriptionCandidate,
+  FinanceSubscriptionDismissal,
   FinanceStateSnapshot,
   FinanceTaxYear,
   FinanceTransaction,
 } from './types';
+import type {
+  FinanceRewardBenefit,
+  FinanceRewardCardProfile,
+  FinanceRewardRule,
+} from './rewards-types';
 import {
   FINANCE_ACCOUNT_KINDS,
   FINANCE_ACCOUNT_LINK_STATUSES,
@@ -37,6 +45,8 @@ import {
   FINANCE_ENTITY_KINDS,
   FINANCE_TRANSACTION_SOURCES,
   FINANCE_TRANSACTION_ACTIVITIES,
+  FINANCE_SUBSCRIPTION_CANDIDATE_SOURCES,
+  FINANCE_SUBSCRIPTION_CANDIDATE_STATUSES,
 } from './types';
 
 export { createDefaultPersonalEntity };
@@ -133,9 +143,92 @@ export function normalizeAccount(raw: unknown): FinanceAccount | undefined {
     connectionId: asTrimmedString(o.connectionId) ?? legacyPlaidItemId,
     institutionName: asTrimmedString(o.institutionName) ?? legacyPlaidInstitutionName,
     externalAccountId: asTrimmedString(o.externalAccountId) ?? legacyPlaidAccountId,
+    rewardProfileId: asTrimmedString(o.rewardProfileId),
     plaidItemId: legacyPlaidItemId,
     plaidInstitutionName: legacyPlaidInstitutionName,
     plaidAccountId: legacyPlaidAccountId,
+    ...timestamps(o),
+  };
+}
+
+function normalizeRewardRule(raw: unknown): FinanceRewardRule | undefined {
+  const o = asRecord(raw);
+  const multiplier = o ? asFiniteNumber(o.multiplier) : undefined;
+  if (!o || multiplier === undefined || multiplier < 0) return undefined;
+  const capPeriod = asOneOf(o.capPeriod, ['month', 'quarter', 'year', 'lifetime'] as const);
+  const startsOn = asString(o.startsOn);
+  const endsOn = asString(o.endsOn);
+  return {
+    id: idOrNew(o.id),
+    name: asTrimmedString(o.name) || 'Bonus Category',
+    multiplier,
+    categoryIds: stringList(o.categoryIds),
+    sourceCategories: stringList(o.sourceCategories),
+    startsOn: startsOn && isDateKey(startsOn) ? startsOn : undefined,
+    endsOn: endsOn && isDateKey(endsOn) ? endsOn : undefined,
+    capAmount: Math.max(0, asFiniteNumber(o.capAmount) ?? 0) || undefined,
+    capPeriod,
+    capGroup: asTrimmedString(o.capGroup),
+    requiresActivation: o.requiresActivation === true,
+    active: o.active !== false,
+  };
+}
+
+function normalizeRewardBenefit(raw: unknown): FinanceRewardBenefit | undefined {
+  const o = asRecord(raw);
+  const faceValue = o ? asFiniteNumber(o.faceValue) : undefined;
+  if (!o || faceValue === undefined || faceValue < 0) return undefined;
+  return {
+    id: idOrNew(o.id),
+    name: asTrimmedString(o.name) || 'Card Benefit',
+    faceValue,
+    userValue: Math.max(0, asFiniteNumber(o.userValue) ?? 0),
+    enabled: o.enabled === true,
+  };
+}
+
+export function normalizeRewardProfile(raw: unknown): FinanceRewardCardProfile | undefined {
+  const o = asRecord(raw);
+  if (!o) return undefined;
+  const source = asRecord(o.source) ?? {};
+  const welcomeOffer = asRecord(o.welcomeOffer);
+  const pointValueCents = asFiniteNumber(o.pointValueCents);
+  const baseMultiplier = asFiniteNumber(o.baseMultiplier);
+  const annualFee = asFiniteNumber(o.annualFee);
+  if (pointValueCents === undefined || baseMultiplier === undefined || annualFee === undefined) {
+    return undefined;
+  }
+  const sourceKind = asOneOf(source.kind, ['manual', 'issuer', 'third_party'] as const) ?? 'manual';
+  return {
+    id: idOrNew(o.id),
+    issuer: asTrimmedString(o.issuer) || 'Unknown Issuer',
+    name: asTrimmedString(o.name) || 'Rewards Card',
+    network: asTrimmedString(o.network),
+    ownership: asOneOf(o.ownership, ['owned', 'market'] as const) ?? 'owned',
+    rewardCurrency: asTrimmedString(o.rewardCurrency) || 'points',
+    pointValueCents: Math.max(0, pointValueCents),
+    baseMultiplier: Math.max(0, baseMultiplier),
+    annualFee: Math.max(0, annualFee),
+    rules: mapDefined(o.rules, normalizeRewardRule),
+    benefits: mapDefined(o.benefits, normalizeRewardBenefit),
+    welcomeOffer: welcomeOffer ? {
+      description: asTrimmedString(welcomeOffer.description) || 'Welcome Offer',
+      rewardAmount: Math.max(0, asFiniteNumber(welcomeOffer.rewardAmount) ?? 0) || undefined,
+      spendRequirement:
+        Math.max(0, asFiniteNumber(welcomeOffer.spendRequirement) ?? 0) || undefined,
+      monthsToEarn: Math.max(0, asFiniteNumber(welcomeOffer.monthsToEarn) ?? 0) || undefined,
+    } : undefined,
+    source: {
+      url: asTrimmedString(source.url),
+      hostname: asTrimmedString(source.hostname),
+      kind: sourceKind,
+      retrievedAt: asTrimmedString(source.retrievedAt),
+      confidence: source.confidence == null
+        ? undefined
+        : Math.min(1, Math.max(0, asFiniteNumber(source.confidence) ?? 0)),
+      warnings: stringList(source.warnings),
+    },
+    editedFields: stringList(o.editedFields),
     ...timestamps(o),
   };
 }
@@ -217,6 +310,7 @@ export function normalizeTransaction(raw: unknown): FinanceTransaction | undefin
     activity,
     activityTime: activityTime(o.activityTime),
     externalId: asTrimmedString(o.externalId),
+    sourceCategory: asTrimmedString(o.sourceCategory),
     ezPassFriendId: source === 'ezpass' ? asTrimmedString(o.ezPassFriendId) : undefined,
     ezPassFriendName: source === 'ezpass' ? asTrimmedString(o.ezPassFriendName) : undefined,
     ...timestamps(o),
@@ -232,6 +326,13 @@ export function normalizeBill(raw: unknown): FinanceRecurringBill | undefined {
   if (amount === undefined || !nextDue || !isDateKey(nextDue) || !entityId) {
     return undefined;
   }
+  const link = asRecord(o.subscriptionLink);
+  const linkSource = link
+    ? asOneOf(link.source, FINANCE_SUBSCRIPTION_CANDIDATE_SOURCES)
+    : undefined;
+  const linkProvider = link ? asOneOf(link.provider, FINANCE_CONNECTION_PROVIDERS) : undefined;
+  const candidateId = link ? asTrimmedString(link.candidateId) : undefined;
+  const materialFingerprint = link ? asTrimmedString(link.materialFingerprint) : undefined;
   return {
     id: idOrNew(o.id),
     name: asTrimmedString(o.name) || 'Bill',
@@ -247,7 +348,75 @@ export function normalizeBill(raw: unknown): FinanceRecurringBill | undefined {
     notes: asTrimmedString(o.notes),
     active: typeof o.active === 'boolean' ? o.active : true,
     lastPaidAt: asTrimmedString(o.lastPaidAt),
+    subscriptionLink:
+      link && linkSource && linkProvider && candidateId && materialFingerprint
+        ? {
+            candidateId,
+            source: linkSource,
+            provider: linkProvider,
+            connectionId: asTrimmedString(link.connectionId),
+            externalStreamId: asTrimmedString(link.externalStreamId),
+            materialFingerprint,
+            lastSyncedAt: asTrimmedString(link.lastSyncedAt) || isoNow(),
+          }
+        : undefined,
     ...timestamps(o),
+  };
+}
+
+export function normalizeSubscriptionCandidate(
+  raw: unknown,
+): FinanceSubscriptionCandidate | undefined {
+  const o = asRecord(raw);
+  if (!o) return undefined;
+  const source = asOneOf(o.source, FINANCE_SUBSCRIPTION_CANDIDATE_SOURCES);
+  const status = asOneOf(o.status, FINANCE_SUBSCRIPTION_CANDIDATE_STATUSES);
+  const provider = asOneOf(o.provider, FINANCE_CONNECTION_PROVIDERS);
+  const cadence = asOneOf(o.cadence, FINANCE_BILL_CADENCES);
+  const amount = asFiniteNumber(o.amount);
+  const confidence = asFiniteNumber(o.confidence);
+  const nextDue = asString(o.nextDue);
+  const id = asTrimmedString(o.id);
+  const materialFingerprint = asTrimmedString(o.materialFingerprint);
+  if (
+    !source || !status || !provider || !cadence || cadence === 'once' ||
+    amount === undefined || amount <= 0 || confidence === undefined ||
+    !nextDue || !isDateKey(nextDue) || !id || !materialFingerprint
+  ) return undefined;
+  return {
+    id,
+    source,
+    status,
+    provider,
+    connectionId: asTrimmedString(o.connectionId),
+    externalStreamId: asTrimmedString(o.externalStreamId),
+    name: asTrimmedString(o.name) || 'Subscription',
+    amount,
+    currency: currencyCode(o.currency),
+    cadence,
+    nextDue,
+    accountId: asTrimmedString(o.accountId),
+    categoryHint: asTrimmedString(o.categoryHint),
+    suggestedKind: asOneOf(o.suggestedKind, FINANCE_BILL_KINDS) ?? 'subscription',
+    confidence: Math.max(0, Math.min(1, confidence)),
+    active: typeof o.active === 'boolean' ? o.active : true,
+    materialFingerprint,
+    detectedAt: asTrimmedString(o.detectedAt) || isoNow(),
+  };
+}
+
+export function normalizeSubscriptionDismissal(
+  raw: unknown,
+): FinanceSubscriptionDismissal | undefined {
+  const o = asRecord(raw);
+  if (!o) return undefined;
+  const candidateId = asTrimmedString(o.candidateId);
+  const materialFingerprint = asTrimmedString(o.materialFingerprint);
+  if (!candidateId || !materialFingerprint) return undefined;
+  return {
+    candidateId,
+    materialFingerprint,
+    dismissedAt: asTrimmedString(o.dismissedAt) || isoNow(),
   };
 }
 
@@ -326,15 +495,31 @@ export function normalizeFinanceSnapshot(raw: unknown): FinanceStateSnapshot {
     entities = [createDefaultPersonalEntity(), ...entities];
   }
   const referenceSavingsApr = asFiniteNumber(o.referenceSavingsApr);
+  const subscriptionDetectionStatus = asOneOf(
+    o.subscriptionDetectionStatus,
+    ['idle', 'pending', 'ready', 'fallback', 'error'] as const,
+  ) ?? 'idle';
   return {
     entities,
     accounts: mapDefined(o.accounts, normalizeAccount),
     holdings: mapDefined(o.holdings, normalizeHolding),
-    transactions: deduplicateEzPassTransactions(mapDefined(o.transactions, normalizeTransaction)),
+    transactions: harmonizeFinanceMerchantCategories(
+      deduplicateEzPassTransactions(mapDefined(o.transactions, normalizeTransaction)),
+    ),
     bills: mapDefined(o.bills, normalizeBill),
+    subscriptionCandidates: mapDefined(
+      o.subscriptionCandidates,
+      normalizeSubscriptionCandidate,
+    ),
+    dismissedSubscriptions: mapDefined(
+      o.dismissedSubscriptions,
+      normalizeSubscriptionDismissal,
+    ),
+    subscriptionDetectionStatus,
     buckets: mapDefined(o.buckets, normalizeBucket),
     taxYears: mapDefined(o.taxYears, normalizeTaxYear),
     documents: mapDefined(o.documents, normalizeDocument),
+    rewardProfiles: mapDefined(o.rewardProfiles, normalizeRewardProfile),
     creditScore: normalizeCreditScore(o.creditScore),
     customHandoffUrl: asTrimmedString(o.customHandoffUrl),
     referenceSavingsApr:
@@ -354,9 +539,13 @@ export function privateFinancePayload(state: FinanceStateSnapshot): FinanceState
     holdings,
     transactions,
     bills,
+    subscriptionCandidates,
+    dismissedSubscriptions,
+    subscriptionDetectionStatus,
     buckets,
     taxYears,
     documents,
+    rewardProfiles,
     creditScore,
     customHandoffUrl,
     referenceSavingsApr,
@@ -369,9 +558,13 @@ export function privateFinancePayload(state: FinanceStateSnapshot): FinanceState
     holdings,
     transactions,
     bills,
+    subscriptionCandidates,
+    dismissedSubscriptions,
+    subscriptionDetectionStatus,
     buckets,
     taxYears,
     documents,
+    rewardProfiles,
     creditScore,
     customHandoffUrl,
     referenceSavingsApr,

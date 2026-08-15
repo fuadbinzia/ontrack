@@ -154,6 +154,11 @@ describe("Finance E-ZPass area", () => {
       ezPassFriendName: "Sample Friend",
     };
     const activities = [mine, friend];
+    const ownerAssigned = {
+      ...transaction("owner-assigned", 4, "expense", "2026-08-12"),
+      ezPassFriendId: "owner-synthetic",
+      ezPassFriendName: "Owner Example",
+    };
 
     expect(ezPassFriendFilterOptions(activities)).toEqual([
       { value: "all", label: "All" },
@@ -171,6 +176,23 @@ describe("Finance E-ZPass area", () => {
     expect(
       filterEzPassActivitiesByDriver(activities, "mine").map((row) => row.id),
     ).toEqual(["mine"]);
+    expect(
+      filterEzPassActivitiesByDriver(
+        [...activities, ownerAssigned],
+        "mine",
+        "owner-synthetic",
+      ).map((row) => row.id),
+    ).toEqual(["mine", "owner-assigned"]);
+    expect(
+      ezPassFriendFilterOptions(
+        [...activities, ownerAssigned],
+        [],
+        "owner-synthetic",
+      ),
+    ).not.toContainEqual({
+      value: "friend:owner-synthetic",
+      label: "Owner",
+    });
     const friendOnly = filterEzPassActivitiesByDriver(
       activities,
       "friend:friend-synthetic",
@@ -227,7 +249,7 @@ describe("Finance E-ZPass area", () => {
     );
   });
 
-  it("keeps Finance and the transactions list routed through the dedicated E-ZPass area", () => {
+  it("keeps E-ZPass on the Finance hub without crowding the transactions header", () => {
     const root = path.resolve(__dirname, "../../../..");
     const financeHub = fs.readFileSync(
       path.join(root, "src/features/finance/finance-screen.tsx"),
@@ -268,6 +290,13 @@ describe("Finance E-ZPass area", () => {
       path.join(root, "src/features/finance/finance-ezpass-friend-tag.tsx"),
       "utf8",
     );
+    const memberManagement = fs.readFileSync(
+      path.join(
+        root,
+        "src/features/finance/finance-ezpass-member-management.tsx",
+      ),
+      "utf8",
+    );
     const statementFiles = fs.readFileSync(
       path.join(
         root,
@@ -281,7 +310,7 @@ describe("Finance E-ZPass area", () => {
     );
 
     expect(financeHub).toContain("router.push('/(tabs)/finance/ezpass')");
-    expect(transactions).toContain("router.push('/(tabs)/finance/ezpass')");
+    expect(transactions).not.toContain("router.push('/(tabs)/finance/ezpass')");
     expect(area).toMatch(
       /router\.push\(["']\/\(tabs\)\/finance\/ezpass-import["']\)/,
     );
@@ -335,7 +364,16 @@ describe("Finance E-ZPass area", () => {
     expect(area).toContain("activeLedger?.role === 'member'");
     expect(area).toContain("<FinanceEzPassFriendTag");
     expect(overview).toContain("AgentUiIds.finance.ezpass.driverFilter(value)");
-    expect(area).toContain("AgentUiIds.finance.ezpass.friendClear");
+    expect(area).toContain("AgentUiIds.finance.ezpass.assignSelf");
+    expect(area).toContain("Assign To Me");
+    expect(area).toContain("<FinanceEzPassMemberManagement");
+    expect(area).toContain("setEzPassMemberRole");
+    expect(area).toContain("removeEzPassMember");
+    expect(area).toContain("activeLedger.role !== 'member'");
+    expect(memberManagement).toContain("Make Co-Host");
+    expect(memberManagement).toContain("Make Member");
+    expect(memberManagement).toContain("AgentUiIds.finance.ezpass.memberRole(member.userId)");
+    expect(memberManagement).toContain("AgentUiIds.finance.ezpass.memberRemove(member.userId)");
     expect(area).toContain("groupEzPassActivitiesByDay(rows)");
     expect(area).toContain("AgentUiIds.finance.ezpass.day(day.date)");
     expect(area).toContain("formatWeekday(day.date)");
@@ -383,7 +421,8 @@ describe("Finance E-ZPass area", () => {
     expect(area).toContain("description={fieldTitleCase(");
     expect(area).toContain("displayEzPassMerchantName(transaction.merchant)");
     expect(importer).toContain("displayEzPassMerchantName(draft.merchant)");
-    expect(transactions).toContain("txn.source === 'ezpass'");
+    expect(transactions).toContain('generalFinanceTransactions(transactions)');
+    expect(transactions).not.toContain("txn.source === 'ezpass'");
     expect(friendTag).toContain("<ProfileAvatar");
     expect(friendTag).toContain("displayName={displayName!}");
     expect(friendTag).toContain("ezPassFirstName(transaction.ezPassFriendName)");

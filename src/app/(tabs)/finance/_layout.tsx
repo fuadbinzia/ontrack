@@ -21,9 +21,11 @@ export default function FinanceLayout() {
       <Stack.Screen name="ezpass" />
       <Stack.Screen name="ezpass-import" />
       <Stack.Screen name="bills" />
+      <Stack.Screen name="subscriptions" />
       <Stack.Screen name="buckets" />
       <Stack.Screen name="entities" />
       <Stack.Screen name="accounts" />
+      <Stack.Screen name="rewards" />
       <Stack.Screen name="tax" />
     </Stack>
   );

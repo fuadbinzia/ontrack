@@ -28,6 +28,7 @@ import {
 import { refreshEventFollows } from '@/services/events/sync';
 import { useSchedule } from '@/store/schedule';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { deviceLocale, formatDateKey } from '@/utils/date';
 
 type DiscoveryTab = 'sports' | 'concert' | 'following';
 
@@ -49,9 +50,9 @@ const SPORT_OPTIONS: { value: EventSport; label: string }[] = [
 ];
 
 function eventWhen(event: EventSearchResult) {
-  if (!event.startDateTime) return `${event.date} · Time TBA`;
+  if (!event.startDateTime) return `${formatDateKey(event.date, deviceLocale())} · Time TBA`;
   const date = new Date(event.startDateTime);
-  if (Number.isNaN(date.getTime())) return event.date;
+  if (Number.isNaN(date.getTime())) return formatDateKey(event.date, deviceLocale());
   return new Intl.DateTimeFormat(undefined, {
     weekday: 'short',
     month: 'short',

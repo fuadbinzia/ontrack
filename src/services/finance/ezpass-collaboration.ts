@@ -11,10 +11,12 @@ export class EzPassCollaborationError extends Error {
   }
 }
 
+export type EzPassMemberRole = 'owner' | 'cohost' | 'member';
+
 export interface EzPassSharedMember {
   userId: string;
   displayName: string;
-  role: 'owner' | 'member';
+  role: EzPassMemberRole;
 }
 
 export interface EzPassSharedTransaction {
@@ -33,7 +35,7 @@ export interface EzPassSharedTransaction {
 export interface EzPassSharedLedger {
   id: string;
   ownerUserId: string;
-  role: 'owner' | 'member';
+  role: EzPassMemberRole;
   members: EzPassSharedMember[];
   transactions: EzPassSharedTransaction[];
 }
@@ -77,16 +79,21 @@ export function parseEzPassSharedLedgers(value: unknown): EzPassSharedLedger[] {
     if (!row) return [];
     const id = textValue(row?.id);
     const ownerUserId = textValue(row?.ownerUserId);
-    const role = row?.role === 'owner' || row?.role === 'member' ? row.role : undefined;
+    const role = row?.role === 'owner' || row?.role === 'cohost' || row?.role === 'member'
+      ? row.role
+      : undefined;
     if (!id || !ownerUserId || !role) return [];
     const members = Array.isArray(row.members)
       ? row.members.flatMap((memberValue) => {
           const member = objectValue(memberValue);
           const userId = textValue(member?.userId);
           const displayName = textValue(member?.displayName);
-          const memberRole = member?.role === 'owner' || member?.role === 'member'
-            ? member.role
-            : undefined;
+          const memberRole =
+            member?.role === 'owner' ||
+            member?.role === 'cohost' ||
+            member?.role === 'member'
+              ? member.role
+              : undefined;
           return userId && displayName && memberRole
             ? [{ userId, displayName, role: memberRole } satisfies EzPassSharedMember]
             : [];
@@ -162,20 +169,48 @@ export async function syncOwnedEzPassTransactions(
   return data;
 }
 
-export async function addEzPassFriendMembers(userIds: string[]): Promise<void> {
+export async function addEzPassFriendMembers(input: {
+  ledgerId?: string;
+  userIds: string[];
+}): Promise<void> {
   const { client } = await authenticatedClient();
-  const { error } = await client.rpc('add_ezpass_friend_members', {
-    requested_user_ids: userIds,
-  });
+  const { error } = input.ledgerId
+    ? await client.rpc('add_ezpass_ledger_members', {
+        requested_ledger_id: input.ledgerId,
+        requested_user_ids: input.userIds,
+      })
+    : await client.rpc('add_ezpass_friend_members', {
+        requested_user_ids: input.userIds,
+      });
   if (error) {
     throw new EzPassCollaborationError(messageFrom(error, 'Friends could not be added to E-ZPass.'));
   }
 }
 
-export async function removeEzPassMember(userId: string): Promise<void> {
+export async function setEzPassMemberRole(input: {
+  ledgerId: string;
+  userId: string;
+  role: 'cohost' | 'member';
+}): Promise<void> {
   const { client } = await authenticatedClient();
-  const { error } = await client.rpc('remove_ezpass_member', {
-    requested_user_id: userId,
+  const { error } = await client.rpc('set_ezpass_member_role', {
+    requested_ledger_id: input.ledgerId,
+    requested_user_id: input.userId,
+    requested_role: input.role,
+  });
+  if (error) {
+    throw new EzPassCollaborationError(messageFrom(error, 'That access level could not be changed.'));
+  }
+}
+
+export async function removeEzPassMember(input: {
+  ledgerId: string;
+  userId: string;
+}): Promise<void> {
+  const { client } = await authenticatedClient();
+  const { error } = await client.rpc('remove_ezpass_ledger_member', {
+    requested_ledger_id: input.ledgerId,
+    requested_user_id: input.userId,
   });
   if (error) {
     throw new EzPassCollaborationError(messageFrom(error, 'That member could not be removed.'));

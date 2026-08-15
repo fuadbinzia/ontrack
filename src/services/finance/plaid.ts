@@ -19,6 +19,7 @@ export class FinanceServiceError extends Error {
 
 export type PlaidLinkPurpose = 'transactions' | 'investments';
 export type PlaidSyncStatus = 'ready' | 'pending' | 'error';
+export type PlaidRecurringStatus = 'ready' | 'pending' | 'unavailable' | 'error';
 
 export type PlaidLinkTokenResult =
   | {
@@ -61,6 +62,18 @@ export type PlaidLinkedTransaction = {
   categoryHint?: string;
 };
 
+export type PlaidRecurringOutflow = {
+  streamId: string;
+  accountId: string;
+  name: string;
+  amount: number;
+  currency?: string;
+  frequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+  predictedNextDate: string;
+  categoryHint?: string;
+  active: boolean;
+};
+
 type PlaidDataResult = {
   itemId?: string;
   institutionId?: string;
@@ -69,6 +82,8 @@ type PlaidDataResult = {
   accounts: PlaidLinkedAccount[];
   holdings: PlaidLinkedHolding[];
   transactions: PlaidLinkedTransaction[];
+  recurringOutflows?: PlaidRecurringOutflow[];
+  recurringStatus?: PlaidRecurringStatus;
   removedExternalIds: string[];
   syncStatus: PlaidSyncStatus;
   syncError?: string;
@@ -90,6 +105,8 @@ type PlaidApiData = {
   accounts?: PlaidLinkedAccount[];
   holdings?: PlaidLinkedHolding[];
   transactions?: PlaidLinkedTransaction[];
+  recurring_outflows?: PlaidRecurringOutflow[];
+  recurring_status?: PlaidRecurringStatus;
   removed_external_ids?: string[];
   sync_status?: PlaidSyncStatus;
   sync_error?: string;
@@ -143,6 +160,8 @@ function normalizeResult(data: PlaidApiData): PlaidDataResult {
     accounts: normalizeAccounts(data.accounts),
     holdings: data.holdings ?? [],
     transactions: data.transactions ?? [],
+    recurringOutflows: data.recurring_outflows ?? [],
+    recurringStatus: data.recurring_status ?? 'unavailable',
     removedExternalIds: data.removed_external_ids ?? [],
     syncStatus:
       data.sync_status === 'pending' || data.sync_status === 'error'

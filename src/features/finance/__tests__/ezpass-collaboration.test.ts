@@ -2,7 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import {
+  ezPassAssignableFriendIds,
   ezPassLedgerLabel,
+  ezPassTagPressIntent,
   sharedEzPassActivities,
 } from '../ezpass-collaboration-model';
 import { parseEzPassSharedLedgers } from '@/services/finance/ezpass-collaboration';
@@ -30,6 +32,83 @@ const snapshot = [{
 }];
 
 describe('E-ZPass collaboration boundary', () => {
+  it('shows no assignable friends before anyone is added to the E-ZPass ledger', () => {
+    expect(ezPassAssignableFriendIds(undefined)).toEqual([]);
+  });
+
+  it('allows assignment only to friends added as E-ZPass members', () => {
+    const [ledger] = parseEzPassSharedLedgers(snapshot);
+    expect(ezPassAssignableFriendIds(ledger)).toEqual(['member-synthetic']);
+  });
+
+  it('keeps a member out of their own assignment-picker roster', () => {
+    const [ledger] = parseEzPassSharedLedgers(snapshot);
+    const roster = {
+      ...ledger,
+      members: [
+        ...ledger.members,
+        {
+          userId: 'other-member-synthetic',
+          displayName: 'Taylor Morgan',
+          role: 'member' as const,
+        },
+      ],
+    };
+    expect(ezPassAssignableFriendIds(roster, 'member-synthetic')).toEqual([
+      'other-member-synthetic',
+    ]);
+  });
+
+  it('keeps an established empty E-ZPass roster empty', () => {
+    const [ledger] = parseEzPassSharedLedgers([{ ...snapshot[0], members: [] }]);
+    expect(ezPassAssignableFriendIds(ledger)).toEqual([]);
+  });
+
+  it('lets an added member tag and untag only themselves', () => {
+    expect(ezPassTagPressIntent({
+      ledgerRole: 'member',
+      currentUserId: 'member-synthetic',
+      assignedUserId: undefined,
+    })).toEqual({ action: 'update', userId: 'member-synthetic' });
+    expect(ezPassTagPressIntent({
+      ledgerRole: 'member',
+      currentUserId: 'member-synthetic',
+      assignedUserId: 'member-synthetic',
+    })).toEqual({ action: 'update', userId: undefined });
+  });
+
+  it('prevents a member from replacing another driver while owners use the picker', () => {
+    expect(ezPassTagPressIntent({
+      ledgerRole: 'member',
+      currentUserId: 'member-synthetic',
+      assignedUserId: 'other-member-synthetic',
+    })).toEqual({ action: 'blocked' });
+    expect(ezPassTagPressIntent({
+      ledgerRole: 'owner',
+      currentUserId: 'owner-synthetic',
+      assignedUserId: undefined,
+    })).toEqual({ action: 'open-picker' });
+    expect(ezPassTagPressIntent({
+      ledgerRole: 'cohost',
+      currentUserId: 'member-synthetic',
+      assignedUserId: 'other-member-synthetic',
+    })).toEqual({ action: 'open-picker' });
+  });
+
+  it('parses co-host access for both the viewer and roster', () => {
+    const [ledger] = parseEzPassSharedLedgers([{
+      ...snapshot[0],
+      role: 'cohost',
+      members: snapshot[0].members.map((member) =>
+        member.userId === 'member-synthetic' ? { ...member, role: 'cohost' } : member),
+    }]);
+    expect(ledger.role).toBe('cohost');
+    expect(ledger.members).toContainEqual(expect.objectContaining({
+      userId: 'member-synthetic',
+      role: 'cohost',
+    }));
+  });
+
   it('parses only normalized shared ledger fields', () => {
     const [ledger] = parseEzPassSharedLedgers(snapshot);
     expect(ledger.members).toHaveLength(2);
@@ -92,5 +171,40 @@ describe('E-ZPass collaboration boundary', () => {
     expect(migration).toContain('grant select on public.ezpass_shared_transactions to authenticated');
     expect(migration).not.toContain('receipt_uri');
     expect(migration).not.toContain('account_id');
+  });
+
+  it('keeps E-ZPass ledger variables distinct from SQL column names', () => {
+    const migration = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        '../../../../supabase/migrations/202608140004_fix_ezpass_ledger_id_ambiguity.sql',
+      ),
+      'utf8',
+    );
+    expect(migration).toContain('target_ledger_id uuid;');
+    expect(migration).toContain('values (target_ledger_id, actor');
+    expect(migration).toContain('values (target_ledger_id, friend_id');
+    expect(migration).toContain('activity_row.ledger_id = target_ledger_id');
+    expect(migration).not.toMatch(/\n\s*ledger_id uuid;/);
+  });
+
+  it('grants co-host administration while protecting the original owner', () => {
+    const migration = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        '../../../../supabase/migrations/202608140005_ezpass_cohosts.sql',
+      ),
+      'utf8',
+    );
+    expect(migration).toContain("check (role in ('owner', 'cohost', 'member'))");
+    expect(migration).toContain("member.role in ('owner', 'cohost')");
+    expect(migration).toContain("if actor_role in ('owner', 'cohost') then");
+    expect(migration).toContain('public.add_ezpass_ledger_members');
+    expect(migration).toContain('public.set_ezpass_member_role');
+    expect(migration).toContain('public.remove_ezpass_ledger_member');
+    expect(migration).toContain("raise exception 'The E-ZPass owner cannot be changed.'");
+    expect(migration).toContain("raise exception 'The E-ZPass owner cannot be removed.'");
+    expect(migration).toContain("raise exception 'Hosts cannot change their own access.'");
+    expect(migration).toContain("raise exception 'Hosts cannot remove themselves.'");
   });
 });

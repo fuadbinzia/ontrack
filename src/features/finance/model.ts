@@ -37,6 +37,19 @@ export function transactionsInMonth(
   return transactions.filter((t) => t.date.startsWith(prefix));
 }
 
+/**
+ * Transactions backed by the user's actual accounts/cards.
+ *
+ * Imported E-ZPass activity is a separate toll subledger. Keeping it out of the
+ * general ledger prevents individual tolls from appearing alongside (and being
+ * double-counted with) the replenishment charge fetched from a linked card.
+ */
+export function generalFinanceTransactions(
+  transactions: FinanceTransaction[],
+): FinanceTransaction[] {
+  return transactions.filter((transaction) => transaction.source !== 'ezpass');
+}
+
 export function isSpendingTransaction(transaction: FinanceTransaction): boolean {
   return (
     transaction.activity === undefined ||

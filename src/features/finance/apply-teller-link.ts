@@ -3,6 +3,8 @@ import type { TellerSyncResult } from '@/services/finance/teller';
 import { useFinance } from '@/store/finance';
 import { todayKey } from '@/utils/date';
 
+import { refreshLocalSubscriptionCandidates } from './refresh-subscription-candidates';
+
 type SuccessfulTellerSync = Extract<TellerSyncResult, { ok: true }>;
 
 export function applyTellerSyncResult(
@@ -68,6 +70,7 @@ export function applyTellerSyncResult(
       accountId,
       source: 'teller',
       externalId: row.externalId,
+      sourceCategory: row.categoryHint,
     })];
   });
   state.reconcileLinkedTransactions(
@@ -76,4 +79,6 @@ export function applyTellerSyncResult(
     transactions,
     result.refreshedFrom,
   );
+  refreshLocalSubscriptionCandidates();
+  useFinance.getState().setSubscriptionDetectionStatus('fallback');
 }

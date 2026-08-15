@@ -46,6 +46,9 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('health-settings');
     expect(listAgentUiFlowNames()).toContain('vehicles-new');
     expect(listAgentUiFlowNames()).toContain('workouts');
+    expect(listAgentUiFlowNames()).toContain('finance-transaction-categorize');
+    expect(listAgentUiFlowNames()).toContain('finance-transaction-filter-sort');
+    expect(listAgentUiFlowNames()).toContain('finance-rewards');
     const steps = resolveAgentUiFlow('travel-demo-add-flight');
     expect(steps?.[0]).toMatchObject({
       op: 'dismiss',
@@ -88,6 +91,36 @@ describe('agent-ui flows', () => {
         (s) => s.op === 'wait' && s.prefix === 'ontrack.workouts.',
       ),
     ).toBe(true);
+    expect(resolveAgentUiFlow('finance-transaction-categorize')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'seed', to: 'finance-demo' }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.finance.transactions.category.sheet',
+        }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('finance-transaction-filter-sort')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'seed', to: 'finance-demo' }),
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.finance.transactions.filter.category.other',
+        }),
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.finance.transactions.sort.amount_high',
+        }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('finance-rewards')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'goto', to: 'finance/rewards' }),
+        expect.objectContaining({ op: 'wait', id: 'ontrack.finance.rewards.section.hero' }),
+        expect.objectContaining({ op: 'tap', id: 'ontrack.finance.rewards.addManual' }),
+        expect.objectContaining({ op: 'wait', id: 'ontrack.finance.rewards.profile.sheet' }),
+      ]),
+    );
     expect(resolveAgentUiFlow('missing')).toBeNull();
   });
 

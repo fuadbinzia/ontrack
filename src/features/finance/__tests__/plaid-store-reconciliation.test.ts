@@ -142,8 +142,40 @@ describe('Plaid local reconciliation', () => {
         externalId: 'modified-1',
         amount: 15,
         merchant: 'Updated merchant',
+        categoryId: 'dining',
       }),
     ]);
+  });
+
+  it('inherits a known category for new transactions from the same merchant', () => {
+    useFinance.getState().saveTransaction(createFinanceTransaction({
+      amount: 25,
+      date: '2026-08-10',
+      merchant: 'Passny',
+      categoryId: 'ezpass_replenishment',
+      entityId: 'personal',
+      source: 'plaid',
+      externalId: 'passny-old',
+    }));
+
+    useFinance.getState().reconcilePlaidTransactions([
+      createFinanceTransaction({
+        amount: 25,
+        date: '2026-08-13',
+        merchant: 'PASS-NY',
+        categoryId: 'other',
+        entityId: 'personal',
+        source: 'plaid',
+        externalId: 'passny-new',
+      }),
+    ], []);
+
+    expect(useFinance.getState().transactions).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        externalId: 'passny-new',
+        categoryId: 'ezpass_replenishment',
+      }),
+    ]));
   });
 
   it('removes every local row owned by a disconnected Item', () => {

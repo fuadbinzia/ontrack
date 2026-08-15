@@ -1,6 +1,7 @@
 import {
   loadPlaidAccounts,
   loadPlaidHoldings,
+  loadPlaidRecurringResult,
   syncPlaidTransactionChanges,
 } from '@/services/finance/plaid-data';
 import {
@@ -36,6 +37,8 @@ export async function POST(request: Request) {
         accounts: result.accounts,
         holdings: result.holdings,
         transactions: [],
+        recurring_outflows: [],
+        recurring_status: 'unavailable',
         removed_external_ids: [],
         sync_status: 'ready',
       };
@@ -45,12 +48,17 @@ export async function POST(request: Request) {
       syncPlaidTransactionChanges(item.accessToken, item.cursor),
     ]);
     await updatePlaidCursor(userId, item.itemId, changes.cursor);
+    const recurring = changes.pending
+      ? { outflows: [], status: 'pending' as const }
+      : await loadPlaidRecurringResult(item.accessToken);
     return {
       configured: true,
       purpose: item.purpose,
       accounts,
       holdings: [],
       transactions: changes.transactions,
+      recurring_outflows: recurring.outflows,
+      recurring_status: recurring.status,
       removed_external_ids: changes.removedExternalIds,
       sync_status: changes.pending ? 'pending' : 'ready',
     };

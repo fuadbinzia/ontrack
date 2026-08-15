@@ -15,4 +15,10 @@ describe('Overview summary row layout contract', () => {
     expect(source).toMatch(/justifyContent: ["']center["']/);
     expect(source).not.toContain('styles.rowTitleLine');
   });
+
+  it('uses each section tone on its icon and label', () => {
+    expect(source).toContain("}[row.tone ?? 'accent']");
+    expect(source).toContain('color={toneColor}');
+    expect(source).toContain('style={[styles.label, { color: toneColor }]}');
+  });
 });

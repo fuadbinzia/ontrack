@@ -15,6 +15,7 @@ const mockDeletePlaidItemRecord = jest.fn();
 const mockLoadPlaidAccounts = jest.fn();
 const mockLoadPlaidHoldings = jest.fn();
 const mockSyncPlaidTransactionChanges = jest.fn();
+const mockLoadPlaidRecurringResult = jest.fn();
 
 jest.mock('../plaid-server', () => {
   class PlaidServerError extends Error {
@@ -52,6 +53,7 @@ jest.mock('../plaid-data', () => ({
   loadPlaidAccounts: (...args: unknown[]) => mockLoadPlaidAccounts(...args),
   loadPlaidHoldings: (...args: unknown[]) => mockLoadPlaidHoldings(...args),
   syncPlaidTransactionChanges: (...args: unknown[]) => mockSyncPlaidTransactionChanges(...args),
+  loadPlaidRecurringResult: (...args: unknown[]) => mockLoadPlaidRecurringResult(...args),
 }));
 
 function request(path: string, body: unknown): Request {
@@ -70,6 +72,7 @@ describe('Plaid API routes', () => {
     mockSavePlaidItem.mockResolvedValue(undefined);
     mockUpdatePlaidCursor.mockResolvedValue(undefined);
     mockDeletePlaidItemRecord.mockResolvedValue(undefined);
+    mockLoadPlaidRecurringResult.mockResolvedValue({ outflows: [], status: 'unavailable' });
   });
 
   it('binds a transaction Link session to the authenticated user', async () => {
@@ -87,6 +90,7 @@ describe('Plaid API routes', () => {
     expect(mockPlaidRequest).toHaveBeenCalledWith('/link/token/create', expect.objectContaining({
       user: { client_user_id: 'user-1' },
       products: ['transactions'],
+      transactions: { days_requested: 180 },
       hosted_link: expect.objectContaining({
         completion_redirect_uri: 'ontrack://plaid/complete',
         is_mobile_app: true,
@@ -189,6 +193,7 @@ describe('Plaid API routes', () => {
       item_id: 'item-1',
       institution_name: 'Example Bank',
       sync_status: 'ready',
+      recurring_status: 'unavailable',
     });
   });
 
@@ -255,6 +260,7 @@ describe('Plaid API routes', () => {
       'cursor-before',
     );
     expect(mockUpdatePlaidCursor).toHaveBeenCalledWith('user-1', 'item-1', 'cursor-after');
+    expect(mockLoadPlaidRecurringResult).toHaveBeenCalledWith('server-access-token');
     expect(result).toMatchObject({
       purpose: 'transactions',
       sync_status: 'ready',

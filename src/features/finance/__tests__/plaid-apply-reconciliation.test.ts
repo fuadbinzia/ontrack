@@ -184,4 +184,60 @@ describe('applying Plaid server results', () => {
       expect.objectContaining({ id: unrelated.id, source: 'manual' }),
     ]);
   });
+
+  it('stores Plaid subscriptions and obvious bills together for review', () => {
+    const entityId = useFinance.getState().entities[0]!.id;
+
+    applyPlaidExchangeResult({
+      ok: true,
+      itemId: 'item-subscriptions',
+      institutionName: 'Example Bank',
+      purpose: 'transactions',
+      accounts: [{ accountId: 'card-1', name: 'Card', kind: 'card', currency: 'USD' }],
+      holdings: [],
+      transactions: [],
+      recurringOutflows: [
+        {
+          streamId: 'stream-service',
+          accountId: 'card-1',
+          name: 'Stream Box',
+          amount: 12,
+          currency: 'USD',
+          frequency: 'monthly',
+          predictedNextDate: '2026-09-01',
+          categoryHint: 'ENTERTAINMENT_SUBSCRIPTION',
+          active: true,
+        },
+        {
+          streamId: 'stream-rent',
+          accountId: 'card-1',
+          name: 'Rent Payment',
+          amount: 1500,
+          currency: 'USD',
+          frequency: 'monthly',
+          predictedNextDate: '2026-09-01',
+          categoryHint: 'RENT_AND_UTILITIES',
+          active: true,
+        },
+      ],
+      recurringStatus: 'ready',
+      removedExternalIds: [],
+      syncStatus: 'ready',
+    }, entityId, 'USD');
+
+    expect(useFinance.getState().subscriptionCandidates).toEqual([
+      expect.objectContaining({
+        source: 'plaid',
+        name: 'Stream Box',
+        amount: 12,
+        suggestedKind: 'subscription',
+      }),
+      expect.objectContaining({
+        source: 'plaid',
+        name: 'Rent Payment',
+        suggestedKind: 'bill',
+      }),
+    ]);
+    expect(useFinance.getState().subscriptionDetectionStatus).toBe('ready');
+  });
 });

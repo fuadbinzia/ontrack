@@ -16,6 +16,7 @@ export type OverviewRow = {
   headline: string;
   detail: string;
   href: Href;
+  tone?: 'accent' | 'success' | 'warning' | 'danger' | 'secondary';
   beforeNavigate?: () => void;
 };
 
@@ -29,6 +30,13 @@ export function OverviewSummaryRow({
   const router = useRouter();
   const theme = useTheme();
   const { spacing, s, layout } = useResponsive();
+  const toneColor = {
+    accent: theme.accentPrimary,
+    success: theme.success,
+    warning: theme.warning,
+    danger: theme.danger,
+    secondary: theme.textSecondary,
+  }[row.tone ?? 'accent'];
   const open = () => {
     row.beforeNavigate?.();
     router.navigate(row.href);
@@ -38,7 +46,8 @@ export function OverviewSummaryRow({
     <AgentTestId
       testID={AgentUiIds.overview.row(row.routeName)}
       label={`Open ${row.label}`}
-      onPress={open}>
+      onPress={open}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${row.label}. ${row.headline}. ${row.detail}`}
@@ -53,12 +62,17 @@ export function OverviewSummaryRow({
             borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
             borderBottomColor: theme.separator,
           },
-        ]}>
-        <GlassIconWell size={s(42)} borderRadius={radii.md}>
-          <Symbol name={row.icon} size={s(19)} color={theme.accentPrimary} />
+        ]}
+      >
+        <GlassIconWell size={s(44)} borderRadius={radii.md}>
+          <Symbol name={row.icon} size={s(19)} color={toneColor} />
         </GlassIconWell>
         <View style={[styles.copy, { gap: spacing.xxs }]}>
-          <AppText variant="overline" color="accent" fit style={styles.label}>
+          <AppText
+            variant="overline"
+            fit
+            style={[styles.label, { color: toneColor }]}
+          >
             {row.label}
           </AppText>
           <AppText variant="subheading" fit style={styles.headline}>

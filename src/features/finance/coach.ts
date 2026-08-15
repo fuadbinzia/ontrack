@@ -2,6 +2,7 @@ import {
   bucketProgress,
   bucketSavedAmount,
   categoryBreakdown,
+  generalFinanceTransactions,
   highestAprAccounts,
   monthlySpendSeries,
   sumAmounts,
@@ -40,9 +41,10 @@ export function buildFinanceCoachInsights(input: {
   const now = input.now ?? new Date();
   const savingsApr = referenceSavingsAprPercent(input.referenceSavingsApr);
   const insights: FinanceCoachInsight[] = [];
-  const monthTx = transactionsInMonth(input.transactions, now.getFullYear(), now.getMonth());
+  const ledgerTransactions = generalFinanceTransactions(input.transactions);
+  const monthTx = transactionsInMonth(ledgerTransactions, now.getFullYear(), now.getMonth());
   const monthTotal = sumAmounts(monthTx);
-  const series = monthlySpendSeries(input.transactions, 3, now);
+  const series = monthlySpendSeries(ledgerTransactions, 3, now);
   const prev = series.length >= 2 ? series[series.length - 2]?.amount ?? 0 : 0;
 
   if (prev > 0 && monthTotal > prev * 1.15) {

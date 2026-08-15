@@ -7,6 +7,7 @@ import {
     AGENT_UI_DEMO_FLIGHT_ID,
     AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
     AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
+    AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
     AGENT_UI_DEMO_GROCERY_LIST_ID,
     AGENT_UI_DEMO_GROCERY_RECIPE_ID,
     AGENT_UI_DEMO_HEALTH_FACTOR_ID,
@@ -52,6 +53,7 @@ const mockSaveEvent = jest.fn((payload: { id?: string }) => ({
   id: payload.id ?? 'activity-random',
 }));
 const mockReplaceVisionBoardData = jest.fn();
+const mockSaveFinanceTransaction = jest.fn();
 
 jest.mock('@/features/account/dev-mode-controller', () => ({
   ensureDevModeSandboxSync: jest.fn(),
@@ -100,6 +102,20 @@ jest.mock('@/store/vehicles', () => ({
   useVehicles: {
     getState: () => ({
       saveVehicle: mockSaveVehicle,
+    }),
+  },
+}));
+
+jest.mock('@/store/finance', () => ({
+  createFinanceTransaction: (input: Record<string, unknown>) => ({
+    ...input,
+    createdAt: '2026-08-05T00:00:00.000Z',
+    updatedAt: '2026-08-05T00:00:00.000Z',
+  }),
+  useFinance: {
+    getState: () => ({
+      entities: [{ id: 'finance-agent-ui-personal' }],
+      saveTransaction: mockSaveFinanceTransaction,
     }),
   },
 }));
@@ -191,6 +207,7 @@ describe('agent-ui fixtures', () => {
     mockPlantsSetState.mockClear();
     mockSaveEvent.mockClear();
     mockReplaceVisionBoardData.mockClear();
+    mockSaveFinanceTransaction.mockClear();
   });
 
   it('builds a stable demo trip', () => {
@@ -358,6 +375,7 @@ describe('agent-ui fixtures', () => {
     expect(normalizeFixtureName('grocery-demo')).toBe('grocery-demo');
     expect(normalizeFixtureName('health')).toBe('health-demo');
     expect(normalizeFixtureName('vehicle-demo')).toBe('vehicle-demo');
+    expect(normalizeFixtureName('finance-transaction')).toBe('finance-demo');
     expect(AGENT_UI_FIXTURE_NAMES).toEqual(
       expect.arrayContaining([
         'travel-demo',
@@ -366,6 +384,7 @@ describe('agent-ui fixtures', () => {
         'grocery-demo',
         'health-demo',
         'vehicle-demo',
+        'finance-demo',
       ]),
     );
 
@@ -375,6 +394,18 @@ describe('agent-ui fixtures', () => {
       primaryId: AGENT_UI_DEMO_CHECKLIST_LIST_ID,
     });
     expect(mockTodosSetState).toHaveBeenCalled();
+
+    expect(seedAgentUiFixture('finance-demo')).toEqual({
+      fixture: 'finance-demo',
+      primaryId: AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
+      itemId: AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
+    });
+    expect(mockSaveFinanceTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
+        source: 'plaid',
+      }),
+    );
 
     expect(seedAgentUiFixture('grocery-demo')).toMatchObject({
       fixture: 'grocery-demo',

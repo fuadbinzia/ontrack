@@ -414,11 +414,11 @@ describe('ChecklistTaskDetailsSheet', () => {
       </SafeAreaProvider>,
     );
 
-    expect(screen.queryByLabelText('New category name')).toBeNull();
+    expect(screen.queryByLabelText('Search or create category')).toBeNull();
     fireEvent.press(screen.getByLabelText('Category'));
-    fireEvent.changeText(screen.getByLabelText('New category name'), 'Pet');
+    fireEvent.changeText(screen.getByLabelText('Search or create category'), 'Pet');
     expect(screen.queryByText('Add')).toBeNull();
-    fireEvent.press(screen.getByLabelText(/Create category/i));
+    fireEvent.press(screen.getByLabelText(/^Create category$/i));
 
     expect(onCreateCategory).toHaveBeenCalledWith('Pet');
     expect(onSetCategory).toHaveBeenCalledWith(createdCategory.id);

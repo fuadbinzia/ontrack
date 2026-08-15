@@ -532,7 +532,7 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.checklists.itemDetails.assigneeOption.<id>` | Choose assignee (`anyone` or user id) |
 | `ontrack.checklists.itemDetails.category` | Open category dropdown              |
 | `ontrack.checklists.itemDetails.categoryOption.<id>` | Choose category (`uncategorized` or category id) |
-| `ontrack.checklists.itemDetails.newCategoryName` | New category name in item details |
+| `ontrack.checklists.itemDetails.newCategoryName` | Search or create a category in item details |
 | `ontrack.checklists.itemDetails.createCategory` | Create and assign a category      |
 
 Demo fixture: `list-agent-ui-demo-checklist` / `task-agent-ui-demo-plan` via `./scripts/agent-ui-seed.sh checklist-demo` or flow `checklist-demo`.
@@ -1122,31 +1122,50 @@ Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scr
 
 ## Finance
 
-Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flows `finance`, `finance-ezpass`, `finance-ezpass-import`, `finance-ezpass-add-friend`, `finance-ezpass-saved-statements`
+Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flows `finance`, `finance-transactions`, `finance-transaction-filter-sort`, `finance-transaction-categorize`, `finance-rewards`, `finance-subscriptions` (combined recurring expenses), `finance-ezpass`, `finance-ezpass-import`, `finance-ezpass-add-friend`, `finance-ezpass-saved-statements`
 
 | testID                            | Control                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.tabs.finance` | Open Finance tab |
 | `ontrack.finance.hub` | Finance hub |
 | `ontrack.finance.back` | Eyebrow back on Finance nested screens |
-| `ontrack.finance.hub.addExpense` | Add expense |
-| `ontrack.finance.hub.transactions` / `.bills` / `.buckets` / `.entities` / `.accounts` / `.tax` | Hub navigation |
+| `ontrack.finance.hub.transactions` / `.bills` / `.buckets` / `.entities` / `.accounts` / `.rewards` / `.tax` | Hub navigation |
 | `ontrack.finance.hub.billPaid.<id>` | Mark bill paid from hub |
 | `ontrack.finance.coach.<id>` | Money coach insight card |
 | `ontrack.finance.expense.*` | Expense form (`form` + fields / save / cancel) |
 | `ontrack.finance.transactions.*` | Transactions list |
-| `ontrack.finance.transactions.importEzPass`                                                                  | Open E-ZPass activity import                                                                              |
+| `ontrack.finance.transactions.section.activity` | Activity ledger heading and visible result count |
+| `ontrack.finance.transactions.date.<YYYY-MM-DD>` | Date-group heading in the transaction ledger |
+| `ontrack.finance.transactions.search` | Search transactions by merchant, category, date, source, activity, or amount |
+| `ontrack.finance.transactions.filter.categories` / `.filter.category.<categoryId>` | Filter the transaction list by one or more categories |
+| `ontrack.finance.transactions.sort` / `.sort.<sortId>` | Sort by date, amount, merchant, or category |
+| `ontrack.finance.transactions.row.<id>` | Open transaction categorization sheet |
+| `ontrack.finance.transactions.category.sheet` / `.close` / `.backdrop` / `.selector` / `.<categoryId>` / `.newName` / `.create` / `.save` | Search, choose, create, and save a transaction category |
 | `ontrack.finance.hub.ezpass`                                                                                 | Open the E-ZPass area from Finance                                                                        |
 | `ontrack.finance.ezpass.home` / `.summary` / `.monthChart` / `.monthDetail` / `.month.<YYYY-MM>` / `.share` / `.upload` | E-ZPass dashboard, road-spend summary, tappable six-month graph, selected-month totals, share action, and upload action |
 | `ontrack.finance.ezpass.statements` / `.statements.toggle` / `.statement.<id>`                              | Bottom collapsible uploaded-statement list and reopenable saved source file                               |
 | `ontrack.finance.ezpass.roadActivity` / `.replenishments` / `.day.<YYYY-MM-DD>` / `.activity.<id>`           | Combined toll/refund activity, separate replenishments, newest-first day groups, and imported activity    |
-| `ontrack.finance.ezpass.driver.<all-or-mine-or-friend:id>` / `.friendTag.<transactionId>` / `.friendClear`  | Filter E-ZPass activity by driver, assign/change a shared driver, or mark the activity as mine             |
+| `ontrack.finance.ezpass.driver.<all-or-mine-or-friend:id>` / `.friendTag.<transactionId>` / `.assignSelf`  | Filter E-ZPass activity by driver, assign/change an added friend, or explicitly assign the owner           |
+| `ontrack.finance.ezpass.memberManagement` / `.memberRole.<userId>` / `.memberRemove.<userId>` / `.memberConfirmRemove.<userId>` | Manage E-ZPass members, co-host access, and removal                                                         |
 | `ontrack.finance.ezpass.ledger.<id>`                                                                         | Owned/shared ledger selection                                                                               |
 | `ontrack.finance.ezpass.officialSite` / `.file` / `.screenshots` / `.ai` / `.row.<id>` / `.confirm`          | Official E-ZPass NY handoff, source picker, review rows, optional AI fallback, and import confirmation    |
-| `ontrack.finance.bills.*` | Bills & subscriptions |
+| `ontrack.finance.bills.*` | Recurring bills |
+| `ontrack.finance.hub.recurring` / `ontrack.finance.recurring.*` | Combined Bills & Subscriptions summary, manual-add sheet, and saved-item editing (`.categorize.<id>` → `.categorize.sheet`, editable name, Bill/Subscription choices, category, save, and confirmed delete below Save) |
+| `ontrack.finance.subscriptions.*` | Financial-data refresh, detected bill/subscription review, tracked recurring-expense rows, and removal from the edit sheet |
+| `ontrack.finance.subscriptions.refreshStatus` / `.refreshStatus.dismiss` | Latest refresh result and its dismiss action |
 | `ontrack.finance.buckets.*` | Savings buckets |
 | `ontrack.finance.entities.*` | Personal / business / property |
 | `ontrack.finance.accounts.*`                                                                                 | Manual accounts, Plaid bank/investment Link, provider sync/disconnect, HYSA APR                           |
+| `ontrack.finance.accounts.rewardProfile.<accountId>` | Link a card account to a saved rewards profile |
+| `ontrack.finance.rewards` / `.section.hero` / `.section.profiles` / `.section.transactions` / `.section.compare` | Rewards Optimizer screen and major analysis sections |
+| `ontrack.finance.rewards.transaction.<id>` | Purchase-level actual-versus-best-card reward explanation |
+| `ontrack.finance.rewards.addManual` / `.createFromLink` / `.importCsv` | Add a manual profile, analyze a public card link, or locally import a statement CSV |
+| `ontrack.finance.rewards.range.<range>` / `.customFrom` / `.customTo` | Change the rewards analysis window |
+| `ontrack.finance.rewards.profile.<id>` / `.profile.sheet` / `.profile.close` / `.profile.save` / `.profile.*` | Open, review, edit, and save a reward profile and its assumptions |
+| `ontrack.finance.rewards.rule.*` / `.benefit.*` / `.welcomeOffer` | Edit bonus rules, caps, annual benefit values, and welcome-offer callout |
+| `ontrack.finance.rewards.compare.left` / `.compare.right` | Compare any two saved reward profiles |
+| `ontrack.finance.rewards.link.*` | Public HTTPS card-page analysis and editable-draft handoff |
+| `ontrack.finance.rewards.csv.*` | Local CSV picker, guided column mapping, account selection, and import |
 | `ontrack.finance.credit.*` | Credit score card, edit sheet, free-provider links |
 | `ontrack.finance.tax.*` | Tax prep, doc vault, entity scope, export, File elsewhere |
 

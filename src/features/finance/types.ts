@@ -1,5 +1,7 @@
 /** Finance domain models — local-first ledger, bills, buckets, tax prep. */
 
+import type { FinanceRewardCardProfile } from './rewards-types';
+
 export type FinanceEntityKind = 'personal' | 'business' | 'property';
 
 export const FINANCE_ENTITY_KINDS: readonly FinanceEntityKind[] = [
@@ -154,6 +156,20 @@ export const FINANCE_BILL_CADENCES: readonly FinanceBillCadence[] = [
   'once',
 ] as const;
 
+export type FinanceSubscriptionCandidateSource = 'plaid' | 'local';
+export type FinanceSubscriptionCandidateStatus = 'pending' | 'confirmed';
+export type FinanceSubscriptionDetectionStatus = 'idle' | 'pending' | 'ready' | 'fallback' | 'error';
+
+export const FINANCE_SUBSCRIPTION_CANDIDATE_SOURCES: readonly FinanceSubscriptionCandidateSource[] = [
+  'plaid',
+  'local',
+] as const;
+
+export const FINANCE_SUBSCRIPTION_CANDIDATE_STATUSES: readonly FinanceSubscriptionCandidateStatus[] = [
+  'pending',
+  'confirmed',
+] as const;
+
 export type FinanceDocumentKind =
   | 'w2'
   | '1099'
@@ -245,6 +261,8 @@ export interface FinanceAccount {
   connectionId?: string;
   institutionName?: string;
   externalAccountId?: string;
+  /** Optional rewards profile used to analyze purchases made on this card. */
+  rewardProfileId?: string;
   /** Opaque Plaid item id when linked (server-side tokens never stored here). */
   /** @deprecated Read only for snapshots created before provider-neutral connections. */
   plaidItemId?: string;
@@ -308,6 +326,8 @@ export interface FinanceTransaction {
   activityTime?: string;
   /** External id when synced from Plaid. */
   externalId?: string;
+  /** Provider category retained for recurring-charge detection. */
+  sourceCategory?: string;
   /** Connected friend assigned to an imported E-ZPass activity. */
   ezPassFriendId?: string;
   /** Local display-name snapshot so the tag remains legible if the friend cache is unavailable. */
@@ -332,8 +352,45 @@ export interface FinanceRecurringBill {
   notes?: string;
   active: boolean;
   lastPaidAt?: string;
+  subscriptionLink?: {
+    candidateId: string;
+    source: FinanceSubscriptionCandidateSource;
+    provider: FinanceConnectionProvider;
+    connectionId?: string;
+    externalStreamId?: string;
+    materialFingerprint: string;
+    lastSyncedAt: string;
+  };
   createdAt: string;
   updatedAt: string;
+}
+
+export interface FinanceSubscriptionCandidate {
+  id: string;
+  source: FinanceSubscriptionCandidateSource;
+  status: FinanceSubscriptionCandidateStatus;
+  provider: FinanceConnectionProvider;
+  connectionId?: string;
+  externalStreamId?: string;
+  name: string;
+  amount: number;
+  currency: string;
+  cadence: Exclude<FinanceBillCadence, 'once'>;
+  nextDue: string;
+  accountId?: string;
+  categoryHint?: string;
+  /** Recommended destination inferred from provider categories and merchant text. */
+  suggestedKind: FinanceBillKind;
+  confidence: number;
+  active: boolean;
+  materialFingerprint: string;
+  detectedAt: string;
+}
+
+export interface FinanceSubscriptionDismissal {
+  candidateId: string;
+  materialFingerprint: string;
+  dismissedAt: string;
 }
 
 export interface FinanceBucketContribution {
@@ -389,9 +446,13 @@ export interface FinanceStateSnapshot {
   holdings: FinanceHolding[];
   transactions: FinanceTransaction[];
   bills: FinanceRecurringBill[];
+  subscriptionCandidates: FinanceSubscriptionCandidate[];
+  dismissedSubscriptions: FinanceSubscriptionDismissal[];
+  subscriptionDetectionStatus: FinanceSubscriptionDetectionStatus;
   buckets: FinanceBucket[];
   taxYears: FinanceTaxYear[];
   documents: FinanceDocument[];
+  rewardProfiles: FinanceRewardCardProfile[];
   creditScore?: FinanceCreditScore;
   /** User-saved custom file-elsewhere URL. */
   customHandoffUrl?: string;

@@ -45,8 +45,28 @@ export function dateDisplayFormatForLocale(locale?: string): DateDisplayFormat {
   }
 }
 
+function localeRegion(locale: string): string | undefined {
+  try {
+    if (typeof Intl.Locale === 'function') {
+      return new Intl.Locale(locale.replace('_', '-')).maximize().region?.toUpperCase();
+    }
+  } catch {
+    // Fall through to the BCP-47 region segment.
+  }
+  return locale.replace('_', '-').split('-')
+    .find((segment) => /^[A-Za-z]{2}$/.test(segment) && segment.toLowerCase() !== locale.slice(0, 2).toLowerCase())
+    ?.toUpperCase();
+}
+
+/** U.S. region always uses U.S. ordering; other locales retain their own convention. */
+function localeForDateFormatting(format: DateDisplayFormat): string | undefined {
+  const locale = format === 'system' ? deviceLocale() : format;
+  if (localeRegion(locale) === 'US') return 'en-US';
+  return locale === 'system' ? undefined : locale;
+}
+
 function dateFormatter(locale: DateDisplayFormat): Intl.DateTimeFormat {
-  return getDateTimeFormatter(locale === 'system' ? undefined : locale, {
+  return getDateTimeFormatter(localeForDateFormatting(locale), {
     day: 'numeric',
     month: 'numeric',
     year: 'numeric',
@@ -85,7 +105,10 @@ export function nativeDatePickerLocale(locale: unknown): string | undefined {
     : undefined;
 }
 
-export function formatDateKey(value: string, format: DateDisplayFormat): string {
+export function formatDateKey(
+  value: string,
+  format: DateDisplayFormat,
+): string {
   if (!isDateKey(value)) return value;
   try {
     return dateFormatter(format).format(fromDateKey(value));
@@ -109,10 +132,13 @@ export function formatTimePickerTitle(label: string): string {
 }
 
 /** Month/day (or day/month) without year or leading zeros — for dense timeline chrome. */
-export function formatDateKeyShort(value: string, format: DateDisplayFormat): string {
+export function formatDateKeyShort(
+  value: string,
+  format: DateDisplayFormat = deviceLocale(),
+): string {
   if (!isDateKey(value)) return value;
   try {
-    return getDateTimeFormatter(format === 'system' ? undefined : format, {
+    return getDateTimeFormatter(localeForDateFormatting(format), {
       day: 'numeric',
       month: 'numeric',
     }).format(fromDateKey(value));
@@ -121,39 +147,37 @@ export function formatDateKeyShort(value: string, format: DateDisplayFormat): st
   }
 }
 
-const SHORT_MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-] as const;
-
-/** Medium calendar chrome: `Sep 27`. */
-export function formatDateKeyMedium(value: string): string {
+/** Medium calendar chrome, ordered for the locale: `Sep 27` / `27 Sept`. */
+export function formatDateKeyMedium(
+  value: string,
+  format: DateDisplayFormat = deviceLocale(),
+): string {
   if (!isDateKey(value)) return value;
-  const d = fromDateKey(value);
-  return `${SHORT_MONTHS[d.getMonth()]} ${d.getDate()}`;
+  try {
+    return getDateTimeFormatter(localeForDateFormatting(format), {
+      day: 'numeric',
+      month: 'short',
+    }).format(fromDateKey(value));
+  } catch {
+    return value;
+  }
 }
 
 /**
  * Trip date-range chrome: `Sep 8 – Sep 14, 2026` (en dash; year once when shared).
  */
-export function formatTripDateRangeLabel(startDate: string, endDate: string): string {
+export function formatTripDateRangeLabel(
+  startDate: string,
+  endDate: string,
+  format: DateDisplayFormat = deviceLocale(),
+): string {
   if (!isDateKey(startDate) || !isDateKey(endDate)) {
     return `${startDate} – ${endDate}`;
   }
   const start = fromDateKey(startDate);
   const end = fromDateKey(endDate);
-  const startLabel = formatDateKeyMedium(startDate);
-  const endLabel = formatDateKeyMedium(endDate);
+  const startLabel = formatDateKeyMedium(startDate, format);
+  const endLabel = formatDateKeyMedium(endDate, format);
   if (start.getFullYear() === end.getFullYear()) {
     return `${startLabel} – ${endLabel}, ${end.getFullYear()}`;
   }
@@ -215,19 +239,21 @@ export function minutesBetween(
   return Math.round((end.getTime() - start.getTime()) / 60_000) + (endMinutes - startMinutes);
 }
 
-const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
 export function formatDateLong(
   key: string,
-  options?: { year?: boolean },
+  options?: { year?: boolean; locale?: DateDisplayFormat },
 ): string {
-  const d = fromDateKey(key);
-  const base = `${MONTHS[d.getMonth()]} ${d.getDate()}`;
-  return options?.year ? `${base}, ${d.getFullYear()}` : base;
+  if (!isDateKey(key)) return key;
+  const locale = options?.locale ?? deviceLocale();
+  try {
+    return getDateTimeFormatter(localeForDateFormatting(locale), {
+      day: 'numeric',
+      month: 'long',
+      year: options?.year ? 'numeric' : undefined,
+    }).format(fromDateKey(key));
+  } catch {
+    return key;
+  }
 }
 
 /** Plant watering / care due chip: Overdue, Due today, or Due {date}. */
@@ -241,12 +267,33 @@ export function formatDueLabel(dueKey: string, options?: { overduePrefix?: strin
   return `Due ${formatDateLong(dueKey)}`;
 }
 
-export function formatWeekday(key: string): string {
-  return WEEKDAYS[fromDateKey(key).getDay()];
+export function formatWeekday(
+  key: string,
+  format: DateDisplayFormat = deviceLocale(),
+): string {
+  if (!isDateKey(key)) return key;
+  try {
+    return getDateTimeFormatter(localeForDateFormatting(format), {
+      weekday: 'long',
+    }).format(fromDateKey(key));
+  } catch {
+    return key;
+  }
 }
 
-export function formatMonthTitle(year: number, month: number): string {
-  return `${MONTHS[month]} ${year}`;
+export function formatMonthTitle(
+  year: number,
+  month: number,
+  format: DateDisplayFormat = deviceLocale(),
+): string {
+  try {
+    return getDateTimeFormatter(localeForDateFormatting(format), {
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(year, month, 1, 12));
+  } catch {
+    return `${year}-${`${month + 1}`.padStart(2, '0')}`;
+  }
 }
 
 /** Minutes elapsed since local midnight for "now". */

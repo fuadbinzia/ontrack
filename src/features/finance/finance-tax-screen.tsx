@@ -21,6 +21,7 @@ import { createFinanceDocument, createFinanceTaxYear } from './create';
 import { FinanceSubpageHeader } from './finance-subpage-header';
 import { FinanceTaxHandoffSheet } from './finance-tax-handoff-sheet';
 import {
+  generalFinanceTransactions,
   groupTransactionsByTaxBucket,
   taxChecklistKeys,
   taxChecklistLabel,
@@ -154,7 +155,7 @@ export function FinanceTaxScreen() {
     const ids = new Set(
       taxYear.entityIds.length ? taxYear.entityIds : entities.map((e) => e.id),
     );
-    return transactions.filter(
+    return generalFinanceTransactions(transactions).filter(
       (t) => ids.has(t.entityId) && t.date.startsWith(String(taxYear.year)),
     );
   }, [taxYear, entities, transactions]);

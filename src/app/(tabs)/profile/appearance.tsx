@@ -39,6 +39,8 @@ const MODE_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'dark', label: 'Dark' },
 ];
 
+const PRESET_ROWS = [THEME_PRESETS.slice(0, 2), THEME_PRESETS.slice(2, 4), THEME_PRESETS.slice(4, 6)];
+
 const COLOR_GROUPS: {
   title: string;
   subtitle: string;
@@ -217,14 +219,22 @@ export default function AppearanceScreen() {
           <AppText variant="caption" color="secondary">
             One tap changes the full app palette.
           </AppText>
-          <View style={[styles.presetGrid, { gap: spacing.sm }]}>
-            {THEME_PRESETS.map((preset) => (
-              <PresetCard
-                key={preset.id}
-                preset={preset}
-                selected={presetId === preset.id}
-                onPress={() => choosePreset(preset)}
-              />
+          <View style={{ gap: spacing.md }}>
+            {PRESET_ROWS.map((row, rowIndex) => (
+              <View
+                key={rowIndex}
+                style={[styles.presetRow, { gap: spacing.md }]}
+              >
+                {row.map((preset) => (
+                  <View key={preset.id} style={styles.presetCell}>
+                    <PresetCard
+                      preset={preset}
+                      selected={presetId === preset.id}
+                      onPress={() => choosePreset(preset)}
+                    />
+                  </View>
+                ))}
+              </View>
             ))}
           </View>
         </View>
@@ -414,8 +424,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  presetGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  presetCard: { width: '48%', flexGrow: 1 },
+  presetRow: { flexDirection: 'row', alignItems: 'stretch' },
+  presetCell: { flex: 1, minWidth: 0 },
+  presetCard: { width: '100%' },
   presetSample: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radii.md,

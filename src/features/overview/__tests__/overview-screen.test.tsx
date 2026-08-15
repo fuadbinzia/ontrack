@@ -20,6 +20,7 @@ const mockOpenHttpsUrl = jest.fn();
 let mockActivities: Record<string, unknown>[] = [];
 let mockCategories: Record<string, unknown>[] = [];
 let mockEventDetails: Record<string, unknown>[] = [];
+let mockEventFollows: Record<string, unknown>[] = [];
 
 function resetOverviewTestState() {
   mockPlants = [];
@@ -27,6 +28,7 @@ function resetOverviewTestState() {
   mockActivities = [];
   mockCategories = [];
   mockEventDetails = [];
+  mockEventFollows = [];
   mockSetSelectedDate.mockClear();
   mockOpenHttpsUrl.mockClear();
   useFinance.getState().reset();
@@ -74,6 +76,15 @@ jest.mock("@/components/navigation/bottom-nav-tab-meta", () => {
         { icon: "home", href: `/${routeName}` },
       ]),
     ),
+  };
+});
+
+jest.mock("expo-image", () => {
+  const React = jest.requireActual("react");
+  const { View } = jest.requireActual("react-native");
+  return {
+    Image: ({ accessibilityLabel }: { accessibilityLabel?: string }) =>
+      React.createElement(View, { accessibilityLabel }),
   };
 });
 
@@ -187,11 +198,13 @@ jest.mock("@/store/schedule", () => ({
       activities: Record<string, unknown>[];
       categories: Record<string, unknown>[];
       eventDetails: Record<string, unknown>[];
+      eventFollows: Record<string, unknown>[];
     }) => unknown,
   ) => selector({
     activities: mockActivities,
     categories: mockCategories,
     eventDetails: mockEventDetails,
+    eventFollows: mockEventFollows,
   }),
 }));
 jest.mock("@/store/todos", () => ({
@@ -368,6 +381,7 @@ describe("OverviewScreen calendar excitement", () => {
     render(<OverviewScreen />);
 
     expect(screen.getByText("Fight Night Is Here")).toBeTruthy();
+    expect(screen.getByLabelText("UFC logo")).toBeTruthy();
     fireEvent.press(
       screen.getByLabelText(
         "Watch updates for UFC 330: Rivera vs. Lee on YouTube",
@@ -376,6 +390,27 @@ describe("OverviewScreen calendar excitement", () => {
     expect(mockOpenHttpsUrl).toHaveBeenCalledWith(
       "https://www.youtube.com/results?search_query=UFC%20330%3A%20Rivera%20vs.%20Lee%20latest%20news%20preview%20updates",
     );
+  });
+
+  it("keeps the generic pulse mark when a celebration has no logo", () => {
+    mockActivities = [
+      {
+        id: "birthday",
+        date: "2026-08-13",
+        title: "Birthday Party",
+        categoryId: "personal",
+        startMinutes: 1080,
+        durationMinutes: 180,
+        status: "upcoming",
+        createdAt: "2026-08-01T00:00:00.000Z",
+        updatedAt: "2026-08-01T00:00:00.000Z",
+      },
+    ];
+
+    render(<OverviewScreen />);
+
+    expect(screen.getByText("A Good Day Is Here")).toBeTruthy();
+    expect(screen.queryByLabelText("UFC logo")).toBeNull();
   });
 });
 

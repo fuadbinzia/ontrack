@@ -86,20 +86,23 @@ describe('current-device sign-out invariants', () => {
     expect(clearFn).not.toContain('MediaLibrary');
   });
 
-  it('preserves device first-run completion across local account wipe', () => {
+  it('preserves device first-run completion and appearance across local account wipe', () => {
     const cleanup = readFileSync(
       join(process.cwd(), 'src/services/cloud/sync-local-reset.ts'),
       'utf8',
     );
     const clearFn = cleanup.slice(cleanup.indexOf('export async function clearLocalAccountData'));
     expect(clearFn).toContain('hadOnboarded');
-    expect(clearFn).toContain('hasOnboarded: true');
+    expect(clearFn).toContain('snapshotAppearance()');
+    expect(clearFn).toContain('restoreAppearance(appearance, { hasOnboarded: hadOnboarded })');
   });
 
-  it('syncs home/current locations in preferences and keeps avatar device-only', () => {
+  it('syncs home/current locations and appearance in preferences and keeps avatar device-only', () => {
     expect(sync).toContain("domain.name !== 'preferences'");
     expect(sync).toContain('homeLocation: state.homeLocation');
     expect(sync).toContain('currentLocation: state.currentLocation');
+    expect(sync).toContain('appearanceSyncFields(snapshotAppearance())');
+    expect(sync).toContain('applyAppearancePayload(payload, appearance)');
     expect(sync).toContain('avatar stays device-only');
   });
 });

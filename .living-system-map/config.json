@@ -339,6 +339,27 @@
       "target": "native-module:travel-document-reader",
       "kind": "native-contract-test",
       "evidence": "proven"
+    },
+    {
+      "source": "src/features/trackers/__tests__/tracker-presence.test.ts",
+      "target": "src/features/trackers/use-tracker-presence.ts",
+      "kind": "contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/features/trackers/__tests__/tracker-presence.test.ts",
+      "target": "src/store/finance.ts",
+      "kind": "contract-test",
+      "critical": true,
+      "evidence": "proven"
+    },
+    {
+      "source": "src/features/trackers/use-tracker-presence.ts",
+      "target": "src/store/finance.ts",
+      "kind": "presence-finance-boundary",
+      "critical": true,
+      "evidence": "proven"
     }
   ]
 }

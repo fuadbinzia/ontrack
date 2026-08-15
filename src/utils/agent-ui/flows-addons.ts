@@ -49,6 +49,7 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'health/settings' },
     { op: 'wait', prefix: 'ontrack.health.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
+
   profile: [
     { op: 'goto', to: 'profile' },
     { op: 'wait', prefix: 'ontrack.profile.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
@@ -108,10 +109,7 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'scroll', id: 'ontrack.profile.usageAnalytics' },
     { op: 'wait', ms: 250 },
   ],
-  vehicles: [
-    { op: 'goto', to: 'vehicles' },
-    { op: 'wait', prefix: 'ontrack.vehicles.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
-  ],
+
   finance: [
     { op: 'goto', to: 'finance' },
     { op: 'wait', id: 'ontrack.finance.hub', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
@@ -296,6 +294,11 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'finance/tax' },
     { op: 'wait', id: 'ontrack.finance.tax', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
+
+  vehicles: [
+    { op: 'goto', to: 'vehicles' },
+    { op: 'wait', prefix: 'ontrack.vehicles.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
   'vehicles-new': [
     { op: 'goto', to: 'vehicles/new' },
     {
@@ -444,6 +447,12 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'workouts' },
     {
       op: 'wait',
+      id: 'ontrack.workouts.exploreMuscles',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.workouts.exploreMuscles' },
+    {
+      op: 'wait',
       id: `ontrack.workouts.exercise.${AGENT_UI_DEMO_WORKOUT_CATALOG_EXERCISE_ID}.add`,
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
@@ -451,6 +460,12 @@ export const AGENT_UI_ADDON_FLOWS = {
   'workouts-demo-anatomy': [
     { op: 'seed', to: 'workouts-demo' },
     { op: 'goto', to: 'workouts' },
+    {
+      op: 'wait',
+      id: 'ontrack.workouts.exploreMuscles',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.workouts.exploreMuscles' },
     {
       op: 'wait',
       id: 'ontrack.workouts.explorer.anatomySex.male',
@@ -623,4 +638,14 @@ export const AGENT_UI_ADDON_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],
+  trackers: [
+    { op: 'goto', to: 'trackers' },
+    { op: 'wait', id: 'ontrack.trackers.screen', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
+  'trackers-manage': [
+    { op: 'goto', to: 'trackers' },
+    { op: 'wait', id: 'ontrack.trackers.manage', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+    { op: 'tap', id: 'ontrack.trackers.manage' },
+    { op: 'wait', id: 'ontrack.trackers.manage.sheet', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ]
 } as const satisfies Record<string, readonly import('./flows').AgentUiFlowStep[]>;

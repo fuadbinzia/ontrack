@@ -1,9 +1,9 @@
 /**
  * Same-JS-session navigation memory for Fast Refresh remounts.
- * Cold starts leave this null so the bootstrap resolver can open Overview.
+ * Cold starts leave this null so the bootstrap resolver can stay on Today.
  */
 
-export const DEFAULT_APP_LANDING_PATH = '/overview';
+export const DEFAULT_APP_LANDING_PATH = '/';
 
 const TODAY_PATHS = new Set(['/', '/(tabs)', '/(tabs)/', '/index', '/(today)']);
 
@@ -87,17 +87,15 @@ export function consumeNavigationRestorePath(
 
 /**
  * Resolve the first app-shell destination. A same-session restore wins; a
- * genuine root launch falls through to Overview. The caller invokes this once
- * per mount, so an intentional later tap on Today stays put.
+ * genuine root launch stays on Today. The caller invokes this once per mount,
+ * so an intentional later tap on Today stays put.
  */
 export function resolveInitialNavigationPath(
   currentPathname: string | null | undefined,
 ): string | null {
   const restoreTo = consumeNavigationRestorePath(currentPathname);
   if (restoreTo) return restoreTo;
-  return isTodayPathname(currentPathname || '/')
-    ? DEFAULT_APP_LANDING_PATH
-    : null;
+  return null;
 }
 
 /** Test helper — clears module memory between cases. */

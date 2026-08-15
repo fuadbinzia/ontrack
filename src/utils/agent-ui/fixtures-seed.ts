@@ -44,6 +44,11 @@ export function seedAgentUiFixture(
   const { ensureDevModeSandboxSync } =
     require('@/features/account/dev-mode-controller') as typeof import('@/features/account/dev-mode-controller');
   ensureDevModeSandboxSync();
+  // Fixtures need the full catalog even though new installs start with add-ons off.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useAddons } = require('@/store/addons') as typeof import('@/store/addons');
+  const { ALL_ADDONS_ON } = require('@/addons/registry') as typeof import('@/addons/registry');
+  useAddons.getState().replaceEnabled(ALL_ADDONS_ON);
 
   if (
     fixture === 'travel-demo' ||

@@ -86,6 +86,12 @@ export const TAB_META: Record<
   },
 };
 
+/** Full catalog name. Rail chrome keeps the short `TAB_META` label. */
+export function trackerCatalogLabel(routeName: string): string {
+  if (routeName === 'vision-board') return 'Vision Board';
+  return TAB_META[routeName]?.label ?? routeName;
+}
+
 /** Whether an addon-gated tracker route is available on this device. */
 export function isTrackerRouteEnabled(
   routeName: string,

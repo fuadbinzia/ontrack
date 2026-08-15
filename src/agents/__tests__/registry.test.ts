@@ -1,4 +1,4 @@
-import { DEFAULT_ADDON_STATE } from '@/addons/registry';
+import { ALL_ADDONS_ON } from '@/addons/registry';
 import {
     AGENTS,
     agentAvailability,
@@ -47,16 +47,16 @@ describe('agent registry', () => {
     const entitlements = {
       [TEST_AGENT.id]: { active: true, source: 'included' as const },
     };
-    expect(agentAvailability(TEST_AGENT, entitlements, DEFAULT_ADDON_STATE)).toEqual({
+    expect(agentAvailability(TEST_AGENT, entitlements, ALL_ADDONS_ON)).toEqual({
       available: true,
     });
     expect(
       agentAvailability(TEST_AGENT, entitlements, {
-        ...DEFAULT_ADDON_STATE,
+        ...ALL_ADDONS_ON,
         travel: false,
       }),
     ).toEqual({ available: false, reason: 'required-addon-disabled' });
-    expect(agentAvailability(TEST_AGENT, {}, DEFAULT_ADDON_STATE)).toEqual({
+    expect(agentAvailability(TEST_AGENT, {}, ALL_ADDONS_ON)).toEqual({
       available: false,
       reason: 'not-entitled',
     });

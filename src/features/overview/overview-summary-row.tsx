@@ -2,9 +2,7 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, GlassIconWell, Symbol } from '@/components/primitives';
-import type { AppIconName } from '@/design-system';
-import { radii } from '@/design-system';
+import { AppText, Symbol } from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -12,7 +10,6 @@ import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 export type OverviewRow = {
   routeName: string;
   label: string;
-  icon: AppIconName;
   headline: string;
   detail: string;
   href: Href;
@@ -64,9 +61,6 @@ export function OverviewSummaryRow({
           },
         ]}
       >
-        <GlassIconWell size={s(44)} borderRadius={radii.md}>
-          <Symbol name={row.icon} size={s(19)} color={toneColor} />
-        </GlassIconWell>
         <View style={[styles.copy, { gap: spacing.xxs }]}>
           <AppText
             variant="overline"

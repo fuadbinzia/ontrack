@@ -9,12 +9,13 @@ function* walk(dir: string): IterableIterator<string> {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
     const res = path.resolve(dir, entry.name);
-    if (['node_modules', '.git', 'android', 'ios', '.expo', 'dist', 'build'].includes(entry.name)) {
+    if (['node_modules', '.git', 'android', 'ios', '.expo', 'dist', 'build', 'coverage'].includes(entry.name)) {
       continue;
     }
     if (entry.isDirectory()) {
+      if (res.includes(`${path.sep}cloudflare${path.sep}plant-ai-gateway`)) continue;
       yield* walk(res);
-    } else if (entry.isFile() && /\.(tsx?|jsx?)$/i.test(entry.name)) {
+    } else if (entry.isFile() && /\.(tsx?|jsx?)$/i.test(entry.name) && !entry.name.endsWith('.d.ts')) {
       yield res;
     }
   }
@@ -78,6 +79,12 @@ describe('Token budget enforcement', () => {
       .map((f) => path.relative(ROOT, f))
       .sort();
     expect(offenders).toEqual([]);
+  });
+
+  test('ignores generated worker declaration files', () => {
+    expect(files.some((file) => file.endsWith('worker-configuration.d.ts'))).toBe(
+      false,
+    );
   });
 
   test('no hard-coded pixel values (e.g., 12px) in source files', () => {

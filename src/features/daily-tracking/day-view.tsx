@@ -23,8 +23,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { aiProvider } from '@/services/ai';
 import { logPlantWatering, undoPlantWatering } from '@/services/plants/schedule';
 import { useAddons } from '@/store/addons';
+import { useJournal } from '@/store/journal';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
+import { DEFAULT_CHECKLIST_NAME, useTodos } from '@/store/todos';
 import { useUI } from '@/store/ui';
 import type { Activity } from '@/types/models';
 import { confirmDeleteActivity, showActivityActions, type ActivityAction } from '@/utils/activity-actions';
@@ -32,6 +34,7 @@ import { AgentUiIds } from '@/utils/agent-ui';
 import { addDays, toDateKey, todayKey } from '@/utils/date';
 import { listReferenceEquality } from '@/utils/list-equality';
 
+import { DayAddSheet } from './day-add-sheet';
 import { emptyDayTitle, resolveDayTimeState } from './day-view-model';
 import { activityDetailPath } from './activity-detail-route';
 
@@ -59,7 +62,12 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
     layout.bottomNavBarBaseHeight + insets.bottom;
   const aiEnabled = usePreferences((s) => s.aiEnabled);
   const enabledAddons = useAddons((s) => s.enabled);
+  const lists = useTodos((s) => s.lists);
+  const createList = useTodos((s) => s.createList);
+  const addTask = useTodos((s) => s.addTask);
+  const addJournalText = useJournal((s) => s.addText);
   const notifyPageInteraction = useUI((state) => state.notifyPageInteraction);
+  const [addOpen, setAddOpen] = useState(false);
   const { refreshControl } = usePullToRefresh();
   const routeIsActive = useRouteIsActive();
   const [clock, setClock] = useState(() => new Date());
@@ -199,6 +207,40 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
     [logPlantWatering, setStatus, undoPlantWatering],
   );
 
+  const openAdd = useCallback(() => setAddOpen(true), []);
+
+  const addEvent = useCallback(() => {
+    router.push({ pathname: '/activity-form', params: { date } });
+  }, [date, router]);
+
+  const addMeal = useCallback(() => {
+    router.push({
+      pathname: '/activity-form',
+      params: { date, category: 'food' },
+    });
+  }, [date, router]);
+
+  const addChecklistItem = useCallback(
+    (title: string) => {
+      const inbox =
+        lists.find(
+          (list) =>
+            list.kind === 'checklist' && list.name === DEFAULT_CHECKLIST_NAME,
+        ) ?? lists.find((list) => list.kind === 'checklist');
+      const listId = inbox?.id ?? createList(DEFAULT_CHECKLIST_NAME, 'checklist')?.id;
+      if (!listId) return;
+      addTask(listId, title);
+    },
+    [addTask, createList, lists],
+  );
+
+  const addJournalLine = useCallback(
+    (text: string) => {
+      addJournalText(date, text);
+    },
+    [addJournalText, date],
+  );
+
   const openActivity = useCallback(
     (activity: Activity) => {
       const category = findCategory(categories, activity.categoryId);
@@ -276,7 +318,7 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
                   message="Nothing on the books yet — add a workout, a meal, or whatever sounds good and the day starts to feel like yours."
                   actionLabel="Add Activity"
                   actionTestID={AgentUiIds.today.emptyAddActivity}
-                  onAction={() => router.push({ pathname: '/activity-form', params: { date } })}
+                  onAction={openAdd}
                 />
               ) : (
                 <SectionHeader title="Timeline" flush titleColor="tertiary" />
@@ -294,11 +336,19 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
           color={theme.accentPrimary}
           accessibilityLabel="Add Activity"
           testID={AgentUiIds.today.addActivity}
-          onPress={() =>
-            router.push({ pathname: '/activity-form', params: { date } })
-          }
+          onPress={openAdd}
         />
       </View>
+      <DayAddSheet
+        visible={addOpen}
+        onClose={() => setAddOpen(false)}
+        onEvent={addEvent}
+        onMeal={addMeal}
+        onChecklist={addChecklistItem}
+        onJournal={addJournalLine}
+        mealEnabled={enabledAddons.food}
+        journalEnabled={enabledAddons.journal}
+      />
     </SafeAreaView>
   );
 }

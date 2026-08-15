@@ -1,5 +1,5 @@
 import { useIsFocused, useNavigation } from 'expo-router';
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import DraggableFlatList, {
   ScaleDecorator,
@@ -18,11 +18,11 @@ import Animated, {
 import {
   isTrackerRouteEnabled,
   TAB_META,
+  trackerCatalogLabel,
 } from '@/components/navigation/bottom-nav-tab-meta';
 import {
   NAV_PIN_LIMIT,
   NAV_PIN_MIN,
-  PRIMARY_OVERVIEW_ROUTE,
   splitTrackerOrder,
 } from '@/components/navigation/tab-pins';
 import {
@@ -42,6 +42,8 @@ import {
 } from '@/features/trackers/tracker-row-entrance';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
+import { TrackersManageSheet } from '@/features/trackers/trackers-manage-sheet';
+import { useVisibleMoreRoutes } from '@/features/trackers/use-tracker-presence';
 import { useAddons } from '@/store/addons';
 import { useTabPins } from '@/store/tab-pins';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -128,6 +130,7 @@ export function TrackersScreen() {
   const setInNavOrder = useTabPins((store) => store.setInNavOrder);
   const addToNav = useTabPins((store) => store.addToNav);
   const promoteInMore = useTabPins((store) => store.promoteInMore);
+  const [manageOpen, setManageOpen] = useState(false);
 
   const enabledNames = useMemo(() => {
     const names = new Set<string>();
@@ -142,6 +145,7 @@ export function TrackersScreen() {
     () => splitTrackerOrder(trackerOrder, enabledNames, pinnedCount),
     [enabledNames, pinnedCount, trackerOrder],
   );
+  const visibleOthers = useVisibleMoreRoutes(others);
 
   const listData = useMemo<TrackerRow[]>(() => {
     const rows: TrackerRow[] = [];
@@ -150,21 +154,21 @@ export function TrackersScreen() {
       if (!meta) continue;
       rows.push({
         id,
-        label: id === 'vision-board' ? 'Vision Board' : meta.label,
+        label: trackerCatalogLabel(id),
         section: 'inNav',
       });
     }
-    for (const id of others) {
+    for (const id of visibleOthers) {
       const meta = TAB_META[id];
       if (!meta) continue;
       rows.push({
         id,
-        label: id === 'vision-board' ? 'Vision Board' : meta.label,
+        label: trackerCatalogLabel(id),
         section: 'others',
       });
     }
     return rows;
-  }, [inNav, others]);
+  }, [inNav, visibleOthers]);
 
   const openTracker = (routeName: string, section: TrackerRow['section']) => {
     const meta = TAB_META[routeName];
@@ -189,7 +193,6 @@ export function TrackersScreen() {
     if (!meta) return null;
     const inNavCount = inNav.length;
     const canAdd = item.section === 'others' && inNavCount < NAV_PIN_LIMIT;
-    const isOverview = item.id === PRIMARY_OVERVIEW_ROUTE;
 
     return (
       <ScaleDecorator activeScale={1.02}>
@@ -197,7 +200,7 @@ export function TrackersScreen() {
           style={{
             marginBottom: spacing.xs,
             marginTop:
-              index === inNavCount && others.length > 0 ? spacing.md : 0,
+              index === inNavCount && visibleOthers.length > 0 ? spacing.md : 0,
           }}>
           {index === 0 ? (
             <AppText
@@ -207,7 +210,7 @@ export function TrackersScreen() {
               In nav · {inNavCount}/{NAV_PIN_LIMIT}
             </AppText>
           ) : null}
-          {index === inNavCount && others.length > 0 ? (
+          {index === inNavCount && visibleOthers.length > 0 ? (
             <AppText
               variant="overline"
               color="secondary"
@@ -265,27 +268,19 @@ export function TrackersScreen() {
                   </AppText>
                 </Pressable>
               ) : null}
-              {isOverview ? (
-                <View style={styles.sideAction}>
-                  <AppText variant="caption" color="secondary" fit>
-                    First
-                  </AppText>
-                </View>
-              ) : (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Drag to reorder ${item.label}`}
-                  testID={AgentUiIds.trackers.drag(item.id)}
-                  delayLongPress={160}
-                  onLongPress={() => {
-                    haptics.heavy();
-                    drag();
-                  }}
-                  hitSlop={8}
-                  style={styles.sideAction}>
-                  <DragHandle size={s(20)} color={theme.textSecondary} />
-                </Pressable>
-              )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Drag to reorder ${item.label}`}
+                testID={AgentUiIds.trackers.drag(item.id)}
+                delayLongPress={160}
+                onLongPress={() => {
+                  haptics.heavy();
+                  drag();
+                }}
+                hitSlop={8}
+                style={styles.sideAction}>
+                <DragHandle size={s(20)} color={theme.textSecondary} />
+              </Pressable>
             </GlassPlate>
           </TrackerRowBounce>
         </View>
@@ -317,6 +312,25 @@ export function TrackersScreen() {
                 <ScreenHeader
                   title="Sections"
                   subtitle="Top items stay in the navigation bar. Drag to reorder."
+                  titleTrailing={
+                    <AgentTestId
+                      testID={AgentUiIds.trackers.manage}
+                      label="Manage Sections"
+                      onPress={() => setManageOpen(true)}
+                    >
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Manage Sections"
+                        onPress={() => setManageOpen(true)}
+                        hitSlop={8}
+                        style={styles.sideAction}
+                      >
+                        <AppText variant="callout" color="accent" fit>
+                          Manage
+                        </AppText>
+                      </Pressable>
+                    </AgentTestId>
+                  }
                 />
               </View>
             }
@@ -337,6 +351,10 @@ export function TrackersScreen() {
           />
         </View>
       </AgentTestId>
+      <TrackersManageSheet
+        visible={manageOpen}
+        onClose={() => setManageOpen(false)}
+      />
     </Screen>
   );
 }

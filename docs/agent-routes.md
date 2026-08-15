@@ -185,7 +185,10 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `overview-event-updates` | Seed demo fight → open Overview with the YouTube event-updates action ready |
 | `activity-demo-edit` | Seed → open activity form editor |
 | `event-demo-edit-review-invite` | Seed invited fight event → detail → edit → Save & Review Invite → Google Calendar review |
-| `activity-form-dismiss` | Today → open Add Event → choose a vibe → dismiss through the outside backdrop → remain on Today |
+| `today-add` | Today → open the add sheet (Event / Meal / Checklist / Journal) |
+| `trackers` | Sections catalog |
+| `trackers-manage` | Sections → Manage add-on toggles |
+| `activity-form-dismiss` | Today → add sheet → Event → choose a vibe → dismiss through the outside backdrop → remain on Today |
 | `workouts-demo` | Seed gym activity → open its Fitness edit sheet |
 | `workouts-plan-day` | Fitness selected day → open the workout planner |
 | `workouts-change-day` | Fitness selected day → advance one day with the header arrow |

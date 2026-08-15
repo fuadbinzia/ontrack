@@ -34,3 +34,13 @@ export function mergeDefaultCategories(
 export function findCategory(categories: ActivityCategory[], id: string): ActivityCategory {
   return categories.find((c) => c.id === id) ?? categories[0];
 }
+
+export function gymCategoryIds(
+  categories: readonly Pick<ActivityCategory, 'id' | 'detailKind'>[],
+): Set<string> {
+  return new Set(
+    categories
+      .filter((category) => category.detailKind === 'gym')
+      .map((category) => category.id),
+  );
+}

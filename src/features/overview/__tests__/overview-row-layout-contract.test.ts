@@ -16,9 +16,13 @@ describe('Overview summary row layout contract', () => {
     expect(source).not.toContain('styles.rowTitleLine');
   });
 
-  it('uses each section tone on its icon and label', () => {
+  it('uses each section tone on its label', () => {
     expect(source).toContain("}[row.tone ?? 'accent']");
-    expect(source).toContain('color={toneColor}');
     expect(source).toContain('style={[styles.label, { color: toneColor }]}');
+  });
+
+  it('does not keep leading section icon wells', () => {
+    expect(source).not.toContain('GlassIconWell');
+    expect(source).not.toContain('row.icon');
   });
 });

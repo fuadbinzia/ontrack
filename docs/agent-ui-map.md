@@ -113,7 +113,7 @@ Dump/status/command files live in the app Documents directory:
 
 | testID                                                    | Label            | Notes                                                                                                 |
 | --------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------- |
-| `ontrack.tabs.overview`                                   | Overview         | First, fixed app-wide summary destination                                                            |
+| `ontrack.tabs.overview`                                   | Overview         | Optional pulse — not the default land or a forced first pin                                          |
 | `ontrack.tabs.today`                                      | Today            |                                                                                                       |
 | `ontrack.tabs.calendar`                                   | Calendar         |                                                                                                       |
 | `ontrack.tabs.checklists`                                 | Checklists       | route `to-do`                                                                                         |
@@ -142,7 +142,12 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.trackers.row.<route>`                            | Trackers         | Open a tracker from the list (`(today)` → `_today_`)                                                |
 | `ontrack.trackers.add.<route>`                            | Trackers         | Add tracker to nav (when under pin limit)                                                           |
 | `ontrack.trackers.remove.<route>`                         | Trackers         | Retired — demote via drag into More                                                                 |
-| `ontrack.trackers.drag.<route>`                           | Trackers         | Long-press drag handle to reorder; Overview is fixed first and has no drag control                  |
+| `ontrack.trackers.drag.<route>`                           | Trackers         | Long-press drag handle to reorder                                                                   |
+| `ontrack.trackers.manage`                                 | Manage           | Opens add-on toggles from Sections                                                                  |
+| `ontrack.trackers.manage.sheet`                           | Manage sheet     | Backdrop for Manage Sections                                                                        |
+| `ontrack.trackers.manage.close`                           | Close            | Dismiss Manage Sections                                                                             |
+| `ontrack.trackers.addon.<id>`                             | Add-on toggle    | Enable or hide a module                                                                             |
+| `ontrack.trackers.openAddon.<id>`                         | Open             | Open an enabled module even when it has no data yet                                                 |
 | `ontrack.vehicles.list.add`                               | Vehicles         | Add a vehicle                                                                                         |
 | `ontrack.vehicles.list.vehicle.<vehicleId>`               | Vehicles         | Open a vehicle (`vehicle-agent-ui-demo` via `vehicle-demo`)                                           |
 | `ontrack.vehicles.detail.settings`                        | Vehicle detail   | Open vehicle settings                                                                                 |
@@ -180,6 +185,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.food.home.leftover`                      | Leftover Rescue card → AI ideas                                      |
 | `ontrack.food.home.section.nutrition`             | Nutrition snapshot layout anchor (not tappable)                      |
 | `ontrack.food.home.section.community`             | Friends activity layout anchor (not tappable)                        |
+| `ontrack.food.home.more`                          | Collapse pantry, leftovers, nutrition, and friends                   |
 
 ### Recipes (`/(tabs)/food/recipes`)
 
@@ -433,8 +439,16 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.today.weather`             | Home weather tile (full width when home≡current; else left half). Tap → Profile `?reveal=homeLocation` |
 | `ontrack.today.currentLocation`     | Current weather tile only when place ≠ home (right half). Tap → Profile `?reveal=currentLocation` |
 | `ontrack.today.progress`            | Day completion ring (hidden at 0%) |
-| `ontrack.today.addActivity`         | Add activity             |
+| `ontrack.today.addActivity`         | Open Today add sheet     |
 | `ontrack.today.emptyAddActivity`    | Empty-state add          |
+| `ontrack.today.addEvent`            | Add sheet → Event        |
+| `ontrack.today.addMeal`             | Add sheet → Meal         |
+| `ontrack.today.addChecklist`        | Add sheet → Checklist    |
+| `ontrack.today.addJournal`          | Add sheet → Journal      |
+| `ontrack.today.addSheet`            | Add sheet backdrop       |
+| `ontrack.today.addSheet.close`      | Dismiss add sheet        |
+| `ontrack.today.addSheet.field`      | Checklist / journal field |
+| `ontrack.today.addSheet.submit`     | Save checklist / journal |
 | `ontrack.today.activity.<id>`       | Activity card            |
 | `ontrack.today.activityToggle.<id>` | Activity complete toggle |
 | `ontrack.today.detail.<kind>.close` | Dismiss a calendar-card detail sheet from its grabber |
@@ -631,6 +645,7 @@ Demo fixture: `plant-sample-monstera` via `./scripts/agent-ui-seed.sh plants-dem
 | testID                            | Control                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.workouts.header.customPlanner`             | Custom planner header control   |
+| `ontrack.workouts.exploreMuscles`                   | Expand Muscle Explorer on Fitness |
 | `ontrack.workouts.selectedDay.section`              | Selected-day workout section    |
 | `ontrack.workouts.selectedDay.previous` / `.next`   | Change the selected day         |
 | `ontrack.workouts.selectedDay.editWorkout.<activityId>` | Edit a workout in the Fitness sheet |
@@ -1191,6 +1206,7 @@ Deep link: `ontrack://finance` / Expo route `/(tabs)/finance` · flows `finance`
 | --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.tabs.finance` | Open Finance tab |
 | `ontrack.finance.hub` | Finance hub |
+| `ontrack.finance.more` | Collapse assets, credit, coach, buckets, and tools |
 | `ontrack.finance.back` | Eyebrow back on Finance nested screens |
 | `ontrack.finance.hub.transactions` / `.bills` / `.buckets` / `.entities` / `.accounts` / `.rewards` / `.tax` | Hub navigation |
 | `ontrack.finance.hub.billPaid.<id>` | Mark bill paid from hub |

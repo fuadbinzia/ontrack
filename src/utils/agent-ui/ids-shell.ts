@@ -50,6 +50,13 @@ export const agentUiIdsShell = {
       `ontrack.trackers.remove.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
     drag: (routeName: string) =>
       `ontrack.trackers.drag.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    manage: 'ontrack.trackers.manage',
+    manageSheet: 'ontrack.trackers.manage.sheet',
+    manageClose: 'ontrack.trackers.manage.close',
+    addon: (addonId: string) =>
+      `ontrack.trackers.addon.${addonId.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    openAddon: (addonId: string) =>
+      `ontrack.trackers.openAddon.${addonId.replace(/[^a-zA-Z0-9]+/g, '_')}`,
   },
   health: {
     settings: 'ontrack.health.settings',
@@ -229,6 +236,7 @@ export const agentUiIdsShell = {
   },
   workouts: {
     customPlanner: 'ontrack.workouts.header.customPlanner',
+    exploreMuscles: 'ontrack.workouts.exploreMuscles',
     /** Legacy Today-plan ids kept for the still-supported standalone panel. */
     planFromScratch: 'ontrack.workouts.today.planFromScratch',
     todayPlan: (activityId: string) => `ontrack.workouts.todayPlan.${activityId}`,

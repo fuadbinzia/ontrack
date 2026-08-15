@@ -2,205 +2,34 @@ import { persist } from 'zustand/middleware';
 import { createWithEqualityFn as create } from 'zustand/traditional';
 
 import { DEFAULT_CATEGORIES, mergeDefaultCategories } from '@/constants/categories';
-import type { GoogleCalendarDeletion } from '@/services/calendar/google-types';
-import type {
-    EventDetails,
-    EventFollow,
-    EventFollowMode,
-    EventFollowSyncResponse,
-    EventFollowTarget,
-    EventSuggestion,
-} from '@/services/events';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
-import type {
-    Activity,
-    ActivityCategory,
-    ActivityStatus,
-    Meal,
-    Movie,
-    Workout,
-    WorkSession,
-} from '@/types/models';
-import { isAllDayActivity } from '@/utils/activity-time';
+import type { Activity } from '@/types/models';
 import { addDays, DAY_MS, fromDateKey, isDateKey } from '@/utils/date';
 import { newId } from '@/utils/id';
+
+import {
+  activitySeriesId,
+  appendCalendarDeletions,
+  calendarDeletion,
+  cloneEventDetail,
+  migrateLegacyGoogleAllDayActivities,
+  stripLegacySeedData,
+} from './schedule-helpers';
 import { createScheduleEventActions, eventSyncStateAfterSave } from './schedule-events';
+import type { ScheduleState } from './schedule-types';
 
 export { newId } from '@/utils/id';
-
-const seedPattern = /^seed-\d+$/;
-
-interface ScheduleSeedData {
-  activities?: Activity[];
-  meals?: Meal[];
-  workouts?: Workout[];
-  workSessions?: WorkSession[];
-}
-
-function stripLegacySeedData(state: ScheduleSeedData) {
-  const activities = state.activities ?? [];
-  const seedIds = new Set(
-    activities
-      .filter((activity) => seedPattern.test(activity.id))
-      .map((activity) => activity.id),
-  );
-  if (seedIds.size === 0) return state;
-
-  return {
-    ...state,
-    activities: activities.filter((activity) => !seedPattern.test(activity.id)),
-    meals: (state.meals ?? []).filter((meal) => !seedIds.has(meal.activityId)),
-    workouts: (state.workouts ?? []).filter((workout) => !seedIds.has(workout.activityId)),
-    workSessions: (state.workSessions ?? []).filter(
-      (session) => !seedIds.has(session.activityId),
-    ),
-  };
-}
-
-function calendarDeletion(activity: Activity): GoogleCalendarDeletion | undefined {
-  const metadata = activity.googleCalendar;
-  return metadata ? {
-    activityId: activity.id,
-    calendarId: metadata.calendarId,
-    eventId: metadata.eventId,
-    origin: metadata.origin,
-  } : undefined;
-}
-
-function appendCalendarDeletions(
-  current: GoogleCalendarDeletion[],
-  removed: Activity[],
-) {
-  const next = new Map(current.map((deletion) => [deletion.activityId, deletion]));
-  removed.forEach((activity) => {
-    const deletion = calendarDeletion(activity);
-    if (deletion) next.set(deletion.activityId, deletion);
-  });
-  return [...next.values()];
-}
-
-export interface ActivityDraft {
-  date: string;
-  allDay?: boolean;
-  title: string;
-  categoryId: string;
-  startMinutes: number;
-  durationMinutes: number;
-  notes?: string;
-  attendeeEmails?: string[];
-  travelPlanId?: string;
-  travelItemId?: string;
-}
-
-export interface EventSavePayload {
-  id?: string;
-  /** Defaults to one occurrence. Series updates require a stable series identity. */
-  editScope?: 'single' | 'series';
-  activity: ActivityDraft & {
-    status: ActivityStatus;
-    photo?: string | number;
-    photoProcessingVersion?: number;
-    summary?: string;
-    plantId?: string;
-    careKind?: Activity['careKind'];
-  };
-  detailKind: ActivityCategory['detailKind'];
-  meal?: Meal;
-  workout?: Workout;
-  workSession?: WorkSession;
-  movie?: Movie;
-  event?: EventDetails;
-}
-
-function activitySeriesId(activity: Activity | undefined) {
-  if (!activity) return undefined;
-  if (activity.googleCalendar?.recurringEventId) {
-    return `google:${activity.googleCalendar.calendarId}:${activity.googleCalendar.recurringEventId}`;
-  }
-  return activity.recurrence?.seriesId
-    ? `ontrack:${activity.recurrence.seriesId}`
-    : undefined;
-}
-
-function cloneEventDetail<T extends { activityId: string }>(detail: T, activityId: string): T {
-  const cloned = { ...detail, activityId } as T & {
-    items?: unknown[];
-    exercises?: { sets: unknown[] }[];
-    tasks?: unknown[];
-    genres?: string[];
-  };
-  if (cloned.items) cloned.items = cloned.items.map((item) => ({ ...(item as object) }));
-  if (cloned.exercises) {
-    cloned.exercises = cloned.exercises.map((exercise) => ({
-      ...exercise,
-      sets: exercise.sets.map((set) => ({ ...(set as object) })),
-    }));
-  }
-  if (cloned.tasks) cloned.tasks = cloned.tasks.map((task) => ({ ...(task as object) }));
-  if (cloned.genres) cloned.genres = [...cloned.genres];
-  return cloned;
-}
-
-export function migrateLegacyGoogleAllDayActivities(activities: Activity[]) {
-  let changed = false;
-  const migrated = activities.map((activity) => {
-    if (activity.allDay !== undefined || !isAllDayActivity(activity)) return activity;
-    changed = true;
-    return { ...activity, allDay: true };
-  });
-  return changed ? migrated : activities;
-}
-
-export interface ImportedEventDraft {
-  title: string;
-  date: string;
-  startMinutes: number;
-  durationMinutes: number;
-  notes?: string;
-  categoryId: string;
-}
-
-export interface ScheduleState {
-  seeded: boolean;
-  activities: Activity[];
-  meals: Meal[];
-  workouts: Workout[];
-  workSessions: WorkSession[];
-  movies: Movie[];
-  eventDetails: EventDetails[];
-  eventFollows: EventFollow[];
-  eventSuggestions: EventSuggestion[];
-  suppressedExternalEvents: string[];
-  categories: ActivityCategory[];
-  googleCalendarDeletions: GoogleCalendarDeletion[];
-
-  seedIfNeeded: () => void;
-  addActivity: (draft: ActivityDraft) => Activity;
-  replaceTravelActivities: (travelPlanId: string, drafts: ActivityDraft[]) => Activity[];
-  removeTravelActivities: (travelPlanIds: readonly string[]) => void;
-  replaceGoogleCalendarActivities: (activities: Activity[]) => void;
-  clearGoogleCalendarDeletions: (activityIds?: string[]) => void;
-  removeGoogleCalendarImports: () => void;
-  importEvents: (drafts: ImportedEventDraft[]) => Activity[];
-  saveEvent: (payload: EventSavePayload) => Activity;
-  updateActivity: (id: string, patch: Partial<Omit<Activity, 'id' | 'createdAt'>>) => void;
-  deleteActivity: (id: string) => void;
-  setStatus: (id: string, status: ActivityStatus) => void;
-  duplicateActivity: (id: string) => void;
-  moveActivityToDate: (id: string, date: string) => void;
-  upsertMeal: (meal: Meal) => void;
-  setProcessedMealPhoto: (activityId: string, photo: string, originalPhoto: string, version: number) => void;
-  upsertWorkout: (workout: Workout) => void;
-  upsertWorkSession: (session: WorkSession) => void;
-  addCategory: (category: ActivityCategory) => void;
-  addEventFollow: (target: EventFollowTarget, mode: EventFollowMode) => EventFollow;
-  removeEventFollow: (id: string, removeFuture: boolean) => void;
-  applyEventFollowSync: (response: EventFollowSyncResponse) => void;
-  markEventFollowSyncError: (followIds: readonly string[], message: string) => void;
-  acceptEventSuggestion: (id: string) => Activity | undefined;
-  dismissEventSuggestion: (id: string) => void;
-  resetAll: () => void;
-}
+export {
+  migrateLegacyGoogleAllDayActivities,
+  selectActivitiesByDate,
+  selectActivitiesForDate,
+} from './schedule-helpers';
+export type {
+  ActivityDraft,
+  EventSavePayload,
+  ImportedEventDraft,
+  ScheduleState,
+} from './schedule-types';
 
 export const useSchedule = create<ScheduleState>()(
   persist(
@@ -682,10 +511,11 @@ export const useSchedule = create<ScheduleState>()(
         const persisted = persistedState as Partial<ScheduleState>;
         if (!persisted.activities) return persisted;
         let next = persisted;
+        const activities = persisted.activities;
         if (version < 1) {
           next = {
             ...next,
-            activities: migrateLegacyGoogleAllDayActivities(next.activities),
+            activities: migrateLegacyGoogleAllDayActivities(activities),
           };
         }
         if (version < 2) {
@@ -713,19 +543,3 @@ export const useSchedule = create<ScheduleState>()(
     },
   ),
 );
-
-// ── Selectors ───────────────────────────────────────────────────────────
-
-export function selectActivitiesForDate(state: ScheduleState, date: string): Activity[] {
-  return state.activities
-    .filter((a) => a.date === date)
-    .sort((a, b) => a.startMinutes - b.startMinutes);
-}
-
-export function selectActivitiesByDate(state: ScheduleState): Record<string, Activity[]> {
-  const map: Record<string, Activity[]> = {};
-  for (const a of state.activities) {
-    (map[a.date] ??= []).push(a);
-  }
-  return map;
-}

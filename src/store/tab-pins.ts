@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 import {
   clampPinnedCount,
+  DEFAULT_PINNED_COUNT,
   DEFAULT_TRACKER_ORDER,
   mergeTrackerSections,
   NAV_PIN_LIMIT,
@@ -28,7 +29,7 @@ export const useTabPins = create<TabPinsState>()(
   persist(
     (set, get) => ({
       trackerOrder: [...DEFAULT_TRACKER_ORDER],
-      pinnedCount: NAV_PIN_LIMIT,
+      pinnedCount: DEFAULT_PINNED_COUNT,
       setTrackerOrder: (orderedIds, pinnedCount) => {
         const trackerOrder = sanitizeTrackerOrder(orderedIds);
         set({
@@ -101,7 +102,7 @@ export const useTabPins = create<TabPinsState>()(
           ...current,
           trackerOrder,
           pinnedCount: clampPinnedCount(
-            raw?.pinnedCount ?? NAV_PIN_LIMIT,
+            raw?.pinnedCount ?? DEFAULT_PINNED_COUNT,
             trackerOrder.length,
           ),
         };

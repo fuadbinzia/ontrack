@@ -15,6 +15,16 @@ export const agentUiIdsShellDaily = {
     progress: 'ontrack.today.progress',
     addActivity: 'ontrack.today.addActivity',
     emptyAddActivity: 'ontrack.today.emptyAddActivity',
+    addEvent: 'ontrack.today.addEvent',
+    addMeal: 'ontrack.today.addMeal',
+    addChecklist: 'ontrack.today.addChecklist',
+    addJournal: 'ontrack.today.addJournal',
+    addSheet: {
+      sheet: 'ontrack.today.addSheet',
+      close: 'ontrack.today.addSheet.close',
+      field: 'ontrack.today.addSheet.field',
+      submit: 'ontrack.today.addSheet.submit',
+    },
     activity: (activityId: string) => `ontrack.today.activity.${activityId}`,
     activityToggle: (activityId: string) =>
       `ontrack.today.activityToggle.${activityId}`,

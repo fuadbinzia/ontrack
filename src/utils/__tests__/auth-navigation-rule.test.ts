@@ -37,7 +37,7 @@ describe('authentication navigation invariants', () => {
     const welcome = readFileSync(join(process.cwd(), 'src/app/welcome.tsx'), 'utf8');
     expect(welcome).toContain('useShouldShowWelcome');
     expect(welcome).toContain('WelcomeOnboardScreen');
-    expect(welcome).toContain('<AuthScreen variant="welcome" />');
+    expect(welcome).toContain('<AuthScreen variant="welcome" returnTo={returnTo} />');
   });
 
   it('keeps every user-facing app route in the authenticated-or-guest group', () => {

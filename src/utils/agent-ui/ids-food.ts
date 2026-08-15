@@ -24,6 +24,7 @@ export const agentUiIdsFood = {
       leftoverCard: 'ontrack.food.home.leftover',
       nutritionSection: 'ontrack.food.home.section.nutrition',
       communitySection: 'ontrack.food.home.section.community',
+      more: 'ontrack.food.home.more',
     },
     recipes: {
       /** RecipeCard press target (list and grid layouts). */

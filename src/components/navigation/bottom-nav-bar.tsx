@@ -34,7 +34,11 @@ import { deferAfterPageLoad } from '@/utils/defer-after-page-load';
 
 import { bottomNavBottomPad } from './bottom-nav-inset';
 import { BottomNavTabItem } from './bottom-nav-tab-item';
-import { isTrackerRouteEnabled, TAB_META } from './bottom-nav-tab-meta';
+import {
+  isTrackerRouteEnabled,
+  TAB_META,
+  trackerCatalogLabel,
+} from './bottom-nav-tab-meta';
 import {
   MORE_TAB_ROUTE,
   NAV_PIN_LIMIT,
@@ -163,7 +167,7 @@ export function BottomNavBar({
         const meta = TAB_META[name];
         if (!testID || !meta) continue;
         registerAgentUiTarget(testID, {
-          label: name === 'vision-board' ? 'Vision Board' : meta.label,
+          label: trackerCatalogLabel(name),
           press: () => router.navigate(meta.href),
         });
         registered.push(testID);
@@ -287,11 +291,9 @@ export function BottomNavBar({
               const accessibilityLabel =
                 slot.name === '(today)'
                   ? `${meta.label}${todayAccessibilityExtra}`
-                  : slot.name === 'vision-board'
-                    ? 'Vision Board'
-                    : slot.kind === 'more'
-                      ? 'More'
-                      : meta.label;
+                  : slot.kind === 'more'
+                    ? 'More'
+                    : trackerCatalogLabel(slot.name);
 
               const selectTab = () => {
                 // Accent + dot update on the same frame as the tap; navigate

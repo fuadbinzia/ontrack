@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { AppText, IconButton, SectionHeader } from '@/components/primitives';
+import { AppText, CollapsibleSection, IconButton, SectionHeader } from '@/components/primitives';
 import {
   FoodHomeCommunity,
   FoodHomeLeftoverCard,
@@ -147,36 +147,44 @@ export default function FoodHomeScreen() {
         />
       </AgentTestId>
 
-      <FoodHomeQuickActions />
+      <CollapsibleSection
+        title="More in Food"
+        description="Recipes, pantry, leftovers, and friends."
+        testID={AgentUiIds.food.home.more}
+      >
+        <View style={{ gap: spacing.xl }}>
+          <FoodHomeQuickActions />
 
-      <AgentTestId
-        testID={AgentUiIds.food.home.pantrySection}
-        label="Use soon"
-        style={{ gap: spacing.sm }}>
-        <SectionHeader flush title="Use Soon" />
-        <FoodHomePantryCard
-          items={useSoon}
-          onScan={() => router.push('/(tabs)/food/scan' as never)}
-        />
-      </AgentTestId>
+          <AgentTestId
+            testID={AgentUiIds.food.home.pantrySection}
+            label="Use soon"
+            style={{ gap: spacing.sm }}>
+            <SectionHeader flush title="Use Soon" />
+            <FoodHomePantryCard
+              items={useSoon}
+              onScan={() => router.push('/(tabs)/food/scan' as never)}
+            />
+          </AgentTestId>
 
-      <FoodHomeLeftoverCard onPress={openAiIdeas} />
+          <FoodHomeLeftoverCard onPress={openAiIdeas} />
 
-      <AgentTestId
-        testID={AgentUiIds.food.home.nutritionSection}
-        label="Nutrition today"
-        style={{ gap: spacing.sm }}>
-        <SectionHeader flush title="Nutrition Today" />
-        <FoodHomeNutrition totals={totals} />
-      </AgentTestId>
+          <AgentTestId
+            testID={AgentUiIds.food.home.nutritionSection}
+            label="Nutrition today"
+            style={{ gap: spacing.sm }}>
+            <SectionHeader flush title="Nutrition Today" />
+            <FoodHomeNutrition totals={totals} />
+          </AgentTestId>
 
-      <AgentTestId
-        testID={AgentUiIds.food.home.communitySection}
-        label="Friends"
-        style={{ gap: spacing.sm }}>
-        <SectionHeader flush title="Friends" />
-        <FoodHomeCommunity people={friendPeople} loading={friendsLoading} />
-      </AgentTestId>
+          <AgentTestId
+            testID={AgentUiIds.food.home.communitySection}
+            label="Friends"
+            style={{ gap: spacing.sm }}>
+            <SectionHeader flush title="Friends" />
+            <FoodHomeCommunity people={friendPeople} loading={friendsLoading} />
+          </AgentTestId>
+        </View>
+      </CollapsibleSection>
     </FoodScreen>
   );
 }

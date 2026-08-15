@@ -19,6 +19,9 @@ describe('trackers screen contract', () => {
     expect(screen).not.toContain('backgroundElevated');
     expect(screen).toContain('splitTrackerOrder');
     expect(screen).toContain('NAV_PIN_LIMIT');
+    expect(screen).toContain('useVisibleMoreRoutes');
+    expect(screen).toContain('TrackersManageSheet');
+    expect(screen).toContain('AgentUiIds.trackers.manage');
   });
 
   it('dismisses Sections through the parent tab navigator', () => {

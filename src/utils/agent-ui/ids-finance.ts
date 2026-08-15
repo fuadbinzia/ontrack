@@ -3,6 +3,7 @@
 export const agentUiIdsFinance = {
   finance: {
     screen: 'ontrack.finance.hub',
+    more: 'ontrack.finance.more',
     /** Compact eyebrow back on Finance nested screens. */
     back: 'ontrack.finance.back',
     section: (name: string) => `ontrack.finance.section.${name}`,

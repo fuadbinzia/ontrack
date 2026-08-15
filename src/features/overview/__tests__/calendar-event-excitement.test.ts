@@ -1,7 +1,10 @@
-import type { EventDetails } from '@/services/events';
+import type { EventDetails, EventFollow } from '@/services/events';
 import type { Activity, ActivityCategory } from '@/types/models';
 
-import { findCalendarEventExcitement } from '../calendar-event-excitement';
+import {
+  findCalendarEventExcitement,
+  resolveExcitementArtwork,
+} from '../calendar-event-excitement';
 
 const categories: ActivityCategory[] = [
   {
@@ -78,5 +81,89 @@ describe('findCalendarEventExcitement', () => {
     });
     expect(result?.kind).toBe('celebration');
     expect(result?.youtubeUrl).toBeUndefined();
+  });
+});
+
+describe('resolveExcitementArtwork', () => {
+  const follow: EventFollow = {
+    id: 'follow-1',
+    provider: 'thesportsdb',
+    providerTargetId: 'team-1',
+    kind: 'sports',
+    targetKind: 'team',
+    name: 'Example City Comets',
+    imageUrl: 'https://img.example/comets-logo.png',
+    mode: 'auto',
+    createdAt: '2026-08-01T00:00:00.000Z',
+    updatedAt: '2026-08-01T00:00:00.000Z',
+  };
+
+  it('uses the UFC league logo for a fight-night pulse', () => {
+    const excitement = findCalendarEventExcitement({
+      activities: [activity()],
+      categories,
+      eventDetails: [],
+      today: '2026-08-15',
+      currentMinutes: 12 * 60,
+    });
+    expect(resolveExcitementArtwork(excitement, [])).toMatchObject({
+      uri: expect.stringContaining('/ufc.png'),
+      contentFit: 'contain',
+      accessibilityLabel: 'UFC logo',
+    });
+  });
+
+  it('prefers a followed team logo over event photography', () => {
+    const linked = details({
+      kind: 'sports',
+      followId: follow.id,
+      imageUrl: 'https://img.example/game.jpg',
+    });
+    const excitement = findCalendarEventExcitement({
+      activities: [activity({ title: 'Comets at Meteors' })],
+      categories,
+      eventDetails: [linked],
+      today: '2026-08-15',
+      currentMinutes: 12 * 60,
+    });
+    expect(resolveExcitementArtwork(excitement, [linked], [follow])).toEqual({
+      uri: follow.imageUrl,
+      contentFit: 'contain',
+      accessibilityLabel: 'Example City Comets logo',
+    });
+  });
+
+  it('leaves celebrations on the category-icon fallback', () => {
+    const excitement = findCalendarEventExcitement({
+      activities: [activity({ title: 'Birthday Party' })],
+      categories,
+      eventDetails: [],
+      today: '2026-08-15',
+      currentMinutes: 12 * 60,
+    });
+    expect(resolveExcitementArtwork(excitement, [])).toBeUndefined();
+  });
+
+  it('uses provider concert artwork when no logo can be identified', () => {
+    const concertDetails = details({
+      kind: 'concert',
+      imageUrl: 'https://img.example/concert.jpg',
+    });
+    const excitement = findCalendarEventExcitement({
+      activities: [activity({ title: 'Live at the Garden' })],
+      categories,
+      eventDetails: [concertDetails],
+      today: '2026-08-15',
+      currentMinutes: 12 * 60,
+    });
+    expect(resolveExcitementArtwork(excitement, [concertDetails])).toEqual({
+      uri: 'https://img.example/concert.jpg',
+      contentFit: 'cover',
+      accessibilityLabel: 'Live at the Garden artwork',
+    });
+  });
+
+  it('returns nothing when the pulse is not an event', () => {
+    expect(resolveExcitementArtwork(undefined, [])).toBeUndefined();
   });
 });

@@ -16,6 +16,7 @@ import { useHealth } from '@/store/health';
 import { useJournal } from '@/store/journal';
 import { useNutrition } from '@/store/nutrition';
 import { usePlants } from '@/store/plants';
+import { restoreAppearance, snapshotAppearance } from '@/store/appearance-sync';
 import { usePreferences } from '@/store/preferences';
 import { useThemeOverrides } from '@/store/theme-overrides';
 import { useTravelMap } from '@/store/travel-map';
@@ -119,9 +120,11 @@ export async function clearLocalAccountData(options?: {
   markSignedOut?: boolean;
   preserveAccountFlags?: boolean;
 }) {
-  // First-run completion is device chrome, not account graph: wiping it on
-  // sign-out forced the name/goal welcome canvas even when force-preview is off.
+  // First-run completion and appearance are device chrome, not account graph:
+  // wiping them on sign-out reset the welcome canvas and the chosen theme
+  // before cloud restore could put them back.
   const hadOnboarded = usePreferences.getState().hasOnboarded;
+  const appearance = snapshotAppearance();
   syncRuntime.pendingRemote = undefined;
   stopCloudSync();
   await resetLocalDomains();
@@ -134,7 +137,5 @@ export async function clearLocalAccountData(options?: {
       message: undefined,
     });
   }
-  if (hadOnboarded) {
-    usePreferences.setState({ hasOnboarded: true });
-  }
+  restoreAppearance(appearance, { hasOnboarded: hadOnboarded });
 }

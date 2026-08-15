@@ -51,8 +51,8 @@ describe('tab-pins store', () => {
 
   it('setInNavOrder writes the default pin set', () => {
     useTabPins.getState().setInNavOrder([...DEFAULT_NAV_PIN_ORDER], ['travel']);
-    expect(useTabPins.getState().pinnedCount).toBe(4);
-    expect(useTabPins.getState().trackerOrder.slice(0, 5)).toEqual([
+    expect(useTabPins.getState().pinnedCount).toBe(3);
+    expect(useTabPins.getState().trackerOrder.slice(0, 4)).toEqual([
       ...DEFAULT_NAV_PIN_ORDER,
       'travel',
     ]);

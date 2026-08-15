@@ -3,6 +3,7 @@ import {
   normalizeCreditScore,
   normalizeFinanceSnapshot,
   normalizeHolding,
+  normalizeSubscriptionCandidate,
   normalizeTransaction,
 } from '../normalize';
 
@@ -68,6 +69,38 @@ describe('finance normalize', () => {
     }));
   });
 
+  it('repairs matching merchant categories when loading persisted data', () => {
+    const shared = {
+      amount: 25,
+      date: '2026-08-13',
+      entityId: 'personal',
+      source: 'plaid',
+    };
+    const snapshot = normalizeFinanceSnapshot({
+      transactions: [
+        {
+          ...shared,
+          id: 'categorized',
+          merchant: 'Passny',
+          categoryId: 'ezpass_replenishment',
+          updatedAt: '2026-08-13T10:00:00.000Z',
+        },
+        {
+          ...shared,
+          id: 'uncategorized',
+          merchant: 'PASS-NY',
+          categoryId: 'other',
+          updatedAt: '2026-08-14T10:00:00.000Z',
+        },
+      ],
+    });
+
+    expect(snapshot.transactions.map((transaction) => transaction.categoryId)).toEqual([
+      'ezpass_replenishment',
+      'ezpass_replenishment',
+    ]);
+  });
+
   it('keeps investment account kinds and balances', () => {
     const account = normalizeAccount({
       id: 'a1',
@@ -105,5 +138,35 @@ describe('finance normalize', () => {
     });
     expect(credit?.current?.score).toBe(740);
     expect(credit?.history).toHaveLength(1);
+  });
+
+  it('normalizes subscription candidates and preserves legacy snapshots', () => {
+    expect(normalizeFinanceSnapshot({})).toEqual(expect.objectContaining({
+      subscriptionCandidates: [],
+      dismissedSubscriptions: [],
+      subscriptionDetectionStatus: 'idle',
+    }));
+    expect(normalizeSubscriptionCandidate({
+      id: 'subscription:local:one',
+      source: 'local',
+      status: 'pending',
+      provider: 'plaid',
+      name: 'Stream Box',
+      amount: 12,
+      currency: 'usd',
+      cadence: 'monthly',
+      nextDue: '2026-09-01',
+      confidence: 2,
+      active: true,
+      materialFingerprint: '1200:monthly:active',
+    })).toEqual(expect.objectContaining({
+      currency: 'USD',
+      confidence: 1,
+      cadence: 'monthly',
+      suggestedKind: 'subscription',
+    }));
+    expect(normalizeSubscriptionCandidate({
+      id: 'bad', amount: 12, cadence: 'once', nextDue: 'not-a-date',
+    })).toBeUndefined();
   });
 });

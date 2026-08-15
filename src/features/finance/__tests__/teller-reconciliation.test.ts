@@ -22,6 +22,11 @@ describe('Teller local reconciliation', () => {
       syncStatus: 'ready',
     }, entityId, 'USD');
     const first = useFinance.getState().accounts[0]!;
+    const firstTransaction = useFinance.getState().transactions[0]!;
+    useFinance.getState().saveTransaction({
+      ...firstTransaction,
+      categoryId: 'dining',
+    });
     expect(first).toMatchObject({
       provider: 'teller', connectionId: 'enr-1', externalAccountId: 'acc-1',
       institutionName: 'Example Bank',
@@ -42,8 +47,53 @@ describe('Teller local reconciliation', () => {
 
     expect(useFinance.getState().accounts[0]).toMatchObject({ id: first.id, balance: 125 });
     expect(useFinance.getState().transactions).toEqual([
-      expect.objectContaining({ externalId: 'txn-1', amount: 15, source: 'teller' }),
+      expect.objectContaining({
+        externalId: 'txn-1',
+        amount: 15,
+        source: 'teller',
+        categoryId: 'dining',
+      }),
     ]);
+  });
+
+  it('inherits a known category when Teller imports another matching merchant', () => {
+    const entityId = useFinance.getState().entities[0]!.id;
+    applyTellerSyncResult({
+      ok: true,
+      connectionId: 'enr-1',
+      accounts: [{ accountId: 'acc-1', name: 'Checking', kind: 'bank' }],
+      transactions: [{
+        externalId: 'passny-old', accountId: 'acc-1', amount: 25,
+        date: '2026-08-10', merchant: 'Passny',
+      }],
+      syncStatus: 'ready',
+    }, entityId, 'USD');
+    useFinance.getState().categorizeMerchantTransactions('Passny', 'ezpass_replenishment');
+
+    applyTellerSyncResult({
+      ok: true,
+      connectionId: 'enr-1',
+      accounts: [{ accountId: 'acc-1', name: 'Checking', kind: 'bank' }],
+      transactions: [
+        {
+          externalId: 'passny-old', accountId: 'acc-1', amount: 25,
+          date: '2026-08-10', merchant: 'Passny',
+        },
+        {
+          externalId: 'passny-new', accountId: 'acc-1', amount: 25,
+          date: '2026-08-13', merchant: 'PASS NY',
+        },
+      ],
+      refreshedFrom: '2026-08-01',
+      syncStatus: 'ready',
+    }, entityId, 'USD');
+
+    expect(useFinance.getState().transactions).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        externalId: 'passny-new',
+        categoryId: 'ezpass_replenishment',
+      }),
+    ]));
   });
 
   it('removes missing Teller rows only inside the refreshed window and keeps manual data', () => {

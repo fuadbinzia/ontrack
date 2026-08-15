@@ -87,14 +87,21 @@ export function groupEzPassActivitiesByDay(
 export function ezPassFriendFilterOptions(
   transactions: FinanceTransaction[],
   roster: readonly { userId: string; displayName: string }[] = [],
+  currentUserId?: string,
 ): EzPassFriendFilterOption[] {
   const friends = new Map<string, string>();
   for (const person of roster) {
     const firstName = ezPassFirstName(person.displayName);
-    if (person.userId && firstName) friends.set(person.userId, firstName);
+    if (person.userId && person.userId !== currentUserId && firstName) {
+      friends.set(person.userId, firstName);
+    }
   }
   for (const transaction of transactions) {
-    if (transaction.ezPassFriendId && transaction.ezPassFriendName) {
+    if (
+      transaction.ezPassFriendId &&
+      transaction.ezPassFriendId !== currentUserId &&
+      transaction.ezPassFriendName
+    ) {
       friends.set(
         transaction.ezPassFriendId,
         ezPassFirstName(transaction.ezPassFriendName) ?? transaction.ezPassFriendName,
@@ -113,10 +120,14 @@ export function ezPassFriendFilterOptions(
 export function filterEzPassActivitiesByDriver(
   transactions: FinanceTransaction[],
   filter: EzPassDriverFilter,
+  currentUserId?: string,
 ): FinanceTransaction[] {
   if (filter === 'all') return transactions;
   if (filter === 'mine') {
-    return transactions.filter((transaction) => !transaction.ezPassFriendId);
+    return transactions.filter(
+      (transaction) =>
+        !transaction.ezPassFriendId || transaction.ezPassFriendId === currentUserId,
+    );
   }
   const friendId = filter.slice('friend:'.length);
   return transactions.filter((transaction) => transaction.ezPassFriendId === friendId);

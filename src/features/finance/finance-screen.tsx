@@ -10,6 +10,7 @@ import {
   PanelTitle,
   Screen,
   SectionHeader,
+  StatusBadge,
   Symbol,
   fieldTitleCase,
 } from '@/components/primitives';
@@ -17,14 +18,18 @@ import { formatMoney } from '@/features/travel/expenses/format-money';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { useFinance } from '@/store/finance';
+import { usePreferences } from '@/store/preferences';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { formatDateKey } from '@/utils/date';
 
 import { FinanceCreditSheet } from './finance-credit-sheet';
 import { FinanceProgressBar } from './finance-progress-bar';
+import { monthlyRecurringAmount } from './subscriptions';
 import {
   bucketProgress,
   bucketSavedAmount,
   categoryBreakdown,
+  generalFinanceTransactions,
   monthlySpendSeries,
   sumAmounts,
   sumAssetBalances,
@@ -46,23 +51,32 @@ export function FinanceScreen() {
   const bills = useFinance((s) => s.bills);
   const buckets = useFinance((s) => s.buckets);
   const accounts = useFinance((s) => s.accounts);
+  const rewardProfiles = useFinance((s) => s.rewardProfiles);
   const entities = useFinance((s) => s.entities);
   const taxYears = useFinance((s) => s.taxYears);
   const creditScore = useFinance((s) => s.creditScore);
   const baseCurrency = useFinance((s) => s.baseCurrency);
-  const markBillPaid = useFinance((s) => s.markBillPaid);
+  const dateDisplayFormat = usePreferences((s) => s.dateDisplayFormat);
   const { insights, source, disclaimer } = useFinanceCoachInsights();
   const [creditOpen, setCreditOpen] = useState(false);
 
   const now = useMemo(() => new Date(), []);
+  const ledgerTransactions = useMemo(
+    () => generalFinanceTransactions(transactions),
+    [transactions],
+  );
   const monthTx = useMemo(
-    () => transactionsInMonth(transactions, now.getFullYear(), now.getMonth()),
-    [transactions, now],
+    () => transactionsInMonth(ledgerTransactions, now.getFullYear(), now.getMonth()),
+    [ledgerTransactions, now],
   );
   const monthTotal = sumAmounts(monthTx);
   const breakdown = categoryBreakdown(monthTx).slice(0, 4);
-  const series = monthlySpendSeries(transactions, 4, now);
-  const dueBills = upcomingBills(bills, 30, now).slice(0, 4);
+  const series = monthlySpendSeries(ledgerTransactions, 4, now);
+  const activeRecurring = bills.filter((bill) => bill.active);
+  const activeSubscriptions = activeRecurring.filter((bill) => bill.kind === 'subscription');
+  const activeBillCount = activeRecurring.length - activeSubscriptions.length;
+  const upcomingRecurring = upcomingBills(bills, 30, now).slice(0, 4);
+  const pendingSubscriptionCount = useFinance((s) => s.subscriptionCandidates.length);
   const assetsTotal = sumAssetBalances(accounts);
   const ezPassActivities = transactions.filter((transaction) => transaction.source === 'ezpass');
   const currentTax = useMemo(() => {
@@ -83,13 +97,6 @@ export function FinanceScreen() {
               Spending, bills, buckets, and tax prep — file elsewhere when ready.
             </AppText>
           </View>
-          <Button
-            size="sm"
-            onPress={() => router.push('/(tabs)/finance/expense')}
-            testID={AgentUiIds.finance.addExpense}
-          >
-            Add
-          </Button>
         </View>
 
         <Card testID={AgentUiIds.finance.section('month')}>
@@ -178,7 +185,7 @@ export function FinanceScreen() {
               <AppText variant="caption" color="secondary">
                 {FINANCE_CREDIT_BUREAU_LABEL[creditScore.current.bureau]} ·{' '}
                 {FINANCE_CREDIT_MODEL_LABEL[creditScore.current.model]} · as of{' '}
-                {creditScore.current.asOf}
+                {formatDateKey(creditScore.current.asOf, dateDisplayFormat)}
               </AppText>
             </View>
           ) : (
@@ -211,42 +218,59 @@ export function FinanceScreen() {
           </View>
         </Card>
 
-        <Card testID={AgentUiIds.finance.section('bills')}>
-          <SectionHeader
-            title="Bills due"
-            actionLabel="Manage"
-            onAction={() => router.push('/(tabs)/finance/bills')}
-            actionTestID={AgentUiIds.finance.openBills}
-            flush
-          />
-          {dueBills.length ? (
+        <Card
+          testID={AgentUiIds.finance.openRecurring}
+          onPress={() => router.push('/(tabs)/finance/bills')}
+          accessibilityLabel="Manage Bills And Subscriptions">
+          <View style={[styles.rowBetween, { marginBottom: gap.sm }]}>
+            <PanelTitle>Bills & Subscriptions</PanelTitle>
+            <Symbol name="chevron-right" size={s(18)} color={theme.textTertiary} />
+          </View>
+          <View style={[styles.rowBetween, { marginBottom: gap.sm }]}>
+            <View style={{ flex: 1, minWidth: 0, gap: gap.xs }}>
+              <AppText variant="heading" fit>
+                {formatMoney(monthlyRecurringAmount(activeRecurring), baseCurrency)}/month
+              </AppText>
+              <AppText variant="caption" color="secondary" fit>
+                {activeBillCount} {activeBillCount === 1 ? 'bill' : 'bills'} ·{' '}
+                {activeSubscriptions.length} {activeSubscriptions.length === 1 ? 'subscription' : 'subscriptions'}
+              </AppText>
+            </View>
+            {pendingSubscriptionCount ? (
+              <StatusBadge
+                label={`${pendingSubscriptionCount} to review`}
+                tone="warning"
+                testID={AgentUiIds.finance.section('recurringReview')}
+              />
+            ) : null}
+          </View>
+          {upcomingRecurring.length ? (
             <View style={{ gap: gap.sm }}>
-              {dueBills.map((bill) => (
-                <View key={bill.id} style={styles.rowBetween}>
+              {upcomingRecurring.map((expense) => (
+                <View key={expense.id} style={styles.rowBetween}>
                   <View style={{ flex: 1, minWidth: 0, gap: gap.xs }}>
                     <AppText variant="callout" fit numberOfLines={1}>
-                      {bill.name}
+                      {expense.name}
                     </AppText>
                     <AppText variant="caption" color="secondary" fit>
-                      {bill.nextDue} · {bill.kind}
+                      {expense.kind === 'subscription' ? 'Subscription' : 'Bill'} · {formatDateKey(expense.nextDue, dateDisplayFormat)}
                     </AppText>
                   </View>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => markBillPaid(bill.id)}
-                    testID={AgentUiIds.finance.markBillPaid(bill.id)}
-                  >
-                        Paid
-                      </Button>
+                  <AppText variant="callout" fit>
+                    {formatMoney(expense.amount, expense.currency)}
+                  </AppText>
                 </View>
               ))}
             </View>
+          ) : activeRecurring.length ? (
+            <AppText variant="caption" color="secondary">
+              Nothing is due in the next 30 days.
+            </AppText>
           ) : (
             <EmptyState
               icon="finance"
-              title="No bills due soon"
-              message="Track subscriptions, property tax, insurance, and car payments."
+              title="No Recurring Expenses"
+              message="Add a bill or subscription, or review charges detected from linked financial data."
             />
           )}
         </Card>
@@ -304,6 +328,15 @@ export function FinanceScreen() {
               : 'Add manually or link with Plaid'
           }
           onPress={() => router.push('/(tabs)/finance/accounts')}
+        />
+
+        <FinanceHubLink
+          testID={AgentUiIds.finance.openRewards}
+          label="Rewards Optimizer"
+          detail={rewardProfiles.length
+            ? `${rewardProfiles.length} card ${rewardProfiles.length === 1 ? 'profile' : 'profiles'} · compare return`
+            : 'Find the best card for your spending'}
+          onPress={() => router.push('/(tabs)/finance/rewards')}
         />
 
         <FinanceHubLink

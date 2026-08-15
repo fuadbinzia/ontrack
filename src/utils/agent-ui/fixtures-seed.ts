@@ -3,6 +3,7 @@ import {
   AGENT_UI_DEMO_CHECKLIST_LIST_ID,
   AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
   AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
+  AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
   AGENT_UI_DEMO_GROCERY_LIST_ID,
   AGENT_UI_DEMO_HEALTH_FACTOR_ID,
   AGENT_UI_DEMO_HEALTH_MOOD_ID,
@@ -163,6 +164,13 @@ export function normalizeFixtureName(
     return 'food-demo';
   }
   if (
+    key === 'finance-demo' ||
+    key === 'finance-transaction' ||
+    key === AGENT_UI_DEMO_FINANCE_TRANSACTION_ID
+  ) {
+    return 'finance-demo';
+  }
+  if (
     key === 'workouts-demo' ||
     key === 'workouts' ||
     key === 'workout' ||
@@ -233,6 +241,9 @@ export function purgeAgentUiDemoFixtures(): void {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { useVehicles } =
     require('@/store/vehicles') as typeof import('@/store/vehicles');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useFinance } =
+    require('@/store/finance') as typeof import('@/store/finance');
 
   for (const tripId of AGENT_UI_RESERVED_TRIP_IDS) {
     if (useTravel.getState().plans.some((plan) => plan.id === tripId)) {
@@ -262,6 +273,12 @@ export function purgeAgentUiDemoFixtures(): void {
 
   if (useVehicles.getState().vehicles.some((vehicle) => vehicle.id === AGENT_UI_DEMO_VEHICLE_ID)) {
     useVehicles.getState().removeVehicle(AGENT_UI_DEMO_VEHICLE_ID);
+  }
+
+  if (useFinance.getState().transactions.some(
+    (transaction) => transaction.id === AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
+  )) {
+    useFinance.getState().removeTransaction(AGENT_UI_DEMO_FINANCE_TRANSACTION_ID);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports

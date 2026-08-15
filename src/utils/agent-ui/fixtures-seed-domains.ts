@@ -4,6 +4,7 @@ import {
   AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
   AGENT_UI_DEMO_EVENT_BOUT_ID,
   AGENT_UI_DEMO_FOOD_ACTIVITY_ID,
+  AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
   AGENT_UI_DEMO_GROCERY_TASK_TOMATOES_ID,
   AGENT_UI_DEMO_HEALTH_FACTOR_ID,
   AGENT_UI_DEMO_HEALTH_MOOD_ID,
@@ -300,6 +301,32 @@ export function seedDomainAgentUiFixture(
       primaryId: activity.id,
       activityId: activity.id,
       recipeId,
+    };
+  }
+
+  if (fixture === 'finance-demo') {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const finance =
+      require('@/store/finance') as typeof import('@/store/finance');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { todayKey } = require('@/utils/date') as typeof import('@/utils/date');
+    const state = finance.useFinance.getState();
+    const transaction = finance.createFinanceTransaction({
+      id: AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
+      amount: 25,
+      currency: 'USD',
+      date: todayKey(),
+      merchant: 'Demo Card Charge',
+      categoryId: 'other',
+      entityId: state.entities[0]?.id ?? '',
+      source: 'plaid',
+      externalId: 'transaction-agent-ui-demo-external',
+    });
+    state.saveTransaction(transaction);
+    return {
+      fixture,
+      primaryId: transaction.id,
+      itemId: transaction.id,
     };
   }
 

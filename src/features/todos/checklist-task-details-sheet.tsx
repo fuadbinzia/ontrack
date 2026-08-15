@@ -13,12 +13,12 @@ import {
 
 import {
   Dropdown,
-  ErrorMessage,
   IconButton,
   Input,
   SheetScaffold,
   Symbol,
 } from '@/components/primitives';
+import { CategoryCreatorSelector } from '@/components/shared';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { ANYONE_ASSIGNEE } from '@/features/todos/checklist-assignee-filter';
 import { sortCategoriesForList } from '@/features/todos/checklist-category-helpers';
@@ -165,9 +165,6 @@ export function ChecklistTaskDetailsSheet({
     key: string;
     height: number;
   }>();
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const [draft, setDraft] = useState('');
-  const [error, setError] = useState<string>();
   const scaledTitleLineHeight =
     typography.body.lineHeight * Math.min(fontScale, 1.3);
   const titleMaxHeight = Math.max(
@@ -206,8 +203,6 @@ export function ChecklistTaskDetailsSheet({
     titleContentHeight?.key === titleMeasurementKey
       ? titleContentHeight.height
       : estimatedTitleHeight;
-  const categoryFooterHeight = Math.max(64, s(68)) +
-    (error ? Math.max(20, s(20)) : 0);
   const selectedAssigneeIds =
     task?.assigneeUserIds && task.assigneeUserIds.length > 0
       ? task.assigneeUserIds
@@ -238,27 +233,11 @@ export function ChecklistTaskDetailsSheet({
       testID: AgentUiIds.checklists.itemDetails.assigneeOption(member.userId),
     })),
   ], selectedAssigneeIds);
-  const categoryOptions = selectedFirstAlphabetically([
-    {
-      value: UNCATEGORIZED_ID,
-      label: 'Uncategorized',
-      testID: AgentUiIds.checklists.itemDetails.categoryOption(UNCATEGORIZED_ID),
-    },
-    ...categories.map((category) => ({
-      value: category.id,
-      label: category.name,
-      testID: AgentUiIds.checklists.itemDetails.categoryOption(category.id),
-    })),
-  ], [selectedCategoryId]);
-
   useEffect(() => {
     Keyboard.dismiss();
     setTitleDraft(task?.title ?? '');
     setTitleFocused(false);
     setTitleContentHeight(undefined);
-    setCategoryOpen(false);
-    setDraft('');
-    setError(undefined);
   }, [task?.id, task?.title, titleMinHeight]);
 
   const cleanTitle = titleDraft.trim();
@@ -293,28 +272,6 @@ export function ChecklistTaskDetailsSheet({
         ? current
         : { key: titleMeasurementKey, height: nextHeight },
     );
-  };
-
-  const handleCategoryOpenChange = (open: boolean) => {
-    setCategoryOpen(open);
-    if (!open) {
-      setDraft('');
-      setError(undefined);
-    }
-  };
-
-  const createAndSelect = () => {
-    if (!draft.trim()) return;
-    const created = onCreateCategory(draft);
-    if (!created) {
-      setError('Enter a unique category name.');
-      return;
-    }
-    setDraft('');
-    setError(undefined);
-    onSetCategory(created.id);
-    Keyboard.dismiss();
-    setCategoryOpen(false);
   };
 
   return (
@@ -373,45 +330,19 @@ export function ChecklistTaskDetailsSheet({
         }
       />
 
-      <Dropdown
-        label="Category"
-        accessibilityLabel="Category"
-        open={categoryOpen}
-        onOpenChange={handleCategoryOpenChange}
+      <CategoryCreatorSelector
         value={selectedCategoryId}
-        options={categoryOptions}
-        menuFooter={
-          <>
-            <Input
-              accessibilityLabel="New category name"
-              autoCapitalize="words"
-              maxLength={40}
-              placeholder="New category"
-              returnKeyType="done"
-              testID={AgentUiIds.checklists.itemDetails.newCategoryName}
-              value={draft}
-              onChangeText={(value) => {
-                setDraft(value);
-                if (error) setError(undefined);
-              }}
-              onSubmitEditing={createAndSelect}
-              trailing={
-                <IconButton
-                  accessibilityLabel="Create category"
-                  color={theme.accentPrimary}
-                  disabled={!draft.trim()}
-                  icon="add"
-                  testID={AgentUiIds.checklists.itemDetails.createCategory}
-                  onPress={createAndSelect}
-                />
-              }
-            />
-            {error ? <ErrorMessage message={error} variant="caption" /> : null}
-          </>
-        }
-        menuFooterHeight={categoryFooterHeight}
+        categories={[
+          { id: UNCATEGORIZED_ID, name: 'Uncategorized' },
+          ...categories,
+        ]}
         testID={AgentUiIds.checklists.itemDetails.category}
-        onChange={(categoryId) =>
+        optionTestID={AgentUiIds.checklists.itemDetails.categoryOption}
+        newCategoryNameTestID={AgentUiIds.checklists.itemDetails.newCategoryName}
+        createCategoryTestID={AgentUiIds.checklists.itemDetails.createCategory}
+        resetKey={task?.id}
+        onCreateCategory={onCreateCategory}
+        onSelect={(categoryId) =>
           onSetCategory(
             categoryId === UNCATEGORIZED_ID ? undefined : categoryId,
           )

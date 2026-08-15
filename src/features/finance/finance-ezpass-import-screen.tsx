@@ -19,7 +19,9 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { requestEzPassAiParse } from '@/services/finance/ezpass';
 import { useFinanceEzPassStatements } from '@/store/finance-ezpass-statements';
 import { createFinanceTransaction, useFinance } from '@/store/finance';
+import { usePreferences } from '@/store/preferences';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { formatDateKey } from '@/utils/date';
 
 import { EZPASS_REPLENISHMENT_CATEGORY, FINANCE_CATEGORIES } from './categories';
 import { personalEntityId } from './create';
@@ -55,6 +57,7 @@ export function FinanceEzPassImportScreen() {
   const entities = useFinance((state) => state.entities);
   const transactions = useFinance((state) => state.transactions);
   const baseCurrency = useFinance((state) => state.baseCurrency);
+  const dateDisplayFormat = usePreferences((state) => state.dateDisplayFormat);
   const saveTransactions = useFinance((state) => state.saveTransactions);
   const saveStatement = useFinanceEzPassStatements((state) => state.saveStatement);
   const [phase, setPhase] = useState<ImportPhase>('idle');
@@ -362,7 +365,7 @@ export function FinanceEzPassImportScreen() {
                   <Card key={draft.fingerprint}>
                     <SettingsToggleRow
                       label={displayEzPassMerchantName(draft.merchant)}
-                      detail={`${draft.date}${draft.activityTime ? ` · ${formatEzPassActivityTime(draft.activityTime)}` : ''} · ${formatMoney(draft.amount, baseCurrency)} · ${draft.kind}${probable ? ' · possible duplicate' : ''}${draft.confidence === 'review' ? ' · review' : ''}`}
+                      detail={`${formatDateKey(draft.date, dateDisplayFormat)}${draft.activityTime ? ` · ${formatEzPassActivityTime(draft.activityTime)}` : ''} · ${formatMoney(draft.amount, baseCurrency)} · ${draft.kind}${probable ? ' · possible duplicate' : ''}${draft.confidence === 'review' ? ' · review' : ''}`}
                       value={selected.has(draft.fingerprint)}
                       onValueChange={() => toggle(draft.fingerprint)}
                       testID={AgentUiIds.finance.ezpass.row(draft.fingerprint)}

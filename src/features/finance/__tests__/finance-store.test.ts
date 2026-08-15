@@ -78,4 +78,33 @@ describe('Finance store', () => {
       }),
     ]);
   });
+
+  it('applies a selected category to every matching merchant transaction', () => {
+    useFinance.getState().saveTransactions([
+      createFinanceTransaction({
+        id: 'passny-one', amount: 25, date: '2026-08-13', merchant: 'Passny',
+        categoryId: 'other', entityId: 'personal', source: 'plaid',
+      }),
+      createFinanceTransaction({
+        id: 'passny-two', amount: 25, date: '2026-08-12', merchant: 'PASS-NY',
+        categoryId: 'other', entityId: 'personal', source: 'teller',
+      }),
+      createFinanceTransaction({
+        id: 'passny-cafe', amount: 12, date: '2026-08-11', merchant: 'Passny Cafe',
+        categoryId: 'other', entityId: 'personal', source: 'manual',
+      }),
+    ]);
+
+    useFinance.getState().categorizeMerchantTransactions(
+      'Pass ny',
+      'ezpass_replenishment',
+    );
+
+    expect(useFinance.getState().transactions.map(({ id, categoryId }) => ({ id, categoryId })))
+      .toEqual([
+        { id: 'passny-one', categoryId: 'ezpass_replenishment' },
+        { id: 'passny-two', categoryId: 'ezpass_replenishment' },
+        { id: 'passny-cafe', categoryId: 'other' },
+      ]);
+  });
 });

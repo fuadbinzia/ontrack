@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       country_codes: ['US'],
       user: { client_user_id: userId },
       products: [purpose],
+      ...(purpose === 'transactions' ? { transactions: { days_requested: 180 } } : {}),
       redirect_uri: redirectUri,
       hosted_link: {
         completion_redirect_uri: completionRedirectUri,

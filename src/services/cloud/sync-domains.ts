@@ -271,9 +271,13 @@ export const domains: SyncDomain[] = [
         holdings: state.holdings,
         transactions: state.transactions,
         bills: state.bills,
+        subscriptionCandidates: state.subscriptionCandidates,
+        dismissedSubscriptions: state.dismissedSubscriptions,
+        subscriptionDetectionStatus: state.subscriptionDetectionStatus,
         buckets: state.buckets,
         taxYears: state.taxYears,
         documents: state.documents,
+        rewardProfiles: state.rewardProfiles,
         creditScore: state.creditScore,
         customHandoffUrl: state.customHandoffUrl,
         referenceSavingsApr: state.referenceSavingsApr,
@@ -317,6 +321,8 @@ export function hasMeaningfulLocalData(): boolean {
   if (
     finance.transactions.length > 0 ||
     finance.bills.length > 0 ||
+    finance.subscriptionCandidates.length > 0 ||
+    finance.dismissedSubscriptions.length > 0 ||
     finance.buckets.length > 0 ||
     finance.accounts.length > 0 ||
     finance.holdings.length > 0 ||

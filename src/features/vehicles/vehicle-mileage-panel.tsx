@@ -3,8 +3,9 @@ import { View } from 'react-native';
 
 import { AppText, Button, Card, DateField, Input, SectionHeader } from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
+import { usePreferences } from '@/store/preferences';
 import type { Vehicle, VehicleMileageLog } from '@/features/vehicles/types';
-import { todayKey } from '@/utils/date';
+import { formatDateKey, todayKey } from '@/utils/date';
 import { newUuid } from '@/utils/id';
 import { asFiniteNonNegative } from '@/utils/parse';
 
@@ -16,6 +17,7 @@ export function VehicleMileagePanel({
   onChange: (next: Vehicle, summary: string, entityId?: string) => void;
 }) {
   const { spacing: gap } = useResponsive();
+  const dateDisplayFormat = usePreferences((state) => state.dateDisplayFormat);
   const [date, setDate] = useState(todayKey());
   const [miles, setMiles] = useState(
     vehicle.odometerMiles !== undefined ? String(vehicle.odometerMiles) : '',
@@ -61,7 +63,7 @@ export function VehicleMileagePanel({
               {log.miles.toLocaleString()} mi
             </AppText>
             <AppText variant="caption" color="secondary" fit numberOfLines={1}>
-              {log.date}
+              {formatDateKey(log.date, dateDisplayFormat)}
               {log.notes ? ` · ${log.notes}` : ''}
             </AppText>
           </Card>

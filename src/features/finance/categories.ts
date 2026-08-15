@@ -49,7 +49,7 @@ export const EZPASS_REPLENISHMENT_CATEGORY: FinanceCategory = {
 
 export const FINANCE_CATEGORIES: readonly FinanceCategory[] = [
   { id: 'groceries', label: 'Groceries', taxBucket: 'personal', personalDefault: true },
-  { id: 'dining', label: 'Dining', taxBucket: 'meals', personalDefault: true, businessDefault: true },
+  { id: 'dining', label: 'Food/Dining', taxBucket: 'meals', personalDefault: true, businessDefault: true },
   { id: 'transport', label: 'Transport', taxBucket: 'car_truck', personalDefault: true, businessDefault: true },
   { id: 'housing', label: 'Housing', taxBucket: 'personal', personalDefault: true },
   { id: 'utilities', label: 'Utilities', taxBucket: 'utilities', personalDefault: true, businessDefault: true, propertyDefault: true },

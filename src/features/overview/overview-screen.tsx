@@ -139,6 +139,7 @@ export function OverviewScreen() {
           ? `${nextTodayActivity.allDay ? 'All day' : formatMinutes(nextTodayActivity.startMinutes)} · ${nextTodayActivity.title}`
           : 'Open the timeline to plan what comes next.',
         href: TAB_META['(today)'].href,
+        tone: remaining.length ? 'accent' : 'success',
         beforeNavigate: () => setSelectedDate(todayKey()),
       },
       {
@@ -150,6 +151,7 @@ export function OverviewScreen() {
           ? formatTripDateRangeLabel(nextTrip.startDate, nextTrip.endDate)
           : 'Build your next itinerary when inspiration hits.',
         href: TAB_META.travel.href,
+        tone: 'accent',
       },
       {
         routeName: 'to-do',
@@ -162,6 +164,7 @@ export function OverviewScreen() {
           ? `Across ${formatCount(lists.length, 'list')}.`
           : 'Create a checklist or grocery list.',
         href: TAB_META['to-do'].href,
+        tone: openTasks.length ? 'accent' : 'success',
       },
       {
         routeName: 'finance',
@@ -176,6 +179,11 @@ export function OverviewScreen() {
           ? `${nextBills[0].name} · ${formatMoney(nextBills[0].amount, nextBills[0].currency)} · ${formatDateKeyMedium(nextBills[0].nextDue)}`
           : 'Accounts, savings, and spending are one tap away.',
         href: TAB_META.finance.href,
+        tone: overdueBills.length
+          ? 'danger'
+          : nextBills.length
+            ? 'warning'
+            : 'secondary',
       },
       {
         routeName: 'plants',
@@ -188,6 +196,7 @@ export function OverviewScreen() {
           ? `${formatCount(plants.length, 'plant')} in your collection.`
           : 'Add a plant to begin a care plan.',
         href: TAB_META.plants.href,
+        tone: duePlants.length ? 'warning' : 'success',
       },
       {
         routeName: 'workouts',
@@ -199,6 +208,7 @@ export function OverviewScreen() {
         detail:
           workoutsToday[0]?.title ?? 'Explore muscles or build a session.',
         href: TAB_META.workouts.href,
+        tone: workoutsToday.length ? 'success' : 'secondary',
       },
       {
         routeName: 'health',
@@ -215,6 +225,7 @@ export function OverviewScreen() {
               ? `${formatCount(moodEntries.length, 'mind check-in')} recorded.`
               : 'Review body metrics or check in with your mind.',
         href: TAB_META.health.href,
+        tone: todayHealth ? 'success' : 'secondary',
       },
       {
         routeName: 'vehicles',
@@ -227,6 +238,7 @@ export function OverviewScreen() {
           ? `${formatCount(vehicles.length, 'vehicle')} tracked.`
           : 'Add a vehicle to track service and costs.',
         href: TAB_META.vehicles.href,
+        tone: dueMaintenance ? 'warning' : 'success',
       },
       {
         routeName: 'food',
@@ -239,6 +251,7 @@ export function OverviewScreen() {
           mealsToday[0]?.freeformTitle ??
           'Plan a meal, explore recipes, or check your pantry.',
         href: TAB_META.food.href,
+        tone: mealsToday.length ? 'success' : 'secondary',
       },
       {
         routeName: 'vision-board',
@@ -249,6 +262,7 @@ export function OverviewScreen() {
           : 'Make the future visible',
         detail: `${formatCount(visionItems.length, 'idea')} across ${formatCount(visionCategories.length, 'board')}.`,
         href: TAB_META['vision-board'].href,
+        tone: 'accent',
       },
       {
         routeName: 'calendar',
@@ -257,6 +271,7 @@ export function OverviewScreen() {
         headline: 'See the wider rhythm',
         detail: 'Move from today into the days and weeks ahead.',
         href: TAB_META.calendar.href,
+        tone: 'secondary',
       },
       {
         routeName: 'insights',
@@ -265,6 +280,7 @@ export function OverviewScreen() {
         headline: 'Patterns across your life',
         detail: 'See how your routines and follow-through are trending.',
         href: TAB_META.insights.href,
+        tone: 'accent',
       },
       {
         routeName: 'social',
@@ -273,6 +289,7 @@ export function OverviewScreen() {
         headline: 'Your people, together',
         detail: 'Open shared activity and connections.',
         href: TAB_META.social.href,
+        tone: 'success',
       },
       {
         routeName: 'games',
@@ -281,6 +298,7 @@ export function OverviewScreen() {
         headline: 'Take a playful break',
         detail: 'Jump into your games collection.',
         href: TAB_META.games.href,
+        tone: 'accent',
       },
       {
         routeName: 'profile',
@@ -289,10 +307,12 @@ export function OverviewScreen() {
         headline: 'Make onTrack yours',
         detail: 'Manage add-ons, preferences, and your account.',
         href: TAB_META.profile.href,
+        tone: 'secondary',
       },
     ];
 
     return {
+      dateLabel: formatDateKeyMedium(today),
       attentionCount: attentionItems.length,
       attentionItems,
       rows: rows.filter((row) =>
@@ -321,14 +341,15 @@ export function OverviewScreen() {
   const heroTitle = summary.attentionCount
     ? `${formatCountWithVerb(summary.attentionCount, 'thing', 'needs', 'need')} your attention`
     : 'Everything is moving smoothly';
+  const heroTone = summary.attentionCount ? theme.warning : theme.success;
 
   return (
     <Screen contentStyle={{ gap: spacing.lg }}>
       <AgentTestId testID={AgentUiIds.overview.screen} label="Overview screen">
         <ScreenHeader
-          eyebrow="Your onTrack pulse"
+          eyebrow={summary.dateLabel}
           title="Overview"
-          subtitle="The important parts of your life, together in one place."
+          subtitle="One calm view of everything moving in your life."
         />
       </AgentTestId>
 
@@ -340,24 +361,52 @@ export function OverviewScreen() {
             {
               borderRadius: radii.xl,
               borderWidth: 1,
-              borderColor: theme.success,
+              borderColor: heroTone,
               padding: spacing.lg,
-              gap: spacing.sm,
+              gap: spacing.md,
             },
-          ]}>
-          <View style={[styles.heroTop, { gap: spacing.sm }]}>
+          ]}
+        >
+          <View style={[styles.heroTop, { gap: spacing.md }]}>
             <View style={styles.heroCopy}>
-              <AppText variant="overline" color="success" fit>
+              <AppText variant="overline" fit style={{ color: heroTone }}>
                 Right now
               </AppText>
-              <AppText variant="heading">{heroTitle}</AppText>
+              <AppText variant="title" fit fitMinimumScale={0.64}>
+                {heroTitle}
+              </AppText>
+              <AppText variant="caption" color="secondary">
+                {summary.attentionCount
+                  ? 'Clear what matters, then keep moving.'
+                  : 'Your plans, routines, and care are in a good rhythm.'}
+              </AppText>
             </View>
-            <GlassIconWell size={s(48)} borderRadius={radii.lg}>
-              <Symbol name="habit" size={s(22)} color={theme.success} />
-            </GlassIconWell>
+            <View
+              style={[
+                styles.pulseOrbit,
+                { borderColor: heroTone, padding: s(4) },
+              ]}
+            >
+              <GlassIconWell size={s(56)} borderRadius={radii.xl}>
+                <Symbol
+                  name={summary.attentionCount ? 'warning' : 'habit'}
+                  size={s(24)}
+                  color={heroTone}
+                />
+              </GlassIconWell>
+            </View>
           </View>
           {summary.attentionItems.length ? (
-            <View style={{ gap: spacing.xxs }}>
+            <View
+              style={[
+                styles.attentionList,
+                {
+                  gap: spacing.xxs,
+                  borderTopColor: theme.separator,
+                  paddingTop: spacing.sm,
+                },
+              ]}
+            >
               {summary.attentionItems.slice(0, 3).map((item) => (
                 <Animated.View
                   key={item.key}
@@ -367,18 +416,31 @@ export function OverviewScreen() {
                   layout={LinearTransition.duration(motion.layout).reduceMotion(
                     ReduceMotion.System,
                   )}
-                  style={[styles.attentionRow, { gap: spacing.xs }]}>
+                  style={[styles.attentionRow, { gap: spacing.xs }]}
+                >
+                  <View
+                    style={[
+                      styles.attentionMarker,
+                      {
+                        width: s(5),
+                        height: s(5),
+                        borderRadius: s(3),
+                        backgroundColor: heroTone,
+                      },
+                    ]}
+                  />
                   <AppText
                     variant="callout"
                     color="primary"
-                    style={styles.attentionLabel}>
-                    • {item.label}
+                    style={styles.attentionLabel}
+                  >
+                    {item.label}
                   </AppText>
                   <IconButton
                     icon="check"
                     size={s(34)}
                     iconSize="sm"
-                    color={theme.success}
+                    color={heroTone}
                     accessibilityLabel={`Acknowledge ${item.label}`}
                     testID={AgentUiIds.overview.acknowledge(item.key)}
                     onPress={() => acknowledgeAttention(item.key)}
@@ -402,7 +464,7 @@ export function OverviewScreen() {
               Across onTrack
             </AppText>
             <AppText variant="caption" color="secondary" fit>
-              Live from your sections
+              Tap Any Section To Go Deeper
             </AppText>
           </View>
           <GlassPlate
@@ -412,7 +474,8 @@ export function OverviewScreen() {
                 borderRadius: radii.xl,
                 paddingHorizontal: spacing.md,
               },
-            ]}>
+            ]}
+          >
             {summary.rows.map((row, index) => (
               <OverviewSummaryRow
                 key={row.routeName}
@@ -433,11 +496,19 @@ const styles = StyleSheet.create({
   },
   heroTop: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   heroCopy: {
     flex: 1,
     minWidth: 0,
+  },
+  pulseOrbit: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radii.xl,
+    flexShrink: 0,
+  },
+  attentionList: {
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   attentionRow: {
     minWidth: 0,
@@ -447,6 +518,9 @@ const styles = StyleSheet.create({
   attentionLabel: {
     flex: 1,
     minWidth: 0,
+  },
+  attentionMarker: {
+    flexShrink: 0,
   },
   sectionHeading: {
     flexDirection: 'row',

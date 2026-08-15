@@ -4,6 +4,12 @@ import { useFinance } from '@/store/finance';
 import { todayKey } from '@/utils/date';
 
 import { mapPlaidAccountKind } from './plaid-account-kind';
+import { refreshLocalSubscriptionCandidates } from './refresh-subscription-candidates';
+import {
+  recurringKindForDescription,
+  subscriptionMaterialFingerprint,
+} from './subscriptions';
+import type { FinanceSubscriptionCandidate } from './types';
 
 type SuccessfulPlaidData = {
   itemId: string;
@@ -12,6 +18,8 @@ type SuccessfulPlaidData = {
   accounts: Extract<PlaidExchangeResult, { ok: true }>['accounts'];
   holdings: Extract<PlaidExchangeResult, { ok: true }>['holdings'];
   transactions: Extract<PlaidExchangeResult, { ok: true }>['transactions'];
+  recurringOutflows?: Extract<PlaidExchangeResult, { ok: true }>['recurringOutflows'];
+  recurringStatus?: Extract<PlaidExchangeResult, { ok: true }>['recurringStatus'];
   removedExternalIds: string[];
   syncStatus: Extract<PlaidExchangeResult, { ok: true }>['syncStatus'];
 };
@@ -156,12 +164,65 @@ function reconcileTransactions(
         accountId,
         source: 'plaid',
         externalId: row.externalId,
+        sourceCategory: row.categoryHint,
       }),
     ];
   });
   useFinance.getState().reconcilePlaidTransactions(
     transactions,
     result.removedExternalIds,
+  );
+}
+
+function reconcileSubscriptions(
+  result: SuccessfulPlaidData,
+  accountIds: Map<string, string>,
+  baseCurrency: string,
+) {
+  useFinance.getState().setSubscriptionDetectionStatus(
+    result.recurringStatus === 'ready'
+      ? 'ready'
+      : result.recurringStatus === 'pending'
+        ? 'pending'
+        : 'fallback',
+  );
+  const now = new Date().toISOString();
+  const candidates: FinanceSubscriptionCandidate[] = result.recurringStatus === 'ready'
+      ? (result.recurringOutflows ?? []).flatMap((row) => {
+        const accountId = accountIds.get(row.accountId);
+        const suggestedKind = recurringKindForDescription(row.name, row.categoryHint);
+        if (!accountId || !suggestedKind) return [];
+        const materialFingerprint = subscriptionMaterialFingerprint({
+          amount: row.amount,
+          cadence: row.frequency,
+          active: row.active,
+        });
+        return [{
+          id: `subscription:plaid:${result.itemId}:${row.streamId}`,
+          source: 'plaid' as const,
+          status: 'pending' as const,
+          provider: 'plaid' as const,
+          connectionId: result.itemId,
+          externalStreamId: row.streamId,
+          name: row.name,
+          amount: row.amount,
+          currency: row.currency || baseCurrency,
+          cadence: row.frequency,
+          nextDue: row.predictedNextDate,
+          accountId,
+          categoryHint: row.categoryHint,
+          suggestedKind,
+          confidence: 0.98,
+          active: row.active,
+          materialFingerprint,
+          detectedAt: now,
+        }];
+      })
+    : [];
+  useFinance.getState().reconcileSubscriptionCandidates(
+    'plaid',
+    result.itemId,
+    candidates,
   );
 }
 
@@ -175,6 +236,8 @@ function applyPlaidData(
     reconcileHoldings(result, accountIds, baseCurrency);
   } else {
     reconcileTransactions(result, accountIds, entityId, baseCurrency);
+    reconcileSubscriptions(result, accountIds, baseCurrency);
+    refreshLocalSubscriptionCandidates();
   }
 }
 

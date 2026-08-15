@@ -10,6 +10,7 @@ import {
   SectionHeader,
 } from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
+import { usePreferences } from '@/store/preferences';
 import type {
   Vehicle,
   VehicleMaintenanceLog,
@@ -18,7 +19,7 @@ import type {
 import { isMaintenanceDue, nextDueDate, nextDueMiles } from '@/features/vehicles/maintenance-due';
 import { formatMoney } from '@/features/travel/expenses/format-money';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
-import { todayKey } from '@/utils/date';
+import { formatDateKey, todayKey } from '@/utils/date';
 import { newUuid } from '@/utils/id';
 import { asFiniteNonNegative, asPositiveNumber } from '@/utils/parse';
 
@@ -30,6 +31,7 @@ export function VehicleMaintenancePanel({
   onChange: (next: Vehicle, summary: string, entityType: 'maintenance_schedule' | 'maintenance_log', entityId?: string) => void;
 }) {
   const { spacing: gap } = useResponsive();
+  const dateDisplayFormat = usePreferences((state) => state.dateDisplayFormat);
   const [title, setTitle] = useState('');
   const [intervalMiles, setIntervalMiles] = useState('');
   const [intervalMonths, setIntervalMonths] = useState('');
@@ -187,7 +189,7 @@ export function VehicleMaintenancePanel({
               {log.title}
             </AppText>
             <AppText variant="caption" color="secondary" fit numberOfLines={1}>
-              {log.date}
+              {formatDateKey(log.date, dateDisplayFormat)}
               {log.miles !== undefined ? ` · ${log.miles.toLocaleString()} mi` : ''}
               {log.cost !== undefined
                 ? ` · ${formatMoney(log.cost, log.currency ?? vehicle.baseCurrency)}`

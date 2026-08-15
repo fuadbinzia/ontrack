@@ -3,6 +3,7 @@ import {
   bucketProgress,
   bucketSavedAmount,
   categoryBreakdown,
+  generalFinanceTransactions,
   groupTransactionsByTaxBucket,
   monthlySpendSeries,
   sumAmounts,
@@ -35,6 +36,32 @@ function txn(
 }
 
 describe('finance model', () => {
+  it('keeps E-ZPass activity out of the general ledger while retaining card replenishments', () => {
+    const rows = [
+      txn({ id: 'toll', amount: 2.25, date: '2026-08-13', source: 'ezpass' }),
+      txn({
+        id: 'imported-replenishment',
+        amount: 25,
+        date: '2026-08-13',
+        source: 'ezpass',
+        activity: 'transfer',
+      }),
+      txn({
+        id: 'card-replenishment',
+        amount: 25,
+        date: '2026-08-13',
+        source: 'plaid',
+        merchant: 'E-ZPass NY',
+      }),
+      txn({ id: 'groceries', amount: 18, date: '2026-08-13' }),
+    ];
+
+    expect(generalFinanceTransactions(rows).map((row) => row.id)).toEqual([
+      'card-replenishment',
+      'groceries',
+    ]);
+  });
+
   it('sums and breaks down month spend', () => {
     const rows = [
       txn({ id: '1', amount: 10, date: '2026-08-01', categoryId: 'groceries' }),

@@ -1,6 +1,7 @@
 import {
   loadPlaidAccounts,
   loadPlaidHoldings,
+  loadPlaidRecurringResult,
   syncPlaidTransactionChanges,
 } from '@/services/finance/plaid-data';
 import {
@@ -98,6 +99,8 @@ export async function POST(request: Request) {
     let accounts: Awaited<ReturnType<typeof loadPlaidAccounts>> = [];
     let holdings: Awaited<ReturnType<typeof loadPlaidHoldings>>['holdings'] = [];
     let transactions: Awaited<ReturnType<typeof syncPlaidTransactionChanges>>['transactions'] = [];
+    let recurringOutflows: Awaited<ReturnType<typeof loadPlaidRecurringResult>>['outflows'] = [];
+    let recurringStatus: Awaited<ReturnType<typeof loadPlaidRecurringResult>>['status'] = 'unavailable';
     let removedExternalIds: string[] = [];
     let syncStatus: 'ready' | 'pending' | 'error' = 'ready';
     let syncError: string | undefined;
@@ -117,9 +120,15 @@ export async function POST(request: Request) {
         removedExternalIds = changes.removedExternalIds;
         syncStatus = changes.pending ? 'pending' : 'ready';
         await updatePlaidCursor(userId, exchange.item_id, changes.cursor);
+        const recurring = changes.pending
+          ? { outflows: [], status: 'pending' as const }
+          : await loadPlaidRecurringResult(exchange.access_token);
+        recurringOutflows = recurring.outflows;
+        recurringStatus = recurring.status;
       }
     } catch (error) {
       syncStatus = 'error';
+      recurringStatus = 'error';
       syncError = error instanceof Error ? error.message : 'Initial Plaid sync failed.';
     }
 
@@ -133,6 +142,8 @@ export async function POST(request: Request) {
       accounts,
       holdings,
       transactions,
+      recurring_outflows: recurringOutflows,
+      recurring_status: recurringStatus,
       removed_external_ids: removedExternalIds,
       sync_status: syncStatus,
       sync_error: syncError,

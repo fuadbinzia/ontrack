@@ -1,4 +1,7 @@
-import type { EzPassSharedLedger } from '@/services/finance/ezpass-collaboration';
+import type {
+  EzPassMemberRole,
+  EzPassSharedLedger,
+} from '@/services/finance/ezpass-collaboration';
 
 import { deduplicateEzPassTransactions } from './ezpass-deduplication';
 import { ezPassFirstName } from './ezpass-model';
@@ -7,8 +10,43 @@ import type { FinanceTransaction } from './types';
 export type EzPassLedgerActivity = FinanceTransaction & {
   ezPassLedgerId?: string;
   ezPassSharedTransactionId?: string;
-  ezPassLedgerRole?: 'owner' | 'member';
+  ezPassLedgerRole?: EzPassMemberRole;
 };
+
+export type EzPassTagPressIntent =
+  | { action: 'open-picker' }
+  | { action: 'blocked' }
+  | { action: 'ignore' }
+  | { action: 'update'; userId?: string };
+
+export function ezPassTagPressIntent(input: {
+  ledgerRole: EzPassMemberRole | undefined;
+  currentUserId: string | undefined;
+  assignedUserId: string | undefined;
+}): EzPassTagPressIntent {
+  if (input.ledgerRole !== 'member') return { action: 'open-picker' };
+  if (!input.currentUserId) return { action: 'ignore' };
+  if (input.assignedUserId && input.assignedUserId !== input.currentUserId) {
+    return { action: 'blocked' };
+  }
+  return {
+    action: 'update',
+    userId: input.assignedUserId === input.currentUserId
+      ? undefined
+      : input.currentUserId,
+  };
+}
+
+export function ezPassAssignableFriendIds(
+  ledger: Pick<EzPassSharedLedger, 'members'> | undefined,
+  currentUserId?: string,
+): string[] {
+  return ledger?.members
+    .filter(
+      (member) => member.role !== 'owner' && member.userId !== currentUserId,
+    )
+    .map((member) => member.userId) ?? [];
+}
 
 export function ezPassLedgerLabel(
   ledger: EzPassSharedLedger,

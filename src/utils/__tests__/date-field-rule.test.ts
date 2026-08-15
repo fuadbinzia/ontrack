@@ -32,4 +32,21 @@ describe('native date-field invariant', () => {
     );
     expect(primitives).toContain("export { DateField } from './date-field';");
   });
+
+  it('does not render stored date keys directly as visible text', () => {
+    const files = [
+      ...tsxFiles(join(process.cwd(), 'src/app')),
+      ...tsxFiles(join(process.cwd(), 'src/features')),
+    ];
+
+    for (const file of files) {
+      const source = readFileSync(file, 'utf8');
+      expect(source).not.toMatch(
+        />\s*\{[A-Za-z0-9_.]+\.(?:date|nextDue|asOf)\}/,
+      );
+      expect(source).not.toMatch(
+        /\b(?:next|due|as of)\s+\{[A-Za-z0-9_.]+\.(?:date|nextDue|asOf)\}/i,
+      );
+    }
+  });
 });

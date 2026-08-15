@@ -256,7 +256,7 @@ describe("OverviewScreen finance integration", () => {
       screen.getByText(/Finance\|1 bill due now\|Internet · .*80.*2026-08-13/),
     ).toBeTruthy();
     expect(screen.getByText("1 thing needs your attention")).toBeTruthy();
-    expect(screen.getByText("• Internet · Bill due")).toBeTruthy();
+    expect(screen.getByText("Internet · Bill due")).toBeTruthy();
   });
 
   it("uses plural noun and verb forms when multiple items need attention", () => {

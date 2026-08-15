@@ -3,84 +3,39 @@ import { persist } from 'zustand/middleware';
 
 import {
   createDefaultPersonalEntity,
+  createFinanceBill,
   createFinanceEntity,
+  createFinanceRewardProfile,
   createFinanceTransaction,
 } from '@/features/finance/create';
 import { deduplicateEzPassTransactions } from '@/features/finance/ezpass-deduplication';
+import {
+  categorizeFinanceMerchant,
+  financeMerchantCategory,
+  harmonizeFinanceMerchantCategories,
+  saveFinanceTransactionForMerchant,
+} from '@/features/finance/finance-merchant-category';
 import { advanceBillDue } from '@/features/finance/model';
 import {
   normalizeFinanceSnapshot,
   privateFinancePayload,
 } from '@/features/finance/normalize';
 import type {
-  FinanceAccount,
-  FinanceBucket,
   FinanceBucketContribution,
-  FinanceCreditScoreEntry,
-  FinanceDocument,
-  FinanceEntity,
-  FinanceHolding,
-  FinanceRecurringBill,
   FinanceStateSnapshot,
-  FinanceTaxYear,
-  FinanceTransaction,
 } from '@/features/finance/types';
 import { FINANCE_CREDIT_HISTORY_CAP } from '@/features/finance/types';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import { todayKey } from '@/utils/date';
 import { newUuid } from '@/utils/id';
 
+import type { FinanceState } from './finance-state';
+
 export {
   createFinanceEntity,
+  createFinanceRewardProfile,
   createFinanceTransaction,
   privateFinancePayload,
-};
-
-type FinanceState = FinanceStateSnapshot & {
-  saveEntity: (entity: FinanceEntity) => void;
-  removeEntity: (id: string) => void;
-  saveAccount: (account: FinanceAccount) => void;
-  removeAccount: (id: string) => void;
-  removeConnection: (provider: 'plaid' | 'teller', connectionId: string) => void;
-  removePlaidItem: (itemId: string) => void;
-  saveHolding: (holding: FinanceHolding) => void;
-  removeHolding: (id: string) => void;
-  upsertHoldings: (holdings: FinanceHolding[]) => void;
-  replacePlaidHoldings: (accountIds: string[], holdings: FinanceHolding[]) => void;
-  saveTransaction: (transaction: FinanceTransaction) => void;
-  saveTransactions: (transactions: FinanceTransaction[]) => void;
-  repairEzPassDuplicates: () => void;
-  removeTransaction: (id: string) => void;
-  upsertPlaidTransactions: (transactions: FinanceTransaction[]) => void;
-  reconcilePlaidTransactions: (
-    transactions: FinanceTransaction[],
-    removedExternalIds: string[],
-  ) => void;
-  reconcileLinkedTransactions: (
-    provider: 'plaid' | 'teller',
-    accountIds: string[],
-    transactions: FinanceTransaction[],
-    refreshedFrom?: string,
-  ) => void;
-  saveBill: (bill: FinanceRecurringBill) => void;
-  removeBill: (id: string) => void;
-  markBillPaid: (id: string, paidOn?: string) => void;
-  saveBucket: (bucket: FinanceBucket) => void;
-  removeBucket: (id: string) => void;
-  addBucketContribution: (
-    bucketId: string,
-    contribution: Omit<FinanceBucketContribution, 'id'> & { id?: string },
-  ) => void;
-  saveTaxYear: (taxYear: FinanceTaxYear) => void;
-  removeTaxYear: (id: string) => void;
-  saveDocument: (document: FinanceDocument) => void;
-  removeDocument: (id: string) => void;
-  setCreditScore: (entry: FinanceCreditScoreEntry) => void;
-  clearCreditScore: () => void;
-  setCustomHandoffUrl: (url: string | undefined) => void;
-  setReferenceSavingsApr: (apr: number | undefined) => void;
-  replaceFinanceData: (snapshot: FinanceStateSnapshot) => void;
-  reset: () => void;
 };
 
 function touchUpdatedAt(): string {
@@ -103,9 +58,13 @@ const emptySnapshot = (): FinanceStateSnapshot => {
     holdings: [],
     transactions: [],
     bills: [],
+    subscriptionCandidates: [],
+    dismissedSubscriptions: [],
+    subscriptionDetectionStatus: 'idle',
     buckets: [],
     taxYears: [],
     documents: [],
+    rewardProfiles: [],
     baseCurrency: 'USD',
     updatedAt: touchUpdatedAt(),
   };
@@ -159,6 +118,22 @@ export const useFinance = create<FinanceState>()(
             if (transaction.source === provider) return [];
             return [{ ...transaction, accountId: undefined, updatedAt: now }];
           }),
+          bills: get().bills.map((bill) =>
+            (bill.accountId && accountIds.has(bill.accountId)) ||
+            (bill.subscriptionLink?.provider === provider &&
+              bill.subscriptionLink.connectionId === connectionId)
+              ? {
+                  ...bill,
+                  accountId: undefined,
+                  subscriptionLink: undefined,
+                  updatedAt: now,
+                }
+              : bill,
+          ),
+          subscriptionCandidates: get().subscriptionCandidates.filter(
+            (candidate) =>
+              candidate.provider !== provider || candidate.connectionId !== connectionId,
+          ),
           updatedAt: now,
         });
       },
@@ -247,10 +222,7 @@ export const useFinance = create<FinanceState>()(
       saveTransaction: (transaction) => {
         const now = touchUpdatedAt();
         set({
-          transactions: upsertById(get().transactions, {
-            ...transaction,
-            updatedAt: now,
-          }),
+          transactions: saveFinanceTransactionForMerchant(get().transactions, transaction, now),
           updatedAt: now,
         });
       },
@@ -269,7 +241,17 @@ export const useFinance = create<FinanceState>()(
             next[index] = updated;
           }
         }
-        set({ transactions: deduplicateEzPassTransactions(next), updatedAt: now });
+        set({
+          transactions: harmonizeFinanceMerchantCategories(deduplicateEzPassTransactions(next)),
+          updatedAt: now,
+        });
+      },
+      categorizeMerchantTransactions: (merchant, categoryId) => {
+        const now = touchUpdatedAt();
+        set({
+          transactions: categorizeFinanceMerchant(get().transactions, merchant, categoryId, now),
+          updatedAt: now,
+        });
       },
       repairEzPassDuplicates: () => {
         const current = get().transactions;
@@ -292,12 +274,23 @@ export const useFinance = create<FinanceState>()(
         for (const txn of incoming) {
           if (txn.externalId && byExternal.has(txn.externalId)) {
             const existing = byExternal.get(txn.externalId)!;
-            next = upsertById(next, { ...existing, ...txn, id: existing.id });
+            next = upsertById(next, {
+              ...existing,
+              ...txn,
+              id: existing.id,
+              categoryId: existing.categoryId,
+            });
           } else {
-            next = upsertById(next, txn);
+            next = upsertById(next, {
+              ...txn,
+              categoryId: financeMerchantCategory(next, txn.merchant) ?? txn.categoryId,
+            });
           }
         }
-        set({ transactions: next, updatedAt: touchUpdatedAt() });
+        set({
+          transactions: harmonizeFinanceMerchantCategories(next),
+          updatedAt: touchUpdatedAt(),
+        });
       },
       reconcilePlaidTransactions: (incoming, removedExternalIds) => {
         const now = touchUpdatedAt();
@@ -321,6 +314,9 @@ export const useFinance = create<FinanceState>()(
             ...existing,
             ...transaction,
             id: existing?.id ?? transaction.id,
+            categoryId: existing?.categoryId
+              ?? financeMerchantCategory(next, transaction.merchant)
+              ?? transaction.categoryId,
             createdAt: existing?.createdAt ?? transaction.createdAt,
             updatedAt: now,
           });
@@ -356,6 +352,9 @@ export const useFinance = create<FinanceState>()(
             ...existing,
             ...transaction,
             id: existing?.id ?? transaction.id,
+            categoryId: existing?.categoryId
+              ?? financeMerchantCategory(next, transaction.merchant)
+              ?? transaction.categoryId,
             createdAt: existing?.createdAt ?? transaction.createdAt,
             updatedAt: now,
           });
@@ -394,6 +393,135 @@ export const useFinance = create<FinanceState>()(
           updatedAt: now,
         });
       },
+      reconcileSubscriptionCandidates: (source, connectionId, incoming) => {
+        const now = touchUpdatedAt();
+        const incomingById = new Map(incoming.map((candidate) => [candidate.id, candidate]));
+        const bills = get().bills.map((bill) => {
+          const linked = bill.subscriptionLink;
+          if (!linked) return bill;
+          const candidate = incomingById.get(linked.candidateId);
+          if (!candidate) return bill;
+          return {
+            ...bill,
+            amount: candidate.amount,
+            currency: candidate.currency,
+            cadence: candidate.cadence,
+            nextDue: candidate.nextDue,
+            accountId: candidate.accountId,
+            active: candidate.active,
+            subscriptionLink: {
+              ...linked,
+              connectionId: candidate.connectionId,
+              externalStreamId: candidate.externalStreamId,
+              materialFingerprint: candidate.materialFingerprint,
+              lastSyncedAt: now,
+            },
+            updatedAt: now,
+          };
+        });
+        const confirmedIds = new Set(
+          bills.flatMap((bill) => bill.subscriptionLink?.candidateId ?? []),
+        );
+        const dismissedSubscriptions = get().dismissedSubscriptions.filter((dismissal) => {
+          const candidate = incomingById.get(dismissal.candidateId);
+          return !candidate || candidate.materialFingerprint === dismissal.materialFingerprint;
+        });
+        const dismissedKeys = new Set(
+          dismissedSubscriptions.map(
+            (dismissal) => `${dismissal.candidateId}|${dismissal.materialFingerprint}`,
+          ),
+        );
+        const retained = get().subscriptionCandidates.filter((candidate) => {
+          if (candidate.source !== source) return true;
+          if (source === 'plaid' && candidate.connectionId !== connectionId) return true;
+          return false;
+        });
+        const nextIncoming = incoming.filter(
+          (candidate) =>
+            candidate.active &&
+            !confirmedIds.has(candidate.id) &&
+            !dismissedKeys.has(`${candidate.id}|${candidate.materialFingerprint}`),
+        );
+        set({
+          bills,
+          subscriptionCandidates: [...retained, ...nextIncoming],
+          dismissedSubscriptions,
+          updatedAt: now,
+        });
+      },
+      confirmSubscriptionCandidate: (id, kind) => {
+        const candidate = get().subscriptionCandidates.find((row) => row.id === id);
+        const entityId = get().entities.find((entity) => entity.kind === 'personal')?.id;
+        if (!candidate || !entityId) return;
+        const now = touchUpdatedAt();
+        const bill = createFinanceBill({
+          name: candidate.name,
+          amount: candidate.amount,
+          currency: candidate.currency,
+          cadence: candidate.cadence,
+          nextDue: candidate.nextDue,
+          entityId,
+          kind: kind ?? candidate.suggestedKind,
+          accountId: candidate.accountId,
+        });
+        set({
+          bills: [...get().bills, {
+            ...bill,
+            subscriptionLink: {
+              candidateId: candidate.id,
+              source: candidate.source,
+              provider: candidate.provider,
+              connectionId: candidate.connectionId,
+              externalStreamId: candidate.externalStreamId,
+              materialFingerprint: candidate.materialFingerprint,
+              lastSyncedAt: now,
+            },
+          }],
+          subscriptionCandidates: get().subscriptionCandidates.filter((row) => row.id !== id),
+          updatedAt: now,
+        });
+      },
+      dismissSubscriptionCandidate: (id) => {
+        const candidate = get().subscriptionCandidates.find((row) => row.id === id);
+        if (!candidate) return;
+        const now = touchUpdatedAt();
+        const retained = get().dismissedSubscriptions.filter(
+          (dismissal) => dismissal.candidateId !== id,
+        );
+        set({
+          subscriptionCandidates: get().subscriptionCandidates.filter((row) => row.id !== id),
+          dismissedSubscriptions: [...retained, {
+            candidateId: id,
+            materialFingerprint: candidate.materialFingerprint,
+            dismissedAt: now,
+          }],
+          updatedAt: now,
+        });
+      },
+      removeSubscription: (id) => {
+        const bill = get().bills.find((row) => row.id === id);
+        if (!bill || bill.kind !== 'subscription') return;
+        const now = touchUpdatedAt();
+        const link = bill.subscriptionLink;
+        const retained = link
+          ? get().dismissedSubscriptions.filter(
+              (dismissal) => dismissal.candidateId !== link.candidateId,
+            )
+          : get().dismissedSubscriptions;
+        set({
+          bills: get().bills.filter((row) => row.id !== id),
+          dismissedSubscriptions: link
+            ? [...retained, {
+                candidateId: link.candidateId,
+                materialFingerprint: link.materialFingerprint,
+                dismissedAt: now,
+              }]
+            : retained,
+          updatedAt: now,
+        });
+      },
+      setSubscriptionDetectionStatus: (subscriptionDetectionStatus) =>
+        set({ subscriptionDetectionStatus, updatedAt: touchUpdatedAt() }),
       saveBucket: (bucket) => {
         const now = touchUpdatedAt();
         set({
@@ -452,6 +580,25 @@ export const useFinance = create<FinanceState>()(
           })),
           updatedAt: touchUpdatedAt(),
         }),
+      saveRewardProfile: (profile) => {
+        const now = touchUpdatedAt();
+        set({
+          rewardProfiles: upsertById(get().rewardProfiles, { ...profile, updatedAt: now }),
+          updatedAt: now,
+        });
+      },
+      removeRewardProfile: (id) => {
+        const now = touchUpdatedAt();
+        set({
+          rewardProfiles: get().rewardProfiles.filter((profile) => profile.id !== id),
+          accounts: get().accounts.map((account) =>
+            account.rewardProfileId === id
+              ? { ...account, rewardProfileId: undefined, updatedAt: now }
+              : account,
+          ),
+          updatedAt: now,
+        });
+      },
       setCreditScore: (entry) => {
         const prev = get().creditScore;
         const history = [

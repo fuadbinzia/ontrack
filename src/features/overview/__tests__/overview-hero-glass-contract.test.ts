@@ -15,14 +15,17 @@ describe('Overview hero glass contract', () => {
 
     expect(hero).toContain('<GlassPlate');
     expect(hero).toContain('intensity={64}');
-    expect(hero).toContain('borderColor: theme.success');
+    expect(hero).toContain('borderColor: heroTone');
     expect(hero).not.toContain('accent="green"');
   });
 
   it('keeps attention copy on high-contrast semantic text colors', () => {
-    expect(source).toContain('<AppText variant="overline" color="success" fit>');
+    expect(source).toContain(
+      'variant="overline" fit style={{ color: heroTone }}',
+    );
     expect(source).toContain('variant="callout"');
     expect(source).toContain('color="primary"');
+    expect(source).toContain("summary.attentionCount ? 'warning' : 'habit'");
   });
 
   it('does not show a next prediction in the hero', () => {

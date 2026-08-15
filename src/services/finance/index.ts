@@ -1,5 +1,10 @@
 export { requestFinanceCoachPolish } from './coach-client';
 export {
+  importRewardCardLink,
+  RewardCardImportError,
+  urlRewardProfileImporter,
+} from './rewards-link-client';
+export {
   completePlaidLink,
   createPlaidLinkToken,
   disconnectPlaidItem,

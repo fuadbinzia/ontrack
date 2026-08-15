@@ -1,6 +1,8 @@
 import {
   loadPlaidHoldings,
+  loadPlaidRecurringResult,
   mapPlaidAccounts,
+  mapPlaidRecurringOutflows,
   syncPlaidTransactionChanges,
 } from '../plaid-data';
 
@@ -38,6 +40,10 @@ describe('Plaid transaction sync', () => {
               date: '2026-08-10',
               merchant_name: 'Market',
               iso_currency_code: 'USD',
+              personal_finance_category: {
+                primary: 'ENTERTAINMENT',
+                detailed: 'ENTERTAINMENT_TV_AND_MOVIES',
+              },
             },
             {
               transaction_id: 'deposit-1',
@@ -76,7 +82,12 @@ describe('Plaid transaction sync', () => {
 
     expect(result.cursor).toBe('cursor-2');
     expect(result.transactions).toEqual([
-      expect.objectContaining({ externalId: 'expense-1', accountId: 'account-checking', amount: 42.5 }),
+      expect.objectContaining({
+        externalId: 'expense-1',
+        accountId: 'account-checking',
+        amount: 42.5,
+        categoryHint: 'ENTERTAINMENT_TV_AND_MOVIES',
+      }),
       expect.objectContaining({ externalId: 'expense-2', accountId: 'account-card', amount: 9.25 }),
     ]);
     expect(result.removedExternalIds).toEqual(
@@ -290,6 +301,72 @@ describe('Plaid account and holding mapping', () => {
         currency: 'USD',
       }),
     ]);
+  });
+
+  it('maps supported active recurring outflows and drops malformed or unknown cadences', () => {
+    expect(mapPlaidRecurringOutflows([
+      {
+        stream_id: 'stream-1',
+        account_id: 'account-1',
+        merchant_name: 'Stream Box',
+        predicted_next_date: '2026-09-01',
+        frequency: 'MONTHLY',
+        last_amount: { amount: 14.99, iso_currency_code: 'USD' },
+        is_active: true,
+        personal_finance_category: { detailed: 'ENTERTAINMENT_SUBSCRIPTION' },
+      },
+      {
+        stream_id: 'stream-inactive',
+        account_id: 'account-1',
+        description: 'Cloud Storage',
+        predicted_next_date: '2026-09-02',
+        frequency: 'ANNUALLY',
+        average_amount: 99,
+        is_active: false,
+      },
+      {
+        stream_id: 'unknown-frequency',
+        account_id: 'account-1',
+        predicted_next_date: '2026-09-01',
+        frequency: 'UNKNOWN',
+        last_amount: { amount: 10 },
+      },
+      {
+        stream_id: 'missing-date',
+        account_id: 'account-1',
+        frequency: 'MONTHLY',
+        last_amount: { amount: 10 },
+      },
+    ])).toEqual([
+      expect.objectContaining({
+        streamId: 'stream-1',
+        accountId: 'account-1',
+        amount: 14.99,
+        currency: 'USD',
+        frequency: 'monthly',
+        active: true,
+      }),
+      expect.objectContaining({
+        streamId: 'stream-inactive',
+        frequency: 'yearly',
+        active: false,
+      }),
+    ]);
+  });
+
+  it.each([
+    ['PRODUCT_NOT_READY', 'pending'],
+    ['PRODUCTS_NOT_SUPPORTED', 'unavailable'],
+    ['API_ERROR', 'error'],
+  ])('turns recurring endpoint %s into non-fatal %s status', async (code, status) => {
+    global.fetch = jest.fn().mockResolvedValue(
+      plaidResponse({ error_code: code, error_message: 'Recurring data unavailable' }, 400),
+    );
+
+    await expect(loadPlaidRecurringResult('server-token')).resolves.toEqual({
+      outflows: [],
+      status,
+    });
   });
 
   it('filters malformed holdings while preserving account identity and currency fallback', async () => {

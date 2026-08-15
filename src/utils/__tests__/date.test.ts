@@ -50,12 +50,13 @@ describe('date keys', () => {
   });
 
   it('keeps the full year in calendar picker month titles', () => {
-    expect(formatMonthTitle(2026, 8)).toBe('September 2026');
+    expect(formatMonthTitle(2026, 8, 'en-US')).toBe('September 2026');
   });
 
   it('formats long dates with an optional year', () => {
-    expect(formatDateLong('2026-08-10')).toBe('August 10');
-    expect(formatDateLong('2026-08-10', { year: true })).toBe('August 10, 2026');
+    expect(formatDateLong('2026-08-10', { locale: 'en-US' })).toBe('August 10');
+    expect(formatDateLong('2026-08-10', { year: true, locale: 'en-US' })).toBe('August 10, 2026');
+    expect(formatDateLong('2026-08-10', { year: true, locale: 'en-GB' })).toBe('10 August 2026');
   });
 
   it('formats short timeline dates without year or leading zeros', () => {
@@ -65,16 +66,24 @@ describe('date keys', () => {
   });
 
   it('formats medium and trip-range chrome dates', () => {
-    expect(formatDateKeyMedium('2026-09-08')).toBe('Sep 8');
-    expect(formatTripDateRangeLabel('2026-09-08', '2026-09-14')).toBe(
+    expect(formatDateKeyMedium('2026-09-08', 'en-US')).toBe('Sep 8');
+    expect(formatDateKeyMedium('2026-09-08', 'en-GB')).toBe('8 Sept');
+    expect(formatTripDateRangeLabel('2026-09-08', '2026-09-14', 'en-US')).toBe(
       'Sep 8 – Sep 14, 2026',
     );
     expect(formatTripWeekdayRangeLabel('2026-09-08', '2026-09-14')).toBe(
       'Tuesday – Monday',
     );
-    expect(formatTripDateRangeLabel('2025-12-30', '2026-01-02')).toBe(
+    expect(formatTripDateRangeLabel('2025-12-30', '2026-01-02', 'en-US')).toBe(
       'Dec 30, 2025 – Jan 2, 2026',
     );
+  });
+
+  it('uses month-first dates for locales that use the US ordering', () => {
+    expect(formatDateKey('2026-08-24', 'en-US')).toBe('8/24/2026');
+    expect(formatDateKey('2026-08-24', 'en-PH')).toBe('8/24/2026');
+    expect(formatDateKey('2026-08-24', 'es-US')).toBe('8/24/2026');
+    expect(formatDateKey('2026-08-24', 'en-GB')).toBe('24/08/2026');
   });
 
   it('handles legacy preferences without a native picker locale', () => {

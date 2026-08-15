@@ -11,6 +11,10 @@ import type {
   FinanceTaxYear,
   FinanceTransaction,
 } from './types';
+import type {
+  FinanceRewardCardProfile,
+  FinanceRewardProfileDraft,
+} from './rewards-types';
 
 function isoNow(): string {
   return new Date().toISOString();
@@ -56,6 +60,7 @@ export function createFinanceTransaction(input: {
   activity?: FinanceTransaction['activity'];
   activityTime?: string;
   externalId?: string;
+  sourceCategory?: string;
   ezPassFriendId?: string;
   ezPassFriendName?: string;
 }): FinanceTransaction {
@@ -75,6 +80,7 @@ export function createFinanceTransaction(input: {
     activity: input.activity ?? 'expense',
     activityTime: input.activityTime,
     externalId: input.externalId,
+    sourceCategory: input.sourceCategory,
     ezPassFriendId: input.ezPassFriendId,
     ezPassFriendName: input.ezPassFriendName,
     createdAt: now,
@@ -96,6 +102,21 @@ export function createFinanceAccount(
     name: input.name.trim() || 'Account',
     createdAt: input.createdAt ?? now,
     updatedAt: input.updatedAt ?? now,
+  };
+}
+
+export function createFinanceRewardProfile(
+  draft: FinanceRewardProfileDraft,
+  id?: string,
+): FinanceRewardCardProfile {
+  const now = isoNow();
+  return {
+    ...draft,
+    id: id ?? newUuid(),
+    issuer: draft.issuer.trim(),
+    name: draft.name.trim() || 'Rewards Card',
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
@@ -122,6 +143,10 @@ const BILL_KIND_CATEGORY: Record<FinanceBillKind, string> = {
   other: 'other',
 };
 
+export function financeBillCategoryForKind(kind: FinanceBillKind): string {
+  return BILL_KIND_CATEGORY[kind];
+}
+
 export function createFinanceBill(input: {
   id?: string;
   name: string;
@@ -144,7 +169,7 @@ export function createFinanceBill(input: {
     currency: input.currency,
     cadence: input.cadence,
     nextDue: input.nextDue,
-    categoryId: input.categoryId ?? BILL_KIND_CATEGORY[input.kind],
+    categoryId: input.categoryId ?? financeBillCategoryForKind(input.kind),
     entityId: input.entityId,
     kind: input.kind,
     accountId: input.accountId,

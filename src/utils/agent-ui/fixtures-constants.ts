@@ -67,6 +67,10 @@ export const AGENT_UI_DEMO_FOOD_ACTIVITY_ID = 'activity-agent-ui-demo-meal';
 export const AGENT_UI_DEMO_EVENT_ACTIVITY_ID = 'activity-agent-ui-demo-event';
 export const AGENT_UI_DEMO_EVENT_BOUT_ID = 'bout_agent_ui_demo_main';
 
+/** Stable linked-card transaction for Finance categorization flows. */
+export const AGENT_UI_DEMO_FINANCE_TRANSACTION_ID =
+  'transaction-agent-ui-demo-finance';
+
 /** Stable gym activity for workouts Today’s Plan. */
 export const AGENT_UI_DEMO_WORKOUT_ACTIVITY_ID = 'activity-agent-ui-demo-workout';
 export const AGENT_UI_DEMO_WORKOUT_EXERCISE_ID =
@@ -114,6 +118,7 @@ export type AgentUiFixtureName =
   | 'event-demo'
   | 'home-weather'
   | 'food-demo'
+  | 'finance-demo'
   | 'workouts-demo'
   | 'vision-board-demo';
 
@@ -168,6 +173,7 @@ export const AGENT_UI_FIXTURE_NAMES = [
   'event-demo',
   'home-weather',
   'food-demo',
+  'finance-demo',
   'workouts-demo',
   'vision-board-demo',
 ] as const;

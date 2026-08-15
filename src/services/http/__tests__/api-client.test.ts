@@ -72,4 +72,22 @@ describe('apiRequest', () => {
     expect(outcome).toBe('aborted');
     expect(mockFetch).not.toHaveBeenCalled();
   });
+
+  it('maps an unreadable success body to the unavailable error', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: { get: () => '12' },
+      json: () => Promise.reject(new SyntaxError('Unexpected token')),
+    });
+
+    await expect(
+      apiRequest({
+        url: 'https://api.example.com/data',
+        unavailableMessage: 'Unavailable',
+        offlineMessage: 'Offline',
+        createError: (message) => new TestApiError(message),
+      }),
+    ).rejects.toMatchObject({ message: 'Unavailable' });
+  });
 });

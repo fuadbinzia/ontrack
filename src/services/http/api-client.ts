@@ -129,5 +129,9 @@ export async function apiRequest<T, TError extends Error>(
   }
 
   finishActivity({ receivedBytes: Number(response.headers.get('content-length')) || 0 });
-  return response.json() as Promise<T>;
+  try {
+    return await response.json() as T;
+  } catch {
+    throw createError(unavailableMessage, defaultErrorCode, response.status);
+  }
 }

@@ -3,15 +3,16 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, Button, Card, DateField, ErrorMessage, Input, Screen, SectionHeader, TimeField } from '@/components/primitives';
+import { AppText, Button, Card, DateField, ErrorMessage, GlassPlate, Input, Screen, SectionHeader, TimeField } from '@/components/primitives';
 import { ChipRow } from '@/components/shared';
 import { radii, spacing } from '@/design-system';
 import { usePendingImagePickerResult } from '@/hooks/use-pending-image-picker';
 import {
+    buildFallbackCarePlan,
     createPlantCarePlan,
     identifyPlant,
     persistPlantPhoto,
-    PlantServiceError,
+    plantServiceErrorMessage,
     searchPlants,
     type PlantTaxonSearchResult,
 } from '@/services/plants';
@@ -129,7 +130,7 @@ export default function NewPlantScreen() {
       setNickname(result.identity.commonName);
       setStep('details');
     } catch (caught) {
-      setError(caught instanceof PlantServiceError ? caught.message : 'The plant could not be analyzed.');
+      setError(plantServiceErrorMessage(caught, 'The plant could not be analyzed.'));
     } finally {
       setBusy(false);
     }
@@ -213,12 +214,12 @@ export default function NewPlantScreen() {
     setError(undefined);
     try {
       const result = await createPlantCarePlan({ identity, health, room: roomProfile(), roomPhotoUri: roomPhoto });
-      setCarePlan(result.carePlan);
+      setCarePlan(result.carePlan ?? buildFallbackCarePlan({ identity, health, room: roomProfile() }));
+    } catch {
+      setCarePlan(buildFallbackCarePlan({ identity, health, room: roomProfile() }));
+    } finally {
       setRoomPhoto(undefined);
       setStep('review');
-    } catch (caught) {
-      setError(caught instanceof PlantServiceError ? caught.message : 'A care plan could not be created.');
-    } finally {
       setBusy(false);
     }
   };
@@ -282,7 +283,7 @@ export default function NewPlantScreen() {
 
       {step === 'photo' ? (
         <>
-          {plantPhoto ? <Image source={plantPhoto} style={styles.hero} contentFit="cover" /> : <View style={styles.photoPlaceholder}><AppText color="secondary">No Plant Photo Yet</AppText></View>}
+          {plantPhoto ? <Image source={plantPhoto} style={styles.hero} contentFit="cover" /> : <GlassPlate style={styles.photoPlaceholder}><AppText color="secondary">No Plant Photo Yet</AppText></GlassPlate>}
           <View style={styles.buttonRow}>
             <View style={styles.flex}>
               <Button
@@ -448,7 +449,7 @@ const styles = StyleSheet.create({
   content: { gap: spacing.md },
   hero: { width: '100%', aspectRatio: 4 / 3, borderRadius: radii.lg },
   roomPhoto: { width: '100%', aspectRatio: 16 / 9, borderRadius: radii.md },
-  photoPlaceholder: { aspectRatio: 4 / 3, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(128,128,128,0.12)', borderRadius: radii.lg },
+  photoPlaceholder: { aspectRatio: 4 / 3, alignItems: 'center', justifyContent: 'center', borderRadius: radii.lg },
   buttonRow: { flexDirection: 'row', gap: spacing.md },
   flex: { flex: 1 },
   summaryCard: { gap: spacing.xs },

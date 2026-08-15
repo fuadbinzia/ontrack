@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.93',
+    date: '2026-08-15',
+    notes: [
+      'Keep Build Care Plan working when the plant model fails.',
+    ],
+  },
+  {
     version: '1.0.92',
     date: '2026-08-15',
     notes: [

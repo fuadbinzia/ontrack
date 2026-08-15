@@ -1,3 +1,4 @@
+import { buildFallbackCarePlan } from '@/services/plants/fallback-care';
 import { canUsePlantIdentityForCare, validatePlantHealth, validatePlantIdentity } from '@/services/plants/validate';
 import { compressResponse } from '@/services/http/compression';
 import {
@@ -31,21 +32,8 @@ export async function POST(request: Request) {
   try {
     const carePlan = await createCarePlan({ identity, health, room: input.room, roomImageDataUrl });
     return compressResponse(request, Response.json({ carePlan }, { headers: plantCorsHeaders }));
-  } catch (error) {
-    if (error instanceof Error && error.message === 'OLLAMA_UNAVAILABLE') {
-      return plantError(
-        'The local plant model is unavailable. Start Ollama and install the configured vision model.',
-        'PROVIDER_FAILURE',
-        503,
-      );
-    }
-    if (error instanceof Error && error.message === 'CLOUDFLARE_AI_UNAVAILABLE') {
-      return plantError(
-        'Plant care planning is temporarily unavailable. Try again shortly.',
-        'PROVIDER_FAILURE',
-        503,
-      );
-    }
-    return plantError('Plant care planning is temporarily unavailable.', 'PROVIDER_FAILURE', 502);
+  } catch {
+    const carePlan = buildFallbackCarePlan({ identity, health, room: input.room });
+    return compressResponse(request, Response.json({ carePlan }, { headers: plantCorsHeaders }));
   }
 }

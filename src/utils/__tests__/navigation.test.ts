@@ -143,3 +143,54 @@ describe('root stack back button', () => {
     expect(body).not.toContain('router.replace(');
   });
 });
+
+const NESTED_STACK_LAYOUTS = [
+  'src/app/(tabs)/(today)/_layout.tsx',
+  'src/app/(tabs)/to-do/_layout.tsx',
+  'src/app/(tabs)/travel/_layout.tsx',
+  'src/app/(tabs)/profile/_layout.tsx',
+  'src/app/(tabs)/plants/_layout.tsx',
+  'src/app/(tabs)/food/_layout.tsx',
+  'src/app/(tabs)/vision-board/_layout.tsx',
+  'src/app/(tabs)/vehicles/_layout.tsx',
+  'src/app/(tabs)/finance/_layout.tsx',
+  'src/app/(tabs)/health/_layout.tsx',
+  'src/app/(tabs)/journal/_layout.tsx',
+] as const;
+
+describe('full-screen swipe-back stacks', () => {
+  it('enables iOS full-screen pop and Android ios_from_right on AppStack', () => {
+    const appStack = readFileSync(
+      join(process.cwd(), 'src/components/navigation/app-stack.tsx'),
+      'utf8',
+    );
+    expect(appStack).toContain('fullScreenGestureEnabled: true');
+    expect(appStack).toContain("'ios_from_right'");
+    expect(appStack).toContain('composeSwipeBackScreenLayout');
+  });
+
+  it('pops Android swipe-back through goBackOrReplace', () => {
+    const scene = readFileSync(
+      join(process.cwd(), 'src/components/navigation/swipe-back-scene.tsx'),
+      'utf8',
+    );
+    expect(scene).toContain('goBackOrReplace');
+    expect(scene).not.toContain('router.back(');
+  });
+
+  it.each(NESTED_STACK_LAYOUTS)('uses AppStack in %s', (file) => {
+    const layout = readFileSync(join(process.cwd(), file), 'utf8');
+    expect(layout).toContain('AppStack');
+    expect(layout).not.toContain('fade_from_bottom');
+  });
+
+  it('keeps the vision-board canvas and travel map off the swipe-back gesture', () => {
+    const vision = readFileSync(
+      join(process.cwd(), 'src/app/(tabs)/vision-board/_layout.tsx'),
+      'utf8',
+    );
+    const root = readFileSync(join(process.cwd(), 'src/app/_layout.tsx'), 'utf8');
+    expect(vision).toMatch(/name="\[id\]"[\s\S]*?gestureEnabled:\s*false/);
+    expect(root).toMatch(/name="travel-map"[\s\S]*?gestureEnabled:\s*false/);
+  });
+});

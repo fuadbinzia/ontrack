@@ -22,11 +22,6 @@ export type SkyMotionLayerProps = {
   driftAmp?: number;
   /** One-way drift duration ms; higher = lazier clouds. */
   driftMs?: number;
-  /**
-   * Day plates breathe layer opacity; night keeps a stable lift so per-star
-   * shimmer carries the sparkle without a lockstep pulse.
-   */
-  opacityMode?: 'breathe' | 'stable';
   tiltXAmp?: number;
   tiltYAmp?: number;
   driftYAmp?: number;
@@ -44,32 +39,12 @@ export function SkyMotionLayer({
   delayMs = 0,
   driftAmp = 0,
   driftMs = 28000,
-  opacityMode = 'breathe',
   tiltXAmp = 14,
   tiltYAmp = 9,
   driftYAmp = 1.2,
   children,
 }: SkyMotionLayerProps) {
-  const idle = useSharedValue(opacityMode === 'breathe' ? 0.72 : 1);
   const drift = useSharedValue(0);
-
-  useEffect(() => {
-    if (opacityMode !== 'breathe') return;
-    idle.value = withDelay(
-      delayMs,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0.65, {
-            duration: 2400,
-            easing: Easing.inOut(Easing.quad),
-          }),
-        ),
-        -1,
-        false,
-      ),
-    );
-  }, [delayMs, idle, opacityMode]);
 
   useEffect(() => {
     if (driftAmp <= 0) return;
@@ -94,10 +69,7 @@ export function SkyMotionLayer({
   }, [delayMs, drift, driftAmp, driftMs]);
 
   const style = useAnimatedStyle(() => {
-    const opacity =
-      opacityMode === 'breathe'
-        ? interpolate(energy.value, [0, 1], [idle.value, 1])
-        : interpolate(energy.value, [0, 1], [0.94, 1]);
+    const opacity = interpolate(energy.value, [0, 1], [0.94, 1]);
     const glide =
       driftAmp > 0
         ? interpolate(drift.value, [0, 1], [-driftAmp, driftAmp])

@@ -9,7 +9,7 @@ const layout = readFileSync(
 function screenOptions(name: string): string {
   const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = layout.match(
-    new RegExp(`<Stack\\.Screen\\s+name="${escapedName}"\\s+options=\\{\\{([\\s\\S]*?)\\}\\}\\s*/>`),
+    new RegExp(`<AppStack\\.Screen\\s+name="${escapedName}"\\s+options=\\{\\{([\\s\\S]*?)\\}\\}\\s*/>`),
   );
 
   if (!match?.[1]) {
@@ -43,7 +43,7 @@ describe('plant modal contrast', () => {
 
   it('keeps non-modal plant routes transparent for the shared glass atmosphere', () => {
     expect(layout).toContain("contentStyle: { backgroundColor: 'transparent' }");
-    expect(layout).toContain('<Stack.Screen name="index" />');
-    expect(layout).toContain('<Stack.Screen name="[id]" />');
+    expect(layout).toContain('<AppStack.Screen name="index" />');
+    expect(layout).toContain('<AppStack.Screen name="[id]" />');
   });
 });

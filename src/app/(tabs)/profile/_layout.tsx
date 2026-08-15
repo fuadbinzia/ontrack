@@ -1,23 +1,9 @@
-import { Stack } from 'expo-router';
-
-import { motion } from '@/design-system';
-import { useTheme } from '@/hooks/use-theme';
+import { AppStack } from '@/components/navigation/app-stack';
 
 export const unstable_settings = {
   anchor: 'index',
 };
 
 export default function ProfileTabLayout() {
-  const theme = useTheme();
-
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: process.env.EXPO_OS === 'android' ? 'fade_from_bottom' : 'default',
-        animationDuration: motion.page,
-        contentStyle: { backgroundColor: 'transparent' },
-      }}
-    />
-  );
+  return <AppStack />;
 }

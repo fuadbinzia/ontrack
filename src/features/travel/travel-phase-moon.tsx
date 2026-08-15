@@ -1,14 +1,7 @@
-import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
-  Easing,
-  cancelAnimation,
   interpolate,
   useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import Svg, {
@@ -29,7 +22,6 @@ import {
   moonTerminatorPath,
 } from '@/features/travel/travel-sky-astronomy';
 import { celestialDiscHostStyle } from '@/features/travel/travel-sky-plate';
-import { useRouteIsActive } from '@/hooks/use-app-activity';
 
 /** Fixed lunar-surface features, positioned as fractions of the moon radius. */
 const MOON_MARIA = [
@@ -82,37 +74,17 @@ export function PhaseMoon({
   const shadow = moonPhaseShadowPath(cycle, cx, cy, r, southern);
   const litPath = moonTerminatorPath(cycle, cx, cy, r, southern);
   const illumination = moonIlluminationFromCycle(cycle);
-  const routeIsActive = useRouteIsActive();
-
-  const idle = useSharedValue(0.9);
-  useEffect(() => {
-    cancelAnimation(idle);
-    if (!routeIsActive) {
-      idle.value = 0.9;
-      return;
-    }
-    idle.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 2800, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.86, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-    return () => cancelAnimation(idle);
-  }, [idle, routeIsActive]);
-
   const style = useAnimatedStyle(() => {
     const energy = motion?.energy.value ?? 0;
     const tiltX = motion?.tiltX.value ?? 0;
     const tiltY = motion?.tiltY.value ?? 0;
     return {
-      opacity: interpolate(energy, [0, 1], [idle.value, 1]),
+      opacity: interpolate(energy, [0, 1], [0.9, 1]),
       transform: [{ translateX: tiltX * 3 }, { translateY: tiltY * 2 }],
     };
   });
 
-  // Soft sky-plate halo — pad beyond the disc so the glow can breathe.
+  // Soft sky-plate halo — pad beyond the disc so the glow stays round.
   const pad = r * 1.8;
   const box = pad * 2;
   const glowOpacity = 0.1 + illumination * 0.14;

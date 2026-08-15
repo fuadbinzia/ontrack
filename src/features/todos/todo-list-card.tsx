@@ -4,7 +4,6 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText, DragHandle, GlassPlate, Symbol } from '@/components/primitives';
 import { glassMaterials, layout, radii } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
-import { todoListIcon } from '@/features/todos/list-icon';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoList } from '@/store/todos';
@@ -54,10 +53,8 @@ export function TodoListCard({
   testID?: string;
 }) {
   const theme = useTheme();
-  const { spacing, s, typography } = useResponsive();
+  const { spacing, typography } = useResponsive();
   const nameInputRef = useRef<TextInput>(null);
-  const icon = todoListIcon(list.name, list.kind);
-  const iconBox = Math.max(44, s(48));
   // Keep the compact avatar stack visually subordinate to the checklist title.
   const collaboratorChip = Math.max(14, Math.round(typography.caption.lineHeight));
   const collaboratorRing = 1;
@@ -72,18 +69,6 @@ export function TodoListCard({
   const dark = theme.name === 'dark';
   const cardContents = (
     <>
-      <GlassPlate
-        airy
-        style={[
-          styles.cardIcon,
-          {
-            width: iconBox,
-            height: iconBox,
-            borderRadius: radii.md,
-          },
-        ]}>
-        <Symbol name={icon} size={22} color={theme.textSecondary} />
-      </GlassPlate>
       <View style={[styles.cardCopy, { gap: spacing.xs, minWidth: 0, flexShrink: 1 }]}>
         {canRename ? (
           <View style={styles.nameEditor}>
@@ -159,8 +144,8 @@ export function TodoListCard({
         <AppText variant="heading" color={open ? 'accent' : 'success'}>
           {open}
         </AppText>
-        <AppText variant="caption" color="tertiary">
-          open
+        <AppText variant="caption" color="tertiary" fit titleCase>
+          Open
         </AppText>
       </View>
     </>
@@ -279,12 +264,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.16,
     shadowRadius: 16,
     elevation: 8,
-  },
-  cardIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    zIndex: 1,
   },
   cardCopy: { flex: 1 },
   nameEditor: {

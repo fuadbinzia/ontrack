@@ -104,7 +104,7 @@ describe('canonical travel sheet design', () => {
     expect(chat).not.toContain('router.back()');
     // Nested under (tabs)/travel so the bottom nav stays on itinerary + tools.
     expect(travelLayout).toContain("anchor: 'index'");
-    expect(travelLayout).toContain('headerShown: false');
+    expect(travelLayout).toContain('AppStack');
 
     const planHero = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-plan-hero.tsx'),

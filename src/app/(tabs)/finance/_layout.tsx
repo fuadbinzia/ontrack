@@ -1,6 +1,4 @@
-import { Stack } from 'expo-router';
-
-import { motion } from '@/design-system';
+import { AppStack } from '@/components/navigation/app-stack';
 
 export const unstable_settings = {
   anchor: 'index',
@@ -8,25 +6,19 @@ export const unstable_settings = {
 
 export default function FinanceLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: process.env.EXPO_OS === 'android' ? 'fade_from_bottom' : 'default',
-        animationDuration: motion.page,
-        contentStyle: { backgroundColor: 'transparent' },
-      }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="transactions" />
-      <Stack.Screen name="expense" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="ezpass" />
-      <Stack.Screen name="ezpass-import" />
-      <Stack.Screen name="bills" />
-      <Stack.Screen name="subscriptions" />
-      <Stack.Screen name="buckets" />
-      <Stack.Screen name="entities" />
-      <Stack.Screen name="accounts" />
-      <Stack.Screen name="rewards" />
-      <Stack.Screen name="tax" />
-    </Stack>
+    <AppStack>
+      <AppStack.Screen name="index" />
+      <AppStack.Screen name="transactions" />
+      <AppStack.Screen name="expense" options={{ presentation: 'modal' }} />
+      <AppStack.Screen name="ezpass" />
+      <AppStack.Screen name="ezpass-import" />
+      <AppStack.Screen name="bills" />
+      <AppStack.Screen name="subscriptions" />
+      <AppStack.Screen name="buckets" />
+      <AppStack.Screen name="entities" />
+      <AppStack.Screen name="accounts" />
+      <AppStack.Screen name="rewards" />
+      <AppStack.Screen name="tax" />
+    </AppStack>
   );
 }

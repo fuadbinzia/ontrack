@@ -36,13 +36,12 @@ export function MotionLayer({
   ...props
 }: Omit<
   ComponentProps<typeof SharedMotionLayer>,
-  'opacityMode' | 'tiltXAmp' | 'tiltYAmp' | 'driftYAmp'
+  'tiltXAmp' | 'tiltYAmp' | 'driftYAmp'
 >) {
   return (
     <SharedMotionLayer
       {...props}
       driftMs={driftMs}
-      opacityMode="stable"
       tiltXAmp={16}
       tiltYAmp={10}
       driftYAmp={1}

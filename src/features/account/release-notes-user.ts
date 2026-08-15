@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.98',
+    date: '2026-08-15',
+    notes: [
+      'Let stacked screens swipe back from anywhere, and stop itinerary skies from pulsing brightness.',
+    ],
+  },
+  {
     version: '1.0.97',
     date: '2026-08-15',
     notes: [

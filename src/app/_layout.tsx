@@ -1,4 +1,4 @@
-import { Stack, usePathname, useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import {
   DarkTheme,
   DefaultTheme,
@@ -14,13 +14,13 @@ import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 
+import { AppStack } from '@/components/navigation/app-stack';
 import { NavigationSessionSync } from '@/components/navigation/navigation-session-sync';
 import { AppPromptHost } from '@/components/primitives/app-prompt';
 import { AppSafeArea } from '@/components/primitives/app-safe-area';
 import { HeaderBackButton } from '@/components/primitives/back-button';
 import { RouteErrorBoundary } from '@/components/primitives/route-error-boundary';
 import { ScreenAtmosphere } from '@/components/primitives/screen-atmosphere';
-import { motion } from '@/design-system/motion';
 import { spacing } from '@/design-system/spacing';
 import { AppBootLoader } from '@/features/auth/app-boot-loader';
 import {
@@ -247,20 +247,13 @@ function RootNavigator({
       </Suspense>
       <AgentUiFabRestoreHost>
         <ThemeToggleFabHost>
-          <Stack
+          <AppStack
             screenOptions={{
               orientation: 'portrait',
               headerShown: true,
               headerTitle: '',
               headerShadowVisible: false,
               headerStyle: { backgroundColor: theme.backgroundPrimary },
-              // Prefer continuous native push over hard cuts; Android fades in
-              // from below so material transitions don’t snap.
-              animation:
-                process.env.EXPO_OS === 'android'
-                  ? 'fade_from_bottom'
-                  : 'default',
-              animationDuration: motion.page,
               ...(process.env.EXPO_OS === 'ios'
                 ? {
                     unstable_headerLeftItems: () => [
@@ -278,8 +271,8 @@ function RootNavigator({
               },
             }}
           >
-            <Stack.Protected guard={welcomeAccess}>
-              <Stack.Screen
+            <AppStack.Protected guard={welcomeAccess}>
+              <AppStack.Screen
                 name="welcome"
                 options={{
                   animation: 'fade',
@@ -287,9 +280,9 @@ function RootNavigator({
                   contentStyle: { backgroundColor: 'transparent' },
                 }}
               />
-            </Stack.Protected>
-            <Stack.Protected guard={phase === 'resolving-data'}>
-              <Stack.Screen
+            </AppStack.Protected>
+            <AppStack.Protected guard={phase === 'resolving-data'}>
+              <AppStack.Screen
                 name="auth/data-choice"
                 options={{
                   animation: 'fade',
@@ -298,9 +291,9 @@ function RootNavigator({
                   contentStyle: { backgroundColor: 'transparent' },
                 }}
               />
-            </Stack.Protected>
-            <Stack.Protected guard={appAccess}>
-              <Stack.Screen
+            </AppStack.Protected>
+            <AppStack.Protected guard={appAccess}>
+              <AppStack.Screen
                 name="(tabs)"
                 options={{
                   headerShown: false,
@@ -313,7 +306,7 @@ function RootNavigator({
                   contentStyle: { backgroundColor: 'transparent' },
                 }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="onboarding"
                 options={{
                   animation: 'fade',
@@ -321,64 +314,65 @@ function RootNavigator({
                   contentStyle: { backgroundColor: 'transparent' },
                 }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="account"
                 options={{
                   headerShown: false,
                   contentStyle: { backgroundColor: 'transparent' },
                 }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="travel-map"
                 options={{
                   headerShown: false,
                   orientation: 'all',
+                  gestureEnabled: false,
                   contentStyle: {
                     backgroundColor: 'transparent',
                     paddingTop: 0,
                   },
                 }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="vision-board/category-editor"
                 options={{ presentation: 'modal' }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="vision-board/item-editor"
                 options={{ presentation: 'modal' }}
               />
               {/* Legacy path redirects → nested tab stacks (bottom nav persists). */}
-              <Stack.Screen name="agents" options={{ headerShown: false }} />
-              <Stack.Screen
+              <AppStack.Screen name="agents" options={{ headerShown: false }} />
+              <AppStack.Screen
                 name="design-system"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen name="api-usage" options={{ headerShown: false }} />
-              <Stack.Screen
+              <AppStack.Screen name="api-usage" options={{ headerShown: false }} />
+              <AppStack.Screen
                 name="integrations"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen name="developer" options={{ headerShown: false }} />
-              <Stack.Screen
+              <AppStack.Screen name="developer" options={{ headerShown: false }} />
+              <AppStack.Screen
                 name="nutrition-profile"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="todos/[id]"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="todos/[id]/settings"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="todos/[id]/recipe-import"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen name="todo-collaborators" />
-              <Stack.Screen name="todo-invites" />
-              <Stack.Screen name="invite/travel" />
-              <Stack.Screen
+              <AppStack.Screen name="todo-collaborators" />
+              <AppStack.Screen name="todo-invites" />
+              <AppStack.Screen name="invite/travel" />
+              <AppStack.Screen
                 name="activity-form"
                 options={{
                   // SheetScaffold owns the backdrop and pan-down gesture so
@@ -393,14 +387,14 @@ function RootNavigator({
                   },
                 }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="detail/gym-active/[id]"
                 options={{
                   presentation: 'fullScreenModal',
                   gestureEnabled: false,
                 }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="games/balloon-pop"
                 options={{
                   headerShown: false,
@@ -408,18 +402,18 @@ function RootNavigator({
                   contentStyle: { backgroundColor: 'transparent' },
                 }}
               />
-            </Stack.Protected>
-            <Stack.Protected guard={appAccess && hasOnboarded}>
-              <Stack.Screen
+            </AppStack.Protected>
+            <AppStack.Protected guard={appAccess && hasOnboarded}>
+              <AppStack.Screen
                 name="share-import"
                 options={{ gestureEnabled: false }}
               />
-              <Stack.Screen
+              <AppStack.Screen
                 name="share-event"
                 options={{ gestureEnabled: false }}
               />
-            </Stack.Protected>
-            <Stack.Screen
+            </AppStack.Protected>
+            <AppStack.Screen
               name="auth/callback"
               options={{
                 animation: 'fade',
@@ -427,21 +421,21 @@ function RootNavigator({
                 contentStyle: { backgroundColor: 'transparent' },
               }}
             />
-            <Stack.Screen name="i/[code]" />
-            <Stack.Screen name="j/[code]" />
-            <Stack.Screen name="f/[code]" />
-            <Stack.Screen name="l/[code]" />
-            <Stack.Screen name="c/[code]" />
-            <Stack.Screen name="v/[code]" />
-            <Stack.Screen
+            <AppStack.Screen name="i/[code]" />
+            <AppStack.Screen name="j/[code]" />
+            <AppStack.Screen name="f/[code]" />
+            <AppStack.Screen name="l/[code]" />
+            <AppStack.Screen name="c/[code]" />
+            <AppStack.Screen name="v/[code]" />
+            <AppStack.Screen
               name="privacy"
               options={legalDocumentScreenOptions('Privacy Policy')}
             />
-            <Stack.Screen
+            <AppStack.Screen
               name="terms"
               options={legalDocumentScreenOptions('Terms of Use')}
             />
-            <Stack.Screen
+            <AppStack.Screen
               name="agent/ui"
               options={{
                 headerShown: false,
@@ -450,7 +444,7 @@ function RootNavigator({
                 contentStyle: { backgroundColor: 'transparent' },
               }}
             />
-          </Stack>
+          </AppStack>
         </ThemeToggleFabHost>
       </AgentUiFabRestoreHost>
       {/* After Stack inside flex:1 so absolute overlay covers the window. */}

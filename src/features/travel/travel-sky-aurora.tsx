@@ -18,9 +18,14 @@ import type { TiltSkyMotion } from '@/features/travel/use-tilt-sky-motion';
 
 export { destinationShowsAurora } from '@/features/travel/travel-sky-aurora-destinations';
 
+/** Steady veil strength — night brightness, not a looping pulse. */
+export function auroraVeilOpacity(muted?: boolean): number {
+  return muted ? 0.28 : 0.55;
+}
+
 /**
  * Soft aurora curtains for Iceland (and kin) night headers.
- * Green/teal with a violet edge — restrained motion, not a light show.
+ * Green/teal with a violet edge — restrained drift, not a brightness cycle.
  */
 export function TravelSkyAurora({
   statusBand,
@@ -32,28 +37,18 @@ export function TravelSkyAurora({
   motion: TiltSkyMotion;
   /** Dim under clouds / rain. */
   muted?: boolean;
-  /** When false, hold a static veil (no pulse/drift loops yet). */
+  /** When false, hold a static veil (no drift). */
   liveFx?: boolean;
 }) {
-  const pulse = useSharedValue(liveFx ? 0 : 0.7);
   const drift = useSharedValue(0.5);
+  const veil = auroraVeilOpacity(muted);
 
   useEffect(() => {
     if (!liveFx) {
-      cancelAnimation(pulse);
       cancelAnimation(drift);
-      pulse.value = 0.7;
       drift.value = 0.5;
       return;
     }
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.35, { duration: 3800, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
     drift.value = withDelay(
       400,
       withRepeat(
@@ -65,25 +60,18 @@ export function TravelSkyAurora({
         false,
       ),
     );
-    return () => {
-      cancelAnimation(pulse);
-      cancelAnimation(drift);
-    };
-  }, [drift, liveFx, pulse]);
+    return () => cancelAnimation(drift);
+  }, [drift, liveFx]);
 
-  const style = useAnimatedStyle(() => {
-    const base = muted ? 0.28 : 0.55;
-    return {
-      opacity: interpolate(pulse.value, [0, 1], [base * 0.65, base]),
-      transform: [
-        {
-          translateX:
-            interpolate(drift.value, [0, 1], [-6, 8]) + motion.tiltX.value * 5,
-        },
-        { translateY: motion.tiltY.value * 3 },
-      ],
-    };
-  });
+  const style = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX:
+          interpolate(drift.value, [0, 1], [-6, 8]) + motion.tiltX.value * 5,
+      },
+      { translateY: motion.tiltY.value * 3 },
+    ],
+  }));
 
   // Reach into the status-bar band so the green/teal veil continues behind the
   // clock (celestial discs stay cleared separately via SKY_CELESTIAL_CLEARANCE).
@@ -91,7 +79,9 @@ export function TravelSkyAurora({
   const y1 = statusBand + 52;
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, style]} pointerEvents="none">
+    <Animated.View
+      style={[StyleSheet.absoluteFill, { opacity: veil }, style]}
+      pointerEvents="none">
       <Svg
         width="100%"
         height="100%"

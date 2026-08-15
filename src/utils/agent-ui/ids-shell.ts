@@ -35,6 +35,7 @@ export const agentUiIdsShell = {
   overview: {
     screen: 'ontrack.overview.screen',
     hero: 'ontrack.overview.hero',
+    eventUpdates: 'ontrack.overview.eventUpdates',
     section: 'ontrack.overview.section.all',
     acknowledge: (key: string) =>
       `ontrack.overview.attention.acknowledge.${key.replace(/[^a-zA-Z0-9]+/g, '_')}`,
@@ -319,6 +320,7 @@ export const agentUiIdsShell = {
     durationMinutes: 'ontrack.activityForm.duration.mins',
     startTime: 'ontrack.activityForm.startTime',
     notes: 'ontrack.activityForm.notes',
+    attendeeEmails: 'ontrack.activityForm.attendeeEmails',
     pickPhoto: 'ontrack.activityForm.pickPhoto',
     analyzePhoto: 'ontrack.activityForm.analyzePhoto',
     removePhoto: 'ontrack.activityForm.removePhoto',

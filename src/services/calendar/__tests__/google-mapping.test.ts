@@ -193,3 +193,66 @@ it('matches all-day content by exclusive date boundaries', () => {
     summary: 'Conference', start: { date: '2026-08-12' }, end: { date: '2026-08-13' },
   }, activity, 'UTC')).toBe(false);
 });
+
+it('exports guest emails with app download links in the invitation description', () => {
+  const invited: Activity = {
+    id: 'activity-invited', date: '2026-08-12', title: 'Picnic', notes: 'Meet by the lake.',
+    attendeeEmails: ['alex@example.com', 'jordan@example.com'],
+    categoryId: 'personal', startMinutes: 720, durationMinutes: 60,
+    status: 'upcoming', createdAt: syncedAt, updatedAt: syncedAt,
+  };
+
+  expect(activityBody(invited, 'America/New_York')).toMatchObject({
+    attendees: [{ email: 'alex@example.com' }, { email: 'jordan@example.com' }],
+    description: expect.stringContaining('https://apps.apple.com/app/id6789723522'),
+  });
+  expect(activityBody(invited, 'America/New_York')).toMatchObject({
+    description: expect.stringContaining('https://play.google.com/store/apps/details'),
+  });
+});
+
+it('imports external guests without keeping the onTrack download footer in local notes', () => {
+  const activity = eventToActivity(
+    {
+      summary: 'Picnic',
+      description: [
+        'Meet by the lake.',
+        '',
+        'Shared from onTrack.',
+        'Download for iPhone: https://apps.apple.com/app/id6789723522',
+        'Download for Android: https://play.google.com/store/apps/details?id=com.imtihoss.ontracknow',
+      ].join('\n'),
+      attendees: [
+        { email: 'owner@example.com', organizer: true },
+        { email: 'alex@example.com', responseStatus: 'accepted' },
+      ],
+      start: { dateTime: '2026-08-12T12:00:00-04:00' },
+      end: { dateTime: '2026-08-12T13:00:00-04:00' },
+    },
+    undefined,
+    link,
+    'America/New_York',
+    syncedAt,
+  );
+
+  expect(activity.notes).toBe('Meet by the lake.');
+  expect(activity.attendeeEmails).toEqual(['alex@example.com']);
+});
+
+it('treats guest changes as Google-visible event changes but ignores RSVP status', () => {
+  const activity: Activity = {
+    id: 'activity-invited', date: '2026-08-12', title: 'Picnic',
+    attendeeEmails: ['alex@example.com'], categoryId: 'personal', startMinutes: 720,
+    durationMinutes: 60, status: 'upcoming', createdAt: syncedAt, updatedAt: syncedAt,
+  };
+  const body = activityBody(activity, 'America/New_York');
+
+  expect(googleEventMatchesActivity({
+    ...body,
+    attendees: [{ email: 'alex@example.com', responseStatus: 'accepted' }],
+  }, activity, 'America/New_York')).toBe(true);
+  expect(googleEventMatchesActivity({
+    ...body,
+    attendees: [{ email: 'jordan@example.com' }],
+  }, activity, 'America/New_York')).toBe(false);
+});

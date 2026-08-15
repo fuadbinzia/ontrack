@@ -555,7 +555,7 @@ export function UfcFightCard({
           />
         ))}
       </View>
-      {activeGroup?.bouts.map((bout) => (
+      {activeGroup?.bouts?.map((bout) => (
         <BoutRow
           key={bout.providerCompetitionId}
           bout={bout}

@@ -6,6 +6,7 @@ import {
   mergeOwnedItineraryItemWithRemote,
   pickNewerItineraryItem,
   preserveOwnedItinerarySecrets,
+  sortedVisibleItineraryForViewer,
   visibleItineraryForViewer,
 } from '../itinerary-visibility';
 import { normalizeTravelItineraryItem } from '../normalize';
@@ -102,6 +103,34 @@ describe('itinerary visibility', () => {
         'user-me',
       ).map((item) => item.id),
     ).toEqual(['item-mine', 'item-peer', 'item-trip']);
+  });
+
+  it('sorts visible stops without mutating their store-backed order', () => {
+    const later = flightItem({ id: 'item-later', date: '2026-09-09', startMinutes: 600 });
+    const early = flightItem({ id: 'item-early', date: '2026-09-08', startMinutes: 480 });
+    const lateSameDay = flightItem({ id: 'item-late-same-day', date: '2026-09-08', startMinutes: 900 });
+    const items = [later, lateSameDay, early];
+
+    expect(
+      sortedVisibleItineraryForViewer(items, 'user-me').map((item) => item.id),
+    ).toEqual(['item-early', 'item-late-same-day', 'item-later']);
+    expect(items.map((item) => item.id)).toEqual([
+      'item-later',
+      'item-late-same-day',
+      'item-early',
+    ]);
+  });
+
+  it('returns an independent list when visible stops are already sorted', () => {
+    const items = [
+      flightItem({ id: 'item-first', startMinutes: 480 }),
+      flightItem({ id: 'item-second', startMinutes: 600 }),
+    ];
+
+    const sorted = sortedVisibleItineraryForViewer(items, undefined);
+
+    expect(sorted).not.toBe(items);
+    expect(sorted).toEqual(items);
   });
 
   it('strips booking secrets from shared payloads', () => {

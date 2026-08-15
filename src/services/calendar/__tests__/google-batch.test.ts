@@ -1,4 +1,5 @@
 import { buildGoogleBatchBody, parseGoogleBatchResponse } from '../google-batch';
+import { googleCalendarInviteMutationPath } from '../calendar-invitations';
 import { assertGoogleBatchResult } from '../google-sync';
 import { dedupeGoogleCalendarActivities, googleEventIdForActivity } from '../google-server';
 
@@ -23,6 +24,13 @@ it('builds and correlates a Google Calendar multipart batch', () => {
   ].join('\r\n');
   expect(parseGoogleBatchResponse<{ id: string }>('multipart/mixed; boundary=response-boundary', response).get('operation-0'))
     .toEqual({ status: 200, body: { id: 'google-1' } });
+});
+
+it('requests Google attendee notifications for event creates, updates, and cancellations', () => {
+  expect(googleCalendarInviteMutationPath('primary'))
+    .toBe('/calendars/primary/events?sendUpdates=all');
+  expect(googleCalendarInviteMutationPath('team@example.com', 'event/1'))
+    .toBe('/calendars/team%40example.com/events/event%2F1?sendUpdates=all');
 });
 
 it('does not discard unlink mappings when Google rejects an embedded deletion', () => {

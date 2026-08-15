@@ -216,6 +216,7 @@ export function seedDomainAgentUiFixture(
         startMinutes: 21 * 60,
         durationMinutes: 240,
         status: 'upcoming',
+        attendeeEmails: ['invitee@example.com'],
       },
       event: {
         activityId: AGENT_UI_DEMO_EVENT_ACTIVITY_ID,

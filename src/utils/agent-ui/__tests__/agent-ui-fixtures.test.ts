@@ -463,6 +463,9 @@ describe('agent-ui fixtures', () => {
       expect.objectContaining({
         id: AGENT_UI_DEMO_EVENT_ACTIVITY_ID,
         detailKind: 'event',
+        activity: expect.objectContaining({
+          attendeeEmails: ['invitee@example.com'],
+        }),
         event: expect.objectContaining({
           bouts: expect.arrayContaining([
             expect.objectContaining({

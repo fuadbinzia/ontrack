@@ -18,7 +18,11 @@ import { glassFieldBackground, glassFieldBorder } from '@/design-system';
 import { usePendingImagePickerResult } from '@/hooks/use-pending-image-picker';
 import { useTheme } from '@/hooks/use-theme';
 import { analyzeMealPhoto, NutritionServiceError, persistMealPhoto } from '@/services/nutrition';
-import type { EventDetails } from '@/services/events';
+import {
+  formatCalendarAttendeeEmails,
+  parseCalendarAttendeeEmails,
+} from '@/services/calendar/calendar-invitations';
+import { asEventBroadcasts, type EventDetails } from '@/services/events';
 import { usePreferences } from '@/store/preferences';
 import { useAddons } from '@/store/addons';
 import { newId, useSchedule } from '@/store/schedule';
@@ -88,6 +92,9 @@ export default function ActivityFormScreen() {
   const [durationMinutes, setDurationMinutes] = useState(String(initialDuration.minutes));
   const status: ActivityStatus = existing?.status ?? 'upcoming';
   const [notes, setNotes] = useState(existing?.notes ?? '');
+  const [attendeeEmails, setAttendeeEmails] = useState(
+    formatCalendarAttendeeEmails(existing?.attendeeEmails),
+  );
   const [photo, setPhoto] = useState<string | number | undefined>(existing?.photo);
   const [meal, setMeal] = useState(() => cloneMeal(storedMeal, initialId, existing?.title ?? ''));
   const [workout, setWorkout] = useState(() => cloneWorkout(storedWorkout, initialId, existing?.title ?? ''));
@@ -120,6 +127,7 @@ export default function ActivityFormScreen() {
     durationHours,
     durationMinutes,
     notes,
+    attendeeEmails,
     photo,
     meal,
     workout,
@@ -138,8 +146,21 @@ export default function ActivityFormScreen() {
     allowLeave.current = true;
     goBackOrReplace(router, '/');
   };
-  const leaveAfterSave = () => {
+  const leaveAfterSave = (reviewInvitation: boolean, reviewActivityId?: string) => {
     allowLeave.current = true;
+    if (reviewInvitation) {
+      // Close the root transparent-modal route first. A single pop-to aimed at
+      // Tabs can reveal an underlying event-detail modal without completing
+      // the nested Profile navigation when this editor was opened from detail.
+      if (router.canDismiss()) router.dismiss();
+      requestAnimationFrame(() => {
+        router.navigate({
+          pathname: '/(tabs)/profile/calendar-sync',
+          params: reviewActivityId ? { reviewActivityId } : undefined,
+        });
+      });
+      return;
+    }
     goBackOrReplace(router, '/');
   };
   const confirmDiscard = (onDiscard: () => void) => {
@@ -327,6 +348,10 @@ export default function ActivityFormScreen() {
       return setError('Every task needs a title.');
     }
     if (category.detailKind === 'movie' && !movie) return setError('Search for and select a movie.');
+    const parsedAttendees = parseCalendarAttendeeEmails(attendeeEmails);
+    if (parsedAttendees.invalid.length) {
+      return setError(`Check these guest emails: ${parsedAttendees.invalid.join(', ')}`);
+    }
 
     const totalCalories = meal.items.reduce((sum, item) => sum + item.calories, 0);
     const summary =
@@ -343,7 +368,7 @@ export default function ActivityFormScreen() {
             : category.detailKind === 'event' && eventDetails
               ? [
                   eventDetails.venue?.name,
-                  eventDetails.broadcasts.map((item) => item.name).join(', ') || undefined,
+                  asEventBroadcasts(eventDetails.broadcasts).map((item) => item.name).join(', ') || undefined,
                 ].filter(Boolean).join(' · ')
             : existing?.summary;
 
@@ -359,6 +384,7 @@ export default function ActivityFormScreen() {
         durationMinutes: totalDurationMinutes,
         status,
         notes: notes.trim() || undefined,
+        attendeeEmails: parsedAttendees.emails,
         photo: category.supportsPhotos ? photo : undefined,
         photoProcessingVersion: category.detailKind === 'food' ? meal.photoProcessingVersion : undefined,
         summary,
@@ -384,8 +410,8 @@ export default function ActivityFormScreen() {
     } as const;
 
     const commitSave = (editScope: 'single' | 'series') => {
-      saveEvent({ ...payload, editScope });
-      leaveAfterSave();
+      const savedActivity = saveEvent({ ...payload, editScope });
+      leaveAfterSave(parsedAttendees.emails.length > 0, savedActivity.id);
     };
 
     if (isRecurringSeries) {
@@ -510,6 +536,8 @@ export default function ActivityFormScreen() {
           onStartMinutesChange={setStartMinutes}
           notes={notes}
           onNotesChange={setNotes}
+          attendeeEmails={attendeeEmails}
+          onAttendeeEmailsChange={setAttendeeEmails}
         />
 
         {category.supportsPhotos ? (
@@ -564,7 +592,7 @@ export default function ActivityFormScreen() {
         {error ? <ErrorMessage message={error} /> : null}
         <View style={styles.actions}>
           <GlassPrimaryAction
-            label="Save"
+            label={attendeeEmails.trim() ? 'Save & Review Invite' : 'Save'}
             onPress={save}
             disabled={!title.trim()}
             testID={AgentUiIds.activityForm.save}

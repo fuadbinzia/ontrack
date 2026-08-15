@@ -54,6 +54,8 @@ export function ActivityFormScheduleCard({
   onStartMinutesChange,
   notes,
   onNotesChange,
+  attendeeEmails,
+  onAttendeeEmailsChange,
 }: {
   date: string;
   onDateChange: (value: string) => void;
@@ -66,6 +68,8 @@ export function ActivityFormScheduleCard({
   onStartMinutesChange: (value: number) => void;
   notes: string;
   onNotesChange: (value: string) => void;
+  attendeeEmails: string;
+  onAttendeeEmailsChange: (value: string) => void;
 }) {
   return (
     <AgentTestId
@@ -125,6 +129,25 @@ export function ActivityFormScheduleCard({
           testID={AgentUiIds.activityForm.notes}
         />
       </ActivityFormGlassField>
+      <ActivityFormGlassField label="Guests">
+        <Input
+          value={attendeeEmails}
+          onChangeText={onAttendeeEmailsChange}
+          placeholder="alex@example.com, jordan@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          multiline
+          style={styles.guestEmails}
+          fieldBackground="transparent"
+          fieldBorderColor="transparent"
+          accessibilityLabel="Guest Emails"
+          testID={AgentUiIds.activityForm.attendeeEmails}
+        />
+      </ActivityFormGlassField>
+      <AppText variant="caption" color="secondary">
+        Save to review and send through Google Calendar. App Store and Google Play links are included.
+      </AppText>
     </AgentTestId>
   );
 }
@@ -257,6 +280,7 @@ const styles = StyleSheet.create({
   singleColumn: { width: '100%' },
   twoColumns: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   multiline: { minHeight: 96, textAlignVertical: 'top' },
+  guestEmails: { minHeight: 64, textAlignVertical: 'top' },
   photo: { width: '100%', height: 220, borderRadius: radii.lg, zIndex: 1 },
   analysisReady: { padding: spacing.md, gap: spacing.xs, borderRadius: radii.md },
   loader: { padding: spacing.md },

@@ -17,12 +17,17 @@ export function OPTIONS(request: Request) {
 function validFollow(value: unknown): value is EventFollow {
   if (!value || typeof value !== 'object') return false;
   const follow = value as Partial<EventFollow>;
-  return typeof follow.id === 'string'
-    && follow.id.length <= 100
-    && typeof follow.providerTargetId === 'string'
-    && follow.providerTargetId.length <= 100
-    && typeof follow.name === 'string'
-    && follow.name.length <= 120
+  const id = typeof follow.id === 'string' ? follow.id.trim() : '';
+  const providerTargetId = typeof follow.providerTargetId === 'string'
+    ? follow.providerTargetId.trim()
+    : '';
+  const name = typeof follow.name === 'string' ? follow.name.trim() : '';
+  return id.length > 0
+    && id.length <= 100
+    && providerTargetId.length > 0
+    && providerTargetId.length <= 100
+    && name.length > 0
+    && name.length <= 120
     && (follow.provider === 'thesportsdb' || follow.provider === 'ticketmaster')
     && isEventKind(follow.kind)
     && (follow.targetKind === 'team' || follow.targetKind === 'league' || follow.targetKind === 'promotion' || follow.targetKind === 'artist')

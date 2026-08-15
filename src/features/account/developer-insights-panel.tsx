@@ -59,7 +59,7 @@ export function DeveloperInsightsPanel() {
   }));
 
   const productSurfaces =
-    product?.topSurfaces.map((row) => ({
+    product?.topSurfaces?.map((row) => ({
       label: analyticsSurfaceLabel(row.surface as AnalyticsSurface),
       value: formatActiveDuration(row.activeMs),
     })) ?? [];

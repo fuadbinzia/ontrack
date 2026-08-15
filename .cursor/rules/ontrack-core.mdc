@@ -21,6 +21,7 @@ Keep this file short on purpose. Load detail only when the task needs it.
 ## Non-negotiables (every session)
 
 - **No personal identifiers** in source — see `no-personal-identifiers.mdc`.
+- **External HTTPS stays in-app first** → use `openHttpsUrl` / `openInAppBrowser`; direct app handoff requires an explicit user choice. See `in-app-browser.mdc`.
 - **Bug fixes require direct + surrounding regression tests** in the same change — see `bug-fix-regression-tests.mdc`; cover the reported failure plus adjacent/boundary/recurrence cases, and backfill missing coverage when touching an older fix.
 - **Device testing is opt-in only** → never boot, open, or use a simulator, emulator, physical device, `agent-ui`, or dual-platform UI verification unless the user explicitly requests device testing in the current task. App-affecting JS/UI defaults to typecheck + focused tests. If device testing is requested, use `./scripts/agent-ui-verify-both.sh --route … [--flow <name>] --exists …`, assert/`--color`, then stop.
 - **Headless verify** → dedicated agent devices only (`onTrack Agent N` / `onTrack_Agent_N`, **max 2 per platform**). No slot free → exit 3, report the skip, stop without testing. Never touch `onTrack iPhone 17 Pro` / `Galaxy_S26`; no headed handoff. Headed Simulator/AVD only if the user asks. Launch >30s = defect to fix. After testing: **safe shutdown** on lease EXIT (`KEEP_IOS`/`KEEP_ANDROID=0` default; Android `default_boot` snapshot first). Never leave agent devices orphaned (reap on claim). Park-warm only with `KEEP_*=1`.

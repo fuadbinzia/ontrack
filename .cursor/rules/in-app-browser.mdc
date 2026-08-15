@@ -1,0 +1,21 @@
+---
+description: External HTTPS content must preview inside onTrack before any app or system-browser handoff
+alwaysApply: true
+---
+
+# In-app browser first
+
+Keep users inside onTrack when they open ordinary web content.
+
+## Required
+
+1. Open `https:` links with `@/utils/safe-url` `openHttpsUrl` or `openInAppBrowser` so they appear in an in-app browser first.
+2. Let the user explicitly choose any service-provided **Open in App** action from that browser. Do not automatically deep-link or hand an ordinary HTTPS URL to the operating system.
+3. Fall back to `Linking.openURL` only when the in-app browser cannot be presented.
+4. Continue validating untrusted or synced URLs as HTTPS before opening them.
+
+## Direct handoff exceptions
+
+Direct `Linking.openURL` is allowed when the user explicitly selected an external-app action, or when the target is inherently an OS/app capability such as `tel:`, `sms:`, maps, system settings, an installed-app join link, or an app-store link.
+
+When adding a new external-content journey, regression-test that the first attempt uses the in-app browser and that system handoff is only a fallback or explicit user action.

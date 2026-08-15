@@ -133,6 +133,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.tabs.dock`                                       | Bottom nav       | Layout anchor — page-matching bottom nav fill (not tappable)                                          |
 | `ontrack.overview.screen`                                 | Overview         | App-wide summary screen anchor                                                                        |
 | `ontrack.overview.hero`                                   | Overview pulse   | Today's highest-level status                                                                          |
+| `ontrack.overview.eventUpdates`                           | Event updates    | Previews the highlighted event's YouTube search in-app; users may choose YouTube's app handoff         |
 | `ontrack.overview.attention.acknowledge.<key>`            | Acknowledge      | Hides the current version of an Overview attention item without changing its source record           |
 | `ontrack.overview.section.all`                            | Across onTrack   | Live module summary list                                                                              |
 | `ontrack.overview.row.<route>`                            | Overview row     | Opens the matching section; the Today row resets the timeline to the current date                     |
@@ -479,6 +480,7 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.activityForm.duration.mins`    | Duration minutes field                 |
 | `ontrack.activityForm.startTime`        | Start time                             |
 | `ontrack.activityForm.notes`            | Notes                                  |
+| `ontrack.activityForm.attendeeEmails`   | Guest email invitation field           |
 | `ontrack.activityForm.pickPhoto`        | Choose / replace photo                 |
 | `ontrack.activityForm.analyzePhoto`     | Re-run meal photo analysis             |
 | `ontrack.activityForm.removePhoto`      | Remove photo                           |
@@ -718,6 +720,7 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.straiaway.landing`                                      | Partner connect landing                                        |
 | `ontrack.straiaway.openOntrack`                                  | Open partner link in onTrack                                   |
 | `ontrack.calendarSync.connect`                                   | Connect Google Calendar                                        |
+| `ontrack.calendarSync.section.inviteReview`                      | Saved event and guest list awaiting Google Calendar review     |
 | `ontrack.calendarSync.reconnect`                                 | Renew Google Calendar permissions                              |
 | `ontrack.calendarSync.sync`                                      | Preview Google Calendar sync                                   |
 | `ontrack.calendarSync.confirmSync`                               | Confirm previewed calendar changes                             |

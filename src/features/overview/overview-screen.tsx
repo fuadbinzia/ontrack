@@ -12,6 +12,7 @@ import {
 } from '@/components/navigation/bottom-nav-tab-meta';
 import {
   AppText,
+  Button,
   GlassIconWell,
   GlassPlate,
   IconButton,
@@ -44,7 +45,9 @@ import {
 import { getNumberFormatter } from '@/utils/intl-cache';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { formatCount, formatCountWithVerb } from '@/utils/grammar';
+import { openHttpsUrl } from '@/utils/safe-url';
 
+import { findCalendarEventExcitement } from './calendar-event-excitement';
 import { OverviewSummaryRow, type OverviewRow } from './overview-summary-row';
 import {
   maintenanceDueCount,
@@ -73,6 +76,7 @@ export function OverviewScreen() {
   const enabledAddons = useAddons((state) => state.enabled);
   const activities = useSchedule((state) => state.activities);
   const categories = useSchedule((state) => state.categories);
+  const eventDetails = useSchedule((state) => state.eventDetails);
   const lists = useTodos((state) => state.lists);
   const tasks = useTodos((state) => state.tasks);
   const plans = useTravel((state) => state.plans);
@@ -94,7 +98,8 @@ export function OverviewScreen() {
 
   const summary = useMemo(() => {
     const today = todayKey();
-    const remaining = remainingActivities(activities, today, nowMinutes());
+    const currentMinutes = nowMinutes();
+    const remaining = remainingActivities(activities, today, currentMinutes);
     const nextTrip = nextTravelPlan(plans, today);
     const openTasks = tasks.filter((task) => !task.completed);
     const nextBills = upcomingBills(bills, today);
@@ -127,6 +132,13 @@ export function OverviewScreen() {
     }).filter((item) => !acknowledged.has(item.key));
     const nextTodayActivity =
       remaining.find((activity) => !activity.allDay) ?? remaining[0];
+    const eventExcitement = findCalendarEventExcitement({
+      activities,
+      categories,
+      eventDetails,
+      today,
+      currentMinutes,
+    });
     const rows: OverviewRow[] = [
       {
         routeName: '(today)',
@@ -315,6 +327,7 @@ export function OverviewScreen() {
       dateLabel: formatDateKeyMedium(today),
       attentionCount: attentionItems.length,
       attentionItems,
+      eventExcitement,
       rows: rows.filter((row) =>
         isTrackerRouteEnabled(row.routeName, enabledAddons),
       ),
@@ -325,6 +338,7 @@ export function OverviewScreen() {
     bills,
     categories,
     enabledAddons,
+    eventDetails,
     healthSummaries,
     lists.length,
     mealEntries,
@@ -338,10 +352,16 @@ export function OverviewScreen() {
     visionItems,
   ]);
 
-  const heroTitle = summary.attentionCount
-    ? `${formatCountWithVerb(summary.attentionCount, 'thing', 'needs', 'need')} your attention`
-    : 'Everything is moving smoothly';
-  const heroTone = summary.attentionCount ? theme.warning : theme.success;
+  const heroTitle =
+    summary.eventExcitement?.headline ??
+    (summary.attentionCount
+      ? `${formatCountWithVerb(summary.attentionCount, 'thing', 'needs', 'need')} your attention`
+      : 'Everything is moving smoothly');
+  const heroTone = summary.eventExcitement
+    ? theme.accentPrimary
+    : summary.attentionCount
+      ? theme.warning
+      : theme.success;
 
   return (
     <Screen contentStyle={{ gap: spacing.lg }}>
@@ -370,15 +390,16 @@ export function OverviewScreen() {
           <View style={[styles.heroTop, { gap: spacing.md }]}>
             <View style={styles.heroCopy}>
               <AppText variant="overline" fit style={{ color: heroTone }}>
-                Right now
+                {summary.eventExcitement?.eyebrow ?? 'Right now'}
               </AppText>
               <AppText variant="title" fit fitMinimumScale={0.64}>
                 {heroTitle}
               </AppText>
               <AppText variant="caption" color="secondary">
-                {summary.attentionCount
-                  ? 'Clear what matters, then keep moving.'
-                  : 'Your plans, routines, and care are in a good rhythm.'}
+                {summary.eventExcitement?.message ??
+                  (summary.attentionCount
+                    ? 'Clear what matters, then keep moving.'
+                    : 'Your plans, routines, and care are in a good rhythm.')}
               </AppText>
             </View>
             <View
@@ -389,13 +410,34 @@ export function OverviewScreen() {
             >
               <GlassIconWell size={s(56)} borderRadius={radii.xl}>
                 <Symbol
-                  name={summary.attentionCount ? 'warning' : 'habit'}
+                  name={
+                    summary.eventExcitement
+                      ? 'event'
+                      : summary.attentionCount
+                        ? 'warning'
+                        : 'habit'
+                  }
                   size={s(24)}
                   color={heroTone}
                 />
               </GlassIconWell>
             </View>
           </View>
+          {summary.eventExcitement?.youtubeUrl ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon="play"
+              style={styles.eventUpdatesButton}
+              accessibilityLabel={`Watch updates for ${summary.eventExcitement.activity.title} on YouTube`}
+              testID={AgentUiIds.overview.eventUpdates}
+              onPress={() =>
+                void openHttpsUrl(summary.eventExcitement?.youtubeUrl)
+              }
+            >
+              Watch Event Updates
+            </Button>
+          ) : null}
           {summary.attentionItems.length ? (
             <View
               style={[
@@ -509,6 +551,9 @@ const styles = StyleSheet.create({
   },
   attentionList: {
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  eventUpdatesButton: {
+    alignSelf: 'flex-start',
   },
   attentionRow: {
     minWidth: 0,

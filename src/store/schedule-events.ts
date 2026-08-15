@@ -6,6 +6,7 @@ import type {
   EventSearchResult,
   EventSuggestion,
 } from '@/services/events';
+import { asEventBroadcasts, asEventStringList } from '@/services/events';
 import { externalEventKey } from '@/services/events';
 import { todayKey } from '@/utils/date';
 import { newId } from '@/utils/id';
@@ -44,6 +45,7 @@ export function eventResultToActivity(
   updatedAt = createdAt,
 ): Activity {
   const timing = localTiming(event);
+  const broadcasts = asEventBroadcasts(event.broadcasts);
   return {
     id,
     categoryId: 'event',
@@ -54,7 +56,7 @@ export function eventResultToActivity(
     durationMinutes: event.durationMinutes,
     notes: event.notes,
     status: 'upcoming',
-    summary: [event.venue?.name, event.broadcasts.map((item) => item.name).join(', ')]
+    summary: [event.venue?.name, broadcasts.map((item) => item.name).join(', ')]
       .filter(Boolean)
       .join(' · ') || undefined,
     createdAt,
@@ -68,9 +70,20 @@ export function eventResultToDetails(
   now: string,
   options: Pick<EventDetails, 'importMode'> & { followId?: string },
 ): EventDetails {
-  const { title: _title, startDateTime: _start, date: _date, allDay: _allDay, durationMinutes: _duration, notes: _notes, ...details } = event;
+  const {
+    title: _title,
+    startDateTime: _start,
+    date: _date,
+    allDay: _allDay,
+    durationMinutes: _duration,
+    notes: _notes,
+    participants,
+    ...details
+  } = event;
   return {
     ...details,
+    participants: asEventStringList(participants),
+    broadcasts: asEventBroadcasts(details.broadcasts),
     activityId,
     followId: options.followId,
     importMode: options.importMode,
@@ -242,9 +255,16 @@ export function createScheduleEventActions(
       set((state) => removeFollowFromSchedule(state, id, removeFuture)),
     applyEventFollowSync: (response) =>
       set((state) => reconcileEventFollows(state, response)),
-    markEventFollowSyncError: (message) => set((state) => ({
-      eventFollows: state.eventFollows.map((follow) => ({ ...follow, lastSyncError: message })),
-    })),
+    markEventFollowSyncError: (followIds, message) => set((state) => {
+      const failedFollowIds = new Set(followIds);
+      return {
+        eventFollows: state.eventFollows.map((follow) =>
+          failedFollowIds.has(follow.id)
+            ? { ...follow, lastSyncError: message }
+            : follow,
+        ),
+      };
+    }),
     acceptEventSuggestion: (id) => {
       const suggestion = get().eventSuggestions.find((item) => item.id === id);
       if (!suggestion) return undefined;

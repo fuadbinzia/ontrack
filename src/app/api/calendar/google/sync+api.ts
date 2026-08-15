@@ -14,7 +14,12 @@ export async function POST(request: Request) {
     unauthorizedMessage: 'Sign in to sync calendars.',
     errorFallback: 'Calendar sync failed.',
   }, async (request, userId) => {
-    const body = await request.json() as { activities?: Activity[]; deletions?: GoogleCalendarDeletion[]; timeZone?: string; phase?: 'pull' | 'push' };
+    let body: { activities?: Activity[]; deletions?: GoogleCalendarDeletion[]; timeZone?: string; phase?: 'pull' | 'push' };
+    try {
+      body = await request.json() as typeof body;
+    } catch {
+      return Response.json({ error: 'Calendar payload is invalid JSON.' }, { status: 400, headers: apiCorsHeaders(request, METHODS) });
+    }
     if (!Array.isArray(body.activities) || body.activities.length > 10_000) {
       return Response.json({ error: 'Calendar payload is invalid.' }, { status: 400, headers: apiCorsHeaders(request, METHODS) });
     }

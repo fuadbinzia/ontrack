@@ -244,7 +244,7 @@ export function normalizeEspnUfcEvent(value: unknown): EventSearchResult | undef
     date,
     allDay: !card,
     durationMinutes: 240,
-    participants: headline?.fighters.map((fighter) => fighter.name) ?? [],
+    participants: headline?.fighters?.map((fighter) => fighter.name) ?? [],
     card: [...new Set(matchups)],
     bouts,
     venue: {

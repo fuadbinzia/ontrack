@@ -59,6 +59,7 @@ export interface ActivityDraft {
   startMinutes: number;
   durationMinutes: number;
   notes?: string;
+  attendeeEmails?: string[];
   travelPlanId?: string;
   travelItemId?: string;
 }
@@ -167,7 +168,7 @@ export interface ScheduleState {
   addEventFollow: (target: EventFollowTarget, mode: EventFollowMode) => EventFollow;
   removeEventFollow: (id: string, removeFuture: boolean) => void;
   applyEventFollowSync: (response: EventFollowSyncResponse) => void;
-  markEventFollowSyncError: (message: string) => void;
+  markEventFollowSyncError: (followIds: readonly string[], message: string) => void;
   acceptEventSuggestion: (id: string) => Activity | undefined;
   dismissEventSuggestion: (id: string) => void;
   resetAll: () => void;

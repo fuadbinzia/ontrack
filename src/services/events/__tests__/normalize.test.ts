@@ -5,6 +5,11 @@ import {
   normalizeTicketmasterAttraction,
   normalizeTicketmasterEvent,
 } from '@/services/events/normalize';
+import {
+  asEventFollowSyncResponse,
+  asEventFollowTargetsResponse,
+  asEventSearchResponse,
+} from '@/services/events';
 
 describe('event provider normalization', () => {
   it('normalizes a Ticketmaster concert with venue, artist, image, and ticket URL', () => {
@@ -122,4 +127,81 @@ describe('event provider normalization', () => {
     expect(normalizeTicketmasterAttraction({ id: '30', name: 'Example Artist' })).toMatchObject({ targetKind: 'artist', kind: 'concert' });
     expect(normalizeTicketmasterEvent({ id: 'missing-title' })).toBeUndefined();
   });
-});
+
+  it('normalizes malformed event search payloads into safe event rows', () => {
+    const response = asEventSearchResponse({
+      page: 3,
+      hasMore: true,
+      results: [
+        { provider: 'invalid', kind: 'sports', sourceName: 'Bad', providerEventId: 'x', title: 'Ignored', date: '2026-08-15' },
+        {
+          provider: 'espn',
+          kind: 'sports',
+          providerEventId: 'evt-1',
+          sourceName: 'ESPN',
+          title: 'Khabib vs Gaethje',
+          date: '2026-08-15',
+          allDay: false,
+          durationMinutes: 240,
+          participants: ['Khabib', 123, null],
+          card: ['Khabib vs Gaethje'],
+          broadcasts: [{ name: 'ESPN' }, { countryCode: 3 } as unknown as { name: string }],
+          bouts: [{
+            providerCompetitionId: '1',
+            cardSection: 'main',
+            fighters: [{ providerAthleteId: 'a', name: 'Khabib' }, { providerAthleteId: 'b' }],
+          }],
+        },
+      ],
+    } as const);
+
+    expect(response.page).toBe(3);
+    expect(response.hasMore).toBe(true);
+    expect(response.results).toHaveLength(1);
+    expect(response.results[0]).toMatchObject({
+      provider: 'espn',
+      providerEventId: 'evt-1',
+      title: 'Khabib vs Gaethje',
+      participants: ['Khabib'],
+      card: ['Khabib vs Gaethje'],
+      broadcasts: [{ name: 'ESPN' }],
+    });
+  });
+
+  it('normalizes malformed follow targets and sync responses', () => {
+    const targets = asEventFollowTargetsResponse({
+      results: [
+        {
+          provider: 'espn',
+          kind: 'sports',
+          providerTargetId: 'team-1',
+          targetKind: 'team',
+          name: 'Khabib',
+        },
+        { provider: 'espn', kind: 'sports', providerTargetId: '', targetKind: 'team', name: 'Invalid' },
+      ],
+    });
+    expect(targets).toMatchObject({
+      results: [{
+        provider: 'espn',
+        providerTargetId: 'team-1',
+        targetKind: 'team',
+      }],
+    });
+
+    const sync = asEventFollowSyncResponse({
+      syncedAt: undefined,
+      results: [
+        {
+          followId: 'follow-ok',
+          events: [{ provider: 'espn', kind: 'sports', sourceName: 'ESPN', providerEventId: 'evt-1', title: 'Fight', date: '2026-08-15', allDay: true, durationMinutes: 240 }],
+        },
+        { followId: '', events: [{ provider: 'espn', kind: 'sports', sourceName: 'ESPN', providerEventId: 'evt-2', title: 'Filtered', date: '2026-08-16', allDay: true, durationMinutes: 120 }] },
+      ],
+    });
+    expect(sync.results).toHaveLength(1);
+    expect(sync.results[0].followId).toBe('follow-ok');
+    expect(sync.results[0].events).toHaveLength(1);
+    expect(sync.syncedAt).toEqual(expect.any(String));
+  });
+}); 

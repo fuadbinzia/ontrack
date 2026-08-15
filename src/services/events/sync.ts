@@ -1,6 +1,15 @@
 import { useSchedule } from '@/store/schedule';
 
-import { fetchLiveUfcEvents, searchEvents, syncEventFollows } from './index';
+import {
+  asEventBroadcasts,
+  asEventFollowSyncResponse,
+  asEventSearchResponse,
+  asEventLiveResponse,
+  asEventStringList,
+  fetchLiveUfcEvents,
+  searchEvents,
+  syncEventFollows,
+} from './index';
 import type { EventDetails, EventSearchResult } from './types';
 
 export const EVENT_FOLLOW_STALE_MS = 6 * 60 * 60 * 1000;
@@ -62,6 +71,11 @@ export function mergeRichUfcDetails(
   syncedAt: string,
 ): EventDetails {
   if (!candidate.bouts?.length) return current;
+  const nextParticipants = asEventStringList(candidate.participants);
+  const currentParticipants = asEventStringList(current.participants);
+  const card = asEventStringList(candidate.card);
+  const candidateBroadcasts = asEventBroadcasts(candidate.broadcasts);
+  const currentBroadcasts = asEventBroadcasts(current.broadcasts);
   return {
     ...current,
     sourceName: /\bespn\b/i.test(current.sourceName)
@@ -69,15 +83,11 @@ export function mergeRichUfcDetails(
       : `${current.sourceName} · ESPN`,
     sourceUrl: candidate.sourceUrl ?? current.sourceUrl,
     imageUrl: candidate.imageUrl ?? current.imageUrl,
-    participants: candidate.participants.length
-      ? candidate.participants
-      : current.participants,
-    card: candidate.card?.length ? candidate.card : current.card,
+    participants: nextParticipants.length ? nextParticipants : currentParticipants,
+    card: card.length ? card : current.card,
     bouts: candidate.bouts,
     venue: candidate.venue?.name ? candidate.venue : current.venue,
-    broadcasts: candidate.broadcasts.length
-      ? candidate.broadcasts
-      : current.broadcasts,
+    broadcasts: candidateBroadcasts.length ? candidateBroadcasts : currentBroadcasts,
     watchUrl: candidate.watchUrl ?? current.watchUrl,
     status: candidate.status === 'unknown' ? current.status : candidate.status,
     lastSyncedAt: syncedAt,
@@ -104,11 +114,16 @@ export function refreshEventFollows(options: {
   if (follows.length === 0) return Promise.resolve();
 
   inFlight = syncEventFollows(follows)
-    .then((response) => useSchedule.getState().applyEventFollowSync(response))
+    .then((response) => useSchedule.getState().applyEventFollowSync(
+      asEventFollowSyncResponse(response),
+    ))
     .catch((error: unknown) => {
       if (error instanceof Error && error.name === 'AbortError') return;
       const message = error instanceof Error ? error.message : 'Event schedules could not be refreshed.';
-      useSchedule.getState().markEventFollowSyncError(message);
+      useSchedule.getState().markEventFollowSyncError(
+        follows.map((follow) => follow.id),
+        message,
+      );
       throw error;
     })
     .finally(() => {
@@ -130,7 +145,8 @@ export function refreshUfcEventDetails(activityId: string, signal?: AbortSignal)
 
   const request = searchEvents('sports', 'UFC', 0, signal, 'combat')
     .then((response) => {
-      const candidate = matchingUfcEvent(details, activity.title, activity.date, response.results);
+      const candidates = asEventSearchResponse(response).results;
+      const candidate = matchingUfcEvent(details, activity.title, activity.date, candidates);
       if (!candidate?.bouts?.length) return;
       const syncedAt = new Date().toISOString();
       useSchedule.setState((current) => ({
@@ -159,17 +175,18 @@ export function refreshLiveUfcEventDetails(activityId: string, signal?: AbortSig
 
   const request = fetchLiveUfcEvents(activity.date, signal)
     .then((response) => {
+      const liveResponse = asEventLiveResponse(response);
       const candidate = matchingUfcEvent(
         details,
         activity.title,
         activity.date,
-        response.results,
+        liveResponse.results,
       );
       if (!candidate?.bouts?.length) return;
       useSchedule.setState((current) => ({
         eventDetails: current.eventDetails.map((item) =>
           item.activityId === activityId
-            ? mergeRichUfcDetails(item, candidate, response.syncedAt)
+            ? mergeRichUfcDetails(item, candidate, liveResponse.syncedAt)
             : item,
         ),
       }));

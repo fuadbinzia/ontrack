@@ -99,7 +99,7 @@ export function FinanceEzPassScreen() {
     () =>
       ezPassFriendFilterOptions(
         summary.activities,
-        activeLedger?.members.filter((member) => member.role !== 'owner') ?? [],
+        activeLedger?.members?.filter((member) => member.role !== 'owner') ?? [],
         collaboration.userId,
       ),
     [activeLedger?.members, collaboration.userId, summary.activities],
@@ -164,7 +164,7 @@ export function FinanceEzPassScreen() {
       const local = transactions.find(
         (candidate) => candidate.id === transaction.ezPassSharedTransactionId,
       );
-      const member = activeLedger?.members.find((candidate) => candidate.userId === userId);
+      const member = activeLedger?.members?.find((candidate) => candidate.userId === userId);
       if (local && activeLedger?.role === 'owner') {
         saveTransaction({
           ...local,
@@ -491,7 +491,7 @@ export function FinanceEzPassScreen() {
             }
           })();
         }}
-        excludeIds={activeLedger?.members.map((member) => member.userId) ?? []}
+        excludeIds={activeLedger?.members?.map((member) => member.userId) ?? []}
         title="Add E-ZPass Friend"
         confirmLabel="Add"
         presentation="searchable-dropdown"

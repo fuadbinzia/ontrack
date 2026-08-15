@@ -42,8 +42,8 @@ export default function NutritionProfileScreen() {
   const [weightKg, setWeightKg] = useState(String(active?.weightKg ?? ''));
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(active?.activityLevel ?? 'low-active');
   const [goal, setGoal] = useState<NutritionGoal>(active?.goal ?? 'maintain');
-  const [allergies, setAllergies] = useState(active?.allergies.join(', ') ?? '');
-  const [preferences, setPreferences] = useState(active?.dietaryPreferences.join(', ') ?? '');
+  const [allergies, setAllergies] = useState(active?.allergies?.join(', ') ?? '');
+  const [preferences, setPreferences] = useState(active?.dietaryPreferences?.join(', ') ?? '');
   const [guardianAcknowledged, setGuardianAcknowledged] = useState(Boolean(active?.guardianAcknowledgedAt));
   const [targets, setTargets] = useState<NutritionTargets>();
   const [error, setError] = useState<string>();

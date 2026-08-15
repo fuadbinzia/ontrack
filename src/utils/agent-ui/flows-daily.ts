@@ -9,6 +9,15 @@ import {
 import { AGENT_UI_WAIT_TIMEOUT_MS } from './flows-waits';
 
 export const AGENT_UI_DAILY_FLOWS = {
+  'overview-event-updates': [
+    { op: 'seed', to: 'event-demo' },
+    { op: 'goto', to: 'overview' },
+    {
+      op: 'wait',
+      id: 'ontrack.overview.eventUpdates',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   calendar: [
     { op: 'goto', to: 'calendar' },
     { op: 'wait', prefix: 'ontrack.calendar.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
@@ -81,6 +90,43 @@ export const AGENT_UI_DAILY_FLOWS = {
       op: 'wait',
       // Title when editing; guidedTitle/date also settle the form.
       prefix: 'ontrack.activityForm.',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.activityForm.attendeeEmails',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  'event-demo-edit-review-invite': [
+    { op: 'seed', to: 'event-demo' },
+    { op: 'goto', to: 'today' },
+    {
+      op: 'wait',
+      id: `ontrack.today.activity.${AGENT_UI_DEMO_EVENT_ACTIVITY_ID}`,
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: `ontrack.today.activity.${AGENT_UI_DEMO_EVENT_ACTIVITY_ID}` },
+    {
+      op: 'wait',
+      id: 'ontrack.eventDetail.edit',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.eventDetail.edit' },
+    {
+      op: 'wait',
+      id: 'ontrack.activityForm.save',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.activityForm.save' },
+    {
+      op: 'wait',
+      id: 'ontrack.calendarSync.screen',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.calendarSync.section.inviteReview',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],

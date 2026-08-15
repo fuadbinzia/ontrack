@@ -1,7 +1,7 @@
 import type { ThemeTokenOverrides } from './theme-overrides';
 import type { ThemeAppearance } from './themes';
 
-export type ThemePresetId = 'classic' | 'coast' | 'garden' | 'berry' | 'midnight';
+export type ThemePresetId = 'classic' | 'coast' | 'garden' | 'berry' | 'midnight' | 'ember';
 
 export type ThemePreset = {
   id: ThemePresetId;
@@ -101,6 +101,27 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
       textOnAccent: '#061522',
       separator: '#29425F',
       danger: '#FF777E',
+    },
+  },
+  {
+    id: 'ember',
+    name: 'Ember',
+    description: 'Smoked charcoal and warm amber',
+    appearance: 'dark',
+    colors: {
+      backgroundPrimary: '#171513',
+      backgroundSecondary: '#211D18',
+      backgroundElevated: '#2B251E',
+      backgroundSunken: '#1D1915',
+      textPrimary: '#FFF7E8',
+      textSecondary: '#D7C7AE',
+      textTertiary: '#A39176',
+      accentPrimary: '#F0AE4D',
+      accentSoft: '#B8782F',
+      accentFaint: '#46321C',
+      textOnAccent: '#261704',
+      separator: '#493D30',
+      danger: '#FF7D68',
     },
   },
 ] as const;

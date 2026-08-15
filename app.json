@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.85",
+    "version": "1.0.86",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -50,7 +50,7 @@
       "appleTeamId": "F5HRXF5795"
     },
     "android": {
-      "versionCode": 85,
+      "versionCode": 86,
       "package": "com.imtihoss.ontracknow",
       "intentFilters": [
         {

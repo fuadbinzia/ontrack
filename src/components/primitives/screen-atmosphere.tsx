@@ -26,7 +26,10 @@ export function ScreenAtmosphere() {
   const a = glassMaterials.atmosphere;
   const customCanvas = useThemeOverrides((state) => {
     const colors = state.overrides.default;
-    return Boolean(colors.backgroundPrimary || colors.backgroundSecondary);
+    return (
+      state.presetId !== 'classic' ||
+      Boolean(colors.backgroundPrimary || colors.backgroundSecondary)
+    );
   });
   const dark = theme.name === 'dark';
   const colors = customCanvas
@@ -117,7 +120,10 @@ export function useScreenAtmosphereChrome(enabled = true) {
   const theme = useTheme();
   const customCanvas = useThemeOverrides((state) => {
     const colors = state.overrides.default;
-    return Boolean(colors.backgroundPrimary || colors.backgroundSecondary);
+    return (
+      state.presetId !== 'classic' ||
+      Boolean(colors.backgroundPrimary || colors.backgroundSecondary)
+    );
   });
   const { height } = useWindowDimensions();
   const top = customCanvas ? theme.backgroundSecondary : screenAtmosphereTopColor(theme.name);

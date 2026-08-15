@@ -10,11 +10,20 @@ type PackingListDependencies = {
 };
 
 export function packingListNameForTrip(title: string): string {
-  const tripTitle = title.trim();
+  const tripTitle = title.trim().replace(/\s+/g, ' ');
+  return tripTitle ? `${tripTitle} Checklist` : 'Checklist';
+}
+
+function normalizedListName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
+
+function legacyPackingListNameForTrip(title: string): string {
+  const tripTitle = title.trim().replace(/\s+/g, ' ');
   return tripTitle ? `${tripTitle} Packing List` : 'Packing List';
 }
 
-/** Returns the existing linked list, or creates and links one exactly once. */
+/** Returns and links the trip's existing checklist, or creates one exactly once. */
 export function getOrCreateTravelPackingList(
   plan: TravelPlan,
   {
@@ -24,12 +33,35 @@ export function getOrCreateTravelPackingList(
     now = () => new Date().toISOString(),
   }: PackingListDependencies,
 ): TodoList | undefined {
+  const expectedName = packingListNameForTrip(plan.title);
+  const existingByName = lists.find(
+    (list) =>
+      list.kind === 'checklist' &&
+      normalizedListName(list.name) === normalizedListName(expectedName),
+  );
   const existing = plan.packingListId
-    ? lists.find((list) => list.id === plan.packingListId)
+    ? lists.find(
+        (list) => list.id === plan.packingListId && list.kind === 'checklist',
+      )
     : undefined;
-  if (existing) return existing;
+  if (existing) {
+    const isLegacyGeneratedList =
+      normalizedListName(existing.name) ===
+      normalizedListName(legacyPackingListNameForTrip(plan.title));
+    if (!existingByName || !isLegacyGeneratedList) return existing;
+    if (existingByName.id === existing.id) return existing;
+  }
 
-  const created = createList(packingListNameForTrip(plan.title), 'checklist');
+  if (existingByName) {
+    const linked = savePlan({
+      ...plan,
+      packingListId: existingByName.id,
+      updatedAt: now(),
+    });
+    return linked ? existingByName : undefined;
+  }
+
+  const created = createList(expectedName, 'checklist');
   if (!created) return undefined;
 
   const linked = savePlan({

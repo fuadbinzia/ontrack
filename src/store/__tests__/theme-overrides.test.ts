@@ -71,21 +71,24 @@ describe('useThemeOverrides store', () => {
 
   it('applies a full preset atomically and marks later edits custom', () => {
     act(() => {
-      useThemeOverrides.getState().applyPreset('coast', {
-        backgroundPrimary: '#EAF3F5',
-        accentPrimary: '#18758A',
-        textPrimary: '#132D35',
-      });
+      useThemeOverrides.getState().applyPreset('coast');
     });
     expect(useThemeOverrides.getState().presetId).toBe('coast');
-    expect(useThemeOverrides.getState().overrides.default.backgroundPrimary).toBe('#EAF3F5');
+    expect(useThemeOverrides.getState().overrides.default).toEqual({});
     expect(useThemeOverrides.getState().overrides.travel).toEqual({});
     expect(useThemeOverrides.getState().history[0]?.action).toBe('applyPreset');
 
     act(() => {
-      useThemeOverrides.getState().setToken('default', 'accentPrimary', '#123456');
+      useThemeOverrides.getState().setToken('default', 'accentPrimary', '#123456', {
+        backgroundPrimary: '#081A20',
+        accentPrimary: '#63C4D5',
+      });
     });
     expect(useThemeOverrides.getState().presetId).toBe('custom');
+    expect(useThemeOverrides.getState().overrides.default).toMatchObject({
+      backgroundPrimary: '#081A20',
+      accentPrimary: '#123456',
+    });
   });
 
   it('sets and restores fonts with history', () => {

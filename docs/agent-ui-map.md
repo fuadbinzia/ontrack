@@ -1172,17 +1172,20 @@ Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scr
 
 ## Journal
 
-Deep link: `ontrack://journal` / Expo route `/(tabs)/journal` · flows `journal`, `journal-demo`, `journal-prev-day`, `journal-next-day`
+Deep link: `ontrack://journal` / Expo route `/(tabs)/journal` · flows `journal`, `journal-demo`, `journal-open-today`, `journal-prev-day`, `journal-next-day`
 
 | testID | Control |
 | --- | --- |
 | `ontrack.tabs.journal` | Open Journal tab |
+| `ontrack.journal.hub` | Journal landing (list or empty invite) |
+| `ontrack.journal.hub.empty` | Empty landing invitation |
+| `ontrack.journal.hub.pages` | Written pages list |
+| `ontrack.journal.openToday` | Start or open today’s page (empty CTA, write-today +, or today’s card) |
+| `ontrack.journal.page.<YYYY-MM-DD>` | Open a past page from the landing |
 | `ontrack.journal.today` | Today’s page canvas |
 | `ontrack.journal.screen` | Past-day page canvas |
-| `ontrack.journal.back` | Back from a past day |
+| `ontrack.journal.back` | Back from a dated page to the landing |
 | `ontrack.journal.prevDay` / `ontrack.journal.nextDay` | Day chevrons on the Journal line (far right); next disabled on today |
-| `ontrack.journal.section.earlier` | Earlier pages list |
-| `ontrack.journal.earlier.<YYYY-MM-DD>` | Open a past page |
 | `ontrack.journal.empty` | Empty today canvas |
 | `ontrack.journal.undo` / `ontrack.journal.redo` | Undo/redo text-block edits (left of Edit) |
 | `ontrack.journal.editMode` | Header Edit (left of plus); shows delete on blocks |

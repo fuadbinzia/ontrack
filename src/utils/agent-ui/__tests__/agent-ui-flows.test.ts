@@ -39,6 +39,7 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('grocery-demo');
     expect(listAgentUiFlowNames()).toContain('health-demo');
     expect(listAgentUiFlowNames()).toContain('journal-demo');
+    expect(listAgentUiFlowNames()).toContain('journal-open-today');
     expect(listAgentUiFlowNames()).toContain('journal-prev-day');
     expect(listAgentUiFlowNames()).toContain('journal-next-day');
     expect(listAgentUiFlowNames()).toContain('vehicle-demo-detail');
@@ -165,14 +166,22 @@ describe('agent-ui flows', () => {
         ]),
       );
     }
+    expect(resolveAgentUiFlow('journal-open-today')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'tap', id: 'ontrack.journal.openToday' }),
+        expect.objectContaining({ op: 'wait', id: 'ontrack.journal.today' }),
+      ]),
+    );
     expect(resolveAgentUiFlow('journal-prev-day')).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({ op: 'tap', id: 'ontrack.journal.openToday' }),
         expect.objectContaining({ op: 'tap', id: 'ontrack.journal.prevDay' }),
         expect.objectContaining({ op: 'wait', id: 'ontrack.journal.screen' }),
       ]),
     );
     expect(resolveAgentUiFlow('journal-next-day')).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({ op: 'tap', id: 'ontrack.journal.openToday' }),
         expect.objectContaining({ op: 'tap', id: 'ontrack.journal.nextDay' }),
         expect.objectContaining({ op: 'wait', id: 'ontrack.journal.today' }),
       ]),

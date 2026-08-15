@@ -1,59 +1,32 @@
-export const CORE_TRACKER_ROUTES = new Set([
-  'overview',
-  '(today)',
-  'calendar',
-  'to-do',
-  'social',
-  'insights',
-  'profile',
-]);
+import {
+  isTrackerRouteEnabled,
+  TAB_META,
+} from '@/components/navigation/bottom-nav-tab-meta';
+import { splitTrackerOrder } from '@/components/navigation/tab-pins';
 
-export type TrackerPresenceInput = {
-  mealCount: number;
-  gymActivityCount: number;
-  plantCount: number;
-  travelPlanCount: number;
-  visionItemCount: number;
-  vehicleCount: number;
-  healthEntryCount: number;
-  financeRecordCount: number;
-  journalBlockCount: number;
-};
-
-export function trackerRouteHasPresence(
-  routeName: string,
-  input: TrackerPresenceInput,
-): boolean {
-  if (CORE_TRACKER_ROUTES.has(routeName)) return true;
-  switch (routeName) {
-    case 'food':
-      return input.mealCount > 0;
-    case 'workouts':
-      return input.gymActivityCount > 0;
-    case 'plants':
-      return input.plantCount > 0;
-    case 'travel':
-      return input.travelPlanCount > 0;
-    case 'vision-board':
-      return input.visionItemCount > 0;
-    case 'vehicles':
-      return input.vehicleCount > 0;
-    case 'health':
-      return input.healthEntryCount > 0;
-    case 'finance':
-      return input.financeRecordCount > 0;
-    case 'journal':
-      return input.journalBlockCount > 0;
-    case 'games':
-      return false;
-    default:
-      return true;
-  }
+/**
+ * More lists every enabled section. Presence used to hide empty add-ons,
+ * which also hid a module the user had just turned on.
+ */
+export function visibleMoreRoutes(others: readonly string[]): string[] {
+  return [...others];
 }
 
-export function visibleMoreRoutes(
-  others: readonly string[],
-  input: TrackerPresenceInput,
-): string[] {
-  return others.filter((name) => trackerRouteHasPresence(name, input));
+/** In-nav pins plus More rows for the current add-on toggles. */
+export function moreListRoutes(
+  trackerOrder: readonly string[],
+  enabledAddons: Record<string, boolean>,
+  pinnedCount: number,
+): { inNav: string[]; others: string[] } {
+  const enabledNames = new Set<string>();
+  for (const name of Object.keys(TAB_META)) {
+    if (!isTrackerRouteEnabled(name, enabledAddons)) continue;
+    enabledNames.add(name);
+  }
+  const { inNav, others } = splitTrackerOrder(
+    trackerOrder,
+    enabledNames,
+    pinnedCount,
+  );
+  return { inNav, others: visibleMoreRoutes(others) };
 }

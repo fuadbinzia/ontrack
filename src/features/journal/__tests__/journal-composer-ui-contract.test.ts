@@ -58,11 +58,7 @@ describe('journal page chrome', () => {
     const page = read('journal-page-screen.tsx');
     expect(page).toContain('scroll={false}');
     expect(page).toContain('JournalComposer');
-    expect(page.indexOf('JournalBlockList')).toBeLessThan(page.indexOf('JournalEarlierList'));
-    const earlier = read('journal-earlier-list.tsx');
-    expect(earlier).toContain('SettingsGroup');
-    expect(earlier).toContain('SettingsRow');
-    expect(earlier).not.toContain('JournalTimeChips');
+    expect(page).not.toContain('JournalEarlierList');
     expect(page).toContain('paddingTop: spacing.lg');
     expect(page).toContain('tabBarHeight + composerDockGap');
     expect(page).toContain('useDockedKeyboardInset');

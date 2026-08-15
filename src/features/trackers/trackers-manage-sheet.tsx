@@ -30,7 +30,7 @@ export function TrackersManageSheet({
     <SheetScaffold
       visible={visible}
       title="Manage Sections"
-      subtitle="Turn modules on without losing their data. Open an empty one from here."
+      subtitle="Turn modules on without losing their data."
       onClose={onClose}
       closeTestID={AgentUiIds.trackers.manageClose}
       backdropTestID={AgentUiIds.trackers.manageSheet}

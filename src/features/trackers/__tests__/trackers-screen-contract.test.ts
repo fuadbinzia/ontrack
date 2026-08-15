@@ -17,9 +17,10 @@ describe('trackers screen contract', () => {
     expect(screen).toContain('AgentUiIds');
     expect(screen).not.toContain('surface="solid"');
     expect(screen).not.toContain('backgroundElevated');
-    expect(screen).toContain('splitTrackerOrder');
+    expect(screen).toContain('moreListRoutes');
     expect(screen).toContain('NAV_PIN_LIMIT');
-    expect(screen).toContain('useVisibleMoreRoutes');
+    expect(screen).not.toContain('useVisibleMoreRoutes');
+    expect(screen).not.toContain('use-tracker-presence');
     expect(screen).toContain('TrackersManageSheet');
     expect(screen).toContain('AgentUiIds.trackers.manage');
   });

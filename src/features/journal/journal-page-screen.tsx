@@ -22,7 +22,6 @@ import { AgentUiIds } from '@/utils/agent-ui';
 import { formatDateKeyMedium, formatWeekday, todayKey } from '@/utils/date';
 
 import { JournalBlockList } from './journal-block-list';
-import { JournalEarlierList } from './journal-earlier-list';
 import {
   JournalAddMenu,
   JournalComposer,
@@ -31,7 +30,6 @@ import {
 import { JournalSectionLinkSheet } from './journal-section-link-sheet';
 import {
   canShiftJournalDate,
-  earlierJournalPages,
   journalEditDismissFor,
   journalPageHref,
   journalSectionLinks,
@@ -39,13 +37,7 @@ import {
   shiftJournalDate,
 } from './model';
 
-export function JournalPageScreen({
-  dateKey,
-  showEarlier = false,
-}: {
-  dateKey: string;
-  showEarlier?: boolean;
-}) {
+export function JournalPageScreen({ dateKey }: { dateKey: string }) {
   const router = useRouter();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -89,10 +81,6 @@ export function JournalPageScreen({
   }, [dateKey, ensurePage]);
 
   const page = pageForDate(pages, dateKey);
-  const earlier = useMemo(
-    () => (showEarlier ? earlierJournalPages(pages, today) : []),
-    [pages, showEarlier, today],
-  );
   const links = useMemo(() => journalSectionLinks(enabledAddons), [enabledAddons]);
 
   const openSection = (section: string) => {
@@ -102,16 +90,7 @@ export function JournalPageScreen({
   };
 
   const openJournalDate = (nextKey: string) => {
-    const href = journalPageHref(nextKey, today);
-    if (href === '/(tabs)/journal') {
-      if (!showEarlier) router.replace(href);
-      return;
-    }
-    if (showEarlier) {
-      router.push(href);
-      return;
-    }
-    router.replace(href);
+    router.replace(journalPageHref(nextKey));
   };
 
   const goAdjacent = (delta: -1 | 1) => {
@@ -131,14 +110,12 @@ export function JournalPageScreen({
           titleMeta={formatDateKeyMedium(dateKey)}
           eyebrow={isToday ? 'Today' : formatWeekday(dateKey)}
           leading={
-            showEarlier ? undefined : (
-              <HeaderBackButton
-                compact
-                accessibilityLabel="Back to Journal"
-                fallback="/(tabs)/journal"
-                testID={AgentUiIds.journal.back}
-              />
-            )
+            <HeaderBackButton
+              compact
+              accessibilityLabel="Back to Journal"
+              fallback="/(tabs)/journal"
+              testID={AgentUiIds.journal.back}
+            />
           }
           titleTrailing={
             <View style={[styles.headerActions, { gap: spacing.xs }]}>
@@ -210,12 +187,6 @@ export function JournalPageScreen({
               showDeletes={managing}
             />
           </View>
-          {showEarlier ? (
-            <JournalEarlierList
-              pages={earlier}
-              onOpen={(nextKey) => router.push(`/(tabs)/journal/${nextKey}`)}
-            />
-          ) : null}
         </View>
         <Pressable
           accessibilityLabel="Dismiss Editor"

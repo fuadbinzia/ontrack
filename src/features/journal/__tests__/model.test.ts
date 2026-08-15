@@ -12,6 +12,7 @@ import {
   emptyJournalTextHistory,
   journalIndexTime,
   journalPageHref,
+  writtenJournalPages,
   popJournalTextRedo,
   popJournalTextUndo,
   pushJournalTextEdit,
@@ -45,8 +46,8 @@ describe('journal model', () => {
     expect(canShiftJournalDate('2026-08-15', 1, '2026-08-15')).toBe(false);
     expect(canShiftJournalDate('2026-08-14', 1, '2026-08-15')).toBe(true);
     expect(canShiftJournalDate('2026-08-15', -1, '2026-08-15')).toBe(true);
-    expect(journalPageHref('2026-08-15', '2026-08-15')).toBe('/(tabs)/journal');
-    expect(journalPageHref('2026-08-14', '2026-08-15')).toBe('/(tabs)/journal/2026-08-14');
+    expect(journalPageHref('2026-08-15')).toBe('/(tabs)/journal/2026-08-15');
+    expect(journalPageHref('2026-08-14')).toBe('/(tabs)/journal/2026-08-14');
   });
 
   it('accepts date keys and looks up a page', () => {
@@ -67,6 +68,11 @@ describe('journal model', () => {
       page('2026-08-12', note('t3', 'Tue')),
     ];
     expect(earlierJournalPages(pages, '2026-08-15').map((entry) => entry.dateKey)).toEqual([
+      '2026-08-13',
+      '2026-08-12',
+    ]);
+    expect(writtenJournalPages(pages).map((entry) => entry.dateKey)).toEqual([
+      '2026-08-15',
       '2026-08-13',
       '2026-08-12',
     ]);

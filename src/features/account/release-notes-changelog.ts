@@ -4,6 +4,14 @@ import { CHANGELOG_ARCHIVE } from './release-notes-changelog-archive';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.96',
+    date: '2026-08-15',
+    notes: [
+      'Open Journal on a written-pages landing, and keep enabled add-ons visible in More even when empty.',
+      'Touched: app routes, features/journal.',
+    ],
+  },
+  {
     version: '1.0.95',
     date: '2026-08-15',
     notes: [

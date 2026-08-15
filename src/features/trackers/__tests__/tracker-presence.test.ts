@@ -1,72 +1,74 @@
-import fs from 'fs';
-import path from 'path';
-
 import {
-  trackerRouteHasPresence,
-  visibleMoreRoutes,
-} from '../tracker-presence';
+  ADDONS,
+  ALL_ADDONS_ON,
+  DEFAULT_ADDON_STATE,
+} from '@/addons/registry';
+import {
+  DEFAULT_PINNED_COUNT,
+  DEFAULT_TRACKER_ORDER,
+} from '@/components/navigation/tab-pins';
 
-const hookSource = fs.readFileSync(
-  path.resolve(__dirname, '../use-tracker-presence.ts'),
-  'utf8',
-);
+import { moreListRoutes, visibleMoreRoutes } from '../tracker-presence';
 
-const empty = {
-  mealCount: 0,
-  gymActivityCount: 0,
-  plantCount: 0,
-  travelPlanCount: 0,
-  visionItemCount: 0,
-  vehicleCount: 0,
-  healthEntryCount: 0,
-  financeRecordCount: 0,
-  journalBlockCount: 0,
-};
+function listedRoutes(
+  enabledAddons: Record<string, boolean>,
+): string[] {
+  const { inNav, others } = moreListRoutes(
+    DEFAULT_TRACKER_ORDER,
+    enabledAddons,
+    DEFAULT_PINNED_COUNT,
+  );
+  return [...inNav, ...others];
+}
 
 describe('tracker presence', () => {
-  it('keeps core sections visible when they have no data', () => {
-    expect(trackerRouteHasPresence('overview', empty)).toBe(true);
-    expect(trackerRouteHasPresence('(today)', empty)).toBe(true);
-    expect(trackerRouteHasPresence('to-do', empty)).toBe(true);
-    expect(trackerRouteHasPresence('profile', empty)).toBe(true);
+  it('keeps Journal in More when the add-on is on and the page is empty', () => {
+    expect(visibleMoreRoutes(['profile', 'journal'])).toEqual([
+      'profile',
+      'journal',
+    ]);
   });
 
-  it('hides idle add-on sections until they have data', () => {
-    expect(trackerRouteHasPresence('food', empty)).toBe(false);
-    expect(trackerRouteHasPresence('travel', empty)).toBe(false);
-    expect(trackerRouteHasPresence('games', empty)).toBe(false);
-    expect(trackerRouteHasPresence('finance', empty)).toBe(false);
-    expect(
-      trackerRouteHasPresence('food', { ...empty, mealCount: 1 }),
-    ).toBe(true);
-    expect(
-      trackerRouteHasPresence('journal', { ...empty, journalBlockCount: 2 }),
-    ).toBe(true);
-    expect(
-      trackerRouteHasPresence('finance', { ...empty, financeRecordCount: 1 }),
-    ).toBe(true);
+  it('lists every turned-on add-on in More', () => {
+    const previous = process.env.EXPO_OS;
+    process.env.EXPO_OS = 'ios';
+    try {
+      for (const addon of ADDONS) {
+        if (!addon.tabRoute) continue;
+        expect(DEFAULT_TRACKER_ORDER).toContain(addon.tabRoute);
+        expect(
+          listedRoutes({ ...DEFAULT_ADDON_STATE, [addon.id]: true }),
+        ).toContain(addon.tabRoute);
+      }
+    } finally {
+      process.env.EXPO_OS = previous;
+    }
   });
 
-  it('filters More to core plus sections with presence', () => {
-    expect(
-      visibleMoreRoutes(
-        ['profile', 'travel', 'food', 'social'],
-        { ...empty, travelPlanCount: 1 },
-      ),
-    ).toEqual(['profile', 'travel', 'social']);
+  it('omits every turned-off add-on from More', () => {
+    const listed = new Set(listedRoutes(DEFAULT_ADDON_STATE));
+    for (const addon of ADDONS) {
+      if (!addon.tabRoute) continue;
+      expect(listed.has(addon.tabRoute)).toBe(false);
+    }
   });
 
-  it('counts finance ledger records from the finance store', () => {
-    expect(hookSource).toContain("from '@/store/finance'");
-    expect(hookSource).toContain('useFinance((state) => state.bills)');
-    expect(hookSource).toContain('useFinance((state) => state.transactions)');
-    expect(hookSource).toContain('useFinance((state) => state.accounts)');
-    expect(hookSource).toContain('useFinance((state) => state.buckets)');
-    expect(hookSource).toContain(
-      'bills.length + transactions.length + accounts.length + buckets.length',
-    );
-    expect(
-      visibleMoreRoutes(['finance', 'games'], { ...empty, financeRecordCount: 3 }),
-    ).toEqual(['finance']);
+  it('lists the full enabled catalog together', () => {
+    const previous = process.env.EXPO_OS;
+    process.env.EXPO_OS = 'ios';
+    try {
+      const listed = listedRoutes(ALL_ADDONS_ON);
+      for (const addon of ADDONS) {
+        if (!addon.tabRoute) continue;
+        expect(listed).toContain(addon.tabRoute);
+      }
+    } finally {
+      process.env.EXPO_OS = previous;
+    }
+  });
+
+  it('does not invent More rows that are not already enabled', () => {
+    expect(visibleMoreRoutes(['profile'])).toEqual(['profile']);
+    expect(visibleMoreRoutes([])).toEqual([]);
   });
 });

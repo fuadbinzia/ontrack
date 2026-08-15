@@ -170,10 +170,11 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `grocery-demo-recipe-import` | Seed → recipe import URL field ready |
 | `grocery-demo-settings` | Seed → grocery detail → settings (list name field) |
 | `health-demo` | Seed mood factor + entry → Health Mind section |
-| `journal` | Goto Journal hub |
-| `journal-demo` | Seed today’s page → Journal hub |
-| `journal-prev-day` | Seed → Journal hub → previous day |
-| `journal-next-day` | Seed → previous day → back to today |
+| `journal` | Goto Journal landing |
+| `journal-demo` | Seed today’s page → Journal landing |
+| `journal-open-today` | Seed → landing → today’s page |
+| `journal-prev-day` | Seed → landing → today → previous day |
+| `journal-next-day` | Seed → today → previous day → back to today |
 | `health-demo-mood` | Seed → mood check-in with demo factor chip |
 | `plants-demo` | Seed Monstera sample → plant detail (log watering ready) |
 | `plants-demo-list` | Seed → plants list with sample card |

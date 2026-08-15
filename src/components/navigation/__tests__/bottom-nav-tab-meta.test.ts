@@ -28,6 +28,25 @@ describe('bottom-nav-tab-meta eager routes', () => {
     expect(isTrackerRouteEnabled('travel', addonsOff)).toBe(false);
   });
 
+  it('enables every catalog add-on route from its toggle', () => {
+    const previous = process.env.EXPO_OS;
+    process.env.EXPO_OS = 'ios';
+    try {
+      for (const addon of ADDONS) {
+        if (!addon.tabRoute) continue;
+        expect(isTrackerRouteEnabled(addon.tabRoute, addonsOff)).toBe(false);
+        expect(
+          isTrackerRouteEnabled(addon.tabRoute, {
+            ...addonsOff,
+            [addon.id]: true,
+          }),
+        ).toBe(true);
+      }
+    } finally {
+      process.env.EXPO_OS = previous;
+    }
+  });
+
   it('labels the workouts route as Fitness to match the add-on catalog', () => {
     const fitnessAddon = ADDONS.find((addon) => addon.id === 'fitness');
 

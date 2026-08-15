@@ -16,15 +16,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
-  isTrackerRouteEnabled,
   TAB_META,
   trackerCatalogLabel,
 } from '@/components/navigation/bottom-nav-tab-meta';
-import {
-  NAV_PIN_LIMIT,
-  NAV_PIN_MIN,
-  splitTrackerOrder,
-} from '@/components/navigation/tab-pins';
+import { NAV_PIN_LIMIT, NAV_PIN_MIN } from '@/components/navigation/tab-pins';
 import {
   AppText,
   DragHandle,
@@ -43,7 +38,7 @@ import {
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { TrackersManageSheet } from '@/features/trackers/trackers-manage-sheet';
-import { useVisibleMoreRoutes } from '@/features/trackers/use-tracker-presence';
+import { moreListRoutes } from '@/features/trackers/tracker-presence';
 import { useAddons } from '@/store/addons';
 import { useTabPins } from '@/store/tab-pins';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -132,20 +127,10 @@ export function TrackersScreen() {
   const promoteInMore = useTabPins((store) => store.promoteInMore);
   const [manageOpen, setManageOpen] = useState(false);
 
-  const enabledNames = useMemo(() => {
-    const names = new Set<string>();
-    for (const name of Object.keys(TAB_META)) {
-      if (!isTrackerRouteEnabled(name, enabledAddons)) continue;
-      names.add(name);
-    }
-    return names;
-  }, [enabledAddons]);
-
-  const { inNav, others } = useMemo(
-    () => splitTrackerOrder(trackerOrder, enabledNames, pinnedCount),
-    [enabledNames, pinnedCount, trackerOrder],
+  const { inNav, others: visibleOthers } = useMemo(
+    () => moreListRoutes(trackerOrder, enabledAddons, pinnedCount),
+    [enabledAddons, pinnedCount, trackerOrder],
   );
-  const visibleOthers = useVisibleMoreRoutes(others);
 
   const listData = useMemo<TrackerRow[]>(() => {
     const rows: TrackerRow[] = [];

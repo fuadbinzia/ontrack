@@ -1,8 +1,15 @@
 import type { Href } from 'expo-router';
 
+import { ADDONS } from '@/addons/registry';
 import type { AppIconName } from '@/design-system';
 
 import { MORE_TAB_ROUTE } from './tab-pins';
+
+const ADDON_ID_BY_ROUTE = new Map(
+  ADDONS.flatMap((addon) =>
+    addon.tabRoute ? ([[addon.tabRoute, addon.id]] as const) : [],
+  ),
+);
 
 /** Route name → label / icon / href for the bottom bar + Trackers catalog. */
 export const TAB_META: Record<
@@ -97,17 +104,12 @@ export function isTrackerRouteEnabled(
   routeName: string,
   enabledAddons: Record<string, boolean>,
 ): boolean {
-  if (routeName === 'workouts') return !!enabledAddons.fitness;
-  if (routeName === 'plants') return !!enabledAddons.plants;
-  if (routeName === 'travel') return !!enabledAddons.travel;
-  if (routeName === 'vision-board') return !!enabledAddons['vision-board'];
-  if (routeName === 'games') return !!enabledAddons.games;
-  if (routeName === 'vehicles') return !!enabledAddons.vehicles;
-  if (routeName === 'food') return !!enabledAddons.food;
-  if (routeName === 'finance') return !!enabledAddons.finance;
-  if (routeName === 'journal') return !!enabledAddons.journal;
-  if (routeName === 'health') {
-    return process.env.EXPO_OS === 'ios' && !!enabledAddons.health;
+  const addonId = ADDON_ID_BY_ROUTE.get(routeName);
+  if (addonId) {
+    if (addonId === 'health') {
+      return process.env.EXPO_OS === 'ios' && !!enabledAddons.health;
+    }
+    return !!enabledAddons[addonId];
   }
   return routeName in TAB_META && routeName !== MORE_TAB_ROUTE;
 }

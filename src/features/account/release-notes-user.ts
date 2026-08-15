@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.96',
+    date: '2026-08-15',
+    notes: [
+      'Open Journal on a written-pages landing, and keep enabled add-ons visible in More even when empty.',
+    ],
+  },
+  {
     version: '1.0.95',
     date: '2026-08-15',
     notes: [

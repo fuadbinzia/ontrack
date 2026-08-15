@@ -15,11 +15,8 @@ export function isJournalDateKey(value: string | undefined): value is string {
   return typeof value === 'string' && DATE_KEY.test(value);
 }
 
-export function journalPageHref(
-  dateKey: string,
-  today: string,
-): '/(tabs)/journal' | `/(tabs)/journal/${string}` {
-  return dateKey >= today ? '/(tabs)/journal' : `/(tabs)/journal/${dateKey}`;
+export function journalPageHref(dateKey: string): `/(tabs)/journal/${string}` {
+  return `/(tabs)/journal/${dateKey}`;
 }
 
 export function shiftJournalDate(
@@ -46,13 +43,19 @@ export function pageForDate(
   return pages.find((page) => page.dateKey === dateKey);
 }
 
+export function writtenJournalPages(
+  pages: readonly JournalPage[],
+): JournalPage[] {
+  return pages
+    .filter((page) => page.blocks.length > 0)
+    .sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+}
+
 export function earlierJournalPages(
   pages: readonly JournalPage[],
   today: string,
 ): JournalPage[] {
-  return pages
-    .filter((page) => page.dateKey < today && page.blocks.length > 0)
-    .sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  return writtenJournalPages(pages).filter((page) => page.dateKey < today);
 }
 
 export function journalSectionLinks(

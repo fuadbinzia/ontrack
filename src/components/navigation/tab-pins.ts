@@ -9,15 +9,17 @@ export const NAV_PIN_MIN = 1;
  * Remaining catalog order fills “Others” on Trackers.
  */
 export const DEFAULT_NAV_PIN_ORDER = [
-  'overview',
   '(today)',
-  'calendar',
   'to-do',
+  'calendar',
 ] as const;
+
+export const DEFAULT_PINNED_COUNT = DEFAULT_NAV_PIN_ORDER.length;
 
 /** Full tracker catalog order (More / trackers excluded — always the 5th bar slot). */
 export const DEFAULT_TRACKER_ORDER = [
   ...DEFAULT_NAV_PIN_ORDER,
+  'overview',
   'profile',
   'social',
   'insights',
@@ -33,7 +35,7 @@ export const DEFAULT_TRACKER_ORDER = [
   'food',
 ] as const;
 
-/** Overview is the app-wide pulse and always leads the navigation order. */
+/** Optional pulse — no longer forced first in the bar. */
 export const PRIMARY_OVERVIEW_ROUTE = 'overview';
 
 export const TRACKER_ROUTE_NAMES = new Set<string>(DEFAULT_TRACKER_ORDER);
@@ -72,10 +74,7 @@ export function sanitizeTrackerOrder(
     if (seen.has(name)) continue;
     next.push(name);
   }
-  return [
-    PRIMARY_OVERVIEW_ROUTE,
-    ...next.filter((name) => name !== PRIMARY_OVERVIEW_ROUTE),
-  ];
+  return next;
 }
 
 export function clampPinnedCount(

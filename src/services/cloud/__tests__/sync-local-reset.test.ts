@@ -99,13 +99,24 @@ jest.mock('@/store/plants', () => ({
 }));
 jest.mock('@/store/preferences', () => ({
   usePreferences: {
-    getState: () => ({ hasOnboarded: true, resetAll: mockResetPreferences }),
+    getState: () => ({
+      hasOnboarded: true,
+      themePreference: 'dark',
+      resetAll: mockResetPreferences,
+    }),
     setState: (...args: unknown[]) => mockSetPreferences(...args),
   },
 }));
 jest.mock('@/store/theme-overrides', () => ({
   useThemeOverrides: {
-    getState: () => ({ resetAll: mockResetTheme, clearHistory: mockClearThemeHistory }),
+    getState: () => ({
+      resetAll: mockResetTheme,
+      clearHistory: mockClearThemeHistory,
+      presetId: 'coast',
+      overrides: {},
+      fonts: {},
+    }),
+    setState: jest.fn(),
   },
 }));
 jest.mock('@/store/travel-map', () => ({
@@ -220,6 +231,9 @@ describe('local account data reset', () => {
     expect(mockStopCloudSync).toHaveBeenCalled();
     expect(mockResetAccountFlags).not.toHaveBeenCalled();
     expect(mockCloudStatusSetState).not.toHaveBeenCalled();
-    expect(mockSetPreferences).toHaveBeenCalledWith({ hasOnboarded: true });
+    expect(mockSetPreferences).toHaveBeenCalledWith({
+      hasOnboarded: true,
+      themePreference: 'dark',
+    });
   });
 });

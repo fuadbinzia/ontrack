@@ -15,6 +15,7 @@ const CONSTELLATION_TABS = [
   'finance',
   'games',
   'to-do',
+  'journal',
   'vision-board',
   'vehicles',
 ] as const;

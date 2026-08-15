@@ -46,6 +46,10 @@ describe('auth constellation layout clearance', () => {
     }
   });
 
+  it('includes Journal among the orbiting features', () => {
+    expect(AUTH_ORBIT_NODES.some((node) => node.tab === 'journal')).toBe(true);
+  });
+
   it('keeps Food inside the right edge at rest (well + label clearance)', () => {
     const food = AUTH_ORBIT_NODES.find((node) => node.tab === 'food');
     expect(food?.x).toBeLessThanOrEqual(0.9);

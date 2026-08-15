@@ -11,13 +11,10 @@ jest.mock('expo-router', () => ({
 jest.mock('@/components/primitives', () => {
   const React = jest.requireActual('react');
   const { Text, View } = jest.requireActual('react-native');
-  const Container = ({ children }: { children?: React.ReactNode }) =>
-    React.createElement(View, null, children);
 
   return {
     AppText: ({ children }: { children?: React.ReactNode }) =>
       React.createElement(Text, null, children),
-    GlassIconWell: Container,
     Symbol: () => React.createElement(View),
   };
 });
@@ -48,7 +45,6 @@ jest.mock('@/utils/agent-ui', () => {
 const baseRow: OverviewRow = {
   routeName: '(today)',
   label: 'Today',
-  icon: 'today',
   headline: 'Your day is clear',
   detail: 'Open the timeline.',
   href: '/',

@@ -12,6 +12,11 @@ import type { VisionBoardCategory, VisionBoardItem } from '@/features/vision-boa
 import { useAddons } from '@/store/addons';
 import { useAgents } from '@/store/agents';
 import { usePlants } from '@/store/plants';
+import {
+  appearanceSyncFields,
+  applyAppearancePayload,
+  snapshotAppearance,
+} from '@/store/appearance-sync';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { DEFAULT_CHECKLIST_NAME, privateTodoPayload, useTodos } from '@/store/todos';
@@ -89,7 +94,7 @@ export const domains: SyncDomain[] = [
         // Survive sign-out → sign-in (local wipe + cloud restore).
         homeLocation: state.homeLocation,
         currentLocation: state.currentLocation,
-        themePreference: state.themePreference,
+        ...appearanceSyncFields(snapshotAppearance()),
         aiEnabled: state.aiEnabled,
         hapticsEnabled: state.hapticsEnabled,
         usageAnalyticsEnabled: state.usageAnalyticsEnabled,
@@ -97,6 +102,7 @@ export const domains: SyncDomain[] = [
     },
     write: (payload) => {
       const local = usePreferences.getState();
+      const appearance = snapshotAppearance();
       usePreferences.setState({
         hasOnboarded: typeof payload.hasOnboarded === 'boolean' ? payload.hasOnboarded : false,
         name: typeof payload.name === 'string' ? payload.name : '',
@@ -109,10 +115,6 @@ export const domains: SyncDomain[] = [
           typeof payload.currentLocation === 'string'
             ? payload.currentLocation.trim()
             : local.currentLocation,
-        themePreference:
-          payload.themePreference === 'light' || payload.themePreference === 'dark'
-            ? payload.themePreference
-            : 'system',
         aiEnabled: typeof payload.aiEnabled === 'boolean' ? payload.aiEnabled : true,
         hapticsEnabled: typeof payload.hapticsEnabled === 'boolean' ? payload.hapticsEnabled : true,
         usageAnalyticsEnabled:
@@ -121,6 +123,7 @@ export const domains: SyncDomain[] = [
             : local.usageAnalyticsEnabled,
         // avatar stays device-only — never in app_state preferences payload.
       });
+      applyAppearancePayload(payload, appearance);
     },
     reset: () => usePreferences.getState().resetAll(),
     subscribe: (onChange) => usePreferences.subscribe(onChange),

@@ -32,6 +32,6 @@ describe('incoming share session lifecycle', () => {
     expect(screen).toContain('if (!hasIncomingSharePayloads(payloads))');
     expect(screen).toContain('shouldConfirmShareDiscard(payloads, allowLeave.current)');
     expect(screen).toContain('appPrompt.dismiss()');
-    expect(screen).toContain("router.replace('/(tabs)/overview')");
+    expect(screen).toContain("router.replace('/')");
   });
 });

@@ -78,7 +78,7 @@ describe('WelcomeOnboardScreen', () => {
     expect(screen.getByTestId(AgentUiIds.onboarding.goal)).toBeTruthy();
   });
 
-  it('try-first enters guest, completes onboarding, and opens Overview by default', async () => {
+  it('try-first enters guest, completes onboarding, and opens Today by default', async () => {
     render(
       <SafeAreaProvider initialMetrics={METRICS}>
         <WelcomeOnboardScreen />
@@ -95,7 +95,7 @@ describe('WelcomeOnboardScreen', () => {
         name: 'Guest',
         goal: 'Live intentionally',
       });
-      expect(mockReplace).toHaveBeenCalledWith('/overview');
+      expect(mockReplace).toHaveBeenCalledWith('/');
     });
   });
 
@@ -146,7 +146,7 @@ describe('WelcomeOnboardScreen', () => {
     fireEvent.press(screen.getByLabelText('I want to try the app out first'));
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith('/overview');
+      expect(mockReplace).toHaveBeenCalledWith('/');
     });
   });
 });

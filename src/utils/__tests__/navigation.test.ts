@@ -43,13 +43,13 @@ describe('goBackOrReplace', () => {
 });
 
 describe('feature route ownership', () => {
-  it('makes Overview the tab navigator landing destination', () => {
+  it('makes Today the tab navigator landing destination', () => {
     const tabsLayout = readFileSync(
       join(process.cwd(), 'src/app/(tabs)/_layout.tsx'),
       'utf8',
     );
 
-    expect(tabsLayout).toContain('initialRouteName="overview"');
+    expect(tabsLayout).toContain('initialRouteName="(today)"');
   });
 
   it.each(['profile', 'workouts', 'plants', 'travel', 'vision-board', 'games', 'vehicles'])(

@@ -230,6 +230,20 @@ export const AGENT_UI_DAILY_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],
+  'today-add': [
+    { op: 'goto', to: 'today' },
+    {
+      op: 'wait',
+      id: 'ontrack.today.addActivity',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.today.addActivity' },
+    {
+      op: 'wait',
+      id: 'ontrack.today.addEvent',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   'activity-form-dismiss': [
     { op: 'goto', to: 'today' },
     {
@@ -238,6 +252,12 @@ export const AGENT_UI_DAILY_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
     { op: 'tap', id: 'ontrack.today.addActivity' },
+    {
+      op: 'wait',
+      id: 'ontrack.today.addEvent',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.today.addEvent' },
     {
       op: 'wait',
       id: 'ontrack.activityForm.category.mindfulness',

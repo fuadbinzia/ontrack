@@ -67,7 +67,7 @@ export default function ShareImportScreen() {
       allowLeave.current = true;
       if (navigation.isFocused()) {
         appPrompt.dismiss();
-        router.replace('/(tabs)/overview');
+        router.replace('/');
       }
       return;
     }

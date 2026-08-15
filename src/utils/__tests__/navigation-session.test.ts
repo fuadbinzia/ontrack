@@ -40,17 +40,17 @@ describe('navigation-session', () => {
     expect(consumeNavigationRestorePath('/')).toBeNull();
   });
 
-  it('opens Overview for a cold root launch and Today route aliases', () => {
-    expect(resolveInitialNavigationPath('/')).toBe('/overview');
-    expect(resolveInitialNavigationPath('/(tabs)')).toBe('/overview');
-    expect(resolveInitialNavigationPath('/(today)')).toBe('/overview');
+  it('stays on Today for a cold root launch', () => {
+    expect(resolveInitialNavigationPath('/')).toBeNull();
+    expect(resolveInitialNavigationPath('/(tabs)')).toBeNull();
+    expect(resolveInitialNavigationPath('/(today)')).toBeNull();
   });
 
-  it('preserves a direct deep link instead of replacing it with Overview', () => {
+  it('preserves a direct deep link instead of replacing it', () => {
     expect(resolveInitialNavigationPath('/travel/abc')).toBeNull();
   });
 
-  it('prefers same-session restoration over the Overview default', () => {
+  it('prefers same-session restoration over the Today default', () => {
     rememberNavigationPathname('/calendar');
     expect(resolveInitialNavigationPath('/')).toBe('/calendar');
   });

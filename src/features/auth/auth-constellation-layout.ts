@@ -54,6 +54,7 @@ const AUTH_ORBIT_TABS: readonly {
   { tab: 'vehicles' },
   { tab: 'vision-board' },
   { tab: 'to-do' },
+  { tab: 'journal' },
   { tab: 'games', dropWhenCompact: true },
 ];
 

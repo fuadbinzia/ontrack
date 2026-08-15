@@ -6,6 +6,7 @@ import {
   AppText,
   Button,
   Card,
+  CollapsibleSection,
   EmptyState,
   PanelTitle,
   Screen,
@@ -157,6 +158,69 @@ export function FinanceScreen() {
         </Card>
 
         <Card
+          testID={AgentUiIds.finance.openRecurring}
+          onPress={() => router.push('/(tabs)/finance/bills')}
+          accessibilityLabel="Manage Bills And Subscriptions">
+          <View style={[styles.rowBetween, { marginBottom: gap.sm }]}>
+            <PanelTitle>Bills & Subscriptions</PanelTitle>
+            <Symbol name="chevron-right" size={s(18)} color={theme.textTertiary} />
+          </View>
+          <View style={[styles.rowBetween, { marginBottom: gap.sm }]}>
+            <View style={{ flex: 1, minWidth: 0, gap: gap.xs }}>
+              <AppText variant="heading" fit>
+                {formatMoney(monthlyRecurringAmount(activeRecurring), baseCurrency)}/month
+              </AppText>
+              <AppText variant="caption" color="secondary" fit>
+                {activeBillCount} {activeBillCount === 1 ? 'bill' : 'bills'} ·{' '}
+                {activeSubscriptions.length} {activeSubscriptions.length === 1 ? 'subscription' : 'subscriptions'}
+              </AppText>
+            </View>
+            {pendingSubscriptionCount ? (
+              <StatusBadge
+                label={`${pendingSubscriptionCount} to review`}
+                tone="warning"
+                testID={AgentUiIds.finance.section('recurringReview')}
+              />
+            ) : null}
+          </View>
+          {upcomingRecurring.length ? (
+            <View style={{ gap: gap.sm }}>
+              {upcomingRecurring.map((expense) => (
+                <View key={expense.id} style={styles.rowBetween}>
+                  <View style={{ flex: 1, minWidth: 0, gap: gap.xs }}>
+                    <AppText variant="callout" fit numberOfLines={1}>
+                      {expense.name}
+                    </AppText>
+                    <AppText variant="caption" color="secondary" fit>
+                      {expense.kind === 'subscription' ? 'Subscription' : 'Bill'} · {formatDateKey(expense.nextDue, dateDisplayFormat)}
+                    </AppText>
+                  </View>
+                  <AppText variant="callout" fit>
+                    {formatMoney(expense.amount, expense.currency)}
+                  </AppText>
+                </View>
+              ))}
+            </View>
+          ) : activeRecurring.length ? (
+            <AppText variant="caption" color="secondary">
+              Nothing is due in the next 30 days.
+            </AppText>
+          ) : (
+            <EmptyState
+              icon="finance"
+              title="No Recurring Expenses"
+              message="Add a bill or subscription, or review charges detected from linked financial data."
+            />
+          )}
+        </Card>
+
+        <CollapsibleSection
+          title="More in Finance"
+          description="Assets, credit, coach, buckets, and tools."
+          testID={AgentUiIds.finance.more}
+        >
+        <View style={{ gap: gap.lg }}>
+        <Card
           testID={AgentUiIds.finance.section('assets')}
           onPress={() => router.push('/(tabs)/finance/accounts')}
           accessibilityLabel="Assets">
@@ -216,63 +280,6 @@ export function FinanceScreen() {
               </View>
             ))}
           </View>
-        </Card>
-
-        <Card
-          testID={AgentUiIds.finance.openRecurring}
-          onPress={() => router.push('/(tabs)/finance/bills')}
-          accessibilityLabel="Manage Bills And Subscriptions">
-          <View style={[styles.rowBetween, { marginBottom: gap.sm }]}>
-            <PanelTitle>Bills & Subscriptions</PanelTitle>
-            <Symbol name="chevron-right" size={s(18)} color={theme.textTertiary} />
-          </View>
-          <View style={[styles.rowBetween, { marginBottom: gap.sm }]}>
-            <View style={{ flex: 1, minWidth: 0, gap: gap.xs }}>
-              <AppText variant="heading" fit>
-                {formatMoney(monthlyRecurringAmount(activeRecurring), baseCurrency)}/month
-              </AppText>
-              <AppText variant="caption" color="secondary" fit>
-                {activeBillCount} {activeBillCount === 1 ? 'bill' : 'bills'} ·{' '}
-                {activeSubscriptions.length} {activeSubscriptions.length === 1 ? 'subscription' : 'subscriptions'}
-              </AppText>
-            </View>
-            {pendingSubscriptionCount ? (
-              <StatusBadge
-                label={`${pendingSubscriptionCount} to review`}
-                tone="warning"
-                testID={AgentUiIds.finance.section('recurringReview')}
-              />
-            ) : null}
-          </View>
-          {upcomingRecurring.length ? (
-            <View style={{ gap: gap.sm }}>
-              {upcomingRecurring.map((expense) => (
-                <View key={expense.id} style={styles.rowBetween}>
-                  <View style={{ flex: 1, minWidth: 0, gap: gap.xs }}>
-                    <AppText variant="callout" fit numberOfLines={1}>
-                      {expense.name}
-                    </AppText>
-                    <AppText variant="caption" color="secondary" fit>
-                      {expense.kind === 'subscription' ? 'Subscription' : 'Bill'} · {formatDateKey(expense.nextDue, dateDisplayFormat)}
-                    </AppText>
-                  </View>
-                  <AppText variant="callout" fit>
-                    {formatMoney(expense.amount, expense.currency)}
-                  </AppText>
-                </View>
-              ))}
-            </View>
-          ) : activeRecurring.length ? (
-            <AppText variant="caption" color="secondary">
-              Nothing is due in the next 30 days.
-            </AppText>
-          ) : (
-            <EmptyState
-              icon="finance"
-              title="No Recurring Expenses"
-              message="Add a bill or subscription, or review charges detected from linked financial data."
-            />
-          )}
         </Card>
 
         <Card testID={AgentUiIds.finance.section('buckets')}>
@@ -360,6 +367,8 @@ export function FinanceScreen() {
           }
           onPress={() => router.push('/(tabs)/finance/tax')}
         />
+        </View>
+        </CollapsibleSection>
       </View>
       </AgentTestId>
       <FinanceCreditSheet visible={creditOpen} onClose={() => setCreditOpen(false)} />

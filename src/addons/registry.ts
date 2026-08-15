@@ -87,18 +87,26 @@ export const ADDONS = [
   },
 ] as const satisfies readonly AddonDefinition[];
 
-export const DEFAULT_ADDON_STATE: AddonEnabledState = {
-  food: true,
-  fitness: true,
-  plants: true,
-  travel: true,
-  'vision-board': true,
-  games: true,
-  vehicles: true,
-  health: true,
-  finance: true,
-  journal: true,
-};
+function addonFlags(enabled: boolean): AddonEnabledState {
+  return {
+    food: enabled,
+    fitness: enabled,
+    plants: enabled,
+    travel: enabled,
+    'vision-board': enabled,
+    games: enabled,
+    vehicles: enabled,
+    health: enabled,
+    finance: enabled,
+    journal: enabled,
+  };
+}
+
+/** New installs start with the catalog off. Existing persisted rows stay as saved. */
+export const DEFAULT_ADDON_STATE: AddonEnabledState = addonFlags(false);
+
+/** Full catalog on — fixtures, agent sandbox, and tests that need every module. */
+export const ALL_ADDONS_ON: AddonEnabledState = addonFlags(true);
 
 /** Beta default. Paid access can later replace this from server-owned rows. */
 export const DEFAULT_ADDON_ENTITLEMENTS: AddonEntitlementState = {

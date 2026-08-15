@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Screen } from '@/components/primitives';
+import { CollapsibleSection, Screen } from '@/components/primitives';
 import { categoryColors, layout, spacing } from '@/design-system';
 import type { ExerciseLoadKind } from '@/features/workouts/exercise-load';
 import { formatMuscleLabel } from '@/features/workouts/format-muscle-label';
@@ -24,6 +24,7 @@ import { WorkoutsScreenHeader } from '@/features/workouts/workouts-screen-header
 import { useTheme } from '@/hooks/use-theme';
 import { newId, useSchedule } from '@/store/schedule';
 import type { WorkoutExercise } from '@/types/models';
+import { AgentUiIds } from '@/utils/agent-ui';
 import { formatWeekday, nowMinutes, todayKey } from '@/utils/date';
 import { haptics } from '@/utils/haptics';
 
@@ -215,48 +216,52 @@ export default function WorkoutsScreen() {
       />
 
       <View style={styles.pagePadding}>
-        <MuscleExplorer
-          anatomySex={explorer.anatomySex}
-          bodyView={explorer.bodyView}
-          selectedMuscle={explorer.selectedMuscle}
-          selectedTarget={explorer.selectedTarget}
-          atlasCategoryId={explorer.atlasCategoryId}
-          atlasMuscle={explorer.atlasMuscle}
-          atlasSelection={explorer.atlasSelection}
-          visibleMuscles={explorer.visibleMuscles}
-          gymColors={gymColors}
-          onChangeAnatomySex={explorer.changeAnatomySex}
-          onChangeBodyView={explorer.changeBodyView}
-          onSelectMapHit={explorer.selectMapHit}
-          onSelectMuscle={explorer.selectMuscle}
-          onSelectAtlasCategory={explorer.selectAtlasCategory}
-          onSelectAtlasMuscle={explorer.selectAtlasMuscle}
-        />
+        <CollapsibleSection
+          title="Explore Muscles"
+          description="Open the atlas when you want to build from anatomy."
+          testID={AgentUiIds.workouts.exploreMuscles}
+        >
+          <View style={{ gap: spacing.xl }}>
+            <MuscleExplorer
+              anatomySex={explorer.anatomySex}
+              bodyView={explorer.bodyView}
+              selectedMuscle={explorer.selectedMuscle}
+              selectedTarget={explorer.selectedTarget}
+              atlasCategoryId={explorer.atlasCategoryId}
+              atlasMuscle={explorer.atlasMuscle}
+              atlasSelection={explorer.atlasSelection}
+              visibleMuscles={explorer.visibleMuscles}
+              gymColors={gymColors}
+              onChangeAnatomySex={explorer.changeAnatomySex}
+              onChangeBodyView={explorer.changeBodyView}
+              onSelectMapHit={explorer.selectMapHit}
+              onSelectMuscle={explorer.selectMuscle}
+              onSelectAtlasCategory={explorer.selectAtlasCategory}
+              onSelectAtlasMuscle={explorer.selectAtlasMuscle}
+            />
+            <MuscleSummaryPanel
+              atlasMuscle={explorer.atlasMuscle}
+              atlasSelection={explorer.atlasSelection}
+              muscleTargets={explorer.muscleTargets}
+              selectedTarget={explorer.selectedTarget}
+              focusExercises={explorer.focusExercises}
+              gymColors={gymColors}
+              onSelectTarget={explorer.selectTarget}
+            />
+            <MuscleFocusExercises
+              muscleLabel={formatMuscleLabel(explorer.atlasMuscle.name)}
+              exercises={explorer.focusExercises}
+              loadKind={exerciseLoadKind}
+              selectedExerciseIds={selectedExerciseIds}
+              accentTint={gymColors.tint}
+              accentMain={gymColors.main}
+              onChangeLoadKind={setExerciseLoadKind}
+              onPreview={openExercisePreview}
+              onToggle={(exerciseId) => toggleExercise(exerciseId)}
+            />
+          </View>
+        </CollapsibleSection>
       </View>
-
-      <View style={styles.pagePadding}>
-        <MuscleSummaryPanel
-          atlasMuscle={explorer.atlasMuscle}
-          atlasSelection={explorer.atlasSelection}
-          muscleTargets={explorer.muscleTargets}
-          selectedTarget={explorer.selectedTarget}
-          focusExercises={explorer.focusExercises}
-          gymColors={gymColors}
-          onSelectTarget={explorer.selectTarget}
-        />
-      </View>
-
-      <MuscleFocusExercises
-        muscleLabel={formatMuscleLabel(explorer.atlasMuscle.name)}
-        exercises={explorer.focusExercises}
-        loadKind={exerciseLoadKind}
-        selectedExerciseIds={selectedExerciseIds}
-        accentTint={gymColors.tint}
-        accentMain={gymColors.main}
-        onChangeLoadKind={setExerciseLoadKind}
-        onPreview={openExercisePreview}
-        onToggle={(exerciseId) => toggleExercise(exerciseId)}
-      />
 
       <WorkoutSessionBuilder
         selectedExercises={selectedExercises}

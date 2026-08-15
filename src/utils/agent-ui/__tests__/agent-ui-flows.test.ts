@@ -27,6 +27,9 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('open-home-location');
     expect(listAgentUiFlowNames()).toContain('today-prev-day');
     expect(listAgentUiFlowNames()).toContain('today-next-day');
+    expect(listAgentUiFlowNames()).toContain('today-add');
+    expect(listAgentUiFlowNames()).toContain('trackers');
+    expect(listAgentUiFlowNames()).toContain('trackers-manage');
     expect(listAgentUiFlowNames()).toContain('open-avatar-editor');
     expect(listAgentUiFlowNames()).toContain('open-profile-identity');
     expect(listAgentUiFlowNames()).toContain('open-developer');
@@ -130,6 +133,22 @@ describe('agent-ui flows', () => {
       ]),
     );
     expect(resolveAgentUiFlow('missing')).toBeNull();
+    expect(resolveAgentUiFlow('today-add')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'tap', id: 'ontrack.today.addActivity' }),
+        expect.objectContaining({ op: 'wait', id: 'ontrack.today.addEvent' }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('trackers-manage')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'goto', to: 'trackers' }),
+        expect.objectContaining({ op: 'tap', id: 'ontrack.trackers.manage' }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.trackers.manage.sheet',
+        }),
+      ]),
+    );
   });
 
   it('keeps state-sensitive entry flows deterministic', () => {

@@ -1,4 +1,8 @@
-import type { EventDetails } from '@/services/events';
+import {
+  resolveEventCalendarArtwork,
+  type EventCalendarArtwork,
+} from '@/features/events/event-calendar-artwork';
+import type { EventDetails, EventFollow } from '@/services/events';
 import type { Activity, ActivityCategory } from '@/types/models';
 
 export type CalendarExcitementKind =
@@ -170,4 +174,18 @@ export function findCalendarEventExcitement({
     message: message(next.activity.title, next.daysAway, Boolean(youtubeUrl)),
     youtubeUrl,
   };
+}
+
+/** Logo-first mark for the Overview pulse; callers keep the category-icon fallback. */
+export function resolveExcitementArtwork(
+  excitement: CalendarEventExcitement | undefined,
+  eventDetails: readonly EventDetails[],
+  follows: readonly EventFollow[] = [],
+): EventCalendarArtwork | undefined {
+  if (!excitement) return undefined;
+  const details = eventDetails.find((item) => item.activityId === excitement.activity.id);
+  const follow = details?.followId
+    ? follows.find((item) => item.id === details.followId)
+    : undefined;
+  return resolveEventCalendarArtwork(excitement.activity.title, details, follow);
 }

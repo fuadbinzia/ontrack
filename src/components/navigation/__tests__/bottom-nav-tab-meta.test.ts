@@ -1,6 +1,10 @@
 import { ADDONS } from '@/addons/registry';
 
-import { isTrackerRouteEnabled, TAB_META } from '../bottom-nav-tab-meta';
+import {
+  isTrackerRouteEnabled,
+  TAB_META,
+  trackerCatalogLabel,
+} from '../bottom-nav-tab-meta';
 
 describe('bottom-nav-tab-meta eager routes', () => {
   const addonsOff = {
@@ -33,5 +37,12 @@ describe('bottom-nav-tab-meta eager routes', () => {
       href: '/(tabs)/workouts',
     });
     expect(TAB_META.workouts.label).toBe(fitnessAddon?.name);
+  });
+
+  it('uses the full Vision Board name in catalogs, not the short rail label', () => {
+    expect(TAB_META['vision-board'].label).toBe('Vision');
+    expect(trackerCatalogLabel('vision-board')).toBe('Vision Board');
+    expect(trackerCatalogLabel('workouts')).toBe('Fitness');
+    expect(trackerCatalogLabel('unknown-route')).toBe('unknown-route');
   });
 });

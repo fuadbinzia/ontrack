@@ -10,7 +10,7 @@ import { asEventBroadcasts, asEventStringList } from '@/services/events';
 import { externalEventKey } from '@/services/events';
 import { todayKey } from '@/utils/date';
 import { newId } from '@/utils/id';
-import type { ScheduleState } from './schedule';
+import type { ScheduleState } from './schedule-types';
 
 export type ScheduleEventState = {
   activities: Activity[];

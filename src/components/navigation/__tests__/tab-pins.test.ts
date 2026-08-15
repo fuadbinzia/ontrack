@@ -11,37 +11,34 @@ import {
 } from '../tab-pins';
 
 describe('tab-pins', () => {
-  it('defaults In nav to Overview · Today · Calendar · Checklists', () => {
+  it('defaults In nav to Today · Checklists · Calendar', () => {
     expect([...DEFAULT_NAV_PIN_ORDER]).toEqual([
-      'overview',
       '(today)',
-      'calendar',
       'to-do',
+      'calendar',
     ]);
-    expect(DEFAULT_NAV_PIN_ORDER).toHaveLength(NAV_PIN_LIMIT);
+    expect(DEFAULT_NAV_PIN_ORDER.length).toBeLessThanOrEqual(NAV_PIN_LIMIT);
   });
 
   it('sanitizes unknown / duplicate names and appends missing catalog entries', () => {
     expect(
       sanitizeTrackerOrder(['profile', 'nope', 'profile', 'travel']),
     ).toEqual([
-      'overview',
       'profile',
       'travel',
       ...DEFAULT_TRACKER_ORDER.filter(
-        (name) =>
-          name !== 'overview' && name !== 'profile' && name !== 'travel',
+        (name) => name !== 'profile' && name !== 'travel',
       ),
     ]);
   });
 
-  it('keeps Overview first when a persisted or dragged order puts it elsewhere', () => {
+  it('keeps a persisted order that puts Overview later', () => {
     expect(
       sanitizeTrackerOrder(['calendar', 'to-do', 'overview', '(today)']).slice(
         0,
         4,
       ),
-    ).toEqual(['overview', 'calendar', 'to-do', '(today)']);
+    ).toEqual(['calendar', 'to-do', 'overview', '(today)']);
   });
 
   it('splits enabled order into In nav (by pinnedCount) and Others', () => {
@@ -51,7 +48,7 @@ describe('tab-pins', () => {
       enabled,
       4,
     );
-    expect(inNav).toEqual([...DEFAULT_NAV_PIN_ORDER]);
+    expect(inNav).toEqual([...DEFAULT_NAV_PIN_ORDER, 'overview']);
     expect(others[0]).toBe('profile');
     expect(mergeTrackerSections(inNav, others)).toEqual({
       trackerOrder: [...DEFAULT_TRACKER_ORDER],
@@ -66,7 +63,7 @@ describe('tab-pins', () => {
       enabled,
       2,
     );
-    expect(inNav).toEqual(['overview', '(today)']);
+    expect(inNav).toEqual(['(today)', 'to-do']);
     expect(others[0]).toBe('calendar');
   });
 
@@ -84,7 +81,7 @@ describe('tab-pins', () => {
       enabled,
       4,
     );
-    expect(inNav).toEqual(['overview', '(today)', 'calendar', 'to-do']);
+    expect(inNav).toEqual(['(today)', 'to-do', 'calendar', 'overview']);
     expect(others).toEqual(['profile', 'travel']);
   });
 
@@ -103,7 +100,7 @@ describe('tab-pins', () => {
     const next = promoteMoreSelection(DEFAULT_TRACKER_ORDER, 'travel', 4);
     expect(next).not.toBeNull();
     expect(next!.pinnedCount).toBe(4);
-    expect(next!.trackerOrder.slice(0, 4)).toEqual([...DEFAULT_NAV_PIN_ORDER]);
+    expect(next!.trackerOrder.slice(0, 3)).toEqual([...DEFAULT_NAV_PIN_ORDER]);
     expect(next!.trackerOrder[4]).toBe('travel');
     expect(
       promoteMoreSelection(DEFAULT_TRACKER_ORDER, 'profile', 4),

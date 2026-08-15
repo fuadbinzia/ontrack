@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.95',
+    date: '2026-08-15',
+    notes: [
+      'Hide idle add-ons in More until they have data, and let Today add Event, Meal, Checklist, or Journal.',
+    ],
+  },
+  {
     version: '1.0.94',
     date: '2026-08-15',
     notes: [

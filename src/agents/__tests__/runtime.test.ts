@@ -1,4 +1,4 @@
-import { DEFAULT_ADDON_STATE } from '@/addons/registry';
+import { ALL_ADDONS_ON } from '@/addons/registry';
 
 import { AgentRuntimeError, createAgentRuntime } from '../runtime';
 import type {
@@ -39,7 +39,7 @@ function runtimeState(
     entitlements: {
       [TEST_AGENT.id]: { active: true, source: 'testing' },
     },
-    enabledAddons: DEFAULT_ADDON_STATE,
+    enabledAddons: ALL_ADDONS_ON,
   };
 }
 

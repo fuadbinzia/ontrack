@@ -1,5 +1,6 @@
 import {
   DEFAULT_CATEGORIES,
+  gymCategoryIds,
   mergeDefaultCategories,
 } from '@/constants/categories';
 import type { ActivityCategory } from '@/types/models';
@@ -45,5 +46,16 @@ describe('schedule category upgrades', () => {
     expect(merged.filter((category) => category.id === 'event')).toEqual([
       expect.objectContaining({ name: 'Event', detailKind: 'event' }),
     ]);
+  });
+
+  it('collects gym category ids for fitness presence and overview', () => {
+    expect(gymCategoryIds(DEFAULT_CATEGORIES)).toEqual(new Set(['gym']));
+    expect(
+      gymCategoryIds([
+        ...DEFAULT_CATEGORIES,
+        { ...customCategory, id: 'home-gym', detailKind: 'gym' },
+      ]),
+    ).toEqual(new Set(['gym', 'home-gym']));
+    expect(gymCategoryIds([])).toEqual(new Set());
   });
 });

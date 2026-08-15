@@ -20,12 +20,12 @@ description: >-
 ## Non-negotiables
 
 - One page per `YYYY-MM-DD`. No cloud sync domain — `createSensitivePersistStorage` only.
-- Voice notes stay in `Documents/journal-voice/`. Never persist recorder cache URIs.
+- Voice notes stay in `Documents/journal-voice/`. Never persist recorder cache URIs. Start via `beginExpoRecording` (`mixWithOthers`, plain `record()`); never “unavailable on this device” unless native audio is missing.
 - Dictate sends audio to onTrack AI only after first-use disclosure; then discard the take.
 - Do not call `/travel/translator` or reuse `ontrack-voice-lists`.
 - Stamp `ontrack.journal.*` on every interactive control.
 - Composer is a full-width docked field above the tab bar with send in the pill; header is `Journal` + date with only prev/next on that line’s far right (`titleTrailing`); eyebrow is Undo, Redo, Edit, plus. Undo/redo text-block edits for the open day. Next is disabled on today.
 - Trash shows only in Edit mode. Tap the text inside a block to edit — not the whole card. Text sits vertically centered in the row.
 - Every block stamps `createdAt` / `updatedAt`; cards show those as a caption (Created, plus Updated when they differ). The landing lists written days only.
-- Landing lists written pages over a scenic atmosphere; empty invites Start Today’s Journal. Dated pages (including today) live at `/(tabs)/journal/[date]`.
+- Landing lists written pages over a scenic atmosphere; empty invites Start Today’s Journal. Dated pages (including today) live at `/(tabs)/journal/[date]` on the same meadow (page variant, quieter empty — not `EmptyState`).
 - Prefer `./scripts/agent-ui.sh once --flow journal-demo` over hand-built pages. Open today with `journal-open-today`.

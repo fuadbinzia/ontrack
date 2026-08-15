@@ -1186,7 +1186,7 @@ Deep link: `ontrack://journal` / Expo route `/(tabs)/journal` · flows `journal`
 | `ontrack.journal.screen` | Past-day page canvas |
 | `ontrack.journal.back` | Back from a dated page to the landing |
 | `ontrack.journal.prevDay` / `ontrack.journal.nextDay` | Day chevrons on the Journal line (far right); next disabled on today |
-| `ontrack.journal.empty` | Empty today canvas |
+| `ontrack.journal.empty` | Empty dated page |
 | `ontrack.journal.undo` / `ontrack.journal.redo` | Undo/redo text-block edits (left of Edit) |
 | `ontrack.journal.editMode` | Header Edit (left of plus); shows delete on blocks |
 | `ontrack.journal.dismissEdit` | Tap-out target that closes the inline editor |

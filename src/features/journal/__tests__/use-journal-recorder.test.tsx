@@ -27,5 +27,6 @@ describe('useJournalRecorder', () => {
       await expect(result.current.start('dictate')).resolves.toBe(false);
     });
     expect(result.current.statusMessage).toMatch(/typing still works/i);
+    expect(result.current.statusMessage).not.toMatch(/unavailable on this device/i);
   });
 });

@@ -40,8 +40,12 @@ describe('journal landing', () => {
     expect(pages).not.toContain('SettingsRow');
 
     expect(page).toContain('HeaderBackButton');
+    expect(page).toContain("useJournalLandingAtmosphere({ variant: 'page' })");
+    expect(page).toContain('JournalPageEmpty');
+    expect(page).toContain("backgroundColor: 'transparent'");
     expect(page).not.toContain('showEarlier');
     expect(page).not.toContain('JournalEarlierList');
+    expect(page).not.toContain('EmptyState');
     expect(dateRoute).not.toContain('todayKey()');
     expect(dateRoute).toContain('JournalPageScreen');
   });
@@ -52,5 +56,21 @@ describe('journal landing', () => {
     expect(model).toContain('page.blocks.length > 0');
     expect(model).toContain('`/(tabs)/journal/${dateKey}`');
     expect(model).not.toContain("dateKey >= today ? '/(tabs)/journal'");
+  });
+
+  it('keeps the dated empty quiet and on the same meadow as the landing', () => {
+    const atmosphere = read('journal-landing-atmosphere.tsx');
+    const empty = read('journal-page-empty.tsx');
+    const list = read('journal-block-list.tsx');
+
+    expect(atmosphere).toContain("variant?: JournalAtmosphereVariant");
+    expect(atmosphere).toContain("variant === 'page' ? 10 : 0");
+    expect(empty).toContain('journal.empty');
+    expect(empty).toContain('Today is waiting.');
+    expect(empty).toContain('This page is waiting.');
+    expect(empty).toContain('journalLandingFontFamily');
+    expect(empty).not.toContain('EmptyState');
+    expect(list).not.toContain('EmptyState');
+    expect(list).not.toContain('Today Is Open');
   });
 });

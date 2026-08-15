@@ -25,8 +25,10 @@ import {
 } from '@/services/travel/translator-client';
 import { newId } from '@/utils/id';
 import {
+  beginExpoRecording,
   loadOptionalExpoAudio,
   recordingOptionsFor,
+  voiceStartErrorMessage,
   type ExpoAudioApi,
 } from '@/utils/optional-expo-audio';
 
@@ -361,22 +363,16 @@ export function useTravelTranslator({
           );
           return;
         }
-        await audioApi.setAudioModeAsync({
-          allowsRecording: true,
-          playsInSilentMode: true,
-          interruptionMode: 'doNotMix',
-        });
-        await recorder.prepareToRecordAsync();
+        await beginExpoRecording(audioApi, recorder);
         activeVoiceRef.current = direction;
         setActiveVoice(direction);
-        recorder.record({ forDuration: MAX_RECORDING_SECONDS });
         recordingTimerRef.current = setTimeout(() => {
           void finishVoice();
         }, MAX_RECORDING_SECONDS * 1_000);
-      } catch {
+      } catch (error) {
         activeVoiceRef.current = null;
         setActiveVoice(null);
-        setStatusMessage('Voice recording is unavailable on this device.');
+        setStatusMessage(voiceStartErrorMessage(error));
       }
     },
     [finishVoice, recorder, stopPlayback, translating],

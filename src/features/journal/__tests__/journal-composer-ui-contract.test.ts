@@ -27,6 +27,10 @@ describe('journal page chrome', () => {
     expect(page.indexOf('prevDay')).toBeLessThan(page.indexOf('editMode'));
     expect(page).toContain('icon={managing ? \'check\' : \'edit\'}');
     expect(composer).toContain('composer.menu');
+    expect(composer).toContain('GlassPlate');
+    expect(composer).toContain('placeholderTextColor={theme.textSecondary}');
+    expect(composer).toContain('fieldBackground="transparent"');
+    expect(composer).toContain('color={canSend ? theme.textOnAccent : theme.textSecondary}');
   });
 
   it('lets a text block open an inline editor', () => {

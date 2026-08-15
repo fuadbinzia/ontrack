@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.84',
+    date: '2026-08-14',
+    notes: [
+      'Fix travel roster invite reconciliation.',
+      'Touched: features/travel.',
+    ],
+  },
+  {
     version: '1.0.83',
     date: '2026-08-14',
     notes: [

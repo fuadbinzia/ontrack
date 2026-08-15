@@ -57,6 +57,19 @@ describe('historical bug-fix regressions', () => {
     );
   });
 
+  it('keeps generated app binaries out of EAS build uploads', () => {
+    const easIgnore = read('.easignore');
+    const apkScript = read('scripts/android-release-to-drive.sh');
+
+    for (const archivePattern of ['*.apk', '*.aab', '*.ipa']) {
+      expect(easIgnore.split('\n')).toContain(archivePattern);
+    }
+    expect(easIgnore.split('\n')).toContain('.eas-local-build/');
+    expect(apkScript).toContain('APK_OUTPUT_DIR="$ROOT/.eas-local-build/apks"');
+    expect(apkScript).toContain('APK_DEST="$APK_OUTPUT_DIR/$APK_NAME"');
+    expect(apkScript).not.toContain('APK_DEST="$ROOT/$APK_NAME"');
+  });
+
   it('keeps the iOS sharing extension on the containing app version', () => {
     const plugin = read('plugins/with-simulator-keychain-codesign.js');
 

@@ -147,11 +147,3 @@ $$;
 
 revoke all on function public.travel_preferred_display_name(text, text) from public;
 grant execute on function public.travel_preferred_display_name(text, text) to authenticated;
-
--- Repair a truncated profile display name that diverged from invite + auth metadata.
-update public.profiles as profile
-set
-  display_name = 'Jordan Lee',
-  updated_at = now()
-where profile.user_id = 'cb62bbe4-5b8f-47b1-b3e1-ba80caea4247'
-  and char_length(btrim(profile.display_name)) <= 8;

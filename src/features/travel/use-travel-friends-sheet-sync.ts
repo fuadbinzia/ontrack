@@ -8,6 +8,7 @@ import {
   canonicalTravelTripId,
   isTravelMemberPlan,
 } from '@/features/travel/trip-roster';
+import { travelParticipantMatchesRosterMember } from '@/features/travel/travel-friends-roster-model';
 import type {
   TravelPlan,
   TravelTripRosterPerson,
@@ -178,15 +179,24 @@ export function useTravelFriendsSheetSync({
         const match = people.find(
           (member) =>
             (member.role === 'member' || member.role === 'cohost') &&
-            (member.inviteCode === person.inviteCode ||
-              (member.email &&
-                person.email &&
-                member.email.toLowerCase() === person.email.toLowerCase())),
+            travelParticipantMatchesRosterMember(person, member),
         );
-        if (!match?.displayName || match.displayName === person.name)
+        if (!match) return person;
+        const nextPerson = {
+          ...person,
+          userId: match.userId,
+          name: match.displayName || person.name,
+          acceptedAt: match.acceptedAt ?? person.acceptedAt,
+        };
+        if (
+          nextPerson.userId === person.userId &&
+          nextPerson.name === person.name &&
+          nextPerson.acceptedAt === person.acceptedAt
+        ) {
           return person;
+        }
         changed = true;
-        return { ...person, name: match.displayName };
+        return nextPerson;
       });
 
       // Host plans: rebuild missing accepted friends from the server roster so
@@ -209,6 +219,7 @@ export function useTravelFriendsSheetSync({
             ...participants,
             {
               id: newId('trip-person'),
+              userId: member.userId,
               name: member.displayName,
               ...(member.email ? { email: member.email } : {}),
               inviteCode: member.inviteCode,

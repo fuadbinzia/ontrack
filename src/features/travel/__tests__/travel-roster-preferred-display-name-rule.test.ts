@@ -17,6 +17,5 @@ describe('travel roster preferred display name migration', () => {
       "lower(btrim(invitee_name)) like lower(btrim(profile_name)) || ' %'",
     );
     expect(migration).toContain('public.travel_preferred_display_name(');
-    expect(migration).toContain("display_name = 'Jordan Lee'");
   });
 });

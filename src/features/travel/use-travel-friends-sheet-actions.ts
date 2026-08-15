@@ -6,11 +6,16 @@ import {
   createTravelInviteUrl,
   createTravelOpenJoinUrl,
   decideTravelOpenJoin,
+  loadTravelInviteStatuses,
   resendTravelInvite,
   revokeTravelInvite,
   shareTravelOpenJoinLink,
   shareTravelPlan,
 } from '@/features/travel/share';
+import {
+  pruneRevokedTravelParticipants,
+  travelParticipantMatchesRosterMember,
+} from '@/features/travel/travel-friends-roster-model';
 import type { TravelRemoveConfirmPayload } from '@/features/travel/travel-remove-confirm-modal';
 import {
   canonicalTravelTripId,
@@ -152,14 +157,32 @@ export function useTravelFriendsSheetActions({
     setManagingParticipantId(participant.id);
     try {
       await revokeTravelInvite(participant.inviteCode);
+      const current =
+        useTravel.getState().plans.find((item) => item.id === plan.id) ?? plan;
+      const directParticipants = current.participants.filter(
+        (person) => person.id !== participant.id,
+      );
+      let participants = directParticipants;
+      try {
+        const [nextRoster, statuses] = await Promise.all([
+          refreshRoster(tripId),
+          loadTravelInviteStatuses(
+            directParticipants.map((person) => person.inviteCode),
+          ),
+        ]);
+        participants = pruneRevokedTravelParticipants({
+          participants: directParticipants,
+          inviteStatuses: statuses,
+          roster: nextRoster ?? [],
+        });
+      } catch {
+        void refreshRoster(tripId);
+      }
       onSavePlan({
-        ...plan,
-        participants: plan.participants.filter(
-          (person) => person.id !== participant.id,
-        ),
+        ...current,
+        participants,
         updatedAt: new Date().toISOString(),
       });
-      void refreshRoster(tripId);
     } catch (reason) {
       appPrompt.alert(
         participant.acceptedAt ? 'Couldn’t Remove Friend' : 'Couldn’t Remove Invitation',
@@ -186,17 +209,10 @@ export function useTravelFriendsSheetActions({
 
   const confirmRemoveRosterMember = (member: TravelTripRosterPerson) => {
     const matched = plan.participants.find(
-      (person) =>
-        person.inviteCode === member.inviteCode ||
-        (person.email &&
-          member.email &&
-          person.email.toLowerCase() === member.email.toLowerCase()),
+      (person) => travelParticipantMatchesRosterMember(person, member),
     );
-    if (matched) {
-      confirmRemoveParticipant(matched);
-      return;
-    }
-    if (!member.inviteCode) {
+    const inviteCode = member.inviteCode ?? matched?.inviteCode;
+    if (!inviteCode) {
       appPrompt.alert(
         'Couldn’t Remove Friend',
         'This person can’t be removed from here. Ask them to leave the trip, or remove their invite from another device.',
@@ -211,11 +227,35 @@ export function useTravelFriendsSheetActions({
         void (async () => {
           setTransferringUserId(member.userId);
           try {
-            await revokeTravelInvite(member.inviteCode!);
+            await revokeTravelInvite(inviteCode);
+            const nextRoster = await refreshRoster(tripId);
             setRoster((people) =>
               people.filter((person) => person.userId !== member.userId),
             );
-            void refreshRoster(tripId);
+            const current =
+              useTravel.getState().plans.find((item) => item.id === plan.id) ??
+              plan;
+            const directParticipants = current.participants.filter(
+              (person) => !travelParticipantMatchesRosterMember(person, member),
+            );
+            let participants = directParticipants;
+            try {
+              const statuses = await loadTravelInviteStatuses(
+                directParticipants.map((person) => person.inviteCode),
+              );
+              participants = pruneRevokedTravelParticipants({
+                participants: directParticipants,
+                inviteStatuses: statuses,
+                roster: nextRoster ?? [],
+              });
+            } catch {
+              // The roster row is already gone; polling will reconcile stale locals.
+            }
+            onSavePlan({
+              ...current,
+              participants,
+              updatedAt: new Date().toISOString(),
+            });
           } catch (reason) {
             appPrompt.alert(
               'Couldn’t Remove Friend',

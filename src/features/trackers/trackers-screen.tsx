@@ -1,11 +1,5 @@
-import { useFocusEffect, useIsFocused, useNavigation } from 'expo-router';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useIsFocused, useNavigation } from 'expo-router';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import DraggableFlatList, {
   ScaleDecorator,
@@ -41,16 +35,17 @@ import {
   Symbol,
 } from '@/components/primitives';
 import { radii, springs } from '@/design-system';
+import {
+  trackerRowDragPose,
+  trackerRowEnterDelay,
+  trackerRowMountPose,
+} from '@/features/trackers/tracker-row-entrance';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { useAddons } from '@/store/addons';
 import { useTabPins } from '@/store/tab-pins';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
-
-/** Cap stagger so long catalogs still settle quickly. */
-const ROW_ENTER_STAGGER_MS = 48;
-const ROW_ENTER_STAGGER_MAX = 10;
 
 type TrackerRow = {
   id: string;
@@ -59,51 +54,31 @@ type TrackerRow = {
 };
 
 /**
- * Imperative spring bounce — layout `entering` is unreliable here (tab stays
- * mounted + DraggableFlatList/ScaleDecorator). Replay whenever `entranceKey` bumps.
+ * Imperative spring bounce — layout `entering` is unreliable here
+ * (DraggableFlatList/ScaleDecorator). First paint is already the start pose;
+ * remount-on-focus (`!isFocused` → null) replays without a rest-then-bounce flash.
  */
 function TrackerRowBounce({
   index,
-  entranceKey,
   isActive,
   children,
 }: {
   index: number;
-  entranceKey: number;
   isActive: boolean;
   children: ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
-  const scale = useSharedValue(1);
-  const translateY = useSharedValue(0);
-  const opacity = useSharedValue(1);
+  const mount = trackerRowMountPose(reduceMotion);
+  const played = useRef(false);
+  const scale = useSharedValue(mount.scale);
+  const translateY = useSharedValue(mount.translateY);
+  const opacity = useSharedValue(mount.opacity);
 
   useEffect(() => {
-    if (isActive) {
-      cancelAnimation(scale);
-      cancelAnimation(translateY);
-      cancelAnimation(opacity);
-      scale.value = 1;
-      translateY.value = 0;
-      opacity.value = 1;
-      return;
-    }
-    if (entranceKey < 1) return;
-
-    const delay = Math.min(index, ROW_ENTER_STAGGER_MAX) * ROW_ENTER_STAGGER_MS;
-    if (reduceMotion) {
-      scale.value = 1;
-      translateY.value = 0;
-      opacity.value = 1;
-      return;
-    }
-
-    cancelAnimation(scale);
-    cancelAnimation(translateY);
-    cancelAnimation(opacity);
-    scale.value = 0.82;
-    translateY.value = 20;
-    opacity.value = 0;
+    if (played.current) return;
+    played.current = true;
+    if (reduceMotion) return;
+    const delay = trackerRowEnterDelay(index);
     scale.value = withDelay(
       delay,
       withSpring(1, {
@@ -121,7 +96,18 @@ function TrackerRowBounce({
       }),
     );
     opacity.value = withDelay(delay, withTiming(1, { duration: 140 }));
-  }, [entranceKey, index, isActive, opacity, reduceMotion, scale, translateY]);
+  }, [index, opacity, reduceMotion, scale, translateY]);
+
+  useEffect(() => {
+    if (!isActive) return;
+    const rest = trackerRowDragPose();
+    cancelAnimation(scale);
+    cancelAnimation(translateY);
+    cancelAnimation(opacity);
+    scale.value = rest.scale;
+    translateY.value = rest.translateY;
+    opacity.value = rest.opacity;
+  }, [isActive, opacity, scale, translateY]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -142,14 +128,6 @@ export function TrackersScreen() {
   const setInNavOrder = useTabPins((store) => store.setInNavOrder);
   const addToNav = useTabPins((store) => store.addToNav);
   const promoteInMore = useTabPins((store) => store.promoteInMore);
-  const [entranceKey, setEntranceKey] = useState(0);
-
-  // Replay bounce every time Sections becomes focused (tab stays mounted).
-  useFocusEffect(
-    useCallback(() => {
-      setEntranceKey((key) => key + 1);
-    }, []),
-  );
 
   const enabledNames = useMemo(() => {
     const names = new Set<string>();
@@ -237,10 +215,7 @@ export function TrackersScreen() {
               More
             </AppText>
           ) : null}
-          <TrackerRowBounce
-            index={index}
-            entranceKey={entranceKey}
-            isActive={isActive}>
+          <TrackerRowBounce index={index} isActive={isActive}>
             <GlassPlate
               style={[
                 styles.row,

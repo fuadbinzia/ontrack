@@ -116,6 +116,36 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'finance' },
     { op: 'wait', id: 'ontrack.finance.hub', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
+  journal: [
+    { op: 'goto', to: 'journal' },
+    { op: 'wait', prefix: 'ontrack.journal.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
+  'journal-demo': [
+    { op: 'seed', to: 'journal-demo' },
+    { op: 'goto', to: 'journal' },
+    {
+      op: 'wait',
+      id: 'ontrack.journal.today',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  'journal-prev-day': [
+    { op: 'seed', to: 'journal-demo' },
+    { op: 'goto', to: 'journal' },
+    { op: 'wait', id: 'ontrack.journal.prevDay', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+    { op: 'tap', id: 'ontrack.journal.prevDay' },
+    { op: 'wait', id: 'ontrack.journal.screen', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
+  'journal-next-day': [
+    { op: 'seed', to: 'journal-demo' },
+    { op: 'goto', to: 'journal' },
+    { op: 'wait', id: 'ontrack.journal.prevDay', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+    { op: 'tap', id: 'ontrack.journal.prevDay' },
+    { op: 'wait', id: 'ontrack.journal.screen', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+    { op: 'wait', id: 'ontrack.journal.nextDay', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+    { op: 'tap', id: 'ontrack.journal.nextDay' },
+    { op: 'wait', id: 'ontrack.journal.today', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
   'finance-transactions': [
     { op: 'goto', to: 'finance/transactions' },
     { op: 'wait', id: 'ontrack.finance.transactions', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },

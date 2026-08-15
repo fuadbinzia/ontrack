@@ -11,6 +11,7 @@ import {
     type DevModeSource,
 } from '@/store/dev-mode';
 import { useHealth } from '@/store/health';
+import { useJournal } from '@/store/journal';
 import { useTravel } from '@/store/travel';
 
 function deepCloneJson<T>(value: T): T {
@@ -62,12 +63,32 @@ function writeHealthSnapshot(payload: Record<string, unknown> | undefined) {
   });
 }
 
+function readJournalSnapshot(): Record<string, unknown> {
+  const state = useJournal.getState();
+  return deepCloneJson({
+    version: state.version,
+    aiDisclosureAccepted: state.aiDisclosureAccepted,
+    pages: state.pages,
+  });
+}
+
+function writeJournalSnapshot(payload: Record<string, unknown> | undefined) {
+  if (!payload) return;
+  useJournal.setState({
+    version: 1,
+    aiDisclosureAccepted:
+      typeof payload.aiDisclosureAccepted === 'boolean' ? payload.aiDisclosureAccepted : false,
+    pages: Array.isArray(payload.pages) ? payload.pages : [],
+  });
+}
+
 function captureLiveSnapshot(): DevModeLiveSnapshot {
   return {
     capturedAt: new Date().toISOString(),
     // Deep clone so sandbox seeds cannot mutate the snapshot via shared refs.
     domains: deepCloneJson(snapshotSyncedDomains()),
     health: readHealthSnapshot(),
+    journal: readJournalSnapshot(),
   };
 }
 
@@ -150,6 +171,7 @@ export async function exitDevMode(): Promise<void> {
   if (liveSnapshot?.domains) {
     restoreSyncedDomains(liveSnapshot.domains);
     writeHealthSnapshot(liveSnapshot.health);
+    writeJournalSnapshot(liveSnapshot.journal);
   }
   // Real work done in the sandbox must survive restore (empty/old snapshots
   // previously wiped trips like Iceland that were only present while Dev Mode

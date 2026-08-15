@@ -91,6 +91,7 @@ const KNOWN_ROUTE_ROOTS = new Set([
   'account', 'activity-form', 'activity-form-assistant', 'agent', 'agents', 'api-usage',
   'auth', 'c', 'calendar', 'checklists', 'design-system', 'detail', 'developer', 'f',
   'finance', 'food', 'games', 'health', 'i', 'insights', 'integrations', 'invite', 'j',
+  'journal',
   'l', 'nutrition-profile', 'onboarding', 'overview', 'p', 'partner', 'plants', 'privacy', 'profile',
   'share-event', 'share-import', 'social', 'terms', 'to-do', 'todo-collaborators',
   'todo-invites', 'todos', 'trackers', 'travel', 'travel-map', 'v', 'vehicles',

@@ -69,6 +69,11 @@ export const TAB_META: Record<
     icon: 'finance',
     href: '/(tabs)/finance',
   },
+  journal: {
+    label: 'Journal',
+    icon: 'journal',
+    href: '/(tabs)/journal',
+  },
   food: {
     label: 'Food',
     icon: 'food',
@@ -94,6 +99,7 @@ export function isTrackerRouteEnabled(
   if (routeName === 'vehicles') return !!enabledAddons.vehicles;
   if (routeName === 'food') return !!enabledAddons.food;
   if (routeName === 'finance') return !!enabledAddons.finance;
+  if (routeName === 'journal') return !!enabledAddons.journal;
   if (routeName === 'health') {
     return process.env.EXPO_OS === 'ios' && !!enabledAddons.health;
   }

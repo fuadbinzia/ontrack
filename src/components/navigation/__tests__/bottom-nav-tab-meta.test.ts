@@ -13,6 +13,7 @@ describe('bottom-nav-tab-meta eager routes', () => {
     food: false,
     health: false,
     finance: false,
+    journal: false,
   };
 
   it('treats core catalog routes as enabled without addons', () => {

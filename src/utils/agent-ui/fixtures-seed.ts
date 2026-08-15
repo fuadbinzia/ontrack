@@ -7,6 +7,7 @@ import {
   AGENT_UI_DEMO_GROCERY_LIST_ID,
   AGENT_UI_DEMO_HEALTH_FACTOR_ID,
   AGENT_UI_DEMO_HEALTH_MOOD_ID,
+  AGENT_UI_DEMO_JOURNAL_PAGE_ID,
   AGENT_UI_DEMO_PLANT_ID,
   AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID,
   AGENT_UI_DEMO_VEHICLE_ID,
@@ -171,6 +172,13 @@ export function normalizeFixtureName(
     return 'finance-demo';
   }
   if (
+    key === 'journal-demo' ||
+    key === 'journal' ||
+    key === AGENT_UI_DEMO_JOURNAL_PAGE_ID
+  ) {
+    return 'journal-demo';
+  }
+  if (
     key === 'workouts-demo' ||
     key === 'workouts' ||
     key === 'workout' ||
@@ -279,6 +287,14 @@ export function purgeAgentUiDemoFixtures(): void {
     (transaction) => transaction.id === AGENT_UI_DEMO_FINANCE_TRANSACTION_ID,
   )) {
     useFinance.getState().removeTransaction(AGENT_UI_DEMO_FINANCE_TRANSACTION_ID);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useJournal } = require('@/store/journal') as typeof import('@/store/journal');
+  if (useJournal.getState().pages.some((page) => page.id === AGENT_UI_DEMO_JOURNAL_PAGE_ID)) {
+    useJournal.setState((state) => ({
+      pages: state.pages.filter((page) => page.id !== AGENT_UI_DEMO_JOURNAL_PAGE_ID),
+    }));
   }
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports

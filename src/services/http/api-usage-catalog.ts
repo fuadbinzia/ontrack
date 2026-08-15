@@ -166,6 +166,17 @@ export const API_USAGE_CATALOG: readonly ApiUsageCatalogEntry[] = [
     healthProbe: { kind: 'openai' },
   },
   {
+    id: 'openai-journal-transcribe',
+    name: 'OpenAI (journal dictate)',
+    provider: 'OpenAI Transcription',
+    usedBy: ['Journal voice-to-text'],
+    metering: 'app-rate-limit',
+    bucket: 'journal',
+    configKey: 'openai',
+    guardNames: ['openai'],
+    healthProbe: { kind: 'openai' },
+  },
+  {
     id: 'gemini',
     name: 'Google Gemini',
     provider: 'Google Generative Language',

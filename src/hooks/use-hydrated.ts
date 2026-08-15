@@ -6,6 +6,7 @@ import { useAgents } from '@/store/agents';
 import { useAuthAccess } from '@/store/auth-access';
 import { useDevMode } from '@/store/dev-mode';
 import { useHealth } from '@/store/health';
+import { useJournal } from '@/store/journal';
 import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
@@ -69,6 +70,7 @@ export function useHydrated(): boolean {
       rehydrateStore(() => useVisionBoard.persist.rehydrate()),
       rehydrateStore(() => useVehicles.persist.rehydrate()),
       rehydrateStore(() => useHealth.persist.rehydrate()),
+      rehydrateStore(() => useJournal.persist.rehydrate()),
       rehydrateStore(() => useDevMode.persist.rehydrate()),
     ]).then(async () => {
       // Dev Mode must not stick across cold start (off by default for testers).

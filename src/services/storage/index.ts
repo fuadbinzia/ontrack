@@ -20,6 +20,7 @@ export const STORAGE_KEYS = {
   visionBoard: 'ontrack/vision-board/v1',
   vehicles: 'ontrack/vehicles/v1',
   health: 'ontrack/health/v1',
+  journal: 'ontrack/journal/v1',
   finance: 'ontrack/finance/v1',
   /** Device-local index of durable E-ZPass source files; never cloud-synced. */
   financeEzPassStatements: 'ontrack/finance-ezpass-statements/v1',

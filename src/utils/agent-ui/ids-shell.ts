@@ -24,6 +24,7 @@ export const agentUiIdsShell = {
     vehicles: 'ontrack.tabs.vehicles',
     health: 'ontrack.tabs.health',
     finance: 'ontrack.tabs.finance',
+    journal: 'ontrack.tabs.journal',
     food: 'ontrack.tabs.food',
     /** More → Trackers (pin/reorder hub). */
     more: 'ontrack.tabs.more',

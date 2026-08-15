@@ -3,6 +3,14 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.94',
+    date: '2026-08-15',
+    notes: [
+      'Add Journal add-on with dated private pages, dictate, and local voice notes.',
+      'Touched: app routes, features/account, features/trackers.',
+    ],
+  },
+  {
     version: '1.0.93',
     date: '2026-08-15',
     notes: [

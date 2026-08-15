@@ -16,4 +16,5 @@ export type AgentUiSeedResult = {
   activityId?: string;
   categoryId?: string;
   itemId?: string;
+  pageId?: string;
 };

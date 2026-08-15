@@ -34,6 +34,7 @@ export const appIcons = {
     android: 'account_balance_wallet',
     web: 'account_balance_wallet',
   },
+  journal: { ios: 'square.and.pencil', android: 'edit_note', web: 'edit_note' },
   tasks: { ios: 'checklist', android: 'checklist', web: 'checklist' },
   groceries: { ios: 'cart.fill', android: 'shopping_cart', web: 'shopping_cart' },
   maintenance: {
@@ -141,6 +142,8 @@ export const appIcons = {
   copy: { ios: 'doc.on.doc', android: 'content_copy', web: 'content_copy' },
   translator: { ios: 'character.book.closed.fill', android: 'translate', web: 'translate' },
   microphone: { ios: 'mic.fill', android: 'mic', web: 'mic' },
+  waveform: { ios: 'waveform', android: 'graphic_eq', web: 'graphic_eq' },
+  stop: { ios: 'stop.fill', android: 'stop', web: 'stop' },
   speaker: { ios: 'speaker.wave.2.fill', android: 'volume_up', web: 'volume_up' },
   sync: {
     ios: 'arrow.triangle.2.circlepath',
@@ -255,6 +258,7 @@ export const appIconSections = [
       'games',
       'vehicles',
       'finance',
+      'journal',
       'tasks',
       'groceries',
       'maintenance',
@@ -337,6 +341,8 @@ export const appIconSections = [
       'copy',
       'translator',
       'microphone',
+      'waveform',
+      'stop',
       'speaker',
       'sync',
       'share',

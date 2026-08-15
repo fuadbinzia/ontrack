@@ -53,6 +53,10 @@ export const AGENT_UI_DEMO_GROCERY_TASK_PASTA_ID =
 export const AGENT_UI_DEMO_HEALTH_FACTOR_ID = 'factor-agent-ui-demo-work';
 export const AGENT_UI_DEMO_HEALTH_MOOD_ID = 'mood-agent-ui-demo-calm';
 
+/** Stable journal page for agent deep-links. */
+export const AGENT_UI_DEMO_JOURNAL_PAGE_ID = 'journal-agent-ui-demo-page';
+export const AGENT_UI_DEMO_JOURNAL_TEXT_ID = 'jtext-agent-ui-demo';
+
 /** Stable vehicle for agent deep-links. */
 export const AGENT_UI_DEMO_VEHICLE_ID = 'vehicle-agent-ui-demo';
 
@@ -119,6 +123,7 @@ export type AgentUiFixtureName =
   | 'home-weather'
   | 'food-demo'
   | 'finance-demo'
+  | 'journal-demo'
   | 'workouts-demo'
   | 'vision-board-demo';
 
@@ -174,6 +179,7 @@ export const AGENT_UI_FIXTURE_NAMES = [
   'home-weather',
   'food-demo',
   'finance-demo',
+  'journal-demo',
   'workouts-demo',
   'vision-board-demo',
 ] as const;

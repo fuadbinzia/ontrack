@@ -46,6 +46,7 @@ describe('current-device sign-out invariants', () => {
     }
     expect(sync).toContain('useNutrition.getState().reset()');
     expect(sync).toContain('useHealth.getState().reset()');
+    expect(sync).toContain('useJournal.getState().reset()');
     for (const store of [
       'useFoodProfile',
       'usePantry',
@@ -69,6 +70,7 @@ describe('current-device sign-out invariants', () => {
       'travel-confirmations',
       'travel-moments',
       'finance-docs',
+      'journal-voice',
     ]) {
       expect(sync).toContain(`'${directory}'`);
     }

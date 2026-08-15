@@ -18,6 +18,7 @@ describe('add-on registry', () => {
       'vehicles',
       'health',
       'finance',
+      'journal',
     ]);
     expect(DEFAULT_ADDON_STATE).toEqual({
       food: true,
@@ -29,6 +30,7 @@ describe('add-on registry', () => {
       vehicles: true,
       health: true,
       finance: true,
+      journal: true,
     });
   });
 

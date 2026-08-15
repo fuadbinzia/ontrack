@@ -66,6 +66,7 @@ export function agentUiOverlayRoutePrefixes(route: string | null | undefined): s
     case 'vehicles':
     case 'health':
     case 'finance':
+    case 'journal':
     case 'games':
     case 'agents':
     case 'privacy':

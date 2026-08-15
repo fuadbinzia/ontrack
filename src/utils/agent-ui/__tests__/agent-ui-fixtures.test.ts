@@ -12,6 +12,7 @@ import {
     AGENT_UI_DEMO_GROCERY_RECIPE_ID,
     AGENT_UI_DEMO_HEALTH_FACTOR_ID,
     AGENT_UI_DEMO_HEALTH_MOOD_ID,
+    AGENT_UI_DEMO_JOURNAL_PAGE_ID,
     AGENT_UI_DEMO_PLANT_ID,
     AGENT_UI_DEMO_PLANT_WATERING_ACTIVITY_ID,
     AGENT_UI_DEMO_TRIP_ID,
@@ -54,6 +55,7 @@ const mockSaveEvent = jest.fn((payload: { id?: string }) => ({
 }));
 const mockReplaceVisionBoardData = jest.fn();
 const mockSaveFinanceTransaction = jest.fn();
+const mockJournalSetState = jest.fn();
 
 jest.mock('@/features/account/dev-mode-controller', () => ({
   ensureDevModeSandboxSync: jest.fn(),
@@ -103,6 +105,12 @@ jest.mock('@/store/vehicles', () => ({
     getState: () => ({
       saveVehicle: mockSaveVehicle,
     }),
+  },
+}));
+
+jest.mock('@/store/journal', () => ({
+  useJournal: {
+    setState: mockJournalSetState,
   },
 }));
 
@@ -208,6 +216,7 @@ describe('agent-ui fixtures', () => {
     mockSaveEvent.mockClear();
     mockReplaceVisionBoardData.mockClear();
     mockSaveFinanceTransaction.mockClear();
+    mockJournalSetState.mockClear();
   });
 
   it('builds a stable demo trip', () => {
@@ -385,6 +394,7 @@ describe('agent-ui fixtures', () => {
         'health-demo',
         'vehicle-demo',
         'finance-demo',
+        'journal-demo',
       ]),
     );
 
@@ -411,6 +421,13 @@ describe('agent-ui fixtures', () => {
       fixture: 'grocery-demo',
       recipeId: AGENT_UI_DEMO_GROCERY_RECIPE_ID,
     });
+
+    expect(seedAgentUiFixture('journal-demo')).toEqual({
+      fixture: 'journal-demo',
+      primaryId: AGENT_UI_DEMO_JOURNAL_PAGE_ID,
+      pageId: AGENT_UI_DEMO_JOURNAL_PAGE_ID,
+    });
+    expect(mockJournalSetState).toHaveBeenCalled();
 
     expect(seedAgentUiFixture('health-demo')).toEqual({
       fixture: 'health-demo',

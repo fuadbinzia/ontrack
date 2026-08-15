@@ -20,6 +20,7 @@ export const DEFAULT_TAB_ORDER = [
   'vehicles',
   'health',
   'finance',
+  'journal',
   'food',
   'profile',
 ] as const;

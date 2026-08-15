@@ -35,6 +35,9 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('checklist-demo-item-details');
     expect(listAgentUiFlowNames()).toContain('grocery-demo');
     expect(listAgentUiFlowNames()).toContain('health-demo');
+    expect(listAgentUiFlowNames()).toContain('journal-demo');
+    expect(listAgentUiFlowNames()).toContain('journal-prev-day');
+    expect(listAgentUiFlowNames()).toContain('journal-next-day');
     expect(listAgentUiFlowNames()).toContain('vehicle-demo-detail');
     expect(listAgentUiFlowNames()).toContain('plants-demo');
     expect(listAgentUiFlowNames()).toContain('activity-demo-edit');
@@ -143,6 +146,18 @@ describe('agent-ui flows', () => {
         ]),
       );
     }
+    expect(resolveAgentUiFlow('journal-prev-day')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'tap', id: 'ontrack.journal.prevDay' }),
+        expect.objectContaining({ op: 'wait', id: 'ontrack.journal.screen' }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('journal-next-day')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'tap', id: 'ontrack.journal.nextDay' }),
+        expect.objectContaining({ op: 'wait', id: 'ontrack.journal.today' }),
+      ]),
+    );
   });
 
   it('lands Chase roundtrip submit on the expanded outbound passenger row', () => {

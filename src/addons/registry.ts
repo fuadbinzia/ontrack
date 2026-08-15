@@ -78,6 +78,13 @@ export const ADDONS = [
     categoryIds: [],
     tabRoute: 'finance',
   },
+  {
+    id: 'journal',
+    name: 'Journal',
+    description: 'Private daily pages with typed notes, dictate, and voice notes.',
+    categoryIds: [],
+    tabRoute: 'journal',
+  },
 ] as const satisfies readonly AddonDefinition[];
 
 export const DEFAULT_ADDON_STATE: AddonEnabledState = {
@@ -90,6 +97,7 @@ export const DEFAULT_ADDON_STATE: AddonEnabledState = {
   vehicles: true,
   health: true,
   finance: true,
+  journal: true,
 };
 
 /** Beta default. Paid access can later replace this from server-owned rows. */
@@ -103,6 +111,7 @@ export const DEFAULT_ADDON_ENTITLEMENTS: AddonEntitlementState = {
   vehicles: { active: true, source: 'included' },
   health: { active: true, source: 'included' },
   finance: { active: true, source: 'included' },
+  journal: { active: true, source: 'included' },
 };
 
 const ADDON_BY_ID = new Map<AddonId, AddonDefinition>(ADDONS.map((addon) => [addon.id, addon]));

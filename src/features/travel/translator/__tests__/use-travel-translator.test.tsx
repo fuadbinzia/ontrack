@@ -44,7 +44,7 @@ jest.mock('expo-modules-core', () => ({
 }));
 
 jest.mock('expo-audio', () => ({
-  RecordingPresets: { HIGH_QUALITY: {} },
+  RecordingPresets: { HIGH_QUALITY: { extension: '.m4a' } },
   requestRecordingPermissionsAsync: (...args: unknown[]) => mockPermission(...args),
   setAudioModeAsync: (...args: unknown[]) => mockSetAudioMode(...args),
   useAudioRecorder: () => {

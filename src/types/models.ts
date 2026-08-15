@@ -38,6 +38,8 @@ export interface Activity {
   durationMinutes: number;
   status: ActivityStatus;
   notes?: string;
+  /** External guests invited through Google Calendar sync. */
+  attendeeEmails?: string[];
   /** Short human summary shown on the card, e.g. "620 kcal · balanced" */
   summary?: string;
   photo?: string | number;

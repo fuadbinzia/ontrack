@@ -72,6 +72,17 @@ export function visibleItineraryForViewer(
   return items;
 }
 
+export function sortedVisibleItineraryForViewer(
+  items: TravelItineraryItem[],
+  viewerUserId: string | undefined,
+): TravelItineraryItem[] {
+  return [...visibleItineraryForViewer(items, viewerUserId)].sort(
+    (left, right) =>
+      left.date.localeCompare(right.date)
+      || left.startMinutes - right.startMinutes,
+  );
+}
+
 function stripFlightSecrets(
   details: TravelFlightDetails | undefined,
 ): TravelFlightDetails | undefined {

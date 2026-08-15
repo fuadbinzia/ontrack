@@ -38,8 +38,10 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('vehicle-demo-detail');
     expect(listAgentUiFlowNames()).toContain('plants-demo');
     expect(listAgentUiFlowNames()).toContain('activity-demo-edit');
+    expect(listAgentUiFlowNames()).toContain('event-demo-edit-review-invite');
     expect(listAgentUiFlowNames()).toContain('calendar-activity-demo');
     expect(listAgentUiFlowNames()).toContain('event-bout-detail');
+    expect(listAgentUiFlowNames()).toContain('overview-event-updates');
     expect(listAgentUiFlowNames()).toContain('grocery-demo-recipe-import');
     expect(listAgentUiFlowNames()).toContain('workouts-demo');
     expect(listAgentUiFlowNames()).toContain('vision-board-demo-edit');
@@ -228,6 +230,20 @@ describe('agent-ui flows', () => {
       op: 'goto',
       to: `activityForm?id=${AGENT_UI_DEMO_ACTIVITY_ID}`,
     });
+    expect(resolveAgentUiFlow('activity-demo-edit')).toContainEqual(
+      expect.objectContaining({
+        op: 'wait',
+        id: 'ontrack.activityForm.attendeeEmails',
+      }),
+    );
+    expect(resolveAgentUiFlow('event-demo-edit-review-invite')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'tap', id: 'ontrack.eventDetail.edit' }),
+        expect.objectContaining({ op: 'tap', id: 'ontrack.activityForm.save' }),
+        expect.objectContaining({ op: 'wait', id: 'ontrack.calendarSync.screen' }),
+        expect.objectContaining({ op: 'wait', id: 'ontrack.calendarSync.section.inviteReview' }),
+      ]),
+    );
     expect(resolveAgentUiFlow('calendar-activity-demo')).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

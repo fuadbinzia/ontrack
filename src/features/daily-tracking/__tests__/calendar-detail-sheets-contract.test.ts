@@ -76,6 +76,19 @@ describe('calendar event-card bottom sheets', () => {
     expect(generic.match(/host="route"/g)).toHaveLength(2);
   });
 
+  it('clears every stale generic event layer through its owning Today navigator', () => {
+    const generic = read(
+      'src/app/(tabs)/(today)/detail/generic/[id].tsx',
+    );
+
+    expect(generic).toContain('const navigation = useNavigation()');
+    expect(generic).toMatch(
+      /const close = \(\) => \{[\s\S]*?navigation\.getState\(\)[\s\S]*?state\.index > 0[\s\S]*?navigation\.dispatch\(\{ type: 'POP_TO_TOP', target: state\.key \}\)[\s\S]*?router\.dismissTo\('\/'\)/,
+    );
+    expect(generic.match(/onClose=\{close\}/g)).toHaveLength(2);
+    expect(generic).not.toContain('onClose={() => router.back()}');
+  });
+
   it('aligns the generic event status and edit action as one responsive control rail', () => {
     const generic = read(
       'src/app/(tabs)/(today)/detail/generic/[id].tsx',

@@ -91,7 +91,18 @@ describe('activity form unsaved changes', () => {
     expect(formSource).not.toContain("goBackOrReplace(router, '/(tabs)/calendar')");
   });
 
-  it('uses the same Today destination after close and save', () => {
-    expect(formSource.match(/goBackOrReplace\(router, '\/'\);/g)).toHaveLength(2);
+  it('dismisses the editor before routing guest invitations from event detail to Google review', () => {
+    expect(formSource).toMatch(
+      /const leaveAfterSave = \(reviewInvitation: boolean, reviewActivityId\?: string\)[\s\S]*?if \(router\.canDismiss\(\)\) router\.dismiss\(\);[\s\S]*?requestAnimationFrame\(\(\) => \{[\s\S]*?pathname: '\/\(tabs\)\/profile\/calendar-sync'[\s\S]*?reviewActivityId[\s\S]*?goBackOrReplace\(router, '\/'\)/,
+    );
+    expect(formSource).not.toContain("router.replace('/(tabs)/profile/calendar-sync')");
+    expect(formSource).not.toContain("router.dismissTo('/(tabs)/profile/calendar-sync')");
+  });
+
+  it('keeps invite-free saves on the ordinary Today dismissal path', () => {
+    expect(formSource).toContain('leaveAfterSave(parsedAttendees.emails.length > 0, savedActivity.id)');
+    expect(formSource).toMatch(
+      /if \(reviewInvitation\) \{[\s\S]*?return;[\s\S]*?goBackOrReplace\(router, '\/'\)/,
+    );
   });
 });

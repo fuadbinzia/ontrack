@@ -24,7 +24,7 @@ export function PlaybookEditorScreen() {
   const [name, setName] = useState(playbook?.name ?? '');
   const [sourceIds, setSourceIds] = useState<string[]>(playbook?.sourceEmotionIds ?? []);
   const [targetIds, setTargetIds] = useState<string[]>(playbook?.targetEmotionIds ?? []);
-  const [steps, setSteps] = useState(playbook?.steps.join('\n') ?? '');
+  const [steps, setSteps] = useState(playbook?.steps?.join('\n') ?? '');
   const [duration, setDuration] = useState(playbook?.durationMinutes ? String(playbook.durationMinutes) : '');
   const [suggestions, setSuggestions] = useState<MoodActionSuggestion[]>([]);
   const [suggesting, setSuggesting] = useState(false);

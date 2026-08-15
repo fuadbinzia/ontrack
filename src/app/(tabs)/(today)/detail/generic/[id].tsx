@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import {
@@ -22,6 +22,7 @@ import {
   shouldPollUfcLiveUpdates,
   UFC_LIVE_POLL_MS,
 } from '@/services/events/sync';
+import { asEventStringList } from '@/services/events';
 import { useSchedule } from '@/store/schedule';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { activityTimingLabel } from '@/utils/activity-time';
@@ -29,6 +30,7 @@ import { openHttpsUrl } from '@/utils/safe-url';
 
 export default function GenericDetailScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const theme = useTheme();
   const { layout, spacing: responsiveSpacing } = useResponsive();
   const { height: windowHeight } = useWindowDimensions();
@@ -43,6 +45,16 @@ export default function GenericDetailScreen() {
   const liveStartMinutes = activity?.startMinutes;
   const liveTitle = activity?.title;
   const liveStatus = eventDetails?.status;
+  const cardParticipants = asEventStringList(eventDetails?.participants);
+  const cardSections = asEventStringList(eventDetails?.card);
+  const close = () => {
+    const state = navigation.getState();
+    if (state && state.index > 0) {
+      navigation.dispatch({ type: 'POP_TO_TOP', target: state.key });
+      return;
+    }
+    router.dismissTo('/');
+  };
 
   useEffect(() => {
     if (!eventDetails || eventDetails.bouts?.length) return;
@@ -116,7 +128,7 @@ export default function GenericDetailScreen() {
         visible
         host="route"
         title="Activity Not Found"
-        onClose={() => router.back()}
+        onClose={close}
         closeAccessibilityLabel="Go back"
         closeTestID={AgentUiIds.eventDetail.goBack}
         fitContent
@@ -138,7 +150,7 @@ export default function GenericDetailScreen() {
       title={activity.title}
       subtitle={activityTimingLabel(activity)}
       subtitleIcon="clock"
-      onClose={() => router.back()}
+      onClose={close}
       closeAccessibilityLabel="Dismiss event details"
       closeTestID={AgentUiIds.eventDetail.close}
       backdropTestID={AgentUiIds.eventDetail.backdrop}
@@ -205,12 +217,12 @@ export default function GenericDetailScreen() {
         </AgentTestId>
       ) : null}
 
-      {eventDetails && (eventDetails.participants.length > 0 || eventDetails.card?.length) ? (
+      {eventDetails && (cardParticipants.length > 0 || cardSections.length > 0) ? (
         <AgentTestId testID={AgentUiIds.eventDetail.fightCard} label="Fight card">
           <UfcFightCard
             bouts={eventDetails.bouts}
-            participants={eventDetails.participants}
-            legacyCard={eventDetails.card}
+            participants={cardParticipants}
+            legacyCard={cardSections}
             eventTitle={activity.title}
             eventTiming={activityTimingLabel(activity)}
           />

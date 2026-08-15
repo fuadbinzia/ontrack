@@ -69,6 +69,30 @@ describe('follow reconciliation', () => {
     expect(updated.eventDetails[0].broadcasts).toEqual([{ name: 'NBC' }]);
   });
 
+  it('builds event summaries safely when a sync result is missing broadcast metadata', () => {
+    const malformed = { ...event(), broadcasts: null as unknown } as EventSearchResult;
+    const activity = eventResultToActivity(malformed, 'activity-legacy', '2026-08-13T12:00:00.000Z');
+    expect(activity).toMatchObject({
+      id: 'activity-legacy',
+      summary: 'Madison Square Garden',
+    });
+  });
+
+  it('sanitizes malformed event detail fields when saving synced search results', () => {
+    const malformed = {
+      ...event(),
+      participants: [1 as unknown, 'Knicks', 2 as unknown] as unknown[],
+      broadcasts: 3 as unknown,
+    } as EventSearchResult;
+    const details = eventResultToDetails(malformed, 'activity-legacy', '2026-08-13T12:00:00.000Z', {
+      importMode: 'auto',
+    });
+    expect(details).toMatchObject({
+      participants: ['Knicks'],
+      broadcasts: [],
+    });
+  });
+
   it('queues review follows without creating schedule activities', () => {
     const followed = follow('review');
     const next = reconcileEventFollows(state([followed]), response(followed.id, [event()]));
@@ -108,6 +132,44 @@ describe('follow reconciliation', () => {
 
 describe('schedule event actions', () => {
   beforeEach(() => useSchedule.getState().resetAll());
+
+  it('records sync errors only on follows included in the failed refresh', () => {
+    const failed = { ...follow('auto'), id: 'follow-failed' };
+    const unrelated = {
+      ...follow('review'),
+      id: 'follow-unrelated',
+      lastSyncError: 'Existing unrelated error',
+    };
+    useSchedule.setState({ eventFollows: [failed, unrelated] });
+
+    useSchedule.getState().markEventFollowSyncError(
+      [failed.id],
+      'Provider unavailable',
+    );
+
+    expect(useSchedule.getState().eventFollows).toEqual([
+      { ...failed, lastSyncError: 'Provider unavailable' },
+      unrelated,
+    ]);
+  });
+
+  it('records the same failed batch error on every attempted follow', () => {
+    const first = { ...follow('auto'), id: 'follow-first' };
+    const second = { ...follow('review'), id: 'follow-second' };
+    const untouched = { ...follow('review'), id: 'follow-untouched' };
+    useSchedule.setState({ eventFollows: [first, second, untouched] });
+
+    useSchedule.getState().markEventFollowSyncError(
+      [first.id, second.id],
+      'Provider unavailable',
+    );
+
+    expect(useSchedule.getState().eventFollows).toEqual([
+      { ...first, lastSyncError: 'Provider unavailable' },
+      { ...second, lastSyncError: 'Provider unavailable' },
+      untouched,
+    ]);
+  });
 
   it('accepts a review suggestion into the schedule with linked details', () => {
     const followed = useSchedule.getState().addEventFollow({
@@ -185,6 +247,14 @@ describe('manual UFC detail backfill', () => {
       sourceName: 'TheSportsDB · ESPN',
       bouts: rich.bouts,
     });
+  });
+
+  it('retains current participants and broadcasts when candidate live data omits malformed arrays', () => {
+    const malformed = { ...rich, participants: undefined, broadcasts: undefined } as EventSearchResult;
+    const merged = mergeRichUfcDetails(current, malformed, '2026-08-14T12:00:00Z');
+    expect(merged.participants).toEqual(current.participants);
+    expect(merged.broadcasts).toEqual(current.broadcasts);
+    expect(merged.bouts).toEqual(rich.bouts);
   });
 });
 

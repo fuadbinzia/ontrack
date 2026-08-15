@@ -121,6 +121,17 @@ describe('event API routes', () => {
       method: 'POST', body: JSON.stringify({ follows: [{ id: 'bad' }] }),
     }));
     expect(malformed.status).toBe(400);
+    const blank = await syncRoute.POST(new Request('https://ontrack.example/api/events/sync', {
+      method: 'POST', body: JSON.stringify({
+        follows: [
+          {
+            id: '   ', provider: 'thesportsdb', providerTargetId: '   ', kind: 'sports',
+            targetKind: 'team', name: '   ', mode: 'auto', createdAt: '2026-01-01', updatedAt: '2026-01-01',
+          },
+        ],
+      }),
+    }));
+    expect(blank.status).toBe(400);
     const oversized = await syncRoute.POST(new Request('https://ontrack.example/api/events/sync', {
       method: 'POST', body: JSON.stringify({ follows: Array.from({ length: 26 }, () => ({})) }),
     }));

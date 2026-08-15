@@ -176,7 +176,9 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `activity-demo` | Seed mindfulness activity → Today card |
 | `calendar-activity-demo` | Seed mindfulness activity → Calendar selected-day event row |
 | `activity-demo-detail` | Seed → open generic event detail |
+| `overview-event-updates` | Seed demo fight → open Overview with the YouTube event-updates action ready |
 | `activity-demo-edit` | Seed → open activity form editor |
+| `event-demo-edit-review-invite` | Seed invited fight event → detail → edit → Save & Review Invite → Google Calendar review |
 | `activity-form-dismiss` | Today → open Add Event → choose a vibe → dismiss through the outside backdrop → remain on Today |
 | `workouts-demo` | Seed gym activity → Today’s Plan card |
 | `workouts-demo-explore` | Seed → Muscle Explorer (incline-curl add ready) |

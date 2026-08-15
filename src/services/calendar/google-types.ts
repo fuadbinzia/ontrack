@@ -79,6 +79,12 @@ export type GoogleCalendarEvent = {
   status?: string;
   summary?: string;
   description?: string;
+  attendees?: {
+    email?: string;
+    organizer?: boolean;
+    resource?: boolean;
+    responseStatus?: string;
+  }[];
   updated?: string;
   start?: { date?: string; dateTime?: string };
   end?: { date?: string; dateTime?: string };

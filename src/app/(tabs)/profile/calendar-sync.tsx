@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -31,15 +31,22 @@ import {
   subscribeToGoogleCalendarBackgroundSync,
 } from '@/services/calendar/google-client';
 import type { GoogleCalendarStatus, GoogleCalendarSyncDirection } from '@/services/calendar/google-types';
+import { useSchedule } from '@/store/schedule';
+import { activityTimingLabel } from '@/utils/activity-time';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 
 export default function CalendarSyncScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ calendarConnected?: string; calendarError?: string }>();
+  const params = useLocalSearchParams<{
+    calendarConnected?: string;
+    calendarError?: string;
+    reviewActivityId?: string;
+  }>();
   const { isGuest } = useAuthSession();
   const { spacing } = useResponsive();
   const [status, setStatus] = useState<GoogleCalendarStatus>({ connected: false, direction: 'two_way' });
+  const [statusLoaded, setStatusLoaded] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [changingDirection, setChangingDirection] = useState(false);
@@ -47,6 +54,13 @@ export default function CalendarSyncScreen() {
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
   const [needsReconnect, setNeedsReconnect] = useState(false);
+  const autoReviewedActivityRef = useRef<string | undefined>(undefined);
+  const reviewActivityId = typeof params.reviewActivityId === 'string'
+    ? params.reviewActivityId
+    : undefined;
+  const reviewActivity = useSchedule((state) =>
+    state.activities.find((activity) => activity.id === reviewActivityId),
+  );
   const backgroundSync = useSyncExternalStore(
     subscribeToGoogleCalendarBackgroundSync,
     getGoogleCalendarBackgroundSyncState,
@@ -54,9 +68,13 @@ export default function CalendarSyncScreen() {
   );
 
   const refreshStatus = useCallback(async () => {
-    if (isGuest) return;
+    if (isGuest) {
+      setStatusLoaded(true);
+      return;
+    }
     try { setStatus(await getGoogleCalendarStatus()); }
     catch (caught) { setError(caught instanceof Error ? caught.message : 'Calendar status could not be loaded.'); }
+    finally { setStatusLoaded(true); }
   }, [isGuest]);
 
   useEffect(() => { void refreshStatus(); }, [refreshStatus]);
@@ -92,12 +110,27 @@ export default function CalendarSyncScreen() {
     })();
   }
 
-  const reviewSync = async () => {
+  const reviewSync = async (focusedActivityId?: string) => {
     setPreviewing(true); setMessage(undefined); setError(undefined); setNeedsReconnect(false);
     try {
       const preview = await previewGoogleCalendarSync();
-      if (!preview.changes.length) {
-        appPrompt.alert('Everything is up to date', 'No changes need to be synced.');
+      const focusedPreview = focusedActivityId
+        ? {
+            ...preview,
+            changes: preview.changes.filter((change) =>
+              change.destination === 'google'
+              && (change.id === `google-${focusedActivityId}`
+                || change.id.endsWith(`-${focusedActivityId}`)),
+            ),
+          }
+        : preview;
+      if (!focusedPreview.changes.length) {
+        appPrompt.alert(
+          focusedActivityId ? 'Invite Is Up to Date' : 'Everything Is Up to Date',
+          focusedActivityId
+            ? 'Google Calendar already has this event and guest list.'
+            : 'No changes need to be synced.',
+        );
         return;
       }
       appPrompt.alert(
@@ -113,7 +146,7 @@ export default function CalendarSyncScreen() {
           },
         ],
         {
-          content: <CalendarSyncReview preview={preview} />,
+          content: <CalendarSyncReview preview={focusedPreview} />,
           scrollableMessage: true,
         },
       );
@@ -124,6 +157,13 @@ export default function CalendarSyncScreen() {
       setPreviewing(false);
     }
   };
+
+  useEffect(() => {
+    if (!reviewActivityId || !statusLoaded || !status.connected) return;
+    if (autoReviewedActivityRef.current === reviewActivityId) return;
+    autoReviewedActivityRef.current = reviewActivityId;
+    void reviewSync(reviewActivityId);
+  }, [reviewActivityId, status.connected, statusLoaded]);
 
   const syncProgress = backgroundSync.progress?.phase === 'pull'
     ? 'Reading Google events…'
@@ -179,7 +219,7 @@ export default function CalendarSyncScreen() {
         <ScreenHeader
           eyebrow="Profile"
           title="Google Calendar"
-          subtitle="Choose whether events flow both ways, only to Google, or only from Google. Event titles, notes, dates, times, updates, and deletions are included."
+          subtitle="Choose whether events flow both ways, only to Google, or only from Google. Event details, guest invitations, updates, and cancellations are included."
           leading={
             <HeaderBackButton
               compact
@@ -189,6 +229,29 @@ export default function CalendarSyncScreen() {
           }
         />
       </AgentTestId>
+
+      {reviewActivity?.attendeeEmails?.length ? (
+        <AgentTestId
+          testID={AgentUiIds.calendarSync.inviteReview}
+          label="Pending invitation review">
+          <SectionHeader title="Invitation Review" />
+          <Card style={{ gap: spacing.sm }}>
+            <AppText variant="subheading" fit>{reviewActivity.title}</AppText>
+            <AppText variant="caption" color="secondary">
+              {activityTimingLabel(reviewActivity)}
+            </AppText>
+            <AppText variant="overline" color="accent">Guests</AppText>
+            {reviewActivity.attendeeEmails.map((email) => (
+              <AppText key={email} variant="callout">{email}</AppText>
+            ))}
+            <AppText variant="caption" color="secondary">
+              {status.connected
+                ? 'Preparing the Google Calendar change review…'
+                : 'Connect Google Calendar to review and send this invitation.'}
+            </AppText>
+          </Card>
+        </AgentTestId>
+      ) : null}
 
       <SectionHeader title="Connection" />
       <Card style={{ gap: spacing.md }}>
@@ -222,14 +285,14 @@ export default function CalendarSyncScreen() {
               ? 'Changes made in either calendar sync to the other.'
               : status.direction === 'to_google'
                 ? 'onTrack changes go to Google. Google-only changes are not imported.'
-                : 'Google additions and updates come into onTrack. Nothing is removed or exported.'}
+                : 'Google additions and updates come into onTrack. Nothing is removed or exported. Guest invitations are not sent from onTrack in this mode.'}
           </AppText>
         ) : null}
         {status.lastSyncedAt ? <AppText variant="caption" color="tertiary">Last synced {new Date(status.lastSyncedAt).toLocaleString()}</AppText> : null}
         {status.connected && needsReconnect ? (
           <Button testID={AgentUiIds.calendarSync.reconnect} disabled={primaryControlsDisabled} onPress={() => void runConnect()} accessibilityLabel="Reconnect Google Calendar">{connecting ? 'Reconnecting…' : 'Reconnect Google Calendar'}</Button>
         ) : status.connected ? (
-          <Button testID={AgentUiIds.calendarSync.sync} disabled={primaryControlsDisabled} onPress={() => void reviewSync()} accessibilityLabel="Review Google Calendar sync changes">{backgroundSync.running ? syncProgress : previewing ? 'Reviewing Changes…' : 'Sync Now'}</Button>
+          <Button testID={AgentUiIds.calendarSync.sync} disabled={primaryControlsDisabled} onPress={() => void reviewSync(reviewActivityId)} accessibilityLabel="Review Google Calendar sync changes">{backgroundSync.running ? syncProgress : previewing ? 'Reviewing Changes…' : reviewActivityId ? 'Review & Send Invite' : 'Sync Now'}</Button>
         ) : (
           <Button testID={AgentUiIds.calendarSync.connect} disabled={primaryControlsDisabled} onPress={() => void runConnect()} accessibilityLabel="Connect Google Calendar">{connecting ? 'Connecting…' : isGuest ? 'Sign In to Connect' : 'Connect Google Calendar'}</Button>
         )}

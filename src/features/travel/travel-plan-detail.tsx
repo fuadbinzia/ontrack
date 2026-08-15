@@ -18,8 +18,8 @@ import {
 } from '@/features/travel/calendar';
 import { type ExpenseFormState } from '@/features/travel/expenses/expense-form';
 import {
+  sortedVisibleItineraryForViewer,
   stampOwnedItineraryDefaults,
-  visibleItineraryForViewer,
 } from '@/features/travel/itinerary-visibility';
 import { TravelImportResult } from '@/features/travel/travel-import-result-modal';
 import { TravelPlanDetailBody } from '@/features/travel/travel-plan-detail-body';
@@ -335,12 +335,7 @@ function TravelPlanDetailLoaded({
   );
   const [timelineNow, setTimelineNow] = useState(() => new Date());
   const sortedItinerary = useMemo(
-    () =>
-      visibleItineraryForViewer(itinerary, localUserId).sort(
-        (left, right) =>
-          left.date.localeCompare(right.date) ||
-          left.startMinutes - right.startMinutes,
-      ),
+    () => sortedVisibleItineraryForViewer(itinerary, localUserId),
     [itinerary, localUserId],
   );
   const timelineDays = useMemo(

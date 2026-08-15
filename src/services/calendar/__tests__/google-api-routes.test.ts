@@ -130,6 +130,22 @@ it('returns a read-only sync preview before any sync mutation starts', async () 
   expect(mockSyncGoogleCalendarServer).not.toHaveBeenCalled();
 });
 
+it('returns 400 for malformed JSON in calendar sync payloads', async () => {
+  const syncResponse = await syncRoute.POST(new Request(
+    'https://ontrack.example/api/calendar/google/sync',
+    { method: 'POST', body: '{activities: []}' },
+  ));
+  expect(syncResponse.status).toBe(400);
+  await expect(syncResponse.json()).resolves.toEqual({ error: 'Calendar payload is invalid JSON.' });
+
+  const previewResponse = await previewRoute.POST(new Request(
+    'https://ontrack.example/api/calendar/google/preview',
+    { method: 'POST', body: '{activities: []}' },
+  ));
+  expect(previewResponse.status).toBe(400);
+  await expect(previewResponse.json()).resolves.toEqual({ error: 'Calendar payload is invalid JSON.' });
+});
+
 it('normalizes untrusted timezone and phase values at the sync route', async () => {
   mockSyncGoogleCalendarServer.mockResolvedValueOnce({ hasMore: false });
 

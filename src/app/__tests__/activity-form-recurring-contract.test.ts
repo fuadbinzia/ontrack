@@ -25,12 +25,17 @@ describe('recurring event edit prompt', () => {
     expect(source).toMatch(/if \(isRecurringSeries\)[\s\S]*?return;[\s\S]*?commitSave\('single'\);/);
   });
 
-  it('returns every successful save to Today instead of Calendar', () => {
+  it('dismisses the sheet host before recurring guest events enter invitation review', () => {
     expect(source).toMatch(
-      /const leaveAfterSave = \(\) => \{[\s\S]*?goBackOrReplace\(router, '\/'\);[\s\S]*?\};/,
+      /const leaveAfterSave = \(reviewInvitation: boolean, reviewActivityId\?: string\)[\s\S]*?if \(router\.canDismiss\(\)\) router\.dismiss\(\);[\s\S]*?requestAnimationFrame\(\(\) => \{[\s\S]*?pathname: '\/\(tabs\)\/profile\/calendar-sync'[\s\S]*?reviewActivityId[\s\S]*?goBackOrReplace\(router, '\/'\)/,
     );
+    expect(source).not.toContain("router.replace('/(tabs)/profile/calendar-sync')");
+    expect(source).not.toContain("router.dismissTo('/(tabs)/profile/calendar-sync')");
+  });
+
+  it('applies the same invite-aware close path to single and series saves', () => {
     expect(source).toMatch(
-      /const commitSave[\s\S]*?saveEvent\(\{ \.\.\.payload, editScope \}\);[\s\S]*?leaveAfterSave\(\);/,
+      /const commitSave[\s\S]*?const savedActivity = saveEvent\(\{ \.\.\.payload, editScope \}\);[\s\S]*?leaveAfterSave\(parsedAttendees\.emails\.length > 0, savedActivity\.id\);/,
     );
   });
 });

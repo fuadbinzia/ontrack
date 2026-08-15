@@ -93,6 +93,7 @@ export const agentUiIdsShellProfile = {
   },
   calendarSync: {
     screen: 'ontrack.calendarSync.screen',
+    inviteReview: 'ontrack.calendarSync.section.inviteReview',
     connect: 'ontrack.calendarSync.connect',
     reconnect: 'ontrack.calendarSync.reconnect',
     sync: 'ontrack.calendarSync.sync',

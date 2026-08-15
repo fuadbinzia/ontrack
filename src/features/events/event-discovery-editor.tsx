@@ -17,6 +17,10 @@ import {
 import { spacing } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import {
+  asEventBroadcasts,
+  asEventFollowTargetsResponse,
+  asEventSearchResponse,
+  asEventStringList,
   searchEventFollowTargets,
   searchEvents,
   type EventDetails,
@@ -63,10 +67,11 @@ function eventWhen(event: EventSearchResult) {
 }
 
 function resultMeta(event: EventSearchResult) {
+  const broadcasts = asEventBroadcasts(event.broadcasts);
   return [
     eventWhen(event),
     event.venue?.name,
-    event.broadcasts.map((item) => item.name).join(', ') || undefined,
+    broadcasts.map((item) => item.name).join(', ') || undefined,
   ].filter(Boolean).join(' · ');
 }
 
@@ -162,10 +167,12 @@ export function EventDiscoveryEditor({
           searchEventFollowTargets(tab, normalized, controller.signal, sport)
             .catch(() => ({ results: [] })),
         ]);
-        setResults(eventResponse.results);
-        setTargets(targetResponse.results);
-        setHasMore(eventResponse.hasMore);
-        setPage(0);
+        const normalizedEventResponse = asEventSearchResponse(eventResponse);
+        const normalizedTargetResponse = asEventFollowTargetsResponse(targetResponse);
+        setResults(normalizedEventResponse.results);
+        setTargets(normalizedTargetResponse.results);
+        setHasMore(normalizedEventResponse.hasMore);
+        setPage(normalizedEventResponse.page);
       } catch (caught) {
         if (caught instanceof Error && caught.name === 'AbortError') return;
         setResults([]);
@@ -206,9 +213,10 @@ export function EventDiscoveryEditor({
     setError(undefined);
     try {
       const response = await searchEvents(tab, query, page + 1, undefined, sport);
-      setResults((current) => [...current, ...response.results]);
-      setPage(response.page);
-      setHasMore(response.hasMore);
+      const normalized = asEventSearchResponse(response);
+      setResults((current) => [...current, ...normalized.results]);
+      setPage(normalized.page);
+      setHasMore(normalized.hasMore);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'More events could not be loaded.');
     } finally {
@@ -423,9 +431,12 @@ export function EventDiscoveryEditor({
         <AgentTestId testID={AgentUiIds.activityForm.event.selected} label="Selected event">
           <GlassPlate style={styles.selectedCard}>
             <AppText variant="overline" color="accent">Selected event</AppText>
-            <AppText variant="bodyMedium">{selected.participants.join(' vs ') || selected.sourceName}</AppText>
+            <AppText variant="bodyMedium">{asEventStringList(selected.participants).join(' vs ') || selected.sourceName}</AppText>
             <AppText variant="caption" color="secondary">
-              {[selected.venue?.name, selected.broadcasts.map((item) => item.name).join(', ')].filter(Boolean).join(' · ') || 'Details will stay attached to this event.'}
+              {[
+                selected.venue?.name,
+                asEventBroadcasts(selected.broadcasts).map((item) => item.name).join(', '),
+              ].filter(Boolean).join(' · ') || 'Details will stay attached to this event.'}
             </AppText>
           </GlassPlate>
         </AgentTestId>

@@ -14,11 +14,19 @@ export async function POST(request: Request) {
     unauthorizedMessage: 'Sign in to preview calendar sync.',
     errorFallback: 'Calendar sync preview failed.',
   }, async (request, userId) => {
-    const body = await request.json() as {
+    let body: {
       activities?: Activity[];
       deletions?: GoogleCalendarDeletion[];
       timeZone?: string;
     };
+    try {
+      body = await request.json() as typeof body;
+    } catch {
+      return Response.json({ error: 'Calendar payload is invalid JSON.' }, {
+        status: 400,
+        headers: apiCorsHeaders(request, METHODS),
+      });
+    }
     if (!Array.isArray(body.activities) || body.activities.length > 10_000) {
       return Response.json(
         { error: 'Calendar payload is invalid.' },

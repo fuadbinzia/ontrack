@@ -72,6 +72,28 @@ describe('schedule event saves', () => {
     expect(state.meals[0].items).toHaveLength(1);
   });
 
+  it('persists guest emails with the event for calendar invitation sync', () => {
+    useSchedule.getState().saveEvent({
+      id: activity.id,
+      detailKind: 'food',
+      activity: {
+        date: activity.date,
+        title: activity.title,
+        categoryId: activity.categoryId,
+        startMinutes: activity.startMinutes,
+        durationMinutes: activity.durationMinutes,
+        status: activity.status,
+        attendeeEmails: ['alex@example.com', 'jordan@example.com'],
+      },
+      meal,
+    });
+
+    expect(useSchedule.getState().activities[0].attendeeEmails).toEqual([
+      'alex@example.com',
+      'jordan@example.com',
+    ]);
+  });
+
   it('updates only the selected occurrence when a recurring edit uses single scope', () => {
     const first = {
       ...activity,

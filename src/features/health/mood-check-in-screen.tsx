@@ -33,7 +33,13 @@ export function MoodCheckInScreen() {
   const addCustomEmotion = useHealth((state) => state.addCustomEmotion);
   const linkFollowUp = useHealth((state) => state.linkFollowUp);
   const [ratings, setRatings] = useState<Record<string, Intensity>>(
-    () => Object.fromEntries(existingEntry?.emotions.map((rating) => [rating.emotionId, rating.intensity]) ?? []),
+    () =>
+      Object.fromEntries(
+        (existingEntry?.emotions ?? []).map((rating) => [
+          rating.emotionId,
+          rating.intensity,
+        ]),
+      ),
   );
   const [factorIds, setFactorIds] = useState<string[]>(existingEntry?.factorIds ?? []);
   const [note, setNote] = useState(existingEntry?.note ?? '');

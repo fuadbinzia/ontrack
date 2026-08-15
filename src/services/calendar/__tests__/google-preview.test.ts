@@ -220,6 +220,34 @@ it('shows the exact fields a Google update will change in onTrack', () => {
   ]);
 });
 
+it('shows the guest list that an invitation update will send to Google', () => {
+  const invited = {
+    ...activity('invited', 'Dinner'),
+    attendeeEmails: ['alex@example.com', 'jordan@example.com'],
+    updatedAt: '2026-08-13T11:00:00.000Z',
+  };
+  const preview = buildGoogleCalendarSyncPreview(
+    'to_google',
+    [invited],
+    [],
+    [link('invited', 'event-invited')],
+    [{
+      id: 'event-invited', summary: 'Dinner', updated: syncedAt,
+      start: { dateTime: '2026-08-13T10:00:00Z' },
+      end: { dateTime: '2026-08-13T11:00:00Z' },
+    }],
+    'UTC',
+  );
+
+  expect(preview.changes).toContainEqual(expect.objectContaining({
+    action: 'update',
+    destination: 'google',
+    details: expect.arrayContaining([
+      { label: 'Guests', before: 'None', after: 'alex@example.com, jordan@example.com' },
+    ]),
+  }));
+});
+
 it('repairs crossed recurring links instead of proposing stale Google times', () => {
   const therapy = { ...activity('therapy', 'Therapy'), startMinutes: 14 * 60 };
   const friend = { ...activity('friend', 'Ft w/ Aya'), startMinutes: 10 * 60 };

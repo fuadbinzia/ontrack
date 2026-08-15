@@ -2,10 +2,11 @@ import type { Activity } from '@/types/models';
 import { isAllDayActivity } from '@/utils/activity-time';
 import { formatDateLong, formatDuration, formatMinutes } from '@/utils/date';
 
+import { googleAttendeeEmails } from './calendar-invitations';
 import { zonedDateParts } from './google-mapping';
 import type { GoogleCalendarEvent, GoogleCalendarSyncPreviewItem } from './google-types';
 
-type PreviewValues = Partial<Record<'Title' | 'Date' | 'Time' | 'Duration' | 'Notes', string>>;
+type PreviewValues = Partial<Record<'Title' | 'Date' | 'Time' | 'Duration' | 'Guests' | 'Notes', string>>;
 
 export function activityPreviewValues(activity: Activity): PreviewValues {
   return {
@@ -13,6 +14,7 @@ export function activityPreviewValues(activity: Activity): PreviewValues {
     Date: formatDateLong(activity.date, { year: true }),
     Time: isAllDayActivity(activity) ? 'All day' : formatMinutes(activity.startMinutes),
     Duration: formatDuration(activity.durationMinutes),
+    Guests: activity.attendeeEmails?.join(', ') || 'None',
     Notes: activity.notes?.trim() || 'None',
   };
 }
@@ -20,6 +22,7 @@ export function activityPreviewValues(activity: Activity): PreviewValues {
 export function eventPreviewValues(event: GoogleCalendarEvent, timeZone: string): PreviewValues {
   const values: PreviewValues = {
     Title: event.summary?.trim() || 'Untitled event',
+    Guests: googleAttendeeEmails(event.attendees).join(', ') || 'None',
     Notes: event.description?.trim() || 'None',
   };
   if (event.start?.date) {
@@ -51,7 +54,7 @@ export function previewDetails(
   before: PreviewValues | undefined,
   after: PreviewValues | undefined,
 ): NonNullable<GoogleCalendarSyncPreviewItem['details']> {
-  const labels: (keyof PreviewValues)[] = ['Title', 'Date', 'Time', 'Duration', 'Notes'];
+  const labels: (keyof PreviewValues)[] = ['Title', 'Date', 'Time', 'Duration', 'Guests', 'Notes'];
   return labels.flatMap((label) => {
     const previous = before?.[label];
     const next = after?.[label];

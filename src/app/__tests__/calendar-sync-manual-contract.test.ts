@@ -31,7 +31,7 @@ describe('manual Google Calendar sync', () => {
 
   it('starts a new sync only from the Sync Now control', () => {
     expect(calendarSyncScreen).toMatch(
-      /testID=\{AgentUiIds\.calendarSync\.sync\}[\s\S]*?onPress=\{\(\) => void reviewSync\(\)\}/,
+      /testID=\{AgentUiIds\.calendarSync\.sync\}[\s\S]*?onPress=\{\(\) => void reviewSync\(reviewActivityId\)\}/,
     );
     expect(calendarSyncScreen).not.toContain('}, [backgroundSync.running]);');
     expect(calendarScreen).not.toContain('syncGoogleCalendarIfConnected');
@@ -70,11 +70,20 @@ describe('manual Google Calendar sync', () => {
 
     expect(reviewSync).toContain('previewGoogleCalendarSync()');
     expect(reviewSync).toContain("'Review Sync Changes'");
-    expect(reviewSync).toContain('content: <CalendarSyncReview preview={preview} />');
+    expect(reviewSync).toContain('content: <CalendarSyncReview preview={focusedPreview} />');
     expect(reviewSync).toContain("text: 'Sync Changes'");
     expect(reviewSync).toContain('AgentUiIds.calendarSync.confirmSync');
     expect(reviewSync).toContain('onPress: () => void runSync()');
     expect(reviewSync).toContain('scrollableMessage: true');
+  });
+
+  it('shows and automatically prepares the specific invitation saved by the event editor', () => {
+    expect(calendarSyncScreen).toContain('reviewActivityId?: string');
+    expect(calendarSyncScreen).toContain('AgentUiIds.calendarSync.inviteReview');
+    expect(calendarSyncScreen).toContain('<SectionHeader title="Invitation Review" />');
+    expect(calendarSyncScreen).toContain('reviewActivity.attendeeEmails.map');
+    expect(calendarSyncScreen).toContain('void reviewSync(reviewActivityId)');
+    expect(calendarSyncScreen).toContain("reviewActivityId ? 'Review & Send Invite' : 'Sync Now'");
   });
 
   it('keeps long preview lists in a bounded scroll region', () => {
@@ -87,7 +96,7 @@ describe('manual Google Calendar sync', () => {
 
   it('does not start a write when the preview has no changes', () => {
     expect(calendarSyncScreen).toMatch(
-      /if \(!preview\.changes\.length\) \{[\s\S]*?'Everything is up to date'[\s\S]*?return;/,
+      /if \(!focusedPreview\.changes\.length\) \{[\s\S]*?'Everything Is Up to Date'[\s\S]*?return;/,
     );
   });
 

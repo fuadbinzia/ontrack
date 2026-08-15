@@ -1,6 +1,6 @@
 import type { Activity } from '@/types/models';
-
 import { buildGoogleBatchBody, parseGoogleBatchResponse, type GoogleBatchOperation } from './google-batch';
+import { googleCalendarInviteMutationPath } from './calendar-invitations';
 import {
   activityBody,
   eventToActivity,
@@ -377,14 +377,14 @@ export async function syncGoogleCalendarServer(
       const id = `operation-${index}`;
       if (mutation.kind === 'delete') return {
         id, method: 'DELETE',
-        path: `/calendar/v3${googleCalendarEventPath(row.calendar_id, mutation.link.google_event_id)}`,
+        path: `/calendar/v3${googleCalendarInviteMutationPath(row.calendar_id, mutation.link.google_event_id)}`,
       };
       return {
         id,
         method: mutation.link ? 'PATCH' : 'POST',
         path: mutation.link
-          ? `/calendar/v3${googleCalendarEventPath(row.calendar_id, mutation.link.google_event_id)}`
-          : `/calendar/v3${googleCalendarEventPath(row.calendar_id)}`,
+          ? `/calendar/v3${googleCalendarInviteMutationPath(row.calendar_id, mutation.link.google_event_id)}`
+          : `/calendar/v3${googleCalendarInviteMutationPath(row.calendar_id)}`,
         body: activityBody(mutation.activity, timeZone, createEventIds.get(mutation.activity.id)),
       };
     });

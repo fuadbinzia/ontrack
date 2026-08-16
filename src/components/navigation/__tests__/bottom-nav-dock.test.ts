@@ -2,12 +2,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
-    BottomNavBarBridge,
+    notifyBottomNavDockListeners,
     onBottomNavBarBridgeUnmount,
     peekBottomNavDock,
     publishBottomNavDock,
     resetBottomNavDockForTests,
     subscribeBottomNavDock,
+    writeBottomNavDockSnapshot,
 } from '../bottom-nav-dock';
 
 const read = (relative: string) =>
@@ -73,20 +74,23 @@ describe('tab dock stays visible after tab scenes paint', () => {
     expect(layout).toContain('tabBar={renderBottomNavBar}');
     expect(layout).not.toContain('tabBar={BottomNavBarBridge}');
     expect(dock).toContain('return <BottomNavBarBridge {...props} />');
-    expect(dock).toContain('if (peekBottomNavDock() !== props)');
-    expect(dock).not.toContain('useLayoutEffect');
+    expect(dock).toContain('writeBottomNavDockSnapshot');
+    expect(dock).toContain('useLayoutEffect');
+    const bridge = dock.slice(dock.indexOf('export function BottomNavBarBridge'));
+    expect(bridge).not.toContain('publishBottomNavDock');
   });
 
-  it('publishes dock props during render so the host snapshot is populated before subscribe', () => {
-    const props = { state: { index: 2, routes: [] } } as never;
-    BottomNavBarBridge(props);
-    expect(peekBottomNavDock()).toBe(props);
-    const seen: unknown[] = [];
+  it('writes the dock snapshot during render without notifying the host', () => {
+    let ticks = 0;
     const stop = subscribeBottomNavDock(() => {
-      seen.push(peekBottomNavDock());
+      ticks += 1;
     });
+    const props = { state: { index: 2, routes: [] } } as never;
+    expect(writeBottomNavDockSnapshot(props)).toBe(true);
     expect(peekBottomNavDock()).toBe(props);
-    expect(seen).toEqual([]);
+    expect(ticks).toBe(0);
+    notifyBottomNavDockListeners();
+    expect(ticks).toBe(1);
     stop();
   });
 

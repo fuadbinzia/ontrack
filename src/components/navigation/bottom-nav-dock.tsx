@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { useSyncExternalStore } from 'react';
+import { useLayoutEffect, useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { BottomNavBar } from './bottom-nav-bar';
@@ -24,10 +24,22 @@ function peekBottomNavDock(): BottomNavDockProps | null {
   return dockProps;
 }
 
-export function publishBottomNavDock(next: BottomNavDockProps | null): void {
-  if (dockProps === next) return;
+/** Mutate the snapshot only. Never call this from render if listeners must fire. */
+export function writeBottomNavDockSnapshot(
+  next: BottomNavDockProps | null,
+): boolean {
+  if (dockProps === next) return false;
   dockProps = next;
+  return true;
+}
+
+export function notifyBottomNavDockListeners(): void {
   for (const listener of listeners) listener();
+}
+
+export function publishBottomNavDock(next: BottomNavDockProps | null): void {
+  if (!writeBottomNavDockSnapshot(next)) return;
+  notifyBottomNavDockListeners();
 }
 
 export function resetBottomNavDockForTests(): void {
@@ -46,13 +58,16 @@ export function onBottomNavBarBridgeUnmount(
   _published: BottomNavDockProps,
 ): void {}
 
-/** Publishes into BottomNavDockHost; renders nothing inside BottomTabView. */
+/**
+ * Writes the snapshot during render (so a later sibling Host getSnapshot
+ * sees props in the same commit) but notifies after layout. Notifying
+ * during render updates BottomNavDockHost mid-commit (React setState-in-render).
+ */
 export function BottomNavBarBridge(props: BottomNavDockProps) {
-  // Publish during render so the sibling host's first getSnapshot sees props
-  // even if this slot unmounts before layout effects (ScreenContainer cover).
-  if (peekBottomNavDock() !== props) {
-    publishBottomNavDock(props);
-  }
+  const snapshotChanged = writeBottomNavDockSnapshot(props);
+  useLayoutEffect(() => {
+    if (snapshotChanged) notifyBottomNavDockListeners();
+  }, [props, snapshotChanged]);
   return null;
 }
 

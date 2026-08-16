@@ -16,6 +16,7 @@ interface MonthGridProps {
   month: number;
   selected: string;
   activitiesByDate: Record<string, Activity[]>;
+  holidayDates?: ReadonlySet<string>;
   onSelect: (dateKey: string) => void;
 }
 
@@ -25,6 +26,7 @@ function MonthDayCell({
   inMonth,
   isSelected,
   today,
+  holiday,
   dot,
   onSelect,
 }: {
@@ -33,6 +35,7 @@ function MonthDayCell({
   inMonth: boolean;
   isSelected: boolean;
   today: boolean;
+  holiday: boolean;
   dot: string | null;
   onSelect: (dateKey: string) => void;
 }) {
@@ -83,12 +86,31 @@ function MonthDayCell({
         color={inMonth ? (isSelected ? 'accent' : 'primary') : 'tertiary'}>
         {day}
       </AppText>
-      {dot && inMonth ? <View style={[styles.dot, { backgroundColor: dot }]} /> : null}
+      {inMonth && (holiday || dot) ? (
+        <View style={styles.marks}>
+          {holiday ? (
+            <View
+              style={[
+                styles.holidayMark,
+                { borderColor: theme.accentPrimary },
+              ]}
+            />
+          ) : null}
+          {dot ? <View style={[styles.dot, { backgroundColor: dot }]} /> : null}
+        </View>
+      ) : null}
     </Pressable>
   );
 }
 
-export function MonthGrid({ year, month, selected, activitiesByDate, onSelect }: MonthGridProps) {
+export function MonthGrid({
+  year,
+  month,
+  selected,
+  activitiesByDate,
+  holidayDates,
+  onSelect,
+}: MonthGridProps) {
   const theme = useTheme();
   const cells = monthGrid(year, month);
 
@@ -125,6 +147,7 @@ export function MonthGrid({ year, month, selected, activitiesByDate, onSelect }:
               inMonth={cell.inMonth}
               isSelected={cell.key === selected}
               today={isToday(cell.key)}
+              holiday={Boolean(holidayDates?.has(cell.key))}
               dot={indicatorColor(cell.key)}
               onSelect={onSelect}
             />
@@ -149,11 +172,22 @@ const styles = StyleSheet.create({
     aspectRatio: 0.9,
     borderRadius: radii.md,
   },
-  // Overlay so the day digit stays optically centered in the plate.
-  dot: {
+  marks: {
     position: 'absolute',
     bottom: spacing.xs,
-    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  holidayMark: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    borderWidth: 1.5,
+    backgroundColor: 'transparent',
+  },
+  // Overlay so the day digit stays optically centered in the plate.
+  dot: {
     width: 5,
     height: 5,
     borderRadius: 3,

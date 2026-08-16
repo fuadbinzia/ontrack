@@ -12,10 +12,19 @@ import {
 } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { layout, radii, spacing } from '@/design-system';
-import { calendarActivitiesForDate } from '@/features/calendar/calendar-day-events';
+import { AllDayActivityBanner } from '@/features/calendar/all-day-banner';
+import {
+    calendarActivitiesForDate,
+    splitDayActivities,
+} from '@/features/calendar/calendar-day-events';
 import { CalendarEventRow } from '@/features/calendar/calendar-event-row';
 import { CalendarShine } from '@/features/calendar/calendar-shine';
+import { HolidayBanner } from '@/features/calendar/holiday-banner';
 import { MonthGrid } from '@/features/calendar/month-grid';
+import {
+    useCalendarHolidays,
+    useMonthHolidayDates,
+} from '@/features/calendar/use-calendar-holidays';
 import { activityDetailPath } from '@/features/daily-tracking/activity-detail-route';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useAddons } from '@/store/addons';
@@ -72,7 +81,13 @@ export default function CalendarScreen() {
     () => calendarActivitiesForDate(activitiesByDate, selected),
     [activitiesByDate, selected],
   );
-  const dayCount = dayActivities.length;
+  const { timed: timedActivities, allDay: allDayActivities } = useMemo(
+    () => splitDayActivities(dayActivities),
+    [dayActivities],
+  );
+  const dayHolidays = useCalendarHolidays(selected);
+  const holidayDates = useMonthHolidayDates(year, month);
+  const dayCount = timedActivities.length;
   const dayLabel = formatDateLong(selected, { year: true });
 
   const shiftMonth = (delta: number) => {
@@ -139,6 +154,7 @@ export default function CalendarScreen() {
             month={month}
             selected={selected}
             activitiesByDate={activitiesByDate}
+            holidayDates={holidayDates}
             onSelect={setSelectedDate}
           />
         </GlassPlate>
@@ -171,9 +187,24 @@ export default function CalendarScreen() {
         </Button>
       </GlassPlate>
 
-      {dayActivities.length > 0 ? (
+      {dayHolidays.length > 0 || dayActivities.length > 0 ? (
         <View style={[styles.eventList, { marginTop: rs.md, gap: rs.sm }]}>
-          {dayActivities.map((activity) => (
+          {dayHolidays.map((holiday) => (
+            <HolidayBanner
+              key={holiday.id}
+              holiday={holiday}
+              testID={AgentUiIds.calendar.holiday(holiday.id)}
+            />
+          ))}
+          {allDayActivities.map((activity) => (
+            <AllDayActivityBanner
+              key={activity.id}
+              activity={activity}
+              testID={AgentUiIds.calendar.allDay(activity.id)}
+              onPress={() => openActivity(activity)}
+            />
+          ))}
+          {timedActivities.map((activity) => (
             <CalendarEventRow
               key={activity.id}
               activity={activity}

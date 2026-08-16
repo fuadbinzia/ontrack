@@ -6,6 +6,7 @@ import { AppText, Button } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
 import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
+import { useDismissCalendarDetail } from '@/features/daily-tracking/dismiss-calendar-detail';
 import { useSchedule } from '@/store/schedule';
 import { activityTimingLabel } from '@/utils/activity-time';
 import { openHttpsUrl } from '@/utils/safe-url';
@@ -17,16 +18,9 @@ export default function MovieDetailScreen() {
   const movie = useSchedule((state) => state.movies.find((item) => item.activityId === id));
   const categories = useSchedule((state) => state.categories);
   const setStatus = useSchedule((state) => state.setStatus);
+  const close = useDismissCalendarDetail(!activity || !movie);
 
-  if (!activity || !movie) {
-    return (
-      <CalendarDetailSheet kind="movie" title="Movie Event Not Found" onClose={() => router.back()}>
-        <AppText variant="body" color="secondary">
-          This movie event is no longer available.
-        </AppText>
-      </CalendarDetailSheet>
-    );
-  }
+  if (!activity || !movie) return null;
 
   const category = findCategory(categories, activity.categoryId);
   const tmdbUrl = `https://www.themoviedb.org/${movie.mediaType === 'tv' ? 'tv' : 'movie'}/${movie.tmdbId}`;
@@ -38,7 +32,7 @@ export default function MovieDetailScreen() {
       title={activity.title}
       subtitle={activityTimingLabel(activity)}
       subtitleIcon="clock"
-      onClose={() => router.back()}>
+      onClose={close}>
       {movie.posterUrl ? (
         <Pressable
           accessibilityRole="link"

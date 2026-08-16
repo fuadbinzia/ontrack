@@ -96,10 +96,12 @@ export default function ProfileSettingsScreen() {
   const aiEnabled = usePreferences((state) => state.aiEnabled);
   const hapticsEnabled = usePreferences((state) => state.hapticsEnabled);
   const usageAnalyticsEnabled = usePreferences((state) => state.usageAnalyticsEnabled);
+  const showHolidays = usePreferences((state) => state.showHolidays);
   const setThemePreference = usePreferences((state) => state.setThemePreference);
   const setAiEnabled = usePreferences((state) => state.setAiEnabled);
   const setHapticsEnabled = usePreferences((state) => state.setHapticsEnabled);
   const setUsageAnalyticsEnabled = usePreferences((state) => state.setUsageAnalyticsEnabled);
+  const setShowHolidays = usePreferences((state) => state.setShowHolidays);
   const enabledAddons = useAddons((state) => state.enabled);
   const setAddonEnabled = useAddons((state) => state.setEnabled);
   const installedAgentCount = useAgents((state) => Object.keys(state.installations).length);
@@ -343,6 +345,14 @@ export default function ProfileSettingsScreen() {
                 icon="settings"
                 value={hapticsEnabled}
                 onValueChange={setHapticsEnabled}
+              />
+              <SettingsToggleRow
+                label="Holidays"
+                detail="Show public holidays on Calendar and Today"
+                icon="calendar"
+                value={showHolidays}
+                onValueChange={setShowHolidays}
+                testID={AgentUiIds.profile.showHolidays}
               />
             </SettingsGroup>
           </View>

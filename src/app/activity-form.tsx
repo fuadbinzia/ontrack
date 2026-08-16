@@ -146,6 +146,15 @@ export default function ActivityFormScreen() {
     allowLeave.current = true;
     goBackOrReplace(router, '/');
   };
+  const leaveAfterDelete = () => {
+    allowLeave.current = true;
+    // The editor is a root modal over the event-detail sheet. One dismiss
+    // would reveal "Activity Not Found" on that stale detail — pop both.
+    if (router.canDismiss()) router.dismiss();
+    requestAnimationFrame(() => {
+      router.dismissTo('/');
+    });
+  };
   const leaveAfterSave = (reviewInvitation: boolean, reviewActivityId?: string) => {
     allowLeave.current = true;
     if (reviewInvitation) {
@@ -459,9 +468,9 @@ export default function ActivityFormScreen() {
       title: 'Delete Event',
       message: `Remove “${existing.title}” from your schedule?`,
       onConfirm: () => {
-        deleteActivity(editId);
         allowLeave.current = true;
-        close();
+        deleteActivity(editId);
+        leaveAfterDelete();
       },
     });
   };
@@ -470,6 +479,7 @@ export default function ActivityFormScreen() {
   const fieldBorder = glassFieldBorder(theme.name);
 
   if (missingActivity) {
+    if (allowLeave.current) return null;
     return (
       <ActivityFormMissingScreen
         atmosphereFloor={theme.backgroundPrimary}

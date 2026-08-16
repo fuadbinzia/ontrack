@@ -5,6 +5,7 @@ import { AppText, Button, Card } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { spacing } from '@/design-system';
 import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
+import { useDismissCalendarDetail } from '@/features/daily-tracking/dismiss-calendar-detail';
 import { useSchedule } from '@/store/schedule';
 import { activityTimingLabel, isAllDayActivity } from '@/utils/activity-time';
 import { openSleepData } from '@/utils/open-sleep-data';
@@ -20,16 +21,9 @@ export default function SleepDetailScreen() {
   const categories = useSchedule((state) => state.categories);
   const setStatus = useSchedule((state) => state.setStatus);
   const healthEnabled = useAddons((state) => state.enabled.health);
+  const close = useDismissCalendarDetail(!activity);
 
-  if (!activity) {
-    return (
-      <CalendarDetailSheet kind="sleep" title="Sleep Activity Not Found" onClose={() => router.back()}>
-        <AppText variant="body" color="secondary">
-          This sleep activity is no longer available.
-        </AppText>
-      </CalendarDetailSheet>
-    );
-  }
+  if (!activity) return null;
 
   const category = findCategory(categories, activity.categoryId);
   const healthAppName = process.env.EXPO_OS === 'ios' ? 'Apple Health' : 'Health Connect';
@@ -42,7 +36,7 @@ export default function SleepDetailScreen() {
       title={activity.title}
       subtitle={isAllDayActivity(activity) ? 'All day' : `${activityTimingLabel(activity)} planned`}
       subtitleIcon="clock"
-      onClose={() => router.back()}>
+      onClose={close}>
 
       <Card variant="sunken" style={styles.healthCard}>
         <AppText variant="subheading">Your Recorded Sleep</AppText>

@@ -5,6 +5,7 @@ import { AppText, Button, GlassPlate, SectionHeader } from '@/components/primiti
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
 import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
+import { useDismissCalendarDetail } from '@/features/daily-tracking/dismiss-calendar-detail';
 import { useTheme } from '@/hooks/use-theme';
 import { useSchedule } from '@/store/schedule';
 import { activityTimingLabel } from '@/utils/activity-time';
@@ -18,18 +19,11 @@ export default function WorkDetailScreen() {
 
   const activity = useSchedule((s) => s.activities.find((a) => a.id === activityId));
   const session = useSchedule((s) => s.workSessions.find((w) => w.activityId === activityId));
+  const close = useDismissCalendarDetail(!activity);
   const categories = useSchedule((s) => s.categories);
   const upsertWorkSession = useSchedule((s) => s.upsertWorkSession);
 
-  if (!activity) {
-    return (
-      <CalendarDetailSheet kind="work" title="Work Session Not Found" onClose={() => router.back()}>
-        <AppText variant="body" color="secondary">
-          This work session is no longer available.
-        </AppText>
-      </CalendarDetailSheet>
-    );
-  }
+  if (!activity) return null;
 
   const category = findCategory(categories, activity.categoryId);
   const tasks = session?.tasks ?? [];
@@ -51,7 +45,7 @@ export default function WorkDetailScreen() {
       title={activity.title}
       subtitle={activityTimingLabel(activity)}
       subtitleIcon="clock"
-      onClose={() => router.back()}>
+      onClose={close}>
       <AppText variant="body" color="secondary">
         {doneCount} of {formatCount(tasks.length, 'task')} complete · {session?.focusMinutes ?? 0}m focus logged
       </AppText>

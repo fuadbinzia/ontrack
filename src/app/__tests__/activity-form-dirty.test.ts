@@ -99,6 +99,16 @@ describe('activity form unsaved changes', () => {
     expect(formSource).not.toContain("router.dismissTo('/(tabs)/profile/calendar-sync')");
   });
 
+  it('pops the editor and the stale event-detail sheet after delete', () => {
+    expect(formSource).toMatch(
+      /const leaveAfterDelete = \(\) => \{[\s\S]*?if \(router\.canDismiss\(\)\) router\.dismiss\(\);[\s\S]*?requestAnimationFrame\(\(\) => \{[\s\S]*?router\.dismissTo\('\/'\)/,
+    );
+    expect(formSource).toMatch(
+      /onConfirm: \(\) => \{[\s\S]*?deleteActivity\(editId\);[\s\S]*?leaveAfterDelete\(\);/,
+    );
+    expect(formSource).toContain('if (allowLeave.current) return null;');
+  });
+
   it('keeps invite-free saves on the ordinary Today dismissal path', () => {
     expect(formSource).toContain('leaveAfterSave(parsedAttendees.emails.length > 0, savedActivity.id)');
     expect(formSource).toMatch(

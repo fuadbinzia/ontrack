@@ -251,8 +251,15 @@ describe('glass plate contract', () => {
 
   it('keeps Calendar on frosted GlassPlate chrome', () => {
     const calendar = read('src/app/(tabs)/calendar.tsx');
+    const holiday = read('src/features/calendar/holiday-banner.tsx');
+    const allDay = read('src/features/calendar/all-day-banner.tsx');
     expect(calendar).toContain('GlassPlate');
     expect(calendar).not.toContain('backgroundColor: theme.backgroundSunken');
+    expect(holiday).toContain('AllDayBanner');
+    expect(allDay).toContain('GlassPlate');
+    expect(allDay).toContain('GlassIconWell');
+    expect(allDay).not.toContain('backgroundElevated');
+    expect(allDay).not.toContain('backgroundSunken');
   });
 
   it('forbids opaque paper fills on shared product chrome shells', () => {

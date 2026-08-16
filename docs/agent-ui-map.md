@@ -440,6 +440,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.today.openCalendar`        | Date title (weekday + long date) → Calendar tab |
 | `ontrack.today.weather`             | Home weather tile (full width when home≡current; else left half). Tap → Profile `?reveal=homeLocation` |
 | `ontrack.today.currentLocation`     | Current weather tile only when place ≠ home (right half). Tap → Profile `?reveal=currentLocation` |
+| `ontrack.today.holiday.<id>`        | Static all-day holiday rail (not a timeline activity) |
+| `ontrack.today.allDay.<id>`         | Static all-day user event (birthday / all-day) — opens detail, not a timeline card |
 | `ontrack.today.progress`            | Day completion ring (hidden at 0%) |
 | `ontrack.today.addActivity`         | Open Today add sheet     |
 | `ontrack.today.emptyAddActivity`    | Empty-state add          |
@@ -465,6 +467,8 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.calendar.nextMonth`        | Next month          |
 | `ontrack.calendar.openDay`          | Open selected day (date + chevron) |
 | `ontrack.calendar.day.<YYYY-MM-DD>` | Month grid day cell |
+| `ontrack.calendar.holiday.<id>`     | Static selected-day holiday rail (not an event row) |
+| `ontrack.calendar.allDay.<id>`      | Static selected-day all-day / birthday rail (not a timed event row) |
 | `ontrack.calendar.activity.<id>`    | Open a selected-day event detail sheet |
 
 ## Event detail (`/detail/generic/<activityId>`)
@@ -475,7 +479,6 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | `ontrack.eventDetail.toggleComplete` | Mark complete / incomplete |
 | `ontrack.eventDetail.close`       | Dismiss the event sheet from its grabber |
 | `ontrack.eventDetail.backdrop`    | Dismiss the event sheet from its backdrop |
-| `ontrack.eventDetail.goBack`      | Go back when the event is missing |
 | `ontrack.eventDetail.section.fightCard` | Broadcast-style headliner and opposing-corner fight card |
 | `ontrack.eventDetail.fightCard.tab.<main|prelims|early-prelims>` | Show one fight-card section |
 | `ontrack.eventDetail.fightCard.bout.<boutId>` | Open a fight-card bout’s matchup modal |
@@ -1016,6 +1019,7 @@ Deep link example: `ontrack://design-system` / Expo route `/design-system`
 | `ontrack.profile.apiUsage`         | Open Integrations (also via Developer Tools) |
 | `ontrack.profile.developer`        | Open Developer Tools hub |
 | `ontrack.profile.usageAnalytics`   | Toggle first-party usage analytics |
+| `ontrack.profile.showHolidays`     | Toggle public holidays on Calendar and Today |
 | `ontrack.profile.appearance.open` | Open App Appearance from Profile |
 | `ontrack.profile.appearance.back` | Return to Profile |
 | `ontrack.profile.appearance.preview` | Live app-theme preview |

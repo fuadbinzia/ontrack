@@ -36,6 +36,7 @@ import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { useUI } from '@/store/ui';
 import { isDateKey } from '@/utils/date';
+import { userVisibleError } from '@/utils/operational-error';
 
 function validDraft(draft: SharedEventDraft): boolean {
   return (
@@ -217,7 +218,7 @@ export default function ShareEventScreen() {
         </View>
       ) : null}
 
-      {error ? (
+      {userVisibleError(error) ? (
         <View style={styles.errorBlock}>
           <ErrorMessage message={error} />
           <Button
@@ -233,7 +234,7 @@ export default function ShareEventScreen() {
         </View>
       ) : null}
 
-      {!loading && !error ? (
+      {!loading && !userVisibleError(error) ? (
         <>
           <SectionHeader
             title={`${drafts.length} ${drafts.length === 1 ? 'event' : 'events'} found`}

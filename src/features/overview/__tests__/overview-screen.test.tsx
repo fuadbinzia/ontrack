@@ -79,6 +79,13 @@ jest.mock("@/components/navigation/bottom-nav-tab-meta", () => {
   };
 });
 
+jest.mock("expo-router", () => ({
+  useFocusEffect: (effect: () => void) => {
+    const React = jest.requireActual("react") as typeof import("react");
+    React.useEffect(() => effect(), [effect]);
+  },
+}));
+
 jest.mock("expo-image", () => {
   const React = jest.requireActual("react");
   const { View } = jest.requireActual("react-native");

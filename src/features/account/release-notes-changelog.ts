@@ -4,6 +4,14 @@ import { CHANGELOG_ARCHIVE } from './release-notes-changelog-archive';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.100',
+    date: '2026-08-15',
+    notes: [
+      'Let tab-root swipe-back return to the previous tab, and keep backend outage copy off the screen.',
+      'Touched: app routes, features/events.',
+    ],
+  },
+  {
     version: '1.0.99',
     date: '2026-08-15',
     notes: [

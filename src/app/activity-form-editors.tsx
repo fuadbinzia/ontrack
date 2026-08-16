@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, Button, ErrorMessage, GlassPlate, IconButton, Input, LoadingBlock, SectionHeader, SegmentedControl } from '@/components/primitives';
+import { userVisibleError } from '@/utils/operational-error';
 import { radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -236,7 +237,7 @@ export function MovieEditor({ movie, onSelect, guided = false }: { movie?: Movie
         returnKeyType="search"
       />
       {searching ? <LoadingBlock compact /> : null}
-      {searchError ? (
+      {userVisibleError(searchError) ? (
         <View style={styles.searchMessage}>
           <ErrorMessage message={searchError} />
           <Button variant="secondary" onPress={() => setRetryKey((value) => value + 1)}>Try Again</Button>

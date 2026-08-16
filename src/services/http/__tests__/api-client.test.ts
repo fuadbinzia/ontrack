@@ -14,8 +14,17 @@ jest.mock('@/services/cloud/access-token', () => ({
   authHeader: (...args: unknown[]) => mockAuthHeader(...args),
 }));
 
+jest.mock('@/utils/operational-error', () => ({
+  isOperationalFailure: (message: string, status?: number) =>
+    status === 0 || status === 429 || (status !== undefined && status >= 500)
+    || /unavailable|offline|not configured/i.test(message),
+  reportOperationalFailure: jest.fn(),
+}));
+
 // eslint-disable-next-line import/first
 import { apiRequest } from '@/services/http/api-client';
+// eslint-disable-next-line import/first
+import { reportOperationalFailure } from '@/utils/operational-error';
 
 class TestApiError extends Error {}
 
@@ -89,5 +98,6 @@ describe('apiRequest', () => {
         createError: (message) => new TestApiError(message),
       }),
     ).rejects.toMatchObject({ message: 'Unavailable' });
+    expect(reportOperationalFailure).toHaveBeenCalledWith('Unavailable', 'api.request');
   });
 });

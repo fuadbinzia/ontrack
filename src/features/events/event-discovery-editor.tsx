@@ -33,6 +33,7 @@ import { refreshEventFollows } from '@/services/events/sync';
 import { useSchedule } from '@/store/schedule';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { deviceLocale, formatDateKey } from '@/utils/date';
+import { userVisibleError } from '@/utils/operational-error';
 
 type DiscoveryTab = 'sports' | 'concert' | 'following';
 
@@ -362,7 +363,7 @@ export function EventDiscoveryEditor({
             returnKeyType="search"
             testID={AgentUiIds.activityForm.event.search}
           />
-          {error ? (
+          {userVisibleError(error) ? (
             <View style={styles.section}>
               <ErrorMessage message={error} />
               <Button variant="secondary" onPress={() => setRetryKey((value) => value + 1)}>Try Again</Button>

@@ -9,6 +9,57 @@ import {
 import { AGENT_UI_WAIT_TIMEOUT_MS } from './flows-waits';
 
 export const AGENT_UI_DAILY_FLOWS = {
+  'overview-today-swipe-back': [
+    { op: 'goto', to: 'overview' },
+    {
+      op: 'wait',
+      id: 'ontrack.overview.row._today_',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.overview.row._today_' },
+    {
+      op: 'wait',
+      id: 'ontrack.today.addActivity',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'wait',
+      id: 'ontrack.shell.swipeBack',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.shell.swipeBack' },
+    {
+      op: 'wait',
+      id: 'ontrack.overview.screen',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
+  'overview-today-swipe-forward': [
+    { op: 'goto', to: 'overview' },
+    {
+      op: 'wait',
+      id: 'ontrack.overview.row._today_',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.overview.row._today_' },
+    {
+      op: 'wait',
+      id: 'ontrack.shell.swipeBack',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.shell.swipeBack' },
+    {
+      op: 'wait',
+      id: 'ontrack.shell.swipeForward',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.shell.swipeForward' },
+    {
+      op: 'wait',
+      id: 'ontrack.today.addActivity',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
   'overview-event-updates': [
     { op: 'seed', to: 'event-demo' },
     { op: 'goto', to: 'overview' },

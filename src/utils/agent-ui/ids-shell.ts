@@ -4,6 +4,10 @@ import { agentUiIdsShellDaily } from './ids-shell-daily';
 import { agentUiIdsShellProfile } from './ids-shell-profile';
 
 export const agentUiIdsShell = {
+  shell: {
+    swipeBack: 'ontrack.shell.swipeBack',
+    swipeForward: 'ontrack.shell.swipeForward',
+  },
   sheet: {
     /** Layout anchor for the visible SheetScaffold plate (not tappable). */
     plate: 'ontrack.sheet.plate',

@@ -137,6 +137,8 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.overview.attention.acknowledge.<key>`            | Acknowledge      | Hides the current version of an Overview attention item without changing its source record           |
 | `ontrack.overview.section.all`                            | Across onTrack   | Live module summary list                                                                              |
 | `ontrack.overview.row.<route>`                            | Overview row     | Opens the matching section; the Today row resets the timeline to the current date                     |
+| `ontrack.shell.swipeBack`                                 | Swipe back       | Left-edge swipe-back host on a tab root; drag right or tap to return to the previous tab              |
+| `ontrack.shell.swipeForward`                              | Swipe forward    | Right-edge swipe-forward host after a tab swipe-back; drag left or tap to return to the page you left |
 | `ontrack.sheet.plate`                                     | Any modal sheet  | Layout anchor — visible `SheetScaffold` plate bounds (not tappable)                                   |
 | `ontrack.trackers.screen`                                 | Sections         | More hub — In nav / Others reorder                                                                  |
 | `ontrack.trackers.row.<route>`                            | Trackers         | Open a tracker from the list (`(today)` → `_today_`)                                                |

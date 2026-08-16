@@ -2,6 +2,7 @@ import { fetch } from 'expo/fetch';
 
 import { beginRuntimeOperation } from '@/features/performance/runtime-activity';
 import { authHeader } from '@/services/cloud/access-token';
+import { isOperationalFailure, reportOperationalFailure } from '@/utils/operational-error';
 
 export type ApiErrorBody = {
   error?: string;
@@ -24,6 +25,18 @@ export type ApiRequestOptions<TError extends Error> = {
   /** When false, skip attaching the cloud access token. Default true. */
   authenticate?: boolean;
 };
+
+function raiseApiError<TError extends Error>(
+  createError: ApiRequestOptions<TError>['createError'],
+  message: string,
+  code?: string,
+  status?: number,
+): never {
+  if (isOperationalFailure(message, status)) {
+    reportOperationalFailure(message, 'api.request');
+  }
+  throw createError(message, code, status);
+}
 
 function abortError(): Error {
   const error = new Error('The request was aborted.');
@@ -104,9 +117,11 @@ export async function apiRequest<T, TError extends Error>(
   } catch (error) {
     finishActivity({ error: true });
     if (error instanceof Error && error.name === 'AbortError') throw error;
-    throw createError(
+    raiseApiError(
+      createError,
       offlineMessage,
       defaultErrorCode === undefined ? 'OFFLINE' : defaultErrorCode,
+      0,
     );
   } finally {
     if (timer !== undefined) clearTimeout(timer);
@@ -121,7 +136,8 @@ export async function apiRequest<T, TError extends Error>(
       error: true,
       receivedBytes: Number(response.headers.get('content-length')) || 0,
     });
-    throw createError(
+    raiseApiError(
+      createError,
       parsed?.error ?? unavailableMessage,
       parsed?.code ?? defaultErrorCode,
       response.status,
@@ -132,6 +148,6 @@ export async function apiRequest<T, TError extends Error>(
   try {
     return await response.json() as T;
   } catch {
-    throw createError(unavailableMessage, defaultErrorCode, response.status);
+    raiseApiError(createError, unavailableMessage, defaultErrorCode, response.status);
   }
 }

@@ -49,6 +49,8 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('calendar-activity-demo');
     expect(listAgentUiFlowNames()).toContain('event-bout-detail');
     expect(listAgentUiFlowNames()).toContain('overview-event-updates');
+    expect(listAgentUiFlowNames()).toContain('overview-today-swipe-back');
+    expect(listAgentUiFlowNames()).toContain('overview-today-swipe-forward');
     expect(listAgentUiFlowNames()).toContain('grocery-demo-recipe-import');
     expect(listAgentUiFlowNames()).toContain('workouts-demo');
     expect(listAgentUiFlowNames()).toContain('workouts-change-day');

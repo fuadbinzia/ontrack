@@ -5,10 +5,14 @@ import { EventDiscoveryEditor } from '@/features/events/event-discovery-editor';
 import { searchEventFollowTargets, searchEvents } from '@/services/events';
 import type { EventSearchResult } from '@/services/events';
 
-jest.mock('@/services/events', () => ({
-  searchEvents: jest.fn(),
-  searchEventFollowTargets: jest.fn(),
-}));
+jest.mock('@/services/events', () => {
+  const actual = jest.requireActual('@/services/events') as typeof import('@/services/events');
+  return {
+    ...actual,
+    searchEvents: jest.fn(),
+    searchEventFollowTargets: jest.fn(),
+  };
+});
 
 jest.mock('@/components/primitives/loading-block', () => ({
   LoadingBlock: () => null,
@@ -16,6 +20,10 @@ jest.mock('@/components/primitives/loading-block', () => ({
 
 jest.mock('@/services/events/sync', () => ({
   refreshEventFollows: jest.fn(),
+}));
+
+jest.mock('@/utils/crash-report', () => ({
+  sendCrashReport: jest.fn(),
 }));
 
 jest.mock('@/store/schedule', () => ({
@@ -80,10 +88,29 @@ describe('event discovery selection', () => {
 
     fireEvent.press(screen.getByLabelText(`Select ${event.title}`));
 
-    expect(onSelect).toHaveBeenCalledWith(event);
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({
+      providerEventId: event.providerEventId,
+      title: event.title,
+    }));
     expect(screen.getByText('Selected Event')).toBeTruthy();
     expect(screen.getByTestId('ontrack.activityForm.event.changeSelection')).toBeTruthy();
     expect(screen.queryByText('Matching events')).toBeNull();
+  });
+
+  it('keeps manual add usable when sports discovery is not configured', async () => {
+    jest.mocked(searchEvents).mockRejectedValueOnce(
+      new Error('Sports schedules are not configured.'),
+    );
+    const screen = renderEditor(jest.fn());
+
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText('Sports schedules are not configured.')).toBeNull();
+    expect(screen.queryByText('Try Again')).toBeNull();
+    expect(screen.getByTestId('ontrack.activityForm.event.search')).toBeTruthy();
   });
 
   it('returns to the existing results without another provider request', async () => {

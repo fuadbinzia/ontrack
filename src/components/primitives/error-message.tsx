@@ -6,6 +6,8 @@ import {
   type Text,
 } from 'react-native';
 
+import { isOperationalErrorMessage, reportOperationalFailure, userVisibleError } from '@/utils/operational-error';
+
 import { AppText, type AppTextProps } from './app-text';
 
 export interface ErrorMessageProps
@@ -19,30 +21,39 @@ export function ErrorMessage({
   ...rest
 }: ErrorMessageProps) {
   const ref = useRef<Text>(null);
+  const visible = userVisibleError(message);
 
   useEffect(() => {
+    if (!visible) {
+      if (isOperationalErrorMessage(message)) {
+        reportOperationalFailure(message, 'ui.error-message');
+      }
+      return;
+    }
     const timeout = setTimeout(() => {
       if (Platform.OS !== 'web') {
         const reactTag = findNodeHandle(ref.current);
         if (reactTag) AccessibilityInfo.setAccessibilityFocus(reactTag);
       }
-      AccessibilityInfo.announceForAccessibility(`Error: ${message}`);
+      AccessibilityInfo.announceForAccessibility(`Error: ${visible}`);
     }, 100);
 
     return () => clearTimeout(timeout);
-  }, [message]);
+  }, [message, visible]);
+
+  if (!visible) return null;
 
   return (
     <AppText
       ref={ref}
       variant={variant}
       color="danger"
-      accessibilityLabel={`Error: ${message}`}
+      accessibilityLabel={`Error: ${visible}`}
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"
       {...rest}
     >
-      {message}
+      {visible}
     </AppText>
   );
 }

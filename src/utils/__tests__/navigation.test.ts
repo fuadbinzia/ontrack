@@ -127,7 +127,10 @@ describe('root stack back button', () => {
     expect(tabsLayout).toContain('BackHandler');
     expect(tabsLayout).toContain('hardwareBackPress');
     expect(tabsLayout).toContain('canDismiss()');
-    expect(tabsLayout).toContain('canGoBack()');
+    expect(tabsLayout).toContain('getFocusedStackCanPop()');
+    expect(tabsLayout).toContain('intent="overview-return"');
+    expect(tabsLayout).toContain('beginTabReturn()');
+    expect(tabsLayout).toContain('rememberFocusedTab(tabName, pathname)');
   });
 
   it('guards stack dismissal and preserves a safe fallback', () => {
@@ -177,7 +180,24 @@ describe('full-screen swipe-back stacks', () => {
       'utf8',
     );
     expect(scene).toContain('goBackOrReplace');
+    expect(scene).toContain('beginTabReturn');
+    expect(scene).toContain('useRootNavigationState');
+    expect(scene).not.toContain('getRootState(');
     expect(scene).not.toContain('router.back(');
+  });
+
+  it('lets a tab root swipe back to the previous tab', () => {
+    const tabs = readFileSync(
+      join(process.cwd(), 'src/app/(tabs)/_layout.tsx'),
+      'utf8',
+    );
+    const scene = readFileSync(
+      join(process.cwd(), 'src/components/navigation/swipe-back-scene.tsx'),
+      'utf8',
+    );
+    expect(tabs).toContain('rememberFocusedTab(tabName, pathname)');
+    expect(scene).toContain('beginTabReturn()');
+    expect(scene).not.toContain('OVERVIEW_HREF');
   });
 
   it.each(NESTED_STACK_LAYOUTS)('uses AppStack in %s', (file) => {

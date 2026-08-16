@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.100',
+    date: '2026-08-15',
+    notes: [
+      'Let tab-root swipe-back return to the previous tab, and keep backend outage copy off the screen.',
+    ],
+  },
+  {
     version: '1.0.99',
     date: '2026-08-15',
     notes: [

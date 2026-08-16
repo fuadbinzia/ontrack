@@ -8,6 +8,34 @@ import {
 
 import { AGENT_UI_WAIT_TIMEOUT_MS } from './flows-waits';
 
+const ICELAND_TRIP_TOOLS = 'travel/trip-travel-home-iceland/tools';
+const ICELAND_PACKING_LIST =
+  'ontrack.travel.list.packingList.trip-travel-home-iceland';
+
+function landIcelandTripTools(options?: { seed?: boolean }) {
+  return [
+    { op: 'dismiss', prefix: 'ontrack.travel.' },
+    ...(options?.seed === false ? [] : [{ op: 'seed', to: 'travel-home' }]),
+    { op: 'goto', to: ICELAND_TRIP_TOOLS },
+    {
+      op: 'wait',
+      id: ICELAND_PACKING_LIST,
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ];
+}
+
+function openIcelandTripChecklist() {
+  return [
+    { op: 'tap', id: ICELAND_PACKING_LIST },
+    {
+      op: 'wait',
+      id: 'ontrack.checklists.detail.newTask',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ];
+}
+
 export const AGENT_UI_TRAVEL_FLOWS = {
   'travel-map-demo': [
     { op: 'dismiss', prefix: 'ontrack.travel.' },
@@ -113,6 +141,16 @@ export const AGENT_UI_TRAVEL_FLOWS = {
       id: 'ontrack.travel.chrome.skyDecor',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
+  ],
+  'travel-home-iceland-tools': landIcelandTripTools(),
+  'travel-home-iceland-checklist': [
+    ...landIcelandTripTools(),
+    ...openIcelandTripChecklist(),
+  ],
+  // Second Checklist tap without reseeding — must open the same list.
+  'travel-home-iceland-checklist-again': [
+    ...landIcelandTripTools({ seed: false }),
+    ...openIcelandTripChecklist(),
   ],
   'travel-demo-hub': [
     { op: 'dismiss', prefix: 'ontrack.travel.' },

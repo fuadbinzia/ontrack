@@ -43,7 +43,9 @@ import {
 } from '@/features/todos/checklist-task-details-sheet';
 import { createChecklistTaskAndOpenDetails } from '@/features/todos/checklist-task-creation';
 import { TodoEmptyState } from '@/features/todos/todo-empty-state';
+import { openTodoLists } from '@/features/todos/todo-list-href';
 import { confirmRemoveTodoList } from '@/features/todos/todo-list-remove';
+import { useVisibleTodoList } from '@/features/todos/todo-list-visible';
 import { TodoListSettingsSheet } from '@/features/todos/todo-list-settings-screen';
 import { ChecklistItemSeparator, TodoRow } from '@/features/todos/todo-row';
 import { sortTodoTasks, type TodoFilter, type TodoSort } from '@/features/todos/todo-sort';
@@ -72,7 +74,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
     measuredTabBarHeight ||
     layout.bottomNavBarBaseHeight + insets.bottom;
   const { user } = useAuthSession();
-  const list = useTodos((state) => state.lists.find((item) => item.id === listId));
+  const list = useVisibleTodoList(listId);
   const linkedTrip = useTravel((state) =>
     state.plans.find((plan) => plan.packingListId === listId),
   );
@@ -277,7 +279,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
   const removeList = () => {
     if (!list) return;
     confirmRemoveTodoList(list, {
-      afterRemoved: () => router.replace('/(tabs)/to-do' as never),
+      afterRemoved: () => openTodoLists(),
     });
   };
 
@@ -291,7 +293,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
         </AppText>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.replace('/(tabs)/to-do' as never)}>
+          onPress={openTodoLists}>
           <AppText variant="callout" color="accent">Back to Lists</AppText>
         </Pressable>
       </Screen>

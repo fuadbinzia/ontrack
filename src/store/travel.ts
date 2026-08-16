@@ -72,7 +72,12 @@ export const useTravel = create<TravelState>()(
           };
         }),
       savePlan: (plan) => {
-        const normalized = normalizeTravelPlan(plan);
+        const current = get().plans.find((item) => item.id === plan.id);
+        const incoming =
+          current?.packingListId && !plan.packingListId
+            ? { ...plan, packingListId: current.packingListId }
+            : plan;
+        const normalized = normalizeTravelPlan(incoming);
         if (!normalized) return false;
         set((state) => {
           return {

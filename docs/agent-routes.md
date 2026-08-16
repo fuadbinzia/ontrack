@@ -47,6 +47,14 @@ Pin is required when iOS Simulator and Android Emulator are both running — oth
   --assert-exists travel.list.tripWeather.trip-agent-ui-demo \
   --assert-route /travel/trip-agent-ui-demo/tools
 
+# Iceland Trip Tools → Checklist (open existing / create once)
+./scripts/agent-ui.sh once --flow travel-home-iceland-checklist \
+  --assert-exists checklists.detail.newTask \
+  --assert-exists checklists.detail.linkedTrip
+# Second tap without reseeding must open the same list (compare routes)
+./scripts/agent-ui.sh once --flow travel-home-iceland-checklist-again \
+  --assert-exists checklists.detail.linkedTrip
+
 # Food tab — runtime routes drop the (tabs) group (/food, not /(tabs)/food)
 ./scripts/agent-ui-verify-both.sh --route /food --flow food-demo \
   --exists ontrack.food.home.section.suggestions
@@ -161,6 +169,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `open-avatar-editor` | Profile → avatar editor sheet |
 | `open-profile-identity` | Profile → name & blurb editor sheet |
 | `open-developer` | Profile → Developer Tools (Dev Mode toggle; needs developer_tools) |
+| `open-backup` | Profile → Your Backup (download / Google Drive) |
 | `profile-usage-analytics` | Profile → Usage Analytics GlassSwitch row |
 | `checklist-demo` | Seed demo checklist → open list detail (task ready) |
 | `checklist-demo-list` | Seed → checklists overview with demo list card |
@@ -326,6 +335,7 @@ Tap/goto no longer rewrite the dump by default.
 | `designSystem` / `design-system` | `/design-system` | `ontrack:///design-system` |
 | `integrations` / `apiUsage` / `api-usage` | `/integrations` | `ontrack:///integrations` |
 | `developer` / `developer-tools` | `/developer` | `ontrack:///developer` |
+| `backup` / `profile-backup` | `/(tabs)/profile/backup` | `ontrack:///(tabs)/profile/backup` |
 | `performance` / `performance-monitor` | `/(tabs)/profile/performance` | `ontrack:///(tabs)/profile/performance` |
 | `nutrition` | `/nutrition-profile` → `/(tabs)/food/nutrition-profile` | `ontrack:///nutrition-profile` |
 | `activityForm` / `activity` | `/activity-form` | `ontrack:///activity-form` |

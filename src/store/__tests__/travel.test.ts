@@ -104,6 +104,19 @@ describe('disabled all-accounts travel test fixture', () => {
     );
   });
 
+  it('keeps a trip checklist link when a later save omits packingListId', () => {
+    expect(useTravel.getState().savePlan({
+      ...trip('trip-1'),
+      packingListId: 'checklist-1',
+    })).toBe(true);
+
+    expect(useTravel.getState().savePlan(trip('trip-1'))).toBe(true);
+
+    expect(
+      useTravel.getState().plans.find((item) => item.id === 'trip-1')?.packingListId,
+    ).toBe('checklist-1');
+  });
+
   it('keeps a trip checklist link when cloud replace omits packingListId', () => {
     expect(useTravel.getState().savePlan({
       ...trip('trip-1'),

@@ -139,6 +139,8 @@ export interface SheetScaffoldProps extends PropsWithChildren {
    * Pass `solid` for dense editors that need opaque elevated paper.
    */
   surface?: 'solid' | 'glass';
+  /** Fires after the held exit finishes and the host unmounts. */
+  onExited?: () => void;
 }
 
 /** Canonical modal sheet: safe areas, swipe grabber, scroll body, and in-scroll CTA. */
@@ -167,6 +169,7 @@ export function SheetScaffold({
   backdropTestID,
   supportedOrientations,
   surface = 'glass',
+  onExited,
   children,
 }: SheetScaffoldProps) {
   const theme = useTheme();
@@ -230,6 +233,16 @@ export function SheetScaffold({
     beginModalSheet();
     return endModalSheet;
   }, [presented, beginModalSheet, endModalSheet]);
+  const presentedOnce = useRef(false);
+  useEffect(() => {
+    if (held) {
+      presentedOnce.current = true;
+      return;
+    }
+    if (!presentedOnce.current) return;
+    presentedOnce.current = false;
+    onExited?.();
+  }, [held, onExited]);
 
   // Hold the host through the measured exit. pointerEvents none so a settling
   // card cannot trap the next tap / navigation.

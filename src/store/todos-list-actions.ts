@@ -1,5 +1,6 @@
 import { newUuid } from '@/utils/id';
 import {
+  canDeleteTodoList,
   canEditTodoContent,
   markGuestEdit,
   queuedMutation,
@@ -179,7 +180,7 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
 
     deleteList: (id) => {
       const list = get().lists.find((item) => item.id === id);
-      if (!list || list.role !== 'owner' || list.mode === 'shared') return;
+      if (!list || !canDeleteTodoList(list) || list.mode === 'shared') return;
       markGuestEdit();
       set((state) => ({
         lists: state.lists.filter((item) => item.id !== id),

@@ -17,8 +17,8 @@ function documentText(
 
 describe('current legal disclosures', () => {
   it('dates both legal documents to the current product update', () => {
-    expect(PRIVACY_POLICY_UPDATED).toBe('August 14, 2026');
-    expect(TERMS_OF_USE_UPDATED).toBe('August 14, 2026');
+    expect(PRIVACY_POLICY_UPDATED).toBe('August 16, 2026');
+    expect(TERMS_OF_USE_UPDATED).toBe('August 16, 2026');
   });
 
   it('covers newly introduced sensitive data and provider boundaries', () => {
@@ -29,6 +29,7 @@ describe('current legal disclosures', () => {
       'Teller',
       'E-ZPass',
       'Google Calendar',
+      'Google Drive',
       'StraiAway',
       'Siri',
       'Resend',

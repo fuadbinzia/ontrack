@@ -96,7 +96,7 @@ async function encryptionKey() {
   return crypto.subtle.importKey('raw', digest, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
 
-async function encryptToken(value: string) {
+export async function encryptToken(value: string) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await encryptionKey(), encoder.encode(value));
   return `v1.${base64url(iv)}.${base64url(new Uint8Array(encrypted))}`;

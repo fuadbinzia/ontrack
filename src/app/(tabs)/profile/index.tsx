@@ -203,6 +203,14 @@ export default function ProfileSettingsScreen() {
               onPress={() => router.push('/(tabs)/profile/calendar-sync' as never)}
               accessibilityLabel="Manage Google Calendar sync"
             />
+            <SettingsActionRow
+              label="Backup"
+              detail="Download a copy or save it to Google Drive"
+              icon="download"
+              testID={AgentUiIds.profile.backup}
+              onPress={() => router.push('/(tabs)/profile/backup' as never)}
+              accessibilityLabel="Backup your onTrack data"
+            />
           </SettingsGroup>
         </AgentTestId>
       </ProfileSection>

@@ -52,7 +52,7 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
     title: 'Health, Mood, and Food Profile Data',
     paragraphs: [
       'When you choose to connect Apple Health, onTrack reads only the activity, workout, heart-rate, sleep, and optional State of Mind types you authorize. Apple controls these permissions and you can change them in Apple Health.',
-      'Apple Health summaries, mood check-ins, notes, factors, and personal playbooks stay in a separate encrypted store on this device and are not uploaded through onTrack cloud sync.',
+      'Apple Health summaries, mood check-ins, notes, factors, and personal playbooks stay in a separate encrypted store on this device and are not uploaded through onTrack cloud sync. If you use Profile → Backup, those records are included in the file you download or save to your Google Drive.',
       'If you explicitly enable State of Mind sync, onTrack can read authorized State of Mind entries and save compatible labels, associations, and an overall pleasantness value to Apple Health. Private notes, custom labels, and playbooks are never written there.',
       'Food profile details, including allergies, intolerances, avoided ingredients, dietary preferences, and nutrition priorities, are private by default. Community posts do not include them unless you separately enable the applicable sharing choice; allergy severity and private notes are never included in a community profile preview.',
     ],
@@ -79,6 +79,14 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
       'When you choose to connect Google Calendar, onTrack reads and writes calendar events so titles, notes, dates, times, updates, and deletions can sync in both directions. Google Calendar access is optional and is separate from signing in with Google.',
       'Google OAuth refresh credentials are encrypted and stored server-side. onTrack does not use Google Calendar data for advertising or AI training.',
       'You can disconnect while keeping existing events, or disconnect and remove Google events imported into onTrack and onTrack events exported to Google. Deleting your onTrack account also removes the stored connection credential.',
+    ],
+  },
+  {
+    title: 'Your Backup and Google Drive',
+    paragraphs: [
+      'Profile → Backup lets you download a copy of your onTrack data or save that copy to Google Drive. The file includes synced app data plus device-only records such as journal pages, Health and mood entries, food profile details, and related settings. Photos, voice notes, and other attachments remain as references to files already on the device; they are not packed into the backup file.',
+      'Download uses the system share sheet so you can save the file to Files, AirDrop, or another destination you choose. Saving to Google Drive is optional and separate from signing in with Google or connecting Google Calendar. onTrack uses the Drive file scope to create an “onTrack Backups” folder and backup files that this app created. Google OAuth refresh credentials are encrypted and stored server-side. onTrack does not read other files in your Drive.',
+      'Restoring a backup replaces the onTrack data on this device with the copy you choose. Copies you download or save to Google Drive are controlled by you and by that destination’s practices. Disconnecting Google Drive revokes onTrack access and leaves existing backup files in your Drive. Deleting your onTrack account also removes the stored Drive connection credential.',
     ],
   },
   {
@@ -116,7 +124,7 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
     title: 'Guest Mode and Cloud Sync',
     paragraphs: [
       'Guest mode keeps data on the device until you sign in. If you create a new account, you can keep guest plans (upload them) or start fresh. If you sign into an existing account, you can merge device-only plans into your cloud account or use cloud data only — cloud stays the source of truth and is never silently replaced by guest data.',
-      'On signed-in devices, cloud sync stores supported account data so it can follow you across devices you authorize. Apple Health and mood data remain outside onTrack cloud sync as described above; app-private voice snapshots and local tax-document files also remain on the device unless you explicitly export or share them.',
+      'On signed-in devices, cloud sync stores supported account data so it can follow you across devices you authorize. Apple Health and mood data remain outside onTrack cloud sync as described above; app-private voice snapshots and local tax-document files also remain on the device unless you explicitly export, share, or include them in a Profile → Backup copy.',
     ],
   },
   {

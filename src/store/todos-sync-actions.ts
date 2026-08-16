@@ -35,6 +35,30 @@ export type TodoSyncActions = {
   reset: () => void;
 };
 
+function linkedTravelPackingListIds(): Set<string> {
+  try {
+    // Lazy require: importing travel at module load also pulls sync-session
+    // (and its supabase client) into todo-only tests.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useTravel } = require('@/store/travel') as typeof import('@/store/travel');
+    return new Set(
+      useTravel.getState().plans.flatMap((plan) =>
+        plan.packingListId ? [plan.packingListId] : [],
+      ),
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+function keepSharedOrLocal(
+  listId: string,
+  sharedIds: Set<string>,
+  keptLocalOnlyIds: Set<string>,
+): boolean {
+  return sharedIds.has(listId) || keptLocalOnlyIds.has(listId);
+}
+
 export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
   return {
     replacePrivateData: (value) => {
@@ -43,13 +67,24 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
         const sharedIds = new Set(
           state.lists.filter((list) => list.mode === 'shared').map((list) => list.id),
         );
+        const packingListIds = linkedTravelPackingListIds();
         const incomingPrivate = incoming.lists.filter((list) => list.mode === 'private');
         const incomingById = new Map(incomingPrivate.map((list) => [list.id, list]));
         const retainedIds = new Set<string>();
+        const keptLocalOnlyIds = new Set<string>();
         const lists = state.lists.flatMap((list) => {
           if (list.mode === 'shared') return [list];
           const replacement = incomingById.get(list.id);
-          if (!replacement) return [];
+          if (!replacement) {
+            // A trip checklist created this session may not be in the cloud
+            // blob yet — dropping it makes Trip Tools mint a duplicate.
+            if (packingListIds.has(list.id)) {
+              keptLocalOnlyIds.add(list.id);
+              retainedIds.add(list.id);
+              return [list];
+            }
+            return [];
+          }
           retainedIds.add(list.id);
           return [replacement];
         });
@@ -64,7 +99,9 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
                 (list) => list.id === task.listId && list.mode === 'private',
               ),
             ),
-            ...state.tasks.filter((task) => sharedIds.has(task.listId)),
+            ...state.tasks.filter((task) =>
+              keepSharedOrLocal(task.listId, sharedIds, keptLocalOnlyIds),
+            ),
           ],
           categories: [
             ...incoming.categories.filter((category) =>
@@ -72,7 +109,9 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
                 (list) => list.id === category.listId && list.mode === 'private',
               ),
             ),
-            ...state.categories.filter((category) => sharedIds.has(category.listId)),
+            ...state.categories.filter((category) =>
+              keepSharedOrLocal(category.listId, sharedIds, keptLocalOnlyIds),
+            ),
           ],
           recipes: [
             ...incoming.recipes.filter((recipe) =>
@@ -81,7 +120,9 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
                   list.id === recipe.listId && list.mode === 'private',
               ),
             ),
-            ...state.recipes.filter((recipe) => sharedIds.has(recipe.listId)),
+            ...state.recipes.filter((recipe) =>
+              keepSharedOrLocal(recipe.listId, sharedIds, keptLocalOnlyIds),
+            ),
           ],
         };
       });

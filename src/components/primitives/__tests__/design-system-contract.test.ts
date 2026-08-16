@@ -183,6 +183,8 @@ describe('canonical design-system contract', () => {
     expect(scaffold).not.toContain('animationType="slide"');
     // Hold the host through a measured exit; never trap the next tap.
     expect(scaffold).toContain('if (!held) return null');
+    expect(scaffold).toContain('onExited?: () => void');
+    expect(scaffold).toContain('onExited?.()');
     expect(scaffold).toContain("pointerEvents={visible ? 'auto' : 'none'}");
     expect(dismissPan).toContain('playExit');
     expect(dismissPan).toContain('shouldSkipSheetExit');

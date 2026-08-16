@@ -33,7 +33,9 @@ export {
 
 export {
   canCompleteTodo,
+  canDeleteTodoList,
   canEditTodoContent,
+  canLeaveTodoList,
   privateTodoPayload,
 } from './todos-helpers';
 

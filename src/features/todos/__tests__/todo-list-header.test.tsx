@@ -180,5 +180,7 @@ describe('TodoListHeader layout', () => {
     expect(source.indexOf('<TodoListHeaderToolbar')).toBeLessThan(
       source.indexOf('Add an item'),
     );
+    expect(source).toContain('testID={AgentUiIds.checklists.detail.title}');
+    expect(source).toContain('label={list.name}');
   });
 });

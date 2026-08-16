@@ -62,10 +62,14 @@ function shouldInstallOntoDevice({
   appInstalled,
   stampIdentity,
   artifactIdentity: identity,
+  installedIdentity,
 }) {
   if (!identity) return false;
   if (!appInstalled) return true;
-  return String(stampIdentity || '') !== String(identity);
+  // Prefer the binary actually on the device. A host stamp can claim Pro is
+  // fresh after an agent skipped it ("leave Pro untouched") or a failed install.
+  const have = installedIdentity || stampIdentity;
+  return String(have || '') !== String(identity);
 }
 
 function walkFileMtimes(dir, acc) {
@@ -186,6 +190,7 @@ function main(argv) {
         appInstalled: args.installed === '1' || args.installed === 'true',
         stampIdentity: args.stamp || '',
         artifactIdentity: args['artifact-id'] || '',
+        installedIdentity: args['installed-id'] || '',
       }),
     );
     return;

@@ -8,6 +8,7 @@ import {
   packingListNameCandidatesForTrip,
   packingListNameForTrip,
   preserveTravelPackingListIds,
+  resetTravelPackingListMemory,
 } from '../travel-packing-list';
 import type { TravelPlan } from '../types';
 
@@ -36,6 +37,9 @@ const list: TodoList = {
 };
 
 describe('travel packing list link', () => {
+  beforeEach(() => {
+    resetTravelPackingListMemory();
+  });
   it('uses a trip-specific checklist name', () => {
     expect(packingListNameForTrip('  Iceland  ')).toBe('Iceland Checklist');
     expect(packingListNameForTrip('New   York')).toBe('New York Checklist');
@@ -94,31 +98,36 @@ describe('travel packing list link', () => {
     });
   });
 
-  it('does not create a duplicate when the existing checklist link cannot be saved', () => {
+  it('opens an existing trip checklist even when the trip link cannot be saved', () => {
     const createList = jest.fn();
 
     expect(getOrCreateTravelPackingList(plan, {
       lists: [{ ...list, name: '  iceland   checklist  ' }],
       createList,
       savePlan: () => false,
-    })).toBeUndefined();
+    })?.id).toBe(list.id);
     expect(createList).not.toHaveBeenCalled();
   });
 
-  it('moves a legacy generated link to an existing trip checklist', () => {
+  it('keeps a linked packing list instead of switching to a later empty checklist', () => {
     const legacyList = {
       ...list,
       id: 'legacy-list',
       name: 'Iceland Packing List',
+      createdAt: '2026-08-10T00:00:00.000Z',
+    };
+    const emptyChecklist = {
+      ...list,
+      createdAt: '2026-08-16T00:00:00.000Z',
     };
     const savePlan = jest.fn(() => true);
 
     expect(getOrCreateTravelPackingList(
-      { ...plan, packingListId: legacyList.id },
-      { lists: [legacyList, list], createList: jest.fn(), savePlan },
-    )).toBe(list);
+      { ...plan, packingListId: emptyChecklist.id },
+      { lists: [legacyList, emptyChecklist], createList: jest.fn(), savePlan },
+    )).toBe(legacyList);
     expect(savePlan).toHaveBeenCalledWith(expect.objectContaining({
-      packingListId: list.id,
+      packingListId: legacyList.id,
     }));
   });
 
@@ -185,20 +194,60 @@ describe('travel packing list link', () => {
     }));
   });
 
-  it('prefers the trip checklist name over a leftover packing list', () => {
+  it('opens the original packing list instead of a later empty checklist', () => {
+    const legacyList = {
+      ...list,
+      id: 'legacy-list',
+      name: 'Iceland Packing List',
+      createdAt: '2026-08-10T00:00:00.000Z',
+    };
+    const emptyChecklist = {
+      ...list,
+      createdAt: '2026-08-16T00:00:00.000Z',
+    };
+    const createList = jest.fn();
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [legacyList, emptyChecklist],
+      createList,
+      savePlan: () => true,
+    })).toBe(legacyList);
+    expect(createList).not.toHaveBeenCalled();
+  });
+
+  it('renames a leftover packing list to Checklist when that name is free', () => {
     const legacyList = {
       ...list,
       id: 'legacy-list',
       name: 'Iceland Packing List',
     };
-    const createList = jest.fn();
+    const renameList = jest.fn();
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [legacyList],
+      createList: jest.fn(),
+      renameList,
+      savePlan: () => true,
+    })).toEqual({ ...legacyList, name: 'Iceland Checklist' });
+    expect(renameList).toHaveBeenCalledWith(legacyList.id, 'Iceland Checklist');
+  });
+
+  it('does not rename a packing list onto an existing Checklist name', () => {
+    const legacyList = {
+      ...list,
+      id: 'legacy-list',
+      name: 'Iceland Packing List',
+      createdAt: '2026-08-10T00:00:00.000Z',
+    };
+    const renameList = jest.fn();
 
     expect(getOrCreateTravelPackingList(plan, {
       lists: [legacyList, list],
-      createList,
+      createList: jest.fn(),
+      renameList,
       savePlan: () => true,
-    })).toBe(list);
-    expect(createList).not.toHaveBeenCalled();
+    })).toBe(legacyList);
+    expect(renameList).not.toHaveBeenCalled();
   });
 
   it('opens a destination-named checklist instead of creating a duplicate', () => {
@@ -263,9 +312,121 @@ describe('travel packing list link', () => {
       join(process.cwd(), 'src/features/travel/travel-plan-trip-tools.tsx'),
       'utf8',
     );
-    expect(source).toContain('useTodos.getState().lists');
+    expect(source).toContain('travelPackingListStoreDeps()');
+    expect(source).toContain('getLists: () => useTodos.getState().lists');
     expect(source).toContain('useTravel.getState().plans.find');
-    expect(source).toContain('todoListDetailHref(list.id)');
+    expect(source).toContain('openTodoList(list.id)');
+    expect(source).toContain('ensureList:');
+    expect(source).toContain('listsWithItems:');
+    expect(source).toContain('renameList:');
     expect(source).not.toContain('pathname: "/(tabs)/to-do/[id]"');
+  });
+
+  it('opens the same checklist on a second tap even when the list snapshot is empty', () => {
+    const createList = jest.fn(() => list);
+    const savePlan = jest.fn(() => true);
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [],
+      createList,
+      savePlan,
+    })?.id).toBe(list.id);
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [],
+      createList,
+      savePlan: jest.fn(() => true),
+    })?.id).toBe(list.id);
+    expect(createList).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not mint a second checklist when sync dropped the remembered list', () => {
+    const createList = jest.fn();
+    const ensureList = jest.fn();
+    const other = { ...list, id: 'other-list', name: 'Groceries run' };
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [],
+      createList: jest.fn(() => list),
+      savePlan: () => true,
+    })?.id).toBe(list.id);
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [other],
+      createList,
+      ensureList,
+      savePlan: () => true,
+    })?.id).toBe(list.id);
+    expect(createList).not.toHaveBeenCalled();
+    expect(ensureList).toHaveBeenCalledWith(list);
+  });
+
+  it('opens the older Iceland Checklist when a later empty duplicate exists', () => {
+    const original = {
+      ...list,
+      createdAt: '2026-08-10T00:00:00.000Z',
+    };
+    const duplicate = {
+      ...list,
+      id: 'list-2',
+      createdAt: '2026-08-16T00:00:00.000Z',
+    };
+
+    expect(getOrCreateTravelPackingList(
+      { ...plan, packingListId: duplicate.id },
+      { lists: [duplicate, original], createList: jest.fn(), savePlan: () => true },
+    )).toBe(original);
+  });
+
+  it('links the populated Iceland Checklist instead of the empty duplicate', () => {
+    const packed = {
+      ...list,
+      id: 'packed-list',
+      createdAt: '2026-08-10T00:00:00.000Z',
+    };
+    const empty = {
+      ...list,
+      id: 'empty-list',
+      createdAt: '2026-08-08T00:00:00.000Z',
+    };
+    const savePlan = jest.fn(() => true);
+
+    expect(getOrCreateTravelPackingList(
+      { ...plan, packingListId: empty.id },
+      {
+        lists: [empty, packed],
+        listsWithItems: new Set([packed.id]),
+        createList: jest.fn(),
+        savePlan,
+      },
+    )).toBe(packed);
+    expect(savePlan).toHaveBeenCalledWith(expect.objectContaining({
+      packingListId: packed.id,
+    }));
+  });
+
+  it('opens the original packing list even if this session remembered a later checklist', () => {
+    const emptyChecklist = {
+      ...list,
+      createdAt: '2026-08-16T00:00:00.000Z',
+    };
+    const legacyList = {
+      ...list,
+      id: 'legacy-list',
+      name: 'Iceland Packing List',
+      createdAt: '2026-08-10T00:00:00.000Z',
+    };
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [emptyChecklist],
+      createList: jest.fn(),
+      savePlan: () => true,
+    })?.id).toBe(emptyChecklist.id);
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [emptyChecklist, legacyList],
+      createList: jest.fn(),
+      savePlan: () => true,
+    })).toBe(legacyList);
   });
 });

@@ -207,9 +207,14 @@ export function TodoListHeader({
               />
             </AgentTestId>
           ) : (
-            <AppText style={titleStyle} numberOfLines={1}>
-              {list.name}
-            </AppText>
+            <AgentTestId
+              testID={AgentUiIds.checklists.detail.title}
+              label={list.name}
+            >
+              <AppText style={titleStyle} numberOfLines={1}>
+                {list.name}
+              </AppText>
+            </AgentTestId>
           )}
         </View>
       </View>

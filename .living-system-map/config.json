@@ -53,6 +53,7 @@
       "--",
       "--coverage",
       "--runInBand",
+      "--forceExit",
       "--watchman=false",
       "--coverageReporters=json-summary",
       "--coverageReporters=text-summary",

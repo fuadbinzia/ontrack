@@ -4,6 +4,7 @@ import {
   deleteSharedTodoList,
   leaveTodoList,
 } from '@/services/todos/collaboration';
+import { canDeleteTodoList, canLeaveTodoList } from '@/store/todos-helpers';
 import { useTodos, type TodoList } from '@/store/todos';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
@@ -14,20 +15,18 @@ function listHasNonOwnerMembers(listId: string): boolean {
   );
 }
 
-export async function performTodoListRemoval(
-  list: TodoList,
-  leaving: boolean,
-): Promise<void> {
+export async function performTodoListRemoval(list: TodoList): Promise<void> {
+  if (canLeaveTodoList(list)) {
+    await leaveTodoList(list.id);
+    return;
+  }
+  if (!canDeleteTodoList(list)) return;
   if (list.mode === 'private') {
     useTodos
       .getState()
       .recipes.filter((recipe) => recipe.listId === list.id)
       .forEach((recipe) => deletePersistedRecipeImage(recipe.sourceImageUri));
     useTodos.getState().deleteList(list.id);
-    return;
-  }
-  if (leaving) {
-    await leaveTodoList(list.id);
     return;
   }
   await deleteSharedTodoList(list.id);
@@ -37,7 +36,8 @@ export function confirmRemoveTodoList(
   list: TodoList,
   options?: { afterRemoved?: () => void },
 ): void {
-  const leaving = list.mode === 'shared' && list.role !== 'owner';
+  const leaving = canLeaveTodoList(list);
+  if (!leaving && !canDeleteTodoList(list)) return;
   const sharedOwnerDelete =
     !leaving && list.mode === 'shared' && listHasNonOwnerMembers(list.id);
   confirmDestructiveAction({
@@ -49,10 +49,10 @@ export function confirmRemoveTodoList(
         : 'The checklist and every item in it will be permanently deleted.',
     actionLabel: leaving ? 'Leave' : 'Delete',
     onConfirm: () => {
-      void performTodoListRemoval(list, leaving)
+      options?.afterRemoved?.();
+      void performTodoListRemoval(list)
         .then(() => {
           haptics.warning();
-          options?.afterRemoved?.();
         })
         .catch((caught: unknown) => {
           appPrompt.alert(

@@ -113,7 +113,7 @@ export function ScreenAtmosphereSceneFill() {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.behindScroll]}>
       <View
         style={{
           position: 'absolute',
@@ -174,5 +174,9 @@ export function useScreenAtmosphereChrome(enabled = true) {
 const styles = StyleSheet.create({
   orb: {
     position: 'absolute',
+  },
+  /** Sit under Screen's scroll child (first descendant for iOS 26 edge effects). */
+  behindScroll: {
+    zIndex: 0,
   },
 });

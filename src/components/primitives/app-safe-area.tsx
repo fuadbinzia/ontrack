@@ -5,6 +5,10 @@ import { useEffect, useRef } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+    hideIosScrollEdgeScreenContext,
+    ScreenContext,
+} from '@/components/navigation/scroll-edge-effects';
 import { useTheme } from '@/hooks/use-theme';
 
 import {
@@ -33,7 +37,9 @@ export function AppSafeArea({
 }: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
   return (
     <SafeAreaChromeProvider>
-      <AppSafeAreaFrame style={style}>{children}</AppSafeAreaFrame>
+      <ScreenContext.Provider value={hideIosScrollEdgeScreenContext}>
+        <AppSafeAreaFrame style={style}>{children}</AppSafeAreaFrame>
+      </ScreenContext.Provider>
     </SafeAreaChromeProvider>
   );
 }

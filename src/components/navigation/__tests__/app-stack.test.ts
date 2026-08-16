@@ -24,6 +24,12 @@ describe('mergeAppStackScreenOptions', () => {
       appStackScreenOptions.animation,
     );
     expect(appStackScreenOptions.animationDuration).toBeGreaterThan(0);
+    expect(appStackScreenOptions.scrollEdgeEffects).toEqual({
+      top: 'hidden',
+      bottom: 'hidden',
+      left: 'hidden',
+      right: 'hidden',
+    });
   });
 
   it('lets a screen override animation without dropping the swipe flags', () => {
@@ -33,6 +39,12 @@ describe('mergeAppStackScreenOptions', () => {
       animationMatchesGesture: true,
       gestureEnabled: true,
       animation: 'fade',
+      scrollEdgeEffects: {
+        top: 'hidden',
+        bottom: 'hidden',
+        left: 'hidden',
+        right: 'hidden',
+      },
     });
   });
 
@@ -59,6 +71,12 @@ describe('mergeAppStackScreenOptions', () => {
       fullScreenGestureEnabled: true,
       animationMatchesGesture: true,
       headerShown: true,
+      scrollEdgeEffects: {
+        top: 'hidden',
+        bottom: 'hidden',
+        left: 'hidden',
+        right: 'hidden',
+      },
     });
   });
 });

@@ -2,7 +2,7 @@
 # Full ship flow for onTrack:
 #   patch-bump version + release notes/changelog → commit → branch → PR →
 #   merge main → delete branch → verify OTA runtime compatibility →
-#   TestFlight + device OTA
+#   one export (no source maps; overlaps runtime check) → upload testflight → republish device
 #
 # HARD CONSTRAINT: this script publishes OTA updates only. It must never start,
 # queue, or submit an iOS/Android binary build. Binary builds require a separate,
@@ -30,7 +30,7 @@
 #   --skip-ota      Skip EAS Update publish
 #   --dry-run       Print steps only
 #
-# Android JS/assets ship via the `device` channel (same as update:device).
+# Android JS/assets ship via republish onto the `device` channel (same bundle).
 # Rebuild/sideload APK only for native / runtimeVersion changes:
 #   npm run android:release-to-drive (or eas build --profile device).
 
@@ -74,7 +74,7 @@ run() {
 }
 
 latest_testflight_runtime() {
-  npx eas-cli@latest build:list \
+  npx --yes --prefer-offline eas-cli@latest build:list \
     --platform ios \
     --build-profile testflight \
     --status finished \
@@ -280,11 +280,20 @@ OTA_MSG="$MESSAGE"
 [[ -n "$OTA_MSG" ]] || OTA_MSG="Ship $(git rev-parse --short HEAD)"
 
 if [[ "$SKIP_OTA" -eq 0 ]]; then
-  require_compatible_testflight_runtime
-  echo "==> Publishing TestFlight OTA (iOS)"
-  run npm run update:testflight -- --message "$OTA_MSG" --non-interactive
-  echo "==> Publishing device OTA (Android sideload)"
-  run npm run update:device -- --message "$OTA_MSG" --non-interactive
+  echo "==> Publishing TestFlight + device OTA (export overlaps runtime check)"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    bash "$ROOT/scripts/publish-ota.sh" -m "$OTA_MSG" --export-only --dry-run
+    require_compatible_testflight_runtime
+    bash "$ROOT/scripts/publish-ota.sh" -m "$OTA_MSG" --upload-only --dry-run
+  else
+    bash "$ROOT/scripts/publish-ota.sh" -m "$OTA_MSG" --export-only &
+    export_pid=$!
+    trap 'kill "$export_pid" 2>/dev/null || true' EXIT
+    require_compatible_testflight_runtime
+    wait "$export_pid" || die "OTA export failed"
+    trap - EXIT
+    bash "$ROOT/scripts/publish-ota.sh" -m "$OTA_MSG" --upload-only
+  fi
 else
   echo "==> Skipping EAS Update (--skip-ota)"
 fi

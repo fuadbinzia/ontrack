@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { LoadingBlock } from '@/components/primitives';
-import { getLastAgentUiContentRoute, handleAgentUiRequest, isAgentUiEnabled } from '@/utils/agent-ui';
+import { isAgentUiEnabled } from '@/utils/agent-ui';
 
 /**
  * Cold-start fallback for agent dump/tap/exists ops.
@@ -15,7 +15,14 @@ export default function AgentUiRoute() {
   const params = useLocalSearchParams<{ op?: string; id?: string }>();
 
   useEffect(() => {
+    if (!__DEV__) return;
     let active = true;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getLastAgentUiContentRoute } =
+      require('@/utils/agent-ui/route') as typeof import('@/utils/agent-ui/route');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { handleAgentUiRequest } =
+      require('@/utils/agent-ui/handle-agent-ui-url') as typeof import('@/utils/agent-ui/handle-agent-ui-url');
     const returnTo = getLastAgentUiContentRoute() ?? '/';
     // Linking listener usually handles this first; re-run is idempotent for dump/exists.
     void handleAgentUiRequest(params).finally(() => {
@@ -32,13 +39,13 @@ export default function AgentUiRoute() {
     };
   }, [params, router]);
 
-  if (!isAgentUiEnabled()) {
+  if (!__DEV__ || !isAgentUiEnabled()) {
     return <Redirect href="/" />;
   }
 
   return (
     <View style={{ flex: 1, justifyContent: 'center' }}>
-      <LoadingBlock label="Agent UI…" />
+      <LoadingBlock />
     </View>
   );
 }

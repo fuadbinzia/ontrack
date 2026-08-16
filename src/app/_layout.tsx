@@ -6,7 +6,7 @@ import {
 } from 'expo-router/react-navigation';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { lazy, Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -47,16 +47,37 @@ import { useAccountFlags } from '@/store/account-flags';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { useTravel } from '@/store/travel';
-import { AgentUiFabRestoreHost } from '@/utils/agent-ui/AgentUiFabRestoreHost';
-import { AgentUiOverlay } from '@/utils/agent-ui/AgentUiOverlay';
-import { AgentUiRouteSync } from '@/utils/agent-ui/AgentUiRouteSync';
 import { todayKey } from '@/utils/date';
-import { ThemeToggleFab, ThemeToggleFabHost } from '@/utils/dev-theme-toggle';
 
 /** Expo Router catches render failures so the app never sticks on a blank white view. */
 export { RouteErrorBoundary as ErrorBoundary };
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+type DevChromeHost = (props: { children: ReactNode }) => ReactNode;
+const PassThroughHost: DevChromeHost = ({ children }) => children;
+const HiddenDevHost = () => null;
+
+let AgentUiRouteSync: () => ReactNode = HiddenDevHost;
+let AgentUiFabRestoreHost: DevChromeHost = PassThroughHost;
+let ThemeToggleFabHost: DevChromeHost = PassThroughHost;
+let AgentUiOverlay: () => ReactNode = HiddenDevHost;
+let ThemeToggleFab: () => ReactNode = HiddenDevHost;
+
+if (__DEV__) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  AgentUiRouteSync = require('@/utils/agent-ui/AgentUiRouteSync').AgentUiRouteSync;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  AgentUiFabRestoreHost =
+    require('@/utils/agent-ui/AgentUiFabRestoreHost').AgentUiFabRestoreHost;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  ({
+    ThemeToggleFab,
+    ThemeToggleFabHost,
+  } = require('@/utils/dev-theme-toggle') as typeof import('@/utils/dev-theme-toggle'));
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  AgentUiOverlay = require('@/utils/agent-ui/AgentUiOverlay').AgentUiOverlay;
+}
 
 const LazyPerformanceMonitorProvider = lazy(() =>
   import('@/features/performance/performance-monitor-provider').then(

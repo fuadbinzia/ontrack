@@ -27,7 +27,7 @@ import { useCloudSyncStatus } from '@/services/cloud/sync';
 import { apiRequest } from '@/services/http/api-client';
 import { resolveExpoApiUrl } from '@/services/http/api-url';
 import { useDevMode } from '@/store/dev-mode';
-import { AgentUiIds, getAgentUiRoute } from '@/utils/agent-ui';
+import { AgentUiIds } from '@/utils/agent-ui';
 import {
   AGENT_UI_FIXTURE_NAMES,
   seedAgentUiFixture,
@@ -40,6 +40,7 @@ import {
 } from '@/utils/agent-ui/overlay';
 import {
   agentUiNavigate,
+  getAgentUiRoute,
   resolveAgentUiDestination,
 } from '@/utils/agent-ui/route';
 import { deferUntilIdle } from '@/utils/defer-until-idle';

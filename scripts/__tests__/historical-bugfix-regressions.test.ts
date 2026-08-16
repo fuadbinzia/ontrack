@@ -36,16 +36,17 @@ describe('historical bug-fix regressions', () => {
       .filter((line) => !line.trimStart().startsWith('#'))
       .join('\n');
     const compatibilityCheck = ship.indexOf('require_compatible_testflight_runtime');
-    const testflightPublish = ship.indexOf('npm run update:testflight');
+    const uploadOnly = ship.indexOf('--upload-only');
 
     expect(ship).toContain('--build-profile testflight');
     expect(ship).toContain('--status finished');
     expect(ship).toContain('builds?.[0]?.runtime?.version');
     expect(ship).toContain('ship:push is OTA-only');
+    expect(ship).toContain('--export-only');
     expect(ship).not.toContain('npm run build:testflight');
     expect(executableLines).not.toMatch(/(?:eas|eas-cli@latest)\s+build(?:\s|$)/m);
     expect(compatibilityCheck).toBeGreaterThan(-1);
-    expect(testflightPublish).toBeGreaterThan(compatibilityCheck);
+    expect(uploadOnly).toBeGreaterThan(compatibilityCheck);
   });
 
   it('syncs Expo config before building a correctly versioned Drive APK', () => {

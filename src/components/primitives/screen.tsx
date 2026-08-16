@@ -136,6 +136,7 @@ export function Screen({
       keyboardShouldPersistTaps="handled"
       onScroll={handleScroll}
       scrollEventThrottle={agentScroll.scrollEventThrottle}
+      alwaysBounceVertical={false}
       refreshControl={refresh ? pull.refreshControl : undefined}>
       {children}
     </ScrollView>
@@ -143,10 +144,12 @@ export function Screen({
     <View style={[styles.fill, paddingStyle, contentStyle]}>{children}</View>
   );
 
+  // Scroll must be the first child so iOS 26 `UIScrollEdgeEffect` lookup
+  // (first-descendant chain) hits the UIScrollView, not the atmosphere fill.
   const frame = (
     <>
-      {useAtmosphere ? <ScreenAtmosphereSceneFill /> : null}
       {shell}
+      {useAtmosphere ? <ScreenAtmosphereSceneFill /> : null}
     </>
   );
 
@@ -173,6 +176,6 @@ export function Screen({
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  scrollView: { flex: 1, backgroundColor: 'transparent' },
+  scrollView: { flex: 1, backgroundColor: 'transparent', zIndex: 1 },
   scrollContent: { flexGrow: 1 },
 });

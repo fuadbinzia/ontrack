@@ -52,7 +52,7 @@ export default function CalendarScreen() {
   const selectedDate = useUI((state) => state.selectedDate);
   const setSelectedDate = useUI((state) => state.setSelectedDate);
   const [shinePlay, setShinePlay] = useState(false);
-  useWarmHrefs(['/activity-form']);
+  useWarmHrefs(isFocused ? ['/activity-form'] : []);
   const activitiesByDate = useMemo(() => {
     const grouped: Record<string, typeof activities> = {};
     for (const activity of activities) {

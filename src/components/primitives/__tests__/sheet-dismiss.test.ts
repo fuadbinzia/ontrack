@@ -2,10 +2,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
-  SHEET_EXIT_MIN_DISTANCE,
-  sheetExitDistance,
-  shouldHoldSheet,
-  shouldSkipSheetExit,
+    SHEET_EXIT_MIN_DISTANCE,
+    isModalSheetPresented,
+    sheetExitDistance,
+    shouldHoldSheet,
+    shouldSkipSheetExit,
 } from '@/components/primitives/sheet-dismiss';
 
 describe('sheet dismiss hold', () => {
@@ -26,6 +27,30 @@ describe('sheet dismiss hold', () => {
     expect(shouldSkipSheetExit(200, 480)).toBe(false);
     expect(shouldSkipSheetExit(480, 480)).toBe(true);
     expect(shouldSkipSheetExit(SHEET_EXIT_MIN_DISTANCE, 80)).toBe(true);
+  });
+});
+
+describe('isModalSheetPresented', () => {
+  it('hides the tab dock for an in-tree modal that is open', () => {
+    expect(isModalSheetPresented(true, 'modal', false)).toBe(true);
+    expect(isModalSheetPresented(true, 'modal', true)).toBe(true);
+  });
+
+  it('does not hide the dock for a closed in-tree modal', () => {
+    expect(isModalSheetPresented(false, 'modal', true)).toBe(false);
+    expect(isModalSheetPresented(false, 'modal', false)).toBe(false);
+  });
+
+  it('hides the dock for a focused route sheet', () => {
+    expect(isModalSheetPresented(true, 'route', true)).toBe(true);
+  });
+
+  it('does not hide the dock for a prefetched route sheet that is not focused', () => {
+    expect(isModalSheetPresented(true, 'route', false)).toBe(false);
+  });
+
+  it('does not hide the dock for a focused route whose sheet is not visible', () => {
+    expect(isModalSheetPresented(false, 'route', true)).toBe(false);
   });
 });
 

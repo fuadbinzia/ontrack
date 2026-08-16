@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.110",
+    "date": "2026-08-16",
+    "notes": [
+      "Keep the tab dock visible on load when a prefetched event sheet is sitting off-screen.",
+      "Touched: app routes."
+    ]
+  },
+  {
     "version": "1.0.109",
     "date": "2026-08-16",
     "notes": [

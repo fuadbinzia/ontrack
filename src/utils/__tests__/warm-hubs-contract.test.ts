@@ -22,6 +22,12 @@ describe('hub route warm-up', () => {
     }
   });
 
+  it('does not prefetch the event sheet from an off-screen Calendar tab', () => {
+    expect(read('src/app/(tabs)/calendar.tsx')).toContain(
+      "useWarmHrefs(isFocused ? ['/activity-form'] : [])",
+    );
+  });
+
   it('defers focus-time work so landing frames stay free', () => {
     expect(read('src/features/health/health-screen.tsx')).toContain(
       'deferAfterPageTransition(() => { void refreshHealth(); })',

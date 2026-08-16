@@ -48,6 +48,17 @@ describe('publish OTA once then republish', () => {
     expect(() => groupId('{"ok":true}')).toThrow();
   });
 
+  it('does not treat a complete dist as export failure when eas env:exec exits non-zero', () => {
+    const publish = read('scripts/publish-ota.sh');
+    const ship = read('scripts/ship-push.sh');
+    expect(publish).toContain('export_complete');
+    expect(publish).toContain('complete dist/; continuing');
+    expect(ship).toContain('dist/metadata.json');
+    expect(ship).toContain('dist/assetmap.json');
+    expect(ship).toContain('dist/ is complete, continuing');
+    expect(ship).not.toMatch(/wait "\$export_pid" \|\| die "OTA export failed"/);
+  });
+
   it('exports once without source maps then skip-bundler uploads and republishes', () => {
     const publish = read('scripts/publish-ota.sh');
     const ship = read('scripts/ship-push.sh');
@@ -66,8 +77,12 @@ describe('publish OTA once then republish', () => {
     expect(publish).toContain('--destination-channel device');
     expect(publish).toContain('--export-only');
     expect(publish).toContain('--upload-only');
+    expect(publish).toContain('dist/metadata.json');
+    expect(publish).toContain('complete dist/');
     expect(ship).toContain('--export-only');
     expect(ship).toContain('--upload-only');
+    expect(ship).toContain('dist/metadata.json');
+    expect(ship).toContain('dist/ is complete, continuing');
     expect(ship).not.toContain('npm run update:device');
     expect(pkg.scripts?.['update:preview']).toContain('publish-ota.sh');
   });

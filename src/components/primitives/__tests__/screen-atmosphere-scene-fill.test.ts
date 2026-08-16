@@ -36,6 +36,7 @@ describe('Screen atmosphere scene fill', () => {
     expect(screen.indexOf('{shell}')).toBeLessThan(
       screen.indexOf('{useAtmosphere ? <ScreenAtmosphereSceneFill'),
     );
+    expect(screen).toContain('styles.aboveAtmosphere');
     expect(screen).toContain('useScreenAtmosphereChrome(');
     expect(atmosphere).toContain('screenAtmosphereSceneOffset(insets.top)');
     expect(atmosphere).toContain('height');

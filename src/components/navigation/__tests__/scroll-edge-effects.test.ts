@@ -54,8 +54,23 @@ describe('iOS 26 overscroll cannot blank a glass page', () => {
     expect(shellIndex).toBeGreaterThan(0);
     expect(fillIndex).toBeGreaterThan(shellIndex);
     expect(screen).toContain('alwaysBounceVertical={false}');
-    expect(screen).toContain('zIndex: 1');
     expect(atmosphere).toContain('behindScroll');
     expect(atmosphere).toContain('zIndex: 0');
+  });
+
+  it('keeps scroll={false} chrome above the atmosphere wash so More is not a blank page', () => {
+    const screen = read('src/components/primitives/screen.tsx');
+    const trackers = read('src/features/trackers/trackers-screen.tsx');
+    const lists = read('src/features/todos/todo-lists-overview.tsx');
+
+    expect(trackers).toContain('scroll={false}');
+    expect(lists).toContain('scroll={false}');
+    expect(screen).toContain('aboveAtmosphere: { zIndex: 1 }');
+    expect(screen).toContain(
+      'style={[styles.fill, styles.aboveAtmosphere, paddingStyle, contentStyle]}',
+    );
+    expect(screen).toContain(
+      'style={[styles.scrollView, styles.aboveAtmosphere]}',
+    );
   });
 });

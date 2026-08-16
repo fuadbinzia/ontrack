@@ -290,7 +290,11 @@ if [[ "$SKIP_OTA" -eq 0 ]]; then
     export_pid=$!
     trap 'kill "$export_pid" 2>/dev/null || true' EXIT
     require_compatible_testflight_runtime
-    wait "$export_pid" || die "OTA export failed"
+    wait "$export_pid" || {
+      [[ -f "$ROOT/dist/metadata.json" && -f "$ROOT/dist/assetmap.json" ]] \
+        || die "OTA export failed"
+      echo "warning: OTA export process exited non-zero; dist/ is complete, continuing" >&2
+    }
     trap - EXIT
     bash "$ROOT/scripts/publish-ota.sh" -m "$OTA_MSG" --upload-only
   fi

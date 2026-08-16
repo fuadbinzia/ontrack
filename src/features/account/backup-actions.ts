@@ -1,4 +1,5 @@
 import { applyBackup, type OnTrackBackup } from '@/features/account/backup-archive';
+import { unpackBackupMedia } from '@/features/account/backup-media';
 import { downloadBackup, pickBackupFile, writeBackupFile } from '@/features/account/backup-share';
 import { flushCloudSync } from '@/services/cloud/sync';
 import { startSubscriptions, syncRuntime } from '@/services/cloud/sync-session';
@@ -6,7 +7,7 @@ import { startSubscriptions, syncRuntime } from '@/services/cloud/sync-session';
 export async function restoreBackup(backup: OnTrackBackup, options?: { pushCloud?: boolean }) {
   syncRuntime.stopSubscriptions?.();
   syncRuntime.stopSubscriptions = undefined;
-  applyBackup(backup);
+  applyBackup(await unpackBackupMedia(backup));
   if (options?.pushCloud) {
     await flushCloudSync();
     return;

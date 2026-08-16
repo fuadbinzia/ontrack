@@ -746,6 +746,9 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.calendarSync`                                   | Google Calendar sync settings                                  |
 | `ontrack.profile.backup`                                         | Download or Google Drive backup                                |
 | `ontrack.backup.screen`                                          | Your Backup screen                                             |
+| `ontrack.backup.status`                                          | Backup success/error notice                                    |
+| `ontrack.backup.section.device`                                  | On This Device backup card                                     |
+| `ontrack.backup.section.drive`                                   | Google Drive backup card                                       |
 | `ontrack.backup.download`                                        | Download Backup                                                |
 | `ontrack.backup.connectDrive`                                    | Connect Google Drive                                           |
 | `ontrack.backup.saveDrive`                                       | Save Backup to Google Drive                                    |
@@ -754,6 +757,8 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.backup.restoreFile`                                     | Restore from File                                              |
 | `ontrack.backup.restoreDrive`                                    | Restore from Google Drive                                      |
 | `ontrack.backup.confirmRestore`                                  | Confirm restore                                                |
+| `ontrack.backup.saveOverwrite`                                   | Overwrite Previous Drive backup                                |
+| `ontrack.backup.saveNew`                                         | Save as New Drive backup                                       |
 | `ontrack.profile.straiaway`                                      | StraiAway connect screen (hidden from Profile for now)         |
 | `ontrack.straiaway.connect`                                      | Connect StraiAway                                              |
 | `ontrack.straiaway.disconnect`                                   | Disconnect StraiAway                                           |

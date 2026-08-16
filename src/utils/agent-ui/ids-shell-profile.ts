@@ -96,6 +96,9 @@ export const agentUiIdsShellProfile = {
   },
   backup: {
     screen: 'ontrack.backup.screen',
+    status: 'ontrack.backup.status',
+    sectionDevice: 'ontrack.backup.section.device',
+    sectionDrive: 'ontrack.backup.section.drive',
     download: 'ontrack.backup.download',
     connectDrive: 'ontrack.backup.connectDrive',
     saveDrive: 'ontrack.backup.saveDrive',
@@ -104,6 +107,8 @@ export const agentUiIdsShellProfile = {
     restoreFile: 'ontrack.backup.restoreFile',
     restoreDrive: 'ontrack.backup.restoreDrive',
     confirmRestore: 'ontrack.backup.confirmRestore',
+    saveOverwrite: 'ontrack.backup.saveOverwrite',
+    saveNew: 'ontrack.backup.saveNew',
   },
   calendarSync: {
     screen: 'ontrack.calendarSync.screen',

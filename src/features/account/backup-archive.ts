@@ -1,3 +1,9 @@
+import {
+  normalizeAvatarMeta,
+  type ProfileAvatarMeta,
+} from '@/features/account/profile-avatar-model';
+import type { BackupMediaEntry } from '@/features/account/backup-media';
+import { prepareBackupForRestore, sanitizeBackup } from '@/features/account/backup-sanitize';
 import { getAppVersion } from '@/features/account/release-notes-format';
 import { DEFAULT_EMOTIONS } from '@/features/health/defaults';
 import type {
@@ -26,6 +32,7 @@ import { usePantry } from '@/store/food-pantry';
 import { useRecipes } from '@/store/food-recipes';
 import { useHealth } from '@/store/health';
 import { useJournal } from '@/store/journal';
+import { usePreferences } from '@/store/preferences';
 import { useTabPins } from '@/store/tab-pins';
 import { useTravelMap } from '@/store/travel-map';
 import type { MealPlanEntry, PantryItem, Recipe, UserFoodProfile } from '@/types/food';
@@ -66,7 +73,9 @@ export type OnTrackBackup = {
     financeEzPassStatements?: { id: string; name: string; uris: string[]; importedAt: string }[];
     travelMap?: { visits: TravelMapVisit[]; settings: TravelMapSettings };
     tabPins?: { trackerOrder: string[]; pinnedCount: number };
+    avatar?: ProfileAvatarMeta;
   };
+  media?: Record<string, BackupMediaEntry>;
 };
 
 function objectValue(value: unknown): JsonObject | undefined {
@@ -98,7 +107,7 @@ export function buildBackup(createdAt = new Date().toISOString()): OnTrackBackup
   for (const domain of domains) {
     domainsPayload[domain.name] = domain.read();
   }
-  return {
+  return sanitizeBackup({
     kind: ONTRACK_BACKUP_KIND,
     version: ONTRACK_BACKUP_VERSION,
     createdAt,
@@ -131,8 +140,9 @@ export function buildBackup(createdAt = new Date().toISOString()): OnTrackBackup
       financeEzPassStatements: useFinanceEzPassStatements.getState().statements,
       travelMap: { visits: travelMap.visits, settings: travelMap.settings },
       tabPins: { trackerOrder: tabPins.trackerOrder, pinnedCount: tabPins.pinnedCount },
+      avatar: usePreferences.getState().avatar,
     },
-  };
+  });
 }
 
 export function serializeBackup(backup: OnTrackBackup = buildBackup()): string {
@@ -163,7 +173,8 @@ export function parseBackup(raw: string): OnTrackBackup {
     appVersion: typeof value.appVersion === 'string' ? value.appVersion : '—',
     domains: objectValue(value.domains) ?? {},
     local: objectValue(value.local) ?? {},
-  } as OnTrackBackup;
+    media: objectValue(value.media) as OnTrackBackup['media'],
+  };
 }
 
 function restoreJournal(payload: unknown) {
@@ -202,37 +213,41 @@ function restoreHealth(payload: unknown) {
 
 /** Replace local app data with a parsed backup. Does not pull or push cloud sync. */
 export function applyBackup(backup: OnTrackBackup) {
+  const restored = prepareBackupForRestore(backup);
   for (const domain of domains) {
-    const payload = backup.domains?.[domain.name];
+    const payload = restored.domains?.[domain.name];
     if (payload) domain.write(payload);
   }
-  restoreJournal(backup.local.journal);
-  restoreHealth(backup.local.health);
-  if (backup.local.foodProfile) useFoodProfile.getState().replaceProfile(backup.local.foodProfile);
-  if (Array.isArray(backup.local.foodPantry)) usePantry.getState().replaceItems(backup.local.foodPantry);
-  if (backup.local.foodRecipes) {
+  restoreJournal(restored.local.journal);
+  restoreHealth(restored.local.health);
+  if (restored.local.foodProfile) useFoodProfile.getState().replaceProfile(restored.local.foodProfile);
+  if (Array.isArray(restored.local.foodPantry)) usePantry.getState().replaceItems(restored.local.foodPantry);
+  if (restored.local.foodRecipes) {
     useRecipes.setState({
-      seeded: asBoolean(backup.local.foodRecipes.seeded),
-      recipes: Array.isArray(backup.local.foodRecipes.recipes) ? backup.local.foodRecipes.recipes : [],
+      seeded: asBoolean(restored.local.foodRecipes.seeded),
+      recipes: Array.isArray(restored.local.foodRecipes.recipes) ? restored.local.foodRecipes.recipes : [],
     });
   }
-  if (Array.isArray(backup.local.foodMealPlan)) {
-    useMealPlan.getState().replaceEntries(backup.local.foodMealPlan);
+  if (Array.isArray(restored.local.foodMealPlan)) {
+    useMealPlan.getState().replaceEntries(restored.local.foodMealPlan);
   }
-  if (Array.isArray(backup.local.financeEzPassStatements)) {
-    useFinanceEzPassStatements.setState({ statements: backup.local.financeEzPassStatements });
+  if (Array.isArray(restored.local.financeEzPassStatements)) {
+    useFinanceEzPassStatements.setState({ statements: restored.local.financeEzPassStatements });
   }
-  if (backup.local.travelMap) {
+  if (restored.local.travelMap) {
     useTravelMap.setState({
-      visits: normalizeTravelMapVisits(backup.local.travelMap.visits),
-      settings: normalizeTravelMapSettings(backup.local.travelMap.settings ?? DEFAULT_TRAVEL_MAP_SETTINGS),
+      visits: normalizeTravelMapVisits(restored.local.travelMap.visits),
+      settings: normalizeTravelMapSettings(restored.local.travelMap.settings ?? DEFAULT_TRAVEL_MAP_SETTINGS),
       pendingMutations: [],
     });
   }
-  if (backup.local.tabPins) {
+  if (restored.local.tabPins) {
     useTabPins.getState().setTrackerOrder(
-      backup.local.tabPins.trackerOrder,
-      backup.local.tabPins.pinnedCount,
+      restored.local.tabPins.trackerOrder,
+      restored.local.tabPins.pinnedCount,
     );
+  }
+  if (restored.local.avatar) {
+    usePreferences.getState().setAvatar(normalizeAvatarMeta(restored.local.avatar));
   }
 }

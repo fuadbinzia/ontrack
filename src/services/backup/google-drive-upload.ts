@@ -20,21 +20,32 @@ export async function uploadBackupToGoogleDrive(input: {
   folderId: string;
   name: string;
   json: string;
+  /** When set, replace this existing app-created backup instead of creating another file. */
+  fileId?: string;
 }): Promise<{ id: string }> {
-  const start = await driveFetch(`${DRIVE_UPLOAD}?uploadType=resumable`, {
-    method: 'POST',
+  const bytes = new TextEncoder().encode(input.json).length;
+  const updating = Boolean(input.fileId);
+  const startUrl = updating
+    ? `${DRIVE_UPLOAD}/${encodeURIComponent(input.fileId!)}?uploadType=resumable`
+    : `${DRIVE_UPLOAD}?uploadType=resumable`;
+  const start = await driveFetch(startUrl, {
+    method: updating ? 'PATCH' : 'POST',
     headers: {
       Authorization: `Bearer ${input.accessToken}`,
       'Content-Type': 'application/json; charset=UTF-8',
       'X-Upload-Content-Type': 'application/json',
-      'X-Upload-Content-Length': String(new TextEncoder().encode(input.json).length),
+      'X-Upload-Content-Length': String(bytes),
     },
-    body: JSON.stringify({
-      name: input.name,
-      mimeType: 'application/json',
-      parents: [input.folderId],
-      appProperties: { [GOOGLE_DRIVE_BACKUP_PROPERTY]: 'v1' },
-    }),
+    body: JSON.stringify(
+      updating
+        ? { name: input.name, mimeType: 'application/json' }
+        : {
+            name: input.name,
+            mimeType: 'application/json',
+            parents: [input.folderId],
+            appProperties: { [GOOGLE_DRIVE_BACKUP_PROPERTY]: 'v1' },
+          },
+    ),
   });
   const location = start.headers.get('Location');
   if (!location) throw new Error('Google Drive did not start the backup upload.');
@@ -48,16 +59,30 @@ export async function uploadBackupToGoogleDrive(input: {
   return uploaded.json() as Promise<{ id: string }>;
 }
 
-export async function listGoogleDriveBackups(accessToken: string): Promise<GoogleDriveBackupFile[]> {
-  const query = encodeURIComponent(
-    `appProperties has { key='${GOOGLE_DRIVE_BACKUP_PROPERTY}' and value='v1' } and trashed=false`,
-  );
+export async function listGoogleDriveBackups(
+  accessToken: string,
+  folderId: string,
+): Promise<GoogleDriveBackupFile[]> {
+  // drive.file rejects appProperties search and orderBy (`Invalid Value`). List the folder, sort here.
+  const query = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
   const response = await driveFetch(
-    `${DRIVE_FILES}?q=${query}&fields=files(id,name,createdTime)&orderBy=createdTime desc&pageSize=10`,
+    `${DRIVE_FILES}?q=${query}&fields=files(id,name,createdTime,appProperties)&pageSize=10`,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
-  const payload = await response.json() as { files?: GoogleDriveBackupFile[] };
-  return (payload.files ?? []).filter((file) => file.id && file.name);
+  const payload = await response.json() as {
+    files?: (GoogleDriveBackupFile & { appProperties?: Record<string, string> })[];
+  };
+  return (payload.files ?? []).filter((file) => {
+    if (!file.id || !file.name) return false;
+    return (
+      file.appProperties?.[GOOGLE_DRIVE_BACKUP_PROPERTY] === 'v1'
+      || file.name.startsWith('onTrack-backup')
+    );
+  }).sort((left, right) => {
+    const leftTime = Date.parse(left.createdTime ?? '');
+    const rightTime = Date.parse(right.createdTime ?? '');
+    return (Number.isNaN(rightTime) ? 0 : rightTime) - (Number.isNaN(leftTime) ? 0 : leftTime);
+  });
 }
 
 export async function downloadGoogleDriveBackup(

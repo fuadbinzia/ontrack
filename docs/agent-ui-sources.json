@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-16T18:36:11Z",
-  "idCount": 975,
+  "generatedAt": "2026-08-16T21:05:41Z",
+  "idCount": 980,
   "byId": {
     "ontrack.activityForm.analyzePhoto": {
       "feature": "activityForm",
@@ -842,7 +842,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/features/account/backup-screen.tsx"
+        "src/features/account/backup-screen-panels.tsx"
       ],
       "keyPaths": [
         "backup.connectDrive",
@@ -854,7 +854,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/features/account/backup-screen.tsx"
+        "src/features/account/backup-screen-panels.tsx"
       ],
       "keyPaths": [
         "backup.disconnectDrive",
@@ -870,14 +870,14 @@
         "src/app/p/straiaway.tsx",
         "src/design-system/icons.ts",
         "src/features/account/backup-actions.ts",
+        "src/features/account/backup-screen-panels.tsx",
         "src/features/account/backup-screen.tsx",
         "src/features/account/backup-share.ts",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/finance/ezpass-locations.ts",
         "src/features/finance/ezpass-official-site.ts",
-        "src/features/finance/finance-ezpass-import-source-cards.tsx",
-        "src/features/todos/todo-collaborator-join-screen.tsx"
+        "src/features/finance/finance-ezpass-import-source-cards.tsx"
       ],
       "keyPaths": [
         "backup.download",
@@ -889,6 +889,7 @@
       "entry": null,
       "skill": null,
       "files": [
+        "src/features/account/backup-screen-panels.tsx",
         "src/features/account/backup-screen.tsx"
       ],
       "keyPaths": [
@@ -901,7 +902,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/features/account/backup-screen.tsx"
+        "src/features/account/backup-screen-panels.tsx"
       ],
       "keyPaths": [
         "backup.restoreFile",
@@ -913,11 +914,35 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/features/account/backup-screen.tsx"
+        "src/features/account/backup-screen-panels.tsx"
       ],
       "keyPaths": [
         "backup.saveDrive",
         "saveDrive"
+      ]
+    },
+    "ontrack.backup.saveNew": {
+      "feature": "backup",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/features/account/backup-screen.tsx"
+      ],
+      "keyPaths": [
+        "backup.saveNew",
+        "saveNew"
+      ]
+    },
+    "ontrack.backup.saveOverwrite": {
+      "feature": "backup",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/features/account/backup-screen.tsx"
+      ],
+      "keyPaths": [
+        "backup.saveOverwrite",
+        "saveOverwrite"
       ]
     },
     "ontrack.backup.screen": {
@@ -930,6 +955,53 @@
       ],
       "keyPaths": [
         "backup.screen"
+      ]
+    },
+    "ontrack.backup.section.device": {
+      "feature": "backup",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/features/account/backup-screen-panels.tsx"
+      ],
+      "keyPaths": [
+        "backup.sectionDevice",
+        "sectionDevice"
+      ]
+    },
+    "ontrack.backup.section.drive": {
+      "feature": "backup",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/features/account/backup-screen-panels.tsx"
+      ],
+      "keyPaths": [
+        "backup.sectionDrive",
+        "sectionDrive"
+      ]
+    },
+    "ontrack.backup.status": {
+      "feature": "backup",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/app/(tabs)/(today)/detail/generic/[id].tsx",
+        "src/app/(tabs)/(today)/detail/movie/[id].tsx",
+        "src/app/(tabs)/(today)/detail/sleep/[id].tsx",
+        "src/app/(tabs)/food/ingredients/[id].tsx",
+        "src/app/(tabs)/food/ingredients/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
+        "src/app/(tabs)/insights.tsx",
+        "src/app/(tabs)/plants/[id].tsx",
+        "src/app/(tabs)/plants/index.tsx",
+        "src/app/(tabs)/profile/calendar-sync.tsx",
+        "src/app/(tabs)/profile/index.tsx",
+        "src/app/(tabs)/profile/straiaway.tsx"
+      ],
+      "keyPaths": [
+        "backup.status",
+        "status"
       ]
     },
     "ontrack.calendar.jumpToday": {
@@ -3235,12 +3307,12 @@
         "src/app/api/backup/google/token+api.ts",
         "src/app/api/destination-cover-image+api.ts",
         "src/design-system/icons.ts",
+        "src/features/account/backup-screen-panels.tsx",
         "src/features/account/backup-screen.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/profile-avatar-editor-sheet.tsx",
         "src/features/account/profile-avatar-media.ts",
-        "src/features/account/terms-of-use-content.ts",
-        "src/features/auth/auth-provider-effects.ts"
+        "src/features/account/terms-of-use-content.ts"
       ],
       "keyPaths": [
         "finance.ezpass.upload",
@@ -6358,10 +6430,10 @@
         "src/components/navigation/tab-swipe.ts",
         "src/constants/legal.ts",
         "src/features/account/backup-archive.ts",
+        "src/features/account/backup-sanitize.ts",
         "src/features/account/dev-mode-controller.ts",
         "src/features/account/privacy-policy-content.ts",
-        "src/features/auth/auth-provider-effects.ts",
-        "src/features/food/food-home-hero.tsx"
+        "src/features/auth/auth-provider-effects.ts"
       ],
       "keyPaths": [
         "earlier",
@@ -6516,14 +6588,14 @@
         "src/app/privacy.tsx",
         "src/app/terms.tsx",
         "src/design-system/icons.ts",
+        "src/features/account/backup-media.ts",
         "src/features/account/backup-share.ts",
         "src/features/account/legal-document-screen.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/profile-avatar-media.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/calendar-import/incoming-share.ts",
-        "src/features/finance/create.ts",
-        "src/features/finance/ezpass-document-open.ts"
+        "src/features/finance/create.ts"
       ],
       "keyPaths": [
         "document",
@@ -6626,10 +6698,10 @@
         "src/app/(tabs)/food/recipes/[id].tsx",
         "src/app/(tabs)/food/recipes/index.tsx",
         "src/design-system/icons.ts",
+        "src/features/account/backup-sanitize.ts",
         "src/features/account/privacy-policy-content.ts",
         "src/features/food/allergy-editor-sheet.tsx",
-        "src/features/food/community-sheets.tsx",
-        "src/features/food/fixture-ingredient-knowledge.ts"
+        "src/features/food/community-sheets.tsx"
       ],
       "keyPaths": [
         "allergies",
@@ -7486,12 +7558,12 @@
         "src/app/(tabs)/profile/index.tsx",
         "src/features/account/avatar-cache.ts",
         "src/features/account/avatar-color-picker.tsx",
+        "src/features/account/backup-archive.ts",
         "src/features/account/iconify-icon.tsx",
         "src/features/account/iconify-search.ts",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/profile-avatar-editor-sheet.tsx",
-        "src/features/account/profile-avatar-media.ts",
-        "src/features/account/profile-avatar-model.ts"
+        "src/features/account/profile-avatar-media.ts"
       ],
       "keyPaths": [
         "avatar",
@@ -7572,8 +7644,8 @@
         "src/app/api/backup/google/token+api.ts",
         "src/features/account/backup-actions.ts",
         "src/features/account/backup-archive.ts",
-        "src/features/account/backup-screen.tsx",
-        "src/features/account/backup-share.ts"
+        "src/features/account/backup-media.ts",
+        "src/features/account/backup-sanitize.ts"
       ],
       "keyPaths": [
         "backup",
@@ -8017,6 +8089,7 @@
         "src/app/privacy.tsx",
         "src/app/terms.tsx",
         "src/constants/legal.ts",
+        "src/features/account/backup-sanitize.ts",
         "src/features/account/legal-document-screen.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/profile-about-section.tsx",
@@ -8811,12 +8884,12 @@
         "src/app/api/calendar/google/disconnect+api.ts",
         "src/app/api/finance/teller/disconnect+api.ts",
         "src/app/api/partner/straiaway/disconnect+api.ts",
+        "src/features/account/backup-screen-panels.tsx",
         "src/features/account/backup-screen.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/finance/finance-accounts-screen.tsx",
         "src/services/backup/google-drive-client.ts",
-        "src/services/backup/google-drive-server.ts",
-        "src/services/calendar/google-client.ts"
+        "src/services/backup/google-drive-server.ts"
       ],
       "keyPaths": [
         "disconnect",
@@ -12610,14 +12683,14 @@
         "src/app/(tabs)/profile/straiaway.tsx",
         "src/design-system/icons.ts",
         "src/design-system/themes.ts",
+        "src/features/account/backup-actions.ts",
         "src/features/account/backup-screen.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/auth/auth-palette.ts",
         "src/features/daily-tracking/day-header.tsx",
         "src/features/food/allergy-editor-sheet.tsx",
-        "src/features/journal/journal-composer.tsx",
-        "src/features/journal/use-journal-recorder.ts"
+        "src/features/journal/journal-composer.tsx"
       ],
       "keyPaths": [
         "stop",
@@ -12929,10 +13002,10 @@
         "src/app/api/finance/teller/connect+api.ts",
         "src/app/api/finance/teller/session+api.ts",
         "src/components/primitives/field-leading-icon.tsx",
+        "src/features/account/backup-media.ts",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/terms-of-use-content.ts",
-        "src/features/auth/auth-account-exit.ts",
-        "src/features/food/plan-generate.ts"
+        "src/features/auth/auth-account-exit.ts"
       ],
       "keyPaths": [
         "origin",
@@ -14014,7 +14087,12 @@
         "ontrack.backup.restoreDrive",
         "ontrack.backup.restoreFile",
         "ontrack.backup.saveDrive",
-        "ontrack.backup.screen"
+        "ontrack.backup.saveNew",
+        "ontrack.backup.saveOverwrite",
+        "ontrack.backup.screen",
+        "ontrack.backup.section.device",
+        "ontrack.backup.section.drive",
+        "ontrack.backup.status"
       ]
     },
     "calendar": {

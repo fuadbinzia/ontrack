@@ -3,10 +3,10 @@
 User-owned backups are available from **Profile → Backup**.
 
 - **Download Backup** writes a JSON file and opens the system share sheet (Files, AirDrop, or another app).
-- **Save to Google Drive** is optional and signed-in only. onTrack creates an `onTrack Backups` folder and stores backup files the app created (`drive.file` scope only).
+- **Save to Google Drive** is optional and signed-in only. onTrack creates an `onTrack Backups` folder and stores backup files the app created (`drive.file` scope only). If a backup is already there, the app asks whether to overwrite that copy or save a new one.
 - **Restore** replaces onTrack data on this device from a downloaded file or a Drive backup this app saved.
 
-The JSON includes cloud-synced domains plus device-only journal, Health/mood, food, E-ZPass statement index, travel map, and tab pins. Photos and voice notes stay as local file links — they are not packed into the backup.
+The JSON includes cloud-synced domains plus device-only journal, Health/mood, food, E-ZPass statement files, travel map, tab pins, avatar and appearance customizations, and packed photos, videos, voice notes, and other attachments.
 
 ## Deployment configuration
 

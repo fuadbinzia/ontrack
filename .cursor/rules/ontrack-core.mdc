@@ -13,7 +13,7 @@ Keep this file short on purpose. Load detail only when the task needs it.
 |------|------|
 | App UI / simulator / screenshot bug | `.cursor/skills/agent-ui/SKILL.md` **before** verify |
 | Hang / slow / stuck sim, emu, verify, pool, Metro device | **`docs/agent-ui-verify-benchmark.md` first** (H1–H23 + TSV), then agent-ui skill + `stuck-check-config.mdc` |
-| Design / polish / “make it cool” | `~/.cursor/skills/think-cool/SKILL.md` |
+| New / rebuilt screen, or design / polish / “make it cool” | `~/.cursor/skills/think-cool/SKILL.md` **before coding** (first pass, not a later polish) |
 | Transitions / sheets snap / list add-remove | `~/.cursor/skills/smooth-transitions/SKILL.md` + Development `smooth-transitions.mdc` |
 | Cleanup / “optimize” | `~/.cursor/skills/optimize-code/SKILL.md` |
 | Domain feature work | `.cursor/skills/<domain>/` (travel, todos, workouts, …) + `AGENTS.md` feature table |
@@ -37,7 +37,7 @@ Keep this file short on purpose. Load detail only when the task needs it.
 - **Locality** → smallest entry file first; extract if touched file would stay >700 lines; prefer Shared patterns in `AGENTS.md`.
 - **Responsive chrome** → `useResponsive()` + `AppText fit` (see `responsive-layout.mdc`).
 - **Glass UI** → see `glass-ui.mdc` (product chrome is glass; no opaque paper fills).
-- **Think cool** → UI should feel crafted/delightful (presence, one idea, restraint); for design/polish read `~/.cursor/skills/think-cool/SKILL.md`.
+- **Think cool** → **every new or rebuilt page** ships crafted UX in the same change (presence, one idea, restraint, glass, rest, eased open/close). Read `~/.cursor/skills/think-cool/SKILL.md` before coding the screen — do not ship a correct-but-flat first pass.
 - **Smooth transitions** → core UX principle: pages, sheets, add/remove, open/close ease — never snap-unmount visible chrome. **Page open at rest** — no FadeInDown replay on focus/remount (`page-open-rest.mdc`). Shared `Presence` / `useListEnterIds` / sheet `held` exit. Development `.cursor/rules/smooth-transitions.mdc`.
 - **Optimize** → cleanup/rename/reuse/token-slim/temp removal; read `~/.cursor/skills/optimize-code/SKILL.md`.
 - **`push`** → always `npm run ship:push -- -m "<concise why>"` (`scripts/ship-push.sh`). Same for “push script” / “ship push”. Flow: patch-bump `.xx` + release notes/changelog → commit → branch → PR → merge main → delete branch → TestFlight + device **OTA only** (no APK, AAB, IPA, EAS Build, TestFlight binary, or binary submission). **Never start or queue any binary build from `push`, even as a compatibility fallback.** Check the existing TestFlight runtime; if incompatible or missing, stop and report the explicit binary command the user must request separately. Do **not** treat bare `push` as plain git push. Use `--ota-only` to reship current main (no bump); `--skip-ota` to skip EAS Update. Any native / `runtimeVersion` binary requires a separate explicit user request and separate command (`build:testflight`, `android:release-to-drive`, or `build:device:android`).

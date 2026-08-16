@@ -84,7 +84,7 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
   {
     title: 'Your Backup and Google Drive',
     paragraphs: [
-      'Profile → Backup lets you download a copy of your onTrack data or save that copy to Google Drive. The file includes synced app data plus device-only records such as journal pages, Health and mood entries, food profile details, and related settings. Photos, voice notes, and other attachments remain as references to files already on the device; they are not packed into the backup file.',
+      'Profile → Backup lets you download a copy of your onTrack data or save that copy to Google Drive. The file includes synced app data plus device-only records such as journal pages, Health and mood entries, food profile details, appearance and avatar customizations, and the photos, videos, voice notes, and other attachments those records point to.',
       'Download uses the system share sheet so you can save the file to Files, AirDrop, or another destination you choose. Saving to Google Drive is optional and separate from signing in with Google or connecting Google Calendar. onTrack uses the Drive file scope to create an “onTrack Backups” folder and backup files that this app created. Google OAuth refresh credentials are encrypted and stored server-side. onTrack does not read other files in your Drive.',
       'Restoring a backup replaces the onTrack data on this device with the copy you choose. Copies you download or save to Google Drive are controlled by you and by that destination’s practices. Disconnecting Google Drive revokes onTrack access and leaves existing backup files in your Drive. Deleting your onTrack account also removes the stored Drive connection credential.',
     ],

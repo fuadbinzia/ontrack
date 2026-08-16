@@ -1,0 +1,113 @@
+diff --git a/node_modules/expo-screen-orientation/ios/ScreenOrientationRegistry.swift b/node_modules/expo-screen-orientation/ios/ScreenOrientationRegistry.swift
+index 9e0b369..6480f2f 100644
+--- a/node_modules/expo-screen-orientation/ios/ScreenOrientationRegistry.swift
++++ b/node_modules/expo-screen-orientation/ios/ScreenOrientationRegistry.swift
+@@ -18,7 +18,11 @@ public class ScreenOrientationRegistry: NSObject, UIApplicationDelegate {
+   public var currentScreenOrientation: UIInterfaceOrientation
+   var orientationControllers: [ScreenOrientationController] = []
+   var controllerInterfaceMasks: [ObjectIdentifier: UIInterfaceOrientationMask] = [:]
+-  private let queue = DispatchQueue(label: "expo.screenorientationregistry", attributes: .concurrent)
++  // Fast Refresh / overlapping RCTHosts register this singleton from many JS threads at
++  // once. A concurrent GCD queue without barriers lets Array.append race (SIGSEGV).
++  // NSLock + snapshots matches our expo-notifications patch and avoids main-thread
++  // GCD deadlocks in requiredOrientationMask.
++  private let stateLock = NSLock()
+   @objc
+   public var currentTraitCollection: UITraitCollection?
+   var lastOrientationMask: UIInterfaceOrientationMask
+@@ -108,9 +112,9 @@ public class ScreenOrientationRegistry: NSObject, UIApplicationDelegate {
+   public func setMask(_ mask: UIInterfaceOrientationMask, forController controller: any ScreenOrientationController) {
+     let controllerIdentifier = ObjectIdentifier(controller)
+ 
+-    queue.async(flags: .barrier) {
+-      self.controllerInterfaceMasks[controllerIdentifier] = mask
+-    }
++    stateLock.lock()
++    controllerInterfaceMasks[controllerIdentifier] = mask
++    stateLock.unlock()
+     enforceDesiredDeviceOrientation(withOrientationMask: mask)
+   }
+ 
+@@ -121,20 +125,20 @@ public class ScreenOrientationRegistry: NSObject, UIApplicationDelegate {
+    */
+   @objc
+   public func requiredOrientationMask() -> UIInterfaceOrientationMask {
+-    return queue.sync {
+-      if controllerInterfaceMasks.isEmpty {
+-        return []
+-      }
+-
+-      // We want to apply an orientation mask which is an intersection of locks applied by the modules.
+-      var mask = doesDeviceHaveNotch ? UIInterfaceOrientationMask.allButUpsideDown : UIInterfaceOrientationMask.all
++    stateLock.lock()
++    defer { stateLock.unlock() }
++    if controllerInterfaceMasks.isEmpty {
++      return []
++    }
+ 
+-      for moduleMask in controllerInterfaceMasks {
+-        mask = mask.intersection(moduleMask.value)
+-      }
++    // We want to apply an orientation mask which is an intersection of locks applied by the modules.
++    var mask = doesDeviceHaveNotch ? UIInterfaceOrientationMask.allButUpsideDown : UIInterfaceOrientationMask.all
+ 
+-      return mask
++    for moduleMask in controllerInterfaceMasks {
++      mask = mask.intersection(moduleMask.value)
+     }
++
++    return mask
+   }
+ 
+   // MARK: - Events
+@@ -201,33 +205,33 @@ public class ScreenOrientationRegistry: NSObject, UIApplicationDelegate {
+    Called at the end of the screen orientation change. Notifies the controllers about the orientation change.
+    */
+   func screenOrientationDidChange(_ newScreenOrientation: UIInterfaceOrientation) {
+-    queue.sync(flags: .barrier) {
+-      // Write with the barrier:
+-      if self.currentScreenOrientation != newScreenOrientation {
+-        // Only change if necessary, to prevent listeners from re-calling this method.
+-        self.currentScreenOrientation = newScreenOrientation
+-      }
++    stateLock.lock()
++    if currentScreenOrientation != newScreenOrientation {
++      // Only change if necessary, to prevent listeners from re-calling this method.
++      currentScreenOrientation = newScreenOrientation
+     }
+-    queue.async {
+-      // Read without the barrier:
+-      for controller in self.orientationControllers {
+-        controller.screenOrientationDidChange(newScreenOrientation)
+-      }
++    let controllers = orientationControllers
++    stateLock.unlock()
++
++    for controller in controllers {
++      controller.screenOrientationDidChange(newScreenOrientation)
+     }
+   }
+ 
+   public func registerController(_ controller: ScreenOrientationController) {
+-    queue.sync {
+-      self.orientationControllers.append(controller)
++    stateLock.lock()
++    defer { stateLock.unlock() }
++    if !orientationControllers.contains(where: { $0 === controller }) {
++      orientationControllers.append(controller)
+     }
+   }
+ 
+   public func unregisterController(_ controller: ScreenOrientationController) {
+     let controllerIdentifier = ObjectIdentifier(controller)
+ 
+-    queue.sync {
+-      self.controllerInterfaceMasks.removeValue(forKey: controllerIdentifier)
+-      self.orientationControllers.removeAll(where: { $0 === controller })
+-    }
++    stateLock.lock()
++    defer { stateLock.unlock() }
++    controllerInterfaceMasks.removeValue(forKey: controllerIdentifier)
++    orientationControllers.removeAll(where: { $0 === controller })
+   }
+ }

@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.114",
+    "date": "2026-08-16",
+    "notes": [
+      "Serialize screen-orientation registry mutations so Fast Refresh no longer SIGSEGVs the sim.",
+      "Ship via ship:push (TestFlight + device OTA)."
+    ]
+  },
+  {
     "version": "1.0.113",
     "date": "2026-08-16",
     "notes": [

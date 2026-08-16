@@ -61,12 +61,15 @@ describe('canonical design-system contract', () => {
       'SheetHeader',
     );
     expect(read('src/app/activity-form.tsx')).toContain('SheetScaffold');
-    expect(read('src/features/social/social-friends-modal.tsx')).toContain(
-      'SheetGrabber',
-    );
-    expect(read('src/features/social/social-action-modal.tsx')).toContain(
-      'SheetGrabber',
-    );
+    // Social modals ride SheetScaffold, whose SheetHeader renders the grabber.
+    for (const socialModal of [
+      'src/features/social/social-friends-modal.tsx',
+      'src/features/social/social-action-modal.tsx',
+    ]) {
+      const source = read(socialModal);
+      expect(source).toContain('SheetScaffold');
+      expect(source).not.toContain('<Modal');
+    }
   });
 
   it('keeps a dismissed sheet off-screen unless a close guard explicitly keeps it mounted', () => {

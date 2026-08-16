@@ -14,7 +14,7 @@ Opening a page must not FadeInDown / fade-up / opacity-0 existing content. That 
 3. `LinearTransition` / `listLayout` only after first paint (`useSettledListLayout`) — never on mount.
 4. Never remount-by-key or replay `useFocusEffect` entrance on tab land.
 5. Tab tap: set `tabSwipeX` **before** `beginTabTap` so dest does not flash at rest.
-6. Pager translates fully painted pages — never `opacity: 0` on idle tabs. Lanes ride the UI thread (`tabSwipeLanes`); never derive pager lanes from React render state. Tabs keep `TAB_SCENE_KEEP_PAINTED_SPEC` (`tab-scene-visibility.ts`) — an explicit `animation: 'none'` on Tabs screenOptions puts parked lanes at `display: none` (blank swipe).
+6. Pager translates fully painted pages — never `opacity: 0` on idle tabs. Lanes ride the UI thread (`tabSwipeLanes`); never derive pager lanes from React render state. Tabs keep `TAB_SCENE_KEEP_PAINTED_SPEC` (`tab-scene-visibility.ts`) — an explicit `animation: 'none'` on Tabs screenOptions puts parked lanes at `display: none` (blank swipe). The tab dock is a sibling of `<Tabs>` (`BottomNavDockHost`) — never the in-tree `tabBar` child. ScreenContainer covers that in-tree bar after scenes paint.
 7. Never toggle `detachInactiveScreens` / `freezeOnBlur` on park — that remounts the page that just opened.
 8. Nested `AppStack` tab `index` uses `animation: 'none'` — do not replay `simple_push`.
 9. Photos already on screen use `transition={0}` + cached URI.

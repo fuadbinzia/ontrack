@@ -205,6 +205,8 @@ export function MovieEditor({ movie, onSelect, guided = false }: { movie?: Movie
     }
   };
 
+  const visibleSearchError = userVisibleError(searchError);
+
   return (
     <View>
       {!guided ? <SectionHeader title="Movie Details" /> : null}
@@ -237,9 +239,9 @@ export function MovieEditor({ movie, onSelect, guided = false }: { movie?: Movie
         returnKeyType="search"
       />
       {searching ? <LoadingBlock compact /> : null}
-      {userVisibleError(searchError) ? (
+      {visibleSearchError ? (
         <View style={styles.searchMessage}>
-          <ErrorMessage message={searchError} />
+          <ErrorMessage message={visibleSearchError} />
           <Button variant="secondary" onPress={() => setRetryKey((value) => value + 1)}>Try Again</Button>
         </View>
       ) : null}

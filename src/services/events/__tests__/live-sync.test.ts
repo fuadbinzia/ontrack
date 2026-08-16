@@ -5,6 +5,7 @@ import { useSchedule } from '@/store/schedule';
 const mockFetchLiveUfcEvents = jest.fn();
 
 jest.mock('@/services/events/index', () => ({
+  ...jest.requireActual('@/services/events/index'),
   fetchLiveUfcEvents: (...args: unknown[]) => mockFetchLiveUfcEvents(...args),
   searchEvents: jest.fn(),
   syncEventFollows: jest.fn(),

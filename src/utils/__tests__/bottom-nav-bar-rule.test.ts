@@ -12,6 +12,8 @@ describe('bottom nav bar background invariant', () => {
     expect(tabsLayout).toContain('BOTTOM_NAV_Z_INDEX');
     expect(tabsLayout).toMatch(/zIndex:\s*BOTTOM_NAV_Z_INDEX/);
     expect(tabsLayout).toMatch(/elevation:\s*BOTTOM_NAV_Z_INDEX/);
+    expect(tabsLayout).toContain('BottomNavBarBridge');
+    expect(tabsLayout).toContain('BottomNavDockHost');
     expect(tabsLayout).toMatch(/shadowOpacity:\s*0/);
     expect(tabsLayout).toMatch(/shadowColor:\s*'transparent'/);
     expect(tabsLayout).toMatch(/tabBarBackground:\s*\(\)\s*=>\s*null/);

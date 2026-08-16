@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import FriendInviteRoute from '@/app/f/[code]';
@@ -35,9 +36,11 @@ jest.mock('@/store/friends', () => ({
 
 function renderRoute() {
   return render(
-    <SafeAreaProvider initialMetrics={METRICS}>
-      <FriendInviteRoute />
-    </SafeAreaProvider>,
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <FriendInviteRoute />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>,
   );
 }
 

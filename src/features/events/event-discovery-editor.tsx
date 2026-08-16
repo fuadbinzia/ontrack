@@ -247,6 +247,8 @@ export function EventDiscoveryEditor({
     ],
   );
 
+  const visibleError = userVisibleError(error);
+
   return (
     <View style={styles.root}>
       <AgentTestId testID={AgentUiIds.activityForm.event.tabs} label="Event discovery tabs">
@@ -363,9 +365,9 @@ export function EventDiscoveryEditor({
             returnKeyType="search"
             testID={AgentUiIds.activityForm.event.search}
           />
-          {userVisibleError(error) ? (
+          {visibleError ? (
             <View style={styles.section}>
-              <ErrorMessage message={error} />
+              <ErrorMessage message={visibleError} />
               <Button variant="secondary" onPress={() => setRetryKey((value) => value + 1)}>Try Again</Button>
             </View>
           ) : null}

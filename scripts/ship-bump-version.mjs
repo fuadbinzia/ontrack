@@ -20,13 +20,13 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const APP_JSON = join(ROOT, 'app.json');
 const PACKAGE_JSON = join(ROOT, 'package.json');
-const RELEASE_NOTES_TS = join(
+const RELEASE_NOTES_JSON = join(
   ROOT,
-  'src/features/account/release-notes-user.ts',
+  'src/constants/release-notes-user.json',
 );
-const CHANGELOG_TS = join(
+const CHANGELOG_JSON = join(
   ROOT,
-  'src/features/account/release-notes-changelog.ts',
+  'src/constants/release-notes-changelog.json',
 );
 
 function die(msg) {
@@ -88,10 +88,6 @@ function todayISODate() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-function escapeTsSingleQuoted(value) {
-  return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-}
-
 function sentenceNote(raw) {
   const text = String(raw).trim().replace(/\s+/g, ' ');
   if (!text) return '';
@@ -99,28 +95,13 @@ function sentenceNote(raw) {
   return /[.!?]$/.test(capped) ? capped : `${capped}.`;
 }
 
-function formatEntryBlock(entry) {
-  const notes = entry.notes
-    .map((n) => `      '${escapeTsSingleQuoted(n)}',`)
-    .join('\n');
-  return `  {
-    version: '${entry.version}',
-    date: '${entry.date}',
-    notes: [
-${notes}
-    ],
-  },
-`;
-}
-
-function prependCatalogEntry(source, exportName, entryBlock) {
-  const re = new RegExp(
-    `(export const ${exportName}: VersionNotesEntry\\[\\] = \\[\\n)`,
-  );
-  if (!re.test(source)) {
-    throw new Error(`could not find ${exportName} array`);
+/** Prepend a { version, date, notes } entry to a newest-first JSON catalog. */
+export function prependCatalogEntry(jsonText, entry) {
+  const entries = JSON.parse(jsonText);
+  if (!Array.isArray(entries)) {
+    throw new Error('catalog must be a JSON array');
   }
-  return source.replace(re, `$1${entryBlock}`);
+  return `${JSON.stringify([entry, ...entries], null, 2)}\n`;
 }
 
 function changedPathHints(limit = 4) {
@@ -136,12 +117,7 @@ function changedPathHints(limit = 4) {
       .filter(Boolean)
       .filter((p) => !p.startsWith('scripts/ship-bump-version'))
       .filter((p) => p !== 'app.json' && p !== 'package.json')
-      .filter(
-        (p) =>
-          !p.endsWith('release-notes.ts') &&
-          !p.endsWith('release-notes-user.ts') &&
-          !p.endsWith('release-notes-changelog.ts'),
-      );
+      .filter((p) => !/src\/(features\/account|constants)\/release-notes[^/]*$/.test(p));
     const hints = [];
     for (const p of paths) {
       if (p.startsWith('src/features/')) {
@@ -197,17 +173,13 @@ function main() {
     app.expo.runtimeVersion = String(current);
   }
 
-  let releaseNotesSource = readFileSync(RELEASE_NOTES_TS, 'utf8');
-  releaseNotesSource = prependCatalogEntry(
-    releaseNotesSource,
-    'RELEASE_NOTES',
-    formatEntryBlock({ version: next, date, notes: [releaseNote] }),
+  const releaseNotesJson = prependCatalogEntry(
+    readFileSync(RELEASE_NOTES_JSON, 'utf8'),
+    { version: next, date, notes: [releaseNote] },
   );
-  let changelogSource = readFileSync(CHANGELOG_TS, 'utf8');
-  changelogSource = prependCatalogEntry(
-    changelogSource,
-    'CHANGELOG',
-    formatEntryBlock({ version: next, date, notes: changelogNotes }),
+  const changelogJson = prependCatalogEntry(
+    readFileSync(CHANGELOG_JSON, 'utf8'),
+    { version: next, date, notes: changelogNotes },
   );
 
   const pkg = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8'));
@@ -229,10 +201,10 @@ function main() {
 
   writeFileSync(APP_JSON, `${JSON.stringify(app, null, 2)}\n`);
   writeFileSync(PACKAGE_JSON, `${JSON.stringify(pkg, null, 2)}\n`);
-  writeFileSync(RELEASE_NOTES_TS, releaseNotesSource);
-  writeFileSync(CHANGELOG_TS, changelogSource);
+  writeFileSync(RELEASE_NOTES_JSON, releaseNotesJson);
+  writeFileSync(CHANGELOG_JSON, changelogJson);
   console.log(
-    '    wrote app.json, package.json, release-notes-user.ts, release-notes-changelog.ts',
+    '    wrote app.json, package.json, release-notes-user.json, release-notes-changelog.json',
   );
 }
 

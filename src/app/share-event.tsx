@@ -194,6 +194,7 @@ export default function ShareEventScreen() {
   };
 
   const allValid = drafts.length > 0 && drafts.every(validDraft);
+  const visibleError = userVisibleError(error);
 
   return (
     <Screen contentStyle={styles.screen} refresh={false}>
@@ -218,9 +219,9 @@ export default function ShareEventScreen() {
         </View>
       ) : null}
 
-      {userVisibleError(error) ? (
+      {visibleError ? (
         <View style={styles.errorBlock}>
-          <ErrorMessage message={error} />
+          <ErrorMessage message={visibleError} />
           <Button
             variant="secondary"
             onPress={() => {
@@ -234,7 +235,7 @@ export default function ShareEventScreen() {
         </View>
       ) : null}
 
-      {!loading && !userVisibleError(error) ? (
+      {!loading && !visibleError ? (
         <>
           <SectionHeader
             title={`${drafts.length} ${drafts.length === 1 ? 'event' : 'events'} found`}

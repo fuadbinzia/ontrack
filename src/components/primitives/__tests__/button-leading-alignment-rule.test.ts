@@ -40,8 +40,8 @@ describe('button leading/label alignment invariant', () => {
     const empty = read('src/components/primitives/empty-state.tsx');
 
     expect(empty).toMatch(/actionGlass:\s*\{[^}]*justifyContent:\s*['"]center['"]/s);
-    expect(empty).toContain('fieldTitleCase(title)');
-    expect(empty).toContain('fieldTitleCase(message)');
+    expect(empty).toContain('formatEmptyStateTitle(title)');
+    expect(empty).not.toContain('fieldTitleCase(message)');
     expect(empty).toContain('align="center"');
     // Same Android failure mode as Button — fit left-packs / truncates short labels.
     expect(empty).not.toMatch(/<AppText\b[^>]*\bfit\b/);

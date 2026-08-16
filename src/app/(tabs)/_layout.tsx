@@ -3,24 +3,24 @@ import { useEffect, type ReactElement, type ReactNode } from 'react';
 import { BackHandler, Platform, StyleSheet, View } from 'react-native';
 
 import {
-  BottomNavBarBridge,
-  BottomNavDockHost,
+    BottomNavDockHost,
+    renderBottomNavBar,
 } from '@/components/navigation/bottom-nav-dock';
 import { BOTTOM_NAV_Z_INDEX } from '@/components/navigation/bottom-nav-inset';
 import {
-  beginTabReturn,
-  hasTabReturn as readHasTabReturn,
-  rememberFocusedTab,
-  resolveSwipeBackAction,
-  tabNameFromSegments,
+    beginTabReturn,
+    hasTabReturn as readHasTabReturn,
+    rememberFocusedTab,
+    resolveSwipeBackAction,
+    tabNameFromSegments,
 } from '@/components/navigation/overview-return';
 import { getFocusedStackCanPop } from '@/components/navigation/swipe-back';
 import { SwipeBackScene } from '@/components/navigation/swipe-back-scene';
 import { schedulePreloadTabLanes } from '@/components/navigation/tab-lane-preload';
 import { MORE_TAB_ROUTE } from '@/components/navigation/tab-pins';
 import {
-  TAB_SCENE_KEEP_PAINTED_SPEC,
-  tabSceneKeepPainted,
+    TAB_SCENE_KEEP_PAINTED_SPEC,
+    tabSceneKeepPainted,
 } from '@/components/navigation/tab-scene-visibility';
 import { useShouldShowWelcome } from '@/features/auth/welcome-preview';
 import { useOverviewAffinity } from '@/store/overview-affinity';
@@ -92,7 +92,7 @@ export default function TabsRoot() {
         detachInactiveScreens={false}
         // Publish into BottomNavDockHost (sibling). Rendering the bar inside
         // BottomTabView lets ScreenContainer cover it after scenes paint.
-        tabBar={(props) => <BottomNavBarBridge {...props} />}
+        tabBar={renderBottomNavBar}
         // Swipe lanes must exist before a gesture reveals them: lazy tabs
         // unmount on navigator remounts even though lane history survives.
         // Bounded to the two lane neighbors — see tab-lane-preload.ts.

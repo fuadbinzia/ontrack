@@ -1,7 +1,7 @@
+import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { useLayoutEffect, useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Tabs } from 'expo-router';
 
 import { BottomNavBar } from './bottom-nav-bar';
 import { BOTTOM_NAV_Z_INDEX } from './bottom-nav-inset';
@@ -38,18 +38,33 @@ export function resetBottomNavDockForTests(): void {
 export { peekBottomNavDock, subscribeBottomNavDock };
 
 /**
- * Navigator tabBar slot. Must render nothing inside BottomTabView —
- * ScreenContainer is a native sibling that paints over an in-tree dock
- * once tab scenes load (bar flashes, then stays gone).
+ * In-tree tabBar unmount. ScreenContainer tears that slot down after scenes
+ * paint — clearing the sibling store here hides the dock for the rest of
+ * the session, so keep the last published props.
  */
+export function onBottomNavBarBridgeUnmount(
+  _published: BottomNavDockProps,
+): void {}
+
+/** Publishes into BottomNavDockHost; renders nothing inside BottomTabView. */
 export function BottomNavBarBridge(props: BottomNavDockProps) {
   useLayoutEffect(() => {
     publishBottomNavDock(props);
     return () => {
-      if (dockProps === props) publishBottomNavDock(null);
+      onBottomNavBarBridgeUnmount(props);
     };
   }, [props]);
   return null;
+}
+
+/**
+ * BottomTabView calls `tabBar(props)` as a render function, not as a
+ * component. Passing `BottomNavBarBridge` directly therefore runs its hooks
+ * outside a component (invalid hook call). Keep this wrapper module-scoped
+ * so Tabs still gets a stable `tabBar` reference.
+ */
+export function renderBottomNavBar(props: BottomNavDockProps) {
+  return <BottomNavBarBridge {...props} />;
 }
 
 /** Sibling of `<Tabs>` — stacks above ScreenContainer, not inside it. */

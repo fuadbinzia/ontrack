@@ -172,6 +172,7 @@ describe('full-screen swipe-back stacks', () => {
     expect(appStack).toContain("IOS_SWIPE_BACK_ANIMATION = 'simple_push'");
     expect(appStack).toContain("ANDROID_SWIPE_BACK_ANIMATION = 'ios_from_right'");
     expect(appStack).toContain('composeSwipeBackScreenLayout');
+    expect(appStack).toContain('HIDDEN_SCROLL_EDGE_EFFECTS');
   });
 
   it('pops Android swipe-back through goBackOrReplace', () => {

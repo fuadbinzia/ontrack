@@ -1,22 +1,26 @@
-import { applyAvailableOtaUpdate, type OtaUpdatesClient } from '../apply-ota';
+import {
+  applyAvailableOtaUpdate,
+  otaAppStateAction,
+  otaReloadPlanForOs,
+  type OtaUpdatesClient,
+} from '../apply-ota';
 
 function client(partial: Partial<OtaUpdatesClient> = {}): OtaUpdatesClient {
   return {
     isEnabled: true,
     checkForUpdateAsync: async () => ({ isAvailable: false }),
     fetchUpdateAsync: async () => ({ isNew: false }),
-    reloadAsync: async () => undefined,
     ...partial,
   };
 }
 
 describe('applyAvailableOtaUpdate', () => {
   it('skips when updates are disabled', async () => {
-    const reloadAsync = jest.fn(async () => undefined);
+    const fetchUpdateAsync = jest.fn(async () => ({ isNew: true }));
     await expect(
-      applyAvailableOtaUpdate(client({ isEnabled: false, reloadAsync })),
+      applyAvailableOtaUpdate(client({ isEnabled: false, fetchUpdateAsync })),
     ).resolves.toBe('skipped');
-    expect(reloadAsync).not.toHaveBeenCalled();
+    expect(fetchUpdateAsync).not.toHaveBeenCalled();
   });
 
   it('noops when no update is available', async () => {
@@ -27,34 +31,45 @@ describe('applyAvailableOtaUpdate', () => {
     expect(fetchUpdateAsync).not.toHaveBeenCalled();
   });
 
-  it('fetches but does not same-session reload when a new update is available', async () => {
+  it('fetches and returns downloaded without reloading', async () => {
     const fetchUpdateAsync = jest.fn(async () => ({ isNew: true }));
-    const reloadAsync = jest.fn(async () => undefined);
     await expect(
       applyAvailableOtaUpdate(
         client({
           checkForUpdateAsync: async () => ({ isAvailable: true }),
           fetchUpdateAsync,
-          reloadAsync,
         }),
       ),
     ).resolves.toBe('downloaded');
     expect(fetchUpdateAsync).toHaveBeenCalledTimes(1);
-    // Cold-start apply only — in-session reloadAsync races AppContext/Fabric.
-    expect(reloadAsync).not.toHaveBeenCalled();
   });
 
-  it('does not reload when fetch is not new', async () => {
-    const reloadAsync = jest.fn(async () => undefined);
+  it('does not treat a stale fetch as downloaded', async () => {
     await expect(
       applyAvailableOtaUpdate(
         client({
           checkForUpdateAsync: async () => ({ isAvailable: true }),
           fetchUpdateAsync: async () => ({ isNew: false }),
-          reloadAsync,
         }),
       ),
     ).resolves.toBe('noop');
-    expect(reloadAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe('otaReloadPlanForOs', () => {
+  it('reloads Android in-session and defers iOS until background', () => {
+    expect(otaReloadPlanForOs('android')).toBe('immediate');
+    expect(otaReloadPlanForOs('ios')).toBe('on-background');
+    expect(otaReloadPlanForOs('web')).toBe('next-cold-start');
+  });
+});
+
+describe('otaAppStateAction', () => {
+  it('reloads iOS only after a downloaded update is backgrounded', () => {
+    expect(otaAppStateAction('background', true)).toBe('reload');
+    expect(otaAppStateAction('background', false)).toBe('none');
+    expect(otaAppStateAction('inactive', true)).toBe('none');
+    expect(otaAppStateAction('active', true)).toBe('none');
+    expect(otaAppStateAction('active', false)).toBe('check');
   });
 });

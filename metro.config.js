@@ -50,6 +50,8 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
 config.resolver.blockList = [
   ...(config.resolver.blockList ?? []),
   apiRouteTestBlockList,
+  /[\\/]__tests__[\\/]/,
+  /\.(test|spec)\.[jt]sx?$/,
 ];
 
 config.watcher.healthCheck = {

@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.106",
+    "date": "2026-08-16",
+    "notes": [
+      "Keep production OTA chrome-only and apply Android in-session so devices get updates without blank glass pages.",
+      "Touched: app routes, features/account."
+    ]
+  },
+  {
     "version": "1.0.105",
     "date": "2026-08-16",
     "notes": [

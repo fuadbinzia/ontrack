@@ -12,11 +12,7 @@ import { getNotificationsModule } from '@/services/notifications/runtime';
 import { configurePlantNotifications } from '@/services/plants/notifications';
 import { reconcilePlantSchedules } from '@/services/plants/schedule';
 import { useTravel } from '@/store/travel';
-import {
-  handleAgentUiUrl,
-  isAgentUiEnabled,
-  isAgentUiUrl,
-} from '@/utils/agent-ui';
+import { isAgentUiEnabled } from '@/utils/agent-ui';
 import { deferUntilIdle } from '@/utils/defer-until-idle';
 
 type RootRouter = {
@@ -106,7 +102,10 @@ export function useRootStartupEffects({
   }, [hydrated, phase]);
 
   useEffect(() => {
-    if (!isAgentUiEnabled()) return;
+    if (!__DEV__ || !isAgentUiEnabled()) return;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { handleAgentUiUrl, isAgentUiUrl } =
+      require('@/utils/agent-ui/handle-agent-ui-url') as typeof import('@/utils/agent-ui/handle-agent-ui-url');
     const run = (url: string | null) => {
       if (!url || !isAgentUiUrl(url)) return;
       void handleAgentUiUrl(url);

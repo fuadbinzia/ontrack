@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 import { motion } from '@/design-system';
 
+import { HIDDEN_SCROLL_EDGE_EFFECTS } from './scroll-edge-effects';
 import { SwipeBackScene } from './swipe-back-scene';
 
 type StackProps = ComponentProps<typeof Stack>;
@@ -34,6 +35,9 @@ export const appStackScreenOptions = {
   animation: appStackSwipeAnimation,
   animationDuration: motion.page,
   contentStyle: { backgroundColor: 'transparent' },
+  // Native-stack always forwards a value (default `automatic`). Pin hidden
+  // so iOS 26 overscroll cannot blank glass pages.
+  scrollEdgeEffects: HIDDEN_SCROLL_EDGE_EFFECTS,
 };
 
 /** Tab hub `index` stays at rest. Pushed screens keep the swipe animation. */

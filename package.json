@@ -1,7 +1,7 @@
 {
   "name": "ontrack",
   "main": "expo-router/entry",
-  "version": "1.0.105",
+  "version": "1.0.106",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -110,6 +110,7 @@
     "typecheck:tests": "bash scripts/ensure-metro-hmr-beacon.sh && tsc -p tsconfig.test.json --noEmit",
     "update:testflight": "npx eas-cli@latest update --channel testflight --environment preview",
     "update:device": "npx eas-cli@latest update --channel device --environment preview",
+    "update:preview": "bash ./scripts/publish-ota.sh",
     "update:production": "npx eas-cli@latest update --channel production --environment production",
     "build:device:android": "npx eas-cli@latest build --platform android --profile device --non-interactive",
     "ios:ensure-codesign": "bash ./scripts/ensure-ios-simulator-codesign.sh",

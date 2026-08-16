@@ -169,7 +169,7 @@ export function Input({
         onLayout={agent.onLayout}
         style={[styles.wrapper, { gap: spacing.sm }, containerStyle]}>
         {label && !stacked ? (
-          <AppText variant="overline" color="tertiary" fit>
+          <AppText variant="overline" color="tertiary" numberOfLines={1}>
             {label}
           </AppText>
         ) : null}
@@ -404,7 +404,7 @@ export function Input({
       onLayout={agent.onLayout}
       style={[styles.wrapper, { gap: spacing.sm }, containerStyle]}>
       {label ? (
-        <AppText variant="overline" color="tertiary" fit>
+        <AppText variant="overline" color="tertiary" numberOfLines={1}>
           {label}
         </AppText>
       ) : null}
@@ -478,6 +478,7 @@ const styles = StyleSheet.create({
   chromeLabel: {
     flex: 1,
     minWidth: 0,
+    letterSpacing: 0,
   },
   iconInput: {
     flexGrow: 1,
@@ -487,6 +488,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     backgroundColor: 'transparent',
+    letterSpacing: 0,
   },
   stackedMultilineInput: {
     // A growing native multiline input can paint over its preceding label.

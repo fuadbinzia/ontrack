@@ -129,7 +129,7 @@ export function TravelItineraryAddSheet({
     Math.round(windowHeight * 0.92) - sheetBottom,
   );
 
-  const { headerGesture, sheetStyle, scrimStyle, onSheetLayout, close } = useSheetDismissPan({
+  const { headerGesture, sheetStyle, scrimStyle, onSheetLayout, close, held } = useSheetDismissPan({
     visible,
     onClose,
   });
@@ -143,10 +143,14 @@ export function TravelItineraryAddSheet({
     return () => sub.remove();
   }, [visible, close]);
 
-  if (!visible) return null;
+  if (!held) return null;
 
   return (
-    <View accessibilityViewIsModal style={styles.overlay}>
+    <View
+      accessibilityViewIsModal
+      pointerEvents={visible ? 'auto' : 'none'}
+      style={styles.overlay}
+    >
       <Animated.View
         pointerEvents="none"
         style={[

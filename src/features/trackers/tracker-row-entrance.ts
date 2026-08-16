@@ -14,16 +14,11 @@ export const TRACKER_ROW_REST_POSE = {
   opacity: 1,
 } as const;
 
-/**
- * First paint must already be the entrance start — never rest, then a
- * post-focus key bump that snaps rows hidden and replays the bounce.
- */
+/** Page open stays at rest — never hide then bounce existing rows. */
 export function trackerRowMountPose(
-  reduceMotion: boolean | null | undefined,
-): typeof TRACKER_ROW_REST_POSE | typeof TRACKER_ROW_HIDDEN_POSE {
-  return reduceMotion === true
-    ? TRACKER_ROW_REST_POSE
-    : TRACKER_ROW_HIDDEN_POSE;
+  _reduceMotion?: boolean | null,
+): typeof TRACKER_ROW_REST_POSE {
+  return TRACKER_ROW_REST_POSE;
 }
 
 /** Dragging holds rest so releasing a row does not restart the bounce. */

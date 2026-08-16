@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
 
 import { GroceryListScreen } from '@/features/todos/grocery-list-screen';
 import { TodoListScreen } from '@/features/todos/todo-list-screen';
@@ -9,6 +10,10 @@ export default function TodoListRoute() {
   const kind = useTodos(
     (state) => state.lists.find((list) => list.id === id)?.kind,
   );
+  const touchList = useTodos((state) => state.touchList);
+  useEffect(() => {
+    if (typeof id === 'string' && id) touchList(id);
+  }, [id, touchList]);
   return kind === 'grocery' ? (
     <GroceryListScreen listId={id} />
   ) : (

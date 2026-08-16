@@ -40,6 +40,7 @@ import {
     todayKey,
 } from '@/utils/date';
 import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 
 export default function CalendarScreen() {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function CalendarScreen() {
   const selectedDate = useUI((state) => state.selectedDate);
   const setSelectedDate = useUI((state) => state.setSelectedDate);
   const [shinePlay, setShinePlay] = useState(false);
+  useWarmHrefs(['/activity-form']);
   const activitiesByDate = useMemo(() => {
     const grouped: Record<string, typeof activities> = {};
     for (const activity of activities) {

@@ -32,7 +32,22 @@ describe('trackers screen contract', () => {
     expect(sheet).not.toMatch(/>\s*Open\s*</);
     expect(sheet).not.toContain('openAddon');
     expect(sheet).not.toContain('router.navigate');
+    expect(sheet).not.toContain('subtitle');
+    expect(sheet).not.toContain('Turn modules on without losing their data');
     expect(ids).not.toContain('openAddon');
+  });
+
+  it('keeps Manage Sections as icon-and-toggle rows without truncated blurbs', () => {
+    const sheet = read('src/features/trackers/trackers-manage-sheet.tsx');
+
+    expect(sheet).toContain('SettingsGroup');
+    expect(sheet).toContain('icon={icon}');
+    expect(sheet).toContain('TAB_META');
+    expect(sheet).not.toContain('addon.description');
+    expect(sheet).not.toContain('detail=');
+    expect(sheet).not.toContain('detailNumberOfLines');
+    expect(sheet).not.toContain('ScrollView');
+    expect(sheet).toContain('addonsByDisplayName');
   });
 
   it('dismisses Sections through the parent tab navigator', () => {
@@ -41,7 +56,8 @@ describe('trackers screen contract', () => {
 
     expect(screen).toContain('useNavigation');
     expect(screen).toContain('navigation.navigate(routeName as never)');
-    expect(screen).toContain('if (!isFocused) return null');
+    expect(screen).not.toContain('if (!isFocused) return null');
+    expect(screen).not.toContain('useIsFocused');
     expect(screen).not.toContain('router.navigate(meta.href)');
     expect(layout).toContain('freezeOnBlur: route.name !== MORE_TAB_ROUTE');
   });

@@ -3,21 +3,24 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { TodoListHeaderToolbar } from '@/features/todos/todo-list-header-toolbar';
 import type { TodoList, TodoMember } from '@/store/todos';
+import { AgentUiIds } from '@/utils/agent-ui';
 
 jest.mock('@/features/todos/checklist-popover-menu', () => {
   const React = jest.requireActual('react');
   const { View } = jest.requireActual('react-native');
   return {
-    ChecklistPopoverMenu: () => React.createElement(View),
-  };
-});
-
-jest.mock('@/features/account/profile-avatar', () => {
-  const React = jest.requireActual('react');
-  const { View } = jest.requireActual('react-native');
-  return {
-    ProfileAvatar: ({ displayName }: { displayName: string }) =>
-      React.createElement(View, { accessibilityLabel: displayName }),
+    ChecklistPopoverMenu: ({
+      accessibilityLabel,
+      testID,
+    }: {
+      accessibilityLabel: string;
+      testID?: string;
+    }) =>
+      React.createElement(View, {
+        accessibilityLabel,
+        testID,
+        accessibilityRole: 'button',
+      }),
   };
 });
 
@@ -44,13 +47,13 @@ const member: TodoMember = {
 };
 const editModeAgent = {
   ref: jest.fn(),
-  testID: 'ontrack.checklists.detail.editMode',
+  testID: AgentUiIds.checklists.detail.editMode,
   onLayout: undefined,
 };
 
 function renderToolbar(
   members: TodoMember[],
-  selectedAssigneeId = 'all',
+  overrides: Partial<Parameters<typeof TodoListHeaderToolbar>[0]> = {},
 ) {
   return render(
     <SafeAreaProvider initialMetrics={metrics}>
@@ -61,7 +64,7 @@ function renderToolbar(
         owner
         canEdit
         filter="open"
-        selectedAssigneeId={selectedAssigneeId}
+        selectedAssigneeId="all"
         sort="smart"
         editMode={false}
         openTasksCount={2}
@@ -75,29 +78,29 @@ function renderToolbar(
         onClearDone={jest.fn()}
         onManageSettings={jest.fn()}
         onRemoveList={jest.fn()}
+        {...overrides}
       />
     </SafeAreaProvider>,
   );
 }
 
-describe('TodoListHeaderToolbar assignee filter', () => {
-  it('shows an assignee filter for collaborative checklists', () => {
+describe('TodoListHeaderToolbar', () => {
+  it('keeps only edit and list-action icons on the bar', () => {
     renderToolbar([member]);
 
-    expect(screen.getByLabelText('Filter by assignee: All Assignees')).toBeTruthy();
-  });
-
-  it('reflects the selected collaborator in the filter label', () => {
-    renderToolbar([member], member.userId);
-
-    expect(
-      screen.getByLabelText('Filter by assignee: Alex Rivera'),
-    ).toBeTruthy();
-  });
-
-  it('hides the assignee filter when the checklist has no members', () => {
-    renderToolbar([]);
-
+    expect(screen.getByLabelText('Edit checklist')).toBeTruthy();
+    expect(screen.getByLabelText('Packing actions')).toBeTruthy();
+    expect(screen.getByTestId(AgentUiIds.checklists.detail.actions)).toBeTruthy();
+    expect(screen.queryByText('Edit')).toBeNull();
+    expect(screen.queryByText('Done')).toBeNull();
     expect(screen.queryByLabelText(/Filter by assignee:/)).toBeNull();
+    expect(screen.queryByLabelText('Sort checklist')).toBeNull();
+  });
+
+  it('swaps the edit icon for a check while editing', () => {
+    renderToolbar([], { editMode: true });
+
+    expect(screen.getByLabelText('Finish editing checklist')).toBeTruthy();
+    expect(screen.queryByText('Done')).toBeNull();
   });
 });

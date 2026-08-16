@@ -49,6 +49,7 @@ export { LoadingSpinner } from './loading-spinner';
 export { MetaList } from './meta-list';
 export type { MetaListItem } from './meta-list';
 export { PanelTitle } from './panel-title';
+export { Presence, useListEnterIds, useSettledListLayout } from './presence';
 export { ProgressRing } from './progress-ring';
 export { RouteErrorBoundary } from './route-error-boundary';
 export {
@@ -58,10 +59,13 @@ export {
     useSafeAreaChrome,
     useSafeAreaChromeOverlay
 } from './safe-area-chrome';
+export { GestureScrollView } from './gesture-scroll-view';
 export { Screen } from './screen';
 export {
     ScreenAtmosphere,
+    ScreenAtmosphereSceneFill,
     screenAtmosphereBottomColor,
+    screenAtmosphereSceneOffset,
     screenAtmosphereTopColor,
     useScreenAtmosphereChrome
 } from './screen-atmosphere';

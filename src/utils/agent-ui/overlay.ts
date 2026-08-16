@@ -47,7 +47,7 @@ export function agentUiOverlayRoutePrefixes(route: string | null | undefined): s
     case 'design-system':
       return ['designSystem', 'design-system'];
     case 'nutrition-profile':
-      return ['nutrition', 'profile'];
+      return ['nutrition', 'food'];
     case 'activity-form':
       return ['activity', 'today'];
     case 'developer':

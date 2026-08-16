@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import {
   AppText,
@@ -10,7 +10,7 @@ import {
   IconButton,
   Symbol,
 } from '@/components/primitives';
-import { layout, radii, spacing } from '@/design-system';
+import { fadeEntering, layout, radii, spacing } from '@/design-system';
 import {
   type ScheduledWorkout,
   workoutSetSummary,
@@ -161,7 +161,7 @@ export function WorkoutDayNavigator({
       ) : null}
 
       {savedMessage ? (
-        <Animated.View entering={FadeInDown.duration(220)}>
+        <Animated.View entering={fadeEntering()}>
           <GlassPlate mist accessible accessibilityRole="alert" style={styles.savedMessage}>
             <Symbol name="checkmark.circle.fill" size="md" color={theme.success} />
             <AppText variant="callout" color="success" style={styles.flex}>

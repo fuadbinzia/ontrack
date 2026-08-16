@@ -37,13 +37,16 @@ function resetOverviewTestState() {
 jest.mock("react-native-reanimated", () => {
   const { View } = jest.requireActual("react-native");
   const transition = {
+    delay: () => transition,
     duration: () => transition,
+    easing: () => transition,
     reduceMotion: () => transition,
   };
   return {
     __esModule: true,
     default: { View },
     Easing: { bezier: () => ({}) },
+    FadeInDown: transition,
     FadeOutLeft: transition,
     LinearTransition: transition,
     ReduceMotion: { System: "system" },
@@ -122,6 +125,7 @@ jest.mock("@/components/primitives", () => {
       accessibilityLabel: string;
       onPress: () => void;
     }) => React.createElement(Pressable, { accessibilityLabel, onPress }),
+    Presence: Container,
     Screen: Container,
     ScreenHeader: ({ title }: { title: string }) =>
       React.createElement(Text, null, title),
@@ -193,6 +197,13 @@ jest.mock("@/store/overview-attention", () => ({
       acknowledge: jest.Mock;
     }) => unknown,
   ) => selector({ acknowledgedKeys: [], acknowledge: jest.fn() }),
+}));
+jest.mock("@/store/overview-affinity", () => ({
+  useOverviewAffinity: Object.assign(
+    (selector: (state: { byRoute: Record<string, never> }) => unknown) =>
+      selector({ byRoute: {} }),
+    { getState: () => ({ seedFromUsageIfEmpty: jest.fn() }) },
+  ),
 }));
 jest.mock("@/store/plants", () => ({
   usePlants: (

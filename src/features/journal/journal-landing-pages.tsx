@@ -1,14 +1,4 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
 import { View } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  Easing,
-  ReduceMotion,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 
 import {
   AppText,
@@ -35,23 +25,6 @@ export function JournalLandingPages({
 }) {
   const theme = useTheme();
   const { spacing, s } = useResponsive();
-  const focusEntrance = useSharedValue(1);
-  const focusEntranceStyle = useAnimatedStyle(() => ({
-    opacity: focusEntrance.value,
-    transform: [{ translateY: (1 - focusEntrance.value) * 12 }],
-  }));
-  useFocusEffect(
-    useCallback(() => {
-      cancelAnimation(focusEntrance);
-      focusEntrance.value = 0;
-      focusEntrance.value = withTiming(1, {
-        duration: 240,
-        easing: Easing.out(Easing.cubic),
-        reduceMotion: ReduceMotion.System,
-      });
-      return () => cancelAnimation(focusEntrance);
-    }, [focusEntrance]),
-  );
 
   return (
     <View style={{ gap: spacing.sm }}>
@@ -63,7 +36,7 @@ export function JournalLandingPages({
           detail={pages.length === 1 ? '1 Page' : `${pages.length} Pages`}
         />
       </AgentTestId>
-      <Animated.View style={[{ gap: spacing.sm }, focusEntranceStyle]}>
+      <View style={{ gap: spacing.sm }}>
         {pages.map((entry) => {
           const isToday = entry.dateKey === today;
           const time = journalIndexTime(entry);
@@ -122,7 +95,7 @@ export function JournalLandingPages({
             </Card>
           );
         })}
-      </Animated.View>
+      </View>
     </View>
   );
 }

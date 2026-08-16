@@ -36,6 +36,11 @@ export const appStackScreenOptions = {
   contentStyle: { backgroundColor: 'transparent' },
 };
 
+/** Tab hub `index` stays at rest. Pushed screens keep the swipe animation. */
+export function isAppStackTabRoot(routeName: string | undefined): boolean {
+  return routeName === 'index';
+}
+
 export function mergeAppStackScreenOptions(
   extra?: ScreenOptions,
 ): ScreenOptions {
@@ -67,10 +72,24 @@ function AppStackImpl({
   children,
   ...rest
 }: StackProps) {
+  const merged = mergeAppStackScreenOptions(screenOptions);
   return (
     <Stack
       {...rest}
-      screenOptions={mergeAppStackScreenOptions(screenOptions)}
+      screenOptions={(props) => {
+        const resolved =
+          typeof merged === 'function' ? merged(props) : { ...merged };
+        if (
+          resolved.animation != null &&
+          resolved.animation !== appStackSwipeAnimation
+        ) {
+          return resolved;
+        }
+        if (isAppStackTabRoot(props.route.name)) {
+          return { ...resolved, animation: 'none' };
+        }
+        return resolved;
+      }}
       screenLayout={
         Platform.OS === 'android'
           ? composeSwipeBackScreenLayout(screenLayout)

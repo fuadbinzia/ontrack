@@ -7,10 +7,12 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { isActivityEnabled } from '@/addons/registry';
 import {
     EmptyState,
+    GestureScrollView,
     IconButton,
     ScreenAtmosphere,
     screenAtmosphereBottomColor,
     SectionHeader,
+    useListEnterIds,
     usePageSurfaceBackground,
 } from '@/components/primitives';
 import { ActivityCard } from '@/components/shared';
@@ -107,6 +109,10 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
   const { timed: activities, allDay: allDayActivities } = useMemo(
     () => splitDayActivities(enabledActivities),
     [enabledActivities],
+  );
+  const activityEnterIds = useListEnterIds(
+    `today:${date}`,
+    activities.map((activity) => activity.id),
   );
   const dayHolidays = useCalendarHolidays(date);
   const hasAllDayRail = dayHolidays.length > 0 || allDayActivities.length > 0;
@@ -277,6 +283,7 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
             leadingArtwork={resolveEventCalendarArtwork(activity.title, details, follow)}
             isCurrent={activity.id === currentId}
             index={index}
+            enter={activityEnterIds.has(activity.id)}
             testID={AgentUiIds.today.activity(activity.id)}
             toggleTestID={AgentUiIds.today.activityToggle(activity.id)}
             onPress={() => openActivity(activity)}
@@ -295,6 +302,7 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
       );
     },
     [
+      activityEnterIds,
       categories,
       currentId,
       eventDetailsByActivityId,
@@ -314,6 +322,7 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
       <FlashList
         data={activities}
         keyExtractor={(item) => item.id}
+        renderScrollComponent={GestureScrollView}
         refreshControl={refreshControl}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 80 }}

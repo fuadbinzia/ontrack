@@ -1,6 +1,23 @@
 import { layout, spacing } from '@/design-system';
 
-import { bottomNavBottomPad, bottomNavContentInset } from '../bottom-nav-inset';
+import {
+  BOTTOM_NAV_Z_INDEX,
+  bottomNavBottomPad,
+  bottomNavContentInset,
+  pagerSceneCoversDock,
+} from '../bottom-nav-inset';
+
+describe('pager scene stacking vs the dock', () => {
+  it('covers the dock when a pager scene has transform and the dock has no zIndex', () => {
+    expect(pagerSceneCoversDock(true, 0)).toBe(true);
+  });
+
+  it('keeps the dock visible when it stacks above the transformed pager', () => {
+    expect(pagerSceneCoversDock(true, BOTTOM_NAV_Z_INDEX)).toBe(false);
+    expect(pagerSceneCoversDock(false, 0)).toBe(false);
+    expect(pagerSceneCoversDock(true, -1)).toBe(true);
+  });
+});
 
 describe('bottomNavBottomPad', () => {
   it('lifts the dock by the full Android system nav inset', () => {

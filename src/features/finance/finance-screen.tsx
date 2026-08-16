@@ -21,6 +21,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useFinance } from '@/store/finance';
 import { usePreferences } from '@/store/preferences';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 import { formatDateKey } from '@/utils/date';
 
 import { FinanceCreditSheet } from './finance-credit-sheet';
@@ -60,6 +61,12 @@ export function FinanceScreen() {
   const dateDisplayFormat = usePreferences((s) => s.dateDisplayFormat);
   const { insights, source, disclaimer } = useFinanceCoachInsights();
   const [creditOpen, setCreditOpen] = useState(false);
+  useWarmHrefs([
+    '/(tabs)/finance/bills',
+    '/(tabs)/finance/transactions',
+    '/(tabs)/finance/accounts',
+    '/(tabs)/finance/buckets',
+  ]);
 
   const now = useMemo(() => new Date(), []);
   const ledgerTransactions = useMemo(

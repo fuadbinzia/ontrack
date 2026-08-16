@@ -86,6 +86,8 @@ describe('glass plate contract', () => {
     expect(badge).toContain('GlassTonePill');
     expect(settingsRow).toContain('GlassIconWell');
     expect(settingsRow).toContain('GlassSwitch');
+    expect(settingsRow).toContain('detail?: string');
+    expect(settingsRow).toContain('{detail ? (');
     expect(settingsRow).not.toMatch(/import\s*\{[^}]*\bSwitch\b/);
     expect(settingsRow).not.toContain('backgroundColor: theme.accentFaint');
     const glassSwitch = read('src/components/primitives/glass-switch.tsx');
@@ -142,10 +144,14 @@ describe('glass plate contract', () => {
 
   it('keeps Profile location prefs and Add Event assistant on glass atmosphere', () => {
     const home = read('src/features/account/profile-location-preferences.tsx');
+    const hero = read('src/features/account/profile-identity-hero.tsx');
     const avatar = read('src/features/account/profile-avatar-editor-sheet.tsx');
     const activity = read('src/app/activity-form.tsx');
     const layout = read('src/app/_layout.tsx');
     const scaffold = read('src/components/primitives/sheet-scaffold.tsx');
+    expect(hero).toContain('GlassPlate');
+    expect(hero).not.toContain('backgroundElevated');
+    expect(hero).not.toContain('surface="solid"');
     expect(home).toContain('SettingsGroup');
     expect(home).toContain('CityAutofindSettingsRow');
     expect(home).not.toContain('GlassPrimaryAction');

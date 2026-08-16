@@ -274,17 +274,16 @@ describe('travel home kit contract', () => {
     );
   });
 
-  it('replays trip-card motion on every Travel focus without remounting cards', () => {
+  it('opens Travel at rest and only enters trips that were just added', () => {
     const yourTrips = readFileSync(
       join(process.cwd(), 'src/features/travel/travel-home-your-trips.tsx'),
       'utf8',
     );
-    expect(yourTrips).toContain('useFocusEffect');
-    expect(yourTrips).toContain('focusEntranceStyle');
-    expect(yourTrips).toContain('withTiming(1');
-    expect(yourTrips).toContain('ReduceMotion.System');
+    expect(yourTrips).toContain('useListEnterIds');
+    expect(yourTrips).toContain('animateEntrance={tripEnterIds.has(plan.id)}');
+    expect(yourTrips).not.toContain('focusEntranceStyle');
+    expect(yourTrips).not.toContain('useFocusEffect');
     expect(yourTrips).not.toContain('entranceKey');
-    expect(yourTrips).not.toMatch(/key=\{`\$\{entranceKey\}/);
   });
 
   it('keeps search results on static card geometry', () => {
@@ -297,9 +296,9 @@ describe('travel home kit contract', () => {
       'utf8',
     );
     expect(yourTrips).not.toContain("searchActive ? 'search' : 'browse'");
-    expect(yourTrips).toContain('animateEntrance={false}');
-    expect(card).toContain('animateEntrance = true');
-    expect(card).toMatch(/animateEntrance[\s\S]*?FadeInDown[\s\S]*?: undefined/);
+    expect(yourTrips).toContain('animateEntrance={tripEnterIds.has(plan.id)}');
+    expect(card).toContain('animateEntrance = false');
+    expect(card).toMatch(/animateEntrance \? listEntering\(index\) : undefined/);
   });
 
   it('keeps the travel map full-page, including the status bar', () => {

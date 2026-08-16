@@ -26,6 +26,7 @@ import {
 } from '@/features/travel/travel-home-background';
 import { TravelHomeCarouselStepper } from '@/features/travel/travel-home-carousel-stepper';
 import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
+import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 import {
     travelHomeHeroContentPosition,
     travelHomeHeroOverscanStyle,
@@ -126,21 +127,24 @@ export function TravelHomeHeroCarousel({
       }
 
       // Fixture/atmosphere underlay while remotes load (and if they miss).
-      void fetchDestinationHeroUris(plan, undefined, { salt: Date.now() }).then(
-        (next) => {
-          if (!active || next.length === 0) return;
-          setFailedUris({});
-          setUris(next);
-          setIndex(0);
-          scrollProgress.value = 0;
-          onActiveImageChange?.(next[0], 0, next.length);
-          if (next[1]) {
-            void Image.prefetch(next[1]).catch(() => undefined);
-          }
-        },
-      );
+      const cancel = deferAfterPageTransition(() => {
+        void fetchDestinationHeroUris(plan, undefined, { salt: Date.now() }).then(
+          (next) => {
+            if (!active || next.length === 0) return;
+            setFailedUris({});
+            setUris(next);
+            setIndex(0);
+            scrollProgress.value = 0;
+            onActiveImageChange?.(next[0], 0, next.length);
+            if (next[1]) {
+              void Image.prefetch(next[1]).catch(() => undefined);
+            }
+          },
+        );
+      });
       return () => {
         active = false;
+        cancel();
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps -- destinationKey covers plan fields
     }, [destinationKey, fixtureSource]),

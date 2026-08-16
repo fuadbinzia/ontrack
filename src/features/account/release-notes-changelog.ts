@@ -4,6 +4,14 @@ import { CHANGELOG_ARCHIVE } from './release-notes-changelog-archive';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.104',
+    date: '2026-08-16',
+    notes: [
+      'Paint-then-translate tabs, shared Presence, and hub polish so pages open at rest and chrome eases instead of snapping.',
+      'Touched: app routes.',
+    ],
+  },
+  {
     version: '1.0.103',
     date: '2026-08-15',
     notes: [

@@ -20,6 +20,7 @@ import { useUI } from '@/store/ui';
 import { useVisionBoard } from '@/store/vision-board';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 
 import { VISION_BOARD_ACCENTS } from './defaults';
 import { cleanupOrphanedVisionBoardImages } from './media';
@@ -61,6 +62,12 @@ export function VisionBoardDashboard() {
   const removeCategory = useVisionBoard((state) => state.removeCategory);
   const [editing, setEditing] = useState(false);
   const [showPopulatedOnly, setShowPopulatedOnly] = useState(false);
+  useWarmHrefs([
+    '/vision-board/all',
+    ...orderedVisionBoardCategories(categories)
+      .slice(0, 4)
+      .map((category) => `/vision-board/${category.id}` as const),
+  ]);
   const orderedCategories = useMemo(
     () => orderedVisionBoardCategories(categories),
     [categories],
@@ -290,6 +297,8 @@ export function VisionBoardDashboard() {
                         source={coverSource}
                         style={StyleSheet.absoluteFill}
                         contentFit="cover"
+                        transition={0}
+                        cachePolicy="memory-disk"
                         accessibilityLabel={
                           usesPreview
                             ? `${category.name} inspiration preview`

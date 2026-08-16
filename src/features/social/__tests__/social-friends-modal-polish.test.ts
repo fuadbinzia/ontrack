@@ -12,7 +12,8 @@ const hub = readFileSync(
 
 describe('social friends modal polish', () => {
   it('moves invite controls into an in-tree bottom sheet over atmosphere-backed glass', () => {
-    expect(modal).toContain('<ScreenAtmosphere />');
+    expect(modal).toContain('<SheetScaffold');
+    expect(modal).not.toContain('animationType="slide"');
     expect(modal).toMatch(/<SheetScaffold\s+host="route"\s+visible/);
     expect(modal).toMatch(/<GlassPlate\s+inverted\s+tintColor=\{chrome\.primaryDeep}/);
     expect(modal).toMatch(/<GlassPlate mist style=\{styles\.inviteUrlPlate}/);

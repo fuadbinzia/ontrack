@@ -32,6 +32,8 @@ import { useHealth } from '@/store/health';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { todayKey } from '@/utils/date';
+import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 
 type HealthSection = 'body' | 'mind';
 
@@ -70,6 +72,7 @@ export function HealthScreen() {
   const [range, setRange] = useState<HealthRange>(7);
   const [refreshing, setRefreshing] = useState(false);
   const refreshInFlight = useRef(false);
+  useWarmHrefs(['/health/mood-check-in', '/health/settings']);
   const [available, setAvailable] = useState<boolean | undefined>();
   const [refreshError, setRefreshError] = useState<string>();
   const accessReviewed = useHealth((state) => state.accessReviewed);
@@ -119,7 +122,12 @@ export function HealthScreen() {
     }
   }, [replaceHealthImport, saveMoodEntry]);
 
-  useFocusEffect(useCallback(() => { void refreshHealth(); }, [refreshHealth]));
+  useFocusEffect(
+    useCallback(
+      () => deferAfterPageTransition(() => { void refreshHealth(); }),
+      [refreshHealth],
+    ),
+  );
 
   useFocusEffect(useCallback(() => {
     const subscription = AppState.addEventListener('change', (next) => {

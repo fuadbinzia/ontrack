@@ -11,7 +11,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import Animated, { FadeInDown, FadeOutUp, ReduceMotion } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -21,7 +21,8 @@ import {
 import {
   borders,
   glassFieldBackground,
-  motion,
+  popoverEntering,
+  popoverExiting,
   radii,
   shadows,
   spacing,
@@ -491,8 +492,8 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
             <Animated.View
               accessibilityLabel={`${fieldLabel} menu`}
               accessibilityViewIsModal
-              entering={FadeInDown.duration(motion.fade).reduceMotion(ReduceMotion.System)}
-              exiting={FadeOutUp.duration(motion.fade).reduceMotion(ReduceMotion.System)}
+              entering={popoverEntering()}
+              exiting={popoverExiting()}
               style={[
                 styles.menu,
                 shadows.overlay,

@@ -625,4 +625,67 @@ describe('to-do store', () => {
       useTodos.getState().tasks.find((task) => task.id === tasks[1].id)?.completed,
     ).toBe(false);
   });
+
+  it('records a local open without treating it as a list edit', () => {
+    const buried = useTodos.getState().createList('Features')!;
+    useTodos.getState().createList('Iceland Checklist');
+    const updatedAt = useTodos
+      .getState()
+      .lists.find((list) => list.id === buried.id)!.updatedAt;
+
+    useTodos.getState().touchList(buried.id, '2026-08-15T20:00:00.000Z');
+
+    const state = useTodos.getState();
+    expect(state.lists.find((list) => list.id === buried.id)?.updatedAt).toBe(
+      updatedAt,
+    );
+    expect(state.listOpenedAt[buried.id]).toBe('2026-08-15T20:00:00.000Z');
+    expect(state.pendingMutations).toEqual([]);
+  });
+
+  it('ignores an open for a list that is not on the device', () => {
+    useTodos.getState().touchList('missing-list', '2026-08-15T20:00:00.000Z');
+    expect(useTodos.getState().listOpenedAt).toEqual({});
+  });
+
+  it('ignores a second open of the same list within 750ms', () => {
+    const list = useTodos.getState().createList('Ideas')!;
+    useTodos.getState().touchList(list.id, '2026-08-15T20:00:00.000Z');
+    useTodos.getState().touchList(list.id, '2026-08-15T20:00:00.400Z');
+
+    expect(useTodos.getState().listOpenedAt[list.id]).toBe(
+      '2026-08-15T20:00:00.000Z',
+    );
+  });
+
+  it('drops opened recency when a private list is deleted', () => {
+    const list = useTodos.getState().createList('Temp')!;
+    useTodos.getState().touchList(list.id, '2026-08-15T20:00:00.000Z');
+    useTodos.getState().deleteList(list.id);
+
+    expect(useTodos.getState().listOpenedAt[list.id]).toBeUndefined();
+  });
+
+  it('drops opened recency for lists that no longer exist', () => {
+    const migrated = normalizeTodoState({
+      groceryMigrationVersion: 1,
+      lists: [{
+        id: 'list-1',
+        name: 'Keep',
+        kind: 'checklist',
+        mode: 'private',
+        role: 'owner',
+        createdAt: '2026-08-12T00:00:00.000Z',
+        updatedAt: '2026-08-12T00:00:00.000Z',
+      }],
+      listOpenedAt: {
+        'list-1': '2026-08-14T09:00:00.000Z',
+        gone: '2026-08-15T09:00:00.000Z',
+      },
+    });
+
+    expect(migrated.listOpenedAt).toEqual({
+      'list-1': '2026-08-14T09:00:00.000Z',
+    });
+  });
 });

@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colorWithAlpha, glassMaterials } from '@/design-system/glass';
 import { useTheme } from '@/hooks/use-theme';
@@ -93,6 +94,36 @@ export function ScreenAtmosphere() {
         locations={dark ? [0, 0.4, 1] : [0, 0.28, 0.62, 1]}
         style={StyleSheet.absoluteFill}
       />
+    </View>
+  );
+}
+
+/** Shift a card-local wash so it continues the window-y=0 shell gradient. */
+export function screenAtmosphereSceneOffset(insetTop: number): number {
+  if (!Number.isFinite(insetTop) || insetTop <= 0) return 0;
+  return -insetTop;
+}
+
+/**
+ * Opaque, window-aligned atmosphere inside a stack card so the previous
+ * page cannot show through a transparent push/pop. Offset by `-insets.top`
+ * so the gradient does not restart at the safe-area edge.
+ */
+export function ScreenAtmosphereSceneFill() {
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View
+        style={{
+          position: 'absolute',
+          top: screenAtmosphereSceneOffset(insets.top),
+          left: 0,
+          right: 0,
+          height,
+        }}>
+        <ScreenAtmosphere />
+      </View>
     </View>
   );
 }

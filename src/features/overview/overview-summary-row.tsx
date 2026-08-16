@@ -1,8 +1,15 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 
-import { AppText, Symbol } from '@/components/primitives';
+import { TAB_META } from '@/components/navigation/bottom-nav-tab-meta';
+import {
+  peekCurrentTabName,
+  startTabOpen,
+} from '@/components/navigation/overview-return';
+import { AppText, GlassIconWell, GlassPlate, Symbol } from '@/components/primitives';
+import { radii } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -17,15 +24,11 @@ export type OverviewRow = {
   beforeNavigate?: () => void;
 };
 
-export function OverviewSummaryRow({
-  row,
-  isLast,
-}: {
-  row: OverviewRow;
-  isLast: boolean;
-}) {
+export function OverviewSummaryRow({ row }: { row: OverviewRow }) {
   const router = useRouter();
   const theme = useTheme();
+  const reduceMotion = useReducedMotion();
+  const { width } = useWindowDimensions();
   const { spacing, s, layout } = useResponsive();
   const toneColor = {
     accent: theme.accentPrimary,
@@ -34,8 +37,16 @@ export function OverviewSummaryRow({
     danger: theme.danger,
     secondary: theme.textSecondary,
   }[row.tone ?? 'accent'];
+  const icon = TAB_META[row.routeName]?.icon;
   const open = () => {
     row.beforeNavigate?.();
+    startTabOpen({
+      from: peekCurrentTabName(),
+      to: row.routeName,
+      side: 'right',
+      width,
+      reduceMotion,
+    });
     router.navigate(row.href);
   };
 
@@ -49,59 +60,56 @@ export function OverviewSummaryRow({
         accessibilityRole="button"
         accessibilityLabel={`${row.label}. ${row.headline}. ${row.detail}`}
         onPress={open}
-        style={({ pressed }) => [
-          styles.row,
-          {
-            minHeight: layout.minTapTarget + spacing.md,
-            gap: spacing.sm,
-            paddingVertical: spacing.sm,
-            opacity: pressed ? 0.68 : 1,
-            borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
-            borderBottomColor: theme.separator,
-          },
-        ]}
+        style={({ pressed }) => [{ opacity: pressed ? 0.72 : 1 }]}
       >
-        <View style={[styles.copy, { gap: spacing.xxs }]}>
-          <AppText
-            variant="overline"
-            fit
-            style={[styles.label, { color: toneColor }]}
-          >
-            {row.label}
-          </AppText>
-          <AppText variant="subheading" fit style={styles.headline}>
-            {row.headline}
-          </AppText>
-          <AppText variant="caption" color="secondary" numberOfLines={2}>
-            {row.detail}
-          </AppText>
-        </View>
-        <View style={[styles.chevron, { minWidth: s(24) }]}>
-          <Symbol
-            name="chevron-right"
-            size={s(13)}
-            color={theme.textTertiary}
-          />
-        </View>
+        <GlassPlate
+          airy
+          style={[
+            styles.card,
+            {
+              minHeight: layout.minTapTarget + spacing.md,
+              gap: spacing.md,
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.md,
+            },
+          ]}
+        >
+          {icon ? (
+            <GlassIconWell size={s(28)} borderRadius={radii.sm}>
+              <Symbol name={icon} size={s(13)} color={toneColor} />
+            </GlassIconWell>
+          ) : null}
+          <View style={[styles.copy, { gap: spacing.xxs }]}>
+            <AppText
+              variant="overline"
+              fit
+              style={[styles.label, { color: toneColor }]}
+            >
+              {row.label}
+            </AppText>
+            <AppText variant="subheading" fit style={styles.headline}>
+              {row.headline}
+            </AppText>
+            <AppText variant="caption" color="secondary" numberOfLines={2}>
+              {row.detail}
+            </AppText>
+          </View>
+        </GlassPlate>
       </Pressable>
     </AgentTestId>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: radii.lg,
+    borderCurve: 'continuous',
   },
   copy: {
     flex: 1,
     minWidth: 0,
-  },
-  chevron: {
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
   },
   label: {
     flex: 1,

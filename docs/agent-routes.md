@@ -164,6 +164,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `profile-usage-analytics` | Profile → Usage Analytics GlassSwitch row |
 | `checklist-demo` | Seed demo checklist → open list detail (task ready) |
 | `checklist-demo-list` | Seed → checklists overview with demo list card |
+| `checklist-demo-open` | Seed → hub → tap demo list card → detail back |
 | `checklist-demo-settings` | Seed → checklist settings (add editors) |
 | `grocery-demo` | Seed demo grocery list → open meal view (recipe ready) |
 | `grocery-demo-combined` | Seed → grocery detail → Combined tab (copy ready) |
@@ -326,7 +327,7 @@ Tap/goto no longer rewrite the dump by default.
 | `integrations` / `apiUsage` / `api-usage` | `/integrations` | `ontrack:///integrations` |
 | `developer` / `developer-tools` | `/developer` | `ontrack:///developer` |
 | `performance` / `performance-monitor` | `/(tabs)/profile/performance` | `ontrack:///(tabs)/profile/performance` |
-| `nutrition` | `/nutrition-profile` | `ontrack:///nutrition-profile` |
+| `nutrition` | `/nutrition-profile` → `/(tabs)/food/nutrition-profile` | `ontrack:///nutrition-profile` |
 | `activityForm` / `activity` | `/activity-form` | `ontrack:///activity-form` |
 | `privacy` | `/privacy` | `ontrack:///privacy` |
 | `terms` | `/terms` | `ontrack:///terms` |

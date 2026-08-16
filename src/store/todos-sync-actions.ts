@@ -6,6 +6,7 @@ import {
   normalizeRecipe,
   normalizeTask,
   normalizeTodoState,
+  omitListOpenedAt,
 } from './todos-normalize';
 import type {
   TodoInvite,
@@ -167,6 +168,7 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
         pendingMutations: state.pendingMutations.filter(
           (mutation) => mutation.listId !== listId,
         ),
+        listOpenedAt: omitListOpenedAt(state.listOpenedAt, listId),
       })),
 
     setShareCode: (listId, shareCode) =>

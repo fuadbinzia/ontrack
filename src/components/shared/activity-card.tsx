@@ -1,10 +1,10 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { AppText, Card, GlassIconWell, IconButton } from '@/components/primitives';
-import { borders, categoryColors, radii, spacing } from '@/design-system';
+import { borders, categoryColors, listEntering, listExiting, radii, spacing } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { Activity, ActivityCategory } from '@/types/models';
@@ -57,6 +57,8 @@ interface ActivityCardProps {
   onToggleComplete: () => void;
   onLongPress?: () => void;
   index?: number;
+  /** True only for a just-added row — page open stays at rest. */
+  enter?: boolean;
   testID?: string;
   toggleTestID?: string;
   /** Logo-first identity artwork; falls back to the category glyph if unavailable. */
@@ -71,6 +73,7 @@ export function ActivityCard({
   onToggleComplete,
   onLongPress,
   index = 0,
+  enter = false,
   testID,
   toggleTestID,
   leadingArtwork,
@@ -81,7 +84,10 @@ export function ActivityCard({
   const skipped = activity.status === 'skipped';
 
   return (
-    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).springify().damping(18)}>
+    <Animated.View
+      entering={enter ? listEntering(index) : undefined}
+      exiting={listExiting()}
+    >
       <Card
         onPress={onPress}
         onLongPress={onLongPress}

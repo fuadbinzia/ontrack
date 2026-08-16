@@ -38,7 +38,7 @@ export default function MovieDetailScreen() {
           accessibilityRole="link"
           accessibilityLabel={`Open ${movie.title} on The Movie Database`}
           onPress={() => void openHttpsUrl(tmdbUrl)}>
-          <Image source={movie.posterUrl} style={styles.poster} contentFit="cover" />
+          <Image source={movie.posterUrl} style={styles.poster} contentFit="cover" transition={0} cachePolicy="memory-disk" />
         </Pressable>
       ) : null}
       <AppText variant="callout" color="secondary">

@@ -9,18 +9,21 @@ import {
   navigationCanGoBack,
   readRootNavigationState,
   OVERVIEW_RETURN_DRAG_RATIO,
-  OVERVIEW_RETURN_MAX_SHIFT,
   overviewReturnCommitMs,
   overviewReturnDragProgress,
-  overviewReturnOpacity,
-  overviewReturnShiftX,
+  clampSwipeTranslation,
+  resolveSwipeAxis,
+  swipeTrackedTranslation,
   shouldCommitSwipeBack,
   shouldCommitSwipeForward,
   shouldWrapSwipeBackScene,
   swipeBackFollowsScene,
+  swipePanActiveOffsetX,
+  SWIPE_AXIS_SLOP,
   SWIPE_BACK_DISTANCE_RATIO,
   SWIPE_BACK_VELOCITY_X,
 } from '../swipe-back';
+import { tabSwipeLane, tabSwipeTranslateX } from '../tab-swipe';
 
 describe('isSwipeBackBlockedPath', () => {
   it('blocks the travel map and vision-board canvas editors', () => {
@@ -242,8 +245,7 @@ describe('focusedStackCanPop', () => {
 });
 
 describe('swipeBackFollowsScene', () => {
-  it('does not slide a tab away from Overview over empty atmosphere', () => {
-    expect(swipeBackFollowsScene('overview-return')).toBe(false);
+  it('slides stack cards with the finger', () => {
     expect(swipeBackFollowsScene('stack')).toBe(true);
   });
 });
@@ -266,18 +268,50 @@ describe('overviewReturnDragProgress', () => {
 });
 
 describe('overviewReturn scene', () => {
-  it('eases opacity and a short shift instead of sliding off-screen', () => {
-    expect(overviewReturnOpacity(0)).toBe(1);
-    expect(overviewReturnOpacity(1)).toBe(0);
-    expect(overviewReturnShiftX(0)).toBe(0);
-    expect(overviewReturnShiftX(1)).toBe(OVERVIEW_RETURN_MAX_SHIFT);
+  it('places the parked tab beside the current page like an Instagram pager', () => {
+    expect(tabSwipeLane('to-do', 'to-do', 'overview', null)).toBe('current');
+    expect(tabSwipeLane('overview', 'to-do', 'overview', null)).toBe('back');
+    expect(tabSwipeLane('profile', 'to-do', 'overview', 'profile')).toBe('forward');
+    expect(tabSwipeLane('plants', 'to-do', 'overview', null)).toBe('idle');
+    expect(tabSwipeTranslateX('current', 80, 390)).toBe(80);
+    expect(tabSwipeTranslateX('back', 80, 390)).toBe(80 - 390);
+    expect(tabSwipeTranslateX('forward', -40, 390)).toBe(350);
+    expect(tabSwipeTranslateX('idle', 0, 390)).toBe(390);
   });
 
-  it('finishes the dissolve before navigating back to Overview', () => {
+  it('slides tab pages 1:1 like Instagram instead of fading them', () => {
     const source = readFileSync(join(__dirname, '../swipe-back-scene.tsx'), 'utf8');
-    expect(source).toMatch(/easings\.standard/);
-    expect(source).toMatch(/OVERVIEW_RETURN_DRAG_RATIO/);
+    expect(source).toContain('tabSwipeX');
+    expect(source).toContain('tabSwipeTranslateX');
+    expect(source).toContain('withSpring');
+    expect(source).toContain('PAGER_SPRING');
+    expect(source).toContain('peekTabTapFrom');
+    expect(source).toContain('peekTabTapLane');
+    expect(source).not.toContain("lane === 'idle' ? 0");
+    expect(source).not.toContain('overviewReturnOpacity');
+    expect(source).not.toContain('@react-navigation/native');
+    expect(source).not.toContain('withTiming');
     expect(source).not.toMatch(/consumeOpenedFromOverview/);
+  });
+
+  it('computes the pager lane on the UI thread so the flip lands with the offset', () => {
+    const source = readFileSync(join(__dirname, '../swipe-back-scene.tsx'), 'utf8');
+    // Lane derived from React state painted the leaving page one frame at
+    // translateX = ±width — the blank flash on every tab tap.
+    expect(source).toContain('tabSwipeLanes.value');
+    const tabSwipe = readFileSync(join(__dirname, '../tab-swipe.ts'), 'utf8');
+    expect(tabSwipe).toMatch(/export function tabSwipeLane\([\s\S]*?'worklet'/);
+  });
+
+  it('keeps the gesture wrapper mounted so enabled flips cannot remount the page mid-transition', () => {
+    const source = readFileSync(join(__dirname, '../swipe-back-scene.tsx'), 'utf8');
+    // `if (!enabled) return scene` swapped the root element type on every tab
+    // tap — React remounted both pages mid-slide and RNGH re-attached handlers.
+    expect(source).not.toContain('if (!enabled) return scene');
+    expect(source).toContain('.enabled(enabled)');
+    expect(source).toMatch(
+      /return <GestureDetector gesture=\{panGesture\}>\{scene\}<\/GestureDetector>;/,
+    );
   });
 
   it('keeps the tab wrapper mounted so opening a route sheet does not remount Today', () => {
@@ -288,11 +322,58 @@ describe('overviewReturn scene', () => {
     expect(source).toContain('GestureDetector');
   });
 
-  it('clears dissolve progress on focus so repeated swipes cannot leave a tab faded', () => {
+  it('clears stack swipe progress on focus without resetting a live tab pager', () => {
     const source = readFileSync(join(__dirname, '../swipe-back-scene.tsx'), 'utf8');
-    expect(source).toMatch(/useFocusEffect\([\s\S]*translateX\.value = 0/);
-    expect(source).toMatch(/if \(!enabled\) translateX\.value = 0/);
+    expect(source).toMatch(/if \(!pager\) translateX\.value = 0/);
     expect(source).not.toMatch(/return \(\) => \{\s*translateX\.value = 0/);
+  });
+
+  it('locks the first axis after slop the way Instagram does', () => {
+    expect(resolveSwipeAxis(4, 4)).toBe('pending');
+    expect(resolveSwipeAxis(SWIPE_AXIS_SLOP, 4)).toBe('x');
+    expect(resolveSwipeAxis(-SWIPE_AXIS_SLOP, 4)).toBe('x');
+    expect(resolveSwipeAxis(4, SWIPE_AXIS_SLOP)).toBe('y');
+    expect(resolveSwipeAxis(4, -SWIPE_AXIS_SLOP)).toBe('y');
+    expect(resolveSwipeAxis(SWIPE_AXIS_SLOP + 2, SWIPE_AXIS_SLOP + 8)).toBe('y');
+    expect(resolveSwipeAxis(SWIPE_AXIS_SLOP + 8, SWIPE_AXIS_SLOP + 2)).toBe('x');
+  });
+
+  it('opens both swipe directions when back and forward are live', () => {
+    expect(swipePanActiveOffsetX(true, true)).toEqual([
+      -SWIPE_AXIS_SLOP,
+      SWIPE_AXIS_SLOP,
+    ]);
+    expect(swipePanActiveOffsetX(true, false)).toEqual([-1e5, SWIPE_AXIS_SLOP]);
+    expect(swipePanActiveOffsetX(false, true)).toEqual([
+      -SWIPE_AXIS_SLOP,
+      1e5,
+    ]);
+    expect(clampSwipeTranslation(-40, true, false)).toBe(0);
+    expect(clampSwipeTranslation(40, false, true)).toBe(0);
+    expect(clampSwipeTranslation(-40, true, true)).toBe(-40);
+    expect(swipeTrackedTranslation(10, true, true)).toBe(0);
+    expect(swipeTrackedTranslation(26, true, true)).toBe(16);
+    expect(swipeTrackedTranslation(-26, true, true)).toBe(-16);
+  });
+
+  it('uses one full-screen pan and lets vertical scroll win in the gesture arena', () => {
+    const source = readFileSync(join(__dirname, '../swipe-back-scene.tsx'), 'utf8');
+    const screen = readFileSync(
+      join(process.cwd(), 'src/components/primitives/screen.tsx'),
+      'utf8',
+    );
+    const today = readFileSync(
+      join(process.cwd(), 'src/features/daily-tracking/day-view.tsx'),
+      'utf8',
+    );
+    expect(source).not.toContain('manualActivation');
+    expect(source).not.toContain('Gesture.Race');
+    expect(source).not.toContain('hitSlop');
+    expect(source).toContain('failOffsetY([-SWIPE_AXIS_SLOP, SWIPE_AXIS_SLOP])');
+    expect(source).toContain('swipePanActiveOffsetX');
+    expect(source).toContain('maxPointers(1)');
+    expect(screen).toContain('GestureScrollView');
+    expect(today).toContain('renderScrollComponent={GestureScrollView}');
   });
 
   it('shortens the commit dissolve on a fast flick', () => {

@@ -8,6 +8,7 @@ import {
     Button,
     Card,
     EmptyState,
+    GestureScrollView,
     GlassIconWell,
     Screen,
     Symbol,
@@ -24,6 +25,7 @@ import { FeatureThemeProvider, useTheme } from '@/hooks/use-theme';
 import { useVehicles } from '@/store/vehicles';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { todayKey } from '@/utils/date';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 
 function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const router = useRouter();
@@ -89,12 +91,20 @@ function VehiclesScreenContent() {
       ),
     [vehicles],
   );
+  useWarmHrefs([
+    '/vehicles/new',
+    ...sorted.slice(0, 4).map(
+      (vehicle) =>
+        ({ pathname: '/vehicles/[id]', params: { id: vehicle.id } }) as const,
+    ),
+  ]);
 
   return (
     <Screen scroll={false} contentStyle={styles.screenContent}>
       <FlashList
         data={sorted}
         keyExtractor={(item) => item.id}
+        renderScrollComponent={GestureScrollView}
         refreshControl={refreshControl}
         contentContainerStyle={{ paddingBottom: gap.md }}
         ListHeaderComponent={

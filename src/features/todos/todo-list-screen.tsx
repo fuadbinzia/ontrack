@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
     Keyboard,
     KeyboardAvoidingView,
@@ -10,20 +10,19 @@ import {
     View,
 } from 'react-native';
 import DraggableFlatList from 'react-native-draggable-flatlist';
-import Animated, {
-    FadeInDown,
-    FadeOutLeft,
-    LinearTransition,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import {
     AppText,
     Screen,
     Symbol,
+    useListEnterIds,
+    useSettledListLayout,
 } from '@/components/primitives';
 import {
     layout,
-    motion,
+    listEntering,
+    listExiting,
     spacing,
 } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
@@ -183,6 +182,10 @@ export function TodoListScreen({ listId }: { listId: string }) {
   const visibleTasks = selectedCategoryId === ALL_CATEGORIES
     ? statusTasks
     : statusTasks.filter((task) => task.categoryId === selectedCategoryId);
+  const taskEnterIds = useListEnterIds(
+    `todo:${listId}:${filter}:${selectedCategoryId}:${selectedAssigneeId}`,
+    visibleTasks.map((task) => task.id),
+  );
   // Null set = browsing; empty set still counts as edit mode (title-only / empty list).
   const editMode = editingTaskIds !== null;
   const completedCount = completedTasks.length;
@@ -448,13 +451,10 @@ export function TodoListScreen({ listId }: { listId: string }) {
               haptics.select();
             }}
             renderItem={({ item, drag, getIndex, isActive }) => (
-              <Animated.View
-                entering={FadeInDown.delay(Math.min(getIndex() ?? 0, 5) * 36).duration(
-                  motion.layout,
-                )}
-                exiting={FadeOutLeft.duration(motion.fade)}
-                layout={LinearTransition.duration(motion.layout)}
-                style={isActive ? styles.activeTaskRow : undefined}
+              <TodoTaskMotion
+                enter={taskEnterIds.has(item.id)}
+                index={getIndex() ?? 0}
+                isActive={isActive}
               >
                 <TodoRow
                   task={item}
@@ -494,7 +494,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
                   }
                   onUpdate={(title) => updateTask(item.id, title)}
                 />
-              </Animated.View>
+              </TodoTaskMotion>
             )}
             showsVerticalScrollIndicator={false}
             style={styles.list}
@@ -508,6 +508,31 @@ export function TodoListScreen({ listId }: { listId: string }) {
         </View>
       </KeyboardAvoidingView>
     </Screen>
+  );
+}
+
+function TodoTaskMotion({
+  enter,
+  index,
+  isActive,
+  children,
+}: {
+  enter: boolean;
+  index: number;
+  isActive: boolean;
+  children: ReactNode;
+}) {
+  const { layout, onLayout } = useSettledListLayout();
+  return (
+    <Animated.View
+      entering={enter ? listEntering(index) : undefined}
+      exiting={listExiting()}
+      layout={layout}
+      onLayout={onLayout}
+      style={isActive ? styles.activeTaskRow : undefined}
+    >
+      {children}
+    </Animated.View>
   );
 }
 

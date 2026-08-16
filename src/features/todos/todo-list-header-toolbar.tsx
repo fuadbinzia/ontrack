@@ -1,22 +1,14 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import {
-  AppText,
-  Dropdown,
-  GlassPlate,
-  IconButton,
-  Symbol,
-} from '@/components/primitives';
-import { radii, spacing } from '@/design-system';
-import { ProfileAvatar } from '@/features/account/profile-avatar';
-import {
-  ALL_ASSIGNEES,
-  checklistAssigneeFilterChoices,
-} from '@/features/todos/checklist-assignee-filter';
+import { IconButton } from '@/components/primitives';
 import { ChecklistPopoverMenu } from '@/features/todos/checklist-popover-menu';
 import { copyTodoListText } from '@/features/todos/share';
+import {
+  parseTodoListToolbarAction,
+  todoListToolbarActionItems,
+  todoListToolbarActionTestID,
+} from '@/features/todos/todo-list-toolbar-actions';
 import type { TodoFilter, TodoSort } from '@/features/todos/todo-sort';
-import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoList, TodoMember, TodoTask } from '@/store/todos';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
@@ -24,59 +16,17 @@ import { haptics } from '@/utils/haptics';
 
 type AgentUiTargetApi = ReturnType<typeof useAgentUiTarget>;
 
-const SORT_OPTIONS: {
-  id: TodoSort;
-  title: string;
-  description: string;
-  icon: 'list' | 'smart' | 'arrow-down' | 'arrow-up' | 'alphabetical';
-}[] = [
-  {
-    id: 'manual',
-    title: 'Manual',
-    description: 'Your drag-and-drop order',
-    icon: 'list',
-  },
-  {
-    id: 'smart',
-    title: 'Smart',
-    description: 'Important first, then recent',
-    icon: 'smart',
-  },
-  {
-    id: 'newest',
-    title: 'Newest First',
-    description: 'Most recently added at the top',
-    icon: 'arrow-down',
-  },
-  {
-    id: 'oldest',
-    title: 'Oldest First',
-    description: 'Longest-standing items at the top',
-    icon: 'arrow-up',
-  },
-  {
-    id: 'alphabetical',
-    title: 'A–Z',
-    description: 'Arrange items alphabetically',
-    icon: 'alphabetical',
-  },
-];
-
 export function TodoListHeaderToolbar({
   list,
   tasks,
   members,
   owner,
   canEdit,
-  filter,
   selectedAssigneeId,
   sort,
   editMode,
-  openTasksCount,
-  closedTasksCount,
   completedCount,
   editModeAgent,
-  onFilterToggle,
   onAssigneeSelect,
   onToggleEditMode,
   onSortChange,
@@ -106,255 +56,74 @@ export function TodoListHeaderToolbar({
   onRemoveList: () => void;
 }) {
   const theme = useTheme();
-  const { s } = useResponsive();
-  const assigneeOptions = checklistAssigneeFilterChoices(members).map(
-    (choice) => ({
-      ...choice,
-      leading:
-        choice.value === ALL_ASSIGNEES ? (
-          <Symbol name="filter" size="sm" color={theme.textSecondary} />
-        ) : (
-          <ProfileAvatar
-            displayName={choice.label}
-            userId={choice.value}
-            size={28}
-          />
-        ),
-      testID: AgentUiIds.checklists.detail.assigneeOption(choice.value),
-    }),
-  );
-  const showAssigneeFilter = members.length > 0;
+  const showEdit = owner || (canEdit && tasks.length > 0);
 
   return (
-    <View style={styles.controls}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={
-          filter === 'open'
-            ? `Showing ${openTasksCount} open tasks. Show closed tasks`
-            : `Showing ${closedTasksCount} closed tasks. Show open tasks`
-        }
-        accessibilityHint="Toggles between open and closed tasks"
-        hitSlop={4}
-        onPress={onFilterToggle}
-        style={({ pressed }) => [{ opacity: pressed ? 0.72 : 1 }]}>
-        <GlassPlate airy style={styles.taskStatus}>
-          <View
-            style={[
-              styles.taskStatusDot,
-              {
-                backgroundColor:
-                  filter === 'open' ? theme.accentPrimary : theme.success,
-              },
-            ]}
-          />
-          <AppText
-            variant="overline"
-            color="secondary"
-            style={styles.taskStatusLabel}>
-            {filter === 'open' ? 'Open' : 'Closed'}
-          </AppText>
-          <View
-            style={[
-              styles.taskStatusDivider,
-              { backgroundColor: theme.separator },
-            ]}
-          />
-          <AppText
-            variant="subheading"
-            style={[
-              styles.taskStatusCount,
-              {
-                fontSize: s(17),
-                lineHeight: s(18),
-                color: filter === 'open' ? theme.accentPrimary : theme.success,
-              },
-            ]}>
-            {filter === 'open' ? openTasksCount : closedTasksCount}
-          </AppText>
-        </GlassPlate>
-      </Pressable>
-      <View style={styles.toolbarMenus}>
-        {showAssigneeFilter ? (
-          <Dropdown
-            label="Assigned to"
-            value={selectedAssigneeId}
-            options={assigneeOptions}
-            onChange={onAssigneeSelect}
-            matchTriggerWidth={false}
-            accessibilityLabel="Filter checklist by assignee"
-            renderTrigger={({ onPress, fieldRef, selectedLabel }) => (
-              <View ref={fieldRef} collapsable={false}>
-                <IconButton
-                  icon="filter"
-                  size={36}
-                  color={
-                    selectedAssigneeId === ALL_ASSIGNEES
-                      ? theme.accentPrimary
-                      : theme.success
-                  }
-                  accessibilityLabel={`Filter by assignee: ${selectedLabel}`}
-                  testID={AgentUiIds.checklists.detail.assigneeFilter}
-                  onPress={onPress}
-                />
-              </View>
-            )}
-          />
-        ) : null}
-        {owner || (canEdit && tasks.length > 0) ? (
-          <Pressable
-            ref={editModeAgent.ref}
-            accessibilityRole="button"
-            accessibilityLabel={
-              editMode ? 'Finish editing checklist' : 'Edit checklist'
-            }
-            testID={editModeAgent.testID}
-            onLayout={editModeAgent.onLayout}
-            onPress={onToggleEditMode}
-            style={({ pressed }) => [{ opacity: pressed ? 0.72 : 1 }]}>
-            <GlassPlate
-              inverted={editMode}
-              style={[
-                styles.editModeButton,
-                editMode ? { borderColor: theme.accentPrimary } : null,
-              ]}>
-              <AppText
-                variant="caption"
-                color={editMode ? 'onAccent' : 'accent'}>
-                {editMode ? 'Done' : 'Edit'}
-              </AppText>
-            </GlassPlate>
-          </Pressable>
-        ) : null}
-        <ChecklistPopoverMenu
-          accessibilityLabel="Sort checklist"
-          title="Sort Items"
-          triggerIcon="sort"
-          testID={AgentUiIds.checklists.detail.sort}
-          items={SORT_OPTIONS.map((option) => ({
-            ...option,
-            selected: sort === option.id,
-          }))}
-          onSelect={(action) => {
-            if (SORT_OPTIONS.some((option) => option.id === action)) {
-              onSortChange(action as TodoSort);
-              haptics.select();
-            }
-          }}
+    <View style={styles.toolbarMenus}>
+      {showEdit ? (
+        <IconButton
+          testID={editModeAgent.testID}
+          accessibilityLabel={
+            editMode ? 'Finish editing checklist' : 'Edit checklist'
+          }
+          icon={editMode ? 'check' : 'edit'}
+          iconSize={16}
+          size={36}
+          appearance={editMode ? 'solid' : 'glass'}
+          color={editMode ? theme.textOnAccent : theme.accentPrimary}
+          background={editMode ? theme.accentPrimary : undefined}
+          onPress={onToggleEditMode}
         />
-        <ChecklistPopoverMenu
-          accessibilityLabel={`${list.name} actions`}
-          title="List Actions"
-          triggerIcon="more"
-          testID={AgentUiIds.checklists.detail.actions}
-          presentation="sheet"
-          sheetSubtitle={list.name}
-          closeTestID={AgentUiIds.checklists.detail.actionsClose}
-          itemTestID={AgentUiIds.checklists.detail.action}
-          items={[
-            {
-              id: 'copy',
-              title: 'Copy',
-              description: 'Copy a polished text checklist',
-              icon: 'copy',
-            },
-            {
-              id: 'share',
-              title: owner ? 'Share' : 'Members',
-              description: owner
-                ? 'Invite friends, join links, and list settings'
-                : 'View people with access',
-              icon: owner ? 'share' : 'people',
-            },
-            ...(canEdit && completedCount > 0
-              ? [
-                  {
-                    id: 'clear',
-                    title: 'Clear Completed',
-                    description: 'Remove every completed item',
-                    icon: 'delete' as const,
-                    destructive: true,
-                    dividerBefore: true,
-                  },
-                ]
-              : []),
-            {
-              id: 'remove',
-              title: owner ? 'Delete List' : 'Leave List',
-              description: owner
-                ? 'Permanently delete this list for everyone'
-                : 'Remove this list from your account',
-              icon: 'delete' as const,
-              destructive: true,
-              dividerBefore: !(canEdit && completedCount > 0),
-            },
-          ]}
-          onSelect={(action) => {
-            if (action === 'copy') {
-              void copyTodoListText(list, tasks, members).then((copied) => {
-                if (copied) haptics.success();
-              });
-            }
-            if (action === 'share') {
-              onManageSettings();
-            }
-            if (action === 'clear') onClearDone();
-            if (action === 'remove') onRemoveList();
-          }}
-        />
-      </View>
+      ) : null}
+      <ChecklistPopoverMenu
+        accessibilityLabel={`${list.name} actions`}
+        title="List Actions"
+        triggerIcon="more"
+        testID={AgentUiIds.checklists.detail.actions}
+        presentation="sheet"
+        sheetSubtitle={list.name}
+        closeTestID={AgentUiIds.checklists.detail.actionsClose}
+        itemTestID={todoListToolbarActionTestID}
+        items={todoListToolbarActionItems({
+          sort,
+          members,
+          selectedAssigneeId,
+          owner,
+          canEdit,
+          completedCount,
+        })}
+        onSelect={(action) => {
+          const parsed = parseTodoListToolbarAction(action);
+          if (parsed.kind === 'sort') {
+            onSortChange(parsed.value as TodoSort);
+            haptics.select();
+            return;
+          }
+          if (parsed.kind === 'assignee') {
+            onAssigneeSelect(parsed.value);
+            haptics.select();
+            return;
+          }
+          if (parsed.value === 'copy') {
+            void copyTodoListText(list, tasks, members).then((copied) => {
+              if (copied) haptics.success();
+            });
+          }
+          if (parsed.value === 'share') onManageSettings();
+          if (parsed.value === 'clear') onClearDone();
+          if (parsed.value === 'remove') onRemoveList();
+        }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  controls: {
-    minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  editModeButton: {
-    minWidth: 58,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.pill,
-    zIndex: 1,
-  },
-  taskStatus: {
-    height: 40,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.pill,
-    zIndex: 1,
-  },
-  taskStatusCount: {
-    includeFontPadding: false,
-    textAlignVertical: 'center',
-  },
-  taskStatusDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 14,
-  },
-  taskStatusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: radii.pill,
-  },
-  taskStatusLabel: {
-    lineHeight: 18,
-    includeFontPadding: false,
-    textAlignVertical: 'center',
-  },
   toolbarMenus: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: spacing.sm,
+    flexShrink: 0,
+    gap: 4,
   },
 });

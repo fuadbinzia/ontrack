@@ -28,6 +28,7 @@ import { useSchedule } from '@/store/schedule';
 import type { Recipe } from '@/types/food';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { todayKey } from '@/utils/date';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 
 const PANTRY_USE_SOON_DAYS = 3;
 
@@ -60,6 +61,12 @@ export default function FoodHomeScreen() {
   const friendsLoading = useFriends((state) => state.loading);
 
   const today = todayKey();
+  useWarmHrefs([
+    '/(tabs)/food/recipes',
+    '/(tabs)/food/tracker',
+    '/(tabs)/food/plan',
+    '/(tabs)/food/scan',
+  ]);
   const suggestions = useMemo(
     () => rankSuggestions(filterRecipesForSevereAllergies(recipes, allergies)),
     [recipes, allergies],

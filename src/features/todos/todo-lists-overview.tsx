@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
     Keyboard,
@@ -18,6 +17,7 @@ import { useAuthSession } from '@/features/auth/auth-provider';
 import { EmptyChecklists } from '@/features/todos/empty-checklists';
 import { canShowChecklistCollaborator } from '@/features/todos/checklist-collaborator-visibility';
 import { TodoListCard } from '@/features/todos/todo-list-card';
+import { openTodoList, todoListDetailHref } from '@/features/todos/todo-list-href';
 import { TodoListsOverviewHeader } from '@/features/todos/todo-lists-overview-header';
 import { confirmRemoveTodoList } from '@/features/todos/todo-list-remove';
 import { sortTodoListsByRecent } from '@/features/todos/todo-sort';
@@ -25,20 +25,19 @@ import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import {
     useTodos,
     type TodoList,
-    type TodoListKind,
 } from '@/store/todos';
 import { useFriends } from '@/store/friends';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 import { listReferenceEquality } from '@/utils/list-equality';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 
 export function TodoListsOverview() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuthSession();
   const { refreshControl } = usePullToRefresh();
   const lists = useTodos(
-    (state) => sortTodoListsByRecent(state.lists),
+    (state) => sortTodoListsByRecent(state.lists, state.listOpenedAt),
     listReferenceEquality,
   );
   const counts = useTodos(
@@ -66,18 +65,17 @@ export function TodoListsOverview() {
   );
   const members = useTodos((state) => state.members, listReferenceEquality);
   const friends = useFriends((state) => state.friends);
-  const invites = useTodos((state) => state.invites, listReferenceEquality);
   const createList = useTodos((state) => state.createList);
   const reorderLists = useTodos((state) => state.reorderLists);
   const renameList = useTodos((state) => state.renameList);
   const [draft, setDraft] = useState('');
-  const [draftKind, setDraftKind] = useState<TodoListKind>('checklist');
   const [nameDrafts, setNameDrafts] = useState<Record<string, string>>({});
   const [editingListIds, setEditingListIds] =
     useState<ReadonlySet<string> | null>(null);
   const editMode =
     editingListIds !== null &&
     lists.some((list) => editingListIds.has(list.id));
+  useWarmHrefs(lists.map((list) => todoListDetailHref(list.id)));
 
   const totalOpen = useMemo(() => {
     let open = 0;
@@ -123,13 +121,13 @@ export function TodoListsOverview() {
   }, [friends, members, user?.id]);
 
   const add = () => {
-    const list = createList(draft, draftKind);
+    const list = createList(draft);
     if (!list) return;
     setEditingListIds(null);
     setDraft('');
     Keyboard.dismiss();
     haptics.success();
-    router.push(`/(tabs)/to-do/${list.id}` as never);
+    openTodoList(list.id);
   };
 
   const moveList = useCallback((id: string, offset: number) => {
@@ -214,7 +212,7 @@ export function TodoListsOverview() {
             onRemove={() => confirmRemoveTodoList(item)}
             canMoveDown={index < lists.length - 1}
             canMoveUp={index > 0}
-            onPress={() => router.push(`/(tabs)/to-do/${item.id}` as never)}
+            onPress={() => openTodoList(item.id)}
           />
         </View>
       );
@@ -227,7 +225,6 @@ export function TodoListsOverview() {
       nameDrafts,
       commitListName,
       moveList,
-      router,
     ],
   );
 
@@ -264,19 +261,13 @@ export function TodoListsOverview() {
               listCount={lists.length}
               totalOpen={totalOpen}
               editMode={editMode}
-              inviteCount={invites.length}
               draft={draft}
-              draftKind={draftKind}
               onDraftChange={setDraft}
-              onDraftKindChange={setDraftKind}
               onSubmitDraft={add}
               onToggleEditMode={() => {
                 if (editMode) finishEditing();
                 else beginEditing();
               }}
-              onOpenCollaborators={() =>
-                router.push('/todo-collaborators' as never)
-              }
             />
           }
           ListEmptyComponent={<EmptyChecklists />}

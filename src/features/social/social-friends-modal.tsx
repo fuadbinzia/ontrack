@@ -1,7 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 
 import {
   AppText,
@@ -15,11 +14,8 @@ import {
   IconButton,
   Input,
   LoadingBlock,
-  ScreenAtmosphere,
   SheetScaffold,
-  SheetGrabber,
   Symbol,
-  useScreenAtmosphereChrome,
 } from '@/components/primitives';
 import { radii } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
@@ -59,57 +55,33 @@ type SocialFriendsModalProps = {
 export function SocialFriendsModal(props: SocialFriendsModalProps) {
   const theme = useTheme();
   const chrome = socialChrome(theme);
-  const insets = useSafeAreaInsets();
   const { spacing, s } = useResponsive();
   const [inviteToolsVisible, setInviteToolsVisible] = useState(false);
-  useScreenAtmosphereChrome(props.visible);
 
   useEffect(() => {
     if (!props.visible) setInviteToolsVisible(false);
   }, [props.visible]);
 
   return (
-    <Modal
-      visible={props.visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={props.onClose}>
-      <View
-        style={[
-          styles.root,
-          {
-            paddingTop: insets.top + spacing.sm,
-            paddingBottom: insets.bottom + spacing.sm,
-          },
-        ]}>
-        <ScreenAtmosphere />
-        <View style={[styles.header, { paddingHorizontal: spacing.lg, gap: spacing.md }]}>
-          <SheetGrabber
-            testID={AgentUiIds.social.friends.close}
-            accessibilityLabel="Close friends"
-            onPress={props.onClose}
-          />
-          <View style={[styles.headerTitleRow, { gap: spacing.md }]}>
-            <View style={styles.headerCopy}>
-              <AppText variant="overline" style={{ color: chrome.primary }} fit>
-                Your circle
-              </AppText>
-              <AppText variant="heading" bold fit>
-                Friends
-              </AppText>
-            </View>
-            {props.signedIn ? (
-              <IconButton
-                testID={AgentUiIds.social.friends.openInviteTools}
-                icon="invite"
-                color={chrome.primary}
-                accessibilityLabel="Add Friends"
-                onPress={() => setInviteToolsVisible(true)}
-              />
-            ) : null}
-          </View>
-        </View>
-
+    <>
+      <SheetScaffold
+        visible={props.visible}
+        eyebrow="Your Circle"
+        title="Friends"
+        closeAccessibilityLabel="Close friends"
+        closeTestID={AgentUiIds.social.friends.close}
+        onClose={props.onClose}
+        decoration={
+          props.signedIn ? (
+            <IconButton
+              testID={AgentUiIds.social.friends.openInviteTools}
+              icon="invite"
+              color={chrome.primary}
+              accessibilityLabel="Add Friends"
+              onPress={() => setInviteToolsVisible(true)}
+            />
+          ) : undefined
+        }>
         {!props.signedIn ? (
           <View style={[styles.signedOut, { padding: spacing.xl }]}>
             <EmptyState
@@ -124,17 +96,7 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
             </Button>
           </View>
         ) : (
-          <ScrollView
-            automaticallyAdjustKeyboardInsets
-            keyboardDismissMode="interactive"
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: spacing.lg,
-              paddingTop: spacing.lg,
-              paddingBottom: spacing.xl,
-              gap: spacing.lg,
-            }}>
+          <View style={{ gap: spacing.lg }}>
             {props.error ? <ErrorMessage message={props.error} /> : null}
 
             <AgentTestId
@@ -262,16 +224,15 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
               </View>
             ) : null}
 
-          </ScrollView>
+          </View>
         )}
-
-        <SocialInviteToolsSheet
-          visible={inviteToolsVisible}
-          friendsProps={props}
-          onClose={() => setInviteToolsVisible(false)}
-        />
-      </View>
-    </Modal>
+      </SheetScaffold>
+      <SocialInviteToolsSheet
+        visible={inviteToolsVisible}
+        friendsProps={props}
+        onClose={() => setInviteToolsVisible(false)}
+      />
+    </>
   );
 }
 

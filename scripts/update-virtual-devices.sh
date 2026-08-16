@@ -9,8 +9,6 @@ cd "$ROOT"
 
 IOS_BUNDLE_ID="com.imtihoss.ontracknow"
 ANDROID_PACKAGE="com.imtihoss.ontracknow"
-IOS_APP="$ROOT/ios/build/Build/Products/Debug-iphonesimulator/onTrack.app"
-ANDROID_APK="$ROOT/android/app/build/outputs/apk/debug/app-debug.apk"
 
 IOS_NAMES=(
   "onTrack Agent 1"
@@ -30,16 +28,24 @@ ANDROID_NAMES=(
 DO_IOS=1
 DO_ANDROID=1
 BUILD=1
+CURRENT_ONLY=0
+
+# shellcheck source=lib/virtual-device-build.sh
+source "$ROOT/scripts/lib/virtual-device-build.sh"
+IOS_APP="$(vd_ios_app)"
+ANDROID_APK="$(vd_android_apk)"
 
 usage() {
   sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
   cat <<'EOF'
 
-Usage: scripts/update-virtual-devices.sh [--ios|--android] [--install-only]
+Usage: scripts/update-virtual-devices.sh [--ios|--android] [--install-only] [--current]
 
   --ios           Update only onTrack iOS simulators.
   --android       Update only onTrack Android emulators.
   --install-only  Reuse the newest validated local debug build.
+  --current       Refresh the current sim/emu plus onTrack iPhone 17 Pro and
+                  Galaxy_S26. Used by agent-ui verify.
 
 Unrelated Apple simulator templates and Android AVDs are never touched.
 Initially stopped devices are stopped again after installation. Android AVDs
@@ -52,6 +58,7 @@ while (($# > 0)); do
     --ios) DO_IOS=1; DO_ANDROID=0 ;;
     --android) DO_IOS=0; DO_ANDROID=1 ;;
     --install-only) BUILD=0 ;;
+    --current) CURRENT_ONLY=1 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "error: unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -109,33 +116,6 @@ resolve_ios_devices() {
       }
     });
   ' "${IOS_NAMES[@]}"
-}
-
-validate_ios_app() {
-  [[ -d "$IOS_APP" ]] || { echo "error: missing iOS app: $IOS_APP" >&2; return 1; }
-  [[ -f "$IOS_APP/Info.plist" ]] || { echo "error: incomplete iOS app (no Info.plist)" >&2; return 1; }
-  local executable
-  executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$IOS_APP/Info.plist")"
-  [[ -n "$executable" && -x "$IOS_APP/$executable" ]] || {
-    echo "error: incomplete iOS app (missing executable)" >&2
-    return 1
-  }
-}
-
-build_ios() {
-  echo "Building onTrack for Apple Silicon iOS simulators…"
-  bash "$ROOT/scripts/ensure-ios-simulator-codesign.sh"
-  xcodebuild \
-    -workspace "$ROOT/ios/onTrack.xcworkspace" \
-    -scheme onTrack \
-    -configuration Debug \
-    -sdk iphonesimulator \
-    -derivedDataPath "$ROOT/ios/build" \
-    ARCHS=arm64 \
-    ONLY_ACTIVE_ARCH=YES \
-    CODE_SIGN_STYLE=Manual \
-    CODE_SIGN_IDENTITY='Apple Development: onTrack Local' \
-    build
 }
 
 update_ios() {
@@ -218,11 +198,6 @@ prepare_ordered_android_names() {
   return 0
 }
 
-build_android() {
-  echo "Building onTrack Android debug APK…"
-  (cd "$ROOT/android" && ./gradlew :app:assembleDebug)
-}
-
 update_android() {
   # shellcheck source=lib/android-emulator.sh
   source "$ROOT/scripts/lib/android-emulator.sh"
@@ -269,6 +244,20 @@ update_android() {
 
   echo "Android emulators updated: $count"
 }
+
+if ((CURRENT_ONLY == 1)); then
+  if ((DO_IOS == 1)); then
+    # shellcheck source=lib/ios-simulator.sh
+    source "$ROOT/scripts/lib/ios-simulator.sh"
+    vd_ensure_current_device_native_fresh ios
+  fi
+  if ((DO_ANDROID == 1)); then
+    vd_ensure_current_device_native_fresh android
+  fi
+  trap - EXIT INT TERM
+  echo "Current onTrack virtual device plus iPhone 17 Pro / Galaxy_S26 have the latest local native build."
+  exit 0
+fi
 
 ((DO_IOS == 0)) || update_ios
 ((DO_ANDROID == 0)) || update_android

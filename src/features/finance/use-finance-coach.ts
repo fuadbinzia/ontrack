@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
+
 import { requestFinanceCoachPolish } from '@/services/finance/coach-client';
 import { useFinance } from '@/store/finance';
 
@@ -36,30 +38,33 @@ export function useFinanceCoachInsights() {
     setSource('local');
     let cancelled = false;
     const savingsApr = referenceSavingsAprPercent(referenceSavingsApr);
-    void requestFinanceCoachPolish({
-      insights: local,
-      referenceSavingsApr: savingsApr,
-    })
-      .then((result) => {
-        if (cancelled) return;
-        if (Array.isArray(result.insights) && result.insights.length) {
-          setInsights(
-            result.insights.map((row, index) => ({
-              id: row.id || local[index]?.id || `tip-${index}`,
-              title: row.title,
-              body: row.body,
-              priority: row.priority ?? local[index]?.priority ?? 50,
-            })),
-          );
-          setSource(result.source);
-        }
-        if (result.disclaimer) setDisclaimer(result.disclaimer);
+    const cancel = deferAfterPageTransition(() => {
+      void requestFinanceCoachPolish({
+        insights: local,
+        referenceSavingsApr: savingsApr,
       })
-      .catch(() => {
-        // Keep local heuristics offline / when polish fails.
-      });
+        .then((result) => {
+          if (cancelled) return;
+          if (Array.isArray(result.insights) && result.insights.length) {
+            setInsights(
+              result.insights.map((row, index) => ({
+                id: row.id || local[index]?.id || `tip-${index}`,
+                title: row.title,
+                body: row.body,
+                priority: row.priority ?? local[index]?.priority ?? 50,
+              })),
+            );
+            setSource(result.source);
+          }
+          if (result.disclaimer) setDisclaimer(result.disclaimer);
+        })
+        .catch(() => {
+          // Keep local heuristics offline / when polish fails.
+        });
+    });
     return () => {
       cancelled = true;
+      cancel();
     };
   }, [local, referenceSavingsApr]);
 

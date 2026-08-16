@@ -1,11 +1,7 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, {
-  FadeOutLeft,
-  LinearTransition,
-  ReduceMotion,
-} from 'react-native-reanimated';
+import Animated, { FadeOutLeft, ReduceMotion } from 'react-native-reanimated';
 
 import {
   AppText,
@@ -54,7 +50,7 @@ function OverviewHeroMark({
           cachePolicy="memory-disk"
           style={artwork.contentFit === 'contain' ? styles.heroLogo : styles.heroArtwork}
           contentFit={artwork.contentFit}
-          transition={160}
+          transition={0}
           onError={() => setFailedUri(artwork.uri)}
         />
       ) : (
@@ -95,10 +91,9 @@ export function OverviewHero({
       <GlassPlate
         intensity={64}
         style={[
-          styles.hero,
           {
             borderRadius: radii.xl,
-            borderWidth: 1,
+            borderWidth: StyleSheet.hairlineWidth,
             borderColor: heroTone,
             padding: spacing.lg,
             gap: spacing.md,
@@ -120,21 +115,14 @@ export function OverviewHero({
                   : 'Your plans, routines, and care are in a good rhythm.')}
             </AppText>
           </View>
-          <View
-            style={[
-              styles.pulseOrbit,
-              { borderColor: heroTone, padding: s(4) },
-            ]}
-          >
-            <OverviewHeroMark
-              artwork={eventArtwork}
-              fallback={
-                eventExcitement ? 'event' : attentionCount ? 'warning' : 'habit'
-              }
-              tone={heroTone}
-              size={s(56)}
-            />
-          </View>
+          <OverviewHeroMark
+            artwork={eventArtwork}
+            fallback={
+              eventExcitement ? 'event' : attentionCount ? 'warning' : 'habit'
+            }
+            tone={heroTone}
+            size={s(56)}
+          />
         </View>
         {eventExcitement?.youtubeUrl ? (
           <Button
@@ -164,9 +152,6 @@ export function OverviewHero({
               <Animated.View
                 key={item.key}
                 exiting={FadeOutLeft.duration(motion.fade).reduceMotion(
-                  ReduceMotion.System,
-                )}
-                layout={LinearTransition.duration(motion.layout).reduceMotion(
                   ReduceMotion.System,
                 )}
                 style={[styles.attentionRow, { gap: spacing.xs }]}
@@ -213,9 +198,6 @@ export function OverviewHero({
 }
 
 const styles = StyleSheet.create({
-  hero: {
-    overflow: 'hidden',
-  },
   heroTop: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -223,11 +205,6 @@ const styles = StyleSheet.create({
   heroCopy: {
     flex: 1,
     minWidth: 0,
-  },
-  pulseOrbit: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: radii.xl,
-    flexShrink: 0,
   },
   attentionList: {
     borderTopWidth: StyleSheet.hairlineWidth,

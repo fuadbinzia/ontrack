@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { motion } from '@/design-system';
 import {
   resetWarmNavigationForTests,
+  WARM_HUB_HREF_CAP,
   warmHref,
   warmHrefsAfterTransition,
 } from '@/utils/warm-navigation';
@@ -22,6 +23,10 @@ describe('warm-navigation', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+  });
+
+  it('caps hub warm-up so landing does not prefetch the whole app', () => {
+    expect(WARM_HUB_HREF_CAP).toBe(6);
   });
 
   it('prefers each href only once per session', () => {

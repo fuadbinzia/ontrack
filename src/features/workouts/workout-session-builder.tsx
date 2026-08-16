@@ -1,6 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { AppText, Button } from '@/components/primitives';
 import { layout, radii, spacing } from '@/design-system';
@@ -39,7 +38,7 @@ export function WorkoutSessionBuilder({
   const targetLabel = isToday(targetDate) ? 'Today' : formatWeekday(targetDate);
 
   return (
-    <Animated.View entering={FadeInUp.duration(260)} style={styles.pagePadding}>
+    <View style={styles.pagePadding}>
       <LinearGradient
         colors={['#35201D', '#1B1210']}
         end={{ x: 1, y: 1 }}
@@ -107,7 +106,7 @@ export function WorkoutSessionBuilder({
           Add Workout to {targetLabel}
         </Button>
       </LinearGradient>
-    </Animated.View>
+    </View>
   );
 }
 

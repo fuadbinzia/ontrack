@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 
 import {
   AppText,
@@ -88,9 +87,7 @@ export function VisionBoardCategoryCanvas({
   };
 
   return (
-        <Animated.View
-          entering={FadeIn.duration(220).reduceMotion(ReduceMotion.System)}
-          style={styles.editor}>
+        <View style={styles.editor}>
           <View style={styles.editorTopbar}>
             <View style={styles.historyActions}>
               <IconButton
@@ -290,7 +287,7 @@ export function VisionBoardCategoryCanvas({
               )}
             </View>
           </View>
-        </Animated.View>
+        </View>
   );
 }
 

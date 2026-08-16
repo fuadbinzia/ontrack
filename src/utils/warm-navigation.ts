@@ -1,6 +1,9 @@
 import { router, type Href } from 'expo-router';
+import { useEffect } from 'react';
 
 import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
+
+export const WARM_HUB_HREF_CAP = 6;
 
 const warmedKeys = new Set<string>();
 
@@ -53,6 +56,20 @@ export function warmHrefsAfterTransition(
     cancelTransition();
     if (gapTimer) clearTimeout(gapTimer);
   };
+}
+
+/** Warm a hub’s likely next screens after the current page is at rest. */
+export function useWarmHrefs(
+  hrefs: readonly Href[],
+  cap = WARM_HUB_HREF_CAP,
+): void {
+  const next = hrefs.slice(0, cap);
+  const token = next.map(hrefKey).join('|');
+  useEffect(() => {
+    return warmHrefsAfterTransition(next);
+    // token stands in for next — same hrefs, same warm.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 }
 
 /** Test helper — clears the session warm cache. */

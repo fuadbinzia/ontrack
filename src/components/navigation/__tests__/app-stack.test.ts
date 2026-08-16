@@ -1,8 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import {
   ANDROID_SWIPE_BACK_ANIMATION,
   appStackScreenOptions,
   appStackSwipeAnimation,
   IOS_SWIPE_BACK_ANIMATION,
+  isAppStackTabRoot,
   mergeAppStackScreenOptions,
 } from '../app-stack';
 
@@ -30,6 +34,21 @@ describe('mergeAppStackScreenOptions', () => {
       gestureEnabled: true,
       animation: 'fade',
     });
+  });
+
+  it('keeps tab-root remounts from replaying simple_push', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/components/navigation/app-stack.tsx'),
+      'utf8',
+    );
+    expect(source).toContain('isAppStackTabRoot');
+    expect(source).toContain("animation: 'none'");
+  });
+
+  it('keeps the tab hub at rest and still animates pushed screens', () => {
+    expect(isAppStackTabRoot('index')).toBe(true);
+    expect(isAppStackTabRoot('appearance')).toBe(false);
+    expect(isAppStackTabRoot('[id]')).toBe(false);
   });
 
   it('merges function screenOptions onto the shared defaults', () => {

@@ -1,8 +1,8 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { AppText, GlassPlate } from '@/components/primitives';
-import { radii, spacing } from '@/design-system';
+import { layout, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoCategory } from '@/store/todos';
 
@@ -51,23 +51,19 @@ export function ChecklistCategoryTabs({
                   airy
                   style={[
                     styles.tab,
-                    selected ? { borderColor: theme.accentPrimary } : undefined,
+                    selected
+                      ? {
+                          borderColor: theme.accentPrimary,
+                          borderWidth: 1,
+                        }
+                      : undefined,
                   ]}
                 >
-                  <View
-                    style={[
-                      styles.dot,
-                      {
-                        backgroundColor: selected
-                          ? theme.accentPrimary
-                          : theme.textTertiary,
-                      },
-                    ]}
-                  />
                   <AppText
                     variant="caption"
                     color={selected ? 'accent' : 'secondary'}
                     fit
+                    titleCase
                   >
                     {category.name}
                   </AppText>
@@ -85,12 +81,11 @@ const styles = StyleSheet.create({
   anchor: { marginHorizontal: -spacing.xs },
   content: { gap: spacing.sm, paddingHorizontal: spacing.xs },
   tab: {
-    minHeight: 40,
+    minHeight: layout.minTapTarget,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'center',
     paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
   },
-  dot: { width: 6, height: 6, borderRadius: radii.pill },
 });

@@ -1,6 +1,5 @@
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
-    FadeIn,
     ReduceMotion,
     SharedTransition,
 } from 'react-native-reanimated';
@@ -37,7 +36,7 @@ export function VisionBoardGallery({
 
   const columns = splitMasonryColumns(items);
   return (
-    <Animated.View entering={FadeIn.duration(220).reduceMotion(ReduceMotion.System)}>
+    <View>
       <View style={styles.heading}>
         <AppText variant="overline" color="tertiary">
           {category.name} gallery
@@ -72,7 +71,7 @@ export function VisionBoardGallery({
           </View>
         ))}
       </View>
-    </Animated.View>
+    </View>
   );
 }
 

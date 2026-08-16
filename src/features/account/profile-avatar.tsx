@@ -5,7 +5,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { typeConfig } from '@/design-system';
 import { useAvatarCache } from '@/features/account/avatar-cache';
 import { IconifyIcon } from '@/features/account/iconify-icon';
-import { resolveProfileAvatarUrl } from '@/features/account/profile-avatar-media';
+import {
+  initialAvatarPhotoUrl,
+  resolveProfileAvatarUrl,
+} from '@/features/account/profile-avatar-media';
 import {
   avatarIconGlyphSize,
   avatarInitialsFontSize,
@@ -55,8 +58,8 @@ export function ProfileAvatar({
   const cached = useAvatarCache((s) => (userId ? s.byUserId[userId] : undefined));
   const meta = avatarOverride ?? (isSelf ? selfAvatar : cached);
   const color = resolveAvatarColor(meta, theme.accentPrimary);
-  const [photoUrl, setPhotoUrl] = useState<string | undefined>(
-    meta?.kind === 'photo' ? meta.localPhotoUri : undefined,
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(() =>
+    initialAvatarPhotoUrl(meta),
   );
 
   useEffect(() => {
@@ -108,6 +111,8 @@ export function ProfileAvatar({
           source={photoUrl}
           style={{ width: size, height: size, borderRadius: size / 2 }}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={0}
         />
       ) : meta?.kind === 'icon' && meta.iconId ? (
         <IconifyIcon iconId={meta.iconId} color={color} size={iconSize} />

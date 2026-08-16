@@ -187,12 +187,20 @@ agent_ui_pool_clone_android_app() {
 
 # Copy the installed app onto a target iOS UDID from any sim that already has it.
 agent_ui_pool_clone_ios_app() {
-  local target_udid="$1" source_udid app_path root
+  local target_udid="$1" source_udid app_path root local_app
   root="$(agent_ui_pool_repo_root)"
   # shellcheck disable=SC1091
   source "${root}/scripts/lib/ios-simulator.sh"
   if ios_simctl_timed get_app_container "$target_udid" "$BUNDLE_ID" data >/dev/null 2>&1; then
     return 0
+  fi
+  local_app="${root}/ios/build/Build/Products/Debug-iphonesimulator/onTrack.app"
+  if [[ -d "$local_app" && -f "$local_app/Info.plist" ]]; then
+    echo "agent-ui: installing local debug client → $(agent_ui_pool_ios_name "${AGENT_UI_SLOT:-?}")" >&2
+    if ios_simctl_timed 90 install "$target_udid" "$local_app" >/dev/null 2>&1; then
+      return 0
+    fi
+    echo "agent-ui: local iOS debug client install failed — trying a peer simulator" >&2
   fi
   source_udid="$(
     xcrun simctl list devices available -j 2>/dev/null | python3 -c '

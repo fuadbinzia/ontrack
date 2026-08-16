@@ -38,5 +38,8 @@ describe('profile avatar initials sizing', () => {
     expect(source).not.toMatch(/adjustsFontSizeToFit/);
     expect(source).not.toMatch(/\bfit\s*=/);
     expect(source).not.toMatch(/fitMinimumScale/);
+    expect(source).toContain('transition={0}');
+    expect(source).toContain('cachePolicy="memory-disk"');
+    expect(source).toContain('initialAvatarPhotoUrl');
   });
 });

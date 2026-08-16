@@ -19,6 +19,7 @@ describe('canonical design-system contract', () => {
       'PanelTitle',
       'StatusBadge',
       'MetaList',
+      'Presence',
       'CollapsibleBody',
       'CollapsibleSection',
       'DisclosureChevron',
@@ -48,7 +49,7 @@ describe('canonical design-system contract', () => {
     expect(sheet).toContain('grabberInteractive={false}');
     expect(dismissPan).toContain('Gesture.Exclusive');
     expect(dismissPan).toMatch(
-      /const shouldRemainOpen = onClose\(\) === false;[\s\S]*?if \(!shouldRemainOpen\) return;[\s\S]*?dragY\.value = reduceMotion/,
+      /const shouldRemainOpen = onClose\(\) === false;[\s\S]*?if \(shouldRemainOpen\) \{[\s\S]*?dragY\.value = reduceMotion/,
     );
     expect(dismissPan).not.toMatch(
       /dragY\.value = 0;[\s\S]*?onClose\(\)/,
@@ -165,9 +166,8 @@ describe('canonical design-system contract', () => {
     expect(scaffold).not.toContain('entering={sheetEntrance}');
     expect(dismissPan).toContain('const entranceY = useSharedValue(0)');
     expect(dismissPan).toContain('entranceY.value = height');
-    expect(dismissPan).toMatch(
-      /entranceY\.value = withSpring\(0, \{[\s\S]*?springs\.sheet\.damping/,
-    );
+    expect(dismissPan).toContain('entranceY.value = withSpring(0, sheetSpring)');
+    expect(dismissPan).toContain('damping: springs.sheet.damping');
     expect(dismissPan).toContain(
       'transform: [{ translateY: entranceY.value + dragY.value }]',
     );
@@ -178,11 +178,14 @@ describe('canonical design-system contract', () => {
     expect(scaffold).toContain('bottom: keyboardInset');
     expect(scaffold).toContain('overlayScrim');
     expect(scaffold).not.toContain('animationType="slide"');
-    // Exit must unmount immediately — holding Modal for exit traps touches
-    // and makes the next page feel stuck.
+    // Hold the host through a measured exit; never trap the next tap.
+    expect(scaffold).toContain('if (!held) return null');
+    expect(scaffold).toContain("pointerEvents={visible ? 'auto' : 'none'}");
+    expect(dismissPan).toContain('playExit');
+    expect(dismissPan).toContain('shouldSkipSheetExit');
+    expect(dismissPan).toContain('const [held, setHeld] = useState(visible)');
     expect(scaffold).not.toContain('FadeOut');
     expect(scaffold).not.toContain('SlideOutDown');
-    expect(scaffold).not.toContain('presented');
     // Glass is the app-wide sheet default; solid remains an escape hatch.
     expect(scaffold).toContain("surface?: 'solid' | 'glass'");
     expect(scaffold).toContain("surface = 'glass'");
@@ -381,8 +384,12 @@ describe('canonical design-system contract', () => {
     expect(dayView).toContain(
       'usePageSurfaceBackground(screenAtmosphereBottomColor(theme.name))',
     );
-    // In-tree wash would stop at the safe-area edge and reintroduce the seam.
-    expect(screen).not.toMatch(/\{useAtmosphere \? <ScreenAtmosphere/);
+    // Naive in-tree wash would stop at the safe-area edge and reintroduce the seam.
+    expect(screen).not.toMatch(/\{useAtmosphere \? <ScreenAtmosphere\s*\/>/);
+    // Stack cards stay transparent; a window-aligned fill occludes the previous page.
+    expect(screen).toContain('ScreenAtmosphereSceneFill');
+    expect(atmosphere).toContain('screenAtmosphereSceneOffset');
+    expect(atmosphere).toContain('top: screenAtmosphereSceneOffset(insets.top)');
   });
 
   it('keeps Privacy / Terms stack chrome transparent like Profile glass atmosphere', () => {

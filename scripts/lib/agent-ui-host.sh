@@ -624,6 +624,29 @@ agent_ui_finish_app_up() {
   return 0
 }
 
+# Install the latest local debug client onto the current sim/emu when the
+# on-disk .app/.apk is newer than the last install (H23). Rebuilds only when
+# native sources outpace that artifact. Escape: AGENT_UI_SKIP_NATIVE_FRESH=1.
+agent_ui_ensure_native_fresh() {
+  AGENT_UI_NATIVE_REFRESHED=0
+  if [[ "${AGENT_UI_SKIP_NATIVE_FRESH:-0}" == "1" ]]; then
+    return 0
+  fi
+  if [[ "${AGENT_UI_NATIVE_FRESH_DONE:-0}" == "1" ]]; then
+    return 0
+  fi
+  # shellcheck source=virtual-device-build.sh
+  source "$(agent_ui_repo_root)/scripts/lib/virtual-device-build.sh"
+  if agent_ui_is_android; then
+    agent_ui_android_lib
+    vd_ensure_current_device_native_fresh android || return 1
+  else
+    agent_ui_ios_lib
+    vd_ensure_current_device_native_fresh ios || return 1
+  fi
+  AGENT_UI_NATIVE_FRESH_DONE=1
+}
+
 # Gate verification: app must be up on the device (bridge answering).
 # Happy path = one cheap route probe. Soft-launch / heal only when down.
 # Skip with AGENT_UI_SKIP_APP_UP=1 (nested probes / ensure-packager recursion).
@@ -657,8 +680,26 @@ agent_ui_ensure_app_up() {
     fi
   fi
 
-  # Definitive liveness: JS bridge answered a route probe (ok + route path).
-  if agent_ui_bridge_answers; then
+  # H23: warm bridge can still be a stale native binary. Refresh the current
+  # device from the latest local debug client before trusting the probe.
+  if agent_ui_simulator_booted; then
+    if ! agent_ui_app_installed; then
+      agent_ui_pool_ensure_app_installed || true
+    fi
+    agent_ui_ensure_native_fresh || return 1
+    if [[ "${AGENT_UI_NATIVE_REFRESHED:-0}" == "1" ]]; then
+      echo "agent-ui: relaunching after native debug client refresh…" >&2
+      agent_ui_launch_app
+      agent_ui_soft_reconnect_dev_client
+      if agent_ui_wait_for_bridge "${AGENT_UI_DEVICE_RESPOND_SECS:-10}"; then
+        agent_ui_finish_app_up
+        return $?
+      fi
+    elif agent_ui_bridge_answers; then
+      agent_ui_finish_app_up
+      return $?
+    fi
+  elif agent_ui_bridge_answers; then
     agent_ui_finish_app_up
     return $?
   fi
@@ -740,6 +781,7 @@ agent_ui_ensure_app_up() {
       return 1
     fi
   fi
+  agent_ui_ensure_native_fresh || return 1
 
   if ! agent_ui_app_process_running; then
     echo "agent-ui: app not running — launching ${BUNDLE_ID}…" >&2

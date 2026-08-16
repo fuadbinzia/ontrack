@@ -3,6 +3,20 @@ import { Platform } from 'react-native';
 import { layout, spacing } from '@/design-system';
 
 /**
+ * Above tab pager scenes. Those views always apply `translateX` (even at rest),
+ * which creates a stacking context that paints over an un-zIndexed absolute dock.
+ */
+export const BOTTOM_NAV_Z_INDEX = 50;
+
+/** True when a transformed pager scene would hide a dock with no stacking order. */
+export function pagerSceneCoversDock(
+  sceneHasTransform: boolean,
+  dockZIndex: number,
+): boolean {
+  return sceneHasTransform && dockZIndex <= 0;
+}
+
+/**
  * Bottom padding for the app tab dock.
  *
  * - Android with a system/gesture nav inset: lift the dock above it.

@@ -2,16 +2,19 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import {
   AppText,
-  Button,
   GlassPlate,
   IconButton,
-  SegmentedControl,
   Symbol,
 } from '@/components/primitives';
-import { fontFamilies, glassMaterials, radii, spacing, typography } from '@/design-system';
+import {
+  fontFamilies,
+  glassMaterials,
+  radii,
+  spacing,
+  typography,
+} from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import type { TodoListKind } from '@/store/todos';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { formatCount } from '@/utils/grammar';
 
@@ -19,26 +22,18 @@ export function TodoListsOverviewHeader({
   listCount,
   totalOpen,
   editMode,
-  inviteCount,
   draft,
-  draftKind,
   onDraftChange,
-  onDraftKindChange,
   onSubmitDraft,
   onToggleEditMode,
-  onOpenCollaborators,
 }: {
   listCount: number;
   totalOpen: number;
   editMode: boolean;
-  inviteCount: number;
   draft: string;
-  draftKind: TodoListKind;
   onDraftChange: (value: string) => void;
-  onDraftKindChange: (kind: TodoListKind) => void;
   onSubmitDraft: () => void;
   onToggleEditMode: () => void;
-  onOpenCollaborators: () => void;
 }) {
   const theme = useTheme();
   const { s } = useResponsive();
@@ -51,8 +46,8 @@ export function TodoListsOverviewHeader({
     <View style={styles.header}>
       <View style={styles.heading}>
         <View style={styles.headingCopy}>
-          <AppText variant="overline" color="accent">Your checklists</AppText>
           <AppText
+            variant="title"
             style={[
               styles.title,
               { fontSize: s(35), lineHeight: s(42) },
@@ -61,85 +56,45 @@ export function TodoListsOverviewHeader({
           </AppText>
           <AppText variant="body" color="secondary">
             {totalOpen
-              ? `${totalOpen} open ${totalOpen === 1 ? 'item' : 'items'} across ${listCount} ${listCount === 1 ? 'list' : 'lists'}.`
+              ? `${formatCount(totalOpen, 'open item')} across ${formatCount(listCount, 'list')}.`
               : 'Everything is handled. Make a list for what comes next.'}
           </AppText>
         </View>
-        <View style={styles.headingActions}>
-          {listCount > 0 ? (
-            <Button
+        {listCount > 0 ? (
+          <View style={styles.headingActions}>
+            <IconButton
               testID={AgentUiIds.checklists.editMode}
               accessibilityLabel={
                 editMode
                   ? 'Finish editing checklists'
                   : 'Edit checklists'
               }
-              size="sm"
-              variant={editMode ? 'primary' : 'secondary'}
+              icon={editMode ? 'check' : 'edit'}
+              iconSize={16}
+              size={36}
+              appearance={editMode ? 'solid' : 'glass'}
+              color={editMode ? theme.textOnAccent : theme.accentPrimary}
+              background={editMode ? theme.accentPrimary : undefined}
               onPress={onToggleEditMode}
-              style={[
-                styles.editModeButton,
-                {
-                  borderColor: editMode
-                    ? theme.accentPrimary
-                    : theme.separator,
-                },
-              ]}
-              textStyle={editMode ? undefined : { color: theme.accentPrimary }}>
-              {editMode ? 'Done' : 'Edit'}
-            </Button>
-          ) : null}
-          <IconButton
-            testID={AgentUiIds.checklists.collaborators}
-            accessibilityLabel={
-              inviteCount
-                ? `Add collaborators, ${formatCount(inviteCount, 'invitation')} waiting`
-                : 'Add collaborators'
-            }
-            icon="invite"
-            iconSize={21}
-            color={
-              inviteCount
-                ? theme.accentPrimary
-                : theme.textSecondary
-            }
-            onPress={onOpenCollaborators}
-          />
-        </View>
+            />
+          </View>
+        ) : null}
       </View>
 
       {!editMode ? (
-        <View style={styles.newListBlock}>
-          <SegmentedControl
-            value={draftKind}
-            options={[
-              {
-                value: 'checklist',
-                label: 'Checklist',
-                icon: 'tasks',
-                testID: AgentUiIds.checklists.newListKind('checklist'),
-              },
-              {
-                value: 'grocery',
-                label: 'Grocery',
-                icon: 'groceries',
-                testID: AgentUiIds.checklists.newListKind('grocery'),
-              },
-            ]}
-            onChange={onDraftKindChange}
-          />
-          <GlassPlate
-            style={[
-              styles.composer,
-              {
-                borderColor: canCreate
-                  ? theme.accentPrimary
-                  : theme.name === 'dark'
-                    ? glassMaterials.border.dark
-                    : glassMaterials.border.light,
-                borderWidth: canCreate ? 1 : StyleSheet.hairlineWidth,
-              },
-            ]}>
+        <GlassPlate
+          style={[
+            styles.composer,
+            {
+              borderColor: canCreate
+                ? theme.accentPrimary
+                : theme.name === 'dark'
+                  ? glassMaterials.border.dark
+                  : glassMaterials.border.light,
+              borderWidth: canCreate ? 1 : StyleSheet.hairlineWidth,
+            },
+          ]}>
+          <View style={styles.inputRow}>
             <Symbol name="add" size={21} color={theme.accentPrimary} />
             <AgentTestId
               testID={newListNameAgent.testID}
@@ -152,11 +107,7 @@ export function TodoListsOverviewHeader({
                   maxLength={80}
                   onChangeText={onDraftChange}
                   onSubmitEditing={onSubmitDraft}
-                  placeholder={
-                    draftKind === 'grocery'
-                      ? 'New grocery list'
-                      : 'New checklist'
-                  }
+                  placeholder="New list"
                   placeholderTextColor={theme.textTertiary}
                   returnKeyType="done"
                   underlineColorAndroid="transparent"
@@ -178,8 +129,8 @@ export function TodoListsOverviewHeader({
               disabled={!canCreate}
               onPress={onSubmitDraft}
             />
-          </GlassPlate>
-        </View>
+          </View>
+        </GlassPlate>
       ) : null}
     </View>
   );
@@ -193,7 +144,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.md,
   },
-  headingCopy: { flex: 1, gap: spacing.xs },
+  headingCopy: { flex: 1, gap: spacing.xs, minWidth: 0 },
   headingActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -204,22 +155,23 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     letterSpacing: -0.7,
   },
-  editModeButton: {
-    minWidth: 58,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
   composer: {
-    minHeight: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingLeft: spacing.lg,
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+    paddingLeft: spacing.sm,
     paddingRight: spacing.sm,
     borderRadius: radii.lg,
     borderCurve: 'continuous',
     zIndex: 1,
   },
-  newListBlock: { gap: spacing.sm },
+  inputRow: {
+    minHeight: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingLeft: spacing.md,
+  },
   input: {
     ...typography.body,
     flex: 1,

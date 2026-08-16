@@ -1,8 +1,16 @@
+import { ADDONS } from '@/addons/registry';
 import {
   isTrackerRouteEnabled,
   TAB_META,
 } from '@/components/navigation/bottom-nav-tab-meta';
 import { splitTrackerOrder } from '@/components/navigation/tab-pins';
+
+/** Manage Sections lists modules A–Z by display name. */
+export function addonsByDisplayName() {
+  return [...ADDONS].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+  );
+}
 
 /**
  * More lists every enabled section. Presence used to hide empty add-ons,

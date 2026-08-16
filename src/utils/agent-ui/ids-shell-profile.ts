@@ -71,6 +71,7 @@ export const agentUiIdsShellProfile = {
       preferences: 'ontrack.profile.section.preferences',
       features: 'ontrack.profile.section.features',
       addons: 'ontrack.profile.section.addons',
+      about: 'ontrack.profile.section.about',
       legal: 'ontrack.profile.section.legal',
       dangerZone: 'ontrack.profile.section.dangerZone',
       disclaimers: 'ontrack.profile.section.disclaimers',

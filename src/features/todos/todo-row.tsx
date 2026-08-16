@@ -107,7 +107,7 @@ export function TodoRow({
   };
   const titleText = (
     <AppText
-      variant="bodyMedium"
+      variant="body"
       color={task.completed ? 'tertiary' : 'primary'}
       selectable
       selectionColor={theme.accentSoft}
@@ -125,6 +125,7 @@ export function TodoRow({
       onPress={listOwner && !editMode ? pressRow : undefined}
       style={styles.taskRowAgent}>
       <GlassPlate
+        airy
         style={[
           styles.taskRow,
           {
@@ -187,14 +188,13 @@ export function TodoRow({
           style={({ pressed }) => [
             styles.checkButton,
             {
-              backgroundColor: task.completed ? theme.success : 'transparent',
               borderColor: task.completed ? theme.success : theme.textTertiary,
               opacity: canComplete ? 1 : 0.35,
               transform: [{ scale: pressed ? 0.88 : 1 }],
             },
           ]}>
           {task.completed ? (
-            <Symbol name="check" size={15} color={theme.textOnAccent} />
+            <Symbol name="check" size={15} color={theme.success} />
           ) : null}
         </Pressable>
       )}
@@ -216,6 +216,7 @@ export function TodoRow({
             underlineColorAndroid="transparent"
             style={[
               styles.editInput,
+              typography.body,
               {
                 color: task.completed ? theme.textTertiary : theme.textPrimary,
               },
@@ -239,11 +240,6 @@ export function TodoRow({
             {titleText}
           </Pressable>
         )}
-        {task.important && !task.completed ? (
-          <AppText variant="overline" color="accent">
-            Focus
-          </AppText>
-        ) : null}
         {showMetadata ? (
           <View style={styles.taskMetaRow}>
             {assigneePeople.length > 0 && assigneeLabel ? (
@@ -339,26 +335,27 @@ export function ChecklistItemSeparator({
 const styles = StyleSheet.create({
   taskRowAgent: { width: '100%' },
   taskRow: {
-    borderRadius: radii.lg,
+    borderRadius: radii.md,
     borderCurve: 'continuous',
   },
   taskRowInner: {
-    minHeight: 68,
+    minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.sm,
-    paddingVertical: spacing.md,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
+    paddingVertical: spacing.sm,
     zIndex: 1,
   },
   checkButton: {
-    width: 27,
-    height: 27,
+    width: 28,
+    height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderRadius: radii.pill,
+    backgroundColor: 'transparent',
   },
   taskCopy: { flex: 1, gap: spacing.xxs, minWidth: 0 },
   taskMetaRow: {
@@ -369,7 +366,6 @@ const styles = StyleSheet.create({
   },
   completedTitle: { textDecorationLine: 'line-through' },
   editInput: {
-    ...typography.bodyMedium,
     margin: 0,
     paddingHorizontal: 0,
     paddingVertical: 0,

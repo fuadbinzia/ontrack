@@ -2,10 +2,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
-  peekBottomNavDock,
-  publishBottomNavDock,
-  resetBottomNavDockForTests,
-  subscribeBottomNavDock,
+    onBottomNavBarBridgeUnmount,
+    peekBottomNavDock,
+    publishBottomNavDock,
+    resetBottomNavDockForTests,
+    subscribeBottomNavDock,
 } from '../bottom-nav-dock';
 
 const read = (relative: string) =>
@@ -46,12 +47,38 @@ describe('tab dock stays visible after tab scenes paint', () => {
     const layout = read('src/app/(tabs)/_layout.tsx');
     const dock = read('src/components/navigation/bottom-nav-dock.tsx');
 
-    expect(layout).toContain('tabBar={(props) => <BottomNavBarBridge {...props} />}');
+    expect(layout).toContain('tabBar={renderBottomNavBar}');
+    expect(layout).not.toContain('tabBar={BottomNavBarBridge}');
+    expect(layout).not.toContain('tabBar={(props) =>');
     expect(layout).toContain('<BottomNavDockHost />');
     expect(layout).toMatch(/<\/Tabs>\s*<BottomNavDockHost \/>/);
     expect(layout).not.toMatch(/tabBar=\{\(props\) => <BottomNavBar[\s{]/);
-    expect(dock).toContain('return null');
+    expect(dock).toContain('onBottomNavBarBridgeUnmount');
+    expect(dock).not.toMatch(
+      /onBottomNavBarBridgeUnmount[\s\S]*publishBottomNavDock\(null\)/,
+    );
     expect(dock).toContain('StyleSheet.absoluteFill');
     expect(dock).toContain('BOTTOM_NAV_Z_INDEX');
+  });
+
+  it('mounts the hook bridge as an element because BottomTabView calls tabBar as a function', () => {
+    const tabView = read(
+      'node_modules/expo-router/build/react-navigation/bottom-tabs/views/BottomTabView.js',
+    );
+    const layout = read('src/app/(tabs)/_layout.tsx');
+    const dock = read('src/components/navigation/bottom-nav-dock.tsx');
+
+    expect(tabView).toMatch(/tabBar\(\{/);
+    expect(layout).toContain('tabBar={renderBottomNavBar}');
+    expect(layout).not.toContain('tabBar={BottomNavBarBridge}');
+    expect(dock).toContain('return <BottomNavBarBridge {...props} />');
+    expect(dock).toContain('useLayoutEffect');
+  });
+
+  it('keeps the sibling dock when ScreenContainer unmounts the in-tree tabBar', () => {
+    const props = { state: { index: 0, routes: [] } } as never;
+    publishBottomNavDock(props);
+    onBottomNavBarBridgeUnmount(props);
+    expect(peekBottomNavDock()).toBe(props);
   });
 });

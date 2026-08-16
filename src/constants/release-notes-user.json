@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.109",
+    "date": "2026-08-16",
+    "notes": [
+      "Keep the tab dock after scenes paint without an invalid hook call, and leave empty-state sentences in sentence case."
+    ]
+  },
+  {
     "version": "1.0.108",
     "date": "2026-08-16",
     "notes": [

@@ -1,6 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { formatEmptyStateTitle } from '@/components/primitives/field-title-case';
 import {
-  emptyDayTitle,
-  resolveDayTimeState,
+    emptyDayTitle,
+    resolveDayTimeState,
 } from '@/features/daily-tracking/day-view-model';
 import type { Activity } from '@/types/models';
 
@@ -93,5 +97,22 @@ describe('emptyDayTitle', () => {
     expect(emptyDayTitle('2026-08-12', '2026-08-12')).toBe('Today is wide open.');
     expect(emptyDayTitle('2026-08-11', '2026-08-12')).toBe('This day was wide open.');
     expect(emptyDayTitle('2026-08-13', '2026-08-12')).toBe('This day is wide open.');
+  });
+
+  it('shows empty-day copy in sentence case', () => {
+    expect(formatEmptyStateTitle(emptyDayTitle('2026-08-12', '2026-08-12'))).toBe(
+      'Today is wide open.',
+    );
+    expect(formatEmptyStateTitle(emptyDayTitle('2026-08-11', '2026-08-12'))).toBe(
+      'This day was wide open.',
+    );
+    expect(formatEmptyStateTitle(emptyDayTitle('2026-08-13', '2026-08-12'))).toBe(
+      'This day is wide open.',
+    );
+    expect(
+      readFileSync(join(__dirname, '../day-view.tsx'), 'utf8'),
+    ).toContain(
+      'Nothing on the books yet — add a workout, a meal, or whatever sounds good and the day starts to feel like yours.',
+    );
   });
 });

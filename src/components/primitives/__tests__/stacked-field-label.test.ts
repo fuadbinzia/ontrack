@@ -1,4 +1,9 @@
-import { fieldTitleCase, titleCaseTextChildren } from '../field-title-case';
+import {
+    fieldTitleCase,
+    formatEmptyStateTitle,
+    isSentenceCopy,
+    titleCaseTextChildren,
+} from '../field-title-case';
 
 describe('fieldTitleCase', () => {
   it('title-cases multi-word field titles and keeps the required marker', () => {
@@ -67,14 +72,28 @@ describe('fieldTitleCase', () => {
     expect(fieldTitleCase('Cash vs debt rates')).toBe('Cash vs Debt Rates');
   });
 
-  it('title-cases empty-state supporting lines', () => {
+  it('keeps short copulas lowercase unless first', () => {
+    expect(fieldTitleCase('Today is wide open.')).toBe('Today is Wide Open.');
+    expect(fieldTitleCase('This day is wide open.')).toBe('This Day is Wide Open.');
+    expect(fieldTitleCase('This day was wide open.')).toBe('This Day was Wide Open.');
+    expect(fieldTitleCase('We are ready')).toBe('We are Ready');
+    expect(fieldTitleCase('Is this ready?')).toBe('Is This Ready?');
+  });
+
+  it('leaves empty-state sentences in sentence case', () => {
+    expect(formatEmptyStateTitle('Today is wide open.')).toBe('Today is wide open.');
+    expect(formatEmptyStateTitle('This day was wide open.')).toBe(
+      'This day was wide open.',
+    );
+    expect(formatEmptyStateTitle('This day is wide open.')).toBe(
+      'This day is wide open.',
+    );
+    expect(formatEmptyStateTitle('No matching trips')).toBe('No Matching Trips');
     expect(
-      fieldTitleCase(
+      isSentenceCopy(
         'Nothing on the books yet — add a workout, a meal, or whatever sounds good and the day starts to feel like yours.',
       ),
-    ).toBe(
-      'Nothing on the Books Yet — Add a Workout, a Meal, or Whatever Sounds Good and the Day Starts to Feel Like Yours.',
-    );
+    ).toBe(true);
   });
 
   it('title-cases button labels', () => {

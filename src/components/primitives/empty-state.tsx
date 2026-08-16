@@ -13,7 +13,7 @@ import { useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 
 import { AppText } from './app-text';
-import { fieldTitleCase } from './field-title-case';
+import { fieldTitleCase, formatEmptyStateTitle } from './field-title-case';
 import { GlassPlate } from './glass-plate';
 import { Symbol } from './symbol';
 
@@ -40,8 +40,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   const theme = useTheme();
   const { spacing, layout } = useResponsive();
-  const titleText = fieldTitleCase(title);
-  const messageText = fieldTitleCase(message);
+  const titleText = formatEmptyStateTitle(title);
   const actionTitle = actionLabel ? fieldTitleCase(actionLabel) : undefined;
   const handleAction = () => {
     if (!onAction) return;
@@ -78,7 +77,7 @@ export function EmptyState({
         align="center"
         numberOfLines={4}
         style={messageStyle}>
-        {messageText}
+        {message}
       </AppText>
       {actionTitle && onAction ? (
         <Pressable

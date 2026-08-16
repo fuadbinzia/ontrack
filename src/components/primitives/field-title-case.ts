@@ -5,19 +5,24 @@ import { Children, type ReactNode } from 'react';
  * Preserves punctuation, required markers, and hyphen/paren boundaries.
  * Keeps short all-caps acronyms (UI, FX, API) intact.
  * Preserves intentional camel casing (StraiAway, onTrack, iOS).
- * Leaves common short words lowercase unless they start the title.
+ * Leaves common short words lowercase unless they start the title
+ * (articles, short prepositions, and copulas like is / was / are).
  */
 const TITLE_SMALL_WORDS = new Set([
   'a',
+  'am',
   'an',
   'and',
+  'are',
   'as',
   'at',
+  'be',
   'but',
   'by',
   'for',
   'from',
   'in',
+  'is',
   'nor',
   'of',
   'on',
@@ -26,6 +31,7 @@ const TITLE_SMALL_WORDS = new Set([
   'to',
   'via',
   'vs',
+  'was',
   'with',
 ]);
 
@@ -59,4 +65,13 @@ export function titleCaseTextChildren(children: ReactNode): ReactNode {
   return Children.map(children, (child) =>
     typeof child === 'string' ? fieldTitleCase(child) : child,
   );
+}
+
+/** Explanatory sentences stay authored; chrome labels still title-case. */
+export function isSentenceCopy(text: string): boolean {
+  return /[.!?]\s*$/.test(text.trim());
+}
+
+export function formatEmptyStateTitle(title: string): string {
+  return isSentenceCopy(title) ? title : fieldTitleCase(title);
 }

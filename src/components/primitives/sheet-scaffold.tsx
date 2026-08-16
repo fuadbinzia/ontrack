@@ -1,31 +1,32 @@
 import { BlurView } from 'expo-blur';
+import { useIsFocused } from 'expo-router';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-  type StyleProp,
-  type ModalProps,
-  type ViewStyle,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    useWindowDimensions,
+    View,
+    type ModalProps,
+    type StyleProp,
+    type ViewStyle,
 } from 'react-native';
 import {
-  GestureDetector,
-  GestureHandlerRootView,
+    GestureDetector,
+    GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  glassMaterials,
-  radii,
-  type AppIconName,
+    glassMaterials,
+    radii,
+    type AppIconName,
 } from '@/design-system';
 import { useDockedKeyboardInset } from '@/hooks/use-docked-keyboard-inset';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
@@ -37,6 +38,7 @@ import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { AppPromptHost } from './app-prompt';
 import { ScreenAtmosphere } from './screen-atmosphere';
 import { ScreenHeader } from './screen-header';
+import { isModalSheetPresented } from './sheet-dismiss';
 import { SheetGrabber } from './sheet-grabber';
 import { useSheetDismissPan } from './use-sheet-dismiss-pan';
 
@@ -176,9 +178,11 @@ export function SheetScaffold({
   // Layout anchor: lets agent-ui dump the plate's painted bounds.
   const plateAgent = useAgentUiTarget(AgentUiIds.sheet.plate, { label: title });
   const [lockedHeight, setLockedHeight] = useState<number>();
+  const routeFocused = useIsFocused();
+  const presented = isModalSheetPresented(visible, host, routeFocused);
   const { headerGesture, sheetStyle, scrimStyle, onSheetLayout, close, held } =
     useSheetDismissPan({
-      visible,
+      visible: presented,
       onClose,
     });
   const backdropAgent = useAgentUiTarget(backdropTestID, {
@@ -187,7 +191,7 @@ export function SheetScaffold({
   });
   // Modal ignores Android soft-input — lift on both platforms.
   const { keyboardInset } = useDockedKeyboardInset({
-    enabled: visible,
+    enabled: presented,
     androidMode: 'modal',
   });
   // Room above the soft keyboard so fields + footer stay reachable.
@@ -217,15 +221,15 @@ export function SheetScaffold({
     }
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [scrollKey, title, visible]);
-  // Hide the tab dock while this sheet is open — dock labels bleeding through
-  // the frosted plate read as a fake gap below short (fitContent) sheets.
+  // Hide the tab dock while this sheet is presented — not while a prefetched
+  // route sheet sits off-screen, and not after visible goes false during exit.
   const beginModalSheet = useUI((state) => state.beginModalSheet);
   const endModalSheet = useUI((state) => state.endModalSheet);
   useEffect(() => {
-    if (!held) return;
+    if (!presented) return;
     beginModalSheet();
     return endModalSheet;
-  }, [held, beginModalSheet, endModalSheet]);
+  }, [presented, beginModalSheet, endModalSheet]);
 
   // Hold the host through the measured exit. pointerEvents none so a settling
   // card cannot trap the next tap / navigation.

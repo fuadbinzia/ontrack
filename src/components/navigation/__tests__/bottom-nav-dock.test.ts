@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
+    BottomNavBarBridge,
     onBottomNavBarBridgeUnmount,
     peekBottomNavDock,
     publishBottomNavDock,
@@ -72,7 +73,21 @@ describe('tab dock stays visible after tab scenes paint', () => {
     expect(layout).toContain('tabBar={renderBottomNavBar}');
     expect(layout).not.toContain('tabBar={BottomNavBarBridge}');
     expect(dock).toContain('return <BottomNavBarBridge {...props} />');
-    expect(dock).toContain('useLayoutEffect');
+    expect(dock).toContain('if (peekBottomNavDock() !== props)');
+    expect(dock).not.toContain('useLayoutEffect');
+  });
+
+  it('publishes dock props during render so the host snapshot is populated before subscribe', () => {
+    const props = { state: { index: 2, routes: [] } } as never;
+    BottomNavBarBridge(props);
+    expect(peekBottomNavDock()).toBe(props);
+    const seen: unknown[] = [];
+    const stop = subscribeBottomNavDock(() => {
+      seen.push(peekBottomNavDock());
+    });
+    expect(peekBottomNavDock()).toBe(props);
+    expect(seen).toEqual([]);
+    stop();
   });
 
   it('keeps the sibling dock when ScreenContainer unmounts the in-tree tabBar', () => {

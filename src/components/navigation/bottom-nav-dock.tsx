@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { useLayoutEffect, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { BottomNavBar } from './bottom-nav-bar';
@@ -48,12 +48,11 @@ export function onBottomNavBarBridgeUnmount(
 
 /** Publishes into BottomNavDockHost; renders nothing inside BottomTabView. */
 export function BottomNavBarBridge(props: BottomNavDockProps) {
-  useLayoutEffect(() => {
+  // Publish during render so the sibling host's first getSnapshot sees props
+  // even if this slot unmounts before layout effects (ScreenContainer cover).
+  if (peekBottomNavDock() !== props) {
     publishBottomNavDock(props);
-    return () => {
-      onBottomNavBarBridgeUnmount(props);
-    };
-  }, [props]);
+  }
   return null;
 }
 

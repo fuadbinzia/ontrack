@@ -21,3 +21,16 @@ export function shouldSkipSheetExit(dragY: number, height: number): boolean {
 export function shouldHoldSheet(visible: boolean, held: boolean): boolean {
   return visible || held;
 }
+
+/**
+ * Route sheets can mount from prefetch/preload without being on screen.
+ * Only those actually presented should hide the tab dock.
+ */
+export function isModalSheetPresented(
+  visible: boolean,
+  host: 'modal' | 'route',
+  routeFocused: boolean,
+): boolean {
+  if (!visible) return false;
+  return host === 'modal' || routeFocused;
+}

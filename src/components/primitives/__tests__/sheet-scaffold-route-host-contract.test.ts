@@ -16,4 +16,15 @@ describe('SheetScaffold route host', () => {
   it('keeps native Modal hosting as the default for in-tree sheets', () => {
     expect(source).toContain("host = 'modal'");
   });
+
+  it('hides the tab dock only while a sheet is presented, not while held or prefetched', () => {
+    expect(source).toContain('useIsFocused');
+    expect(source).toContain('isModalSheetPresented(visible, host, routeFocused)');
+    expect(source).toContain('visible: presented');
+    expect(source).toContain('if (!presented) return');
+    expect(source).toContain('beginModalSheet');
+    expect(source).not.toMatch(
+      /useEffect\(\(\) => \{\s*if \(!held\) return;\s*beginModalSheet/,
+    );
+  });
 });

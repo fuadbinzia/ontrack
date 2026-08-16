@@ -1,8 +1,10 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
 const root = process.cwd();
+const requireFromRoot = createRequire(join(root, 'scripts/__tests__/metro-launch-contract.test.ts'));
 
 function read(relative: string): string {
   return readFileSync(join(root, relative), 'utf8');
@@ -93,6 +95,66 @@ describe('metro launch command contract', () => {
     expect(ensure).not.toMatch(/nohup npm start/);
     expect(ensure).toContain('start_new_session=True');
     expect(ensure).toContain('Metro detached (new session)');
+  });
+
+  it('strips inherited NO_COLOR so Metro workers do not trip Node FORCE_COLOR warnings', () => {
+    const metroConfig = read('metro.config.js');
+    const launcher = read('scripts/start-metro.sh');
+    const publish = read('scripts/publish-ota.sh');
+    const helper = read('scripts/lib/strip-node-color-conflict.cjs');
+
+    expect(helper).toContain('delete env.NO_COLOR');
+    expect(helper).toContain('delete env.NODE_DISABLE_COLORS');
+    expect(metroConfig).toContain('strip-node-color-conflict.cjs');
+    expect(metroConfig).toContain('stripNodeColorConflict()');
+    expect(launcher).toMatch(/unset NO_COLOR NODE_DISABLE_COLORS/);
+    expect(publish).toMatch(/unset NO_COLOR NODE_DISABLE_COLORS/);
+
+    const {
+      stripNodeColorConflict,
+    } = requireFromRoot('../lib/strip-node-color-conflict.cjs') as {
+      stripNodeColorConflict: (env?: NodeJS.ProcessEnv) => NodeJS.ProcessEnv;
+    };
+
+    const env: NodeJS.ProcessEnv = {
+      PATH: process.env.PATH,
+      NO_COLOR: '1',
+      NODE_DISABLE_COLORS: '1',
+      FORCE_COLOR: '1',
+    };
+    const conflicted = spawnSync(
+      process.execPath,
+      ['-e', "require('util').styleText('red','x')"],
+      { env, encoding: 'utf8' },
+    );
+    expect(conflicted.status).toBe(0);
+    expect(conflicted.stderr).toMatch(
+      /NO_COLOR' env is ignored due to the 'FORCE_COLOR'/,
+    );
+
+    const forceOff = spawnSync(
+      process.execPath,
+      ['-e', "require('util').styleText('red','x')"],
+      {
+        env: { PATH: process.env.PATH, NO_COLOR: '1', FORCE_COLOR: '0' },
+        encoding: 'utf8',
+      },
+    );
+    expect(forceOff.status).toBe(0);
+    expect(forceOff.stderr).not.toMatch(/NO_COLOR/);
+
+    stripNodeColorConflict(env);
+    expect(env.NO_COLOR).toBeUndefined();
+    expect(env.NODE_DISABLE_COLORS).toBeUndefined();
+    expect(env.FORCE_COLOR).toBe('1');
+
+    const quiet = spawnSync(
+      process.execPath,
+      ['-e', "require('util').styleText('red','x')"],
+      { env, encoding: 'utf8' },
+    );
+    expect(quiet.status).toBe(0);
+    expect(quiet.stderr).not.toMatch(/NO_COLOR/);
   });
 
   it('keeps Watchman hybrid crawl/watch and refuses dead subscriptions', () => {

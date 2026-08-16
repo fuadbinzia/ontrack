@@ -55,6 +55,8 @@ EAS=(npx --yes --prefer-offline eas-cli@latest)
 GROUP_ID_HELPER="$ROOT/scripts/lib/eas-update-group-id.mjs"
 EXPORT_CMD="npx expo export --output-dir dist --dump-assetmap --platform ios --platform android"
 export EXPO_NO_TELEMETRY=1
+# Metro workers set FORCE_COLOR=1; Node 24 warns if NO_COLOR is also set.
+unset NO_COLOR NODE_DISABLE_COLORS
 
 export_complete() {
   [[ -f "$ROOT/dist/metadata.json" && -f "$ROOT/dist/assetmap.json" ]]

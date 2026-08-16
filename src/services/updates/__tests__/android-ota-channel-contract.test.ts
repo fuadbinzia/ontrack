@@ -34,4 +34,22 @@ describe('android OTA device channel contract', () => {
       'device',
     );
   });
+
+  it('waits at launch so a published OTA can apply on the same cold start', () => {
+    const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8')) as {
+      expo?: { updates?: { fallbackToCacheTimeout?: number } };
+    };
+    const manifest = fs.readFileSync(manifestPath, 'utf8');
+    const expoPlist = fs.readFileSync(
+      path.join(root, 'ios/onTrack/Supporting/Expo.plist'),
+      'utf8',
+    );
+    expect(appJson.expo?.updates?.fallbackToCacheTimeout).toBe(8000);
+    expect(manifest).toContain(
+      'expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="8000"',
+    );
+    expect(expoPlist).toMatch(
+      /<key>EXUpdatesLaunchWaitMs<\/key>\s*<integer>8000<\/integer>/,
+    );
+  });
 });

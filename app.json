@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.107",
+    "version": "1.0.108",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -10,6 +10,8 @@
     "runtimeVersion": "1.0.3",
     "updates": {
       "url": "https://u.expo.dev/bd232bf6-7397-4463-b25a-9b67d78e5695",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 8000,
       "requestHeaders": {
         "expo-channel-name": "device"
       }
@@ -50,7 +52,7 @@
       "appleTeamId": "F5HRXF5795"
     },
     "android": {
-      "versionCode": 107,
+      "versionCode": 108,
       "package": "com.imtihoss.ontracknow",
       "intentFilters": [
         {

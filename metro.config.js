@@ -1,6 +1,11 @@
 const http = require('http');
 const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
+const { stripNodeColorConflict } = require('./scripts/lib/strip-node-color-conflict.cjs');
+
+// Before WorkerFarm copies process.env into FORCE_COLOR=1 transform workers.
+stripNodeColorConflict();
+
 
 const apiRouteTestBlockList = /[\\/]app[\\/].*[\\/]__tests__[\\/].*\+api\.test\.ts$/;
 

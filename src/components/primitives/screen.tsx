@@ -9,8 +9,8 @@ import {
     type ScrollView as RNScrollView,
     type ViewStyle,
 } from 'react-native';
-import { GestureScrollView as ScrollView } from './gesture-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GestureScrollView as ScrollView } from './gesture-scroll-view';
 
 import { bottomNavContentInset } from '@/components/navigation/bottom-nav-inset';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
@@ -126,7 +126,7 @@ export function Screen({
   const shell = scroll ? (
     <ScrollView
       ref={agentScroll.scrollRef}
-      style={styles.scrollView}
+      style={[styles.scrollView, styles.aboveAtmosphere]}
       automaticallyAdjustKeyboardInsets
       scrollEnabled={scrollEnabled}
       contentInsetAdjustmentBehavior="never"
@@ -141,7 +141,10 @@ export function Screen({
       {children}
     </ScrollView>
   ) : (
-    <View style={[styles.fill, paddingStyle, contentStyle]}>{children}</View>
+    <View
+      style={[styles.fill, styles.aboveAtmosphere, paddingStyle, contentStyle]}>
+      {children}
+    </View>
   );
 
   // Scroll must be the first child so iOS 26 `UIScrollEdgeEffect` lookup
@@ -176,6 +179,8 @@ export function Screen({
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  scrollView: { flex: 1, backgroundColor: 'transparent', zIndex: 1 },
+  /** Atmosphere is a later sibling (iOS 26 first-child scroll). Keep chrome on top. */
+  aboveAtmosphere: { zIndex: 1 },
+  scrollView: { flex: 1, backgroundColor: 'transparent' },
   scrollContent: { flexGrow: 1 },
 });

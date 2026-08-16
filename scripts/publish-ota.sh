@@ -56,10 +56,25 @@ GROUP_ID_HELPER="$ROOT/scripts/lib/eas-update-group-id.mjs"
 EXPORT_CMD="npx expo export --output-dir dist --dump-assetmap --platform ios --platform android"
 export EXPO_NO_TELEMETRY=1
 
+export_complete() {
+  [[ -f "$ROOT/dist/metadata.json" && -f "$ROOT/dist/assetmap.json" ]]
+}
+
 export_bundle() {
   echo "==> Exporting OTA bundle (ios+android, no source maps)"
   rm -rf "$ROOT/dist"
+  # `eas env:exec` can exit non-zero after a successful `expo export`
+  # (Metro teardown / FORCE_COLOR warnings). Dist is the source of truth.
+  set +e
   "${EAS[@]}" env:exec preview --non-interactive "$EXPORT_CMD"
+  local status=$?
+  set -e
+  if ! export_complete; then
+    die "OTA export failed (status $status)"
+  fi
+  if [[ "$status" -ne 0 ]]; then
+    echo "warning: eas env:exec exited $status after a complete dist/; continuing" >&2
+  fi
 }
 
 upload_bundle() {

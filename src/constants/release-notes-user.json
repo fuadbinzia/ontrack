@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.107",
+    "date": "2026-08-16",
+    "notes": [
+      "Keep More chrome above the atmosphere wash and continue OTA when dist export already succeeded."
+    ]
+  },
+  {
     "version": "1.0.106",
     "date": "2026-08-16",
     "notes": [

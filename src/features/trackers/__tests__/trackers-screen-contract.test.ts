@@ -23,6 +23,7 @@ describe('trackers screen contract', () => {
     expect(screen).not.toContain('use-tracker-presence');
     expect(screen).toContain('TrackersManageSheet');
     expect(screen).toContain('AgentUiIds.trackers.manage');
+    expect(screen).toContain('scroll={false}');
   });
 
   it('does not render an Open label between Manage Sections add-on rows', () => {

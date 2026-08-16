@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 import {
   catalogTopVersionDiffers,
   CHANGELOG,
@@ -11,6 +14,8 @@ import {
   RELEASE_NOTES,
 } from '../release-notes';
 
+const CONSTANTS_DIR = path.resolve(__dirname, '../../../constants');
+
 describe('release-notes catalogs', () => {
   it('keeps Release Notes and Changelog newest-first with aligned top versions', () => {
     expect(RELEASE_NOTES.length).toBeGreaterThan(1);
@@ -21,6 +26,44 @@ describe('release-notes catalogs', () => {
     );
     expect(getReleaseNotes()).toBe(RELEASE_NOTES);
     expect(getChangelog()).toBe(CHANGELOG);
+  });
+
+  it('keeps catalog data in JSON so ship prepends never regrow the code readers', () => {
+    // Regression: release-notes-user.ts hit 737 lines and tripped the token
+    // budget because ship:push prepended entries into TypeScript source.
+    const reader = fs.readFileSync(
+      path.join(CONSTANTS_DIR, 'release-notes-data.ts'),
+      'utf8',
+    );
+    expect(reader.split('\n').length).toBeLessThan(30);
+    expect(reader).not.toMatch(/version:\s*'/);
+    for (const data of [
+      'release-notes-user.json',
+      'release-notes-changelog.json',
+    ]) {
+      const parsed = JSON.parse(
+        fs.readFileSync(path.join(CONSTANTS_DIR, data), 'utf8'),
+      ) as unknown;
+      expect(Array.isArray(parsed)).toBe(true);
+    }
+  });
+
+  it('keeps catalog entries well-formed and strictly version-descending', () => {
+    const semverKey = (version: string) =>
+      version.split('.').map((part) => Number(part).toString().padStart(6, '0')).join('.');
+    for (const catalog of [RELEASE_NOTES, CHANGELOG]) {
+      for (const entry of catalog) {
+        expect(entry.version).toMatch(/^\d+\.\d+\.\d+$/);
+        expect(entry.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(entry.notes.length).toBeGreaterThan(0);
+        for (const note of entry.notes) expect(note.trim().length).toBeGreaterThan(0);
+      }
+      for (let i = 1; i < catalog.length; i += 1) {
+        expect(
+          semverKey(catalog[i - 1]!.version) > semverKey(catalog[i]!.version),
+        ).toBe(true);
+      }
+    }
   });
 
   it('formats the Profile version label with and without build', () => {

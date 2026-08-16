@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-16T01:07:51Z",
-  "idCount": 964,
+  "generatedAt": "2026-08-16T07:48:56Z",
+  "idCount": 965,
   "byId": {
     "ontrack.activityForm.analyzePhoto": {
       "feature": "activityForm",
@@ -213,11 +213,11 @@
         "src/app/(tabs)/calendar.tsx",
         "src/app/(tabs)/food/ai-ideas.tsx",
         "src/app/(tabs)/food/community.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/preferences.tsx",
         "src/app/(tabs)/food/recipes/index.tsx",
         "src/app/(tabs)/plants/new.tsx",
         "src/app/(tabs)/profile/appearance.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/app/(tabs)/vehicles/[id].tsx",
         "src/app/(tabs)/workouts.tsx"
       ],
@@ -289,6 +289,7 @@
       "entry": null,
       "skill": null,
       "files": [
+        "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/food/community.tsx",
         "src/app/(tabs)/food/index.tsx",
         "src/app/(tabs)/food/ingredients/index.tsx",
@@ -299,8 +300,7 @@
         "src/app/(tabs)/profile/api-usage.tsx",
         "src/app/(tabs)/profile/appearance.tsx",
         "src/app/(tabs)/profile/calendar-sync.tsx",
-        "src/app/(tabs)/profile/index.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx"
+        "src/app/(tabs)/profile/index.tsx"
       ],
       "keyPaths": [
         "activityForm.event.tabs",
@@ -317,13 +317,13 @@
         "src/components/primitives/index.ts",
         "src/components/primitives/sheet-scaffold.tsx",
         "src/components/primitives/use-sheet-dismiss-pan.ts",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/design-system/design-system-catalog-data.ts",
         "src/features/design-system/design-system-components-panel.tsx",
         "src/features/food/food-sheet.tsx",
         "src/features/travel/travel-itinerary-add-sheet.tsx",
-        "src/features/travel/travel-remove-confirm-modal.tsx"
+        "src/features/travel/travel-remove-confirm-modal.tsx",
+        "src/features/travel/travel-sheet.tsx",
+        "docs/design-system.md"
       ],
       "keyPaths": [
         "activityForm.grabber",
@@ -586,7 +586,7 @@
         "src/app/share-event.tsx",
         "src/app/share-import.tsx",
         "src/components/navigation/bottom-nav-bar.tsx",
-        "src/components/navigation/swipe-back-scene.tsx"
+        "src/components/navigation/overview-return.ts"
       ],
       "keyPaths": [
         "auth.dataChoice.cancel",
@@ -622,7 +622,6 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/food/preferences.tsx",
         "src/app/activity-form.tsx",
         "src/app/auth/data-choice.tsx",
         "src/components/navigation/app-stack.tsx",
@@ -633,7 +632,8 @@
         "src/features/account/profile-avatar-model.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/auth/auth-atmosphere.tsx",
-        "src/features/auth/auth-palette.ts"
+        "src/features/auth/auth-palette.ts",
+        "src/features/auth/auth-provider.tsx"
       ],
       "keyPaths": [
         "auth.dataChoice.merge",
@@ -701,9 +701,9 @@
         "src/features/account/developer-hub.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/profile-avatar-model.ts",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
-        "src/features/account/self-display-name.ts"
+        "src/features/account/self-display-name.ts",
+        "src/features/account/terms-of-use-content.ts",
+        "src/features/auth/auth-canvas-extent.ts"
       ],
       "keyPaths": [
         "auth.guest",
@@ -726,12 +726,11 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/auth/auth-canvas-extent.ts",
         "src/features/auth/auth-constellation-layout.ts",
         "src/features/auth/auth-constellation.tsx",
         "src/features/auth/auth-hero.tsx",
+        "src/features/auth/auth-ring-copy.tsx",
         "src/features/auth/auth-screen.tsx",
         "src/features/auth/welcome-onboard-screen.tsx"
       ],
@@ -995,7 +994,6 @@
         "src/features/todos/todo-collaborators-screen.tsx",
         "src/features/todos/todo-list-card.tsx",
         "src/features/todos/todo-list-remove.ts",
-        "src/features/todos/todo-lists-overview-header.tsx",
         "src/features/todos/todo-lists-overview.tsx",
         "src/features/vehicles/vehicle-activity-panel.tsx",
         "src/features/vehicles/vehicle-overview-panel.tsx",
@@ -1091,7 +1089,6 @@
       "skill": ".cursor/skills/todos/SKILL.md",
       "files": [
         "src/features/todos/todo-empty-state.tsx",
-        "src/features/todos/todo-list-header-toolbar.tsx",
         "src/features/todos/todo-list-screen.tsx"
       ],
       "keyPaths": [
@@ -1104,7 +1101,8 @@
       "entry": "src/features/todos/todo-list-screen.tsx",
       "skill": ".cursor/skills/todos/SKILL.md",
       "files": [
-        "src/features/todos/todo-list-header.tsx"
+        "src/features/todos/todo-list-header.tsx",
+        "src/utils/agent-ui/flows-lists.ts"
       ],
       "keyPaths": [
         "checklists.detail.back"
@@ -1131,6 +1129,29 @@
       ],
       "keyPaths": [
         "checklists.detail.editMode"
+      ]
+    },
+    "ontrack.checklists.detail.filter": {
+      "feature": "checklists",
+      "entry": "src/features/todos/todo-list-screen.tsx",
+      "skill": ".cursor/skills/todos/SKILL.md",
+      "files": [
+        "src/agents/runtime.ts",
+        "src/app/(tabs)/(today)/detail/food/[id].tsx",
+        "src/app/(tabs)/(today)/detail/generic/[id].tsx",
+        "src/app/(tabs)/(today)/detail/movie/[id].tsx",
+        "src/app/(tabs)/(today)/detail/work/[id].tsx",
+        "src/app/(tabs)/food/ai-ideas.tsx",
+        "src/app/(tabs)/food/community.tsx",
+        "src/app/(tabs)/food/index.tsx",
+        "src/app/(tabs)/food/ingredients/[id].tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
+        "src/app/(tabs)/food/recipes/[id].tsx",
+        "src/app/(tabs)/food/recipes/index.tsx"
+      ],
+      "keyPaths": [
+        "checklists.detail.filter",
+        "filter"
       ]
     },
     "ontrack.checklists.detail.linkedTrip": {
@@ -1166,7 +1187,7 @@
       "entry": "src/features/todos/todo-list-screen.tsx",
       "skill": ".cursor/skills/todos/SKILL.md",
       "files": [
-        "src/features/todos/todo-list-header-toolbar.tsx"
+        "src/features/todos/todo-list-toolbar-actions.ts"
       ],
       "keyPaths": [
         "checklists.detail.sort"
@@ -1199,18 +1220,18 @@
       "entry": "src/features/todos/todo-list-screen.tsx",
       "skill": ".cursor/skills/todos/SKILL.md",
       "files": [
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/todos/checklist-assignee-filter.ts",
         "src/features/todos/checklist-task-details-sheet.tsx",
         "src/features/todos/share.ts",
         "src/features/todos/todo-empty-state.tsx",
         "src/features/todos/todo-list-header-toolbar.tsx",
         "src/features/todos/todo-list-screen.tsx",
+        "src/features/todos/todo-list-toolbar-actions.ts",
         "src/features/todos/todo-row.tsx",
         "src/store/todos-helpers.ts",
         "src/store/todos-normalize.ts",
-        "src/store/todos-task-actions.ts"
+        "src/store/todos-task-actions.ts",
+        "src/store/todos-types.ts"
       ],
       "keyPaths": [
         "assignee",
@@ -1673,7 +1694,6 @@
       "files": [
         "src/agents/registry.ts",
         "src/app/(tabs)/(today)/detail/sleep/[id].tsx",
-        "src/app/(tabs)/profile/index.tsx",
         "src/app/_layout.tsx",
         "src/app/api/events/search+api.ts",
         "src/app/api/finance/coach+api.ts",
@@ -1682,7 +1702,8 @@
         "src/app/api/finance/teller/session+api.ts",
         "src/app/api/usage/reset+api.ts",
         "src/app/food/ingredient-scan+api.ts",
-        "src/app/food/recipe-ideas+api.ts"
+        "src/app/food/recipe-ideas+api.ts",
+        "src/app/meal-analysis/photo+api.ts"
       ],
       "keyPaths": [
         "developer.env",
@@ -1788,8 +1809,8 @@
         "src/components/primitives/sheet-scaffold.tsx",
         "src/design-system/themes.ts",
         "src/features/account/developer-hub.tsx",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-changelog.ts"
+        "src/features/analytics/usage-analytics-tracker.tsx",
+        "src/features/auth/app-boot-loader.tsx"
       ],
       "keyPaths": [
         "developer.performance",
@@ -1813,6 +1834,7 @@
       "entry": null,
       "skill": null,
       "files": [
+        "src/constants/release-notes-data.ts",
         "src/features/account/developer-release-notes-panel.tsx"
       ],
       "keyPaths": [
@@ -1970,7 +1992,7 @@
         "src/features/daily-tracking/day-header.tsx",
         "src/features/overview/overview-summary-row.tsx",
         "src/features/social/social-hub-screen.tsx",
-        "src/features/trackers/trackers-manage-sheet.tsx"
+        "src/features/trackers/trackers-screen.tsx"
       ],
       "keyPaths": [
         "developer.section.navigate",
@@ -1988,12 +2010,12 @@
         "src/app/activity-form-editors.tsx",
         "src/app/activity-form.tsx",
         "src/components/primitives/meta-list.tsx",
+        "src/components/primitives/sheet-dismiss.ts",
         "src/features/account/developer-hub.tsx",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-changelog.ts",
         "src/features/account/release-notes-format.ts",
-        "src/features/account/release-notes-user.ts",
-        "src/features/analytics/usage-analytics-tracker.tsx"
+        "src/features/analytics/usage-analytics-tracker.tsx",
+        "src/features/auth/session-lock.ts",
+        "src/features/performance/performance-metrics.ts"
       ],
       "keyPaths": [
         "developer.section.runtime",
@@ -2019,8 +2041,6 @@
         "src/app/(tabs)/profile/index.tsx",
         "src/features/account/dev-mode-controller.ts",
         "src/features/account/developer-hub.tsx",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/travel/fixtures/travel-home.ts",
         "src/features/travel/travel-home-atmosphere-queries.ts",
         "src/services/cloud/sync-session.ts",
@@ -2196,29 +2216,6 @@
       "keyPaths": [
         "eventDetail.fightCardModal",
         "fightCardModal"
-      ]
-    },
-    "ontrack.eventDetail.goBack": {
-      "feature": "eventDetail",
-      "entry": null,
-      "skill": null,
-      "files": [
-        "src/app/(tabs)/(today)/detail/generic/[id].tsx",
-        "src/app/(tabs)/food/recipes/[id].tsx",
-        "src/app/(tabs)/to-do/[id]/settings.tsx",
-        "src/app/activity-form.tsx",
-        "src/components/navigation/swipe-back-scene.tsx",
-        "src/components/primitives/back-button.tsx",
-        "src/features/games/balloon-pop/balloon-pop-screen.tsx",
-        "src/features/travel/flights/flight-search-screen.tsx",
-        "src/features/travel/stays/stay-provider-screen.tsx",
-        "src/features/travel/travel-chat-screen.tsx",
-        "src/features/travel/travel-trip-hub-screen.tsx",
-        "src/features/travel/travel-trip-tools-screen.tsx"
-      ],
-      "keyPaths": [
-        "eventDetail.goBack",
-        "goBack"
       ]
     },
     "ontrack.eventDetail.section.fightCard": {
@@ -2544,8 +2541,8 @@
         "src/addons/registry.ts",
         "src/agents/registry.ts",
         "src/app/(tabs)/(today)/detail/gym/[id].tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/profile/index.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/app/_layout.tsx",
         "src/app/welcome.tsx",
         "src/features/account/privacy-policy-content.ts",
@@ -2661,8 +2658,8 @@
         "src/features/finance/types.ts",
         "src/features/games/balloon-pop/balloon-pop-hud.tsx",
         "src/features/games/balloon-pop/balloon-pop-screen.tsx",
-        "src/features/travel/map/city-data.ts",
-        "src/features/travel/stays/stay-provider-logo-lookup.ts"
+        "src/features/overview/overview-affinity.ts",
+        "src/features/travel/map/city-data.ts"
       ],
       "keyPaths": [
         "finance.credit.score",
@@ -2899,9 +2896,9 @@
         "src/app/(tabs)/food/index.tsx",
         "src/app/(tabs)/food/ingredients/[id].tsx",
         "src/app/(tabs)/food/ingredients/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/preferences.tsx",
-        "src/app/(tabs)/food/recipes/[id].tsx",
-        "src/app/(tabs)/food/recipes/index.tsx"
+        "src/app/(tabs)/food/recipes/[id].tsx"
       ],
       "keyPaths": [
         "file",
@@ -4427,9 +4424,9 @@
       "files": [
         "src/app/(tabs)/food/ai-ideas.tsx",
         "src/app/(tabs)/food/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/insights.tsx",
         "src/app/(tabs)/plants/index.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/app/(tabs)/vehicles/index.tsx",
         "src/app/share-event.tsx",
         "src/components/navigation/tab-recency.ts",
@@ -4509,15 +4506,15 @@
         "src/app/(tabs)/food/community.tsx",
         "src/app/(tabs)/food/recipes/[id].tsx",
         "src/components/navigation/app-stack.tsx",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/daily-tracking/day-add-sheet-copy.ts",
         "src/features/daily-tracking/day-add-sheet.tsx",
         "src/features/food/community-sheets.tsx",
         "src/features/food/preferences-sections.tsx",
         "src/features/food/recipe-detail-sheets.tsx",
-        "src/features/journal/journal-composer.tsx"
+        "src/features/journal/journal-composer.tsx",
+        "src/features/journal/journal-page-screen.tsx",
+        "src/features/journal/model.ts",
+        "src/features/todos/grocery-rows.tsx"
       ],
       "keyPaths": [
         "compose",
@@ -4835,7 +4832,6 @@
       "entry": "src/app/detail/food/[id].tsx",
       "skill": null,
       "files": [
-        "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/food/ingredients/[id].tsx",
         "src/app/(tabs)/food/preferences.tsx",
         "src/app/(tabs)/food/recipes/[id].tsx",
@@ -4846,7 +4842,8 @@
         "src/app/(tabs)/vehicles/[id].tsx",
         "src/app/(tabs)/vision-board/index.tsx",
         "src/app/(tabs)/workouts.tsx",
-        "src/app/activity-form-assistant.tsx"
+        "src/app/activity-form-assistant.tsx",
+        "src/app/activity-form-sections.tsx"
       ],
       "keyPaths": [
         "food.ingredients.detail.section",
@@ -5107,8 +5104,8 @@
       "entry": "src/app/detail/food/[id].tsx",
       "skill": null,
       "files": [
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/preferences.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/constants/feature-flags.ts",
         "src/design-system/icons.ts",
         "src/services/nutrition/server.ts",
@@ -5373,6 +5370,7 @@
       "files": [
         "src/app/(tabs)/food/scan.tsx",
         "src/components/primitives/collapsible-body.tsx",
+        "src/design-system/presence.ts",
         "src/features/travel/address-autofind-field.tsx",
         "src/features/travel/travel-chat-access-gate.tsx",
         "src/features/travel/travel-chat-roster.ts",
@@ -5993,13 +5991,13 @@
         "src/app/api/usage/reset+api.ts",
         "src/app/travel/flights/search+api.ts",
         "src/app/travel/flights/status+api.ts",
+        "src/components/navigation/overview-return.ts",
+        "src/components/navigation/tab-lane-preload.ts",
+        "src/components/navigation/tab-swipe.ts",
         "src/components/primitives/screen-atmosphere.tsx",
         "src/components/shared/category-creator-selector.tsx",
         "src/design-system/font-presets.ts",
-        "src/design-system/index.ts",
-        "src/design-system/theme-overrides.ts",
-        "src/design-system/theme-presets.ts",
-        "src/features/account/dev-mode-controller.ts"
+        "src/design-system/index.ts"
       ],
       "keyPaths": [
         "health.reset",
@@ -6048,8 +6046,6 @@
       "files": [
         "src/addons/registry.ts",
         "src/app/journal/transcribe+api.ts",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/journal/journal-composer.tsx",
         "src/features/journal/journal-landing-empty.tsx",
         "src/features/journal/use-journal-recorder.ts",
@@ -6081,7 +6077,6 @@
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/movie/[id].tsx",
         "src/app/(tabs)/food/ingredients/[id].tsx",
-        "src/app/(tabs)/food/preferences.tsx",
         "src/app/(tabs)/profile/index.tsx",
         "src/app/(tabs)/profile/straiaway.tsx",
         "src/app/(tabs)/travel/[id].tsx",
@@ -6089,7 +6084,8 @@
         "src/app/activity-form-assistant.tsx",
         "src/app/activity-form-sections.tsx",
         "src/app/api/finance/plaid/exchange+api.ts",
-        "src/app/api/finance/plaid/link-token+api.ts"
+        "src/app/api/finance/plaid/link-token+api.ts",
+        "src/app/api/finance/rewards/import-link+api.ts"
       ],
       "keyPaths": [
         "journal.composer.link",
@@ -6195,13 +6191,13 @@
         "src/app/(tabs)/profile/developer.tsx",
         "src/app/(tabs)/social.tsx",
         "src/app/(tabs)/travel/[id]/hub.tsx",
+        "src/components/navigation/app-stack.tsx",
         "src/components/primitives/glass-icon-well.tsx",
         "src/components/primitives/glass-meta-chip.tsx",
         "src/features/account/dev-mode-controller.ts",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/finance/finance-subpage-header.tsx",
-        "src/features/finance/types.ts"
+        "src/features/finance/types.ts",
+        "src/features/games/games-hub.tsx"
       ],
       "keyPaths": [
         "hub",
@@ -6228,15 +6224,15 @@
         "src/addons/registry.ts",
         "src/app/api/finance/ezpass/parse+api.ts",
         "src/app/api/finance/rewards/import-link+api.ts",
+        "src/components/navigation/swipe-back-scene.tsx",
+        "src/components/navigation/tab-swipe.ts",
         "src/constants/legal.ts",
         "src/features/account/dev-mode-controller.ts",
         "src/features/account/privacy-policy-content.ts",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/auth/auth-provider-effects.ts",
         "src/features/food/food-home-hero.tsx",
-        "src/features/journal/journal-hub.tsx"
+        "src/features/journal/journal-hub.tsx",
+        "src/features/journal/journal-landing-pages.tsx"
       ],
       "keyPaths": [
         "earlier",
@@ -6369,13 +6365,13 @@
         "src/app/(tabs)/food/scan.tsx",
         "src/app/(tabs)/plants/[id].tsx",
         "src/app/(tabs)/profile/index.tsx",
+        "src/components/navigation/overview-return.ts",
         "src/design-system/icons.ts",
         "src/features/daily-tracking/day-view.tsx",
         "src/features/journal/journal-page-screen.tsx",
         "src/features/journal/model.ts",
         "src/features/travel/destination-cover-fetch.ts",
-        "src/features/vision-board/vision-board-category-canvas.tsx",
-        "src/features/vision-board/vision-board-category-screen.tsx"
+        "src/features/vision-board/vision-board-category-canvas.tsx"
       ],
       "keyPaths": [
         "journal.undo",
@@ -6481,7 +6477,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx"
+        "src/app/(tabs)/food/nutrition-profile.tsx"
       ],
       "keyPaths": [
         "addDependent",
@@ -6496,10 +6492,10 @@
         "src/app/(tabs)/food/ai-ideas.tsx",
         "src/app/(tabs)/food/index.tsx",
         "src/app/(tabs)/food/ingredients/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/preferences.tsx",
         "src/app/(tabs)/food/recipes/[id].tsx",
         "src/app/(tabs)/food/recipes/index.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/design-system/icons.ts",
         "src/features/account/privacy-policy-content.ts",
         "src/features/food/allergy-editor-sheet.tsx",
@@ -6516,7 +6512,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/nutrition-targets/calculate+api.ts",
         "src/design-system/icons.ts",
         "src/features/account/privacy-policy-content.ts",
@@ -6539,7 +6535,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/types/models.ts",
         "src/utils/nutrition.ts"
       ],
@@ -6553,7 +6549,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx"
+        "src/app/(tabs)/food/nutrition-profile.tsx"
       ],
       "keyPaths": [
         "guardianAcknowledgment",
@@ -6565,7 +6561,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/types/models.ts",
         "src/utils/nutrition.ts"
       ],
@@ -6579,7 +6575,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx"
+        "src/app/(tabs)/food/nutrition-profile.tsx"
       ],
       "keyPaths": [
         "nutritionProfile.name"
@@ -6590,7 +6586,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx"
+        "src/app/(tabs)/food/nutrition-profile.tsx"
       ],
       "keyPaths": [
         "nutritionProfile.preferences"
@@ -6601,7 +6597,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx"
+        "src/app/(tabs)/food/nutrition-profile.tsx"
       ],
       "keyPaths": [
         "nutritionProfile.saveTargets",
@@ -6613,7 +6609,7 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/workouts.tsx",
         "src/app/activity-form-editors.tsx",
         "src/app/activity-form.tsx",
@@ -6691,16 +6687,16 @@
       "files": [
         "src/app/(tabs)/insights.tsx",
         "src/app/+native-intent.ts",
+        "src/components/primitives/sheet-dismiss.ts",
         "src/components/shared/activity-card.tsx",
         "src/constants/seed.ts",
         "src/design-system/icons.ts",
         "src/features/account/dev-mode-controller.ts",
         "src/features/account/profile-avatar.tsx",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/auth/auth-constellation.tsx",
         "src/features/auth/auth-provider-effects.ts",
-        "src/features/auth/welcome-onboard-screen.tsx"
+        "src/features/auth/welcome-onboard-screen.tsx",
+        "src/features/daily-tracking/day-view.tsx"
       ],
       "keyPaths": [
         "onboarding.skip",
@@ -6734,9 +6730,9 @@
         "src/app/(tabs)/plants/new.tsx",
         "src/app/(tabs)/profile/index.tsx",
         "src/app/api/destination-cover+api.ts",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
-        "src/features/auth/auth-constellation-layout.ts"
+        "src/features/account/profile-identity-hero.tsx",
+        "src/features/auth/auth-constellation-layout.ts",
+        "src/features/auth/auth-constellation.tsx"
       ],
       "keyPaths": [
         "hero",
@@ -6921,17 +6917,17 @@
       "skill": null,
       "files": [
         "src/agents/registry.ts",
+        "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/insights.tsx",
         "src/app/(tabs)/plants/[id].tsx",
         "src/app/(tabs)/vehicles/[id]/settings.tsx",
         "src/components/navigation/overview-return.ts",
         "src/components/navigation/swipe-back.ts",
+        "src/components/navigation/tab-lane-preload.ts",
+        "src/components/navigation/tab-swipe.ts",
         "src/constants/seed.ts",
         "src/design-system/theme-overrides.ts",
-        "src/features/account/privacy-policy-content.ts",
-        "src/features/design-system/design-system-colors-panel.tsx",
-        "src/features/design-system/design-system-fonts-panel.tsx",
-        "src/features/design-system/design-system-theme-history.tsx"
+        "src/features/account/privacy-policy-content.ts"
       ],
       "keyPaths": [
         "history",
@@ -6946,7 +6942,6 @@
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
         "src/app/(tabs)/_layout.tsx",
-        "src/app/(tabs)/food/preferences.tsx",
         "src/app/(tabs)/food/scan.tsx",
         "src/app/(tabs)/travel/_layout.tsx",
         "src/app/(tabs)/vehicles/[id]/settings.tsx",
@@ -6954,6 +6949,7 @@
         "src/app/api/crash-report+api.ts",
         "src/app/api/events/ufc-live+api.ts",
         "src/app/onboarding.tsx",
+        "src/components/navigation/swipe-back-scene.tsx",
         "src/components/navigation/swipe-back.ts"
       ],
       "keyPaths": [
@@ -7265,15 +7261,15 @@
         "src/app/(tabs)/(today)/_layout.tsx",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
-        "src/app/(tabs)/(today)/detail/gym/[id].tsx",
-        "src/app/(tabs)/(today)/detail/movie/[id].tsx",
-        "src/app/(tabs)/(today)/detail/plant/[id].tsx",
-        "src/app/(tabs)/(today)/detail/sleep/[id].tsx",
-        "src/app/(tabs)/(today)/detail/work/[id].tsx",
         "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/food/ai-ideas.tsx",
         "src/app/(tabs)/food/community.tsx",
-        "src/app/(tabs)/food/ingredients/[id].tsx"
+        "src/app/(tabs)/food/ingredients/[id].tsx",
+        "src/app/(tabs)/food/ingredients/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
+        "src/app/(tabs)/food/plan.tsx",
+        "src/app/(tabs)/food/preferences.tsx",
+        "src/app/(tabs)/food/recipes/[id].tsx"
       ],
       "keyPaths": [
         "back",
@@ -7440,6 +7436,7 @@
         "src/app/(tabs)/profile/index.tsx",
         "src/components/primitives/collapsible-section.tsx",
         "src/features/account/profile-identity-editor-sheet.tsx",
+        "src/features/account/profile-identity-hero.tsx",
         "src/features/design-system/design-system-catalog-data.ts",
         "src/features/games/balloon-pop/balloon-pop-screen.tsx",
         "docs/agent-routes.md"
@@ -7548,16 +7545,16 @@
       "files": [
         "src/app/(tabs)/food/community.tsx",
         "src/app/(tabs)/food/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/profile/index.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/app/(tabs)/vehicles/[id]/settings.tsx",
         "src/app/f/[code].tsx",
         "src/features/account/profile-avatar-editor-sheet.tsx",
         "src/features/account/profile-avatar.tsx",
         "src/features/account/profile-identity-editor-sheet.tsx",
+        "src/features/account/profile-identity-hero.tsx",
         "src/features/finance/ezpass-collaboration-model.ts",
-        "src/features/finance/ezpass-model.ts",
-        "src/features/finance/finance-ezpass-friend-tag.tsx"
+        "src/features/finance/ezpass-model.ts"
       ],
       "keyPaths": [
         "displayName",
@@ -7647,11 +7644,11 @@
         "src/agents/registry.ts",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/food/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/preferences.tsx",
         "src/app/(tabs)/food/recipes/[id].tsx",
         "src/app/(tabs)/food/tracker.tsx",
         "src/app/(tabs)/insights.tsx",
-        "src/app/(tabs)/profile/index.tsx",
         "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/app/_layout.tsx",
         "src/app/activity-form.tsx"
@@ -7667,7 +7664,7 @@
       "skill": null,
       "files": [
         "src/app/(tabs)/food/preferences.tsx",
-        "src/app/(tabs)/profile/index.tsx",
+        "src/features/account/profile-about-section.tsx",
         "src/services/food/community.ts",
         "src/store/food-profile.ts"
       ],
@@ -7685,6 +7682,29 @@
       "keyPaths": [
         "profile.resetData",
         "resetData"
+      ]
+    },
+    "ontrack.profile.section.about": {
+      "feature": "profile",
+      "entry": "src/features/account/",
+      "skill": null,
+      "files": [
+        "src/addons/registry.ts",
+        "src/app/(tabs)/profile/index.tsx",
+        "src/app/activity-form-copy.ts",
+        "src/components/navigation/swipe-back-scene.tsx",
+        "src/components/navigation/tab-swipe.ts",
+        "src/features/account/profile-about-section.tsx",
+        "src/features/account/terms-of-use-content.ts",
+        "src/features/finance/coach.ts",
+        "src/features/performance/performance-metrics.ts",
+        "src/features/social/social-friends-modal.tsx",
+        "src/features/todos/todo-empty-state.tsx",
+        "src/features/travel/travel-chat-alerts.tsx"
+      ],
+      "keyPaths": [
+        "about",
+        "profile.section.about"
       ]
     },
     "ontrack.profile.section.account": {
@@ -7731,14 +7751,14 @@
         "src/agents/types.ts",
         "src/app/(tabs)/(today)/detail/sleep/[id].tsx",
         "src/app/(tabs)/calendar.tsx",
-        "src/app/(tabs)/profile/index.tsx",
         "src/app/activity-form.tsx",
         "src/app/share-event.tsx",
         "src/components/navigation/bottom-nav-bar.tsx",
         "src/components/navigation/bottom-nav-tab-meta.ts",
         "src/features/account/developer-storage.ts",
         "src/features/agents/agent-manager.tsx",
-        "src/features/auth/auth-guest-dirty.ts"
+        "src/features/auth/auth-guest-dirty.ts",
+        "src/features/daily-tracking/day-view.tsx"
       ],
       "keyPaths": [
         "addons",
@@ -7750,7 +7770,7 @@
       "entry": "src/features/account/",
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/index.tsx"
+        "src/features/account/profile-about-section.tsx"
       ],
       "keyPaths": [
         "appInformation",
@@ -7773,7 +7793,7 @@
         "src/design-system/theme-presets.ts",
         "src/design-system/themes.ts",
         "src/features/account/privacy-policy-content.ts",
-        "src/features/account/release-notes-changelog.ts"
+        "src/features/auth/auth-palette.ts"
       ],
       "keyPaths": [
         "appearance",
@@ -7806,9 +7826,7 @@
       "feature": "profile",
       "entry": "src/features/account/",
       "skill": null,
-      "files": [
-        "src/app/(tabs)/profile/index.tsx"
-      ],
+      "files": [],
       "keyPaths": [
         "disclaimers",
         "profile.section.disclaimers"
@@ -7842,14 +7860,14 @@
       "entry": "src/features/account/",
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/index.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/_layout.tsx",
         "src/app/privacy.tsx",
         "src/app/terms.tsx",
         "src/constants/legal.ts",
         "src/features/account/legal-document-screen.tsx",
         "src/features/account/privacy-policy-content.ts",
+        "src/features/account/profile-about-section.tsx",
         "src/features/account/terms-of-use-content.ts",
         "src/features/auth/auth-screen.tsx",
         "src/features/finance/categories.ts"
@@ -7909,7 +7927,6 @@
       "entry": "src/features/account/",
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/index.tsx",
         "src/app/(tabs)/profile/straiaway.tsx",
         "src/app/api/partner/straiaway/callback+api.ts",
         "src/app/api/partner/straiaway/connect+api.ts",
@@ -7920,7 +7937,8 @@
         "src/app/p/straiaway.tsx",
         "src/app/partner/straiaway.tsx",
         "src/features/travel/stay-details.ts",
-        "src/features/travel/stay-package.ts"
+        "src/features/travel/stay-package.ts",
+        "src/features/travel/travel-plan-detail.tsx"
       ],
       "keyPaths": [
         "profile.straiaway",
@@ -7932,7 +7950,7 @@
       "entry": "src/features/account/",
       "skill": null,
       "files": [
-        "src/app/(tabs)/profile/index.tsx"
+        "src/features/account/profile-about-section.tsx"
       ],
       "keyPaths": [
         "profile.terms"
@@ -7944,7 +7962,6 @@
       "skill": null,
       "files": [
         "src/app/(tabs)/(today)/detail/movie/[id].tsx",
-        "src/app/(tabs)/profile/index.tsx",
         "src/app/activity-form-editors.tsx",
         "src/app/api/movies/[id]+api.ts",
         "src/app/api/movies/search+api.ts",
@@ -7987,17 +8004,17 @@
       "skill": null,
       "files": [
         "src/agents/types.ts",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/insights.tsx",
         "src/app/(tabs)/profile/index.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/app/auth/data-choice.tsx",
         "src/app/meal-images/enhance+api.ts",
         "src/app/nutrition-targets/[id]/approve+api.ts",
         "src/features/account/dev-mode-controller.ts",
         "src/features/account/developer-release-notes-panel.tsx",
         "src/features/account/privacy-policy-content.ts",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-changelog.ts"
+        "src/features/account/profile-about-section.tsx",
+        "src/features/account/release-notes-format.ts"
       ],
       "keyPaths": [
         "profile.version",
@@ -8196,12 +8213,12 @@
         "src/app/(tabs)/food/ingredients/[id].tsx",
         "src/app/(tabs)/plants/[id].tsx",
         "src/app/(tabs)/plants/new.tsx",
-        "src/app/(tabs)/profile/index.tsx",
         "src/app/api/calendar/google/callback+api.ts",
         "src/app/api/calendar/google/connect+api.ts",
         "src/app/api/destination-cover+api.ts",
         "src/app/api/destination-cover-image+api.ts",
-        "src/app/api/events/search+api.ts"
+        "src/app/api/events/search+api.ts",
+        "src/app/api/events/targets+api.ts"
       ],
       "keyPaths": [
         "recipeImport.url",
@@ -8598,11 +8615,11 @@
         "src/app/(tabs)/food/tracker.tsx",
         "src/app/_layout.tsx",
         "src/app/auth/data-choice.tsx",
+        "src/components/navigation/swipe-back.ts",
         "src/components/navigation/tab-recency.ts",
+        "src/components/navigation/tab-swipe.ts",
         "src/components/primitives/date-field.tsx",
-        "src/components/primitives/dropdown.tsx",
-        "src/components/primitives/index.ts",
-        "src/components/primitives/input.tsx"
+        "src/components/primitives/dropdown.tsx"
       ],
       "keyPaths": [
         "empty",
@@ -8664,13 +8681,13 @@
         "src/app/j/[code].tsx",
         "src/app/p/straiaway.tsx",
         "src/features/account/privacy-policy-content.ts",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/auth/welcome-onboard-screen.tsx",
         "src/features/finance/coach.ts",
         "src/features/finance/tax-handoff.ts",
         "src/features/journal/journal-hub.tsx",
-        "src/features/journal/journal-landing-atmosphere.tsx"
+        "src/features/journal/journal-landing-atmosphere.tsx",
+        "src/features/journal/journal-landing-empty.tsx",
+        "src/features/journal/journal-page-empty.tsx"
       ],
       "keyPaths": [
         "landing",
@@ -8720,6 +8737,7 @@
         "src/agents/registry.ts",
         "src/agents/types.ts",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
+        "src/app/(tabs)/(today)/detail/generic/[id].tsx",
         "src/app/(tabs)/(today)/detail/gym/[id].tsx",
         "src/app/(tabs)/(today)/detail/movie/[id].tsx",
         "src/app/(tabs)/(today)/detail/plant/[id].tsx",
@@ -8727,8 +8745,7 @@
         "src/app/(tabs)/(today)/detail/work/[id].tsx",
         "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/calendar.tsx",
-        "src/app/(tabs)/food/recipes/[id].tsx",
-        "src/app/(tabs)/profile/calendar-sync.tsx"
+        "src/app/(tabs)/food/recipes/[id].tsx"
       ],
       "keyPaths": [
         "calendar",
@@ -8762,16 +8779,16 @@
       "files": [
         "src/app/+html.tsx",
         "src/features/account/privacy-policy-content.ts",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/account/terms-of-use-content.ts",
+        "src/features/overview/overview-affinity.ts",
         "src/features/todos/checklist-category-tabs.tsx",
         "src/features/todos/checklist-task-details-sheet.tsx",
         "src/features/todos/grocery-list-header.tsx",
         "src/features/todos/share.ts",
         "src/features/todos/todo-collaborator-join-screen.tsx",
         "src/features/todos/todo-collaborators-screen.tsx",
-        "src/features/todos/todo-linked-trip-action.tsx"
+        "src/features/todos/todo-linked-trip-action.tsx",
+        "src/features/todos/todo-list-card.tsx"
       ],
       "keyPaths": [
         "checklists",
@@ -8786,15 +8803,15 @@
         "src/app/account.tsx",
         "src/components/navigation/bottom-nav-bar.tsx",
         "src/components/navigation/bottom-nav-inset.ts",
+        "src/components/navigation/tab-lane-preload.ts",
         "src/components/primitives/dropdown.tsx",
         "src/components/primitives/safe-area-chrome.tsx",
         "src/components/primitives/screen.tsx",
         "src/components/primitives/sheet-scaffold.tsx",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/auth/auth-screen.tsx",
         "src/features/daily-tracking/day-view.tsx",
-        "src/features/journal/journal-composer.tsx"
+        "src/features/journal/journal-composer.tsx",
+        "src/features/journal/journal-page-screen.tsx"
       ],
       "keyPaths": [
         "dock",
@@ -8938,10 +8955,10 @@
         "src/components/primitives/dropdown.tsx",
         "src/design-system/icons.ts",
         "src/features/account/integrations-sort.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/auth/auth-hero.tsx",
         "src/features/auth/welcome-onboard-screen.tsx",
-        "src/features/design-system/design-system-catalog-panel.tsx"
+        "src/features/design-system/design-system-catalog-panel.tsx",
+        "src/features/finance/ezpass-import.ts"
       ],
       "keyPaths": [
         "more",
@@ -8960,11 +8977,11 @@
         "src/app/(tabs)/to-do/index.tsx",
         "src/app/(tabs)/vehicles/[id].tsx",
         "src/app/activity-form-editors.tsx",
+        "src/components/navigation/bottom-nav-bar.tsx",
         "src/components/navigation/bottom-nav-tab-meta.ts",
         "src/components/navigation/overview-return.ts",
         "src/components/navigation/swipe-back-scene.tsx",
-        "src/components/navigation/swipe-back.ts",
-        "src/components/navigation/tab-pins.ts"
+        "src/components/navigation/swipe-back.ts"
       ],
       "keyPaths": [
         "overview",
@@ -8987,7 +9004,7 @@
         "src/app/(tabs)/plants/_layout.tsx",
         "src/app/(tabs)/plants/index.tsx",
         "src/app/(tabs)/plants/new.tsx",
-        "src/app/(tabs)/profile/index.tsx"
+        "src/app/plant-analysis/care+api.ts"
       ],
       "keyPaths": [
         "plants",
@@ -9008,9 +9025,9 @@
         "src/app/(tabs)/food/index.tsx",
         "src/app/(tabs)/food/ingredients/[id].tsx",
         "src/app/(tabs)/food/ingredients/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/preferences.tsx",
-        "src/app/(tabs)/food/recipes/[id].tsx",
-        "src/app/(tabs)/food/recipes/index.tsx"
+        "src/app/(tabs)/food/recipes/[id].tsx"
       ],
       "keyPaths": [
         "profile",
@@ -9049,12 +9066,12 @@
         "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/calendar.tsx",
         "src/app/(tabs)/food/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/tracker.tsx",
         "src/app/(tabs)/insights.tsx",
         "src/app/(tabs)/plants/[id].tsx",
         "src/app/(tabs)/plants/index.tsx",
         "src/app/(tabs)/plants/new.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/app/(tabs)/vehicles/index.tsx",
         "src/app/(tabs)/workouts.tsx"
       ],
@@ -9241,18 +9258,18 @@
       "entry": "src/features/daily-tracking/day-view.tsx",
       "skill": null,
       "files": [
+        "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
+        "src/app/(tabs)/(today)/detail/gym/[id].tsx",
+        "src/app/(tabs)/(today)/detail/movie/[id].tsx",
+        "src/app/(tabs)/(today)/detail/plant/[id].tsx",
+        "src/app/(tabs)/(today)/detail/sleep/[id].tsx",
+        "src/app/(tabs)/(today)/detail/work/[id].tsx",
         "src/app/(tabs)/profile/appearance.tsx",
         "src/app/activity-form.tsx",
         "src/components/navigation/tab-recency.ts",
         "src/components/primitives/app-prompt.tsx",
-        "src/components/primitives/collapsible-body.tsx",
-        "src/components/primitives/date-field.tsx",
-        "src/components/primitives/disclosure-chevron.tsx",
-        "src/components/primitives/screen-header.tsx",
-        "src/components/primitives/sheet-grabber.tsx",
-        "src/components/primitives/sheet-scaffold.tsx",
-        "src/components/primitives/time-field.ios.tsx"
+        "src/components/primitives/collapsible-body.tsx"
       ],
       "keyPaths": [
         "close",
@@ -9627,8 +9644,8 @@
         "src/design-system/motion.ts",
         "src/features/account/city-autofind-settings-row.tsx",
         "src/features/account/city-autofind-suggestion-menu.tsx",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts"
+        "src/features/design-system/design-system-fonts-panel.tsx",
+        "src/features/food/food-home-hero.tsx"
       ],
       "keyPaths": [
         "menu",
@@ -9713,7 +9730,6 @@
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
         "src/app/(tabs)/profile/calendar-sync.tsx",
-        "src/app/(tabs)/profile/index.tsx",
         "src/app/(tabs)/profile/straiaway.tsx",
         "src/app/(tabs)/vehicles/[id]/settings.tsx",
         "src/app/activity-form-sections.tsx",
@@ -9723,7 +9739,8 @@
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/food/community-sheets.tsx",
-        "src/features/food/recipe-detail-sheets.tsx"
+        "src/features/food/recipe-detail-sheets.tsx",
+        "src/features/journal/journal-composer.tsx"
       ],
       "keyPaths": [
         "send",
@@ -9840,13 +9857,13 @@
         "src/agents/runtime.ts",
         "src/agents/types.ts",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
+        "src/app/(tabs)/(today)/detail/generic/[id].tsx",
         "src/app/(tabs)/(today)/detail/gym/[id].tsx",
         "src/app/(tabs)/(today)/detail/movie/[id].tsx",
         "src/app/(tabs)/(today)/detail/plant/[id].tsx",
         "src/app/(tabs)/(today)/detail/sleep/[id].tsx",
         "src/app/(tabs)/(today)/detail/work/[id].tsx",
-        "src/app/(tabs)/(today)/index.tsx",
-        "src/app/(tabs)/_layout.tsx"
+        "src/app/(tabs)/(today)/index.tsx"
       ],
       "keyPaths": [
         "end",
@@ -9880,7 +9897,7 @@
         "src/app/(tabs)/plants/index.tsx",
         "src/app/(tabs)/plants/new.tsx",
         "src/app/(tabs)/profile/calendar-sync.tsx",
-        "src/app/(tabs)/profile/index.tsx"
+        "src/app/(tabs)/travel/[id].tsx"
       ],
       "keyPaths": [
         "start",
@@ -10720,7 +10737,7 @@
         "src/app/(tabs)/calendar.tsx",
         "src/app/(tabs)/food/index.tsx",
         "src/app/(tabs)/food/ingredients/[id].tsx",
-        "src/app/(tabs)/food/tracker.tsx"
+        "src/app/(tabs)/food/nutrition-profile.tsx"
       ],
       "keyPaths": [
         "date",
@@ -11214,8 +11231,6 @@
       "files": [
         "src/app/_layout.tsx",
         "src/design-system/themes.ts",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/events/event-card-model.ts",
         "src/features/events/ufc-fight-card.tsx",
         "src/features/travel/destination-cover-lookup.ts",
@@ -11223,7 +11238,9 @@
         "src/features/travel/map/optional-screen-orientation.ts",
         "src/features/travel/map/travel-map-preview-card.tsx",
         "src/features/travel/map/travel-map-screen.tsx",
-        "src/features/travel/map/use-travel-map-unpin.ts"
+        "src/features/travel/map/use-travel-map-unpin.ts",
+        "src/features/travel/travel-home-atmosphere-catalog.ts",
+        "src/hooks/use-responsive.ts"
       ],
       "keyPaths": [
         "portrait",
@@ -11253,11 +11270,11 @@
         "src/app/f/[code].tsx",
         "src/components/navigation/bottom-nav-tab-meta.ts",
         "src/design-system/icons.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/account/terms-of-use-content.ts",
+        "src/features/calendar/holiday-icon.ts",
+        "src/features/calendar/holiday-mark.tsx",
         "src/features/calendar/holidays.ts",
-        "src/features/finance/finance-ezpass-friend-tag.tsx",
-        "src/features/finance/finance-ezpass-screen.tsx"
+        "src/features/finance/finance-ezpass-friend-tag.tsx"
       ],
       "keyPaths": [
         "people",
@@ -11453,15 +11470,15 @@
         "src/app/(tabs)/food/ingredients/[id].tsx",
         "src/app/api/finance/plaid/link-token+api.ts",
         "src/features/account/city-autofind-settings-row.tsx",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/daily-tracking/weather-place-label.ts",
         "src/features/events/ufc-fight-card.tsx",
         "src/features/food/components/country-restriction-row.tsx",
         "src/features/food/components/index.ts",
         "src/features/food/fixture-ingredient-knowledge.ts",
         "src/features/food/scan-result-sheet.tsx",
-        "src/features/travel/address-lookup.ts"
+        "src/features/travel/address-lookup.ts",
+        "src/features/travel/currency-conversion-link.ts",
+        "src/features/travel/map/city-data.ts"
       ],
       "keyPaths": [
         "country",
@@ -11486,8 +11503,6 @@
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
         "src/design-system/icons.ts",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/food/components/country-restriction-row.tsx",
         "src/features/travel/airline-logo.tsx",
         "src/features/travel/map/globe-projection.ts",
@@ -12045,13 +12060,13 @@
         "src/design-system/icons.ts",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/profile-location-preferences.tsx",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/daily-tracking/day-header.tsx",
         "src/features/daily-tracking/day-weather-bar.tsx",
         "src/features/daily-tracking/resolve-home-weather-day.ts",
-        "src/features/daily-tracking/use-home-weather.ts"
+        "src/features/daily-tracking/use-home-weather.ts",
+        "src/features/daily-tracking/use-place-weather.ts",
+        "src/features/daily-tracking/weather-place-label.ts"
       ],
       "keyPaths": [
         "travel.planDetail.weather",
@@ -12203,10 +12218,10 @@
         "src/app/(tabs)/food/ai-ideas.tsx",
         "src/app/(tabs)/food/ingredients/[id].tsx",
         "src/app/(tabs)/food/ingredients/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/scan.tsx",
         "src/app/(tabs)/insights.tsx",
-        "src/app/(tabs)/plants/[id].tsx",
-        "src/app/(tabs)/plants/new.tsx"
+        "src/app/(tabs)/plants/[id].tsx"
       ],
       "keyPaths": [
         "now",
@@ -12222,14 +12237,14 @@
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
         "src/app/(tabs)/profile/calendar-sync.tsx",
         "src/components/navigation/bottom-nav-tab-item.tsx",
-        "src/components/navigation/swipe-back-scene.tsx",
         "src/components/navigation/swipe-back.ts",
         "src/components/primitives/collapsible-body.tsx",
         "src/components/primitives/glass-switch.tsx",
         "src/components/primitives/index.ts",
         "src/components/primitives/loading-spinner.tsx",
         "src/components/primitives/progress-ring.tsx",
-        "src/features/account/release-notes-changelog.ts"
+        "src/features/auth/app-boot-loader.tsx",
+        "src/features/auth/theme-mode-toggle.tsx"
       ],
       "keyPaths": [
         "progress",
@@ -12266,8 +12281,6 @@
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
         "src/app/travel/flights/search+api.ts",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/social/social-hub-screen.tsx",
         "src/features/travel/destination-cover-photo-filters.ts",
         "src/features/travel/expenses/expense-math.ts",
@@ -12276,7 +12289,9 @@
         "src/features/travel/fixtures/travel-home.ts",
         "src/features/travel/flight-confirmation-fields.ts",
         "src/features/travel/flight-confirmation-parser.ts",
-        "src/features/travel/flight-details.ts"
+        "src/features/travel/flight-details.ts",
+        "src/features/travel/flight-journey-card.tsx",
+        "src/features/travel/flight-journey-model.ts"
       ],
       "keyPaths": [
         "travel.timeline.traveler",
@@ -12392,18 +12407,18 @@
       "entry": "src/app/(tabs)/travel.tsx",
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
+        "src/components/navigation/swipe-back-scene.tsx",
         "src/components/primitives/app-safe-area.tsx",
         "src/components/primitives/disclosure-chevron.tsx",
         "src/components/primitives/safe-area-chrome.tsx",
+        "src/features/daily-tracking/dismiss-calendar-detail.ts",
         "src/features/food/food-home-cards.tsx",
         "src/features/food/ingredient-knowledge.ts",
         "src/features/food/recipe-detail-sections.tsx",
         "src/features/travel/flight-roundtrip-draft.ts",
         "src/features/travel/translator/travel-translator-sheet.tsx",
         "src/features/travel/translator/use-travel-translator.ts",
-        "src/features/travel/travel-currency-sheet-body.tsx",
-        "src/features/travel/travel-currency-sheet.styles.ts",
-        "src/features/travel/travel-plan-detail.tsx"
+        "src/features/travel/travel-currency-sheet-body.tsx"
       ],
       "keyPaths": [
         "swap",
@@ -12439,18 +12454,18 @@
       "entry": "src/app/(tabs)/travel.tsx",
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
-        "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/profile/calendar-sync.tsx",
         "src/app/(tabs)/profile/straiaway.tsx",
         "src/design-system/icons.ts",
         "src/design-system/themes.ts",
         "src/features/account/privacy-policy-content.ts",
-        "src/features/account/release-notes-changelog-archive.ts",
-        "src/features/account/release-notes-changelog.ts",
-        "src/features/account/release-notes-user.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/auth/auth-palette.ts",
-        "src/features/daily-tracking/day-header.tsx"
+        "src/features/daily-tracking/day-header.tsx",
+        "src/features/food/allergy-editor-sheet.tsx",
+        "src/features/journal/journal-composer.tsx",
+        "src/features/journal/use-journal-recorder.ts",
+        "src/features/todos/recipe-import-screen.tsx"
       ],
       "keyPaths": [
         "stop",
@@ -12470,10 +12485,10 @@
         "src/app/(tabs)/food/community.tsx",
         "src/app/(tabs)/food/index.tsx",
         "src/app/(tabs)/food/ingredients/index.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/preferences.tsx",
         "src/app/(tabs)/insights.tsx",
-        "src/app/(tabs)/profile/appearance.tsx",
-        "src/app/(tabs)/profile/index.tsx"
+        "src/app/(tabs)/profile/appearance.tsx"
       ],
       "keyPaths": [
         "preferences",
@@ -12509,17 +12524,17 @@
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
         "src/app/travel/translator/turn+api.ts",
+        "src/components/navigation/bottom-nav-inset.ts",
         "src/components/navigation/swipe-back-scene.tsx",
+        "src/components/navigation/tab-scene-visibility.ts",
+        "src/components/navigation/tab-swipe.ts",
         "src/components/primitives/glass-switch.tsx",
         "src/components/primitives/use-sheet-dismiss-pan.ts",
         "src/design-system/icons.ts",
         "src/features/auth/app-boot-loader.tsx",
         "src/features/auth/theme-mode-toggle.tsx",
         "src/features/calendar/calendar-shine.tsx",
-        "src/features/journal/journal-landing-pages.tsx",
-        "src/features/todos/empty-checklists.tsx",
-        "src/features/trackers/tracker-row-entrance.ts",
-        "src/features/trackers/trackers-screen.tsx"
+        "src/features/todos/empty-checklists.tsx"
       ],
       "keyPaths": [
         "translate",
@@ -13084,8 +13099,8 @@
         "src/app/(tabs)/vehicles/new.tsx",
         "src/app/api/vehicles/parts/search+api.ts",
         "src/app/api/vehicles/vin-decode+api.ts",
+        "src/components/navigation/tab-swipe.ts",
         "src/components/primitives/segmented-control-layout.ts",
-        "src/components/primitives/sheet-scaffold.tsx",
         "src/features/food/fixture-ai-fallbacks.ts",
         "src/features/food/plan-week.tsx",
         "src/features/todos/checklist-task-details-sheet.tsx",
@@ -13105,13 +13120,13 @@
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/gym/[id].tsx",
         "src/app/(tabs)/calendar.tsx",
+        "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/food/tracker.tsx",
         "src/app/(tabs)/journal/[date].tsx",
         "src/app/(tabs)/plants/[id]/check-in.tsx",
         "src/app/(tabs)/plants/[id]/edit.tsx",
         "src/app/(tabs)/plants/index.tsx",
         "src/app/(tabs)/plants/new.tsx",
-        "src/app/(tabs)/profile/nutrition-profile.tsx",
         "src/app/(tabs)/vehicles/[id].tsx"
       ],
       "keyPaths": [
@@ -13202,10 +13217,10 @@
         "src/components/primitives/date-field-calendar.tsx",
         "src/features/account/release-notes-format.ts",
         "src/features/calendar-import/parser.ts",
+        "src/features/calendar/holiday-icon.ts",
         "src/features/calendar/holidays.ts",
         "src/features/calendar/month-grid.tsx",
-        "src/features/calendar/use-calendar-holidays.ts",
-        "src/features/design-system/design-system-theme-history.tsx"
+        "src/features/calendar/use-calendar-holidays.ts"
       ],
       "keyPaths": [
         "vehicles.new.year",
@@ -13873,6 +13888,7 @@
         "ontrack.checklists.detail.back",
         "ontrack.checklists.detail.categoryTabs",
         "ontrack.checklists.detail.editMode",
+        "ontrack.checklists.detail.filter",
         "ontrack.checklists.detail.linkedTrip",
         "ontrack.checklists.detail.newTask",
         "ontrack.checklists.detail.sort",
@@ -13982,7 +13998,6 @@
         "ontrack.eventDetail.close",
         "ontrack.eventDetail.edit",
         "ontrack.eventDetail.fightCard.modal",
-        "ontrack.eventDetail.goBack",
         "ontrack.eventDetail.section.fightCard",
         "ontrack.eventDetail.section.metadata",
         "ontrack.eventDetail.ticket",
@@ -14478,6 +14493,7 @@
         "ontrack.profile.nutrition",
         "ontrack.profile.privacy",
         "ontrack.profile.resetData",
+        "ontrack.profile.section.about",
         "ontrack.profile.section.account",
         "ontrack.profile.section.accountSyncing",
         "ontrack.profile.section.addons",

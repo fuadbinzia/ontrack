@@ -114,9 +114,17 @@ describe('keyboard scrolling invariant', () => {
       ),
       'utf8',
     );
-    expect(sheet).toContain('useDockedKeyboardInset');
-    expect(sheet).toContain("androidMode: 'modal'");
-    expect(sheet).toContain('keyboardInset');
+    const scaffold = readFileSync(
+      join(process.cwd(), 'src/components/primitives/sheet-scaffold.tsx'),
+      'utf8',
+    );
+    // The sheet delegates keyboard lift to SheetScaffold's docked inset —
+    // never a raw Modal without keyboard handling.
+    expect(sheet).toContain('SheetScaffold');
+    expect(sheet).not.toContain('<Modal');
+    expect(scaffold).toContain('useDockedKeyboardInset');
+    expect(scaffold).toContain("androidMode: 'modal'");
+    expect(scaffold).toContain('keyboardInset');
   });
 
   it('re-places dropdown overlay menus above the soft keyboard', () => {

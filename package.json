@@ -1,7 +1,7 @@
 {
   "name": "ontrack",
   "main": "expo-router/entry",
-  "version": "1.0.104",
+  "version": "1.0.105",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -68,6 +68,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@babel/plugin-transform-dynamic-import": "^7.29.7",
     "@react-native/jest-preset": "^0.86.2",
     "@testing-library/react-native": "^13.3.3",
     "@types/d3-geo": "^3.1.0",
@@ -156,6 +157,9 @@
       "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|d3-geo|d3-array|internmap))",
       "/node_modules/react-native-reanimated/plugin/",
       "/node_modules/@react-native/babel-preset/"
+    ],
+    "setupFiles": [
+      "react-native-gesture-handler/jestSetup"
     ]
   },
   "private": true

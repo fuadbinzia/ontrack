@@ -38,7 +38,10 @@ describe('battery lifecycle contracts', () => {
     expect(quality).toContain('active && base.tilt && allowsSensors');
     expect(tilt).toContain('subscription?.remove()');
     expect(tilt).not.toContain("AppState.addEventListener('change'");
-    expect(moon).toContain('if (!routeIsActive)');
+    // Moon dropped its idle brightness loop entirely (stronger than gating):
+    // it must stay loop-free so an off-route sky cannot keep animating.
+    expect(moon).not.toContain('withRepeat');
+    expect(moon).not.toContain('setInterval(');
     expect(fan).toContain('!routeIsActive');
   });
 

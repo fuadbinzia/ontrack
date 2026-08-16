@@ -1,8 +1,11 @@
 import { Redirect, Tabs, usePathname, useRouter, useSegments } from 'expo-router';
 import { useEffect, type ReactElement, type ReactNode } from 'react';
-import { BackHandler, Platform } from 'react-native';
+import { BackHandler, Platform, StyleSheet, View } from 'react-native';
 
-import { BottomNavBar } from '@/components/navigation/bottom-nav-bar';
+import {
+  BottomNavBarBridge,
+  BottomNavDockHost,
+} from '@/components/navigation/bottom-nav-dock';
 import { BOTTOM_NAV_Z_INDEX } from '@/components/navigation/bottom-nav-inset';
 import {
   beginTabReturn,
@@ -76,7 +79,8 @@ export default function TabsRoot() {
 
   return (
     <TabReturnBinder>
-      <Tabs
+      <View collapsable={false} style={styles.shell}>
+        <Tabs
         initialRouteName="(today)"
         screenLayout={({ children, route }) => (
           <SwipeBackScene intent="overview-return" tabName={route.name}>
@@ -86,7 +90,9 @@ export default function TabsRoot() {
         // Keep this boolean stable. Toggling detach/freeze on tab park remounts
         // the page that just opened (load → flash → show again).
         detachInactiveScreens={false}
-        tabBar={(props) => <BottomNavBar {...props} />}
+        // Publish into BottomNavDockHost (sibling). Rendering the bar inside
+        // BottomTabView lets ScreenContainer cover it after scenes paint.
+        tabBar={(props) => <BottomNavBarBridge {...props} />}
         // Swipe lanes must exist before a gesture reveals them: lazy tabs
         // unmount on navigator remounts even though lane history survives.
         // Bounded to the two lane neighbors — see tab-lane-preload.ts.
@@ -140,7 +146,13 @@ export default function TabsRoot() {
         <Tabs.Screen name="food" />
         <Tabs.Screen name="profile" />
         <Tabs.Screen name="trackers" />
-      </Tabs>
+        </Tabs>
+        <BottomNavDockHost />
+      </View>
     </TabReturnBinder>
   );
 }
+
+const styles = StyleSheet.create({
+  shell: { flex: 1 },
+});

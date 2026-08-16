@@ -149,7 +149,6 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.trackers.manage.sheet`                           | Manage sheet     | Backdrop for Manage Sections                                                                        |
 | `ontrack.trackers.manage.close`                           | Close            | Dismiss Manage Sections                                                                             |
 | `ontrack.trackers.addon.<id>`                             | Add-on toggle    | Enable or hide a module                                                                             |
-| `ontrack.trackers.openAddon.<id>`                         | Open             | Open an enabled module even when it has no data yet                                                 |
 | `ontrack.vehicles.list.add`                               | Vehicles         | Add a vehicle                                                                                         |
 | `ontrack.vehicles.list.vehicle.<vehicleId>`               | Vehicles         | Open a vehicle (`vehicle-agent-ui-demo` via `vehicle-demo`)                                           |
 | `ontrack.vehicles.detail.settings`                        | Vehicle detail   | Open vehicle settings                                                                                 |

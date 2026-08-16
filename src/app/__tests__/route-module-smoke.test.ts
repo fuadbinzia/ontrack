@@ -91,6 +91,7 @@ const routeModules = [
 
 const apiModules = [
   'src/app/api/crash-report+api.ts',
+  'src/app/api/backup/google/callback+api.ts',
   'src/app/api/backup/google/connect+api.ts',
   'src/app/api/backup/google/complete+api.ts',
   'src/app/api/backup/google/disconnect+api.ts',

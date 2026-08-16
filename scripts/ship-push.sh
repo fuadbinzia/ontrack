@@ -302,6 +302,15 @@ else
   echo "==> Skipping EAS Update (--skip-ota)"
 fi
 
+echo "==> Deploying EAS Hosting API (production)"
+if [[ "$DRY_RUN" -eq 1 ]]; then
+  echo "[dry-run] npx eas-cli@latest env:exec production 'npx expo export -p web' --non-interactive"
+  echo "[dry-run] npx eas-cli@latest deploy --prod --environment production --non-interactive"
+else
+  npx --yes --prefer-offline eas-cli@latest env:exec production 'npx expo export -p web' --non-interactive
+  npx --yes --prefer-offline eas-cli@latest deploy --prod --environment production --non-interactive
+fi
+
 echo
 echo "======== ship:push complete ========"
 [[ -n "$PR_URL" ]] && echo "pr=$PR_URL"

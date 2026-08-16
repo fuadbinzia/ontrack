@@ -22,6 +22,8 @@ import {
   connectGoogleDriveBackup,
   disconnectGoogleDriveBackup,
   getGoogleDriveBackupStatus,
+  googleDriveConnectErrorMessage,
+  GoogleDriveBackupError,
   googleDriveUploadSession,
   markGoogleDriveBackupComplete,
   type GoogleDriveBackupFile,
@@ -47,22 +49,16 @@ export default function BackupScreen() {
   const { isGuest } = useAuthSession();
   const { spacing } = useResponsive();
   const [status, setStatus] = useState<GoogleDriveBackupStatus>({ connected: false });
-  const [statusLoaded, setStatusLoaded] = useState(false);
   const [busy, setBusy] = useState<'download' | 'connect' | 'save' | 'restore' | 'disconnect'>();
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
 
   const refreshStatus = useCallback(async () => {
-    if (isGuest) {
-      setStatusLoaded(true);
-      return;
-    }
+    if (isGuest) return;
     try {
       setStatus(await getGoogleDriveBackupStatus());
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Google Drive status could not be loaded.');
-    } finally {
-      setStatusLoaded(true);
+      setError(googleDriveConnectErrorMessage(caught));
     }
   }, [isGuest]);
 
@@ -88,7 +84,10 @@ export default function BackupScreen() {
       await refreshStatus();
       setMessage('Google Drive connected. Save a backup whenever you like.');
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Google Drive could not connect.');
+      if (caught instanceof GoogleDriveBackupError && caught.code === 'CANCELLED') return;
+      const text = googleDriveConnectErrorMessage(caught);
+      setError(text);
+      appPrompt.alert('Google Drive', text);
     } finally {
       setBusy(undefined);
     }
@@ -250,6 +249,9 @@ export default function BackupScreen() {
         />
       </AgentTestId>
 
+      {error ? <ErrorMessage message={error} variant="caption" /> : null}
+      {message ? <AppText variant="caption" color="secondary">{message}</AppText> : null}
+
       <SectionHeader title="Download" />
       <Card style={{ gap: spacing.md }}>
         <AppText color="secondary">
@@ -296,7 +298,8 @@ export default function BackupScreen() {
         ) : (
           <Button
             testID={AgentUiIds.backup.connectDrive}
-            disabled={disabled || !statusLoaded}
+            disabled={disabled}
+            loading={busy === 'connect'}
             onPress={() => void runConnect()}
             accessibilityLabel="Connect Google Drive">
             {busy === 'connect' ? 'Connecting…' : isGuest ? 'Sign In to Connect' : 'Connect Google Drive'}
@@ -339,8 +342,6 @@ export default function BackupScreen() {
         ) : null}
       </Card>
 
-      {error ? <ErrorMessage message={error} variant="caption" /> : null}
-      {message ? <AppText variant="caption" color="secondary">{message}</AppText> : null}
     </Screen>
   );
 }

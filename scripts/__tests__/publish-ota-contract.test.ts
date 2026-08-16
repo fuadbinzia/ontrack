@@ -86,4 +86,10 @@ describe('publish OTA once then republish', () => {
     expect(ship).not.toContain('npm run update:device');
     expect(pkg.scripts?.['update:preview']).toContain('publish-ota.sh');
   });
+
+  it('deploys EAS Hosting so new API routes such as Drive backup go live with push', () => {
+    const ship = read('scripts/ship-push.sh');
+    expect(ship).toContain("npx expo export -p web");
+    expect(ship).toContain('deploy --prod --environment production');
+  });
 });

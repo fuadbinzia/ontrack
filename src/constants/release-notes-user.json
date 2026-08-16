@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.111",
+    "date": "2026-08-16",
+    "notes": [
+      "Notify the tab dock after layout so the bar no longer setStates the host during render."
+    ]
+  },
+  {
     "version": "1.0.110",
     "date": "2026-08-16",
     "notes": [

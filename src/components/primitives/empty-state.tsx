@@ -41,6 +41,7 @@ export function EmptyState({
   const theme = useTheme();
   const { spacing, layout } = useResponsive();
   const titleText = fieldTitleCase(title);
+  const messageText = fieldTitleCase(message);
   const actionTitle = actionLabel ? fieldTitleCase(actionLabel) : undefined;
   const handleAction = () => {
     if (!onAction) return;
@@ -77,7 +78,7 @@ export function EmptyState({
         align="center"
         numberOfLines={4}
         style={messageStyle}>
-        {message}
+        {messageText}
       </AppText>
       {actionTitle && onAction ? (
         <Pressable

@@ -15,7 +15,7 @@ import { Symbol } from './symbol';
 
 interface SettingsRowProps {
   label: string;
-  detail: string;
+  detail?: string;
   /** Secondary caption lines (default 2). Use 3–4 for longer how-it-works copy. */
   detailNumberOfLines?: number;
   icon?: AppIconName;
@@ -63,12 +63,14 @@ export function SettingsRow({
         <AppText variant="callout" fit>
           {fieldTitleCase(label)}
         </AppText>
-        <AppText
-          variant="caption"
-          color="secondary"
-          numberOfLines={detailNumberOfLines}>
-          {detail}
-        </AppText>
+        {detail ? (
+          <AppText
+            variant="caption"
+            color="secondary"
+            numberOfLines={detailNumberOfLines}>
+            {detail}
+          </AppText>
+        ) : null}
       </View>
       {trailing}
     </>
@@ -122,7 +124,7 @@ export function SettingsToggleRow({
   grouped,
 }: {
   label: string;
-  detail: string;
+  detail?: string;
   detailNumberOfLines?: number;
   icon?: AppIconName;
   value: boolean;
@@ -131,7 +133,7 @@ export function SettingsToggleRow({
   testID?: string;
   grouped?: boolean;
 }) {
-  const accessibilityLabel = `${label}. ${detail}`;
+  const accessibilityLabel = detail ? `${label}. ${detail}` : label;
   return (
     <SettingsRow
       label={label}

@@ -71,7 +71,7 @@ function PlantDetailContent() {
 
   return (
     <Screen contentStyle={styles.content}>
-      <Image source={plantImageSource(plant.photoUri)} style={styles.hero} contentFit="cover" />
+      <Image source={plantImageSource(plant.photoUri)} style={styles.hero} contentFit="cover" transition={0} cachePolicy="memory-disk" />
       <View style={styles.titleRow}>
         <View style={styles.flex}>
           <AppText variant="title">{plant.nickname}</AppText>

@@ -65,6 +65,7 @@ interface TodoState extends TodoPersistedState {
   renameList: (id: string, name: string) => void;
   setListKind: (id: string, kind: TodoListKind) => boolean;
   deleteList: (id: string) => void;
+  touchList: (id: string, at?: string) => void;
   addCategory: (listId: string, name: string) => TodoCategory | undefined;
   deleteCategory: (id: string) => void;
   setTaskCategory: (taskId: string, categoryId?: string) => void;
@@ -132,6 +133,7 @@ export const useTodos = create<TodoState>()(
           members: state.members,
           invites: state.invites,
           pendingMutations: state.pendingMutations,
+          listOpenedAt: state.listOpenedAt,
         }) as TodoState,
     },
   ),

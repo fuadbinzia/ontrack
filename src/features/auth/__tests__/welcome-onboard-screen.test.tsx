@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -71,11 +74,25 @@ describe('WelcomeOnboardScreen', () => {
     );
 
     expect(screen.getByText('Your day, one place.')).toBeTruthy();
+    expect(screen.getByText('What Should We Call You?')).toBeTruthy();
+    expect(screen.getByText('Primary Goal')).toBeTruthy();
     expect(screen.getByTestId(AgentUiIds.onboarding.getStarted)).toBeTruthy();
     expect(screen.getByTestId(AgentUiIds.onboarding.skip)).toBeTruthy();
     expect(screen.getByTestId(AgentUiIds.auth.guest)).toBeTruthy();
     expect(screen.getByTestId(AgentUiIds.onboarding.name)).toBeTruthy();
     expect(screen.getByTestId(AgentUiIds.onboarding.goal)).toBeTruthy();
+  });
+
+  it('keeps welcome field labels at caption size without overline tracking', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/features/auth/welcome-onboard-screen.tsx'),
+      'utf8',
+    );
+    expect(source).toContain('function WelcomeField');
+    expect(source).toContain('variant="caption"');
+    expect(source).not.toMatch(
+      /<Input[\s\S]*?label="What should we call you\?"/,
+    );
   });
 
   it('try-first enters guest, completes onboarding, and opens Today by default', async () => {

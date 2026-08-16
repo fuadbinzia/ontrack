@@ -237,9 +237,14 @@ describe('metro launch command contract', () => {
     expect(ensure).toContain('Metro-only: skipping device boot/reconnect');
     // Pool heal used to exit 0 with "app not installed" and leave verify broken.
     expect(ensure).toContain('packager_pool_clone_app_if_needed');
+    expect(ensure).toContain('packager_ensure_native_fresh');
     expect(ensure).toContain('agent_ui_pool_clone_ios_app');
 
     const host = read('scripts/lib/agent-ui-host.sh');
+    expect(host).toContain('agent_ui_ensure_native_fresh');
+    expect(host).toContain('AGENT_UI_SKIP_NATIVE_FRESH');
+    expect(host).toContain('AGENT_UI_NATIVE_FRESH_DONE');
+    expect(host).toContain('relaunching after native debug client refresh');
     expect(host).toContain('agent_ui_heal_packager');
     expect(host).toContain('AGENT_UI_SKIP_HEAL');
     expect(host).toContain('agent_ui_pool_ensure_app_installed');
@@ -258,6 +263,8 @@ describe('metro launch command contract', () => {
     expect(sim).toContain('ONTRACK_IOS_SIMULATOR_WINDOW:=0');
     expect(sim).toContain('ios_sim_want_window');
     expect(sim).toContain('ios_sim_pool_mode');
+    expect(sim).toContain('ios_sim_is_protected_sim_name');
+    expect(sim).toContain('onTrack\\ Agent*|onTrack\\ iPhone\\ 17\\ Pro');
     expect(sim).toContain('ios_sim_target');
     expect(sim).toContain('Booting preferred simulator (headless)');
     // Window open is gated — never unconditional open in ensure_preferred.

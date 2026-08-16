@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { AppText, GlassIconWell, GlassPlate, Symbol } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
@@ -31,7 +30,7 @@ export function MuscleSummaryPanel({
   const theme = useTheme();
 
   return (
-    <Animated.View key={atlasMuscle.id} entering={FadeInDown.duration(260)}>
+    <View>
       <GlassPlate
         style={[
           styles.muscleSummary,
@@ -124,7 +123,7 @@ export function MuscleSummaryPanel({
           </GlassPlate>
         ) : null}
       </GlassPlate>
-    </Animated.View>
+    </View>
   );
 }
 

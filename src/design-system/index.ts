@@ -22,6 +22,9 @@ export {
     type PlatformIconNames
 } from './icons';
 export { durations, easings, motion, springs } from './motion';
+export {
+    LIST_STAGGER_CAP, LIST_STAGGER_MS, fadeEntering, fadeExiting, listEnterDelay, listEntering, listExiting, listLayout, nextListEnterIds, popoverEntering, popoverExiting, resetListEnterIds
+} from './presence';
 export { borders, radii } from './radii';
 export {
     BASE_WIDTH, contentGutter, MAX_SCALE, MIN_SCALE, moderateScale, scaleSize, scaleTypographyToken, widthClass, windowScale, type PhoneWidthClass

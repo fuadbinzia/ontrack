@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { AppText } from '@/components/primitives';
 import type { CoTravelerAvatarPerson } from '@/features/travel/travel-cotraveler-stack';
@@ -20,6 +20,7 @@ import {
 import { TravelHomeTravelerStack } from '@/features/travel/travel-home-traveler-stack';
 import { TravelHomeTripFrostScoop } from '@/features/travel/travel-home-trip-frost-scoop';
 import type { TravelPlan } from '@/features/travel/types';
+import { listEntering } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
@@ -58,7 +59,7 @@ export const TravelHomeTripCard = memo(function TravelHomeTripCard({
   onActiveImageChange,
   onLayoutY,
   index = 0,
-  animateEntrance = true,
+  animateEntrance = false,
   soloAtmosphereShadow = false,
   atmosphereAverageColor,
 }: TravelHomeTripCardProps) {
@@ -286,11 +287,7 @@ export const TravelHomeTripCard = memo(function TravelHomeTripCard({
     // Shadow and overflow:hidden cannot share one view on iOS — split so the
     // large mock corner radii actually clip the destination hero.
     <Animated.View
-      entering={
-        animateEntrance
-          ? FadeInDown.delay(Math.min(index, 8) * 40).springify().damping(18)
-          : undefined
-      }
+      entering={animateEntrance ? listEntering(index) : undefined}
       onLayout={(event) => {
         const { width, y } = event.nativeEvent.layout;
         if (width > 0 && Math.abs(width - cardWidth) > 1) setCardWidth(width);

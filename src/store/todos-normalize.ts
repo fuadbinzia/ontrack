@@ -327,6 +327,30 @@ export function normalizeMutation(value: unknown): PendingTodoMutation | undefin
   };
 }
 
+export function omitListOpenedAt(
+  openedAt: Record<string, string>,
+  listId: string,
+): Record<string, string> {
+  if (!(listId in openedAt)) return openedAt;
+  const { [listId]: _removed, ...rest } = openedAt;
+  return rest;
+}
+
+function normalizeListOpenedAt(
+  value: unknown,
+  validListIds: Set<string>,
+): Record<string, string> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const next: Record<string, string> = {};
+  for (const [id, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (!validListIds.has(id)) continue;
+    const at = asNonEmptyString(raw);
+    if (!at) continue;
+    next[id] = at;
+  }
+  return next;
+}
+
 export function normalizeTodoState(value: unknown): TodoPersistedState {
   const source =
     value && typeof value === 'object' && !Array.isArray(value)
@@ -479,6 +503,7 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
           return mutation && validListIds.has(mutation.listId) ? [mutation] : [];
         })
       : [],
+    listOpenedAt: normalizeListOpenedAt(source.listOpenedAt, validListIds),
   };
 }
 

@@ -1,18 +1,15 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import {
-  Modal,
   Pressable,
   StyleSheet,
   View,
   type LayoutChangeEvent,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { IconButton } from '@/components/primitives';
+import { SheetScaffold } from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
-import { useTheme } from '@/hooks/use-theme';
-import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { AgentUiIds } from '@/utils/agent-ui';
 
 /** Full-screen fade lightbox for a single travel photo (trip cover or moment). */
 export function TravelPhotoLightbox({
@@ -27,8 +24,6 @@ export function TravelPhotoLightbox({
   viewerKey: string;
   onClose: () => void;
 }) {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const { s, spacing: rs } = useResponsive();
   const closeSize = Math.max(44, s(46));
   const closeGap = rs.xs;
@@ -54,69 +49,35 @@ export function TravelPhotoLightbox({
   );
 
   return (
-    <Modal
+    <SheetScaffold
       visible={visible}
-      transparent
-      animationType="fade"
-      presentationStyle="overFullScreen"
-      statusBarTranslucent
-      onRequestClose={onClose}>
-      <View
-        accessibilityViewIsModal
-        style={[styles.lightbox, { backgroundColor: theme.overlayScrim, paddingTop: insets.top }]}>
-        <AgentTestId
-          testID={AgentUiIds.travel.photoViewer.dismiss(viewerKey)}
-          label="Dismiss photo"
-          onPress={onClose}
-          style={StyleSheet.absoluteFill}>
-          <Pressable
-            accessibilityLabel="Dismiss photo"
-            onPress={onClose}
-            style={StyleSheet.absoluteFill}
-          />
-        </AgentTestId>
-        <View style={styles.stage} onLayout={onStageLayout} pointerEvents="box-none">
-          {uri ? (
-            <View style={styles.photoCluster} pointerEvents="box-none">
-              <View
-                pointerEvents="box-none"
-                style={[
-                  styles.closeRow,
-                  {
-                    width: photoSize?.width,
-                    marginBottom: closeGap,
-                    minHeight: closeSize,
-                  },
-                ]}>
-                <IconButton
-                  icon="close"
-                  size={closeSize}
-                  testID={AgentUiIds.travel.photoViewer.close(viewerKey)}
-                  accessibilityLabel="Close photo"
-                  onPress={onClose}
-                />
-              </View>
-              <View style={[styles.photoStage, photoSize]}>
-                {/* Absorb taps on the photo so only the scrim dismisses. */}
-                <Pressable accessibilityRole="image" style={styles.photoHit}>
-                  <Image
-                    source={{ uri }}
-                    style={styles.expandedImage}
-                    contentFit="contain"
-                    onLoad={(event) => {
-                      const { width, height } = event.source;
-                      if (width > 0 && height > 0) {
-                        setImageAspect(width / height);
-                      }
-                    }}
-                  />
-                </Pressable>
-              </View>
-            </View>
-          ) : null}
-        </View>
+      title="Photo"
+      closeAccessibilityLabel="Close photo"
+      closeTestID={AgentUiIds.travel.photoViewer.close(viewerKey)}
+      backdropTestID={AgentUiIds.travel.photoViewer.dismiss(viewerKey)}
+      onClose={onClose}>
+      <View style={styles.stage} onLayout={onStageLayout}>
+        {uri ? (
+          <View style={[styles.photoStage, photoSize]}>
+            <Pressable accessibilityRole="image" style={styles.photoHit}>
+              <Image
+                source={{ uri }}
+                style={styles.expandedImage}
+                contentFit="contain"
+                transition={0}
+                cachePolicy="memory-disk"
+                onLoad={(event) => {
+                  const { width, height } = event.source;
+                  if (width > 0 && height > 0) {
+                    setImageAspect(width / height);
+                  }
+                }}
+              />
+            </Pressable>
+          </View>
+        ) : null}
       </View>
-    </Modal>
+    </SheetScaffold>
   );
 }
 

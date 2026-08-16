@@ -31,6 +31,8 @@ describe('journal landing', () => {
     expect(empty).toContain('journal.openToday');
     expect(empty).toContain("Start Today's Journal");
     expect(empty).not.toContain('SettingsRow');
+    expect(empty).not.toContain('entranceKey');
+    expect(empty).not.toContain('FadeInDown');
 
     expect(pages).toContain('Card');
     expect(pages).toContain('airy');
@@ -38,6 +40,8 @@ describe('journal landing', () => {
     expect(pages).toContain('journal.openToday');
     expect(pages).toContain('journal.page');
     expect(pages).not.toContain('SettingsRow');
+    expect(pages).not.toContain('focusEntrance');
+    expect(pages).not.toContain('useFocusEffect');
 
     expect(page).toContain('HeaderBackButton');
     expect(page).toContain("useJournalLandingAtmosphere({ variant: 'page' })");

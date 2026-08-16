@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, FadeOutUp, ReduceMotion } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import {
   AppText,
@@ -20,7 +20,8 @@ import { clampNumber } from '@/components/primitives/dropdown-layout';
 import {
   fontFamilies,
   glassMaterials,
-  motion,
+  popoverEntering,
+  popoverExiting,
   radii,
   shadows,
   spacing,
@@ -226,12 +227,8 @@ export function ChecklistPopoverMenu({
             <Animated.View
               accessibilityLabel={`${title} menu`}
               accessibilityViewIsModal
-              entering={FadeInDown.duration(motion.fade).reduceMotion(
-                ReduceMotion.System,
-              )}
-              exiting={FadeOutUp.duration(motion.fade).reduceMotion(
-                ReduceMotion.System,
-              )}
+              entering={popoverEntering()}
+              exiting={popoverExiting()}
               style={[
                 styles.panelShell,
                 shadows.overlay,

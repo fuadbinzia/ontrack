@@ -276,7 +276,10 @@ describe('agent-ui host scripts contract', () => {
       /app_installed\(\)[\s\S]*?pm path[\s\S]*?run-as "\$BUNDLE_ID" true/,
     );
     expect(pool).toContain('android/app/build/outputs/apk/debug/app-debug.apk');
+    expect(pool).toContain('ios/build/Build/Products/Debug-iphonesimulator/onTrack.app');
     expect(pool).toContain('installing local debug client');
+    expect(host).toContain('agent_ui_ensure_native_fresh');
+    expect(host).toContain('H23: warm bridge can still be a stale native binary');
     expect(pool).toMatch(
       /src_serial="\$\([\s\S]*?run-as "\$BUNDLE_ID" true/,
     );

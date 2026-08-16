@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText, DragHandle, GlassPlate, Symbol } from '@/components/primitives';
 import { glassMaterials, layout, radii } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
+import { todoListCardPresence } from '@/features/todos/todo-list-card-presence';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { TodoList } from '@/store/todos';
@@ -53,10 +54,10 @@ export function TodoListCard({
   testID?: string;
 }) {
   const theme = useTheme();
-  const { spacing, typography } = useResponsive();
+  const { spacing, typography, s } = useResponsive();
   const nameInputRef = useRef<TextInput>(null);
-  // Keep the compact avatar stack visually subordinate to the checklist title.
-  const collaboratorChip = Math.max(14, Math.round(typography.caption.lineHeight));
+  const presence = todoListCardPresence(open, total);
+  const collaboratorChip = Math.max(16, Math.round(s(18)));
   const collaboratorRing = 1;
   const openAgent = useAgentUiTarget(editMode ? undefined : testID, {
     label: list.name,
@@ -103,14 +104,14 @@ export function TodoListCard({
             <AppText variant="subheading" numberOfLines={1}>
               {list.name}
             </AppText>
-            {list.kind === 'grocery' ? (
+            {list.kind === 'grocery' && !editMode ? (
               <AppText variant="caption" color="accent">
                 Grocery
               </AppText>
             ) : null}
           </>
         )}
-        {collaborators?.length ? (
+        {!editMode && collaborators?.length ? (
           <View
             accessible
             accessibilityLabel={`Shared with ${collaboratorLabel}`}
@@ -121,7 +122,6 @@ export function TodoListCard({
                 style={[
                   index > 0 && styles.collaboratorAvatarOverlap,
                   {
-                    // Slight ring so stacked chips separate on the card surface.
                     borderRadius: collaboratorChip / 2,
                     borderWidth: collaboratorRing,
                     borderColor: dark
@@ -140,22 +140,30 @@ export function TodoListCard({
           </View>
         ) : null}
       </View>
-      <View style={styles.count}>
-        <AppText variant="heading" color={open ? 'accent' : 'success'}>
-          {open}
-        </AppText>
-        <AppText variant="caption" color="tertiary" fit titleCase>
-          Open
-        </AppText>
-      </View>
+      {!editMode ? (
+        <View style={styles.count}>
+          <AppText
+            variant="heading"
+            color={presence.tone}
+            style={styles.countValue}>
+            {presence.label}
+          </AppText>
+          <AppText variant="caption" color="tertiary" fit titleCase>
+            {presence.sublabel}
+          </AppText>
+        </View>
+      ) : null}
     </>
   );
 
   return (
     <GlassPlate
+      airy={presence.clear}
       style={[
         styles.card,
         {
+          paddingLeft: editMode ? spacing.sm : spacing.lg,
+          paddingRight: editMode ? spacing.sm : spacing.md,
           borderColor: isActive
             ? theme.accentPrimary
             : dark
@@ -165,28 +173,8 @@ export function TodoListCard({
         },
         isActive && styles.activeCard,
       ]}>
-      {editMode ? (
-        <View style={styles.cardMain}>{cardContents}</View>
-      ) : (
-        <Pressable
-          ref={openAgent.ref}
-          testID={testID}
-          onLayout={openAgent.onLayout}
-          accessibilityHint="Tap to open."
-          accessibilityRole="button"
-          accessibilityLabel={`${list.name}, ${open} open of ${total}${
-            collaboratorLabel ? `, shared with ${collaboratorLabel}` : ''
-          }`}
-          onPress={onPress}
-          style={({ pressed }) => [
-            styles.cardMain,
-            { opacity: pressed && !isActive ? 0.72 : 1 },
-          ]}>
-          {cardContents}
-        </Pressable>
-      )}
-      {editMode ? (
-        <View style={styles.cardEditActions}>
+      <View style={styles.cardRow}>
+        {editMode ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${leaving ? 'Leave' : 'Delete'} ${list.name}`}
@@ -194,7 +182,6 @@ export function TodoListCard({
             onPress={onRemove}
             style={({ pressed }) => [
               styles.cardActionButton,
-              { backgroundColor: `${theme.danger}18` },
               pressed && styles.pressed,
             ]}>
             <Symbol
@@ -203,6 +190,31 @@ export function TodoListCard({
               color={theme.danger}
             />
           </Pressable>
+        ) : null}
+        {editMode ? (
+          <View style={[styles.cardMain, { gap: spacing.sm, paddingVertical: spacing.md }]}>
+            {cardContents}
+          </View>
+        ) : (
+          <Pressable
+            ref={openAgent.ref}
+            testID={testID}
+            onLayout={openAgent.onLayout}
+            accessibilityHint="Tap to open."
+            accessibilityRole="button"
+            accessibilityLabel={`${list.name}, ${open} open of ${total}${
+              collaboratorLabel ? `, shared with ${collaboratorLabel}` : ''
+            }`}
+            onPress={onPress}
+            style={({ pressed }) => [
+              styles.cardMain,
+              { gap: spacing.md, paddingVertical: spacing.lg },
+              { opacity: pressed && !isActive ? 0.72 : 1 },
+            ]}>
+            {cardContents}
+          </Pressable>
+        )}
+        {editMode ? (
           <Pressable
             accessibilityActions={[
               ...(canMoveUp ? [{ name: 'moveUp', label: 'Move Up' }] : []),
@@ -231,30 +243,29 @@ export function TodoListCard({
               }
             />
           </Pressable>
-        </View>
-      ) : null}
+        ) : null}
+      </View>
     </GlassPlate>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 88,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingLeft: 16,
-    paddingRight: 8,
+    minHeight: 72,
+    justifyContent: 'center',
     borderRadius: radii.lg,
     borderCurve: 'continuous',
   },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
+  },
   cardMain: {
-    minHeight: 86,
+    minHeight: 56,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 16,
     minWidth: 0,
     zIndex: 1,
   },
@@ -265,33 +276,35 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
-  cardCopy: { flex: 1 },
+  cardCopy: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   nameEditor: {
-    minHeight: layout.minTapTarget,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
   },
   nameInput: {
     flex: 1,
     minWidth: 0,
-    minHeight: layout.minTapTarget,
     paddingVertical: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
-  nameInputAgent: { flex: 1, minWidth: 0 },
+  nameInputAgent: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+  },
   collaboratorAvatars: {
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 0,
   },
-  collaboratorAvatarOverlap: { marginLeft: -3 },
-  count: { alignItems: 'center', minWidth: 44, flexShrink: 0 },
-  cardEditActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    zIndex: 1,
-  },
+  collaboratorAvatarOverlap: { marginLeft: -4 },
+  count: { alignItems: 'center', minWidth: 48, flexShrink: 0 },
+  countValue: { fontVariant: ['tabular-nums'] },
   cardActionButton: {
     width: layout.minTapTarget,
     height: layout.minTapTarget,

@@ -233,15 +233,27 @@ print(available[-1][1])
 ' "$name"
 }
 
+# User Pro + agent pool — never shut these down to uniquify `simctl booted`.
+ios_sim_is_protected_sim_name() {
+  case "$1" in
+    onTrack\ Agent*|onTrack\ iPhone\ 17\ Pro) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # Shut down every Booted device except keep_udid (so `simctl … booted` is unique).
 # No-op in agent pool mode — other slots / the user's headed sim must stay up.
+# Also never kill Pro or Agent N when a non-pool ensure-packager targets Pro (H22).
 ios_sim_shutdown_others() {
-  local keep_udid="$1" other
+  local keep_udid="$1" name other
   if ios_sim_pool_mode; then
     return 0
   fi
-  while IFS= read -r other; do
+  while IFS=$'\t' read -r name other; do
     [[ -z "$other" || "$other" == "$keep_udid" ]] && continue
+    if ios_sim_is_protected_sim_name "$name"; then
+      continue
+    fi
     echo "Shutting down other simulator: ${other}"
     xcrun simctl shutdown "$other" >/dev/null 2>&1 || true
   done < <(xcrun simctl list devices booted -j 2>/dev/null | python3 -c '
@@ -250,7 +262,7 @@ data = json.load(sys.stdin)
 for devices in data.get("devices", {}).values():
     for d in devices:
         if d.get("state") == "Booted":
-            print(d["udid"])
+            print(f"{d.get(\"name\") or \"\"}\t{d.get(\"udid\") or \"\"}")
 ' 2>/dev/null || true)
 }
 

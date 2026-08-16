@@ -1,16 +1,6 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
 import { Pressable, View } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  Easing,
-  ReduceMotion,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 
-import { EmptyState } from '@/components/primitives';
+import { EmptyState, useListEnterIds } from '@/components/primitives';
 import { resolveTravelCoTravelerPeople } from '@/features/travel/travel-cotraveler-people';
 import { TravelHomeSectionHeader } from '@/features/travel/travel-home-section-header';
 import {
@@ -64,30 +54,13 @@ export function TravelHomeYourTrips({
   onLayoutY,
 }: TravelHomeYourTripsProps) {
   const { s } = useResponsive();
-  /**
-   * Replay the landing motion on the stable list shell. Remounting by key on
-   * every focus also remounted every hero carousel and restarted cover work.
-   */
-  const focusEntrance = useSharedValue(1);
-  const focusEntranceStyle = useAnimatedStyle(() => ({
-    opacity: focusEntrance.value,
-    transform: [{ translateY: (1 - focusEntrance.value) * 12 }],
-  }));
-  useFocusEffect(
-    useCallback(() => {
-      cancelAnimation(focusEntrance);
-      focusEntrance.value = 0;
-      focusEntrance.value = withTiming(1, {
-        duration: 240,
-        easing: Easing.out(Easing.cubic),
-        reduceMotion: ReduceMotion.System,
-      });
-      return () => cancelAnimation(focusEntrance);
-    }, [focusEntrance]),
-  );
   const searchActive = isTravelHomeTripSearchActive(searchOpen, searchQuery);
   const peekHeight = s(travelHomeTokens.spacing.headerToSection);
   const showEmptySearch = plans.length === 0 && Boolean(searchQuery.trim());
+  const tripEnterIds = useListEnterIds(
+    'travel-home',
+    plans.map((plan) => plan.id),
+  );
 
   return (
     <View style={{ gap: s(travelHomeTokens.spacing.sectionGap) }}>
@@ -132,18 +105,15 @@ export function TravelHomeYourTrips({
         </AgentTestId>
       ) : null}
 
-      <Animated.View
-        style={[
-          { gap: travelHomeTokens.spacing.cardGap },
-          focusEntranceStyle,
-        ]}
+      <View
+        style={{ gap: travelHomeTokens.spacing.cardGap }}
         onTouchStart={searchActive ? onDismissSearch : undefined}>
         {plans.map((plan, index) => (
           <TravelHomeTripCard
             key={plan.id}
             plan={plan}
             index={index}
-            animateEntrance={false}
+            animateEntrance={tripEnterIds.has(plan.id)}
             soloAtmosphereShadow={plans.length === 1}
             atmosphereAverageColor={atmosphereAverageColor}
             travelers={resolveTravelCoTravelerPeople(plan, selfDisplayName)}
@@ -154,7 +124,7 @@ export function TravelHomeYourTrips({
             onLayoutY={onLayoutY}
           />
         ))}
-      </Animated.View>
+      </View>
     </View>
   );
 }

@@ -11,7 +11,7 @@ alwaysApply: false
 
 If a step is slow, unclear, or needs multiple retries — **stop and fix the hang-up**. Do not keep re-running verify/flows hoping it clears. Prefer simple causes (config, pins, Metro/daemon) before deep debug or bridge rewrites.
 
-**When the user complains about Simulator / emulator / verify hang / “takes forever”:** open [`docs/agent-ui-verify-benchmark.md`](../../docs/agent-ui-verify-benchmark.md) **before** grinding. Match the symptom to hang classes H1–H19, check recent TSV timings, then continue triage below. Append a run with `./scripts/agent-ui-benchmark-open.sh` when proving an open/close-out fix.
+**When the user complains about Simulator / emulator / verify hang / “takes forever”:** open [`docs/agent-ui-verify-benchmark.md`](../../docs/agent-ui-verify-benchmark.md) **before** grinding. Match the symptom to hang classes H1–H23, check recent TSV timings, then continue triage below. Append a run with `./scripts/agent-ui-benchmark-open.sh` when proving an open/close-out fix.
 
 ## Device timeout → diagnose + lasting fix
 
@@ -42,6 +42,6 @@ A device / bridge / boot / wait **timeout is not “try again”** — treat it 
 7. Headless is the default — do **not** open Simulator.app / `ensure-android-emulator.sh --window` unless the user asked for headed. Assert/`--color` work without a GUI.
 8. Metro `:8081/status`, daemon `:8191/health`; Android `adb reverse` for 8081/8191.
 9. Do **not** force-stop / `--force-reconnect` for glyph/orientation checks — edit source, Fast Refresh, assert.
-10. Hang classes H1–H19 (piped `| head`/`| tail`, Galaxy adopt thrash, unpark/`simctl io`, mid-edit epilogue, empty `/travel` assert H18, devices left warm H19, …) → [`docs/agent-ui-verify-benchmark.md`](../../docs/agent-ui-verify-benchmark.md) + TSV; don’t restate fixes here.
+10. Hang classes H1–H23 (piped `| head`/`| tail`, Galaxy adopt thrash, unpark/`simctl io`, mid-edit epilogue, empty `/travel` assert H18, devices left warm H19, stale native H23, …) → [`docs/agent-ui-verify-benchmark.md`](../../docs/agent-ui-verify-benchmark.md) + TSV; don’t restate fixes here.
 
 Details: [`.cursor/skills/agent-ui/SKILL.md`](../skills/agent-ui/SKILL.md).

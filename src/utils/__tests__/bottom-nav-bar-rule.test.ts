@@ -9,10 +9,30 @@ describe('bottom nav bar background invariant', () => {
     );
 
     expect(tabsLayout).toContain("backgroundColor: 'transparent'");
-    expect(tabsLayout).toMatch(/elevation:\s*0/);
+    expect(tabsLayout).toContain('BOTTOM_NAV_Z_INDEX');
+    expect(tabsLayout).toMatch(/zIndex:\s*BOTTOM_NAV_Z_INDEX/);
+    expect(tabsLayout).toMatch(/elevation:\s*BOTTOM_NAV_Z_INDEX/);
     expect(tabsLayout).toMatch(/shadowOpacity:\s*0/);
     expect(tabsLayout).toMatch(/shadowColor:\s*'transparent'/);
     expect(tabsLayout).toMatch(/tabBarBackground:\s*\(\)\s*=>\s*null/);
+  });
+
+  it('stacks the dock above pager scenes so Today cannot cover the nav bar', () => {
+    const navBar = readFileSync(
+      join(process.cwd(), 'src/components/navigation/bottom-nav-bar.tsx'),
+      'utf8',
+    );
+    const scene = readFileSync(
+      join(process.cwd(), 'src/components/navigation/swipe-back-scene.tsx'),
+      'utf8',
+    );
+
+    expect(navBar).toContain('BOTTOM_NAV_Z_INDEX');
+    expect(navBar).toMatch(/zIndex:\s*BOTTOM_NAV_Z_INDEX/);
+    expect(navBar).toMatch(/elevation:\s*BOTTOM_NAV_Z_INDEX/);
+    expect(navBar).toContain('opacity: modalSheetOpen ? 0 : 1');
+    expect(scene).toContain('tabSwipeTranslateX(');
+    expect(scene).toContain('tabSwipeLanes.value');
   });
 
   it('suspends inactive tabs so hidden sections do not consume battery', () => {
@@ -24,8 +44,14 @@ describe('bottom nav bar background invariant', () => {
     expect(tabsLayout).toContain('detachInactiveScreens');
     expect(tabsLayout).not.toContain('eagerBottomNavRouteNames');
     expect(tabsLayout).toContain('lazy: true');
-    expect(tabsLayout).toContain("animation: 'none'");
+    expect(tabsLayout).toContain('detachInactiveScreens={false}');
+    // Zero-duration spec keeps the navigator's tab animation inert (no per-
+    // switch animation work) while parked lanes stay painted for the pager.
+    expect(tabsLayout).toContain('transitionSpec: TAB_SCENE_KEEP_PAINTED_SPEC');
+    expect(tabsLayout).toContain('sceneStyleInterpolator: tabSceneKeepPainted');
+    expect(tabsLayout).not.toContain("animation: 'none'");
     expect(tabsLayout).toContain('freezeOnBlur: route.name !== MORE_TAB_ROUTE');
+    expect(tabsLayout).not.toContain('name="profile" options={{ lazy: false }}');
     expect(tabsLayout).not.toContain('preload(');
 
     const navBar = readFileSync(
@@ -33,6 +59,8 @@ describe('bottom nav bar background invariant', () => {
       'utf8',
     );
     expect(navBar).not.toContain('navigation.preload');
+    expect(navBar).toContain('startTabOpen');
+    expect(navBar).toContain('tabTapSide');
   });
 
   it('frosts the dock over page atmosphere and clears Android system nav', () => {

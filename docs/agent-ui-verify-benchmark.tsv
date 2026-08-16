@@ -9,3 +9,4 @@ date_iso	elapsed_s	ios_exit	android_exit	slot	path	label	notes
 2026-08-09T16:04:00Z	21	0	0	1	warm	travel-home-smoke	H18; flow travel-home + yourTrips + newTrip.open; bare goto alone failed empty guest
 2026-08-09T16:10:00Z						h19-shutdown-default	KEEP_*=0 default; orphan shut down; login override env keys
 2026-08-09T18:15:00Z						h21-cold-reconnect	skip reconnect on cold boot; iOS relaunch; quieter install log
+2026-08-16T04:25:00Z	47	0	-	1	warm	agent-ios-today-after-native	H22; fresh Agent 1 binary; today.addActivity ok; Pro untouched

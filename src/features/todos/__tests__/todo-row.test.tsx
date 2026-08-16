@@ -153,4 +153,62 @@ describe('TodoRow', () => {
     expect(screen.getByText('Travel')).toBeTruthy();
     expect(screen.queryByText(/Anyone/)).toBeNull();
   });
+
+  it('lets a completed item recede without a filled checkbox well', () => {
+    render(
+      <TodoRow
+        task={{ ...task, completed: true }}
+        canComplete
+        editMode={false}
+        editing={false}
+        isActive={false}
+        listOwner
+        members={[]}
+        showCategory={false}
+        onDelete={jest.fn()}
+        onDragStart={jest.fn()}
+        onOpenDetails={jest.fn()}
+        onStartEdit={jest.fn()}
+        onEndEdit={jest.fn()}
+        onToggle={jest.fn()}
+        onToggleImportant={jest.fn()}
+        onUpdate={jest.fn()}
+      />,
+    );
+
+    const checkbox = screen.getByLabelText(`Mark ${task.title} as open`);
+    expect(checkbox.props.accessibilityState).toMatchObject({ checked: true });
+    expect(checkbox.props.style).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ backgroundColor: 'transparent' }),
+      ]),
+    );
+    expect(screen.queryByText('Focus')).toBeNull();
+  });
+
+  it('does not print a Focus caption on important items', () => {
+    render(
+      <TodoRow
+        task={{ ...task, important: true }}
+        canComplete
+        editMode={false}
+        editing={false}
+        isActive={false}
+        listOwner
+        members={[]}
+        showCategory={false}
+        onDelete={jest.fn()}
+        onDragStart={jest.fn()}
+        onOpenDetails={jest.fn()}
+        onStartEdit={jest.fn()}
+        onEndEdit={jest.fn()}
+        onToggle={jest.fn()}
+        onToggleImportant={jest.fn()}
+        onUpdate={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('Focus')).toBeNull();
+    expect(screen.getByLabelText(`Remove ${task.title} from focus`)).toBeTruthy();
+  });
 });

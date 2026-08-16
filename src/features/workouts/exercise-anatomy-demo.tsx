@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, Button, SheetGrabber, Symbol } from '@/components/primitives';
+import { AppText, Button, SheetScaffold, Symbol } from '@/components/primitives';
 import { categoryColors, layout, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import { formatCount } from '@/utils/grammar';
@@ -92,7 +91,6 @@ function DemoContent({
   onToggleSelected,
 }: DemoContentProps) {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const gymColors = categoryColors(theme, 'gym');
   const [playing, setPlaying] = useState(true);
   const pattern = movementPatternForExercise(exercise);
@@ -106,50 +104,13 @@ function DemoContent({
   }, [visible, exercise.id, anatomySex]);
 
   return (
-    <Modal
-      animationType="slide"
-      onRequestClose={onClose}
-      presentationStyle="overFullScreen"
-      transparent
-      visible={visible}>
-      <View
-        style={[
-          styles.modalRoot,
-          { backgroundColor: theme.overlayScrim, paddingTop: insets.top },
-        ]}>
-        <Pressable
-          accessibilityLabel="Close exercise animation"
-          onPress={onClose}
-          style={StyleSheet.absoluteFill}
-        />
-        <View
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: theme.backgroundPrimary,
-              paddingBottom: Math.max(insets.bottom, spacing.lg),
-            },
-          ]}>
-          <ScrollView
-            contentInsetAdjustmentBehavior="automatic"
-            contentContainerStyle={styles.sheetContent}
-            showsVerticalScrollIndicator={false}>
-            <View style={styles.sheetHeader}>
-              <SheetGrabber
-                accessibilityLabel="Close animation"
-                onPress={onClose}
-              />
-              <View style={styles.flex}>
-                <AppText variant="overline" color="accent">Anatomy in Motion</AppText>
-                <AppText variant="title">{exercise.name}</AppText>
-                <AppText variant="callout" color="secondary">
-                  {MOVEMENT_LABELS[pattern]} · {formatCount(exercise.sets, 'set')} ×{' '}
-                  {formatCount(exercise.reps, 'rep')} ·{' '}
-                  {anatomySex === 'female' ? 'Female' : 'Male'}
-                </AppText>
-              </View>
-            </View>
-
+    <SheetScaffold
+      visible={visible}
+      eyebrow="Anatomy in Motion"
+      title={exercise.name}
+      subtitle={`${MOVEMENT_LABELS[pattern]} · ${formatCount(exercise.sets, 'set')} × ${formatCount(exercise.reps, 'rep')} · ${anatomySex === 'female' ? 'Female' : 'Male'}`}
+      closeAccessibilityLabel="Close animation"
+      onClose={onClose}>
             <View
               style={[
                 styles.animationCard,
@@ -251,10 +212,7 @@ function DemoContent({
               variant={selected ? 'secondary' : 'primary'}>
               {selected ? 'Remove from Session' : 'Add to Session'}
             </Button>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+    </SheetScaffold>
   );
 }
 

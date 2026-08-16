@@ -6,10 +6,7 @@ import {
   type NativeSyntheticEvent,
   type ScrollView,
 } from 'react-native';
-import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
-
 import { Screen } from '@/components/primitives';
-import { motion } from '@/design-system';
 import { useTravelAtmosphere } from '@/features/travel/travel-atmosphere';
 import { resolveTravelArtworkTintHex } from '@/features/travel/travel-artwork-tint';
 import { TravelArtworkTintProvider } from '@/features/travel/travel-artwork-tint-context';
@@ -166,11 +163,7 @@ export function TravelPlanDetailBody({
             denseHeroGlass={denseHeroGlass}
           />
           {bodyReady ? (
-            <Animated.View
-              entering={FadeIn.duration(motion.fade).reduceMotion(
-                ReduceMotion.System,
-              )}>
-              <View style={{ gap: sectionGap }}>
+            <View style={{ gap: sectionGap }}>
                 <TravelTransportSections
                   items={sortedItinerary}
                   transportExpanded={isSectionExpanded('transport')}
@@ -211,8 +204,7 @@ export function TravelPlanDetailBody({
                     {...itemEditHandlers}
                   />
                 </TravelCollapsibleSection>
-              </View>
-            </Animated.View>
+            </View>
           ) : (
             <TravelPlanDetailBodySkeleton
               cardHint={sortedItinerary.length}

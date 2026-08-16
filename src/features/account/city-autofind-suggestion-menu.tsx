@@ -6,7 +6,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import Animated, { FadeInDown, FadeOutUp, ReduceMotion } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/primitives';
@@ -15,7 +15,7 @@ import {
   type DropdownAnchor,
 } from '@/components/primitives/dropdown-layout';
 import { GlassPlate } from '@/components/primitives/glass-plate';
-import { motion, radii, shadows, spacing } from '@/design-system';
+import { popoverEntering, popoverExiting, radii, shadows, spacing } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { type CitySuggestion } from '@/utils/city-lookup';
@@ -99,12 +99,8 @@ export function CityAutofindSuggestionMenu({
           <Animated.View
             accessibilityLabel={`${label} suggestions`}
             accessibilityViewIsModal
-            entering={FadeInDown.duration(motion.fade).reduceMotion(
-              ReduceMotion.System,
-            )}
-            exiting={FadeOutUp.duration(motion.fade).reduceMotion(
-              ReduceMotion.System,
-            )}
+            entering={popoverEntering()}
+            exiting={popoverExiting()}
             style={[
               styles.menu,
               shadows.overlay,

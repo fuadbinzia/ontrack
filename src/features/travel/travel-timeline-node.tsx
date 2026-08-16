@@ -1,6 +1,6 @@
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
-import { motion } from '@/design-system';
+import { useSettledListLayout } from '@/components/primitives';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import {
     resolveStayBookingOpen,
@@ -95,6 +95,7 @@ export function TravelTimelineNode({
   onSaveNotes,
 }: TravelTimelineNodeProps) {
   const theme = useTheme();
+  const { layout: nodeLayout, onLayout: onNodeLayout } = useSettledListLayout();
   const { s, spacing: rs, typography } = useResponsive();
   const { user } = useAuthSession();
   /** Tight leading so dense mist-row glyphs sit in the vertical center of the row. */
@@ -329,7 +330,8 @@ export function TravelTimelineNode({
 
   return (
     <Animated.View
-      layout={LinearTransition.duration(motion.layout)}
+      layout={nodeLayout}
+      onLayout={onNodeLayout}
       style={[
         styles.nodeCard,
         {

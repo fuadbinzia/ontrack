@@ -23,6 +23,7 @@
 #     (Android saves default_boot first for fast reload; never leave orphans)
 #   AGENT_UI_KEEP_IOS=1 / KEEP_ANDROID=1 — park that platform warm (debug)
 #   AGENT_UI_KEEP_DEVICES=1 — park both platforms warm (debug)
+#   AGENT_UI_SKIP_NATIVE_FRESH=1 — skip installing the latest local debug client
 #
 # Agents: do NOT pipe this script through `tail`/`head` — progress is on stderr/stdout
 # and pipes buffer until exit (looks hung for minutes). Prefer bare invoke or `tee`.

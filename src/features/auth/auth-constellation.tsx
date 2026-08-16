@@ -26,12 +26,14 @@ import { useTheme } from '@/hooks/use-theme';
 
 import {
   AUTH_COPY_BASE_HEIGHT,
+  AUTH_COPY_SCALE_MIN,
   AUTH_ORBIT_ELLIPSE,
   AUTH_ORBIT_GUIDES,
   AUTH_ORBIT_TABS,
   AUTH_PLANET_ICON_GAP_FRAC,
   authCopyFrame,
   authCopyMaxHeightFrac,
+  authOrbitLabelStyle,
   authOrbitNodesForTabs,
 } from './auth-constellation-layout';
 import { settleAuthCanvasExtent } from './auth-canvas-extent';
@@ -73,7 +75,9 @@ function ConstellationNode({
   orbit: SharedValue<number>;
 }) {
   const theme = useTheme();
+  const { typography } = useResponsive();
   const { cx, cy, rx, ry } = AUTH_ORBIT_ELLIPSE;
+  const labelStyle = authOrbitLabelStyle(slot, typography.caption);
 
   // Ride the ellipse around the copy. Labels stay upright — only position
   // advances with orbit. No entrance animation: bootstrap mounts skip
@@ -100,7 +104,12 @@ function ConstellationNode({
       <GlassIconWell size={well} borderRadius={well / 2}>
         <Symbol name={icon} size={well * 0.46} color={theme.textSecondary} />
       </GlassIconWell>
-      <AppText variant="caption" color="secondary" align="center" fit>
+      <AppText
+        variant="caption"
+        color="secondary"
+        align="center"
+        numberOfLines={1}
+        style={labelStyle}>
         {label}
       </AppText>
     </Animated.View>
@@ -227,11 +236,13 @@ export function AuthConstellation({
   const slot = well * 1.95;
   const copyFrame = authCopyFrame();
   const copyMaxHeight = height * authCopyMaxHeightFrac(well / height);
-  // Shrink aggressively so headline + rule + intro stay inside the ring.
   const copyScale = Math.min(
     1,
-    Math.max(0.55, height / AUTH_COPY_BASE_HEIGHT),
-    Math.max(0.55, copyMaxHeight / (AUTH_COPY_BASE_HEIGHT * 0.55)),
+    Math.max(AUTH_COPY_SCALE_MIN, height / AUTH_COPY_BASE_HEIGHT),
+    Math.max(
+      AUTH_COPY_SCALE_MIN,
+      copyMaxHeight / (AUTH_COPY_BASE_HEIGHT * AUTH_COPY_SCALE_MIN),
+    ),
   );
 
   const orbit = useSharedValue(0);

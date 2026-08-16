@@ -236,7 +236,7 @@ export function TravelTranslatorSheet({
           <EmptyState
             icon="translator"
             title="Translator is off"
-            message="Turn on AI Summaries in Profile preferences to translate typed or spoken phrases."
+            message="AI translation is turned off for this account."
             actionLabel="Open preferences"
             actionTestID={AgentUiIds.travel.translator.preferences}
             onAction={() => {

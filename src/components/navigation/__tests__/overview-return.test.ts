@@ -4,21 +4,31 @@ import { join } from 'node:path';
 import {
   beginTabForward,
   beginTabReturn,
+  beginTabTap,
   clearTabReturn,
+  endTabTap,
+  endTabTapIfCurrent,
   focusedTabName,
   hasTabForward,
+  hasTabPark,
   hasTabReturn,
   isOverviewPath,
+  peekCurrentTabName,
   peekTabForwardHref,
   peekTabReturnHref,
+  peekTabTapFrom,
+  peekTabTapLane,
+  peekTabTapToken,
   rememberFocusedTab,
   resolveSwipeBackAction,
+  startTabOpen,
   subscribeTabReturn,
   TAB_RETURN_SETTLE_MS,
   tabNameFromSegments,
   useOpenedFromOverview,
   wasOpenedFromOverview,
 } from '../overview-return';
+import { tabSwipeLanes } from '../tab-swipe';
 
 describe('tab return', () => {
   afterEach(() => {
@@ -112,13 +122,17 @@ describe('tab return', () => {
     expect(TAB_RETURN_SETTLE_MS).toBeGreaterThanOrEqual(200);
   });
 
-  it('keeps the previous tab attached while a tab root can dissolve back', () => {
+  it('keeps the previous tab attached and unfrozen so the pager can slide it', () => {
     const tabs = readFileSync(
       join(__dirname, '../../../app/(tabs)/_layout.tsx'),
       'utf8',
     );
-    expect(tabs).toMatch(/detachInactiveScreens=\{!hasTabPark\}/);
+    expect(tabs).toContain('detachInactiveScreens={false}');
+    expect(tabs).toContain('freezeOnBlur: route.name !== MORE_TAB_ROUTE');
+    expect(tabs).not.toContain('detachInactiveScreens={!hasTabPark}');
     expect(tabs).toContain('rememberFocusedTab(tabName, pathname)');
+    expect(tabs).toContain('useOverviewAffinity.getState().recordVisit(tabName)');
+    expect(tabs).toContain("intent=\"overview-return\" tabName={route.name}");
     expect(tabs).toContain('beginTabReturn()');
     expect(tabs).toContain('export default function TabsRoot');
     expect(tabs).not.toContain('export default function TabsLayout');
@@ -148,6 +162,140 @@ describe('tab return', () => {
     expect(tabNameFromSegments(['(tabs)', 'to-do', 'list-1'])).toBe('to-do');
     expect(tabNameFromSegments(['(tabs)', '(today)'])).toBe('(today)');
     expect(tabNameFromSegments(['welcome'])).toBeNull();
+  });
+
+  it('parks both tabs and holds swipe offset until a tap settle finishes', () => {
+    rememberFocusedTab('(today)', '/');
+    expect(beginTabTap('(today)', 'calendar', 'right')).toBe(true);
+    expect(peekCurrentTabName()).toBe('calendar');
+    expect(peekTabTapFrom()).toBe('(today)');
+    expect(peekTabTapLane()).toBe('back');
+    expect(hasTabPark()).toBe(true);
+    expect(peekTabReturnHref()).toBe('/');
+    rememberFocusedTab('(today)', '/');
+    expect(peekCurrentTabName()).toBe('calendar');
+    rememberFocusedTab('calendar', '/(tabs)/calendar');
+    expect(peekTabTapFrom()).toBe('(today)');
+    expect(peekCurrentTabName()).toBe('calendar');
+    endTabTap();
+    expect(peekTabTapFrom()).toBeNull();
+    expect(hasTabReturn()).toBe(true);
+  });
+
+  it('clears a stuck tap after the settle window so dest cannot stay off-screen', () => {
+    jest.useFakeTimers();
+    rememberFocusedTab('(today)', '/');
+    expect(beginTabTap('(today)', 'to-do', 'right')).toBe(true);
+    expect(peekTabTapFrom()).toBe('(today)');
+    jest.advanceTimersByTime(TAB_RETURN_SETTLE_MS - 1);
+    expect(peekTabTapFrom()).toBe('(today)');
+    jest.advanceTimersByTime(1);
+    expect(peekTabTapFrom()).toBeNull();
+    expect(peekCurrentTabName()).toBe('to-do');
+    jest.useRealTimers();
+  });
+
+  it('mirrors lanes onto the UI thread so the flip lands with the pager offset', () => {
+    rememberFocusedTab('overview', '/(tabs)/overview');
+    expect(
+      startTabOpen({
+        from: 'overview',
+        to: 'plants',
+        side: 'right',
+        width: 390,
+        reduceMotion: false,
+      }),
+    ).toBe(true);
+    expect(tabSwipeLanes.value).toMatchObject({
+      current: 'plants',
+      tapFrom: 'overview',
+      tapLane: 'back',
+    });
+    endTabTap();
+    expect(tabSwipeLanes.value).toMatchObject({
+      current: 'plants',
+      back: 'overview',
+      tapFrom: null,
+      tapLane: null,
+    });
+  });
+
+  it('lets a quick second tap keep the pager — a stale settle cannot snap it', () => {
+    rememberFocusedTab('overview', '/(tabs)/overview');
+    startTabOpen({
+      from: 'overview',
+      to: 'plants',
+      side: 'right',
+      width: 390,
+      reduceMotion: false,
+    });
+    const stale = peekTabTapToken();
+    startTabOpen({
+      from: 'plants',
+      to: 'travel',
+      side: 'right',
+      width: 390,
+      reduceMotion: false,
+    });
+    endTabTapIfCurrent(stale);
+    expect(peekTabTapFrom()).toBe('plants');
+    expect(peekCurrentTabName()).toBe('travel');
+    endTabTapIfCurrent(peekTabTapToken());
+    expect(peekTabTapFrom()).toBeNull();
+  });
+
+  it('ignores a settle rest that lands after the tap already ended', () => {
+    rememberFocusedTab('overview', '/(tabs)/overview');
+    startTabOpen({
+      from: 'overview',
+      to: 'plants',
+      side: 'right',
+      width: 390,
+      reduceMotion: false,
+    });
+    const token = peekTabTapToken();
+    endTabTap();
+    expect(() => endTabTapIfCurrent(token)).not.toThrow();
+    expect(peekTabTapFrom()).toBeNull();
+  });
+
+  it('sets swipe offset before beginTabTap so dest does not flash at rest', () => {
+    const source = readFileSync(join(__dirname, '../overview-return.ts'), 'utf8');
+    expect(source).toMatch(
+      /tabSwipeX\.value = tabTapStartX[\s\S]*beginTabTap/,
+    );
+    expect(source).not.toMatch(
+      /if \(!beginTabTap[\s\S]*tabSwipeX\.value = tabTapStartX/,
+    );
+  });
+
+  it('skips the pager when reduce-motion is on or dest is already current', () => {
+    rememberFocusedTab('overview', '/(tabs)/overview');
+    expect(
+      startTabOpen({
+        from: 'overview',
+        to: 'travel',
+        side: 'right',
+        width: 390,
+        reduceMotion: true,
+      }),
+    ).toBe(false);
+    expect(
+      startTabOpen({
+        from: 'overview',
+        to: 'overview',
+        side: 'right',
+        width: 390,
+        reduceMotion: false,
+      }),
+    ).toBe(false);
+  });
+
+  it('puts a leftward tap neighbor in the forward lane', () => {
+    rememberFocusedTab('calendar', '/(tabs)/calendar');
+    expect(beginTabTap('calendar', '(today)', 'left')).toBe(true);
+    expect(peekTabTapLane()).toBe('forward');
+    expect(beginTabTap('(today)', '(today)', 'left')).toBe(false);
   });
 
   it('treats /overview as the hub path', () => {

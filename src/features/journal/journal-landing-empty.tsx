@@ -1,7 +1,4 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
 
 import { AppText, GlassIconWell, GlassPlate, Symbol } from '@/components/primitives';
 import { fieldTitleCase } from '@/components/primitives/field-title-case';
@@ -17,12 +14,6 @@ export function JournalLandingEmpty({ onStart }: { onStart: () => void }) {
   const theme = useTheme();
   const { s, spacing, layout } = useResponsive();
   const dark = theme.name === 'dark';
-  const [entranceKey, setEntranceKey] = useState(0);
-  useFocusEffect(
-    useCallback(() => {
-      setEntranceKey((key) => key + 1);
-    }, []),
-  );
 
   const actionLabel = fieldTitleCase("Start Today's Journal");
   const handleAction = () => {
@@ -140,18 +131,7 @@ export function JournalLandingEmpty({ onStart }: { onStart: () => void }) {
 
   return (
     <AgentTestId testID={AgentUiIds.journal.hubEmpty} style={styles.fill}>
-      {entranceKey > 0 ? (
-        <Animated.View
-          key={entranceKey}
-          style={styles.fill}
-          entering={FadeInDown.springify()
-            .damping(18)
-            .reduceMotion(ReduceMotion.System)}>
-          {body}
-        </Animated.View>
-      ) : (
-        body
-      )}
+      {body}
     </AgentTestId>
   );
 }

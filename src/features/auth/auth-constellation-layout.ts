@@ -128,6 +128,8 @@ export const AUTH_COPY_TOP =
 
 /** Full-size copy reference height; shorter canvases scale type down. */
 export const AUTH_COPY_BASE_HEIGHT = 390;
+/** Floor so ring copy cannot shrink to an unreadable size. */
+export const AUTH_COPY_SCALE_MIN = 0.75;
 
 /** Breathing room so orbiting wells cannot kiss the intro. */
 export const AUTH_COPY_CLEAR_PAD = 0.045;
@@ -174,6 +176,30 @@ export function authCopyMaxHeightFrac(
     wellTop - AUTH_COPY_CLEAR_PAD - AUTH_COPY_TOP,
   );
   return Math.min(AUTH_COPY_HEIGHT, fromSweep);
+}
+
+/**
+ * Slot width that fits the longest orbit label ("Checklists") at caption size.
+ * All labels share one scale from this — never per-word `fit` shrink.
+ */
+export const AUTH_ORBIT_LABEL_REF_SLOT = 76;
+
+export function authOrbitLabelStyle(
+  slot: number,
+  caption: { fontSize: number; lineHeight: number },
+): {
+  fontSize: number;
+  lineHeight: number;
+  letterSpacing: number;
+  width: '100%';
+} {
+  const scale = Math.min(1, Math.max(0.75, slot / AUTH_ORBIT_LABEL_REF_SLOT));
+  return {
+    fontSize: caption.fontSize * scale,
+    lineHeight: caption.lineHeight * scale,
+    letterSpacing: 0,
+    width: '100%',
+  };
 }
 
 export { AUTH_ORBIT_START_DEG, AUTH_ORBIT_TABS };

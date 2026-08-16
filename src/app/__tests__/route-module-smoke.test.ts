@@ -22,6 +22,7 @@ const routeModules = [
   'src/app/(tabs)/food/index.tsx',
   'src/app/(tabs)/food/ingredients/[id].tsx',
   'src/app/(tabs)/food/ingredients/index.tsx',
+  'src/app/(tabs)/food/nutrition-profile.tsx',
   'src/app/(tabs)/food/plan.tsx',
   'src/app/(tabs)/food/preferences.tsx',
   'src/app/(tabs)/food/recipes/[id].tsx',

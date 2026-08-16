@@ -16,6 +16,7 @@ import {
     Button,
     Card,
     ErrorMessage,
+    GestureScrollView,
     GlassPlate,
     HeaderBackButton,
     IconButton,
@@ -426,6 +427,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
       <FlashList
         data={listData}
         keyExtractor={(item) => item.key}
+        renderScrollComponent={GestureScrollView}
         refreshControl={refreshControl}
         automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"

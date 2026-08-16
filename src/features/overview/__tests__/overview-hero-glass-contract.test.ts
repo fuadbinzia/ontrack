@@ -30,6 +30,12 @@ describe('Overview hero glass contract', () => {
     expect(hero).toContain("'habit'");
   });
 
+  it('opens the pulse at rest instead of fading artwork or layout-shifting rows', () => {
+    expect(hero).toContain('transition={0}');
+    expect(hero).not.toContain('LinearTransition');
+    expect(hero).not.toContain("overflow: 'hidden'");
+  });
+
   it('puts event logos in the pulse well instead of a generic ticket glyph', () => {
     expect(hero).toContain('artwork={eventArtwork}');
     expect(hero).toContain('<OverviewHeroMark');
@@ -45,6 +51,12 @@ describe('Overview hero glass contract', () => {
   it('does not keep the Across onTrack section heading or caption', () => {
     expect(screen).not.toContain('Tap Any Section To Go Deeper');
     expect(screen).not.toMatch(/<AppText[^>]*>\s*Across onTrack\s*<\/AppText>/);
+    expect(screen).not.toContain('One calm view of everything moving in your life.');
+    expect(screen).not.toContain('subtitle=');
+  });
+
+  it('does not wrap the pulse mark in an extra orbit ring', () => {
+    expect(hero).not.toContain('pulseOrbit');
   });
 
   it('uses registered glass check controls to acknowledge individual items', () => {

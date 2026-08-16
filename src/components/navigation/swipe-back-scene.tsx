@@ -5,7 +5,7 @@ import {
   useRootNavigationState,
   useRouter,
 } from 'expo-router';
-import { useCallback, useEffect, useMemo, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useSyncExternalStore, type ReactElement, type ReactNode } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -14,17 +14,22 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 
-import { easings, springs } from '@/design-system';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { goBackOrReplace } from '@/utils/navigation';
 
 import {
   beginTabForward,
   beginTabReturn,
+  peekCurrentTabName,
+  peekTabForwardName,
+  peekTabReturnName,
+  peekTabTapFrom,
+  peekTabTapLane,
   resolveSwipeBackAction,
+  subscribeTabReturn,
+  tabSwipeLaneKey,
   useHasTabForward,
   useHasTabReturn,
 } from './overview-return';
@@ -33,28 +38,34 @@ import {
   canActivateSwipeForward,
   focusedStackCanPop,
   navigationCanGoBack,
-  OVERVIEW_RETURN_DRAG_RATIO,
-  overviewReturnCommitMs,
-  overviewReturnDragProgress,
-  overviewReturnOpacity,
-  overviewReturnShiftX,
   rememberFocusedStackCanPop,
+  swipeTrackedTranslation,
   shouldCommitSwipeBack,
   shouldCommitSwipeForward,
   shouldWrapSwipeBackScene,
-  swipeBackFollowsScene,
+  SWIPE_AXIS_SLOP,
+  swipePanActiveOffsetX,
 } from './swipe-back';
+import {
+  PAGER_SPRING,
+  tabSwipeLane,
+  tabSwipeLanes,
+  tabSwipeTranslateX,
+  tabSwipeX,
+} from './tab-swipe';
 
 export function SwipeBackScene({
   children,
   gestureEnabled,
   presentation,
   intent = 'stack',
+  tabName,
 }: {
   children: ReactNode;
   gestureEnabled?: boolean;
   presentation?: string;
   intent?: 'stack' | 'overview-return';
+  tabName?: string;
 }): ReactElement {
   const router = useRouter();
   const navigation = useNavigation();
@@ -64,7 +75,26 @@ export function SwipeBackScene({
   const reduceMotion = useReducedMotion();
   const translateX = useSharedValue(0);
   const screenWidth = useSharedValue(width);
-  screenWidth.value = width;
+  useEffect(() => {
+    screenWidth.value = width;
+  }, [screenWidth, width]);
+  const laneKey = useSyncExternalStore(
+    subscribeTabReturn,
+    tabSwipeLaneKey,
+    tabSwipeLaneKey,
+  );
+  const lane = useMemo(
+    () =>
+      tabSwipeLane(
+        tabName ?? null,
+        peekCurrentTabName(),
+        peekTabReturnName(),
+        peekTabForwardName(),
+        peekTabTapFrom(),
+        peekTabTapLane(),
+      ),
+    [laneKey, tabName],
+  );
 
   const hasTabReturn = useHasTabReturn();
   const hasTabForward = useHasTabForward();
@@ -96,15 +126,19 @@ export function SwipeBackScene({
     hasTabForward,
     intent,
   });
-  const enabled = backEnabled || forwardEnabled;
+  const pager = intent === 'overview-return';
+  const tapping = Boolean(peekTabTapFrom());
+  const isCurrentLane = !pager || lane === 'current';
+  const enabled =
+    isCurrentLane && !tapping && (backEnabled || forwardEnabled);
   useFocusEffect(
     useCallback(() => {
-      translateX.value = 0;
-    }, [translateX]),
+      if (!pager) translateX.value = 0;
+    }, [pager, translateX]),
   );
   useEffect(() => {
-    if (!enabled) translateX.value = 0;
-  }, [enabled, translateX]);
+    if (!pager && !enabled) translateX.value = 0;
+  }, [enabled, pager, translateX]);
 
   const goBack = useCallback(() => {
     const action = resolveSwipeBackAction({
@@ -131,159 +165,159 @@ export function SwipeBackScene({
   }, [router]);
 
   const panGesture = useMemo(() => {
-    const cancel = () => {
-      'worklet';
-      if (reduceMotion) {
-        translateX.value = 0;
-        return;
-      }
-      translateX.value = withSpring(0, {
-        damping: springs.gentle.damping,
-        stiffness: springs.gentle.stiffness,
-        mass: springs.gentle.mass,
-        overshootClamping: true,
-      });
-    };
-    const commitTab = (
-      direction: 1 | -1,
+    const offset = pager ? tabSwipeX : translateX;
+    const settle = (
+      to: number,
       velocityX: number,
-      onCommit: () => void,
+      onRest?: () => void,
     ) => {
       'worklet';
       if (reduceMotion) {
-        translateX.value = 0;
-        runOnJS(onCommit)();
+        offset.value = to;
+        if (onRest) runOnJS(onRest)();
         return;
       }
-      const duration = overviewReturnCommitMs(velocityX);
-      if (!swipeBackFollowsScene(intent)) {
-        translateX.value = withTiming(
-          direction * screenWidth.value * OVERVIEW_RETURN_DRAG_RATIO,
-          { duration, easing: easings.standard },
-          (finished) => {
-            if (finished) runOnJS(onCommit)();
-          },
-        );
-        return;
-      }
-      translateX.value = withTiming(
-        direction * screenWidth.value,
-        { duration, easing: easings.standard },
+      offset.value = withSpring(
+        to,
+        {
+          damping: PAGER_SPRING.damping,
+          stiffness: PAGER_SPRING.stiffness,
+          mass: PAGER_SPRING.mass,
+          overshootClamping: true,
+          velocity: velocityX,
+        },
         (finished) => {
-          if (finished) runOnJS(onCommit)();
+          if (finished && onRest) runOnJS(onRest)();
         },
       );
     };
 
-    const backPan = Gesture.Pan()
-      .enabled(backEnabled)
-      .activeOffsetX([-1e5, 16])
-      .failOffsetY([-20, 20])
+    return Gesture.Pan()
+      .enabled(enabled)
+      .maxPointers(1)
+      .activeOffsetX(swipePanActiveOffsetX(backEnabled, forwardEnabled))
+      .failOffsetY([-SWIPE_AXIS_SLOP, SWIPE_AXIS_SLOP])
       .onUpdate((event) => {
         if (reduceMotion) return;
-        translateX.value = Math.max(0, event.translationX);
+        offset.value = swipeTrackedTranslation(
+          event.translationX,
+          backEnabled,
+          forwardEnabled,
+        );
       })
       .onEnd((event) => {
+        const translationX = swipeTrackedTranslation(
+          event.translationX,
+          backEnabled,
+          forwardEnabled,
+        );
         if (
+          backEnabled &&
           shouldCommitSwipeBack({
-            translationX: event.translationX,
+            translationX,
             velocityX: event.velocityX,
             width: screenWidth.value,
           })
         ) {
-          commitTab(1, event.velocityX, goBack);
+          settle(screenWidth.value, event.velocityX, goBack);
           return;
         }
-        cancel();
-      });
-
-    const forwardPan = Gesture.Pan()
-      .enabled(forwardEnabled)
-      .hitSlop({ left: -(Math.max(width, 36) - 36) })
-      .activeOffsetX([-16, 1e5])
-      .failOffsetY([-20, 20])
-      .onUpdate((event) => {
-        if (reduceMotion) return;
-        translateX.value = Math.min(0, event.translationX);
-      })
-      .onEnd((event) => {
         if (
+          forwardEnabled &&
           shouldCommitSwipeForward({
-            translationX: event.translationX,
+            translationX,
             velocityX: event.velocityX,
             width: screenWidth.value,
           })
         ) {
-          commitTab(-1, event.velocityX, goForward);
+          settle(-screenWidth.value, event.velocityX, goForward);
           return;
         }
-        cancel();
+        settle(0, event.velocityX);
       });
-
-    if (!forwardEnabled) return backPan;
-    if (!backEnabled) return forwardPan;
-    return Gesture.Race(backPan, forwardPan);
   }, [
     backEnabled,
+    enabled,
     forwardEnabled,
     goBack,
     goForward,
-    intent,
+    pager,
     reduceMotion,
     screenWidth,
     translateX,
-    width,
   ]);
 
   const sceneStyle = useAnimatedStyle(() => {
-    if (!swipeBackFollowsScene(intent)) {
-      const progress = overviewReturnDragProgress(
-        translateX.value,
-        screenWidth.value,
-      );
-      const shift =
-        overviewReturnShiftX(progress) * (translateX.value < 0 ? -1 : 1);
+    if (!pager) {
       return {
         flex: 1,
-        opacity: overviewReturnOpacity(progress),
-        transform: [{ translateX: shift }],
+        transform: [{ translateX: translateX.value }],
       };
     }
+    // Lane + offset both live on the UI thread so a tab tap flips them in
+    // the same frame. Deriving the lane from React render state painted the
+    // leaving page one frame at translateX = ±width — a blank flash per tap.
+    // swipeX feeds the lane too: a tab sitting in both the back and forward
+    // stacks parks on whichever side the live drag is about to reveal.
+    const lanes = tabSwipeLanes.value;
+    const swipeX = tabSwipeX.value;
     return {
       flex: 1,
-      transform: [{ translateX: translateX.value }],
+      transform: [
+        {
+          translateX: tabSwipeTranslateX(
+            tabSwipeLane(
+              tabName ?? null,
+              lanes.current,
+              lanes.back,
+              lanes.forward,
+              lanes.tapFrom,
+              lanes.tapLane,
+              swipeX,
+            ),
+            swipeX,
+            screenWidth.value,
+          ),
+        },
+      ],
     };
-  });
+  }, [pager, tabName]);
 
   if (!shouldWrapSwipeBackScene({ gestureEnabled, presentation })) {
     return <>{children}</>;
   }
 
-  return (
-    <GestureDetector gesture={panGesture}>
-      <Animated.View collapsable={false} style={[styles.scene, sceneStyle]}>
-        {children}
-        {intent === 'overview-return' && backEnabled ? (
-          <AgentTestId
-            testID={AgentUiIds.shell.swipeBack}
-            label="Swipe back"
-            onPress={goBack}
-            style={styles.edge}>
-            <Animated.View style={styles.edgeFill} />
-          </AgentTestId>
-        ) : null}
-        {intent === 'overview-return' && forwardEnabled ? (
-          <AgentTestId
-            testID={AgentUiIds.shell.swipeForward}
-            label="Swipe forward"
-            onPress={goForward}
-            style={styles.edgeRight}>
-            <Animated.View style={styles.edgeFill} />
-          </AgentTestId>
-        ) : null}
-      </Animated.View>
-    </GestureDetector>
+  const scene = (
+    <Animated.View
+      collapsable={false}
+      pointerEvents={isCurrentLane ? 'auto' : 'none'}
+      style={[styles.scene, sceneStyle]}>
+      {children}
+      {pager && enabled && backEnabled ? (
+        <AgentTestId
+          testID={AgentUiIds.shell.swipeBack}
+          label="Swipe back"
+          onPress={goBack}
+          style={styles.edge}>
+          <Animated.View style={styles.edgeFill} />
+        </AgentTestId>
+      ) : null}
+      {pager && enabled && forwardEnabled ? (
+        <AgentTestId
+          testID={AgentUiIds.shell.swipeForward}
+          label="Swipe forward"
+          onPress={goForward}
+          style={styles.edgeRight}>
+          <Animated.View style={styles.edgeFill} />
+        </AgentTestId>
+      ) : null}
+    </Animated.View>
   );
+
+  // Keep the detector mounted even while disabled — swapping the wrapper on
+  // enabled flips remounts both pages mid-transition (the load glitch) and
+  // races RNGH's native handler attach. The pan itself is `.enabled(enabled)`.
+  return <GestureDetector gesture={panGesture}>{scene}</GestureDetector>;
 }
 
 const styles = StyleSheet.create({

@@ -145,6 +145,8 @@ export interface TodoPersistedState {
   members: TodoMember[];
   invites: TodoInvite[];
   pendingMutations: PendingTodoMutation[];
+  /** Local-only; opening a list does not sync as an edit. */
+  listOpenedAt: Record<string, string>;
 }
 
 export interface TodoSharedSnapshot {

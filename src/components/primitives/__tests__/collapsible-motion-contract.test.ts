@@ -10,7 +10,10 @@ describe('collapsible motion contract', () => {
     expect(read('src/components/primitives/index.ts')).toContain('DisclosureChevron');
     expect(read('src/design-system/motion.ts')).toContain('disclosure');
     expect(read('src/design-system/motion.ts')).toContain('page');
+    expect(read('src/design-system/motion.ts')).toContain('sheet');
     expect(read('src/design-system/index.ts')).toContain('motion');
+    expect(read('src/design-system/index.ts')).toContain('listEntering');
+    expect(read('src/components/primitives/index.ts')).toContain('Presence');
   });
 
   it('routes shared section collapses through CollapsibleBody', () => {

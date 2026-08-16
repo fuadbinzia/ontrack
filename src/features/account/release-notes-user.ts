@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.104',
+    date: '2026-08-16',
+    notes: [
+      'Paint-then-translate tabs, shared Presence, and hub polish so pages open at rest and chrome eases instead of snapping.',
+    ],
+  },
+  {
     version: '1.0.103',
     date: '2026-08-15',
     notes: [

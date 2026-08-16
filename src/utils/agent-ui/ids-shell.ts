@@ -147,9 +147,11 @@ export const agentUiIdsShell = {
     detail: {
       back: 'ontrack.checklists.detail.back',
       title: 'ontrack.checklists.detail.title',
+      filter: 'ontrack.checklists.detail.filter',
       newTask: 'ontrack.checklists.detail.newTask',
       addTask: 'ontrack.checklists.detail.addTask',
       sort: 'ontrack.checklists.detail.sort',
+      sortOption: (id: string) => `ontrack.checklists.detail.sort.${id}`,
       assigneeFilter: 'ontrack.checklists.detail.assigneeFilter',
       assigneeOption: (assigneeId: string) =>
         `ontrack.checklists.detail.assigneeOption.${assigneeId}`,

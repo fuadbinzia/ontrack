@@ -9,6 +9,7 @@ import {
     Button,
     Card,
     EmptyState,
+    GestureScrollView,
     GlassPlate,
     Screen,
 } from '@/components/primitives';
@@ -20,6 +21,8 @@ import { usePlants } from '@/store/plants';
 import type { Plant } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { formatDueLabel, toDateKey, todayKey } from '@/utils/date';
+import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 
 function PlantCard({ plant }: { plant: Plant }) {
   const router = useRouter();
@@ -36,6 +39,7 @@ function PlantCard({ plant }: { plant: Plant }) {
         <Image
           source={plantImageSource(plant.photoUri)}
           cachePolicy="memory-disk"
+          transition={0}
           recyclingKey={plant.id}
           style={styles.photo}
           contentFit="cover"
@@ -76,25 +80,33 @@ function PlantsScreenContent() {
   const sampleVersion = usePlants((state) => state.sampleVersion);
 
   useEffect(() => {
-    const state = usePlants.getState();
-    const upgraded = ensurePlantSample(
-      state.plants,
-      state.sampleVersion,
-      state.sampleDismissed,
-    );
-    if (
-      upgraded.sampleVersion !== state.sampleVersion
-      || upgraded.sampleDismissed !== state.sampleDismissed
-      || upgraded.plants.length !== state.plants.length
-      || upgraded.plants.some((plant, index) => plant.id !== state.plants[index]?.id)
-    ) {
-      usePlants.setState({
-        plants: upgraded.plants,
-        sampleVersion: upgraded.sampleVersion,
-        sampleDismissed: upgraded.sampleDismissed,
-      });
-    }
+    return deferAfterPageTransition(() => {
+      const state = usePlants.getState();
+      const upgraded = ensurePlantSample(
+        state.plants,
+        state.sampleVersion,
+        state.sampleDismissed,
+      );
+      if (
+        upgraded.sampleVersion !== state.sampleVersion
+        || upgraded.sampleDismissed !== state.sampleDismissed
+        || upgraded.plants.length !== state.plants.length
+        || upgraded.plants.some((plant, index) => plant.id !== state.plants[index]?.id)
+      ) {
+        usePlants.setState({
+          plants: upgraded.plants,
+          sampleVersion: upgraded.sampleVersion,
+          sampleDismissed: upgraded.sampleDismissed,
+        });
+      }
+    });
   }, [plants, sampleVersion]);
+  useWarmHrefs([
+    '/plants/new',
+    ...plants.slice(0, 4).map(
+      (plant) => ({ pathname: '/plants/[id]', params: { id: plant.id } }) as const,
+    ),
+  ]);
 
   const sortedPlants = useMemo(
     () =>
@@ -109,6 +121,7 @@ function PlantsScreenContent() {
       <FlashList
         data={sortedPlants}
         keyExtractor={(item) => item.id}
+        renderScrollComponent={GestureScrollView}
         refreshControl={refreshControl}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={

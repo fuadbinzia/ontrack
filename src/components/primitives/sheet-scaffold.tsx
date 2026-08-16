@@ -176,7 +176,7 @@ export function SheetScaffold({
   // Layout anchor: lets agent-ui dump the plate's painted bounds.
   const plateAgent = useAgentUiTarget(AgentUiIds.sheet.plate, { label: title });
   const [lockedHeight, setLockedHeight] = useState<number>();
-  const { headerGesture, sheetStyle, scrimStyle, onSheetLayout, close } =
+  const { headerGesture, sheetStyle, scrimStyle, onSheetLayout, close, held } =
     useSheetDismissPan({
       visible,
       onClose,
@@ -222,17 +222,21 @@ export function SheetScaffold({
   const beginModalSheet = useUI((state) => state.beginModalSheet);
   const endModalSheet = useUI((state) => state.endModalSheet);
   useEffect(() => {
-    if (!visible) return;
+    if (!held) return;
     beginModalSheet();
     return endModalSheet;
-  }, [visible, beginModalSheet, endModalSheet]);
+  }, [held, beginModalSheet, endModalSheet]);
 
-  // Dismiss unmounts immediately — holding a Modal for exit anim traps touches
-  // and makes the next navigation feel stuck under an invisible overlay.
-  if (!visible) return null;
+  // Hold the host through the measured exit. pointerEvents none so a settling
+  // card cannot trap the next tap / navigation.
+  if (!held) return null;
 
   const content = (
-    <GestureHandlerRootView accessibilityViewIsModal style={styles.modalRoot}>
+    <GestureHandlerRootView
+      accessibilityViewIsModal
+      pointerEvents={visible ? 'auto' : 'none'}
+      style={styles.modalRoot}
+    >
       {/* The shared sheet gesture fades the scrim independently of the card rise. */}
       <Animated.View
         pointerEvents="none"

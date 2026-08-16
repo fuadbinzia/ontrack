@@ -8,7 +8,11 @@ import {
   DEFAULT_TRACKER_ORDER,
 } from '@/components/navigation/tab-pins';
 
-import { moreListRoutes, visibleMoreRoutes } from '../tracker-presence';
+import {
+  addonsByDisplayName,
+  moreListRoutes,
+  visibleMoreRoutes,
+} from '../tracker-presence';
 
 function listedRoutes(
   enabledAddons: Record<string, boolean>,
@@ -65,6 +69,24 @@ describe('tracker presence', () => {
     } finally {
       process.env.EXPO_OS = previous;
     }
+  });
+
+  it('lists Manage Sections add-ons in alphabetical display order', () => {
+    const listed = addonsByDisplayName();
+    expect(listed.map((addon) => addon.name)).toEqual([
+      'Finance',
+      'Fitness',
+      'Food Tracker',
+      'Games',
+      'Health',
+      'Journal',
+      'Plant Care',
+      'Travel Planner',
+      'Vehicle Tracker',
+      'Vision Board',
+    ]);
+    expect(listed).toHaveLength(ADDONS.length);
+    expect(ADDONS.map((addon) => addon.id)[0]).toBe('food');
   });
 
   it('does not invent More rows that are not already enabled', () => {

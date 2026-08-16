@@ -135,7 +135,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.overview.hero`                                   | Overview pulse   | Today's highest-level status                                                                          |
 | `ontrack.overview.eventUpdates`                           | Event updates    | Previews the highlighted event's YouTube search in-app; users may choose YouTube's app handoff         |
 | `ontrack.overview.attention.acknowledge.<key>`            | Acknowledge      | Hides the current version of an Overview attention item without changing its source record           |
-| `ontrack.overview.section.all`                            | Across onTrack   | Live module summary list                                                                              |
+| `ontrack.overview.section.all`                            | Across onTrack   | Live module summary list, ordered by this user's opens (frecency)                                     |
 | `ontrack.overview.row.<route>`                            | Overview row     | Opens the matching section; the Today row resets the timeline to the current date                     |
 | `ontrack.shell.swipeBack`                                 | Swipe back       | Left-edge swipe-back host on a tab root; drag right or tap to return to the previous tab              |
 | `ontrack.shell.swipeForward`                              | Swipe forward    | Right-edge swipe-forward host after a tab swipe-back; drag left or tap to return to the page you left |
@@ -248,7 +248,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.food.preferences.<section>.item.<slug>`  | Removable chip (tap removes the value)                               |
 | `ontrack.food.preferences.section.privacy`        | Privacy toggles anchor (not tappable)                                |
 | `ontrack.food.preferences.privacy.<key>`          | Privacy toggle (`shareAllergies`, `shareDietaryPreferences`, `shareMeals`; default off) |
-| `ontrack.food.preferences.clinical`               | Pointer row → memory-only clinical nutrition profile                 |
+| `ontrack.food.preferences.clinical`               | Nutrition row → `/(tabs)/food/nutrition-profile`                     |
 
 ### Plan & Shopping (`/food/plan`)
 
@@ -536,18 +536,20 @@ Deep link example: `ontrack://travel` / Expo route `/(tabs)/travel`
 | testID                            | Control                                                                 |
 | --------------------------------- | ----------------------------------------------------------------------- |
 | `ontrack.checklists.editMode`             | Edit / Done lists                     |
-| `ontrack.checklists.collaborators`        | Collaborators                         |
+| `ontrack.checklists.collaborators`        | (unused) former hub add-collaborator  |
 | `ontrack.checklists.newListName`          | New list name field                   |
 | `ontrack.checklists.listName.<listId>`    | Editable checklist name               |
-| `ontrack.checklists.newListKind.<kind>`   | Select checklist or grocery-list mode |
+| `ontrack.checklists.newListKind.<kind>`   | (unused) former hub create-kind chips |
 | `ontrack.checklists.createList`           | Create list                           |
 | `ontrack.checklists.list.<listId>`        | Open list card                        |
 | `ontrack.checklists.detail.back`          | Back to Checklists (chevron + label)  |
 | `ontrack.checklists.detail.title`         | Edit checklist title (Edit mode)      |
+| `ontrack.checklists.detail.filter`        | Toggle open / closed tasks            |
 | `ontrack.checklists.detail.newTask`       | New task field                        |
 | `ontrack.checklists.detail.addTask`       | Add task                              |
-| `ontrack.checklists.detail.sort`          | Sort menu                             |
-| `ontrack.checklists.detail.assigneeFilter` | Filter items by assignee             |
+| `ontrack.checklists.detail.sort`          | Sort choices live in List Actions     |
+| `ontrack.checklists.detail.sort.<id>`     | Pick a sort in List Actions           |
+| `ontrack.checklists.detail.assigneeFilter` | Assigned-to choices live in List Actions |
 | `ontrack.checklists.detail.assigneeOption.<id>` | Select all assignees or a member |
 | `ontrack.checklists.detail.actions`       | Open list actions sheet               |
 | `ontrack.checklists.detail.actionsClose`  | Close list actions sheet              |
@@ -722,18 +724,18 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.identity.name`                                  | Name field in identity editor                                  |
 | `ontrack.profile.identity.goal`                                  | Blurb field in identity editor                                 |
 | `ontrack.profile.guestStatus`                                    | (legacy) Guest caption — unused; Account card covers guest CTA |
-| `ontrack.profile.section.account`                                | Account section anchor                                         |
-| `ontrack.profile.section.accountSyncing`                         | Account Syncing section anchor                                 |
+| `ontrack.profile.section.account`                                | Account section (sign-in + connections)                        |
+| `ontrack.profile.section.accountSyncing`                         | Calendar Sync row under Account                                |
 | `ontrack.profile.section.appearance`                             | Appearance section anchor                                      |
-| `ontrack.profile.section.developer`                              | Developer section anchor                                       |
-| `ontrack.profile.section.preferences`                            | Expand/collapse Preferences section                            |
-| `ontrack.profile.section.features`                               | Expand/collapse Features section                               |
-| `ontrack.profile.section.addons`                                 | Expand/collapse Add-ons section                                |
-| `ontrack.profile.section.legal`                                  | Legal section anchor                                           |
-| `ontrack.profile.section.dangerZone`                             | Danger Zone (reset / delete)                                   |
-| `ontrack.profile.section.disclaimers`                            | Disclaimers footer section anchor                              |
-| `ontrack.profile.section.appInformation`                         | App Information footer section                                 |
-| `ontrack.profile.version`                                        | App version row in App Information                             |
+| `ontrack.profile.section.developer`                              | Developer section anchor (gated)                               |
+| `ontrack.profile.section.preferences`                            | Preferences section (places + experience toggles)              |
+| `ontrack.profile.section.features`                               | Agents section                                                 |
+| `ontrack.profile.section.about`                                  | About section (legal + version)                                |
+| `ontrack.profile.section.legal`                                  | Privacy + Terms rows inside About                              |
+| `ontrack.profile.section.dangerZone`                             | Danger Zone (reset / delete) — last                            |
+| `ontrack.profile.section.disclaimers`                            | (unused) former TMDB attribution                               |
+| `ontrack.profile.section.appInformation`                         | Version row inside About                                       |
+| `ontrack.profile.version`                                        | App version row in About                                       |
 | `ontrack.profile.theme.system` / `.light` / `.dark`              | Theme segment                                                  |
 | `ontrack.profile.homeLocation`                                   | Home location inline field (Open-Meteo city autocomplete)      |
 | `ontrack.profile.currentLocation`                                | Current location override field (never writes Home)            |
@@ -741,9 +743,8 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.*.suggestion.<n>`                               | City suggestion row                                            |
 | `ontrack.profile.*.suggestionsDismiss`                           | Dismiss city suggestions                                       |
 | `ontrack.profile.agents`                                         | Manage Agents                                                  |
-| `ontrack.profile.nutrition`                                      | Nutrition profiles                                             |
 | `ontrack.profile.calendarSync`                                   | Google Calendar sync settings                                  |
-| `ontrack.profile.straiaway`                                      | StraiAway partner connect settings                             |
+| `ontrack.profile.straiaway`                                      | StraiAway connect screen (hidden from Profile for now)         |
 | `ontrack.straiaway.connect`                                      | Connect StraiAway                                              |
 | `ontrack.straiaway.disconnect`                                   | Disconnect StraiAway                                           |
 | `ontrack.straiaway.open`                                         | Open StraiAway                                                 |
@@ -763,7 +764,7 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.privacy`                                        | Privacy Policy                                                 |
 | `ontrack.profile.terms`                                          | Terms of Use                                                   |
 | `ontrack.legal.document`                                         | Privacy / Terms document body                                  |
-| `ontrack.profile.tmdb`                                           | TMDB attribution link (footer)                                 |
+| `ontrack.profile.tmdb`                                           | (unused) former TMDB attribution link                          |
 | `ontrack.profile.signOut`                                        | Sign Out (signed-in)                                           |
 | `ontrack.profile.accountProviders`                               | Active SSO line (Apple or Google)                              |
 | `ontrack.profile.createOrSignIn`                                 | Create or Sign In (guest)                                      |
@@ -1171,7 +1172,7 @@ Deep link: `ontrack://health` / Expo route `/(tabs)/health`
 | `ontrack.health.playbookRun.<id>.complete` / `.cancel` | Finish or stop a playbook run       |
 | `ontrack.health.settings`                              | Open Health settings                |
 | `ontrack.health.settings.stateSync.<off                | on>`                                | Configure State of Mind sync |
-| `ontrack.profile.addon.health`                         | Toggle the iPhone Health add-on     |
+| `ontrack.trackers.addon.health`                        | Toggle the iPhone Health add-on     |
 
 Demo fixture: `factor-agent-ui-demo-work` / `mood-agent-ui-demo-calm` via `./scripts/agent-ui-seed.sh health-demo` or flow `health-demo`.
 

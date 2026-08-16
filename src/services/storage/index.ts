@@ -39,6 +39,8 @@ export const STORAGE_KEYS = {
   tabPins: 'ontrack/tab-pins/v1',
   /** Device-local Overview attention acknowledgements; source records stay unchanged. */
   overviewAttention: 'ontrack/overview-attention/v1',
+  /** Device-local Overview module frecency (visit count + recency); per install. */
+  overviewAffinity: 'ontrack/overview-affinity/v1',
   /** Dev Mode toggle + live-account snapshot (sandbox isolation). */
   devMode: 'ontrack/dev-mode/v1',
 } as const;

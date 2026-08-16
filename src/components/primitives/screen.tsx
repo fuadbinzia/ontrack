@@ -2,13 +2,14 @@ import type { PropsWithChildren, RefObject } from 'react';
 import { useRef } from 'react';
 import {
     Platform,
-    ScrollView,
     StyleSheet,
     View,
     type NativeScrollEvent,
     type NativeSyntheticEvent,
+    type ScrollView as RNScrollView,
     type ViewStyle,
 } from 'react-native';
+import { GestureScrollView as ScrollView } from './gesture-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { bottomNavContentInset } from '@/components/navigation/bottom-nav-inset';
@@ -19,10 +20,13 @@ import { useUI } from '@/store/ui';
 import { useAgentUiScrollContainer } from '@/utils/agent-ui/use-agent-ui-scroll-container';
 
 import {
-  usePageSurfaceBackground,
-  useSafeAreaChrome,
+    usePageSurfaceBackground,
+    useSafeAreaChrome,
 } from './safe-area-chrome';
-import { useScreenAtmosphereChrome } from './screen-atmosphere';
+import {
+    ScreenAtmosphereSceneFill,
+    useScreenAtmosphereChrome,
+} from './screen-atmosphere';
 
 interface ScreenProps extends PropsWithChildren {
   /** Scrollable content (default) or a fixed layout */
@@ -41,7 +45,7 @@ interface ScreenProps extends PropsWithChildren {
   /** Extra work after the shared cloud/friends refresh. */
   onRefresh?: () => void | Promise<void>;
   /** Optional access to the shared scroll container for targeted in-screen navigation. */
-  scrollRef?: RefObject<ScrollView | null>;
+  scrollRef?: RefObject<RNScrollView | null>;
   /** Forwarded after agent-ui scroll bookkeeping. */
   onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   /**
@@ -90,8 +94,8 @@ export function Screen({
     !useAtmosphere && typeof backgroundColor === 'string'
       ? backgroundColor
       : undefined;
-  // Default glass wash paints on AppSafeArea (window y=0) so status bar +
-  // page share one continuous atmosphere — no hard safe-area seam.
+  // Shell wash paints on AppSafeArea (window y=0). A window-aligned card
+  // fill occludes the previous stack page without restarting the gradient.
   useScreenAtmosphereChrome(useAtmosphere);
   // Solid / custom fills still publish status-bar + dock colors.
   useSafeAreaChrome(surfaceColor, { priority: -1 });
@@ -139,12 +143,19 @@ export function Screen({
     <View style={[styles.fill, paddingStyle, contentStyle]}>{children}</View>
   );
 
+  const frame = (
+    <>
+      {useAtmosphere ? <ScreenAtmosphereSceneFill /> : null}
+      {shell}
+    </>
+  );
+
   if (!scroll) {
     return (
       <View
         onTouchStart={notifyPageInteraction}
         style={[styles.fill, { backgroundColor }, style]}>
-        {shell}
+        {frame}
       </View>
     );
   }
@@ -155,7 +166,7 @@ export function Screen({
       onTouchStart={notifyPageInteraction}
       collapsable={false}
       style={[styles.fill, { backgroundColor }, style]}>
-      {shell}
+      {frame}
     </View>
   );
 }

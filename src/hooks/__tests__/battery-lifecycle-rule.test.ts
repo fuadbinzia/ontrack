@@ -9,7 +9,7 @@ describe('battery lifecycle contracts', () => {
     const tabs = read('src/app/(tabs)/_layout.tsx');
     const nav = read('src/components/navigation/bottom-nav-bar.tsx');
 
-    expect(tabs).toContain('detachInactiveScreens');
+    expect(tabs).toContain('detachInactiveScreens={false}');
     expect(tabs).toContain('freezeOnBlur: route.name !== MORE_TAB_ROUTE');
     expect(tabs).toContain('lazy: true');
     expect(nav).not.toContain('navigation.preload');

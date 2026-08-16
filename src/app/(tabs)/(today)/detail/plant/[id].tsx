@@ -69,6 +69,8 @@ export default function PlantCalendarDetailScreen() {
         source={plantImageSource(plant.photoUri)}
         style={[styles.hero, { height: s(220) }]}
         contentFit="cover"
+        transition={0}
+        cachePolicy="memory-disk"
       />
 
       {watering ? (

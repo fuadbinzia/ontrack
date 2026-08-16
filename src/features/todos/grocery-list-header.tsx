@@ -11,6 +11,7 @@ import {
   Symbol,
 } from '@/components/primitives';
 import { shareTodoListText } from '@/features/todos/share';
+import { openTodoLists } from '@/features/todos/todo-list-href';
 import { haptics } from '@/utils/haptics';
 import type { TodoList, TodoMember, TodoRecipe, TodoTask } from '@/store/todos';
 import { AgentUiIds, type AgentUiTarget } from '@/utils/agent-ui';
@@ -83,8 +84,7 @@ export function GroceryListHeader(props: GroceryListHeaderProps) {
                   accessibilityLabel="Back to checklists"
                   testID={AgentUiIds.grocery.back}
                   onPress={() => {
-                    if (router.canGoBack()) router.back();
-                    else router.replace('/(tabs)/to-do' as never);
+                    openTodoLists();
                   }}
                 />
                 <AppText

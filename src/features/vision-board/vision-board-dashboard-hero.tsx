@@ -29,6 +29,8 @@ export function VisionBoardDashboardHero({
             source={visionBoardImageSource(heroImage.uri)}
             style={StyleSheet.absoluteFill}
             contentFit="cover"
+            transition={0}
+            cachePolicy="memory-disk"
             accessibilityLabel={heroImage.caption || 'Latest vision board image'}
           />
         ) : null}

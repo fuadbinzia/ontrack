@@ -3,9 +3,19 @@ import { useSyncExternalStore } from 'react';
 
 import { durations } from '@/design-system';
 
+import {
+  resetTabSwipeX,
+  settleTabSwipeX,
+  syncTabSwipeLanes,
+  tabSwipeX,
+  tabTapLane,
+  tabTapStartX,
+  type TabTapSide,
+} from './tab-swipe';
+
 export const OVERVIEW_HREF = '/(tabs)/overview' as const satisfies Href;
-/** Keep the leaving tab mounted until the dissolve finishes. */
-export const TAB_RETURN_SETTLE_MS = durations.base;
+/** Keep the leaving tab mounted until the swipe spring finishes. */
+export const TAB_RETURN_SETTLE_MS = durations.slow;
 export const OVERVIEW_RETURN_SETTLE_MS = TAB_RETURN_SETTLE_MS;
 
 const MAX_TAB_RETURN_HISTORY = 16;
@@ -18,11 +28,28 @@ let history: TabReturnEntry[] = [];
 let forward: TabReturnEntry[] = [];
 let returning = false;
 let forwarding = false;
+let tapping = false;
+let tapFrom: string | null = null;
+let tapNeighborLane: 'back' | 'forward' | null = null;
 let parkAfterReturn = false;
 let parkTimer: ReturnType<typeof setTimeout> | null = null;
+let tapFallbackTimer: ReturnType<typeof setTimeout> | null = null;
 const listeners = new Set<() => void>();
 
+function syncLanes() {
+  syncTabSwipeLanes({
+    current: currentTab,
+    back: peekTabReturnName(),
+    forward: peekTabForwardName(),
+    tapFrom,
+    tapLane: tapNeighborLane,
+  });
+}
+
 function notify() {
+  // Mirror lanes onto the UI thread first so the flip rides the same frame
+  // batch as the pager offset — React re-renders only refresh pointerEvents.
+  syncLanes();
   listeners.forEach((listener) => listener());
 }
 
@@ -31,7 +58,10 @@ function historyKey() {
 }
 
 function notifyIfHistoryChanged(before: string) {
-  if (historyKey() === before) return;
+  if (historyKey() === before) {
+    syncLanes();
+    return;
+  }
   notify();
 }
 
@@ -70,6 +100,12 @@ export function rememberFocusedTab(tabName: string | null, pathname?: string) {
   if (!tabName) return;
   const nextPath = pathForTab(tabName, pathname);
   const before = historyKey();
+  if (tapping) {
+    // Ignore the leaving tab's stale focus report so it cannot undo dest.
+    if (tabName === tapFrom) return;
+    if (currentTab === tabName && nextPath) currentPath = nextPath;
+    return;
+  }
   if (returning) {
     if (history[history.length - 1]?.tab === tabName) {
       history.pop();
@@ -77,8 +113,9 @@ export function rememberFocusedTab(tabName: string | null, pathname?: string) {
     returning = false;
     currentTab = tabName;
     currentPath = nextPath;
+    resetTabSwipeX();
     scheduleParkRelease();
-    notifyIfHistoryChanged(before);
+    notify();
     return;
   }
   if (forwarding) {
@@ -94,8 +131,9 @@ export function rememberFocusedTab(tabName: string | null, pathname?: string) {
     forwarding = false;
     currentTab = tabName;
     currentPath = nextPath;
+    resetTabSwipeX();
     scheduleParkRelease();
-    notifyIfHistoryChanged(before);
+    notify();
     return;
   }
   if (currentTab === tabName) {
@@ -112,6 +150,18 @@ export function rememberFocusedTab(tabName: string | null, pathname?: string) {
   currentTab = tabName;
   currentPath = nextPath;
   notifyIfHistoryChanged(before);
+}
+
+export function peekCurrentTabName(): string | null {
+  return currentTab;
+}
+
+export function peekTabReturnName(): string | null {
+  return history[history.length - 1]?.tab ?? null;
+}
+
+export function peekTabForwardName(): string | null {
+  return forward[forward.length - 1]?.tab ?? null;
 }
 
 export function peekTabReturnHref(): Href | null {
@@ -148,6 +198,98 @@ export function beginTabForward(): Href | null {
   return href;
 }
 
+export function peekTabTapFrom(): string | null {
+  return tapFrom;
+}
+
+export function peekTabTapLane(): 'back' | 'forward' | null {
+  return tapNeighborLane;
+}
+
+let tapToken = 0;
+
+export function peekTabTapToken(): number {
+  return tapToken;
+}
+
+/** End only the tap that started this settle — a newer tap owns the pager. */
+export function endTabTapIfCurrent(token: number) {
+  if (token !== tapToken || !tapping) return;
+  endTabTap();
+}
+
+/** Park both tabs and treat dest as current so a tap can spring like a swipe. */
+export function beginTabTap(
+  from: string,
+  to: string,
+  side: TabTapSide,
+): boolean {
+  if (!from || !to || from === to) return false;
+  tapToken += 1;
+  tapping = true;
+  tapFrom = from;
+  tapNeighborLane = tabTapLane(side);
+  parkAfterReturn = true;
+  forward = [];
+  if (currentTab && currentPath && currentTab !== to) {
+    history.push({ tab: currentTab, path: currentPath });
+    if (history.length > MAX_TAB_RETURN_HISTORY) {
+      history.splice(0, history.length - MAX_TAB_RETURN_HISTORY);
+    }
+  }
+  currentTab = to;
+  currentPath = pathForTab(to);
+  if (tapFallbackTimer) clearTimeout(tapFallbackTimer);
+  tapFallbackTimer = setTimeout(() => {
+    tapFallbackTimer = null;
+    if (tapping) endTabTap();
+  }, TAB_RETURN_SETTLE_MS);
+  notify();
+  return true;
+}
+
+export function endTabTap() {
+  tapping = false;
+  tapFrom = null;
+  tapNeighborLane = null;
+  if (tapFallbackTimer) {
+    clearTimeout(tapFallbackTimer);
+    tapFallbackTimer = null;
+  }
+  resetTabSwipeX();
+  scheduleParkRelease();
+  notify();
+}
+
+/**
+ * Offset the pager, then notify dest as current. Setting dest first at
+ * swipeX=0 flashes the incoming page at rest.
+ */
+export function startTabOpen(input: {
+  from: string | null | undefined;
+  to: string;
+  side: TabTapSide | null;
+  width: number;
+  reduceMotion: boolean;
+}): boolean {
+  if (!input.from) return false;
+  if (input.from === input.to) {
+    endTabTap();
+    return false;
+  }
+  if (input.reduceMotion || !input.side) return false;
+  tabSwipeX.value = tabTapStartX(input.side, input.width);
+  if (!beginTabTap(input.from, input.to, input.side)) {
+    resetTabSwipeX();
+    return false;
+  }
+  // A quick second tap cancels this spring; its rest callback must not reset
+  // the new tap's state mid-flight (that was a hard snap on double taps).
+  const token = tapToken;
+  settleTabSwipeX(0, false, () => endTabTapIfCurrent(token));
+  return true;
+}
+
 export function hasTabReturn() {
   return history.length > 0 || parkAfterReturn;
 }
@@ -167,7 +309,15 @@ export function clearTabReturn() {
   forward = [];
   returning = false;
   forwarding = false;
+  tapping = false;
+  tapFrom = null;
+  tapNeighborLane = null;
   parkAfterReturn = false;
+  resetTabSwipeX();
+  if (tapFallbackTimer) {
+    clearTimeout(tapFallbackTimer);
+    tapFallbackTimer = null;
+  }
   if (parkTimer) {
     clearTimeout(parkTimer);
     parkTimer = null;
@@ -183,6 +333,10 @@ function scheduleParkRelease() {
     parkTimer = null;
     notify();
   }, TAB_RETURN_SETTLE_MS);
+}
+
+export function tabSwipeLaneKey() {
+  return `${currentTab ?? ''}|${peekTabReturnName() ?? ''}|${peekTabForwardName() ?? ''}|${tapFrom ?? ''}|${tapNeighborLane ?? ''}`;
 }
 
 export function subscribeTabReturn(onStoreChange: () => void) {

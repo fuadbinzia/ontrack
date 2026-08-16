@@ -23,6 +23,10 @@ import {
   resolveExcitementArtwork,
   type CalendarEventExcitement,
 } from './calendar-event-excitement';
+import {
+  sortOverviewRowsByAffinity,
+  type OverviewAffinityEntry,
+} from './overview-affinity';
 import type { OverviewRow } from './overview-summary-row';
 import {
   maintenanceDueCount,
@@ -71,6 +75,8 @@ export type OverviewSummaryInput = {
   acknowledgedAttentionKeys: readonly string[];
   enabledAddons: Record<string, boolean>;
   setSelectedDate: (date: string) => void;
+  affinities?: Readonly<Record<string, OverviewAffinityEntry>>;
+  now?: number;
 };
 
 export type OverviewSummary = {
@@ -303,8 +309,12 @@ export function buildOverviewSummary(input: OverviewSummaryInput): OverviewSumma
     attentionItems,
     eventExcitement,
     eventArtwork,
-    rows: rows.filter((row) =>
-      isTrackerRouteEnabled(row.routeName, input.enabledAddons),
+    rows: sortOverviewRowsByAffinity(
+      rows.filter((row) =>
+        isTrackerRouteEnabled(row.routeName, input.enabledAddons),
+      ),
+      input.affinities ?? {},
+      input.now ?? Date.now(),
     ),
   };
 }

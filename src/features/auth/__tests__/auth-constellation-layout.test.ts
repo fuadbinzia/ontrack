@@ -1,13 +1,19 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import {
+  AUTH_COPY_SCALE_MIN,
   AUTH_COPY_HEIGHT,
   AUTH_COPY_PLANET_PAD,
   AUTH_COPY_TOP,
   AUTH_COPY_WIDTH,
   AUTH_ORBIT_ELLIPSE,
+  AUTH_ORBIT_LABEL_REF_SLOT,
   AUTH_ORBIT_NODES,
   authCopyFrame,
   authCopyMaxHeightFrac,
   authLowSweepMinY,
+  authOrbitLabelStyle,
   authOrbitPoint,
   authPlanetRadiusFrac,
 } from '@/features/auth/auth-constellation-layout';
@@ -78,6 +84,34 @@ describe('auth constellation layout clearance', () => {
     for (let i = 1; i < degs.length; i += 1) {
       expect((degs[i]! - degs[i - 1]! + 360) % 360).toBeCloseTo(step, 5);
     }
+  });
+
+  it('floors canvas type scale so ring copy cannot crush', () => {
+    expect(AUTH_COPY_SCALE_MIN).toBeGreaterThanOrEqual(0.75);
+  });
+
+  it('sizes every orbit label from the slot, not the word length', () => {
+    const caption = { fontSize: 12.5, lineHeight: 17 };
+    const wide = authOrbitLabelStyle(AUTH_ORBIT_LABEL_REF_SLOT + 20, caption);
+    const tight = authOrbitLabelStyle(58, caption);
+
+    expect(wide.fontSize).toBe(caption.fontSize);
+    expect(wide.letterSpacing).toBe(0);
+    expect(tight.fontSize).toBeLessThan(caption.fontSize);
+    expect(tight.fontSize).toBe(caption.fontSize * Math.max(0.75, 58 / AUTH_ORBIT_LABEL_REF_SLOT));
+    expect(tight.letterSpacing).toBe(0);
+    expect(authOrbitLabelStyle(58, caption)).toEqual(tight);
+  });
+
+  it('does not fit-shrink orbit labels per word', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/features/auth/auth-constellation.tsx'),
+      'utf8',
+    );
+    expect(source).toContain('authOrbitLabelStyle');
+    expect(source).not.toMatch(
+      /<AppText[\s\S]*?variant="caption"[\s\S]*?fit>/,
+    );
   });
 
   it('exposes authOrbitPoint for the same ring', () => {

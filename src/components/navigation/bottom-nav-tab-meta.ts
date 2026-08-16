@@ -5,7 +5,7 @@ import type { AppIconName } from '@/design-system';
 
 import { MORE_TAB_ROUTE } from './tab-pins';
 
-const ADDON_ID_BY_ROUTE = new Map(
+const ADDON_ID_BY_ROUTE = new Map<string, (typeof ADDONS)[number]['id']>(
   ADDONS.flatMap((addon) =>
     addon.tabRoute ? ([[addon.tabRoute, addon.id]] as const) : [],
   ),

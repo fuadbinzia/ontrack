@@ -53,6 +53,25 @@ export async function uploadProfileAvatarPhoto(
   return path;
 }
 
+export function peekProfileAvatarUrl(
+  photoPath: string | undefined,
+): string | undefined {
+  const path = photoPath?.trim();
+  if (!path) return undefined;
+  const cached = signedUrlCache.get(path);
+  if (cached && cached.expiresAt > Date.now()) return cached.url;
+  return undefined;
+}
+
+export function initialAvatarPhotoUrl(meta?: {
+  kind?: string;
+  localPhotoUri?: string;
+  photoPath?: string;
+}): string | undefined {
+  if (meta?.kind !== 'photo') return undefined;
+  return meta.localPhotoUri ?? peekProfileAvatarUrl(meta.photoPath);
+}
+
 /** Mint (or reuse) a signed URL for a profile avatar storage path. */
 export async function resolveProfileAvatarUrl(
   photoPath: string | undefined,

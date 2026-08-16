@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
-import Animated, { FadeInDown, ReduceMotion } from "react-native-reanimated";
 
 import { AppText, GlassIconWell, Symbol } from "@/components/primitives";
-import { type AppIconName, motion, spacing } from "@/design-system";
+import { type AppIconName, spacing } from "@/design-system";
 import { travelEditorialTextStyle } from "@/features/travel/travel-chrome";
 import { promotesFlightSearch } from "@/features/travel/travel-mode";
 import {
@@ -45,24 +44,18 @@ function ActionGroup({
   title,
   subtitle,
   icon,
-  delay,
   children,
 }: {
   title: string;
   subtitle: string;
   icon: AppIconName;
-  delay: number;
   children: ReactNode;
 }) {
   const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
   const iconSize = Math.max(34, s(36));
   return (
-    <Animated.View
-      entering={FadeInDown.duration(motion.fade)
-        .delay(delay)
-        .reduceMotion(ReduceMotion.System)}
-    >
+    <View>
       <TravelSurfaceCard padding={0}>
         <View style={[styles.group, { gap: rs.md, padding: rs.md }]}>
           <View style={[styles.groupHeader, { gap: rs.sm }]}>
@@ -94,7 +87,7 @@ function ActionGroup({
           <View style={[styles.grid, { gap: rs.sm }]}>{children}</View>
         </View>
       </TravelSurfaceCard>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -140,7 +133,6 @@ export function TravelTripActionGrid({
         title="Book & Organize"
         subtitle="Bookings, plans, and trip essentials"
         icon="maintenance"
-        delay={0}
       >
         <TravelSheetAction
           label="Calendar"
@@ -211,7 +203,6 @@ export function TravelTripActionGrid({
         title="At Your Destination"
         subtitle={`Useful while you’re in ${destination || "town"}`}
         icon="location"
-        delay={50}
       >
         <TravelSheetAction
           label="Trip Weather"
@@ -243,7 +234,6 @@ export function TravelTripActionGrid({
         title="Travel Together"
         subtitle="Keep everyone in the loop"
         icon="people"
-        delay={100}
       >
         <TravelSheetAction
           label="Group Chat"

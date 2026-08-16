@@ -40,6 +40,7 @@ App-affecting → typecheck/tests. Do **not** run device, simulator, emulator, o
 ## Non-negotiable UI
 
 - **Glass UI:** product chrome is glass — see `.cursor/rules/glass-ui.mdc`.
+- **Smooth transitions:** pages, sheets, add/remove, open/close ease — `Presence` / `useListEnterIds` / sheet `held` exit. Page open stays at rest. Never snap-unmount visible chrome.
 - **Safe area:** `AppSafeArea`; never `insets.top` in scroll content; native Modals pad non-scrolling parent with `insets.top`.
 - **Responsive:** `useResponsive()` + `AppText fit` — `.cursor/rules/responsive-layout.mdc`.
 - **Field icons:** `FieldLeadingIcon` + `fieldLeadingIconRowStyle` — vertically centered.
@@ -91,6 +92,7 @@ Domain depth → `.cursor/skills/` (**travel**, **todos**, **workouts**, **visio
 - **API / vision:** `@/services/http/api-url` + `api-client`; `@/services/ai/vision-transport`
 - **Images:** `@/utils/image-persist`, `@/utils/pick-image`
 - **Destructive:** `@/utils/confirm-destructive`
+- **Motion / presence:** `Presence` + `useListEnterIds` / `listEntering` (just-added only) / `useSettledListLayout` / `popoverEntering` — prefer over ad-hoc `FadeInDown.duration(n)`; sheets hold through exit (`useSheetDismissPan` `held`)
 - **UI primitives:** `LoadingBlock`, `EmptyState`, `Dropdown`, `SettingsGroup`/`SettingsRow`, `DangerZone`, `StatusBadge`, `MetaList`, `ActionChip`, `useSafeAreaChrome`
 - **Responsive / field icons:** `useResponsive`, `AppText fit`, `FieldLeadingIcon` + `fieldLeadingIconRowStyle`
 - **Agent UI:** `@/utils/agent-ui` + scripts — **agent-ui** skill (navigation decision tree: `verify` → flow/open → tap → one dump → assert; never re-run a flow just to re-check a screen you’re already on)

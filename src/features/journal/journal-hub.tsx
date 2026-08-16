@@ -7,6 +7,7 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useJournal } from '@/store/journal';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { todayKey } from '@/utils/date';
+import { useWarmHrefs } from '@/utils/warm-navigation';
 import { haptics } from '@/utils/haptics';
 
 import {
@@ -24,6 +25,7 @@ export function JournalHub() {
   const rawPages = useJournal((state) => state.pages);
   const pages = useMemo(() => writtenJournalPages(rawPages), [rawPages]);
   const today = todayKey();
+  useWarmHrefs([journalPageHref(today)]);
   const hasPages = pages.length > 0;
   const hasToday = pages.some((page) => page.dateKey === today);
   const titleSize = Math.max(42, s(46));

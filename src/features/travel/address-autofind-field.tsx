@@ -8,7 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import Animated, { FadeInDown, FadeOutUp, ReduceMotion } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText, Input, LoadingSpinner } from '@/components/primitives';
@@ -16,7 +16,7 @@ import {
   placeDropdownMenu,
   type DropdownAnchor,
 } from '@/components/primitives/dropdown-layout';
-import { motion, radii, shadows, spacing, type AppIconName } from '@/design-system';
+import { popoverEntering, popoverExiting, radii, shadows, spacing, type AppIconName } from '@/design-system';
 import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -320,12 +320,8 @@ export function AddressAutofindField({
             <Animated.View
               accessibilityLabel={`${stackedLabel ?? accessibilityLabel} suggestions`}
               accessibilityViewIsModal
-              entering={FadeInDown.duration(motion.fade).reduceMotion(
-                ReduceMotion.System,
-              )}
-              exiting={FadeOutUp.duration(motion.fade).reduceMotion(
-                ReduceMotion.System,
-              )}
+              entering={popoverEntering()}
+              exiting={popoverExiting()}
               style={[
                 styles.menu,
                 shadows.overlay,

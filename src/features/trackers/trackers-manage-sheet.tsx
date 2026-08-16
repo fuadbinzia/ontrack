@@ -1,12 +1,11 @@
-import { ScrollView } from 'react-native';
-
-import { ADDONS } from '@/addons/registry';
 import type { AddonId } from '@/addons/types';
+import { TAB_META } from '@/components/navigation/bottom-nav-tab-meta';
 import {
   SettingsGroup,
   SettingsToggleRow,
   SheetScaffold,
 } from '@/components/primitives';
+import { addonsByDisplayName } from '@/features/trackers/tracker-presence';
 import { useAddons } from '@/store/addons';
 import { AgentUiIds } from '@/utils/agent-ui';
 
@@ -24,28 +23,29 @@ export function TrackersManageSheet({
     <SheetScaffold
       visible={visible}
       title="Manage Sections"
-      subtitle="Turn modules on without losing their data."
       onClose={onClose}
       closeTestID={AgentUiIds.trackers.manageClose}
       backdropTestID={AgentUiIds.trackers.manageSheet}
     >
-      <ScrollView>
-        <SettingsGroup>
-          {ADDONS.map((addon) => (
+      <SettingsGroup>
+        {addonsByDisplayName().map((addon) => {
+          const icon = addon.tabRoute
+            ? TAB_META[addon.tabRoute]?.icon
+            : undefined;
+          return (
             <SettingsToggleRow
               key={addon.id}
               label={addon.name}
-              detail={addon.description}
-              detailNumberOfLines={1}
+              icon={icon}
               value={enabledAddons[addon.id]}
               onValueChange={(value) =>
                 setAddonEnabled(addon.id as AddonId, value)
               }
               testID={AgentUiIds.trackers.addon(addon.id)}
             />
-          ))}
-        </SettingsGroup>
-      </ScrollView>
+          );
+        })}
+      </SettingsGroup>
     </SheetScaffold>
   );
 }

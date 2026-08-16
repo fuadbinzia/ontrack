@@ -1,23 +1,13 @@
-import { render, screen } from '@testing-library/react-native';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { createRef } from 'react';
 import type { TextInput } from 'react-native';
 
 import { TodoListHeader } from '@/features/todos/todo-list-header';
 import type { TodoList } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
-
-jest.mock('@/components/primitives/progress-ring', () => {
-  const React = jest.requireActual('react');
-  const { Text, View } = jest.requireActual('react-native');
-  return {
-    ProgressRing: ({ label, sublabel }: { label: string; sublabel: string }) =>
-      React.createElement(
-        View,
-        { testID: 'progress-ring' },
-        React.createElement(Text, null, `${label} ${sublabel}`),
-      ),
-  };
-});
 
 jest.mock('@/features/todos/todo-list-header-toolbar', () => {
   const React = jest.requireActual('react');
@@ -28,6 +18,7 @@ jest.mock('@/features/todos/todo-list-header-toolbar', () => {
 });
 
 jest.mock('expo-router', () => ({
+  router: { replace: jest.fn() },
   useRouter: () => ({
     canGoBack: () => true,
     back: jest.fn(),
@@ -111,36 +102,83 @@ describe('TodoListHeader', () => {
     expect(screen.getByText('To Do')).toBeTruthy();
   });
 
-  it('shows completion beside the title without the momentum card copy', () => {
+  it('uses a tappable open count instead of a progress ring', () => {
     renderHeader({
-      tasks: [
-        {
-          id: 'task-open',
-          listId: list.id,
-          title: 'Open task',
-          completed: false,
-          important: false,
-          createdAt,
-          updatedAt: createdAt,
-          version: 1,
-        },
-        {
-          id: 'task-done',
-          listId: list.id,
-          title: 'Done task',
-          completed: true,
-          important: false,
-          createdAt,
-          updatedAt: createdAt,
-          version: 1,
-        },
-      ],
-      completedCount: 1,
-      progress: 0.5,
+      openTasksCount: 48,
+      closedTasksCount: 17,
+      filter: 'open',
     });
 
-    expect(screen.getByText('50% done')).toBeTruthy();
+    expect(screen.getByText('48 Open')).toBeTruthy();
+    expect(screen.getByLabelText('Showing 48 open tasks. Show closed tasks')).toBeTruthy();
+    expect(screen.getByTestId(AgentUiIds.checklists.detail.filter)).toBeTruthy();
+    expect(screen.queryByText('50% done')).toBeNull();
     expect(screen.queryByText('Momentum')).toBeNull();
-    expect(screen.queryByText(/complete$/)).toBeNull();
+  });
+
+  it('keeps the open-count chip left of edit without a chevron', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/features/todos/todo-list-header.tsx'),
+      'utf8',
+    );
+
+    expect(source).not.toContain('DisclosureChevron');
+    expect(source).toContain('titleActions');
+    expect(source.indexOf('filterChip')).toBeLessThan(
+      source.indexOf('<TodoListHeaderToolbar'),
+    );
+  });
+
+  it('toggles the closed count chip and keeps the same control', () => {
+    const onFilterToggle = jest.fn();
+    renderHeader({
+      openTasksCount: 48,
+      closedTasksCount: 17,
+      filter: 'completed',
+      onFilterToggle,
+    });
+
+    const chip = screen.getByLabelText(
+      'Showing 17 closed tasks. Show open tasks',
+    );
+    expect(screen.getByText('17 Closed')).toBeTruthy();
+    expect(screen.queryByText('48 Open')).toBeNull();
+    fireEvent.press(chip);
+    expect(onFilterToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks for a new item in plain language', () => {
+    renderHeader();
+
+    expect(screen.getByPlaceholderText('Add an item')).toBeTruthy();
+    expect(screen.queryByPlaceholderText('What needs your attention?')).toBeNull();
+  });
+
+  it('keeps add-task on a glass send control', () => {
+    renderHeader({ draft: 'Pack bags' });
+
+    expect(screen.getByLabelText('Add task')).toBeTruthy();
+    expect(screen.getByLabelText('New task')).toBeTruthy();
+  });
+});
+
+describe('TodoListHeader layout', () => {
+  it('pins list actions to the top-right nav row', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/features/todos/todo-list-header.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain('navRow');
+    expect(source).toContain('titleActions');
+    expect(source.indexOf('titleActions')).toBeLessThan(
+      source.indexOf('headingCopy'),
+    );
+    expect(source.indexOf('<TodoListHeaderToolbar')).toBeLessThan(
+      source.indexOf('list.name'),
+    );
+    expect(source.indexOf('<TodoListHeaderToolbar')).toBeLessThan(
+      source.indexOf('Add an item'),
+    );
   });
 });

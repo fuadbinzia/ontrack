@@ -4,7 +4,7 @@ import {
   markGuestEdit,
   queuedMutation,
 } from './todos-helpers';
-import { cleanName, nowIso } from './todos-normalize';
+import { cleanName, nowIso, omitListOpenedAt } from './todos-normalize';
 import type {
   TodoList,
   TodoListKind,
@@ -27,6 +27,7 @@ export type TodoListActions = {
   renameList: (id: string, name: string) => void;
   setListKind: (id: string, kind: TodoListKind) => boolean;
   deleteList: (id: string) => void;
+  touchList: (id: string, at?: string) => void;
 };
 
 export function createTodoListActions(set: ListSet, get: ListGet): TodoListActions {
@@ -186,6 +187,28 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
         tasks: state.tasks.filter((task) => task.listId !== id),
         recipes: state.recipes.filter((recipe) => recipe.listId !== id),
         members: state.members.filter((member) => member.listId !== id),
+        listOpenedAt: omitListOpenedAt(state.listOpenedAt, id),
+      }));
+    },
+
+    touchList: (id, at = nowIso()) => {
+      const list = get().lists.find((item) => item.id === id);
+      if (!list || !at) return;
+      const previous = get().listOpenedAt[id];
+      if (previous) {
+        if (at <= previous) return;
+        const previousMs = Date.parse(previous);
+        const nextMs = Date.parse(at);
+        if (
+          Number.isFinite(previousMs) &&
+          Number.isFinite(nextMs) &&
+          nextMs - previousMs < 750
+        ) {
+          return;
+        }
+      }
+      set((state) => ({
+        listOpenedAt: { ...state.listOpenedAt, [id]: at },
       }));
     },
 

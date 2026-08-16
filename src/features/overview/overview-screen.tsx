@@ -1,13 +1,15 @@
 import { useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { View } from 'react-native';
 
-import { GlassPlate, Screen, ScreenHeader } from '@/components/primitives';
-import { radii } from '@/design-system';
+import { useWarmHrefs } from '@/utils/warm-navigation';
+
+import { Presence, Screen, ScreenHeader } from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useAddons } from '@/store/addons';
 import { useFinance } from '@/store/finance';
 import { useMealPlan } from '@/store/food-meal-plan';
 import { useHealth } from '@/store/health';
+import { useOverviewAffinity } from '@/store/overview-affinity';
 import { useOverviewAttention } from '@/store/overview-attention';
 import { usePlants } from '@/store/plants';
 import { useSchedule } from '@/store/schedule';
@@ -47,6 +49,7 @@ export function OverviewScreen() {
   const acknowledgeAttention = useOverviewAttention(
     (state) => state.acknowledge,
   );
+  const affinities = useOverviewAffinity((state) => state.byRoute);
   const setSelectedDate = useUI((state) => state.setSelectedDate);
 
   const summary = useMemo(
@@ -72,8 +75,10 @@ export function OverviewScreen() {
         acknowledgedAttentionKeys,
         enabledAddons,
         setSelectedDate,
+        affinities,
       }),
     [
+      affinities,
       acknowledgedAttentionKeys,
       activities,
       bills,
@@ -95,14 +100,12 @@ export function OverviewScreen() {
     ],
   );
 
+  useWarmHrefs(summary.rows.map((row) => row.href));
+
   return (
     <Screen contentStyle={{ gap: spacing.lg }}>
       <AgentTestId testID={AgentUiIds.overview.screen} label="Overview screen">
-        <ScreenHeader
-          eyebrow={summary.dateLabel}
-          title="Overview"
-          subtitle="One calm view of everything moving in your life."
-        />
+        <ScreenHeader eyebrow={summary.dateLabel} title="Overview" />
       </AgentTestId>
 
       <OverviewHero
@@ -114,30 +117,14 @@ export function OverviewScreen() {
       />
 
       <AgentTestId testID={AgentUiIds.overview.section} label="Across onTrack">
-        <GlassPlate
-          style={[
-            styles.summaryPlate,
-            {
-              borderRadius: radii.xl,
-              paddingHorizontal: spacing.md,
-            },
-          ]}
-        >
-          {summary.rows.map((row, index) => (
-            <OverviewSummaryRow
-              key={row.routeName}
-              row={row}
-              isLast={index === summary.rows.length - 1}
-            />
+        <View style={{ gap: spacing.sm }}>
+          {summary.rows.map((row) => (
+            <Presence key={row.routeName} enter={false}>
+              <OverviewSummaryRow row={row} />
+            </Presence>
           ))}
-        </GlassPlate>
+        </View>
       </AgentTestId>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  summaryPlate: {
-    overflow: 'hidden',
-  },
-});

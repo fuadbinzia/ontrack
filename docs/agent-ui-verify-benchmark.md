@@ -75,6 +75,8 @@ Travel Home smoke (empty guest has no `yourTrips` / `newTrip.open` — seed via 
 | H19 | Agent sims/AVDs still Booted after verify (“didn’t shut down”) | Lease release parked warm (`KEEP_IOS`/`KEEP_ANDROID=1` was default) | Default is now **safe shutdown** on EXIT (`KEEP_*=0`); Android saves `default_boot` before kill for fast reload; orphans reaped on claim. Park-warm escape: `KEEP_*=1` / `KEEP_DEVICES=1` | shipped |
 | H20 | iOS assert passes, Android misses brand-new `ontrack.*` / label after src edit | Warm Android bridge answers on a **stale JS bundle** (“already connected”); iOS cold-reconnects and gets Fast Refresh. Bridge liveness ≠ bundle freshness | Status carries `hmrBeacon`; `verify` / `verify-both` bump+wait the Metro beacon and soft-reconnect when the app lags (`ensure_js_fresh`); ensure-packager no longer trusts “already connected” alone. Escape: `AGENT_UI_SKIP_JS_FRESH=1` | shipped |
 | H21 | “Checking app install…” then ~40–60s quiet / reconnect timeout every turn | (1) H19 shutdown → cold boot every lease; (2) install check is cheap but logged every boot; (3) ensure-packager reconnect waited full deadline while app process was **dead**, then host launched anyway | Cold `ensure_app_up` uses `AGENT_UI_PACKAGER_SKIP_RECONNECT=1` (boot only → launch next); iOS reconnect re-launches when process dead + fail-fast ~12s; quieter install logs. Habit: one `verify-both` per close-out; park-warm with `KEEP_DEVICES=1` only for multi-step debug | shipped |
+| H22 | Agent iOS `JS stale` / `bridge quiet` after `packager:ensure:start` | Non-pool Metro heal preferred Pro and `ios_sim_shutdown_others` killed Agent N; HMR socket died; native agent binary can also lag (`1.0.68` vs JS `1.0.103`) | Never shut down Pro or `onTrack Agent *` from `ios_sim_shutdown_others`; refresh agent sims with `ios:update-simulators` / agent-only install — do not adopt Pro | shipped |
+| H23 | Verify / packager tests a warm sim/emu that still has an old native client | `ensure_app_up` treated “installed + bridge up” as ready; clone-if-missing never replaced a stale `.app`/APK, so Agent N could stay on `1.0.68` after a newer local debug build | `ensure_app_up` / `ensure-packager` install the latest local debug client onto the **current** device (stamp vs artifact identity) **and** sidecar-install onto `onTrack iPhone 17 Pro` + `Galaxy_S26` (never adopt them for verify; Galaxy only if already running). Rebuild only when native sources outpace the artifact. iOS clone prefers `ios/build/…/onTrack.app`. Escape: `AGENT_UI_SKIP_NATIVE_FRESH=1` | shipped |
 
 ---
 
@@ -88,7 +90,8 @@ Travel Home smoke (empty guest has no `yourTrips` / `newTrip.open` — seed via 
 | Device policy: slots, fail-fast, orphan reap | `scripts/lib/agent-ui-pool.sh` |
 | 30s launch budget | `scripts/lib/device-launch-budget.sh` |
 | Agent accounts (agent_1…agent_4) | `scripts/agent-accounts-setup.sh`, `scripts/agent-ui-login.sh` |
-| Contracts | `scripts/__tests__/agent-ui-host-contract.test.ts`, `metro-launch-contract.test.ts` |
+| Native freshness (H23) | `scripts/lib/native-build-freshness.js`, `scripts/lib/virtual-device-build.sh` |
+| Contracts | `scripts/__tests__/agent-ui-host-contract.test.ts`, `metro-launch-contract.test.ts`, `native-build-freshness.test.ts` |
 | Agent skill | `.cursor/skills/agent-ui/SKILL.md` |
 | Enrich one-liners | `~/.cursor/prompt-enrich.md` (Findings) |
 

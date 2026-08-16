@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import {
     AppText,
@@ -11,7 +11,7 @@ import {
     SectionHeader,
     Symbol,
 } from '@/components/primitives';
-import { layout, radii, spacing } from '@/design-system';
+import { fadeEntering, layout, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import type { Activity, Workout } from '@/types/models';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -76,7 +76,7 @@ export function WorkoutTodayPlan({
       )}
 
       {savedMessage ? (
-        <Animated.View entering={FadeInDown.duration(220)}>
+        <Animated.View entering={fadeEntering()}>
           <GlassPlate
             mist
             accessible

@@ -1,3 +1,4 @@
+import { initialAvatarPhotoUrl } from '@/features/account/profile-avatar-media';
 import {
     emptyAvatarMeta,
     mergeAvatarOnHydrate,
@@ -24,6 +25,16 @@ describe('mergeAvatarOnHydrate', () => {
   it('prefers a customized cloud avatar over a local default', () => {
     const remote = { kind: 'icon' as const, iconId: 'mdi:leaf', color: '#2474A8' };
     expect(mergeAvatarOnHydrate(emptyAvatarMeta(), remote)).toEqual(remote);
+  });
+
+  it('uses the local photo on first paint so remount does not flash initials', () => {
+    expect(
+      initialAvatarPhotoUrl({
+        kind: 'photo',
+        localPhotoUri: 'file:///documents/avatar.jpg',
+      }),
+    ).toBe('file:///documents/avatar.jpg');
+    expect(initialAvatarPhotoUrl({ kind: 'icon', iconId: 'mdi:bike' })).toBeUndefined();
   });
 
   it('does not let a stale local photo mask a cloud photo path', () => {

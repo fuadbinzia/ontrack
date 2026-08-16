@@ -44,11 +44,23 @@ export function sortTodoTasks(
   });
 }
 
-export function sortTodoListsByRecent(lists: TodoList[]): TodoList[] {
+export function listRecencyAt(
+  list: TodoList,
+  openedAt?: Readonly<Record<string, string>>,
+): string {
+  const opened = openedAt?.[list.id];
+  if (!opened) return list.updatedAt;
+  return opened > list.updatedAt ? opened : list.updatedAt;
+}
+
+export function sortTodoListsByRecent(
+  lists: TodoList[],
+  openedAt?: Readonly<Record<string, string>>,
+): TodoList[] {
   if (lists.length < 2) return lists;
   const sorted = [...lists].sort(
     (a, b) =>
-      b.updatedAt.localeCompare(a.updatedAt) ||
+      listRecencyAt(b, openedAt).localeCompare(listRecencyAt(a, openedAt)) ||
       b.createdAt.localeCompare(a.createdAt) ||
       a.id.localeCompare(b.id),
   );

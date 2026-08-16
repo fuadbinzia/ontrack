@@ -19,4 +19,19 @@ describe('Input layout contract', () => {
     // (that doubles empty height and makes placeholder-only fields look oversized).
     expect(source).not.toContain('paddingTop: typography.caption.lineHeight + 2');
   });
+
+  it('does not fit-shrink field labels (tracking would outrun the glyphs)', () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), 'src/components/primitives/input.tsx'),
+      'utf8',
+    );
+
+    expect(source).toMatch(
+      /<AppText variant="overline" color="tertiary" numberOfLines=\{1\}>/,
+    );
+    expect(source).not.toMatch(
+      /<AppText variant="overline" color="tertiary" fit>/,
+    );
+    expect(source).toContain('letterSpacing: 0');
+  });
 });

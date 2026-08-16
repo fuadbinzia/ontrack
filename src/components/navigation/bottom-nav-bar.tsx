@@ -2,7 +2,7 @@ import { BlurView } from 'expo-blur';
 import { Tabs, useRouter } from 'expo-router';
 import { BottomTabBarHeightCallbackContext } from 'expo-router/js-tabs';
 import type { ComponentProps } from 'react';
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Platform,
   Pressable,
@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { usePageSurfaceBackgroundColor } from '@/components/primitives';
@@ -32,19 +33,21 @@ import {
 } from '@/utils/agent-ui';
 import { deferAfterPageLoad } from '@/utils/defer-after-page-load';
 
-import { bottomNavBottomPad } from './bottom-nav-inset';
+import { BOTTOM_NAV_Z_INDEX, bottomNavBottomPad } from './bottom-nav-inset';
 import { BottomNavTabItem } from './bottom-nav-tab-item';
 import {
   isTrackerRouteEnabled,
   TAB_META,
   trackerCatalogLabel,
 } from './bottom-nav-tab-meta';
+import { startTabOpen } from './overview-return';
 import {
   MORE_TAB_ROUTE,
   NAV_PIN_LIMIT,
   resolveMoreRetapTarget,
   splitTrackerOrder,
 } from './tab-pins';
+import { tabTapSide } from './tab-swipe';
 
 type BottomNavBarProps = Parameters<
   NonNullable<ComponentProps<typeof Tabs>['tabBar']>
@@ -73,6 +76,7 @@ export function BottomNavBar({
   const barBackground =
     !allowsBlur && pageSurface ? pageSurface : 'transparent';
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const { weather: homeWeather, icon: homeWeatherIcon } = useHomeWeather();
   const todayTabIcon: AppIconName = homeWeatherIcon ?? 'today';
   const todayAccessibilityExtra = homeWeather
@@ -103,6 +107,24 @@ export function BottomNavBar({
   const { inNav } = useMemo(
     () => splitTrackerOrder(trackerOrder, enabledNames, pinnedCount),
     [enabledNames, pinnedCount, trackerOrder],
+  );
+  const slotOrder = useMemo(
+    () => [
+      ...inNav.slice(0, NAV_PIN_LIMIT),
+      MORE_TAB_ROUTE,
+    ],
+    [inNav],
+  );
+  const animateTabTap = useCallback(
+    (from: string | undefined, to: string) =>
+      startTabOpen({
+        from,
+        to,
+        side: tabTapSide(slotOrder.indexOf(from ?? ''), slotOrder.indexOf(to)),
+        width,
+        reduceMotion,
+      }),
+    [reduceMotion, slotOrder, width],
   );
 
   const barSlots = useMemo(() => {
@@ -168,7 +190,10 @@ export function BottomNavBar({
         if (!testID || !meta) continue;
         registerAgentUiTarget(testID, {
           label: trackerCatalogLabel(name),
-          press: () => router.navigate(meta.href),
+          press: () => {
+            animateTabTap(focusedRouteName, name);
+            router.navigate(meta.href);
+          },
         });
         registered.push(testID);
       }
@@ -182,7 +207,7 @@ export function BottomNavBar({
       }
       agentTabIdsRef.current = [];
     };
-  }, [enabledNames, router]);
+  }, [animateTabTap, enabledNames, focusedRouteName, router]);
 
   // Android system/gesture nav: full inset. iOS home indicator: small pad.
   // Keep in sync with chat dock math (`bottomNavBottomPad`).
@@ -310,6 +335,7 @@ export function BottomNavBar({
                       (item) => item.name === dismissTo,
                     );
                     setPendingRouteName(dismissTo);
+                    animateTabTap(focusedRouteName, dismissTo);
                     if (backRoute) {
                       navigation.navigate(backRoute.name, backRoute.params);
                     } else if (backMeta) {
@@ -318,10 +344,14 @@ export function BottomNavBar({
                     return;
                   }
                   setPendingRouteName(slot.name);
+                  animateTabTap(focusedRouteName, slot.name);
                   router.navigate(TAB_META.trackers.href);
                   return;
                 }
                 setPendingRouteName(slot.name);
+                if (focusedRouteName !== slot.name) {
+                  animateTabTap(focusedRouteName, slot.name);
+                }
                 if (!route) {
                   router.navigate(meta.href);
                   return;
@@ -408,6 +438,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    zIndex: BOTTOM_NAV_Z_INDEX,
+    elevation: BOTTOM_NAV_Z_INDEX,
     alignSelf: 'center',
     width: '100%',
     justifyContent: 'flex-end',

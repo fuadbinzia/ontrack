@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 describe('Profile nutrition form switching', () => {
   const source = readFileSync(
-    join(process.cwd(), 'src/app/(tabs)/profile/nutrition-profile.tsx'),
+    join(process.cwd(), 'src/app/(tabs)/food/nutrition-profile.tsx'),
     'utf8',
   );
 

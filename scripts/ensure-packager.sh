@@ -701,6 +701,23 @@ else:
 PY
 }
 
+# H23: current sim/emu must run the latest local debug client before reconnect.
+packager_ensure_native_fresh() {
+  if [[ "${AGENT_UI_SKIP_NATIVE_FRESH:-0}" == "1" ]]; then
+    return 0
+  fi
+  # shellcheck source=lib/virtual-device-build.sh
+  source "$ROOT/scripts/lib/virtual-device-build.sh"
+  local platform="ios"
+  if [[ "$PACKAGER_TARGET" == "android" ]]; then
+    platform=android
+  fi
+  vd_ensure_current_device_native_fresh "$platform" || true
+  if [[ "${AGENT_UI_NATIVE_REFRESHED:-0}" == "1" ]]; then
+    echo "Installed latest ${platform} debug client onto the current device."
+  fi
+}
+
 # When ensuring a pool slot that has no build yet, clone from any peer device.
 packager_pool_clone_app_if_needed() {
   if app_installed; then
@@ -961,6 +978,7 @@ if [[ "$PACKAGER_TARGET" == "android" ]]; then
       exit 0
     fi
   fi
+  packager_ensure_native_fresh
 else
   if ! ensure_preferred_ios_simulator; then
     echo "note: could not boot preferred simulator — Metro is healthy"
@@ -978,6 +996,7 @@ else
       exit 0
     fi
   fi
+  packager_ensure_native_fresh
 fi
 
 # H21: cold-boot heal from ensure_app_up only needs the device up. The host
@@ -987,10 +1006,11 @@ if [[ "${AGENT_UI_PACKAGER_SKIP_RECONNECT:-0}" == "1" ]]; then
   exit 0
 fi
 
-if [[ "$METRO_RELAUNCHED" == "1" ]]; then
+if [[ "$METRO_RELAUNCHED" == "1" || "${AGENT_UI_NATIVE_REFRESHED:-0}" == "1" ]]; then
   # A fresh Metro process cannot have the app's HMR socket; the stale bundle's
   # agent-ui bridge still answers, so do NOT trust probe_connected here.
-  echo "Metro was (re)launched this run — forcing dev client reconnect…"
+  # H23: replacing the native client also kills the JS process.
+  echo "Metro or native client was refreshed this run — forcing dev client reconnect…"
   reconnect_dev_client "$HOST"
   exit 0
 fi

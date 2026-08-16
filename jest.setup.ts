@@ -23,6 +23,7 @@ jest.mock('react-native-reanimated', () => {
     LinearTransition: {},
     ReduceMotion: { System: 'system', Never: 'never', Always: 'always' },
     useSharedValue: (value: unknown) => ({ value }),
+    makeMutable: (value: unknown) => ({ value }),
     useAnimatedStyle: () => ({}),
     // jest.fn so suites can flip Reduce Motion per case.
     useReducedMotion: jest.fn(() => false),
@@ -33,6 +34,7 @@ jest.mock('react-native-reanimated', () => {
     withDelay: (_ms: number, value: unknown) => value,
     cancelAnimation: () => {},
     runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
+    runOnUI: (fn: (...args: unknown[]) => unknown) => () => fn(),
     Extrapolation: { CLAMP: 'clamp' },
     interpolate: () => 0,
   };

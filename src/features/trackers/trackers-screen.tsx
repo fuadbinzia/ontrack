@@ -1,4 +1,4 @@
-import { useIsFocused, useNavigation } from 'expo-router';
+import { useNavigation } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import DraggableFlatList, {
@@ -52,8 +52,8 @@ type TrackerRow = {
 
 /**
  * Imperative spring bounce — layout `entering` is unreliable here
- * (DraggableFlatList/ScaleDecorator). First paint is already the start pose;
- * remount-on-focus (`!isFocused` → null) replays without a rest-then-bounce flash.
+ * (DraggableFlatList/ScaleDecorator). First paint is rest; bounce only
+ * the first mount, never on tab land.
  */
 function TrackerRowBounce({
   index,
@@ -116,7 +116,6 @@ function TrackerRowBounce({
 
 export function TrackersScreen() {
   const theme = useTheme();
-  const isFocused = useIsFocused();
   const navigation = useNavigation();
   const { spacing, s, layout } = useResponsive();
   const enabledAddons = useAddons((store) => store.enabled);
@@ -272,10 +271,6 @@ export function TrackersScreen() {
       </ScaleDecorator>
     );
   };
-
-  // The catalog is intentionally transparent. Never leave it mounted over the
-  // newly focused section if native screen detachment is delayed for a frame.
-  if (!isFocused) return null;
 
   return (
     <Screen scroll={false} bottomInset contentStyle={styles.screenContent}>

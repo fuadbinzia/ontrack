@@ -67,6 +67,16 @@ describe('fieldTitleCase', () => {
     expect(fieldTitleCase('Cash vs debt rates')).toBe('Cash vs Debt Rates');
   });
 
+  it('title-cases empty-state supporting lines', () => {
+    expect(
+      fieldTitleCase(
+        'Nothing on the books yet — add a workout, a meal, or whatever sounds good and the day starts to feel like yours.',
+      ),
+    ).toBe(
+      'Nothing on the Books Yet — Add a Workout, a Meal, or Whatever Sounds Good and the Day Starts to Feel Like Yours.',
+    );
+  });
+
   it('title-cases button labels', () => {
     expect(fieldTitleCase('Open day')).toBe('Open Day');
     expect(fieldTitleCase('Save check-in')).toBe('Save Check-in');

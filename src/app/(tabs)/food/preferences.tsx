@@ -54,6 +54,17 @@ export default function FoodPreferencesScreen() {
         leading={<FoodHeaderBackButton />}
       />
 
+      <SettingsGroup>
+        <SettingsActionRow
+          label="Nutrition"
+          detail="Profiles, dependents, and targets"
+          icon="nutrition-profiles"
+          testID={AgentUiIds.food.preferences.clinical}
+          onPress={() => router.push('/(tabs)/food/nutrition-profile' as never)}
+          accessibilityLabel="Open nutrition profiles"
+        />
+      </SettingsGroup>
+
       <AgentTestId
         testID={AgentUiIds.food.preferences.dietSection}
         label="Dietary preferences"
@@ -181,15 +192,6 @@ export default function FoodPreferencesScreen() {
           />
         </SettingsGroup>
       </AgentTestId>
-
-      {/* Separate, deliberately unpersisted clinical store — linked, never merged. */}
-      <SettingsActionRow
-        label="Clinical nutrition profile"
-        detail="Medical conditions and clinical targets live in a separate, device-only profile."
-        icon="nutrition-profiles"
-        testID={AgentUiIds.food.preferences.clinical}
-        onPress={() => router.push('/(tabs)/profile/nutrition-profile' as never)}
-      />
 
       <AllergyEditorSheet
         visible={editorVisible}

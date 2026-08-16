@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ComponentProps } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -36,8 +36,9 @@ import { AuthBrandMark } from './auth-brand-mark';
 import {
     AuthConstellation,
     HERO_MAX_WIDTH,
-    useAuthCopyScale,
 } from './auth-constellation';
+import { AuthRingCopy } from './auth-ring-copy';
+import { AuthWordmark } from './auth-wordmark';
 import { useAuthSession } from './auth-provider';
 import { GoogleProviderButton } from './google-provider-button';
 import { ThemeModeToggle } from './theme-mode-toggle';
@@ -142,13 +143,7 @@ export function WelcomeOnboardScreen() {
               style={[styles.heroInner, { gap: gap.md }]}>
               <View style={[styles.brandRow, { gap: gap.md }]}>
                 <AuthBrandMark />
-                <AppText
-                  variant="overline"
-                  color="accent"
-                  style={{ letterSpacing: s(3.4) }}
-                  fit>
-                  onTrack
-                </AppText>
+                <AuthWordmark color="accent" />
                 <View style={styles.spacer} />
                 <ThemeModeToggle />
               </View>
@@ -157,7 +152,10 @@ export function WelcomeOnboardScreen() {
                 testID={AgentUiIds.auth.section.constellation}
                 style={styles.constellationSlot}>
                 <AuthConstellation bleed={gutter}>
-                  <WelcomeCopy />
+                  <AuthRingCopy
+                    headline="Your day, one place."
+                    intro="Schedule, track meals, workouts, travel and more — without juggling different apps."
+                  />
                 </AuthConstellation>
               </AgentTestId>
             </AgentTestId>
@@ -168,7 +166,7 @@ export function WelcomeOnboardScreen() {
               styles.form,
               { maxWidth: 520, gap: tight ? gap.sm : gap.md },
             ]}>
-            <Input
+            <WelcomeField
               label="What should we call you?"
               icon="profile"
               value={name}
@@ -188,7 +186,7 @@ export function WelcomeOnboardScreen() {
               }
               fieldBorderRadius={fieldRadius}
             />
-            <Input
+            <WelcomeField
               label="Primary Goal"
               icon="target"
               value={goal}
@@ -334,48 +332,18 @@ export function WelcomeOnboardScreen() {
   );
 }
 
-function WelcomeCopy() {
-  const theme = useTheme();
-  const { s, typography } = useResponsive();
-  const scale = useAuthCopyScale();
-  const introScale = Math.max(scale * 1.12, 0.84);
-
+function WelcomeField({
+  label,
+  ...rest
+}: { label: string } & ComponentProps<typeof Input>) {
+  const { spacing: gap } = useResponsive();
   return (
-    <>
-      <AppText
-        variant="display"
-        numberOfLines={3}
-        adjustsFontSizeToFit
-        minimumFontScale={0.55}
-        style={{
-          fontSize: typography.display.fontSize * scale,
-          lineHeight: typography.display.lineHeight * scale,
-        }}>
-        Your day, one place.
+    <View style={{ gap: gap.xs }}>
+      <AppText variant="caption" color="secondary" titleCase>
+        {label}
       </AppText>
-      <View
-        style={[
-          styles.rule,
-          {
-            width: s(40) * scale,
-            height: Math.max(1, s(1.5)),
-            backgroundColor: theme.accentPrimary,
-          },
-        ]}
-      />
-      <AppText
-        variant="body"
-        color="secondary"
-        numberOfLines={5}
-        adjustsFontSizeToFit
-        minimumFontScale={0.7}
-        style={{
-          fontSize: typography.body.fontSize * introScale,
-          lineHeight: typography.body.lineHeight * introScale,
-        }}>
-        Schedule, track meals, workouts, travel and more — without juggling different apps.
-      </AppText>
-    </>
+      <Input {...rest} />
+    </View>
   );
 }
 
@@ -427,5 +395,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radii.lg,
   },
-  rule: { borderRadius: 1 },
 });

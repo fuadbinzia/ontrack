@@ -5,6 +5,7 @@ import { typeConfig, type TypeVariant } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 
+import { appTextShouldFit } from './app-text-fit';
 import { titleCaseTextChildren } from './field-title-case';
 
 export interface AppTextProps extends TextProps {
@@ -19,6 +20,8 @@ export interface AppTextProps extends TextProps {
   /**
    * Single-line chrome: shrinks to fit width instead of wrapping.
    * Use for button labels, tab labels, headers in tight rows, chips.
+   * Ignored when `numberOfLines` is greater than 1 — multiline copy wraps
+   * at the token size instead of shrinking to an unreadable size.
    */
   fit?: boolean;
   /** Floor when `fit` is set (default 0.72). */
@@ -58,7 +61,11 @@ export const AppText = forwardRef<Text, AppTextProps>(function AppText(
     success: theme.success,
   }[color];
 
-  const shouldFit = fit || adjustsFontSizeToFit === true;
+  const shouldFit = appTextShouldFit({
+    fit,
+    adjustsFontSizeToFit,
+    numberOfLines,
+  });
   const shouldTitleCase = titleCase || variant === 'overline';
   const content = shouldTitleCase ? titleCaseTextChildren(children) : children;
 

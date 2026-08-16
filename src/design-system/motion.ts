@@ -32,6 +32,8 @@ export const motion = {
   layout: durations.base,
   /** Native stack push/pop settle (ms). */
   page: 280,
+  /** Sheet / modal rise and dismiss. */
+  sheet: durations.base,
   /** Chevron / small chrome rotates. */
   chrome: durations.fast,
 } as const;

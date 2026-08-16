@@ -124,6 +124,8 @@ export function ChecklistPopoverMenu({
     onPress: () => openRef.current(),
   });
 
+  const pendingSelectRef = useRef<string | null>(null);
+
   const open = () => {
     haptics.select();
     if (presentation === 'sheet') {
@@ -138,12 +140,18 @@ export function ChecklistPopoverMenu({
   openRef.current = open;
 
   const close = () => setVisible(false);
+  const flushPendingSelect = () => {
+    const id = pendingSelectRef.current;
+    pendingSelectRef.current = null;
+    if (id) onSelect(id);
+  };
   const selectItem = (id: string) => {
     close();
-    // Sheet presentation uses a native Modal. Presenting another Modal in the
-    // same tick (categories / share settings) gets dropped on iOS — defer.
+    // Sheet presentation uses a native Modal with a held exit. Presenting
+    // appPrompt in the same tick mounts it in the sheet's embedded host, then
+    // remounts on the root when the sheet unmounts — the confirm glitches twice.
     if (presentation === 'sheet') {
-      setTimeout(() => onSelect(id), 48);
+      pendingSelectRef.current = id;
       return;
     }
     onSelect(id);
@@ -189,6 +197,7 @@ export function ChecklistPopoverMenu({
           closeAccessibilityLabel="Close list actions"
           closeTestID={closeTestID}
           onClose={close}
+          onExited={flushPendingSelect}
           contentContainerStyle={styles.sheetContent}>
           <ChecklistPopoverItems
             items={items}

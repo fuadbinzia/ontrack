@@ -14,6 +14,8 @@ const boundaries: Record<string, readonly string[]> = {
     'google_calendar_connections',
     'google_calendar_event_links',
   ],
+  'src/services/backup/google-drive-oauth.ts': ['google_drive_connections'],
+  'src/services/backup/google-drive-server.ts': ['google_drive_connections'],
   'src/services/cloud/account-flags.ts': ['account_flags'],
   'src/services/finance/plaid-server.ts': ['plaid_items', 'plaid_link_sessions'],
   'src/services/todos/collaboration-invites.ts': [

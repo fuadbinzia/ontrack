@@ -78,6 +78,7 @@ Domain depth → `.cursor/skills/` (**travel**, **todos**, **workouts**, **visio
 | Tab bar / Trackers pins | `components/navigation/bottom-nav-bar.tsx`, `tab-pins` store, `/(tabs)/trackers` |
 | Airbnb Punta Cana stay mock | seed/flow `travel-punta-cana` → `trip-agent-ui-punta-cana`; OCR fixture `fixtures/airbnb-punta-cana-trips-page.ts` |
 | Profile avatar | `features/account/profile-avatar.tsx` |
+| Backup / Google Drive | `app/(tabs)/profile/backup.tsx`, `features/account/backup-*.ts` |
 | Dev Mode | Off by default. Seeds enter agent sandbox; `devmode release` / `verify-both` / cold start exit it (hub toggle too). → `dev-mode-controller.ts`, `dev-access.ts` |
 | Cloud sync | `services/cloud/sync.ts` |
 | Design tokens / DateField | `design-system/`, `components/primitives/` |

@@ -46,6 +46,44 @@ describe('todoListToolbarActionItems', () => {
     expect(items.find((item) => item.id === 'copy')?.dividerBefore).toBe(true);
   });
 
+  it('offers Delete List only to the owner', () => {
+    const ownerItems = todoListToolbarActionItems({
+      sort: 'manual',
+      members: [],
+      selectedAssigneeId: 'all',
+      owner: true,
+      canEdit: true,
+      completedCount: 0,
+    });
+    const editorItems = todoListToolbarActionItems({
+      sort: 'manual',
+      members: [member],
+      selectedAssigneeId: 'all',
+      owner: false,
+      canEdit: true,
+      completedCount: 0,
+    });
+    const memberItems = todoListToolbarActionItems({
+      sort: 'manual',
+      members: [member],
+      selectedAssigneeId: 'all',
+      owner: false,
+      canEdit: false,
+      completedCount: 0,
+    });
+
+    expect(ownerItems.find((item) => item.id === 'remove')).toMatchObject({
+      title: 'Delete List',
+    });
+    expect(editorItems.find((item) => item.id === 'remove')).toMatchObject({
+      title: 'Leave List',
+    });
+    expect(memberItems.find((item) => item.id === 'remove')).toMatchObject({
+      title: 'Leave List',
+    });
+    expect(editorItems.some((item) => item.title === 'Delete List')).toBe(false);
+  });
+
   it('omits assignee rows on a private list', () => {
     const items = todoListToolbarActionItems({
       sort: 'manual',

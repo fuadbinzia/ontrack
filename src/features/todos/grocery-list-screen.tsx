@@ -37,7 +37,9 @@ import {
     OtherItems,
 } from '@/features/todos/grocery-rows';
 import { copyTodoListText, shareTodoListText } from '@/features/todos/share';
+import { openTodoLists } from '@/features/todos/todo-list-href';
 import { TodoListSettingsSheet } from '@/features/todos/todo-list-settings-screen';
+import { useVisibleTodoList } from '@/features/todos/todo-list-visible';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -82,9 +84,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
     measuredTabBarHeight ||
     layout.bottomNavBarBaseHeight + insets.bottom;
   const { user } = useAuthSession();
-  const list = useTodos((state) =>
-    state.lists.find((item) => item.id === listId),
-  );
+  const list = useVisibleTodoList(listId);
   const tasks = useTodos(
     (state) => state.tasks.filter((task) => task.listId === listId),
     listReferenceEquality,
@@ -412,7 +412,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
       <Screen contentStyle={styles.center}>
         <Symbol name="groceries" size={42} color={theme.textTertiary} />
         <AppText variant="heading">Grocery List Unavailable</AppText>
-        <Button onPress={() => router.replace('/(tabs)/to-do' as never)}>
+        <Button onPress={openTodoLists}>
           Back to Lists
         </Button>
       </Screen>

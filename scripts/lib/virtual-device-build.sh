@@ -78,11 +78,25 @@ vd_rebuild_needed() {
 }
 
 vd_install_needed() {
-  local installed="$1" stamp="$2" identity="$3"
+  local installed="$1" stamp="$2" identity="$3" installed_identity="${4:-}"
+  local extra=()
+  if [[ -n "$installed_identity" ]]; then
+    extra+=(--installed-id "$installed_identity")
+  fi
   node "$(vd_freshness_js)" install-needed \
     --installed "$installed" \
     --stamp "$stamp" \
-    --artifact-id "$identity"
+    --artifact-id "$identity" \
+    "${extra[@]+"${extra[@]}"}"
+}
+
+vd_ios_installed_identity() {
+  local udid="$1"
+  local installed_app
+  [[ -n "$udid" ]] || { printf '\n'; return 0; }
+  installed_app="$(xcrun simctl get_app_container "$udid" "$VD_BUNDLE_ID" app 2>/dev/null || true)"
+  [[ -d "$installed_app" ]] || { printf '\n'; return 0; }
+  vd_artifact_identity "$(vd_ios_identity_file "$installed_app")"
 }
 
 validate_ios_app() {
@@ -225,17 +239,18 @@ vd_android_serial_for_avd() {
   ONTRACK_ANDROID_AVD="$name" ONTRACK_ANDROID_SERIAL= android_emu_preferred_serial
 }
 
-# Install onto a specific iOS UDID when the stamp lags. Echoes "1" if replaced.
+# Install onto a specific iOS UDID when the on-device binary lags. Echoes "1" if replaced.
 vd_refresh_ios_udid() {
   local udid="$1" app="$2" identity="$3" label="${4:-$1}"
-  local installed=0 stamp_file stamp
+  local installed=0 stamp_file stamp installed_identity=""
   [[ -n "$udid" && -n "$identity" ]] || return 1
   if xcrun simctl get_app_container "$udid" "$VD_BUNDLE_ID" data >/dev/null 2>&1; then
     installed=1
+    installed_identity="$(vd_ios_installed_identity "$udid")"
   fi
   stamp_file="$(vd_stamp_path ios "$udid")"
   stamp="$(vd_read_stamp "$stamp_file")"
-  if [[ "$(vd_install_needed "$installed" "$stamp" "$identity")" != "1" ]]; then
+  if [[ "$(vd_install_needed "$installed" "$stamp" "$identity" "$installed_identity")" != "1" ]]; then
     printf '0\n'
     return 0
   fi

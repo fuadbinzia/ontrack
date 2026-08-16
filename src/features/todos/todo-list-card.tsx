@@ -7,7 +7,7 @@ import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { todoListCardPresence } from '@/features/todos/todo-list-card-presence';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import type { TodoList } from '@/store/todos';
+import { canLeaveTodoList, type TodoList } from '@/store/todos';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
 export type TodoListCollaboratorChip = {
@@ -65,7 +65,7 @@ export function TodoListCard({
   });
   const collaboratorNames = collaborators?.map((person) => person.displayName);
   const collaboratorLabel = collaboratorNames?.join(', ');
-  const leaving = list.mode === 'shared' && list.role !== 'owner';
+  const leaving = canLeaveTodoList(list);
   const canRename = editMode && list.role === 'owner';
   const dark = theme.name === 'dark';
   const cardContents = (

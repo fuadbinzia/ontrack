@@ -2,6 +2,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 
 import { getSupabaseClient } from '@/services/cloud/supabase';
 import { removeSharedRecipeImages } from '@/services/todos/recipe-media';
+import { canDeleteTodoList } from '@/store/todos-helpers';
 import {
   type TodoList,
   type TodoSharedSnapshot,
@@ -149,6 +150,9 @@ export async function deleteSharedTodoList(listId: string) {
         members: state.members.filter((member) => member.listId === listId),
       }
     : undefined;
+  if (list && !canDeleteTodoList(list)) {
+    throw new TodoCollaborationError('Only the owner can delete this list.');
+  }
   useTodos.getState().removeSharedList(listId);
   let client: Awaited<ReturnType<typeof authenticatedClient>>;
   try {

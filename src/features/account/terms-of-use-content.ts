@@ -11,7 +11,7 @@ export const TERMS_OF_USE_SECTIONS: readonly LegalSection[] = [
     paragraphs: [
       'onTrack helps you organize daily plans and optional add-ons such as food tracking and community features, fitness and health summaries, finance tools, plant care, travel planning and chat, checklists, vehicles, event discovery, games, and a vision board.',
       'Features may change over time. Some capabilities require an internet connection, a signed-in account, or third-party services.',
-      'Add-ons can be enabled or disabled without deleting their saved data. You are responsible for maintaining your own copies of content that is important to you.',
+      'Add-ons can be enabled or disabled without deleting their saved data. You are responsible for maintaining your own copies of content that is important to you. Profile → Backup can download a copy or save one to Google Drive that you control.',
     ],
   },
   {

@@ -45,6 +45,8 @@ export const AGENT_UI_ROUTE_ALIASES = {
   activity: '/activity-form',
   privacy: '/privacy',
   terms: '/terms',
+  backup: '/(tabs)/profile/backup',
+  'profile-backup': '/(tabs)/profile/backup',
   straiaway: '/(tabs)/profile/straiaway',
   'straiaway-connect': '/(tabs)/profile/straiaway',
 } as const;

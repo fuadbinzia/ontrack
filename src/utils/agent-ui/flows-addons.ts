@@ -54,6 +54,11 @@ export const AGENT_UI_ADDON_FLOWS = {
     { op: 'goto', to: 'profile' },
     { op: 'wait', prefix: 'ontrack.profile.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
+  'open-backup': [
+    { op: 'goto', to: 'profile/backup' },
+    { op: 'wait', id: 'ontrack.backup.screen', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+    { op: 'wait', id: 'ontrack.backup.download', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+  ],
   'profile-appearance': [
     { op: 'goto', to: 'profile/appearance' },
     {

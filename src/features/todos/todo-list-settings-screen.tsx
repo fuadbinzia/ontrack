@@ -36,7 +36,7 @@ import {
   transferTodoListOwnership,
 } from '@/services/todos/collaboration';
 import { useFriends } from '@/store/friends';
-import { useTodos, type TodoMember } from '@/store/todos';
+import { canDeleteTodoList, useTodos, type TodoMember } from '@/store/todos';
 import { AgentUiIds, AgentTestId } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
@@ -232,6 +232,7 @@ export function TodoListSettingsSheet({
   };
 
   const removeList = () => {
+    if (!canDeleteTodoList(list)) return;
     const sharedWithOthers =
       list.mode === 'shared' && otherMembers.length > 0;
     confirmDestructiveAction({
@@ -241,7 +242,7 @@ export function TodoListSettingsSheet({
         : 'The list and every item in it will be permanently deleted.',
       onConfirm: () => {
         void run('delete', async () => {
-          await performTodoListRemoval(list, false);
+          await performTodoListRemoval(list);
           onClose();
           router.replace('/(tabs)/to-do' as never);
         });
@@ -515,7 +516,7 @@ export function TodoListSettingsSheet({
         {list.kind === 'grocery' ? (
           <View style={{ gap: spacing.xs }}>
             <SectionHeader flush title="List Access" />
-            {owner ? (
+            {canDeleteTodoList(list) ? (
               <>
                 {list.mode === 'shared' && otherMembers.length > 0 ? (
                   <AppText variant="caption" color="secondary">

@@ -22,6 +22,9 @@ import {
 describe('agent-ui flows', () => {
   it('lists and resolves named flows', () => {
     expect(listAgentUiFlowNames()).toContain('travel-demo');
+    expect(listAgentUiFlowNames()).toContain('travel-home-iceland-tools');
+    expect(listAgentUiFlowNames()).toContain('travel-home-iceland-checklist');
+    expect(listAgentUiFlowNames()).toContain('travel-home-iceland-checklist-again');
     expect(listAgentUiFlowNames()).toContain('open-new-trip');
     expect(listAgentUiFlowNames()).toContain('open-new-checklist');
     expect(listAgentUiFlowNames()).toContain('open-home-location');
@@ -33,6 +36,7 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('open-avatar-editor');
     expect(listAgentUiFlowNames()).toContain('open-profile-identity');
     expect(listAgentUiFlowNames()).toContain('open-developer');
+    expect(listAgentUiFlowNames()).toContain('open-backup');
     expect(listAgentUiFlowNames()).toContain('profile-usage-analytics');
     expect(listAgentUiFlowNames()).toContain('checklist-demo');
     expect(listAgentUiFlowNames()).toContain('checklist-demo-item-details');
@@ -136,6 +140,45 @@ describe('agent-ui flows', () => {
       ]),
     );
     expect(resolveAgentUiFlow('missing')).toBeNull();
+    expect(resolveAgentUiFlow('travel-home-iceland-tools')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'seed', to: 'travel-home' }),
+        expect.objectContaining({
+          op: 'goto',
+          to: 'travel/trip-travel-home-iceland/tools',
+        }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.travel.list.packingList.trip-travel-home-iceland',
+        }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('travel-home-iceland-checklist')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.travel.list.packingList.trip-travel-home-iceland',
+        }),
+        expect.objectContaining({
+          op: 'wait',
+          id: 'ontrack.checklists.detail.newTask',
+        }),
+      ]),
+    );
+    const icelandAgain = resolveAgentUiFlow('travel-home-iceland-checklist-again');
+    expect(icelandAgain?.some((step) => step.op === 'seed')).toBe(false);
+    expect(icelandAgain).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'goto',
+          to: 'travel/trip-travel-home-iceland/tools',
+        }),
+        expect.objectContaining({
+          op: 'tap',
+          id: 'ontrack.travel.list.packingList.trip-travel-home-iceland',
+        }),
+      ]),
+    );
     expect(resolveAgentUiFlow('today-add')).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ op: 'tap', id: 'ontrack.today.addActivity' }),
@@ -208,6 +251,18 @@ describe('agent-ui flows', () => {
         }),
       ]),
     );
+  });
+
+  it('every named flow lands with a seed, goto, wait, or tap', () => {
+    for (const name of listAgentUiFlowNames()) {
+      const steps = resolveAgentUiFlow(name) ?? [];
+      expect(steps.length).toBeGreaterThan(0);
+      expect(
+        steps.some((step) =>
+          ['seed', 'goto', 'wait', 'tap'].includes(step.op),
+        ),
+      ).toBe(true);
+    }
   });
 
   it('deep-lands non-travel demo surfaces', () => {

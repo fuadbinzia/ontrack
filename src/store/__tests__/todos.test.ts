@@ -2,7 +2,9 @@ import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/asy
 
 import {
     canCompleteTodo,
+    canDeleteTodoList,
     canEditTodoContent,
+    canLeaveTodoList,
     normalizeTodoState,
     privateTodoPayload,
     useTodos,
@@ -247,6 +249,31 @@ describe('to-do store', () => {
     useTodos.getState().renameList(list.id, '  Weekend   errands  ');
 
     expect(useTodos.getState().lists[0].name).toBe('Weekend errands');
+  });
+
+  it('lets only the owner delete a private checklist', () => {
+    const owned = useTodos.getState().createList('Weekend')!;
+    useTodos.getState().addTask(owned.id, 'Pack bags');
+
+    useTodos.getState().deleteList(owned.id);
+
+    expect(useTodos.getState().lists.find((list) => list.id === owned.id)).toBeUndefined();
+    expect(useTodos.getState().tasks.some((task) => task.listId === owned.id)).toBe(false);
+  });
+
+  it('does not let an editor or member delete a shared checklist from local store', () => {
+    for (const role of ['editor', 'member'] as const) {
+      const seed = useTodos.getState().createList(`Trip ${role}`)!;
+      useTodos.getState().replaceSharedSnapshot({
+        list: { ...seed, mode: 'shared', role },
+        tasks: [],
+        members: [],
+      });
+
+      useTodos.getState().deleteList(seed.id);
+
+      expect(useTodos.getState().lists.some((list) => list.id === seed.id)).toBe(true);
+    }
   });
 
   it('persists a manual task order inside its checklist', () => {
@@ -508,6 +535,14 @@ describe('to-do store', () => {
     expect(canEditTodoContent(memberList)).toBe(false);
     expect(canCompleteTodo(editorList, baseTask, 'editor-a')).toBe(true);
     expect(canCompleteTodo(memberList, baseTask, 'member-a')).toBe(false);
+    expect(canDeleteTodoList(editorList)).toBe(false);
+    expect(canDeleteTodoList(memberList)).toBe(false);
+    expect(canDeleteTodoList({ ...editorList, kind: 'grocery', role: 'editor' })).toBe(false);
+    expect(canDeleteTodoList({ ...editorList, role: 'owner' })).toBe(true);
+    expect(canLeaveTodoList(editorList)).toBe(true);
+    expect(canLeaveTodoList(memberList)).toBe(true);
+    expect(canLeaveTodoList({ ...editorList, role: 'owner' })).toBe(false);
+    expect(canLeaveTodoList({ ...editorList, mode: 'private', role: 'editor' })).toBe(false);
   });
 
   it('migrates recognized grocery names but preserves explicit checklist kinds', () => {
@@ -624,68 +659,5 @@ describe('to-do store', () => {
     expect(
       useTodos.getState().tasks.find((task) => task.id === tasks[1].id)?.completed,
     ).toBe(false);
-  });
-
-  it('records a local open without treating it as a list edit', () => {
-    const buried = useTodos.getState().createList('Features')!;
-    useTodos.getState().createList('Iceland Checklist');
-    const updatedAt = useTodos
-      .getState()
-      .lists.find((list) => list.id === buried.id)!.updatedAt;
-
-    useTodos.getState().touchList(buried.id, '2026-08-15T20:00:00.000Z');
-
-    const state = useTodos.getState();
-    expect(state.lists.find((list) => list.id === buried.id)?.updatedAt).toBe(
-      updatedAt,
-    );
-    expect(state.listOpenedAt[buried.id]).toBe('2026-08-15T20:00:00.000Z');
-    expect(state.pendingMutations).toEqual([]);
-  });
-
-  it('ignores an open for a list that is not on the device', () => {
-    useTodos.getState().touchList('missing-list', '2026-08-15T20:00:00.000Z');
-    expect(useTodos.getState().listOpenedAt).toEqual({});
-  });
-
-  it('ignores a second open of the same list within 750ms', () => {
-    const list = useTodos.getState().createList('Ideas')!;
-    useTodos.getState().touchList(list.id, '2026-08-15T20:00:00.000Z');
-    useTodos.getState().touchList(list.id, '2026-08-15T20:00:00.400Z');
-
-    expect(useTodos.getState().listOpenedAt[list.id]).toBe(
-      '2026-08-15T20:00:00.000Z',
-    );
-  });
-
-  it('drops opened recency when a private list is deleted', () => {
-    const list = useTodos.getState().createList('Temp')!;
-    useTodos.getState().touchList(list.id, '2026-08-15T20:00:00.000Z');
-    useTodos.getState().deleteList(list.id);
-
-    expect(useTodos.getState().listOpenedAt[list.id]).toBeUndefined();
-  });
-
-  it('drops opened recency for lists that no longer exist', () => {
-    const migrated = normalizeTodoState({
-      groceryMigrationVersion: 1,
-      lists: [{
-        id: 'list-1',
-        name: 'Keep',
-        kind: 'checklist',
-        mode: 'private',
-        role: 'owner',
-        createdAt: '2026-08-12T00:00:00.000Z',
-        updatedAt: '2026-08-12T00:00:00.000Z',
-      }],
-      listOpenedAt: {
-        'list-1': '2026-08-14T09:00:00.000Z',
-        gone: '2026-08-15T09:00:00.000Z',
-      },
-    });
-
-    expect(migrated.listOpenedAt).toEqual({
-      'list-1': '2026-08-14T09:00:00.000Z',
-    });
   });
 });

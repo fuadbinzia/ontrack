@@ -37,6 +37,7 @@ const routeModules = [
   'src/app/(tabs)/plants/index.tsx',
   'src/app/(tabs)/plants/new.tsx',
   'src/app/(tabs)/profile/agents.tsx',
+  'src/app/(tabs)/profile/backup.tsx',
   'src/app/(tabs)/profile/calendar-sync.tsx',
   'src/app/(tabs)/profile/performance.tsx',
   'src/app/(tabs)/profile/straiaway.tsx',
@@ -90,6 +91,11 @@ const routeModules = [
 
 const apiModules = [
   'src/app/api/crash-report+api.ts',
+  'src/app/api/backup/google/connect+api.ts',
+  'src/app/api/backup/google/complete+api.ts',
+  'src/app/api/backup/google/disconnect+api.ts',
+  'src/app/api/backup/google/status+api.ts',
+  'src/app/api/backup/google/token+api.ts',
   'src/app/api/calendar/google/connect+api.ts',
   'src/app/api/calendar/google/direction+api.ts',
   'src/app/api/calendar/google/disconnect+api.ts',

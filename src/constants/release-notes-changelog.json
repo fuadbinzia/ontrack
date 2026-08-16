@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.113",
+    "date": "2026-08-16",
+    "notes": [
+      "Add Profile backups to Google Drive, keep shared-list delete owner-only, and hold the last checklist so delete doesn't flash List Unavailable.",
+      "Touched: app routes, features/account."
+    ]
+  },
+  {
     "version": "1.0.112",
     "date": "2026-08-16",
     "notes": [

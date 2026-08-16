@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import {
   mkdtempSync,
   writeFileSync,
+  readFileSync,
   utimesSync,
   mkdirSync,
   statSync,
@@ -37,6 +38,37 @@ describe('native build freshness (sim/emu latest build)', () => {
         }),
       }),
     ).toBe(true);
+  });
+
+  it('reinstalls when the host stamp is fresh but the device binary is still old', () => {
+    // Pro can keep 1.0.68 after an agent writes a stamp without installing
+    // ("leave Pro untouched"). Compare the on-device binary, not the stamp.
+    const fresh = artifactIdentity({
+      version: '1.0.112',
+      mtimeMs: 200,
+      size: 11,
+    });
+    const stale = artifactIdentity({
+      version: '1.0.68',
+      mtimeMs: 100,
+      size: 10,
+    });
+    expect(
+      shouldInstallOntoDevice({
+        appInstalled: true,
+        stampIdentity: fresh,
+        installedIdentity: stale,
+        artifactIdentity: fresh,
+      }),
+    ).toBe(true);
+    expect(
+      shouldInstallOntoDevice({
+        appInstalled: true,
+        stampIdentity: stale,
+        installedIdentity: fresh,
+        artifactIdentity: fresh,
+      }),
+    ).toBe(false);
   });
 
   it('skips reinstall when the current device already has this artifact', () => {
@@ -186,6 +218,24 @@ describe('native build freshness (sim/emu latest build)', () => {
     ).trim();
     expect(skip).toBe('0');
 
+    const stampLie = execFileSync(
+      'node',
+      [
+        cli,
+        'install-needed',
+        '--installed',
+        '1',
+        '--stamp',
+        'fresh',
+        '--installed-id',
+        'stale-on-device',
+        '--artifact-id',
+        'fresh',
+      ],
+      { encoding: 'utf8' },
+    ).trim();
+    expect(stampLie).toBe('1');
+
     const missing = execFileSync(
       'node',
       [
@@ -214,5 +264,24 @@ describe('native build freshness (sim/emu latest build)', () => {
     );
     expect(listed).toContain('onTrack iPhone 17 Pro');
     expect(listed).toContain('Galaxy_S26');
+  });
+
+  it('compares the on-device iOS binary and does not freeze CFBundleShortVersionString', () => {
+    const vd = readFileSync(
+      join(process.cwd(), 'scripts/lib/virtual-device-build.sh'),
+      'utf8',
+    );
+    expect(vd).toContain('vd_ios_installed_identity');
+    expect(vd).toContain('vd_install_needed "$installed" "$stamp" "$identity" "$installed_identity"');
+    expect(vd).toContain('--installed-id');
+
+    const info = readFileSync(
+      join(process.cwd(), 'ios/onTrack/Info.plist'),
+      'utf8',
+    );
+    expect(info).toContain('<string>$(MARKETING_VERSION)</string>');
+    expect(info).not.toMatch(
+      /<key>CFBundleShortVersionString<\/key>\s*<string>1\.0\.\d+<\/string>/,
+    );
   });
 });

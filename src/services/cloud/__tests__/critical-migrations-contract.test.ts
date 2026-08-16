@@ -83,6 +83,13 @@ describe('critical persistence migration boundaries', () => {
     expect(direction).toContain('sync_direction');
   });
 
+  it('keeps Drive backup credentials behind RLS with no direct client grants', () => {
+    const source = migration('202608160002_google_drive_backup.sql');
+    expect(source).toContain('alter table public.google_drive_connections enable row level security');
+    expect(source).toContain('revoke all on public.google_drive_connections from anon, authenticated');
+    expect(source).toContain('delete from public.google_drive_connections');
+  });
+
   it('replaces conflicting Calendar event links atomically without client RPC access', () => {
     const source = migration('202608130001_atomic_google_calendar_event_links.sql');
     expect(source).toContain('pg_advisory_xact_lock');
@@ -166,5 +173,13 @@ describe('critical persistence migration boundaries', () => {
     expect(source).toContain('revoke all on function public.living_system_map_account_cost_summary(integer) from public, anon, authenticated');
     expect(source).toContain('grant execute on function public.living_system_map_account_cost_summary(integer) to service_role');
     expect(source).not.toMatch(/grant execute .* to (anon|authenticated)/);
+  });
+
+  it('rejects todo list deletion unless the caller is the owner', () => {
+    const source = migration('202608160001_todo_delete_owner_only.sql');
+    expect(source).toContain('create or replace function public.delete_todo_list(requested_list_id uuid)');
+    expect(source).toContain('if not public.is_todo_owner(requested_list_id) then');
+    expect(source).toContain('only the owner can delete this list.');
+    expect(source).toContain('owner_user_id = auth.uid()');
   });
 });

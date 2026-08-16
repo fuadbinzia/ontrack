@@ -744,6 +744,16 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.profile.*.suggestionsDismiss`                           | Dismiss city suggestions                                       |
 | `ontrack.profile.agents`                                         | Manage Agents                                                  |
 | `ontrack.profile.calendarSync`                                   | Google Calendar sync settings                                  |
+| `ontrack.profile.backup`                                         | Download or Google Drive backup                                |
+| `ontrack.backup.screen`                                          | Your Backup screen                                             |
+| `ontrack.backup.download`                                        | Download Backup                                                |
+| `ontrack.backup.connectDrive`                                    | Connect Google Drive                                           |
+| `ontrack.backup.saveDrive`                                       | Save Backup to Google Drive                                    |
+| `ontrack.backup.disconnectDrive`                                 | Disconnect Google Drive                                        |
+| `ontrack.backup.confirmDisconnect`                               | Confirm Google Drive disconnect                                |
+| `ontrack.backup.restoreFile`                                     | Restore from File                                              |
+| `ontrack.backup.restoreDrive`                                    | Restore from Google Drive                                      |
+| `ontrack.backup.confirmRestore`                                  | Confirm restore                                                |
 | `ontrack.profile.straiaway`                                      | StraiAway connect screen (hidden from Profile for now)         |
 | `ontrack.straiaway.connect`                                      | Connect StraiAway                                              |
 | `ontrack.straiaway.disconnect`                                   | Disconnect StraiAway                                           |

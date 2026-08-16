@@ -84,6 +84,7 @@ describe('historical bug-fix regressions', () => {
     expect(plugin).toContain('syncSharingExtensionVersion');
     expect(plugin).toContain('configuration.buildSettings.MARKETING_VERSION = version');
     expect(plugin).toContain('config.version');
+    expect(read('ios/onTrack/Info.plist')).toContain('$(MARKETING_VERSION)');
   });
 
   it('adds both Siri Swift sources through the supported Xcode helper', () => {

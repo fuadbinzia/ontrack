@@ -4,7 +4,7 @@ import { View } from "react-native";
 
 import { appPrompt } from "@/components/primitives";
 import { useAuthSession } from "@/features/auth/auth-provider";
-import { todoListDetailHref } from "@/features/todos/todo-list-href";
+import { openTodoList } from "@/features/todos/todo-list-href";
 import {
   isTravelPlanOnCalendar,
   travelCalendarDrafts,
@@ -20,7 +20,10 @@ import {
 } from "@/features/travel/travel-calendar-updated-modal";
 import { TravelCurrencySheet } from "@/features/travel/travel-currency-sheet";
 import { TravelFriendsSheet } from "@/features/travel/travel-friends-sheet";
-import { getOrCreateTravelPackingList } from "@/features/travel/travel-packing-list";
+import {
+  getOrCreateTravelPackingList,
+  type TravelPackingListDependencies,
+} from "@/features/travel/travel-packing-list";
 import { TravelTripActionGrid } from "@/features/travel/travel-trip-action-grid";
 import { TravelTranslatorSheet } from "@/features/travel/translator/travel-translator-sheet";
 import type { TravelPlan } from "@/features/travel/types";
@@ -44,6 +47,31 @@ type TravelPlanTripToolsProps = {
   plan: TravelPlan;
   onAddTransport: () => void;
 };
+
+function travelPackingListStoreDeps(): TravelPackingListDependencies {
+  const todos = useTodos.getState();
+  return {
+    lists: todos.lists,
+    getLists: () => useTodos.getState().lists,
+    listsWithItems: new Set(todos.tasks.map((task) => task.listId)),
+    createList: (name, kind) => useTodos.getState().createList(name, kind),
+    ensureList: (item) => {
+      const current = useTodos.getState().lists;
+      if (current.some((entry) => entry.id === item.id)) return;
+      useTodos.setState({ lists: [item, ...current] });
+    },
+    renameList: (id, name) => useTodos.getState().renameList(id, name),
+    savePlan: (next) => {
+      const latest =
+        useTravel.getState().plans.find((item) => item.id === next.id) ?? next;
+      return useTravel.getState().savePlan({
+        ...latest,
+        packingListId: next.packingListId,
+        updatedAt: next.updatedAt,
+      });
+    },
+  };
+}
 
 /** Trip Tools page content and its locally owned sheets. */
 export function TravelPlanTripTools({
@@ -220,21 +248,10 @@ export function TravelPlanTripTools({
               const livePlan =
                 useTravel.getState().plans.find((item) => item.id === plan.id) ??
                 plan;
-              const list = getOrCreateTravelPackingList(livePlan, {
-                lists: useTodos.getState().lists,
-                createList: (name, kind) =>
-                  useTodos.getState().createList(name, kind),
-                savePlan: (next) => {
-                  const latest =
-                    useTravel.getState().plans.find((item) => item.id === next.id) ??
-                    next;
-                  return useTravel.getState().savePlan({
-                    ...latest,
-                    packingListId: next.packingListId,
-                    updatedAt: next.updatedAt,
-                  });
-                },
-              });
+              const list = getOrCreateTravelPackingList(
+                livePlan,
+                travelPackingListStoreDeps(),
+              );
               if (!list) {
                 appPrompt.alert(
                   "Checklist",
@@ -242,7 +259,7 @@ export function TravelPlanTripTools({
                 );
                 return;
               }
-              router.navigate(todoListDetailHref(list.id) as never);
+              openTodoList(list.id);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
             onOpenChat={() => {

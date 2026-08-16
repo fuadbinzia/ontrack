@@ -52,6 +52,15 @@ export function canEditTodoContent(list: TodoList): boolean {
   );
 }
 
+/** Permanent list deletion is owner-only. Collaborators leave instead. */
+export function canDeleteTodoList(list: TodoList): boolean {
+  return list.role === 'owner';
+}
+
+export function canLeaveTodoList(list: TodoList): boolean {
+  return list.mode === 'shared' && list.role !== 'owner';
+}
+
 export function canCompleteTodo(
   list: TodoList,
   task: TodoTask,

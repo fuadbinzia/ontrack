@@ -4,6 +4,14 @@ import { CHANGELOG_ARCHIVE } from './release-notes-changelog-archive';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.103',
+    date: '2026-08-15',
+    notes: [
+      'Drop the stray Open label between Manage Sections add-on rows.',
+      'Touched: features/trackers.',
+    ],
+  },
+  {
     version: '1.0.102',
     date: '2026-08-15',
     notes: [

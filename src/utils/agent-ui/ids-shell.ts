@@ -59,8 +59,6 @@ export const agentUiIdsShell = {
     manageClose: 'ontrack.trackers.manage.close',
     addon: (addonId: string) =>
       `ontrack.trackers.addon.${addonId.replace(/[^a-zA-Z0-9]+/g, '_')}`,
-    openAddon: (addonId: string) =>
-      `ontrack.trackers.openAddon.${addonId.replace(/[^a-zA-Z0-9]+/g, '_')}`,
   },
   health: {
     settings: 'ontrack.health.settings',

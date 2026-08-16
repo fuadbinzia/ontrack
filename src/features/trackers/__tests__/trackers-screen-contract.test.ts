@@ -25,6 +25,16 @@ describe('trackers screen contract', () => {
     expect(screen).toContain('AgentUiIds.trackers.manage');
   });
 
+  it('does not render an Open label between Manage Sections add-on rows', () => {
+    const sheet = read('src/features/trackers/trackers-manage-sheet.tsx');
+    const ids = read('src/utils/agent-ui/ids-shell.ts');
+
+    expect(sheet).not.toMatch(/>\s*Open\s*</);
+    expect(sheet).not.toContain('openAddon');
+    expect(sheet).not.toContain('router.navigate');
+    expect(ids).not.toContain('openAddon');
+  });
+
   it('dismisses Sections through the parent tab navigator', () => {
     const screen = read('src/features/trackers/trackers-screen.tsx');
     const layout = read('src/app/(tabs)/_layout.tsx');

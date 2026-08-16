@@ -860,7 +860,7 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 | `ontrack.travel.list.currency.<tripId>`          | Open Currency Calculator (**plan detail tools**)          |
 | `ontrack.travel.list.translator.<tripId>`        | Open Destination Translator (**plan detail tools**)       |
 | `ontrack.travel.list.expenses.<tripId>`          | Open Expenses (**plan detail tools**)                     |
-| `ontrack.travel.list.packingList.<tripId>`       | Open or create Packing List (**plan detail tools**)       |
+| `ontrack.travel.list.packingList.<tripId>`       | Open existing trip checklist, or create one (**plan detail tools**) |
 | `ontrack.travel.list.groupChat.<tripId>`         | Open Group Chat (**plan detail tools**)                   |
 | `ontrack.travel.list.notesSection.<tripId>`      | Legacy notes section (unused on launcher cards)           |
 

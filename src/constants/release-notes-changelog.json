@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.112",
+    "date": "2026-08-16",
+    "notes": [
+      "Open the existing trip checklist instead of creating a new one each tap.",
+      "Touched: features/travel."
+    ]
+  },
+  {
     "version": "1.0.111",
     "date": "2026-08-16",
     "notes": [

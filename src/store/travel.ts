@@ -9,6 +9,7 @@ import { featureFlags } from '@/constants/feature-flags';
 import { flushCloudDomain } from '@/services/cloud/sync-session';
 import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import { normalizeTravelPlan, normalizeTravelPlans } from '@/features/travel/normalize';
+import { preserveTravelPackingListIds } from '@/features/travel/travel-packing-list';
 import type { TravelPlan } from '@/features/travel/types';
 import { useDevMode } from '@/store/dev-mode';
 import { useSchedule } from '@/store/schedule';
@@ -107,7 +108,11 @@ export const useTravel = create<TravelState>()(
         }
       },
       replacePlans: (plans) => {
-        const nextPlans = withAllAccountsTestTrip(normalizeTravelPlans(plans));
+        const nextPlans = withAllAccountsTestTrip(
+          normalizeTravelPlans(
+            preserveTravelPackingListIds(plans, get().plans),
+          ),
+        );
         const nextIds = new Set(nextPlans.map((plan) => plan.id));
         const droppedIds = get()
           .plans.map((plan) => plan.id)

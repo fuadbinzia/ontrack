@@ -345,7 +345,15 @@ export async function pullTravelTripItinerary(
   const snapshot = parseItinerarySnapshot(rpc.data);
   if (!snapshot) return undefined;
 
-  const merged = mergeItinerarySnapshot(plan, snapshot, userId);
+  const stored = useTravel.getState().plans.find((item) => item.id === plan.id);
+  const merged = mergeItinerarySnapshot(
+    {
+      ...plan,
+      packingListId: stored?.packingListId ?? plan.packingListId,
+    },
+    snapshot,
+    userId,
+  );
   useTravel.getState().savePlan(merged);
   return merged;
 }

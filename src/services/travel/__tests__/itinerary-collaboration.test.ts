@@ -107,6 +107,17 @@ describe('itinerary collaboration merge', () => {
     expect(merged.itinerary.find((row) => row.id === 'mine')?.flight?.confirmationCode).toBe(
       'SECRET',
     );
+    expect(merged.packingListId).toBeUndefined();
+  });
+
+  it('keeps a trip checklist link while merging a remote itinerary', () => {
+    const local = planWith([], { packingListId: 'checklist-1' });
+    const merged = mergeItinerarySnapshot(
+      local,
+      { tripId: 'trip-host', items: [] },
+      'user-me',
+    );
+    expect(merged.packingListId).toBe('checklist-1');
   });
 
   it('publishes compact owned payloads without booking secrets', () => {

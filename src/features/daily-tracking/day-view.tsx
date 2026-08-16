@@ -16,6 +16,10 @@ import {
 import { ActivityCard } from '@/components/shared';
 import { findCategory } from '@/constants/categories';
 import { layout, spacing } from '@/design-system';
+import { AllDayActivityBanner } from '@/features/calendar/all-day-banner';
+import { splitDayActivities } from '@/features/calendar/calendar-day-events';
+import { HolidayBanner } from '@/features/calendar/holiday-banner';
+import { useCalendarHolidays } from '@/features/calendar/use-calendar-holidays';
 import { resolveEventCalendarArtwork } from '@/features/events/event-calendar-artwork';
 import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
@@ -93,13 +97,19 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
     (s) => s.activities.filter((activity) => activity.date === date),
     listReferenceEquality,
   );
-  const activities = useMemo(
+  const enabledActivities = useMemo(
     () =>
       dayActivities
         .filter((activity) => isActivityEnabled(activity, enabledAddons))
         .sort((a, b) => a.startMinutes - b.startMinutes),
     [dayActivities, enabledAddons],
   );
+  const { timed: activities, allDay: allDayActivities } = useMemo(
+    () => splitDayActivities(enabledActivities),
+    [enabledActivities],
+  );
+  const dayHolidays = useCalendarHolidays(date);
+  const hasAllDayRail = dayHolidays.length > 0 || allDayActivities.length > 0;
   const categories = useSchedule((s) => s.categories);
   const eventDetails = useSchedule((s) => s.eventDetails);
   const eventFollows = useSchedule((s) => s.eventFollows);
@@ -311,7 +321,26 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
           <View>
             {renderHeader({ completion, nowLine, summaryLine, topInset: 0 })}
             <View style={styles.timeline}>
-              {activities.length === 0 ? (
+              {hasAllDayRail ? (
+                <View style={styles.holidayRail}>
+                  {dayHolidays.map((holiday) => (
+                    <HolidayBanner
+                      key={holiday.id}
+                      holiday={holiday}
+                      testID={AgentUiIds.today.holiday(holiday.id)}
+                    />
+                  ))}
+                  {allDayActivities.map((activity) => (
+                    <AllDayActivityBanner
+                      key={activity.id}
+                      activity={activity}
+                      testID={AgentUiIds.today.allDay(activity.id)}
+                      onPress={() => openActivity(activity)}
+                    />
+                  ))}
+                </View>
+              ) : null}
+              {activities.length === 0 && allDayActivities.length === 0 ? (
                 <EmptyState
                   icon="today"
                   title={emptyDayTitle(date)}
@@ -320,9 +349,9 @@ export function DayView({ date, onChangeDate, renderHeader }: DayViewProps) {
                   actionTestID={AgentUiIds.today.emptyAddActivity}
                   onAction={openAdd}
                 />
-              ) : (
+              ) : activities.length > 0 ? (
                 <SectionHeader title="Timeline" flush titleColor="tertiary" />
-              )}
+              ) : null}
             </View>
           </View>
         }
@@ -359,6 +388,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPadding,
     paddingTop: spacing.xl,
     paddingBottom: spacing.sm,
+  },
+  holidayRail: {
+    width: '100%',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   rowPad: {
     paddingHorizontal: layout.screenPadding,

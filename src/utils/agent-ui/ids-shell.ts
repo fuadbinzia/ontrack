@@ -339,7 +339,6 @@ export const agentUiIdsShell = {
     toggleComplete: 'ontrack.eventDetail.toggleComplete',
     close: 'ontrack.eventDetail.close',
     backdrop: 'ontrack.eventDetail.backdrop',
-    goBack: 'ontrack.eventDetail.goBack',
     fightCard: 'ontrack.eventDetail.section.fightCard',
     fightCardTab: (section: string) => `ontrack.eventDetail.fightCard.tab.${section}`,
     fightCardBout: (boutId: string) =>

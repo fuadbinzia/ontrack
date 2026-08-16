@@ -98,6 +98,7 @@ export const domains: SyncDomain[] = [
         aiEnabled: state.aiEnabled,
         hapticsEnabled: state.hapticsEnabled,
         usageAnalyticsEnabled: state.usageAnalyticsEnabled,
+        showHolidays: state.showHolidays,
       };
     },
     write: (payload) => {
@@ -121,6 +122,8 @@ export const domains: SyncDomain[] = [
           typeof payload.usageAnalyticsEnabled === 'boolean'
             ? payload.usageAnalyticsEnabled
             : local.usageAnalyticsEnabled,
+        showHolidays:
+          typeof payload.showHolidays === 'boolean' ? payload.showHolidays : true,
         // avatar stays device-only — never in app_state preferences payload.
       });
       applyAppearancePayload(payload, appearance);

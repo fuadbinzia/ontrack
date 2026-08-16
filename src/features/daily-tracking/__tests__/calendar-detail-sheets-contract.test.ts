@@ -73,21 +73,38 @@ describe('calendar event-card bottom sheets', () => {
     );
 
     expect(shell).toContain('host="route"');
-    expect(generic.match(/host="route"/g)).toHaveLength(2);
+    expect(generic.match(/host="route"/g)).toHaveLength(1);
   });
 
   it('clears every stale generic event layer through its owning Today navigator', () => {
     const generic = read(
       'src/app/(tabs)/(today)/detail/generic/[id].tsx',
     );
-
-    expect(generic).toContain('const navigation = useNavigation()');
-    expect(generic).toMatch(
-      /const close = \(\) => \{[\s\S]*?navigation\.getState\(\)[\s\S]*?state\.index > 0[\s\S]*?navigation\.dispatch\(\{ type: 'POP_TO_TOP', target: state\.key \}\)[\s\S]*?router\.dismissTo\('\/'\)/,
+    const helper = read(
+      'src/features/daily-tracking/dismiss-calendar-detail.ts',
     );
-    expect(generic.match(/onClose=\{close\}/g)).toHaveLength(2);
+
+    expect(generic).toContain('useDismissCalendarDetail(!activity)');
+    expect(generic).toContain('if (!activity) return null;');
+    expect(generic).not.toContain('Activity Not Found');
+    expect(generic).not.toContain('This activity is no longer available.');
+    expect(generic.match(/onClose=\{close\}/g)).toHaveLength(1);
     expect(generic).not.toContain('onClose={() => router.back()}');
+    expect(helper).toContain("type: 'POP_TO_TOP'");
+    expect(helper).toContain("router.dismissTo('/')");
   });
+
+  it.each([...detailRoutes, 'generic'] as const)(
+    'dismisses the %s detail after the activity is deleted instead of showing not-found',
+    (kind) => {
+      const route = read(`src/app/(tabs)/(today)/detail/${kind}/[id].tsx`);
+
+      expect(route).toContain('useDismissCalendarDetail(');
+      expect(route).toMatch(/if \(!activity[^)]*\) return null;/);
+      expect(route).not.toContain('no longer available');
+      expect(route).not.toContain('onClose={() => router.back()}');
+    },
+  );
 
   it('aligns the generic event status and edit action as one responsive control rail', () => {
     const generic = read(

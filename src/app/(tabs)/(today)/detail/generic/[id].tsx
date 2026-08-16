@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
+import { useDismissCalendarDetail } from '@/features/daily-tracking/dismiss-calendar-detail';
 import { UfcFightCard } from '@/features/events/ufc-fight-card';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -30,7 +31,6 @@ import { openHttpsUrl } from '@/utils/safe-url';
 
 export default function GenericDetailScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const theme = useTheme();
   const { layout, spacing: responsiveSpacing } = useResponsive();
   const { height: windowHeight } = useWindowDimensions();
@@ -47,14 +47,7 @@ export default function GenericDetailScreen() {
   const liveStatus = eventDetails?.status;
   const cardParticipants = asEventStringList(eventDetails?.participants);
   const cardSections = asEventStringList(eventDetails?.card);
-  const close = () => {
-    const state = navigation.getState();
-    if (state && state.index > 0) {
-      navigation.dispatch({ type: 'POP_TO_TOP', target: state.key });
-      return;
-    }
-    router.dismissTo('/');
-  };
+  const close = useDismissCalendarDetail(!activity);
 
   useEffect(() => {
     if (!eventDetails || eventDetails.bouts?.length) return;
@@ -122,23 +115,7 @@ export default function GenericDetailScreen() {
     };
   }, [activityId, liveDate, liveStartMinutes, liveStatus, liveTitle]);
 
-  if (!activity) {
-    return (
-      <SheetScaffold
-        visible
-        host="route"
-        title="Activity Not Found"
-        onClose={close}
-        closeAccessibilityLabel="Go back"
-        closeTestID={AgentUiIds.eventDetail.goBack}
-        fitContent
-        surface="glass">
-        <AppText variant="body" color="secondary">
-          This activity is no longer available.
-        </AppText>
-      </SheetScaffold>
-    );
-  }
+  if (!activity) return null;
 
   const category = findCategory(categories, activity.categoryId);
 

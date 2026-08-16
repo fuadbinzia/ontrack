@@ -7,6 +7,7 @@ import { AppText, appPrompt, Button, EmptyState, ErrorMessage, Input, SectionHea
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
 import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
+import { useDismissCalendarDetail } from '@/features/daily-tracking/dismiss-calendar-detail';
 import { MealAnalysisReview } from '@/features/nutrition/analysis-review';
 import { usePendingImagePickerResult } from '@/hooks/use-pending-image-picker';
 import {
@@ -31,6 +32,7 @@ export default function FoodDetailScreen() {
   const aiEnabled = usePreferences((state) => state.aiEnabled);
   const activity = useSchedule((state) => state.activities.find((item) => item.id === activityId));
   const meal = useSchedule((state) => state.meals.find((item) => item.activityId === activityId));
+  const close = useDismissCalendarDetail(!activity);
   const categories = useSchedule((state) => state.categories);
   const upsertMeal = useSchedule((state) => state.upsertMeal);
   const updateActivity = useSchedule((state) => state.updateActivity);
@@ -201,15 +203,7 @@ export default function FoodDetailScreen() {
     }
   };
 
-  if (!activity) {
-    return (
-      <CalendarDetailSheet kind="food" title="Meal Not Found" onClose={() => router.back()}>
-        <AppText variant="body" color="secondary">
-          This meal is no longer available.
-        </AppText>
-      </CalendarDetailSheet>
-    );
-  }
+  if (!activity) return null;
   const category = findCategory(categories, activity.categoryId);
 
   return (
@@ -219,7 +213,7 @@ export default function FoodDetailScreen() {
       title={meal?.name ?? activity.title}
       subtitle={activityTimingLabel(activity)}
       subtitleIcon="clock"
-      onClose={() => router.back()}>
+      onClose={close}>
       {displayPhoto ? (
         <Image
           source={displayPhoto}

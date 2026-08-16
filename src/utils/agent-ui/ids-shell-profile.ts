@@ -39,6 +39,7 @@ export const agentUiIdsShellProfile = {
     apiUsage: 'ontrack.profile.apiUsage',
     developer: 'ontrack.profile.developer',
     usageAnalytics: 'ontrack.profile.usageAnalytics',
+    showHolidays: 'ontrack.profile.showHolidays',
     resetData: 'ontrack.profile.resetData',
     signOut: 'ontrack.profile.signOut',
     createOrSignIn: 'ontrack.profile.createOrSignIn',

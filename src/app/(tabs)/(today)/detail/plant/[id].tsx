@@ -7,6 +7,7 @@ import { AppText, Button, Card, GlassPlate, Input } from '@/components/primitive
 import { findCategory } from '@/constants/categories';
 import { radii, spacing } from '@/design-system';
 import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
+import { useDismissCalendarDetail } from '@/features/daily-tracking/dismiss-calendar-detail';
 import { plantImageSource } from '@/features/plants/sample';
 import { useResponsive } from '@/hooks/use-responsive';
 import { logPlantWatering, undoPlantWatering } from '@/services/plants/schedule';
@@ -46,16 +47,9 @@ export default function PlantCalendarDetailScreen() {
     state.plants.find((candidate) => candidate.id === activity?.plantId),
   );
   const [amount, setAmount] = useState('');
+  const close = useDismissCalendarDetail(!activity || !plant);
 
-  if (!activity || !plant) {
-    return (
-      <CalendarDetailSheet kind="plant" title="Plant Event Not Found" onClose={() => router.back()}>
-        <AppText variant="body" color="secondary">
-          This plant event is no longer available.
-        </AppText>
-      </CalendarDetailSheet>
-    );
-  }
+  if (!activity || !plant) return null;
 
   const category = findCategory(categories, activity.categoryId);
   const dueKey = toDateKey(new Date(plant.nextWateringAt));
@@ -70,7 +64,7 @@ export default function PlantCalendarDetailScreen() {
       title={plant.nickname}
       subtitle={`${activityTimingLabel(activity)} · ${plant.identity.commonName}`}
       subtitleIcon="clock"
-      onClose={() => router.back()}>
+      onClose={close}>
       <Image
         source={plantImageSource(plant.photoUri)}
         style={[styles.hero, { height: s(220) }]}

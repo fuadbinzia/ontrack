@@ -3,6 +3,13 @@ import type { VersionNotesEntry } from './release-notes-types';
 /** User-facing; plain language — what’s new for people using the app. */
 export const RELEASE_NOTES: VersionNotesEntry[] = [
   {
+    version: '1.0.102',
+    date: '2026-08-15',
+    notes: [
+      'Show locale holidays and all-day events on Calendar and Today so the day reads at a glance.',
+    ],
+  },
+  {
     version: '1.0.101',
     date: '2026-08-15',
     notes: [

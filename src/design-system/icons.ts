@@ -214,6 +214,7 @@ export const appIcons = {
   timer: { ios: 'timer', android: 'timer', web: 'timer' },
   'arrow-up': { ios: 'arrow.up', android: 'arrow_upward', web: 'arrow_upward' },
   reply: { ios: 'arrowshape.turn.up.left.fill', android: 'reply', web: 'reply' },
+  fireworks: { ios: 'fireworks', android: 'celebration', web: 'celebration' },
 
   // Activity status
   'status-completed': { ios: 'checkmark.circle.fill', android: 'check_circle', web: 'check_circle' },
@@ -399,6 +400,7 @@ export const appIconSections = [
       'timer',
       'arrow-up',
       'reply',
+      'fireworks',
     ],
   },
   {

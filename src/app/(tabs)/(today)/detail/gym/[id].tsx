@@ -6,6 +6,7 @@ import { AppText, Button, SectionHeader } from '@/components/primitives';
 import { findCategory } from '@/constants/categories';
 import { spacing } from '@/design-system';
 import { CalendarDetailSheet } from '@/features/daily-tracking/calendar-detail-sheet';
+import { useDismissCalendarDetail } from '@/features/daily-tracking/dismiss-calendar-detail';
 import { aiProvider } from '@/services/ai';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
@@ -21,6 +22,7 @@ export default function GymDetailScreen() {
 
   const activity = useSchedule((s) => s.activities.find((a) => a.id === activityId));
   const workout = useSchedule((s) => s.workouts.find((w) => w.activityId === activityId));
+  const close = useDismissCalendarDetail(!activity);
   const categories = useSchedule((s) => s.categories);
   const goal = usePreferences((s) => s.goal);
   const aiEnabled = usePreferences((s) => s.aiEnabled);
@@ -44,15 +46,7 @@ export default function GymDetailScreen() {
     };
   }, [aiEnabled, goal, workout?.name]);
 
-  if (!activity) {
-    return (
-      <CalendarDetailSheet kind="gym" title="Workout Not Found" onClose={() => router.back()}>
-        <AppText variant="body" color="secondary">
-          This workout is no longer available.
-        </AppText>
-      </CalendarDetailSheet>
-    );
-  }
+  if (!activity) return null;
 
   const category = findCategory(categories, activity.categoryId);
 
@@ -63,7 +57,7 @@ export default function GymDetailScreen() {
       title={workout?.name ?? activity.title}
       subtitle={activityTimingLabel(activity)}
       subtitleIcon="clock"
-      onClose={() => router.back()}>
+      onClose={close}>
       <AppText variant="body" color="secondary">
         {formatCount(workout?.exercises.length ?? 0, 'exercise')} planned
       </AppText>

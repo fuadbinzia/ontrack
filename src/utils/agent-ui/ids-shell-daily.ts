@@ -25,6 +25,10 @@ export const agentUiIdsShellDaily = {
       field: 'ontrack.today.addSheet.field',
       submit: 'ontrack.today.addSheet.submit',
     },
+    /** Static all-day holiday rail — not a timeline activity. */
+    holiday: (holidayId: string) => `ontrack.today.holiday.${holidayId}`,
+    /** Static all-day user event (birthday, conference, …) — not a timeline card. */
+    allDay: (activityId: string) => `ontrack.today.allDay.${activityId}`,
     activity: (activityId: string) => `ontrack.today.activity.${activityId}`,
     activityToggle: (activityId: string) =>
       `ontrack.today.activityToggle.${activityId}`,
@@ -37,6 +41,8 @@ export const agentUiIdsShellDaily = {
     nextMonth: 'ontrack.calendar.nextMonth',
     openDay: 'ontrack.calendar.openDay',
     day: (dateKey: string) => `ontrack.calendar.day.${dateKey}`,
+    holiday: (holidayId: string) => `ontrack.calendar.holiday.${holidayId}`,
+    allDay: (activityId: string) => `ontrack.calendar.allDay.${activityId}`,
     activity: (activityId: string) => `ontrack.calendar.activity.${activityId}`,
   },
 } as const;

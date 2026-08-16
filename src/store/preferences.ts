@@ -40,6 +40,8 @@ interface PreferencesState {
    * cloud rollups only when signed in. Never includes Health note text.
    */
   usageAnalyticsEnabled: boolean;
+  /** Public holidays on Calendar and Today (static all-day rail, not timeline). */
+  showHolidays: boolean;
   dateLocale: string;
   dateDisplayFormat: DateDisplayFormat;
   completeOnboarding: (input: { name: string; goal: string }) => void;
@@ -52,6 +54,7 @@ interface PreferencesState {
   setAiEnabled: (enabled: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
   setUsageAnalyticsEnabled: (enabled: boolean) => void;
+  setShowHolidays: (enabled: boolean) => void;
   refreshDateLocale: () => void;
   resetAll: () => void;
 }
@@ -71,6 +74,7 @@ export const usePreferences = create<PreferencesState>()(
       aiEnabled: true,
       hapticsEnabled: true,
       usageAnalyticsEnabled: true,
+      showHolidays: true,
       dateLocale: initialLocale,
       dateDisplayFormat: dateDisplayFormatForLocale(initialLocale),
       completeOnboarding: ({ name, goal }) => {
@@ -114,6 +118,7 @@ export const usePreferences = create<PreferencesState>()(
       setAiEnabled: (aiEnabled) => set({ aiEnabled }),
       setHapticsEnabled: (hapticsEnabled) => set({ hapticsEnabled }),
       setUsageAnalyticsEnabled: (usageAnalyticsEnabled) => set({ usageAnalyticsEnabled }),
+      setShowHolidays: (showHolidays) => set({ showHolidays }),
       refreshDateLocale: () => {
         const dateLocale = deviceLocale();
         set({
@@ -133,6 +138,7 @@ export const usePreferences = create<PreferencesState>()(
           aiEnabled: true,
           hapticsEnabled: true,
           usageAnalyticsEnabled: true,
+          showHolidays: true,
           dateLocale: initialLocale,
           dateDisplayFormat: dateDisplayFormatForLocale(initialLocale),
         }),
@@ -154,6 +160,10 @@ export const usePreferences = create<PreferencesState>()(
           avatar: normalizeAvatarMeta(persisted.avatar ?? currentState.avatar),
           dateLocale,
           dateDisplayFormat: dateDisplayFormatForLocale(dateLocale),
+          showHolidays:
+            typeof persisted.showHolidays === 'boolean'
+              ? persisted.showHolidays
+              : true,
         };
       },
     },

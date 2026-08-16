@@ -115,4 +115,6 @@ if [[ ${#EXTRA[@]} -gt 0 ]]; then
 fi
 
 echo "Metro launch: ${ARGS[*]} (advertise ${REACT_NATIVE_PACKAGER_HOSTNAME})"
+# Metro workers set FORCE_COLOR=1; Node 24 warns if NO_COLOR is also set.
+unset NO_COLOR NODE_DISABLE_COLORS
 exec npx "${ARGS[@]}"

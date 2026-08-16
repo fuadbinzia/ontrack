@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.108",
+    "date": "2026-08-16",
+    "notes": [
+      "Apply OTAs from a pending download and when leaving the app so phones stop needing several force-quits.",
+      "Ship via ship:push (TestFlight + device OTA)."
+    ]
+  },
+  {
     "version": "1.0.107",
     "date": "2026-08-16",
     "notes": [

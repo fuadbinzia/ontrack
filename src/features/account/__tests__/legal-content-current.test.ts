@@ -45,6 +45,8 @@ describe('current legal disclosures', () => {
     expect(privacy).toMatch(
       /Apple Health summaries[\s\S]*not uploaded through onTrack cloud sync/i,
     );
+    expect(privacy).toMatch(/photos, videos, voice notes/i);
+    expect(privacy).not.toMatch(/are not packed into the backup file/i);
   });
 
   it('states the product limits for finance, AI, sharing, and imported data', () => {

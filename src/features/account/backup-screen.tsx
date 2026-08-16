@@ -1,20 +1,19 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
 
 import {
   appPrompt,
-  AppText,
-  Button,
-  Card,
-  ErrorMessage,
   HeaderBackButton,
   Screen,
   ScreenHeader,
-  SectionHeader,
-  StatusBadge,
 } from '@/components/primitives';
 import { restoreBackup } from '@/features/account/backup-actions';
+import {
+  BackupDeviceCard,
+  BackupDriveCard,
+  BackupStatusNotice,
+  formatBackupTime,
+} from '@/features/account/backup-screen-panels';
 import { downloadBackup, pickBackupFile, writeBackupFile } from '@/features/account/backup-share';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -22,8 +21,10 @@ import {
   connectGoogleDriveBackup,
   disconnectGoogleDriveBackup,
   getGoogleDriveBackupStatus,
+  googleDriveBackupErrorMessage,
   googleDriveConnectErrorMessage,
   GoogleDriveBackupError,
+  isGoogleDriveAuthError,
   googleDriveUploadSession,
   markGoogleDriveBackupComplete,
   type GoogleDriveBackupFile,
@@ -36,12 +37,6 @@ import {
 } from '@/services/backup/google-drive-upload';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
-
-function formatBackupTime(value?: string) {
-  if (!value) return undefined;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date.toLocaleString();
-}
 
 export default function BackupScreen() {
   const router = useRouter();
@@ -64,7 +59,9 @@ export default function BackupScreen() {
 
   useEffect(() => { void refreshStatus(); }, [refreshStatus]);
   useEffect(() => {
-    if (typeof params.driveError === 'string') setError(params.driveError);
+    if (typeof params.driveError === 'string') {
+      setError(googleDriveConnectErrorMessage(new Error(params.driveError)));
+    }
     if (params.driveConnected === '1') {
       setMessage('Google Drive connected. Save a backup whenever you like.');
       void refreshStatus();
@@ -101,7 +98,7 @@ export default function BackupScreen() {
       const { name } = await downloadBackup();
       setMessage(`Backup ready · ${name}`);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Backup could not be downloaded.');
+      setError(googleDriveBackupErrorMessage(caught, 'Backup could not be downloaded.'));
     } finally {
       setBusy(undefined);
     }
@@ -122,7 +119,7 @@ export default function BackupScreen() {
             await restore();
             setMessage('Backup restored on this device.');
           } catch (caught) {
-            setError(caught instanceof Error ? caught.message : 'Backup could not be restored.');
+            setError(googleDriveBackupErrorMessage(caught, 'Backup could not be restored.'));
           } finally {
             setBusy(undefined);
           }
@@ -142,7 +139,7 @@ export default function BackupScreen() {
         () => restoreBackup(backup, { pushCloud: !isGuest }),
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Backup file could not be read.');
+      setError(googleDriveBackupErrorMessage(caught, 'Backup file could not be read.'));
     }
   };
 
@@ -152,18 +149,62 @@ export default function BackupScreen() {
     setError(undefined);
     try {
       const session = await googleDriveUploadSession();
+      let existing: GoogleDriveBackupFile[] = [];
+      try {
+        existing = await listGoogleDriveBackups(session.accessToken, session.folderId);
+      } catch (caught) {
+        if (isGoogleDriveAuthError(caught)) throw caught;
+      }
+      const previous = existing[0];
+      if (!previous) {
+        await saveBackupToDrive(session);
+        return;
+      }
+      setBusy(undefined);
+      appPrompt.alert(
+        'Save to Google Drive?',
+        `A backup is already in Drive (${previous.name}). Overwrite that copy, or keep it and save a new one?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Save as New',
+            testID: AgentUiIds.backup.saveNew,
+            onPress: () => { void saveBackupToDrive(session); },
+          },
+          {
+            text: 'Overwrite Previous',
+            testID: AgentUiIds.backup.saveOverwrite,
+            onPress: () => { void saveBackupToDrive(session, previous.id); },
+          },
+        ],
+      );
+    } catch (caught) {
+      setError(googleDriveBackupErrorMessage(caught, 'Backup could not be saved to Google Drive.'));
+      setBusy(undefined);
+    }
+  };
+
+  const saveBackupToDrive = async (
+    session: Awaited<ReturnType<typeof googleDriveUploadSession>>,
+    fileId?: string,
+  ) => {
+    setBusy('save');
+    setMessage(undefined);
+    setError(undefined);
+    try {
       const { name, json } = await writeBackupFile();
       await uploadBackupToGoogleDrive({
         accessToken: session.accessToken,
         folderId: session.folderId,
         name,
         json,
+        fileId,
       });
       const complete = await markGoogleDriveBackupComplete();
       setStatus((current) => ({ ...current, connected: true, lastBackupAt: complete.lastBackupAt }));
-      setMessage(`Saved to Google Drive · ${name}`);
+      setMessage(fileId ? `Replaced the previous Drive backup · ${name}` : `Saved to Google Drive · ${name}`);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Backup could not be saved to Google Drive.');
+      setError(googleDriveBackupErrorMessage(caught, 'Backup could not be saved to Google Drive.'));
     } finally {
       setBusy(undefined);
     }
@@ -185,7 +226,7 @@ export default function BackupScreen() {
     setError(undefined);
     try {
       const session = await googleDriveUploadSession();
-      const files = await listGoogleDriveBackups(session.accessToken);
+      const files = await listGoogleDriveBackups(session.accessToken, session.folderId);
       if (!files.length) {
         setMessage('No onTrack backups were found in Google Drive.');
         return;
@@ -199,7 +240,7 @@ export default function BackupScreen() {
         })),
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Google Drive backups could not be loaded.');
+      setError(googleDriveBackupErrorMessage(caught, 'Google Drive backups could not be loaded.'));
     } finally {
       setBusy(undefined);
     }
@@ -221,7 +262,7 @@ export default function BackupScreen() {
             setStatus({ connected: false });
             setMessage('Google Drive disconnected. Existing backups were kept.');
           } catch (caught) {
-            setError(caught instanceof Error ? caught.message : 'Google Drive disconnect failed.');
+            setError(googleDriveBackupErrorMessage(caught, 'Google Drive disconnect failed.'));
           } finally {
             setBusy(undefined);
           }
@@ -238,7 +279,7 @@ export default function BackupScreen() {
         <ScreenHeader
           eyebrow="Profile"
           title="Your Backup"
-          subtitle="Keep a copy on this device or in your Google Drive. Journal, Health, and finance records are included. Photos and voice notes stay as links to files already on this phone."
+          subtitle="A private copy of this device — journal, Health, photos, videos, voice notes, and your customizations."
           leading={
             <HeaderBackButton
               compact
@@ -249,104 +290,27 @@ export default function BackupScreen() {
         />
       </AgentTestId>
 
-      {error ? <ErrorMessage message={error} variant="caption" /> : null}
-      {message ? <AppText variant="caption" color="secondary">{message}</AppText> : null}
+      <BackupStatusNotice error={error} message={message} />
 
-      <SectionHeader title="Download" />
-      <Card style={{ gap: spacing.md }}>
-        <AppText color="secondary">
-          Save a JSON file through the share sheet — Files, AirDrop, or another folder you choose.
-        </AppText>
-        <Button
-          testID={AgentUiIds.backup.download}
-          disabled={disabled}
-          onPress={() => void runDownload()}
-          accessibilityLabel="Download Backup">
-          {busy === 'download' ? 'Preparing Backup…' : 'Download Backup'}
-        </Button>
-      </Card>
+      <BackupDeviceCard
+        disabled={disabled}
+        downloading={busy === 'download'}
+        onDownload={() => void runDownload()}
+        onRestoreFile={() => void runRestoreFile()}
+      />
 
-      <SectionHeader title="Google Drive" />
-      <Card style={{ gap: spacing.md }}>
-        <View style={styles.row}>
-          <View style={styles.copy}>
-            <AppText variant="subheading" fit>
-              {status.connected ? 'Connected' : 'Not Connected'}
-            </AppText>
-            <AppText variant="caption" color="secondary" numberOfLines={2}>
-              {status.email ?? (isGuest ? 'Sign in to save backups to Google Drive' : 'Connect one Google account')}
-            </AppText>
-          </View>
-          <StatusBadge
-            label={status.connected ? 'On' : 'Off'}
-            tone={status.connected ? 'success' : 'neutral'}
-          />
-        </View>
-        {status.lastBackupAt ? (
-          <AppText variant="caption" color="tertiary">
-            Last saved {formatBackupTime(status.lastBackupAt)}
-          </AppText>
-        ) : null}
-        {status.connected ? (
-          <Button
-            testID={AgentUiIds.backup.saveDrive}
-            disabled={disabled}
-            onPress={() => void runSaveToDrive()}
-            accessibilityLabel="Save Backup to Google Drive">
-            {busy === 'save' ? 'Saving to Drive…' : 'Save to Google Drive'}
-          </Button>
-        ) : (
-          <Button
-            testID={AgentUiIds.backup.connectDrive}
-            disabled={disabled}
-            loading={busy === 'connect'}
-            onPress={() => void runConnect()}
-            accessibilityLabel="Connect Google Drive">
-            {busy === 'connect' ? 'Connecting…' : isGuest ? 'Sign In to Connect' : 'Connect Google Drive'}
-          </Button>
-        )}
-        {status.connected ? (
-          <Button
-            variant="secondary"
-            testID={AgentUiIds.backup.disconnectDrive}
-            disabled={disabled}
-            onPress={runDisconnect}
-            accessibilityLabel="Disconnect Google Drive">
-            Disconnect Google Drive
-          </Button>
-        ) : null}
-      </Card>
-
-      <SectionHeader title="Restore" />
-      <Card style={{ gap: spacing.md }}>
-        <AppText color="secondary">
-          Restoring replaces the data on this device with the copy you choose.
-        </AppText>
-        <Button
-          variant="secondary"
-          testID={AgentUiIds.backup.restoreFile}
-          disabled={disabled}
-          onPress={() => void runRestoreFile()}
-          accessibilityLabel="Restore from File">
-          Restore from File
-        </Button>
-        {status.connected ? (
-          <Button
-            variant="secondary"
-            testID={AgentUiIds.backup.restoreDrive}
-            disabled={disabled}
-            onPress={() => void runRestoreFromDrive()}
-            accessibilityLabel="Restore from Google Drive">
-            {busy === 'restore' ? 'Loading Backups…' : 'Restore from Google Drive'}
-          </Button>
-        ) : null}
-      </Card>
-
+      <BackupDriveCard
+        connected={status.connected}
+        email={status.email}
+        lastBackupAt={status.lastBackupAt}
+        isGuest={isGuest}
+        disabled={disabled}
+        busy={busy === 'connect' || busy === 'save' || busy === 'restore' || busy === 'disconnect' ? busy : undefined}
+        onConnect={() => void runConnect()}
+        onSave={() => void runSaveToDrive()}
+        onRestoreDrive={() => void runRestoreFromDrive()}
+        onDisconnect={runDisconnect}
+      />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center' },
-  copy: { flex: 1, minWidth: 0 },
-});

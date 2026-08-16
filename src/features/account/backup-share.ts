@@ -10,14 +10,16 @@ import {
   serializeBackup,
   type OnTrackBackup,
 } from './backup-archive';
+import { packBackupMedia } from './backup-media';
 
-export async function writeBackupFile(backup: OnTrackBackup = buildBackup()): Promise<{
+export async function writeBackupFile(backup?: OnTrackBackup): Promise<{
   file: File;
   name: string;
   json: string;
 }> {
-  const json = serializeBackup(backup);
-  const name = backupFileName(new Date(backup.createdAt));
+  const packed = await packBackupMedia(backup ?? buildBackup());
+  const json = serializeBackup(packed);
+  const name = backupFileName(new Date(packed.createdAt));
   const file = new File(Paths.cache, name);
   file.create({ overwrite: true, intermediates: true });
   file.write(json);

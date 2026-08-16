@@ -56,7 +56,7 @@ async function ensureBackupFolder(token: string, folderId: string | null) {
     }
   }
   const query = encodeURIComponent(
-    `appProperties has { key='${GOOGLE_DRIVE_FOLDER_PROPERTY}' and value='v1' } and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    `name='${GOOGLE_DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
   );
   const listed = await driveJson<{ files?: { id?: string }[] }>(
     token,

@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.116",
+    "date": "2026-08-16",
+    "notes": [
+      "Pack photos and attachments into backups, let Drive overwrite or save a new copy, and list Drive files without appProperties search."
+    ]
+  },
+  {
     "version": "1.0.115",
     "date": "2026-08-16",
     "notes": [

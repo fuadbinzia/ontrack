@@ -11,9 +11,11 @@ jest.mock('expo-web-browser', () => ({
 
 import {
   connectGoogleDriveBackup,
+  googleDriveBackupErrorMessage,
   googleDriveCallbackError,
   googleDriveConnectErrorMessage,
   GoogleDriveBackupError,
+  isGoogleDriveAuthError,
 } from '../google-drive-client';
 
 it('reads Drive callback success and errors from the return URL', () => {
@@ -42,6 +44,34 @@ it('maps a missing Drive connect route to copy the user can see', () => {
     'Google Drive connection was cancelled.',
     'CANCELLED',
   ))).toBe('Google Drive connection was cancelled.');
+});
+
+it('does not tell a connected Drive account to wait out a broken backup folder', () => {
+  expect(googleDriveBackupErrorMessage(
+    new Error('Invalid Value'),
+    'Backup could not be saved to Google Drive.',
+  )).toBe('Google Drive needs to be connected again. Disconnect, then connect.');
+  expect(googleDriveBackupErrorMessage(
+    new Error('Invalid Value'),
+    'Google Drive backups could not be loaded.',
+  )).not.toMatch(/try again in a moment/i);
+  expect(googleDriveBackupErrorMessage(
+    new Error('Invalid Credentials'),
+    'Backup could not be saved to Google Drive.',
+  )).toBe('Google Drive needs to be connected again. Disconnect, then connect.');
+  expect(googleDriveConnectErrorMessage(new Error('Invalid Value'))).not.toMatch(/invalid value/i);
+  expect(googleDriveConnectErrorMessage(new Error('Invalid Value'))).not.toMatch(/disconnect/i);
+  expect(googleDriveBackupErrorMessage(
+    new Error('You appear to be offline. Reconnect and try again.'),
+    'Backup could not be saved to Google Drive.',
+  )).toBe('Backup could not be saved to Google Drive.');
+});
+
+it('treats expired Drive credentials as auth failures, not query noise', () => {
+  expect(isGoogleDriveAuthError(new Error('Invalid Value'))).toBe(false);
+  expect(isGoogleDriveAuthError(new Error('Invalid Credentials'))).toBe(true);
+  expect(isGoogleDriveAuthError(new GoogleDriveBackupError('expired', undefined, 401))).toBe(true);
+  expect(isGoogleDriveAuthError(new GoogleDriveBackupError('forbidden', undefined, 403))).toBe(true);
 });
 
 it('keeps Drive connect failures visible instead of swallowing outage copy', () => {

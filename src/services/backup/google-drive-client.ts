@@ -71,6 +71,27 @@ export function googleDriveCallbackError(url: string | undefined) {
   }
 }
 
+const DRIVE_RECONNECT_COPY =
+  'Google Drive needs to be connected again. Disconnect, then connect.';
+
+export function isGoogleDriveAuthError(error: unknown) {
+  if (error instanceof GoogleDriveBackupError && (error.status === 401 || error.status === 403)) {
+    return true;
+  }
+  const message = error instanceof Error ? error.message : '';
+  return /invalid credentials|unauthorized|insufficient permissions/i.test(message);
+}
+
+function googleDriveApiCopy(message: string, fallback: string, reconnectOnInvalidValue = true) {
+  if (/invalid credentials|unauthorized|insufficient permissions/i.test(message)) {
+    return DRIVE_RECONNECT_COPY;
+  }
+  if (/invalid value/i.test(message)) {
+    return reconnectOnInvalidValue ? DRIVE_RECONNECT_COPY : fallback;
+  }
+  return userVisibleError(message) ?? fallback;
+}
+
 /** User-facing Connect copy. Outage/404 internals stay off the screen. */
 export function googleDriveConnectErrorMessage(error: unknown): string {
   if (error instanceof GoogleDriveBackupError && error.code === 'CANCELLED') {
@@ -83,10 +104,22 @@ export function googleDriveConnectErrorMessage(error: unknown): string {
     return 'Google Drive could not open. Try again in a moment.';
   }
   if (error instanceof Error) {
-    const visible = userVisibleError(error.message);
-    if (visible) return visible;
+    return googleDriveApiCopy(
+      error.message,
+      'Google Drive could not open. Check your connection and try again.',
+      false,
+    );
   }
   return 'Google Drive could not open. Check your connection and try again.';
+}
+
+/** Save / list / restore copy. Drive’s “Invalid Value” stays off the screen. */
+export function googleDriveBackupErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof GoogleDriveBackupError && error.code === 'CANCELLED') {
+    return error.message;
+  }
+  if (error instanceof Error) return googleDriveApiCopy(error.message, fallback);
+  return fallback;
 }
 
 export async function connectGoogleDriveBackup() {

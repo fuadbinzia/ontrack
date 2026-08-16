@@ -280,6 +280,14 @@ describe('overviewReturn scene', () => {
     expect(source).not.toMatch(/consumeOpenedFromOverview/);
   });
 
+  it('keeps the tab wrapper mounted so opening a route sheet does not remount Today', () => {
+    const source = readFileSync(join(__dirname, '../swipe-back-scene.tsx'), 'utf8');
+    expect(source).not.toMatch(
+      /if \(intent === 'overview-return' && !enabled\)/,
+    );
+    expect(source).toContain('GestureDetector');
+  });
+
   it('clears dissolve progress on focus so repeated swipes cannot leave a tab faded', () => {
     const source = readFileSync(join(__dirname, '../swipe-back-scene.tsx'), 'utf8');
     expect(source).toMatch(/useFocusEffect\([\s\S]*translateX\.value = 0/);

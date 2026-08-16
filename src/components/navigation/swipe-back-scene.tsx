@@ -258,10 +258,6 @@ export function SwipeBackScene({
   if (!shouldWrapSwipeBackScene({ gestureEnabled, presentation })) {
     return <>{children}</>;
   }
-  // Keep iOS native stack pop unwrapped; only mount the JS pan when it can win.
-  if (intent === 'overview-return' && !enabled) {
-    return <>{children}</>;
-  }
 
   return (
     <GestureDetector gesture={panGesture}>

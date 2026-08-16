@@ -4,6 +4,14 @@ import { CHANGELOG_ARCHIVE } from './release-notes-changelog-archive';
 /** Technical; modules, migrations, OTA/runtime, agent-ui, known constraints. */
 export const CHANGELOG: VersionNotesEntry[] = [
   {
+    version: '1.0.101',
+    date: '2026-08-15',
+    notes: [
+      'Keep the tab swipe wrapper mounted so Add Event and other route sheets still present.',
+      'Ship via ship:push (TestFlight + device OTA).',
+    ],
+  },
+  {
     version: '1.0.100',
     date: '2026-08-15',
     notes: [

@@ -1,8 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import type { TodoList } from '@/store/todos';
 
 import {
   getOrCreateTravelPackingList,
+  packingListNameCandidatesForTrip,
   packingListNameForTrip,
+  preserveTravelPackingListIds,
 } from '../travel-packing-list';
 import type { TravelPlan } from '../types';
 
@@ -157,5 +162,110 @@ describe('travel packing list link', () => {
     expect(savePlan).toHaveBeenCalledWith(expect.objectContaining({
       packingListId: replacement.id,
     }));
+  });
+
+  it('opens an existing packing list instead of creating a second checklist', () => {
+    const legacyList = {
+      ...list,
+      id: 'legacy-list',
+      name: 'Iceland Packing List',
+    };
+    const createList = jest.fn();
+    const savePlan = jest.fn(() => true);
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [legacyList],
+      createList,
+      savePlan,
+      now: () => '2026-08-12T12:00:00.000Z',
+    })).toBe(legacyList);
+    expect(createList).not.toHaveBeenCalled();
+    expect(savePlan).toHaveBeenCalledWith(expect.objectContaining({
+      packingListId: legacyList.id,
+    }));
+  });
+
+  it('prefers the trip checklist name over a leftover packing list', () => {
+    const legacyList = {
+      ...list,
+      id: 'legacy-list',
+      name: 'Iceland Packing List',
+    };
+    const createList = jest.fn();
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [legacyList, list],
+      createList,
+      savePlan: () => true,
+    })).toBe(list);
+    expect(createList).not.toHaveBeenCalled();
+  });
+
+  it('opens a destination-named checklist instead of creating a duplicate', () => {
+    const destinationList = {
+      ...list,
+      id: 'destination-list',
+      name: 'Reykjavik Checklist',
+    };
+    const createList = jest.fn();
+    const savePlan = jest.fn(() => true);
+
+    expect(getOrCreateTravelPackingList(plan, {
+      lists: [destinationList],
+      createList,
+      savePlan,
+      now: () => '2026-08-12T12:00:00.000Z',
+    })).toBe(destinationList);
+    expect(createList).not.toHaveBeenCalled();
+  });
+
+  it('matches a stored name truncated to the checklist name limit', () => {
+    const longTitle = `Iceland ${'Northern Lights '.repeat(8).trim()}`;
+    const longPlan = { ...plan, title: longTitle };
+    const truncated = {
+      ...list,
+      id: 'truncated-list',
+      name: packingListNameCandidatesForTrip(longPlan)[0]!,
+    };
+    const createList = jest.fn();
+
+    expect(truncated.name.length).toBeLessThanOrEqual(80);
+    expect(getOrCreateTravelPackingList(longPlan, {
+      lists: [truncated],
+      createList,
+      savePlan: () => true,
+    })).toBe(truncated);
+    expect(createList).not.toHaveBeenCalled();
+  });
+
+  it('keeps a local packing-list link when a sync payload omits it', () => {
+    expect(preserveTravelPackingListIds(
+      [{ ...plan, updatedAt: '2026-08-13T00:00:00.000Z' }],
+      [{ ...plan, packingListId: list.id }],
+    )).toEqual([
+      expect.objectContaining({
+        id: plan.id,
+        packingListId: list.id,
+        updatedAt: '2026-08-13T00:00:00.000Z',
+      }),
+    ]);
+  });
+
+  it('does not restore a packing-list link the incoming plan already set', () => {
+    expect(preserveTravelPackingListIds(
+      [{ ...plan, packingListId: 'incoming-list' }],
+      [{ ...plan, packingListId: list.id }],
+    )[0]?.packingListId).toBe('incoming-list');
+  });
+
+  it('resolves the trip checklist from live store state instead of a stale plan copy', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-plan-trip-tools.tsx'),
+      'utf8',
+    );
+    expect(source).toContain('useTodos.getState().lists');
+    expect(source).toContain('useTravel.getState().plans.find');
+    expect(source).toContain('todoListDetailHref(list.id)');
+    expect(source).not.toContain('pathname: "/(tabs)/to-do/[id]"');
   });
 });

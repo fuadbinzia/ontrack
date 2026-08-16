@@ -4,6 +4,7 @@ import { View } from "react-native";
 
 import { appPrompt } from "@/components/primitives";
 import { useAuthSession } from "@/features/auth/auth-provider";
+import { todoListDetailHref } from "@/features/todos/todo-list-href";
 import {
   isTravelPlanOnCalendar,
   travelCalendarDrafts,
@@ -54,7 +55,6 @@ export function TravelPlanTripTools({
   const guestName = usePreferences((state) => state.name);
   const { spacing: rs } = useResponsive();
   const savePlan = useTravel((state) => state.savePlan);
-  const createTodoList = useTodos((state) => state.createList);
   const recordPlanInteraction = useTravel(
     (state) => state.recordPlanInteraction,
   );
@@ -217,22 +217,32 @@ export function TravelPlanTripTools({
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
             onOpenPackingList={() => {
-              const list = getOrCreateTravelPackingList(plan, {
+              const livePlan =
+                useTravel.getState().plans.find((item) => item.id === plan.id) ??
+                plan;
+              const list = getOrCreateTravelPackingList(livePlan, {
                 lists: useTodos.getState().lists,
-                createList: createTodoList,
-                savePlan,
+                createList: (name, kind) =>
+                  useTodos.getState().createList(name, kind),
+                savePlan: (next) => {
+                  const latest =
+                    useTravel.getState().plans.find((item) => item.id === next.id) ??
+                    next;
+                  return useTravel.getState().savePlan({
+                    ...latest,
+                    packingListId: next.packingListId,
+                    updatedAt: next.updatedAt,
+                  });
+                },
               });
               if (!list) {
                 appPrompt.alert(
-                  "Packing List",
-                  "The packing list could not be opened. Please try again.",
+                  "Checklist",
+                  "The checklist could not be opened. Please try again.",
                 );
                 return;
               }
-              router.push({
-                pathname: "/(tabs)/to-do/[id]",
-                params: { id: list.id },
-              } as never);
+              router.navigate(todoListDetailHref(list.id) as never);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
             onOpenChat={() => {

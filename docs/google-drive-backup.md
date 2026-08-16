@@ -21,4 +21,11 @@ Native development calls the hosted API rather than the local Metro API runtime,
 
 Never prefix Drive/Calendar OAuth secrets with `EXPO_PUBLIC_` or bundle them into a native build.
 
+For EAS Hosting, production deploys must explicitly select the environment:
+
+```bash
+npx eas-cli@latest env:exec production 'npx expo export -p web' --non-interactive
+npx eas-cli@latest deploy --prod --environment production --non-interactive
+```
+
 Drive refresh credentials are encrypted in the server-only `google_drive_connections` table. Disconnecting revokes access and leaves existing backup files in the user’s Drive. Account deletion cascades through that table.

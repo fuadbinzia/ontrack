@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.115",
+    "date": "2026-08-16",
+    "notes": [
+      "Open Google Drive connect from Backup instead of a dead tap.",
+      "Touched: app routes, features/account."
+    ]
+  },
+  {
     "version": "1.0.114",
     "date": "2026-08-16",
     "notes": [

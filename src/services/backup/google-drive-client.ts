@@ -4,6 +4,9 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { resolveExpoApiUrl } from '@/services/http/api-url';
 import { apiRequest } from '@/services/http/api-client';
+import { userVisibleError } from '@/utils/operational-error';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export class GoogleDriveBackupError extends Error {
   constructor(message: string, public code?: string, public status?: number) {
@@ -68,6 +71,24 @@ export function googleDriveCallbackError(url: string | undefined) {
   }
 }
 
+/** User-facing Connect copy. Outage/404 internals stay off the screen. */
+export function googleDriveConnectErrorMessage(error: unknown): string {
+  if (error instanceof GoogleDriveBackupError && error.code === 'CANCELLED') {
+    return error.message;
+  }
+  if (error instanceof GoogleDriveBackupError && error.status === 401) {
+    return 'Sign in to onTrack, then connect Google Drive.';
+  }
+  if (error instanceof GoogleDriveBackupError && error.status === 404) {
+    return 'Google Drive could not open. Try again in a moment.';
+  }
+  if (error instanceof Error) {
+    const visible = userVisibleError(error.message);
+    if (visible) return visible;
+  }
+  return 'Google Drive could not open. Check your connection and try again.';
+}
+
 export async function connectGoogleDriveBackup() {
   const redirectUri = Platform.OS === 'web'
     ? Linking.createURL('/(tabs)/profile/backup')
@@ -77,6 +98,9 @@ export async function connectGoogleDriveBackup() {
     'POST',
     { redirectUri },
   );
+  if (!authorizationUrl) {
+    throw new GoogleDriveBackupError('Google Drive could not open. Try again in a moment.');
+  }
   if (Platform.OS === 'web') {
     window.location.assign(authorizationUrl);
     return new Promise<never>(() => undefined);

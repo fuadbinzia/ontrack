@@ -21,12 +21,11 @@ type CountryTopology = Topology<{
   countries: GeometryCollection<{ name?: string }>;
 }>;
 
-// Keep compact geometry for animated world views, then lazily expand Natural
-// Earth's mid-resolution topology for the selected country. The 10m atlas only
-// supplies small nations omitted by the 110m overview.
+// Keep compact geometry for animated world views, then expand Natural Earth's
+// mid-resolution topology for the selected country. Catalog from 50m so the
+// 3.5 MB 10m atlas stays out of the Hermes bundle (it only adds GI / UM / TV).
 const overviewAtlas = require('world-atlas/countries-110m.json') as CountryTopology;
 const countryAtlas = require('world-atlas/countries-50m.json') as CountryTopology;
-const detailAtlas = require('world-atlas/countries-10m.json') as CountryTopology;
 
 // Native SVG path parsing happens on the UI thread. Keep drill-down paths below
 // this ceiling so large multi-polygons (notably the United States and Canada)
@@ -190,12 +189,12 @@ function detailForNumericCode(
 
 const atlasNumericCodes = new Set<string>();
 
-export const ATLAS_COUNTRIES: AtlasCountry[] = detailAtlas.objects.countries.geometries.flatMap((geometry) => {
+export const ATLAS_COUNTRIES: AtlasCountry[] = countryAtlas.objects.countries.geometries.flatMap((geometry) => {
   const numericCode = String(geometry.id).padStart(3, '0');
   const code = alpha2ForNumericCode(numericCode);
   if (!code || atlasNumericCodes.has(numericCode)) return [];
   const overviewFeature = OVERVIEW_BY_NUMERIC_CODE.get(numericCode);
-  const country = overviewFeature ?? topologyFeature(detailAtlas, geometry);
+  const country = overviewFeature ?? topologyFeature(countryAtlas, geometry);
   const detailProperties = geometry.properties as { name?: string } | undefined;
   const name = detailProperties?.name?.trim() || country.properties?.name?.trim();
   const d = path(country);

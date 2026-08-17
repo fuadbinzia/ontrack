@@ -28,6 +28,7 @@ export const PRIVACY_POLICY_SECTIONS: readonly LegalSection[] = [
       'Approximate location when you allow it, used for local weather and travel departure suggestions.',
       'When you enable notifications, we and our delivery providers may process a push token, platform, app state, and your alert preferences to deliver reminders, calendar updates, or travel-chat alerts. Notification previews can be visible on a locked device depending on your system settings.',
       'When you use Siri or Android voice actions, onTrack keeps an app-private device snapshot of checklist names and open item titles so your assistant can add or read items. Apple or Google may process your spoken request and response under their own privacy terms; voice-list snapshots are not uploaded by onTrack solely for this feature.',
+      'When you enable Face ID, Touch ID, or fingerprint unlock, the biometric check stays on this device and is used only to unlock your already signed-in onTrack session. Biometric data is not sent to onTrack or stored in the cloud.',
     ],
   },
   {

@@ -781,6 +781,7 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.legal.document`                                         | Privacy / Terms document body                                  |
 | `ontrack.profile.tmdb`                                           | (unused) former TMDB attribution link                          |
 | `ontrack.profile.signOut`                                        | Sign Out (signed-in)                                           |
+| `ontrack.profile.biometricUnlock`                                | Unlock With Face ID / fingerprint (signed-in, hardware only)   |
 | `ontrack.profile.accountProviders`                               | Active SSO line (Apple or Google)                              |
 | `ontrack.profile.createOrSignIn`                                 | Create or Sign In (guest)                                      |
 | `ontrack.profile.deleteAccount`                                  | Delete Account (signed-in)                                     |
@@ -817,6 +818,7 @@ dock); legacy `/(tabs)/profile/account` redirects there.
 | `ontrack.auth.apple`                    | Continue with Apple                                            |
 | `ontrack.auth.google`                   | Continue with Google                                           |
 | `ontrack.auth.switchAccount`            | Use a different account (locked gate only)                     |
+| `ontrack.auth.unlockBiometric`          | Unlock With Face ID / fingerprint (welcome / upgrade / locked when enrolled) |
 | `ontrack.auth.dismissError`             | Dismiss sign-in error                                          |
 | `ontrack.auth.privacy`                  | Privacy Policy link (upgrade / locked)                         |
 | `ontrack.auth.terms`                  | Terms of Use link (upgrade / locked)       |
@@ -836,7 +838,9 @@ onboarding. `--route /welcome --exists …` without `--flow` asserts the first-r
 canvas (device must be signed out / not yet onboarded).
 
 Killing the app on a **physical device** re-arms the sign-in gate (`locked` phase →
-`/welcome` with re-authentication copy). Simulators and emulators are exempt
+`/welcome` with re-authentication copy). Enrolled devices show `ontrack.auth.unlockBiometric`
+on welcome, upgrade, and the lock gate. Auto-prompt once only when that account already
+enabled Face ID / fingerprint on this device. Simulators and emulators are exempt
 (`Device.isDevice === false`), so agent flows never see it; to inspect the gate on a
 sim, tap `ontrack.developer.lockSession`.
 

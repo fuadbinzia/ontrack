@@ -24,6 +24,10 @@ export interface AuthContextValue {
   isGuest: boolean;
   /** Account waiting behind the cold-start sign-in gate (`locked` phase). */
   lockedEmail?: string;
+  lockedUserId?: string;
+  /** True while Face ID / fingerprint is prompting or restoring the disk session. */
+  workingUnlock?: boolean;
+  unlockWithBiometrics: () => Promise<void>;
   /** Set while `phase === 'resolving-data'` — new vs existing account chooser. */
   dataChoiceVariant?: DataChoiceVariant;
   workingProvider?: AuthProvider;

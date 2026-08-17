@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.122",
+    "version": "1.0.123",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -44,6 +44,7 @@
         "NSMicrophoneUsageDescription": "onTrack uses the microphone to record journal voice notes, dictate journal text, and translate short phrases you choose to record during a trip.",
         "NSPhotoLibraryUsageDescription": "onTrack accesses your photo library so you can attach meal, activity, plant-care, and vision-board photos.",
         "NSMotionUsageDescription": "onTrack uses device motion for activity features and so the travel sky can twinkle and shimmer as you move your phone.",
+        "NSFaceIDUsageDescription": "onTrack uses Face ID to unlock your signed-in session on this device.",
         "ITSAppUsesNonExemptEncryption": false,
         "LSApplicationQueriesSchemes": [
           "straiaway"
@@ -52,7 +53,7 @@
       "appleTeamId": "F5HRXF5795"
     },
     "android": {
-      "versionCode": 122,
+      "versionCode": 123,
       "package": "com.imtihoss.ontracknow",
       "intentFilters": [
         {
@@ -155,6 +156,12 @@
       ],
       "expo-apple-authentication",
       "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "onTrack uses Face ID to unlock your signed-in session on this device."
+        }
+      ],
       [
         "expo-sensors",
         {

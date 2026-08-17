@@ -32,6 +32,7 @@ jest.mock('@/features/auth/auth-provider', () => ({
     workingProvider: mockWorkingProvider,
     error: mockError,
     continueWithProvider: jest.fn(),
+    unlockWithBiometrics: jest.fn(),
     continueAsGuest: jest.fn(),
     signOutCurrentDevice: jest.fn(),
     clearError: jest.fn(),

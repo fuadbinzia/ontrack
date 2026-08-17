@@ -16,6 +16,8 @@
 #   npm run ship:push -- -m "…" --branch feat/travel-home-ui
 #   npm run ship:push -- --ota-only -m "Reship current main"
 #   npm run ship:push -- -m "…" --skip-ota
+#   npm run ship:push -- -m "…" --skip-hosting
+#   npm run ship:push -- --ota-only --force-hosting -m "Redeploy APIs"
 #
 # Every non--ota-only push:
 #   - bumps expo.version patch (.x.y → .x.(y+1)) in app.json (+ package.json)
@@ -28,6 +30,8 @@
 #   --ota-only      Skip version bump + git/PR; publish OTA from current HEAD
 #                   (alias: --ota-apk-only)
 #   --skip-ota      Skip EAS Update publish
+#   --skip-hosting  Skip EAS Hosting even if API / hosting config changed
+#   --force-hosting Redeploy Hosting even when the diff is UI-only
 #   --dry-run       Print steps only
 #
 # Android JS/assets ship via republish onto the `device` channel (same bundle).
@@ -43,7 +47,10 @@ MESSAGE=""
 BRANCH=""
 OTA_ONLY=0
 SKIP_OTA=0
+SKIP_HOSTING=0
+FORCE_HOSTING=0
 DRY_RUN=0
+HOSTING_HELPER="$ROOT/scripts/lib/hosting-deploy-needed.mjs"
 
 usage() {
   awk 'NR==1{next} /^#/{sub(/^# ?/,""); print; next} {exit}' "$0"
@@ -142,6 +149,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     --ota-only|--ota-apk-only) OTA_ONLY=1; shift ;;
     --skip-ota) SKIP_OTA=1; shift ;;
+    --skip-hosting) SKIP_HOSTING=1; shift ;;
+    --force-hosting) FORCE_HOSTING=1; shift ;;
     --skip-apk)
       echo "warning: --skip-apk is obsolete (ship:push no longer builds APKs); ignoring" >&2
       shift
@@ -302,13 +311,30 @@ else
   echo "==> Skipping EAS Update (--skip-ota)"
 fi
 
+hosting_decision() {
+  if [[ "$FORCE_HOSTING" -eq 1 ]]; then
+    echo "needed"
+    return 0
+  fi
+  if [[ "$SKIP_HOSTING" -eq 1 ]]; then
+    echo "skip"
+    return 0
+  fi
+  node "$HOSTING_HELPER" --git-range HEAD^1 HEAD
+}
+
 echo "==> Deploying EAS Hosting API (production)"
-if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo "[dry-run] npx eas-cli@latest env:exec production 'npx expo export -p web' --non-interactive"
-  echo "[dry-run] npx eas-cli@latest deploy --prod --environment production --non-interactive"
+HOSTING_DECISION="$(hosting_decision | tail -1)"
+if [[ "$HOSTING_DECISION" != "needed" ]]; then
+  echo "    skip (no API / hosting-config change; --force-hosting to deploy)"
 else
-  npx --yes --prefer-offline eas-cli@latest env:exec production 'npx expo export -p web' --non-interactive
-  npx --yes --prefer-offline eas-cli@latest deploy --prod --environment production --non-interactive
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] npx eas-cli@latest env:exec production 'npx expo export -p web' --non-interactive"
+    echo "[dry-run] npx eas-cli@latest deploy --prod --environment production --non-interactive"
+  else
+    npx --yes --prefer-offline eas-cli@latest env:exec production 'npx expo export -p web' --non-interactive
+    npx --yes --prefer-offline eas-cli@latest deploy --prod --environment production --non-interactive
+  fi
 fi
 
 echo
@@ -318,4 +344,5 @@ echo "main=$(git rev-parse --short HEAD)"
 [[ -n "$SHIPPED_VERSION" ]] && echo "version=$SHIPPED_VERSION"
 echo "message=$OTA_MSG"
 [[ "$SKIP_OTA" -eq 0 ]] && echo "ota=testflight + device (see EAS Dashboard links above)"
+echo "hosting=${HOSTING_DECISION:-unknown}"
 echo "===================================="

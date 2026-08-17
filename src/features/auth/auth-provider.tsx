@@ -22,6 +22,7 @@ import {
 } from '@/services/cloud/sync';
 import { getSupabaseClient } from '@/services/cloud/supabase';
 import { useAuthAccess } from '@/store/auth-access';
+import { setBiometricUnlockUserId } from '@/store/biometric-unlock';
 import { useFriends } from '@/store/friends';
 
 import {
@@ -42,6 +43,10 @@ import {
 } from './auth-guest-session';
 import { readInitialAuthState, useAuthProviderEffects } from './auth-provider-effects';
 import { type LockedAccount } from './auth-session-snapshot';
+import {
+    authenticateBiometricUnlock,
+    resolveBiometricUnlockSession,
+} from './biometric-unlock';
 import { armSessionLock, requiresSessionUnlock } from './session-lock';
 
 import type { AuthPhase } from './auth-phase';
@@ -63,6 +68,7 @@ export function AuthSessionProvider({
   const [phase, setPhase] = useState<AuthPhase>(() => initial.phase);
   const [session, setSession] = useState<Session | null>(() => initial.session);
   const [workingProvider, setWorkingProvider] = useState<AuthProvider | undefined>(undefined);
+  const [workingUnlock, setWorkingUnlock] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const initializationRef = useRef<Promise<void> | undefined>(undefined);
   const initializedUserRef = useRef<string | undefined>(initial.initializedUserId);
@@ -171,6 +177,51 @@ export function AuthSessionProvider({
     explicitSignOutRef,
     providerLockRef,
   });
+
+  const unlockWithBiometrics = useCallback(async () => {
+    if (providerLockRef.current || workingProvider || workingUnlock) return;
+    const locked = lockedRef.current;
+    providerLockRef.current = true;
+    setWorkingUnlock(true);
+    setError(undefined);
+    try {
+      const live = await getSupabaseClient()?.auth.getSession();
+      const disk = live?.data.session ?? null;
+      const expectedUserId = locked?.userId ?? disk?.user.id;
+      if (!expectedUserId || !disk) {
+        setError('Sign in with Apple or Google first. Face ID unlocks this device after that.');
+        if (locked) setPhase('locked');
+        return;
+      }
+      const auth = await authenticateBiometricUnlock('Unlock onTrack');
+      if (auth !== 'success') return;
+      const outcome = resolveBiometricUnlockSession({
+        lockedUserId: expectedUserId,
+        diskUserId: disk.user.id,
+      });
+      if (outcome !== 'unlocked') {
+        if (locked) applyLock(locked);
+        setError(
+          outcome === 'account-mismatch'
+            ? 'This unlock is for a different account. Sign in with Apple or Google.'
+            : 'Your session is no longer available. Sign in with Apple or Google.',
+        );
+        if (locked) setPhase('locked');
+        return;
+      }
+      setBiometricUnlockUserId(expectedUserId);
+      applyLock(null);
+      initializedUserRef.current = undefined;
+      await initializeAccount(disk);
+    } catch (unlockError) {
+      if (locked) applyLock(locked);
+      setError(accessibleAuthError(unlockError));
+      if (locked) setPhase('locked');
+    } finally {
+      providerLockRef.current = false;
+      setWorkingUnlock(false);
+    }
+  }, [applyLock, initializeAccount, workingProvider, workingUnlock]);
 
   const continueWithProvider = useCallback(
     async (provider: AuthProvider, returnTo?: string) => {
@@ -428,10 +479,13 @@ export function AuthSessionProvider({
         user: session?.user ?? null,
         isGuest: guestEnabled && !session,
         lockedEmail: lockedAccount?.email,
+        lockedUserId: lockedAccount?.userId,
         dataChoiceVariant,
         workingProvider,
+        workingUnlock,
         error,
         continueWithProvider,
+        unlockWithBiometrics,
         continueAsGuest,
         completeOAuthCallback,
         resolveDataConflict,

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
     Platform,
     Pressable,
@@ -8,9 +8,10 @@ import {
     useWindowDimensions,
 } from 'react-native';
 
-import { AppText, ErrorMessage, GlassPlate, Screen } from '@/components/primitives';
+import { AppText, Button, ErrorMessage, GlassPlate, Screen } from '@/components/primitives';
 import { radii, shadows, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
+import { useBiometricUnlock } from '@/store/biometric-unlock';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
 import { AppleProviderButton } from './apple-provider-button';
@@ -18,6 +19,11 @@ import { AuthAtmosphere } from './auth-atmosphere';
 import { HERO_MAX_WIDTH } from './auth-constellation';
 import { AuthHero } from './auth-hero';
 import { useAuthSession } from './auth-provider';
+import {
+    canOfferBiometricUnlock,
+    shouldAutoPromptBiometricUnlock,
+    useBiometricCapability,
+} from './biometric-unlock';
 import { GoogleProviderButton } from './google-provider-button';
 
 export function AuthScreen({
@@ -36,13 +42,25 @@ export function AuthScreen({
     phase,
     session,
     workingProvider,
+    workingUnlock,
+    lockedUserId,
     error,
     continueWithProvider,
+    unlockWithBiometrics,
     signOutCurrentDevice,
     clearError,
   } = useAuthSession();
-  const busy = phase === 'authenticating';
+  const busy = phase === 'authenticating' || Boolean(workingUnlock);
   const locked = variant === 'locked';
+  const capability = useBiometricCapability();
+  const enabledUserId = useBiometricUnlock((state) => state.enabledUserId);
+  const canOfferBiometric = canOfferBiometricUnlock(capability.available);
+  const canAutoPrompt = shouldAutoPromptBiometricUnlock({
+    available: capability.available,
+    enabledUserId,
+    unlockUserId: lockedUserId,
+  });
+  const promptedRef = useRef(false);
   // A half-open account init leaves `session` set on the error screen — another
   // provider bind could merge the wrong graph. Locked unlock uses switch-account.
   const providersLocked = busy || Boolean(session);
@@ -54,6 +72,12 @@ export function AuthScreen({
   const cardPadding = tight ? spacing.md : spacing.lg;
   const cardGap = tight ? spacing.sm : spacing.md;
   const router = useRouter();
+
+  useEffect(() => {
+    if (!canAutoPrompt || busy || promptedRef.current) return;
+    promptedRef.current = true;
+    void unlockWithBiometrics();
+  }, [busy, canAutoPrompt, unlockWithBiometrics]);
 
   const appleAgent = useAgentUiTarget(AgentUiIds.auth.apple, {
     label: 'Continue with Apple',
@@ -160,6 +184,15 @@ export function AuthScreen({
                 </AppText>
               </Pressable>
             </GlassPlate>
+          ) : workingUnlock ? (
+            <View
+              style={styles.floatingBusy}
+              accessibilityLiveRegion="polite"
+              pointerEvents="none">
+              <AppText variant="caption" color="secondary" align="center">
+                Unlocking…
+              </AppText>
+            </View>
           ) : workingProvider ? (
             <View
               style={styles.floatingBusy}
@@ -181,6 +214,18 @@ export function AuthScreen({
               <AppText variant="caption" color="secondary" align="center">
                 This device is locked
               </AppText>
+            ) : null}
+
+            {canOfferBiometric ? (
+              <Button
+                icon={capability.icon}
+                loading={Boolean(workingUnlock)}
+                disabled={providersLocked}
+                testID={AgentUiIds.auth.unlockBiometric}
+                accessibilityLabel={capability.label}
+                onPress={() => void unlockWithBiometrics()}>
+                {capability.label}
+              </Button>
             ) : null}
 
             <AgentTestId

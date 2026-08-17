@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type MutableRefObject,
-} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import {
@@ -14,9 +9,8 @@ import {
 } from '@/components/primitives';
 import { radii } from '@/design-system';
 import { CityAutofindSettingsRow } from '@/features/account/city-autofind-settings-row';
-import { getDestinationCurrentWeather } from '@/features/travel/weather/provider';
+import { persistPlaceLabel } from '@/features/account/profile-location-persist';
 import { temperatureUnitForDateFormat } from '@/features/travel/weather/temperature-unit';
-import type { TemperatureUnit } from '@/features/travel/weather/types';
 import { useCurrentPlaceLabel } from '@/hooks/use-current-place-label';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -26,64 +20,6 @@ import { getCurrentPlaceLabel } from '@/utils/device-location';
 import { haptics } from '@/utils/haptics';
 
 export type ProfileLocationReveal = 'homeLocation' | 'currentLocation';
-
-/**
- * Persist first, then optionally normalize via Open-Meteo.
- * Weather lookup failure must not wipe a user-authored place.
- */
-async function normalizePlaceLabel(
-  raw: string,
-  unit: TemperatureUnit,
-): Promise<string> {
-  const trimmed = raw.trim();
-  if (!trimmed) return '';
-  try {
-    const weather = await getDestinationCurrentWeather(trimmed, unit);
-    const label = weather.locationLabel.trim();
-    return label || trimmed;
-  } catch {
-    return trimmed;
-  }
-}
-
-/** Commit immediately, then normalize when non-empty (shared by Home / Current). */
-async function persistPlaceLabel(input: {
-  raw: string;
-  getSaved: () => string;
-  commit: (value: string) => void;
-  onUnchanged?: (trimmed: string, saved: string) => void;
-  genRef: MutableRefObject<number>;
-  setSaving: (saving: boolean) => void;
-  unit: TemperatureUnit;
-  setError: (error: string | undefined) => void;
-}): Promise<void> {
-  const trimmed = input.raw.trim();
-  const saved = input.getSaved();
-  if (trimmed === saved) {
-    input.setError(undefined);
-    input.onUnchanged?.(trimmed, saved);
-    return;
-  }
-
-  input.commit(trimmed);
-  input.setError(undefined);
-  if (!trimmed) {
-    haptics.tap();
-    return;
-  }
-
-  const gen = ++input.genRef.current;
-  input.setSaving(true);
-  haptics.tap();
-  try {
-    const normalized = await normalizePlaceLabel(trimmed, input.unit);
-    if (gen !== input.genRef.current) return;
-    if (normalized !== trimmed) input.commit(normalized);
-    haptics.success();
-  } finally {
-    if (gen === input.genRef.current) input.setSaving(false);
-  }
-}
 
 /** Home + Current location rows with Open-Meteo city autocomplete. */
 export function ProfileLocationPreferences() {
@@ -157,9 +93,10 @@ export function ProfileLocationPreferences() {
       setError,
     });
 
-  const persistCurrent = (raw: string) =>
+  const persistCurrent = (raw: string, options?: { skipNormalize?: boolean }) =>
     persistPlaceLabel({
       raw,
+      skipNormalize: options?.skipNormalize,
       getSaved: () => usePreferences.getState().currentLocation.trim(),
       commit: (value) => {
         setCurrentLocation(value);
@@ -201,7 +138,9 @@ export function ProfileLocationPreferences() {
           return;
         }
         // Snapshot GPS into Current override (still never writes Home).
-        await persistCurrent(result.label);
+        // The device label is authoritative — a weather geocode of the same
+        // text can resolve to a same-named town in another state.
+        await persistCurrent(result.label, { skipNormalize: true });
         gpsPlace.refresh();
       })
       .finally(() => {

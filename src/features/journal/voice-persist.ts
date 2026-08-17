@@ -21,10 +21,25 @@ export async function persistJournalVoice(uri: string, fileStem = newId('voice')
   return dest.uri;
 }
 
+/**
+ * Stored voice URIs are absolute, but the iOS app container UUID changes on
+ * every binary install — re-anchor persisted paths to the current documents
+ * directory so older notes keep playing after an app update.
+ */
+export function resolveJournalVoiceUri(uri: string): string {
+  if (Platform.OS === 'web' || uri.startsWith('ontrack-media:')) return uri;
+  const marker = `/${JOURNAL_VOICE_DIRECTORY}/`;
+  const index = uri.lastIndexOf(marker);
+  if (index === -1) return uri;
+  const name = uri.slice(index + marker.length);
+  if (!name || name.includes('/')) return uri;
+  return new File(new Directory(Paths.document, JOURNAL_VOICE_DIRECTORY), name).uri;
+}
+
 export async function deleteJournalVoice(uri: string | null | undefined): Promise<void> {
   if (!uri || Platform.OS === 'web') return;
   try {
-    const file = new File(uri);
+    const file = new File(resolveJournalVoiceUri(uri));
     if (file.exists) file.delete();
   } catch {
     // Best-effort cleanup; store references are cleared separately.

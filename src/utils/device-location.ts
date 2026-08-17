@@ -4,16 +4,15 @@ import { Platform } from 'react-native';
 const LAST_KNOWN_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const LOCATION_TIMEOUT_MS = 12_000;
 
+export type DeviceCoordinate = { latitude: number; longitude: number };
+
 export type DevicePlaceResult =
-  | { status: 'suggested'; label: string }
+  | { status: 'suggested'; label: string; coordinate: DeviceCoordinate }
   | { status: 'denied' }
   | { status: 'unavailable' };
 
 export type DeviceCoordinateResult =
-  | {
-      status: 'suggested';
-      coordinate: { latitude: number; longitude: number };
-    }
+  | { status: 'suggested'; coordinate: DeviceCoordinate }
   | { status: 'denied' }
   | { status: 'unavailable' };
 
@@ -94,7 +93,12 @@ export async function getCurrentDeviceCoordinate(): Promise<DeviceCoordinateResu
   }
 }
 
-/** Resolves an approximate place label from the device’s current location. */
+/**
+ * Resolves an approximate place label from the device’s current location.
+ * The coordinate travels with the label so callers can request weather for the
+ * exact spot instead of re-geocoding the text (which can match a same-named
+ * town in another state).
+ */
 export async function getCurrentPlaceLabel(
   formatAddress: (address: DevicePlaceAddress) => string | undefined = formatPlaceAddress,
 ): Promise<DevicePlaceResult> {
@@ -106,7 +110,9 @@ export async function getCurrentPlaceLabel(
       Location.reverseGeocodeAsync(coordinateResult.coordinate),
     );
     const label = addresses[0] ? formatAddress(addresses[0]) : undefined;
-    return label ? { status: 'suggested', label } : { status: 'unavailable' };
+    return label
+      ? { status: 'suggested', label, coordinate: coordinateResult.coordinate }
+      : { status: 'unavailable' };
   } catch {
     return { status: 'unavailable' };
   }

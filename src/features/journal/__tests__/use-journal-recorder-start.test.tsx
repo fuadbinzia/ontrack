@@ -8,6 +8,9 @@ const mockSetAudioModeAsync = jest.fn(async () => undefined);
 const mockRequestRecordingPermissionsAsync = jest.fn(async () => ({
   granted: true,
 }));
+const mockGetRecordingPermissionsAsync = jest.fn(async () => ({
+  granted: true,
+}));
 const mockRecorder = {
   isRecording: false,
   uri: null as string | null,
@@ -25,6 +28,8 @@ jest.mock('expo-audio', () => ({
   RecordingPresets: { HIGH_QUALITY: { extension: '.m4a' } },
   requestRecordingPermissionsAsync: (...args: unknown[]) =>
     mockRequestRecordingPermissionsAsync(...args),
+  getRecordingPermissionsAsync: (...args: unknown[]) =>
+    mockGetRecordingPermissionsAsync(...args),
   setAudioModeAsync: (...args: unknown[]) => mockSetAudioModeAsync(...args),
   useAudioRecorder: () => mockRecorder,
 }));
@@ -47,6 +52,8 @@ describe('useJournalRecorder start', () => {
     mockSetAudioModeAsync.mockReset();
     mockRequestRecordingPermissionsAsync.mockReset();
     mockRequestRecordingPermissionsAsync.mockResolvedValue({ granted: true });
+    mockGetRecordingPermissionsAsync.mockReset();
+    mockGetRecordingPermissionsAsync.mockResolvedValue({ granted: true });
     mockSetAudioModeAsync.mockResolvedValue(undefined);
     mockPrepareToRecordAsync.mockResolvedValue(undefined);
     mockRecorder.isRecording = false;
@@ -83,5 +90,103 @@ describe('useJournalRecorder start', () => {
     expect(result.current.recording).toBe(false);
     expect(result.current.statusMessage).toMatch(/microphone is busy/i);
     expect(result.current.statusMessage).not.toMatch(/unavailable on this device/i);
+  });
+
+  it('auto-finishes at the 60-second cap instead of locking the recorder', async () => {
+    jest.useFakeTimers();
+    try {
+      const onLimitReached = jest.fn();
+      const { result } = renderHook(() => useJournalRecorder());
+
+      await act(async () => {
+        await expect(result.current.start('voice', onLimitReached)).resolves.toBe(true);
+      });
+      mockRecorder.isRecording = true;
+      mockRecorder.uri = 'file:///tmp/take.m4a';
+
+      act(() => {
+        jest.advanceTimersByTime(59_000);
+      });
+      expect(onLimitReached).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(1_000);
+      });
+      expect(onLimitReached).toHaveBeenCalledTimes(1);
+
+      // The old cap flipped an internal flag that made finish() return
+      // undefined forever — the recording could never be saved.
+      let captured: Awaited<ReturnType<typeof result.current.finish>>;
+      await act(async () => {
+        captured = await result.current.finish();
+      });
+      expect(captured?.uri).toBe('file:///tmp/take.m4a');
+      expect(captured?.mode).toBe('voice');
+      expect(mockStop).toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not fire the cap callback after a manual stop', async () => {
+    jest.useFakeTimers();
+    try {
+      const onLimitReached = jest.fn();
+      const { result } = renderHook(() => useJournalRecorder());
+
+      await act(async () => {
+        await result.current.start('voice', onLimitReached);
+      });
+      mockRecorder.isRecording = true;
+      mockRecorder.uri = 'file:///tmp/take.m4a';
+
+      await act(async () => {
+        await result.current.finish();
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(120_000);
+      });
+      expect(onLimitReached).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('re-checks a denied microphone permission on the next attempt', async () => {
+    mockGetRecordingPermissionsAsync.mockResolvedValueOnce({ granted: false });
+    mockRequestRecordingPermissionsAsync.mockResolvedValueOnce({ granted: false });
+    const { result } = renderHook(() => useJournalRecorder());
+
+    await act(async () => {
+      await expect(result.current.start('voice')).resolves.toBe(false);
+    });
+    expect(result.current.statusMessage).toMatch(/permission/i);
+
+    // The user grants microphone access in Settings and comes back — the old
+    // cached denial refused to record until the app relaunched.
+    mockGetRecordingPermissionsAsync.mockResolvedValueOnce({ granted: true });
+    await act(async () => {
+      await expect(result.current.start('voice')).resolves.toBe(true);
+    });
+    expect(result.current.recording).toBe(true);
+    expect(mockRecord).toHaveBeenCalled();
+  });
+
+  it('does not re-prompt once a grant is cached', async () => {
+    const { result } = renderHook(() => useJournalRecorder());
+
+    await act(async () => {
+      await result.current.start('voice');
+    });
+    await act(async () => {
+      await result.current.cancel();
+    });
+    await act(async () => {
+      await expect(result.current.start('voice')).resolves.toBe(true);
+    });
+
+    expect(mockGetRecordingPermissionsAsync).toHaveBeenCalledTimes(1);
+    expect(mockRequestRecordingPermissionsAsync).not.toHaveBeenCalled();
   });
 });

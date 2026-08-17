@@ -20,8 +20,9 @@ description: >-
 ## Non-negotiables
 
 - One page per `YYYY-MM-DD`. No cloud sync domain — `createSensitivePersistStorage` only.
-- Voice notes stay in `Documents/journal-voice/`. Never persist recorder cache URIs. Start via `beginExpoRecording` (`mixWithOthers`, plain `record()`); never “unavailable on this device” unless native audio is missing.
-- Dictate sends audio to onTrack AI only after first-use disclosure; then discard the take.
+- Voice notes stay in `Documents/journal-voice/`. Never persist recorder cache URIs. Start via `beginExpoRecording` (`mixWithOthers`, plain `record()`); never “unavailable on this device” unless native audio is missing. The 60s cap auto-finishes through the `start(mode, onLimitReached)` callback — never a flag that blocks `finish()`.
+- Playback (`voice-playback.ts`): icon state comes from `useAudioPlayerStatus` (never local `playing` state), stored URIs re-anchor via `resolveJournalVoiceUri` (iOS container UUID changes per install), replay seeks to 0 (a finished player parks at the end), and `VOICE_PLAYBACK_AUDIO_MODE` (`playsInSilentMode`, recording off) applies before `play()`.
+- Dictate sends audio to onTrack AI only after first-use disclosure; then discard the take. Default provider is Gemini (free); OpenAI only when `JOURNAL_TRANSCRIBE_PROVIDER=openai`. Never show backend “not configured” copy.
 - Do not call `/travel/translator` or reuse `ontrack-voice-lists`.
 - Stamp `ontrack.journal.*` on every interactive control.
 - Composer is a full-width docked field above the tab bar with send in the pill; header is `Journal` + date with only prev/next on that line’s far right (`titleTrailing`); eyebrow is Undo, Redo, Edit, plus. Undo/redo text-block edits for the open day. Next is disabled on today.

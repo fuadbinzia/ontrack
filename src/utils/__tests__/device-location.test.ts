@@ -1,4 +1,17 @@
-import { formatPlaceAddress } from '@/utils/device-location';
+import * as Location from 'expo-location';
+
+import { formatPlaceAddress, getCurrentPlaceLabel } from '@/utils/device-location';
+
+jest.mock('expo-location', () => ({
+  Accuracy: { Low: 1 },
+  getForegroundPermissionsAsync: jest.fn(),
+  requestForegroundPermissionsAsync: jest.fn(),
+  getLastKnownPositionAsync: jest.fn(),
+  getCurrentPositionAsync: jest.fn(),
+  reverseGeocodeAsync: jest.fn(),
+}));
+
+const locationMock = Location as jest.Mocked<typeof Location>;
 
 describe('device place address formatting', () => {
   it('uses city and region for North American locations', () => {
@@ -54,5 +67,55 @@ describe('device place address formatting', () => {
       country: 'United States',
       isoCountryCode: 'US',
     })).toBeUndefined();
+  });
+});
+
+describe('current device place', () => {
+  const coordinate = { latitude: 40.6976, longitude: -74.2632 };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    locationMock.getForegroundPermissionsAsync.mockResolvedValue({
+      granted: true,
+      canAskAgain: true,
+    } as never);
+    locationMock.getLastKnownPositionAsync.mockResolvedValue({
+      coords: coordinate,
+    } as never);
+  });
+
+  it('returns the coordinate behind the label so weather skips text geocoding', async () => {
+    locationMock.reverseGeocodeAsync.mockResolvedValue([
+      {
+        city: 'Union',
+        district: null,
+        subregion: 'Union County',
+        region: 'New Jersey',
+        country: 'United States',
+        isoCountryCode: 'US',
+      },
+    ] as never);
+
+    await expect(getCurrentPlaceLabel()).resolves.toEqual({
+      status: 'suggested',
+      label: 'Union, New Jersey',
+      coordinate,
+    });
+  });
+
+  it('reports unavailable when the coordinate has no readable place', async () => {
+    locationMock.reverseGeocodeAsync.mockResolvedValue([] as never);
+
+    await expect(getCurrentPlaceLabel()).resolves.toEqual({ status: 'unavailable' });
+  });
+
+  it('reports denied without geocoding when permission is off', async () => {
+    locationMock.getForegroundPermissionsAsync.mockResolvedValue({
+      granted: false,
+      canAskAgain: false,
+    } as never);
+
+    await expect(getCurrentPlaceLabel()).resolves.toEqual({ status: 'denied' });
+    expect(locationMock.reverseGeocodeAsync).not.toHaveBeenCalled();
   });
 });

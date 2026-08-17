@@ -19,6 +19,8 @@ import { useJournal } from '@/store/journal';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 
+import { journalDictateStatusMessage } from './journal-dictate-status';
+
 import {
   audioDataUrlFromUri,
   deleteRecordedAudio,
@@ -66,9 +68,7 @@ export function useJournalComposer(dateKey: string, onRequestLink: () => void) {
         recorder.setStatusMessage('Nothing was heard. Try again or type.');
       }
     } catch (error) {
-      recorder.setStatusMessage(
-        error instanceof Error ? error.message : 'Dictate is temporarily unavailable.',
-      );
+      recorder.setStatusMessage(journalDictateStatusMessage(error));
     } finally {
       setBusy(false);
     }
@@ -95,7 +95,7 @@ export function useJournalComposer(dateKey: string, onRequestLink: () => void) {
 
   const startDictate = () => {
     const begin = () => {
-      void recorder.start('dictate');
+      void recorder.start('dictate', () => void finishDictate());
     };
     if (aiDisclosureAccepted) {
       begin();
@@ -132,7 +132,7 @@ export function useJournalComposer(dateKey: string, onRequestLink: () => void) {
     recorder,
     sendText,
     startDictate,
-    startVoice: () => void recorder.start('voice'),
+    startVoice: () => void recorder.start('voice', () => void finishVoiceNote()),
     onRequestLink,
     stopRecording: () => {
       if (recorder.mode === 'voice') void finishVoiceNote();

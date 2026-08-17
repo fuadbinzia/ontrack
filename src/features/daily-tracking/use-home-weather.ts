@@ -25,9 +25,18 @@ export function useHomeWeather(date?: string) {
   const currentQuery = viewingToday
     ? savedCurrent || currentPlaceLabel
     : '';
+  // GPS place → use the device coordinate so weather never re-geocodes the
+  // label into a same-named town in another state.
+  const currentCoordinate =
+    !savedCurrent && currentQuery ? currentPlace.coordinate : undefined;
 
   const home = usePlaceWeather(savedHome, temperatureUnit, date);
-  const current = usePlaceWeather(currentQuery, temperatureUnit, date);
+  const current = usePlaceWeather(
+    currentQuery,
+    temperatureUnit,
+    date,
+    currentCoordinate,
+  );
 
   // Primary banner: saved home when set, else Current (override or GPS).
   const weather = hasSavedHome ? home.weather : current.weather;

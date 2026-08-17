@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   getCurrentPlaceLabel,
+  type DeviceCoordinate,
   type DevicePlaceResult,
 } from '@/utils/device-location';
 
@@ -13,6 +14,8 @@ export type CurrentPlaceStatus =
 export type CurrentPlaceLabelState = {
   status: CurrentPlaceStatus;
   label: string;
+  /** Exact device coordinate behind `label` — weather uses it directly. */
+  coordinate?: DeviceCoordinate;
   /** Human detail for settings rows. */
   detail: string;
   refresh: () => void;
@@ -45,6 +48,7 @@ export function detailForCurrentPlace(
 export function useCurrentPlaceLabel(enabled = true): CurrentPlaceLabelState {
   const [status, setStatus] = useState<CurrentPlaceStatus>(enabled ? 'loading' : 'idle');
   const [label, setLabel] = useState('');
+  const [coordinate, setCoordinate] = useState<DeviceCoordinate>();
   const [tick, setTick] = useState(0);
 
   const refresh = useCallback(() => {
@@ -55,6 +59,7 @@ export function useCurrentPlaceLabel(enabled = true): CurrentPlaceLabelState {
     if (!enabled) {
       setStatus('idle');
       setLabel('');
+      setCoordinate(undefined);
       return;
     }
 
@@ -64,10 +69,12 @@ export function useCurrentPlaceLabel(enabled = true): CurrentPlaceLabelState {
       if (cancelled) return;
       if (result.status === 'suggested') {
         setLabel(result.label);
+        setCoordinate(result.coordinate);
         setStatus('suggested');
         return;
       }
       setLabel('');
+      setCoordinate(undefined);
       setStatus(result.status);
     });
 
@@ -79,6 +86,7 @@ export function useCurrentPlaceLabel(enabled = true): CurrentPlaceLabelState {
   return {
     status,
     label,
+    coordinate,
     detail: detailForCurrentPlace(status, label),
     refresh,
   };

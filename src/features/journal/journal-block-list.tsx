@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
 
 import {
@@ -19,27 +19,27 @@ import { loadOptionalExpoAudio } from '@/utils/optional-expo-audio';
 
 import { commitJournalTextEdit, formatVoiceDuration, journalBlockTimeParts } from './model';
 import type { JournalBlock, JournalTextBlock } from './types';
+import { resolveJournalVoiceUri } from './voice-persist';
+import { toggleVoicePlayback } from './voice-playback';
 
 const audioApi = loadOptionalExpoAudio();
+const voicePlaybackAvailable =
+  typeof audioApi?.useAudioPlayer === 'function' &&
+  typeof audioApi.useAudioPlayerStatus === 'function';
 
 function VoicePlayControl({ uri, testID }: { uri: string; testID: string }) {
-  const player = audioApi!.useAudioPlayer(uri);
-  const [playing, setPlaying] = useState(false);
+  const source = useMemo(() => resolveJournalVoiceUri(uri), [uri]);
+  const player = audioApi!.useAudioPlayer(source);
+  const status = audioApi!.useAudioPlayerStatus(player);
 
   return (
     <IconButton
-      icon={playing ? 'pause' : 'play'}
-      accessibilityLabel={playing ? 'Pause Voice Note' : 'Play Voice Note'}
+      icon={status.playing ? 'pause' : 'play'}
+      accessibilityLabel={status.playing ? 'Pause Voice Note' : 'Play Voice Note'}
       testID={testID}
       onPress={() => {
         haptics.select();
-        if (playing) {
-          player.pause();
-          setPlaying(false);
-          return;
-        }
-        player.play();
-        setPlaying(true);
+        void toggleVoicePlayback(player, status, audioApi!.setAudioModeAsync);
       }}
     />
   );
@@ -249,7 +249,7 @@ export function JournalBlockList({
                       </AppText>
                     </GlassMetaChip>
                   </View>
-                  {typeof audioApi?.useAudioPlayer === 'function' ? (
+                  {voicePlaybackAvailable ? (
                     <VoicePlayControl
                       uri={block.uri}
                       testID={AgentUiIds.journal.voicePlay(block.id)}

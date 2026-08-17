@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.118",
+    "date": "2026-08-16",
+    "notes": [
+      "Name weather places from real location lookups and make journal dictation status and voice-note playback reliable.",
+      "Touched: features/account, features/daily-tracking."
+    ]
+  },
+  {
     "version": "1.0.117",
     "date": "2026-08-16",
     "notes": [

@@ -110,6 +110,20 @@ describe('travel artwork tint', () => {
     expect(shell.fill).not.toContain(', 1)');
   });
 
+  it('densifies fill-only day shells so itinerary atlas cannot read sharp through', () => {
+    const ios = travelArtworkGlassFill('#E4EEF5', 'shell', {
+      airy: true,
+      allowsBlur: true,
+    });
+    const android = travelArtworkGlassFill('#E4EEF5', 'shell', {
+      airy: true,
+      allowsBlur: false,
+    });
+    expect(ios.fill).toBe('rgba(228, 238, 245, 0.38)');
+    expect(android.fill).toBe('rgba(228, 238, 245, 0.86)');
+    expect(android.fill).not.toContain(', 1)');
+  });
+
   it('keeps light-theme kind accents on light artwork glass', () => {
     expect(kindAccent('flight', lightTravelTheme)).toBe('#315A7C');
     expect(kindAccent('flight', lightTravelTheme, { darkGlass: true })).toBe(

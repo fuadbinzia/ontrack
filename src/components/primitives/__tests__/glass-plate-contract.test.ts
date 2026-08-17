@@ -219,6 +219,12 @@ describe('glass plate contract', () => {
     expect(plate).toContain('glassMistWashStyle');
     expect(glass).toContain('mistLightSolid');
     expect(plate).toContain('androidTintInvertedAiry');
+    // Android has no BlurView — itinerary atlas / photos must not read sharp
+    // through airy plates (0.48/0.34 mid-stop was the Iceland readability bug).
+    expect(plate).toContain("backgroundColor: 'rgba(255, 255, 255, 0.82)'");
+    expect(plate).toContain("backgroundColor: 'rgba(255, 255, 255, 0.76)'");
+    expect(plate).not.toContain("backgroundColor: 'rgba(255, 255, 255, 0.48)'");
+    expect(plate).not.toContain("backgroundColor: 'rgba(255, 255, 255, 0.58)'");
     // Inverted CTAs stay dark-fill on dark theme (white ink must not sit on milk).
     expect(plate).toContain('inverted || theme.name === \'dark\'');
     // Nested mist never mounts BlurView — clipped parents paint white milk on iOS.

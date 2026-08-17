@@ -307,6 +307,7 @@ describe('canonical design-system contract', () => {
     expect(body).toContain('TravelItineraryBackground');
     expect(body).toContain("paper: 'transparent'");
     expect(background).toContain('itinerary-journey-atlas-v1.png');
+    expect(background).toContain('itineraryJourneyWashColors');
     expect(background).toContain('contentPosition={{ top: "0%", left: "50%" }}');
     expect(
       existsSync(

@@ -47,6 +47,11 @@ export const AGENT_UI_ROUTE_ALIASES = {
   terms: '/terms',
   backup: '/(tabs)/profile/backup',
   'profile-backup': '/(tabs)/profile/backup',
+  'download-data': '/(tabs)/profile/download-data',
+  'profile-download-data': '/(tabs)/profile/download-data',
+  blocked: '/(tabs)/profile/blocked',
+  'blocked-users': '/(tabs)/profile/blocked',
+  'delete-account': '/delete-account',
   straiaway: '/(tabs)/profile/straiaway',
   'straiaway-connect': '/(tabs)/profile/straiaway',
 } as const;

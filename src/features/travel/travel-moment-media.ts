@@ -51,6 +51,9 @@ export function resolveTravelPhotoUris(uris?: string[]): string[] {
 }
 
 function readableLocalFileUri(uri: string): string | undefined {
+  // `new File()` is a native documents probe — content:// / https / ph://
+  // abort on some Android builds when travel home resolves cover URIs.
+  if (!uri.startsWith('file://')) return undefined;
   try {
     const file = new File(uri);
     // size === 0 means missing or unreadable — those paint as blank tiles.

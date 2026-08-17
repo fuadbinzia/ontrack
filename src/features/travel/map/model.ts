@@ -1,12 +1,12 @@
-import type { TravelPlan } from '@/features/travel/types';
 import { canonicalTravelTripId } from '@/features/travel/trip-roster';
+import type { TravelPlan } from '@/features/travel/types';
 import { newUuid } from '@/utils/id';
 
 import type {
-  TravelMapPerson,
-  TravelMapPlacePin,
-  TravelMapTripSummary,
-  TravelMapVisit,
+    TravelMapPerson,
+    TravelMapPlacePin,
+    TravelMapTripSummary,
+    TravelMapVisit,
 } from './types';
 
 export const TRAVEL_MAP_SELF_COLOR = '#155EA8';
@@ -122,6 +122,11 @@ export interface TravelMapRenderedVisit {
   visit: TravelMapVisit;
   person: TravelMapPerson;
   canOpenTrip: boolean;
+}
+
+export interface TravelMapPlaceSelection {
+  rendered: TravelMapRenderedVisit;
+  pin: TravelMapPlacePin;
 }
 
 export interface TravelMapCountryCluster {

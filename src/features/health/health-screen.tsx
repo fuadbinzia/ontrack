@@ -2,31 +2,31 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { AppState, Linking, StyleSheet, View } from 'react-native';
 
-import { MetricDisplay } from '@/components/shared';
 import {
-  appPrompt,
-  AppText,
-  Button,
-  Card,
-  EmptyState,
-  ErrorMessage,
-  IconButton,
-  Screen,
-  SegmentedControl,
-  SectionHeader,
+    appPrompt,
+    AppText,
+    Button,
+    Card,
+    EmptyState,
+    ErrorMessage,
+    IconButton,
+    Screen,
+    SectionHeader,
+    SegmentedControl,
 } from '@/components/primitives';
+import { MetricDisplay } from '@/components/shared';
 import { spacing } from '@/design-system';
 import { averageMetric, healthSummaryForDate, moodEntrySummary, playbookOutcomeSummary } from '@/features/health/model';
 import type { AppleStateOfMindSample, HealthRange, MoodEntry } from '@/features/health/types';
 import { useTheme } from '@/hooks/use-theme';
 import {
-  deleteOwnedAppleStateOfMind,
-  isAppleHealthAvailable,
-  isStateOfMindAvailable,
-  openAppleHealth,
-  queryAppleHealth90Days,
-  queryAppleStateOfMind90Days,
-  requestAppleHealthAccess,
+    deleteOwnedAppleStateOfMind,
+    isAppleHealthAvailable,
+    isStateOfMindAvailable,
+    openAppleHealth,
+    queryAppleHealth90Days,
+    queryAppleStateOfMind90Days,
+    requestAppleHealthAccess,
 } from '@/services/health/apple-health';
 import { useHealth } from '@/store/health';
 import { AgentUiIds } from '@/utils/agent-ui';
@@ -178,6 +178,13 @@ export function HealthScreen() {
         <View style={styles.flex}>
           <AppText variant="title">Health</AppText>
           <AppText color="secondary">Private trends and tools for understanding what helps you.</AppText>
+          <Button
+            variant="ghost"
+            testID={AgentUiIds.health.privacy}
+            accessibilityLabel="Privacy Policy"
+            onPress={() => router.push('/privacy' as never)}>
+            Privacy Policy
+          </Button>
         </View>
         <IconButton
           icon="settings"

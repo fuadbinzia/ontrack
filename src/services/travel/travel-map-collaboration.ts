@@ -1,12 +1,13 @@
 import { avatarMetaFromProfileRow } from '@/features/account/profile-avatar-model';
+import { travelMapPersonColorForId } from '@/features/travel/map/model';
 import { normalizeTravelMapVisits } from '@/features/travel/map/normalize';
 import type {
-  TravelMapFriendLayer,
-  TravelMapFriendProfile,
+    TravelMapFriendLayer,
+    TravelMapFriendProfile,
 } from '@/features/travel/map/types';
-import { travelMapPersonColorForId } from '@/features/travel/map/model';
 import { getSupabaseClient } from '@/services/cloud/supabase';
 import { useTravelMap, type TravelMapMutation } from '@/store/travel-map';
+import { asTrimmedString } from '@/utils/parse';
 
 export class TravelMapCollaborationError extends Error {
   constructor(message: string) {
@@ -17,6 +18,40 @@ export class TravelMapCollaborationError extends Error {
 
 function messageFrom(error: { message?: string } | null, fallback: string) {
   return error?.message?.trim() || fallback;
+}
+
+export function parseRpcJsonArray(data: unknown): unknown[] {
+  if (Array.isArray(data)) return data;
+  if (typeof data === 'string') {
+    try {
+      const parsed = JSON.parse(data) as unknown;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function rowText(row: Record<string, unknown>, ...keys: string[]): string {
+  for (const key of keys) {
+    const value = asTrimmedString(row[key]);
+    if (value) return value;
+  }
+  return '';
+}
+
+export function parseTravelMapFriendProfiles(
+  data: unknown,
+): TravelMapFriendProfile[] {
+  return parseRpcJsonArray(data).flatMap((entry) => {
+    if (!entry || typeof entry !== 'object') return [];
+    const row = entry as Record<string, unknown>;
+    const userId = rowText(row, 'userId', 'user_id');
+    const displayName = rowText(row, 'displayName', 'display_name') || 'Friend';
+    if (!userId) return [];
+    return [{ userId, displayName, avatar: avatarMetaFromProfileRow(row) }];
+  });
 }
 
 async function authenticatedClient() {
@@ -92,15 +127,7 @@ export async function listVisibleFriendMapProfiles(): Promise<TravelMapFriendPro
       messageFrom(error, 'Friend maps could not be loaded.'),
     );
   }
-  if (!Array.isArray(data)) return [];
-  return data.flatMap((entry) => {
-    if (!entry || typeof entry !== 'object') return [];
-    const row = entry as Record<string, unknown>;
-    const userId = typeof row.userId === 'string' ? row.userId : undefined;
-    const displayName = typeof row.displayName === 'string' ? row.displayName.trim() : '';
-    if (!userId || !displayName) return [];
-    return [{ userId, displayName, avatar: avatarMetaFromProfileRow(row) }];
-  });
+  return parseTravelMapFriendProfiles(data);
 }
 
 export async function loadFriendTravelMaps(
@@ -116,13 +143,12 @@ export async function loadFriendTravelMaps(
       messageFrom(error, 'Selected friend maps could not be loaded.'),
     );
   }
-  if (!Array.isArray(data)) return [];
-  return data.flatMap((entry) => {
+  return parseRpcJsonArray(data).flatMap((entry) => {
     if (!entry || typeof entry !== 'object') return [];
     const row = entry as Record<string, unknown>;
-    const userId = typeof row.userId === 'string' ? row.userId : undefined;
-    const displayName = typeof row.displayName === 'string' ? row.displayName.trim() : '';
-    if (!userId || !displayName) return [];
+    const userId = rowText(row, 'userId', 'user_id');
+    const displayName = rowText(row, 'displayName', 'display_name') || 'Friend';
+    if (!userId) return [];
     return [
       {
         person: {

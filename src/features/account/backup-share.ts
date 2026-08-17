@@ -4,20 +4,24 @@ import * as Sharing from 'expo-sharing';
 import { Share } from 'react-native';
 
 import {
-  backupFileName,
-  buildBackup,
-  parseBackup,
-  serializeBackup,
-  type OnTrackBackup,
+    backupFileName,
+    buildBackup,
+    parseBackup,
+    serializeBackup,
+    type BuildBackupOptions,
+    type OnTrackBackup,
 } from './backup-archive';
 import { packBackupMedia } from './backup-media';
 
-export async function writeBackupFile(backup?: OnTrackBackup): Promise<{
+export async function writeBackupFile(
+  backup?: OnTrackBackup,
+  options: BuildBackupOptions = {},
+): Promise<{
   file: File;
   name: string;
   json: string;
 }> {
-  const packed = await packBackupMedia(backup ?? buildBackup());
+  const packed = await packBackupMedia(backup ?? buildBackup(undefined, options));
   const json = serializeBackup(packed);
   const name = backupFileName(new Date(packed.createdAt));
   const file = new File(Paths.cache, name);
@@ -27,8 +31,10 @@ export async function writeBackupFile(backup?: OnTrackBackup): Promise<{
 }
 
 /** Write the backup JSON and open the system share sheet (Files, Drive, AirDrop). */
-export async function downloadBackup(): Promise<{ name: string }> {
-  const { file, name, json } = await writeBackupFile();
+export async function downloadBackup(
+  options: BuildBackupOptions = {},
+): Promise<{ name: string }> {
+  const { file, name, json } = await writeBackupFile(undefined, options);
   const canShare = await Sharing.isAvailableAsync();
   if (canShare) {
     await Sharing.shareAsync(file.uri, {

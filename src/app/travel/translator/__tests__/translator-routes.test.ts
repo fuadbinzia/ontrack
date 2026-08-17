@@ -80,11 +80,11 @@ describe('travel translator routes', () => {
     ));
     expect(mockResolveLanguages).toHaveBeenCalledWith(
       { destination: 'Paris', homeLocale: 'en-US' },
-      'user-1',
+      expect.stringMatching(/^[a-f0-9]{32}$/),
     );
     expect(mockTranslateTurn).toHaveBeenCalledWith(
       { destination: 'Paris', text: 'Hello' },
-      'user-1',
+      expect.stringMatching(/^[a-f0-9]{32}$/),
     );
     await expect(languageResponse.json()).resolves.toMatchObject({ destination: { code: 'fr' } });
     await expect(turnResponse.json()).resolves.toEqual({ transcript: 'Hello', translatedText: 'Bonjour' });

@@ -456,7 +456,6 @@ function PromptActionButton({
       ) : null}
       <AppText
         variant="callout"
-        allowFontScaling={false}
         numberOfLines={2}
         style={[styles.actionLabel, { color: foreground }]}>
         {title}

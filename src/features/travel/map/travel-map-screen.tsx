@@ -1,24 +1,29 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  StyleSheet,
-  useWindowDimensions,
-  View,
-  type ModalProps,
+    StyleSheet,
+    useWindowDimensions,
+    View,
+    type ModalProps,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
-  AppText,
-  Button,
-  GlassPlate,
-  appPrompt,
-  useSafeAreaChrome,
+    appPrompt,
+    AppText,
+    Button,
+    GlassPlate,
+    LoadingSpinner,
+    useSafeAreaChrome,
 } from '@/components/primitives';
+import { fadeEntering, fadeExiting, popoverEntering } from '@/design-system';
 import { resolveSelfDisplayName } from '@/features/account/self-display-name';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { useRouteIsActive } from '@/hooks/use-app-activity';
+import { useFriends } from '@/store/friends';
 import { usePreferences } from '@/store/preferences';
 import { useTravel } from '@/store/travel';
 import { useTravelMap } from '@/store/travel-map';
@@ -27,44 +32,45 @@ import { getCurrentDeviceCoordinate } from '@/utils/device-location';
 import { newUuid } from '@/utils/id';
 
 import { canonicalTravelTripId } from '../trip-roster';
-import {
-  atlasCountryByCode,
-  atlasCountryContainsCoordinate,
-  TRAVEL_MAP_OCEAN_BOTTOM,
-} from './country-data';
 import { nearestAtlasCity, type TravelMapCity } from './city-data';
 import {
-  createTravelMapVisit,
-  createStandaloneTravelMapVisit,
-  syncTravelMapVisitSummary,
-  TRAVEL_MAP_SELF_COLOR,
+    atlasCountryByCode,
+    atlasCountryContainsCoordinate,
+    TRAVEL_MAP_OCEAN_BOTTOM,
+} from './country-data';
+import {
+    createStandaloneTravelMapVisit,
+    createTravelMapVisit,
+    syncTravelMapVisitSummary,
+    TRAVEL_MAP_SELF_COLOR,
 } from './model';
 import {
-  optionalScreenOrientation,
-  TravelMapOrientationLock,
+    optionalScreenOrientation,
+    TravelMapOrientationLock,
 } from './optional-screen-orientation';
 import {
-  TRAVEL_MAP_COUNTRY_OCEAN_TOP,
-  TravelMapCanvas,
-  type TravelMapPlaceSelection,
+    TRAVEL_MAP_COUNTRY_OCEAN_TOP,
+    TravelMapCanvas,
+    type TravelMapPlaceSelection,
 } from './travel-map-canvas';
 import { TravelMapCityPicker } from './travel-map-city-picker';
 import { TravelMapCountryPicker } from './travel-map-country-picker';
 import { TravelMapPinSheet } from './travel-map-pin-sheet';
 import {
-  TravelMapIconButton,
-  TravelMapLayerControls,
-  TravelMapPeoplePicker,
-  TravelMapSelectionPreview,
-  TravelMapSuggestionCard,
+    TravelMapIconButton,
+    TravelMapLayerControls,
+    TravelMapPeoplePicker,
+    TravelMapSelectionPreview,
+    TravelMapSuggestionCard,
 } from './travel-map-screen-chrome';
 import { TRAVEL_MAP_WORLD_BACKDROP_TOP } from './travel-map-world-globe';
+import { useOrientationSettle } from './use-orientation-settle';
 import { useTravelMapCollaboration } from './use-travel-map-collaboration';
-import { useTravelMapUnpin } from './use-travel-map-unpin';
 import {
-  useRenderedTravelMapVisits,
-  useTravelMapSuggestion,
+    useRenderedTravelMapVisits,
+    useTravelMapSuggestion,
 } from './use-travel-map-screen-data';
+import { useTravelMapUnpin } from './use-travel-map-unpin';
 
 export function TravelMapScreen() {
   const router = useRouter();
@@ -106,6 +112,16 @@ export function TravelMapScreen() {
   }>();
   const unpinPlace = useTravelMapUnpin(setSelected);
 
+  // Orientation swaps crossfade the chrome, but page open stays at rest: the
+  // enter fade only arms after the first paint (page-open-rest contract).
+  const chromeSettledRef = useRef(false);
+  useEffect(() => {
+    chromeSettledRef.current = true;
+  }, []);
+  const chromeSwapEntering = chromeSettledRef.current
+    ? fadeEntering()
+    : undefined;
+
   useEffect(() => {
     let cancelled = false;
     void getCurrentDeviceCoordinate().then((result) => {
@@ -126,12 +142,19 @@ export function TravelMapScreen() {
   const selfId = user?.id ?? 'local-self';
   const selectedCountry = atlasCountryByCode(countryCode);
   const routeIsActive = useRouteIsActive();
-  const { friendProfiles, friendLayers } = useTravelMapCollaboration({
-    authenticated: phase === 'authenticated' && routeIsActive,
-    pendingCount,
-    selectedFriendIds: settings.selectedFriendIds,
-    onChangeSelectedFriendIds: setSelectedFriendIds,
-  });
+  const rotationSettling = useOrientationSettle(width, height, routeIsActive);
+  const { friendProfiles, friendLayers, refreshFriendProfiles } =
+    useTravelMapCollaboration({
+      authenticated: phase === 'authenticated' && routeIsActive,
+      pendingCount,
+      selectedFriendIds: settings.selectedFriendIds,
+      onChangeSelectedFriendIds: setSelectedFriendIds,
+    });
+  const openPeoplePicker = useCallback(() => {
+    setPeoplePickerOpen(true);
+    refreshFriendProfiles();
+    void useFriends.getState().refresh().catch(() => undefined);
+  }, [refreshFriendProfiles]);
   const { suggestion, setSuggestion } = useTravelMapSuggestion({
     plans,
     visits,
@@ -259,6 +282,48 @@ export function TravelMapScreen() {
     setHighlightedCity(undefined);
   }, []);
 
+  const openCountry = useCallback((code: string) => {
+    setCountryCode(code);
+    setSelected(undefined);
+    setHighlightedCity(undefined);
+  }, []);
+
+  const selectedCountryName = selectedCountry?.name;
+  const placePinAtCoordinate = useCallback(
+    (coordinate: { latitude: number; longitude: number }) => {
+      if (!countryCode) return;
+      if (!atlasCountryContainsCoordinate(
+        countryCode,
+        coordinate.latitude,
+        coordinate.longitude,
+      )) {
+        appPrompt.alert(
+          'Choose inside the country',
+          `Place the pin within ${selectedCountryName ?? 'the selected country'}.`,
+        );
+        return;
+      }
+      const nearestCity = nearestAtlasCity(
+        countryCode,
+        coordinate.latitude,
+        coordinate.longitude,
+      );
+      const pinCoordinate = nearestCity
+        ? {
+            latitude: nearestCity.latitude,
+            longitude: nearestCity.longitude,
+            label: nearestCity.name,
+          }
+        : coordinate;
+      setPlacingPin(false);
+      setSelected(undefined);
+      setHighlightedCity(nearestCity);
+      setDraftCoordinate(pinCoordinate);
+      setPinSheetOpen(true);
+    },
+    [countryCode, selectedCountryName],
+  );
+
   const selectedLocalPlan = selected
     ? plans.find((plan) =>
         selected.rendered.person.isSelf
@@ -305,48 +370,18 @@ export function TravelMapScreen() {
             highlightedCity={highlightedCity}
             placing={placingPin}
             worldMotionPaused={countryPickerOpen}
-            onCountryPress={(code) => {
-              setCountryCode(code);
-              setSelected(undefined);
-              setHighlightedCity(undefined);
-            }}
+            onCountryPress={openCountry}
             onPlacePress={setSelected}
-            onCoordinatePress={(coordinate) => {
-              if (!countryCode) return;
-              if (!atlasCountryContainsCoordinate(
-                countryCode,
-                coordinate.latitude,
-                coordinate.longitude,
-              )) {
-                appPrompt.alert(
-                  'Choose inside the country',
-                  `Place the pin within ${selectedCountry?.name ?? 'the selected country'}.`,
-                );
-                return;
-              }
-              const nearestCity = nearestAtlasCity(
-                countryCode,
-                coordinate.latitude,
-                coordinate.longitude,
-              );
-              const pinCoordinate = nearestCity
-                ? {
-                    latitude: nearestCity.latitude,
-                    longitude: nearestCity.longitude,
-                    label: nearestCity.name,
-                  }
-                : coordinate;
-              setPlacingPin(false);
-              setSelected(undefined);
-              setHighlightedCity(nearestCity);
-              setDraftCoordinate(pinCoordinate);
-              setPinSheetOpen(true);
-            }}
+            onCoordinatePress={placePinAtCoordinate}
           />
         </AgentTestId>
 
         {landscape ? null : (
-          <View style={[styles.topChrome, { left: 12, right: 12 }]}>
+          <Animated.View
+            entering={chromeSwapEntering}
+            exiting={fadeExiting()}
+            style={[styles.topChrome, { left: 12, right: 12 }]}
+          >
             <View style={styles.titleRow}>
               {countryCode ? (
                 <TravelMapIconButton
@@ -394,13 +429,15 @@ export function TravelMapScreen() {
               friendLayers={friendLayers}
               selectedFriendIds={settings.selectedFriendIds}
               onChangeSelectedFriendIds={setSelectedFriendIds}
-              onOpenPeoplePicker={() => setPeoplePickerOpen(true)}
+              onOpenPeoplePicker={openPeoplePicker}
             />
-          </View>
+          </Animated.View>
         )}
 
         {landscape ? (
-          <View
+          <Animated.View
+            entering={chromeSwapEntering}
+            exiting={fadeExiting()}
             style={[
               styles.layerChromeLandscape,
               {
@@ -429,14 +466,16 @@ export function TravelMapScreen() {
               testID={AgentUiIds.travel.map.people}
               label="Choose friend maps"
               icon="people"
-              onPress={() => setPeoplePickerOpen(true)}
+              onPress={openPeoplePicker}
             />
-          </View>
+          </Animated.View>
         ) : null}
 
         {landscape && selectedCountry ? (
-          <View
+          <Animated.View
             pointerEvents="none"
+            entering={fadeEntering()}
+            exiting={fadeExiting()}
             style={[
               styles.countryNameLandscape,
               {
@@ -456,14 +495,15 @@ export function TravelMapScreen() {
                 {selectedCountry.name}
               </AppText>
             </GlassPlate>
-          </View>
+          </Animated.View>
         ) : null}
 
         {placingPin ? (
-          <GlassPlate
-            intensity={72}
+          <Animated.View
+            entering={popoverEntering()}
+            exiting={fadeExiting()}
             style={[
-              styles.placingHint,
+              styles.placingHintHost,
               {
                 bottom: landscape
                   ? Math.max(76, insets.bottom + 68)
@@ -471,24 +511,28 @@ export function TravelMapScreen() {
               },
             ]}
           >
-            <AppText variant="callout" align="center">
-              Tap inside {selectedCountry?.name} to place the pin
-            </AppText>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={() => {
-                setDraftTripId(undefined);
-                setPlacingPin(false);
-              }}
-            >
-              Cancel
-            </Button>
-          </GlassPlate>
+            <GlassPlate intensity={72} style={styles.placingHint}>
+              <AppText variant="callout" align="center">
+                Tap inside {selectedCountry?.name} to place the pin
+              </AppText>
+              <Button
+                size="sm"
+                variant="secondary"
+                onPress={() => {
+                  setDraftTripId(undefined);
+                  setPlacingPin(false);
+                }}
+              >
+                Cancel
+              </Button>
+            </GlassPlate>
+          </Animated.View>
         ) : null}
 
         {countryCode && !placingPin ? (
-          <View
+          <Animated.View
+            entering={fadeEntering()}
+            exiting={fadeExiting()}
             style={[
               styles.pinButton,
               {
@@ -518,7 +562,7 @@ export function TravelMapScreen() {
             >
               {highlightedCity ? `Pin ${highlightedCity.name}` : 'Pin a Place'}
             </Button>
-          </View>
+          </Animated.View>
         ) : null}
 
         {suggestion ? (
@@ -559,15 +603,29 @@ export function TravelMapScreen() {
         />
       ) : null}
 
+      {rotationSettling ? (
+        // Snap-on cover: any enter fade would let the OS stretch show through.
+        // Only the reveal eases once the new layout is at rest.
+        <Animated.View
+          pointerEvents="none"
+          exiting={fadeExiting()}
+          style={styles.rotationVeil}
+        >
+          <LinearGradient
+            colors={[TRAVEL_MAP_WORLD_BACKDROP_TOP, TRAVEL_MAP_OCEAN_BOTTOM]}
+            style={StyleSheet.absoluteFill}
+          />
+          <GlassPlate intensity={65} style={styles.rotationSpinnerWell}>
+            <LoadingSpinner size={26} accessibilityLabel="Rotating the atlas" />
+          </GlassPlate>
+        </Animated.View>
+      ) : null}
+
       <TravelMapCountryPicker
         visible={countryPickerOpen}
         supportedOrientations={atlasModalOrientations}
         onClose={() => setCountryPickerOpen(false)}
-        onSelect={(code) => {
-          setCountryCode(code);
-          setSelected(undefined);
-          setHighlightedCity(undefined);
-        }}
+        onSelect={openCountry}
       />
       {selectedCountry ? (
         <>
@@ -628,6 +686,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  rotationVeil: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rotationSpinnerWell: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   countryNameLandscape: { position: 'absolute', alignItems: 'center' },
   countryNameLandscapePlate: {
     minHeight: 46,
@@ -647,10 +721,12 @@ const styles = StyleSheet.create({
   },
   titleText: { textAlign: 'center' },
   pinButton: { position: 'absolute', right: 16 },
-  placingHint: {
+  placingHintHost: {
     position: 'absolute',
     alignSelf: 'center',
     maxWidth: 430,
+  },
+  placingHint: {
     borderRadius: 24,
     padding: 12,
     gap: 8,

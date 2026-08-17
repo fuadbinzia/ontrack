@@ -3,21 +3,26 @@ import * as Clipboard from 'expo-clipboard';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { useCallback, useRef, useState } from 'react';
 
+import { appPrompt } from '@/components/primitives';
 import type { DropdownAnchor } from '@/components/primitives/dropdown-layout';
+import { promptReportContent } from '@/features/account/report-content';
 import {
-  deleteTravelChatMessage,
-  editTravelChatMessage,
-  enableTravelChatNotifications,
-  markTravelChatRead,
-  sendTravelChatMessage,
-  sendTravelChatTyping,
-  setTravelChatReaction,
-  toggleTravelChatReactionLocal,
-  travelChatMessagePreview,
-  type OptimisticTravelChatMessage,
-  type TravelChatMessage,
+    deleteTravelChatMessage,
+    editTravelChatMessage,
+    enableTravelChatNotifications,
+    markTravelChatRead,
+    sendTravelChatMessage,
+    sendTravelChatTyping,
+    setTravelChatPreviewPreference,
+    setTravelChatReaction,
+    toggleTravelChatReactionLocal,
+    travelChatMessagePreview,
+    type OptimisticTravelChatMessage,
+    type TravelChatMessage,
 } from '@/features/travel/chat';
 import type { TravelChatMessageMenuAction } from '@/features/travel/travel-chat-message-menu';
+import { blockUser } from '@/services/moderation';
+import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { newId } from '@/utils/id';
 
 export function useTravelChatActions(input: {
@@ -239,6 +244,42 @@ export function useTravelChatActions(input: {
           );
         }
       })();
+      return;
+    }
+    if (action === 'report' && message.senderUserId) {
+      promptReportContent({
+        kind: 'travel_chat_message',
+        targetUserId: message.senderUserId,
+        contentId: message.id,
+      });
+      return;
+    }
+    if (action === 'block' && message.senderUserId) {
+      const targetUserId = message.senderUserId;
+      void confirmDestructiveAction({
+        title: 'Block This Person?',
+        message:
+          'You will stop seeing their trip chat messages. They stay on the trip unless a host removes them.',
+        actionLabel: 'Block',
+        onConfirm: () =>
+          void blockUser(targetUserId)
+            .then(() => {
+              setMessages((current) =>
+                current.filter((item) => item.senderUserId !== targetUserId),
+              );
+              appPrompt.alert(
+                'Blocked',
+                'Their messages are hidden. You can unblock them in Profile → Privacy & Data.',
+              );
+            })
+            .catch((reason: unknown) => {
+              setError(
+                reason instanceof Error
+                  ? reason.message
+                  : 'That person could not be blocked.',
+              );
+            }),
+      });
     }
   };
 
@@ -267,6 +308,28 @@ export function useTravelChatActions(input: {
     }
   };
 
+  const [showPreviews, setShowPreviews] = useState(false);
+
+  const updateShowPreviews = async (value: boolean) => {
+    if (!accessCode || !deviceId) return;
+    const previous = showPreviews;
+    setShowPreviews(value);
+    try {
+      await setTravelChatPreviewPreference({
+        accessCode,
+        deviceId,
+        showPreviews: value,
+      });
+    } catch (reason) {
+      setShowPreviews(previous);
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : 'Message preview preference could not be saved.',
+      );
+    }
+  };
+
   const canEnableAlerts =
     notificationsAvailable && !notificationsEnabled && Boolean(deviceId);
 
@@ -291,5 +354,7 @@ export function useTravelChatActions(input: {
     handleMessageMenuAction,
     enableNotifications,
     canEnableAlerts,
+    showPreviews,
+    updateShowPreviews,
   };
 }

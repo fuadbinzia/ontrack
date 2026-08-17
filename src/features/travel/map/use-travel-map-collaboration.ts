@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
-  flushTravelMapMutations,
-  listVisibleFriendMapProfiles,
-  loadFriendTravelMaps,
-  pullMyTravelMap,
+    flushTravelMapMutations,
+    listVisibleFriendMapProfiles,
+    loadFriendTravelMaps,
+    pullMyTravelMap,
 } from '@/services/travel/travel-map-collaboration';
 
 import type { TravelMapFriendLayer, TravelMapFriendProfile } from './types';
@@ -25,11 +25,19 @@ export function useTravelMapCollaboration({
   >([]);
   const [friendLayers, setFriendLayers] = useState<TravelMapFriendLayer[]>([]);
 
+  const refreshFriendProfiles = useCallback(() => {
+    if (!authenticated) return;
+    void listVisibleFriendMapProfiles()
+      .then(setFriendProfiles)
+      .catch(() => undefined);
+  }, [authenticated]);
+
   useEffect(() => {
     if (!authenticated) return;
     let active = true;
-    void Promise.all([pullMyTravelMap(), listVisibleFriendMapProfiles()])
-      .then(([, profiles]) => {
+    void pullMyTravelMap().catch(() => undefined);
+    void listVisibleFriendMapProfiles()
+      .then((profiles) => {
         if (active) setFriendProfiles(profiles);
       })
       .catch(() => undefined);
@@ -74,5 +82,5 @@ export function useTravelMapCollaboration({
     selectedFriendIds,
   ]);
 
-  return { friendProfiles, friendLayers };
+  return { friendProfiles, friendLayers, refreshFriendProfiles };
 }

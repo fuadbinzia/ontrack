@@ -189,7 +189,7 @@ export function Button({
         disabled={isDisabled}
         onPress={handlePress}
         style={({ pressed }) => [
-          { opacity: isDisabled && !loading ? 0.4 : pressed ? 0.75 : 1 },
+          { opacity: isDisabled && !loading ? 0.55 : pressed ? 0.75 : 1 },
           style,
         ]}>
         <GlassPlate
@@ -216,7 +216,7 @@ export function Button({
         hasTrailing ? styles.withTrailing : null,
         padStyle,
         {
-          opacity: isDisabled && !loading ? 0.4 : pressed ? 0.75 : 1,
+          opacity: isDisabled && !loading ? 0.55 : pressed ? 0.75 : 1,
           backgroundColor: solidBackground,
         },
         style,
@@ -312,7 +312,7 @@ export function IconButton({
               : glassMaterials.border.light
             : borderColor,
           borderWidth: glass || borderColor ? StyleSheet.hairlineWidth : 0,
-          opacity: isDisabled && !loading ? 0.35 : pressed ? 0.7 : 1,
+          opacity: isDisabled && !loading ? 0.5 : pressed ? 0.7 : 1,
         },
       ]}>
       {glass ? (

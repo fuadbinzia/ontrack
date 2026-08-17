@@ -62,6 +62,7 @@ export const agentUiIdsShell = {
   },
   health: {
     settings: 'ontrack.health.settings',
+    privacy: 'ontrack.health.privacy',
     section: (section: string) => `ontrack.health.section.${section}`,
     connect: 'ontrack.health.body.connect',
     refresh: 'ontrack.health.body.refresh',
@@ -553,6 +554,8 @@ export const agentUiIdsShell = {
     requestCancel: (requestId: string) => `ontrack.social.request.cancel.${requestId}`,
     friendAddToTrip: (friendId: string) => `ontrack.social.friend.addToTrip.${friendId}`,
     friendRemove: (friendId: string) => `ontrack.social.friend.remove.${friendId}`,
+    friendBlock: (friendId: string) => `ontrack.social.friend.block.${friendId}`,
+    friendReport: (friendId: string) => `ontrack.social.friend.report.${friendId}`,
   },
   chrome: {
     back: 'ontrack.chrome.back',

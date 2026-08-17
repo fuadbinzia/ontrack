@@ -3,24 +3,24 @@ import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/asy
 import { ALL_ACCOUNTS_TEST_TRIP } from '@/constants/travel';
 import { FOOD_FIXTURE_RECIPE_IDS, buildFoodFixtureRecipes } from '@/features/food/fixtures';
 import { SAMPLE_PLANT_ID } from '@/features/plants/sample';
-import { PRIVACY_POLICY_INTRO } from '../privacy-policy-content';
 import { useFoodProfile } from '@/store/food-profile';
+import { useRecipes } from '@/store/food-recipes';
 import { useHealth } from '@/store/health';
 import { useJournal } from '@/store/journal';
 import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
-import { useRecipes } from '@/store/food-recipes';
 import { useSchedule } from '@/store/schedule';
 import { useChecklists } from '@/store/todos';
 import { useTravel } from '@/store/travel';
 import { useVisionBoard } from '@/store/vision-board';
+import { PRIVACY_POLICY_INTRO } from '../privacy-policy-content';
 
 import {
-  applyBackup,
-  backupFileName,
-  buildBackup,
-  parseBackup,
-  serializeBackup,
+    applyBackup,
+    backupFileName,
+    buildBackup,
+    parseBackup,
+    serializeBackup,
 } from '../backup-archive';
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
@@ -58,7 +58,9 @@ describe('user-owned backup archive', () => {
 
   it('round-trips journal text that cloud sync does not store', () => {
     useJournal.getState().addText('2026-08-16', 'Keep this page');
-    const backup = buildBackup('2026-08-16T18:00:00.000Z');
+    const backup = buildBackup('2026-08-16T18:00:00.000Z', {
+      includeSensitiveLocal: true,
+    });
     expect(backup.kind).toBe('ontrack.backup');
     expect(backup.local.journal?.pages[0]?.blocks).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: 'text', text: 'Keep this page' })]),
@@ -196,7 +198,7 @@ describe('user-owned backup archive', () => {
     ]);
     useRecipes.getState().setSeeded(true);
 
-    const json = serializeBackup(buildBackup());
+    const json = serializeBackup(buildBackup(undefined, { includeSensitiveLocal: true }));
     expect(json).not.toContain(PRIVACY_POLICY_INTRO);
     expect(json).not.toContain('This Privacy Policy explains');
     expect(json).not.toContain(SAMPLE_PLANT_ID);
@@ -249,6 +251,26 @@ describe('user-owned backup archive', () => {
     expect(useRecipes.getState().recipes.some((recipe) => recipe.id === FOOD_FIXTURE_RECIPE_IDS.shakshuka)).toBe(false);
     expect(useFoodProfile.getState().profile.privacy.shareAllergies).toBe(true);
     expect(useHealth.getState().emotions.some((emotion) => emotion.name === 'Sparkly')).toBe(true);
+  });
+
+  it('omits health and journal from plaintext backups unless opted in', () => {
+    useJournal.getState().addText('2026-08-16', 'Private diary');
+    useHealth.getState().addCustomEmotion('Sparkly', 2);
+    const excluded = buildBackup();
+    expect(excluded.local.journal).toBeUndefined();
+    expect(excluded.local.health).toBeUndefined();
+    expect(serializeBackup(excluded)).not.toContain('Private diary');
+    expect(serializeBackup(excluded)).not.toContain('Sparkly');
+
+    const included = buildBackup(undefined, { includeSensitiveLocal: true });
+    expect(included.local.journal?.pages[0]?.blocks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: 'text', text: 'Private diary' }),
+      ]),
+    );
+    expect(included.local.health?.emotions.some((emotion) => emotion.name === 'Sparkly')).toBe(
+      true,
+    );
   });
 
   it('round-trips avatar and appearance customizations', () => {

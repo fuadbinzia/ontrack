@@ -1,7 +1,7 @@
 import {
-  ONTRACK_SUPPORT_EMAIL,
-  PRIVACY_POLICY_UPDATED,
-  TERMS_OF_USE_UPDATED,
+    ONTRACK_SUPPORT_EMAIL,
+    PRIVACY_POLICY_UPDATED,
+    TERMS_OF_USE_UPDATED,
 } from '@/constants/legal';
 
 import { PRIVACY_POLICY_SECTIONS } from '../privacy-policy-content';
@@ -18,7 +18,7 @@ function documentText(
 describe('current legal disclosures', () => {
   it('dates both legal documents to the current product update', () => {
     expect(PRIVACY_POLICY_UPDATED).toBe('August 17, 2026');
-    expect(TERMS_OF_USE_UPDATED).toBe('August 16, 2026');
+    expect(TERMS_OF_USE_UPDATED).toBe('August 17, 2026');
   });
 
   it('covers newly introduced sensitive data and provider boundaries', () => {
@@ -48,6 +48,8 @@ describe('current legal disclosures', () => {
     );
     expect(privacy).toMatch(/photos, videos, voice notes/i);
     expect(privacy).not.toMatch(/are not packed into the backup file/i);
+    expect(privacy).toMatch(/off by default for new installs/i);
+    expect(privacy).not.toMatch(/on by default/i);
   });
 
   it('states the product limits for finance, AI, sharing, and imported data', () => {
@@ -60,6 +62,7 @@ describe('current legal disclosures', () => {
     expect(terms).toMatch(/E-ZPass imports can misread/i);
     expect(terms).toMatch(/people or audience you select can view/i);
     expect(terms).toMatch(/does not promise to monitor every post/i);
+    expect(terms).toMatch(/at least 13 years old/i);
   });
 
   it('disclaims third-party affiliation and provides a removal contact', () => {

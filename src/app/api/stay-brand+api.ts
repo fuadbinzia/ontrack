@@ -1,9 +1,10 @@
-import { apiCorsHeaders, apiOptionsResponse } from '@/services/http/cors';
 import {
-  STAY_BRAND_UA,
-  lookupStayBrandDomain,
+    STAY_BRAND_UA,
+    lookupStayBrandDomain,
 } from '@/features/travel/stay-brand-lookup';
 import { lookupStayProviderBrandLogoUrl } from '@/features/travel/stays/stay-provider-logo-lookup';
+import { gatePublicApiRequest } from '@/services/http/api-gate';
+import { apiCorsHeaders, apiOptionsResponse } from '@/services/http/cors';
 
 export function OPTIONS(request: Request) {
   return apiOptionsResponse(request, 'GET, OPTIONS');
@@ -11,6 +12,13 @@ export function OPTIONS(request: Request) {
 
 /** Resolve a hotel/OTA brand domain (+ homepage logo) from stay title. */
 export async function GET(request: Request) {
+  const gate = await gatePublicApiRequest(request);
+  if (gate === 'rate_limited') {
+    return Response.json(
+      { error: 'Too many brand lookups. Try again later.' },
+      { status: 429, headers: apiCorsHeaders(request, 'GET, OPTIONS') },
+    );
+  }
   const params = new URL(request.url).searchParams;
   const title = params.get('title')?.trim() ?? '';
   const bookingUrl = params.get('bookingUrl')?.trim() || undefined;

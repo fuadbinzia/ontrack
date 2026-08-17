@@ -2,36 +2,38 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { appPrompt, ErrorMessage, Screen } from '@/components/primitives';
+import { promptReportContent } from '@/features/account/report-content';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { SocialActionModal } from '@/features/social/social-action-modal';
 import { SocialActivityFeed } from '@/features/social/social-feed';
 import { buildSocialFeedItems } from '@/features/social/social-feed-model';
-import {
-  SocialFriendsCard,
-  SocialHeader,
-  SocialQuickActions,
-  SocialUpcomingTogether,
-} from '@/features/social/social-hub-sections';
 import { SocialFriendsModal } from '@/features/social/social-friends-modal';
+import {
+    SocialFriendsCard,
+    SocialHeader,
+    SocialQuickActions,
+    SocialUpcomingTogether,
+} from '@/features/social/social-hub-sections';
 import { socialTripMemberships } from '@/features/social/social-trip-membership';
 import type {
-  SocialFeedItem,
-  SocialPlaceholder,
-  SocialQuickActionId,
+    SocialFeedItem,
+    SocialPlaceholder,
+    SocialQuickActionId,
 } from '@/features/social/social-types';
 import type { TravelPlan } from '@/features/travel/types';
-import { useResponsive } from '@/hooks/use-responsive';
 import { useRouteIsActive } from '@/hooks/use-app-activity';
 import { useFriendsRealtime } from '@/hooks/use-friends-realtime';
+import { useResponsive } from '@/hooks/use-responsive';
 import {
-  createFriendInviteUrl,
-  getMyFriendInvite,
-  setFriendInviteSlug,
-  shareFriendInvite,
-  type FriendProfile,
-  type FriendRequestItem,
-  type MyFriendInvite,
+    createFriendInviteUrl,
+    getMyFriendInvite,
+    setFriendInviteSlug,
+    shareFriendInvite,
+    type FriendProfile,
+    type FriendRequestItem,
+    type MyFriendInvite,
 } from '@/services/friends';
+import { blockUser } from '@/services/moderation';
 import { useFriends } from '@/store/friends';
 import { usePreferences } from '@/store/preferences';
 import { useTravel } from '@/store/travel';
@@ -413,6 +415,27 @@ export function SocialHubScreen() {
     [removeFriend, run],
   );
 
+  const block = useCallback(
+    (friend: FriendProfile) => {
+      void confirmDestructiveAction({
+        title: 'Block This Person?',
+        message: `${friend.displayName} will be removed from your friends list and you will stop seeing their messages.`,
+        actionLabel: 'Block',
+        onConfirm: () =>
+          void run(`block-${friend.userId}`, () => blockUser(friend.userId)),
+      });
+    },
+    [run],
+  );
+
+  const report = useCallback((friend: FriendProfile) => {
+    promptReportContent({
+      kind: 'user',
+      targetUserId: friend.userId,
+      contentId: friend.userId,
+    });
+  }, []);
+
   const accept = useCallback(
     (request: FriendRequestItem) => {
       void run(`accept-${request.id}`, () => acceptRequest(request.id));
@@ -523,6 +546,8 @@ export function SocialHubScreen() {
         onDecline={decline}
         onCancel={cancel}
         onRemove={remove}
+        onBlock={block}
+        onReport={report}
       />
 
       <SocialActionModal

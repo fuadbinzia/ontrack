@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.125",
+    "date": "2026-08-17",
+    "notes": [
+      "Ship store-readiness privacy controls, travel map country zoom, and accessibility hardening.",
+      "Touched: app routes."
+    ]
+  },
+  {
     "version": "1.0.124",
     "date": "2026-08-17",
     "notes": [

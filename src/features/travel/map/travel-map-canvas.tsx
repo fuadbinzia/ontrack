@@ -1,71 +1,37 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-  type LayoutChangeEvent,
-} from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
+    ReduceMotion,
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient,
-  Path,
-  Pattern,
-  Rect,
-  Stop,
-} from 'react-native-svg';
 
-import { AppText } from '@/components/primitives';
-import { motion } from '@/design-system';
-import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { easings, motion } from '@/design-system';
+import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 
+import type { TravelMapCity } from './city-data';
+import { atlasCountryByCode, type AtlasCountry } from './country-data';
 import {
-  ATLAS_COUNTRIES,
-  TRAVEL_MAP_INK,
-  TRAVEL_MAP_LAND_COLORS,
-  TRAVEL_MAP_OCEAN_BOTTOM,
-  TRAVEL_MAP_OCEAN_MIDDLE,
-  TRAVEL_MAP_OCEAN_TOP,
-  TRAVEL_MAP_VIEWBOX,
-  atlasCountryContainsCoordinate,
-  atlasCountryByCode,
-  atlasCountryDetail,
-  countryViewBox,
-  invertTravelCoordinate,
-  projectTravelCoordinate,
-  travelMapStrokeWidth,
-} from './country-data';
-import { atlasCitiesForCountry, type TravelMapCity } from './city-data';
-import {
-  TRAVEL_GLOBE_INITIAL_ROTATION,
-  travelGlobeRotationForCoordinate,
-  type TravelGlobeRotation,
+    TRAVEL_GLOBE_INITIAL_ROTATION,
+    travelGlobeRotationForCoordinate,
+    type TravelGlobeRotation,
 } from './globe-projection';
 import {
-  travelMapCountryClusters,
-  type TravelMapRenderedVisit,
+    travelMapCountryClusters,
+    type TravelMapPlaceSelection,
+    type TravelMapRenderedVisit,
 } from './model';
-import { TravelMapPinButton } from './travel-map-pin-button';
+import {
+    TRAVEL_MAP_COUNTRY_OCEAN_TOP,
+    TravelMapCountryView,
+} from './travel-map-country-view';
 import { TravelMapWorldFlat } from './travel-map-world-flat';
 import { TravelMapWorldGlobe } from './travel-map-world-globe';
-import type { TravelMapPlacePin } from './types';
 
-type ViewBox = { x: number; y: number; width: number; height: number };
-type Layout = { width: number; height: number };
-
-export const TRAVEL_MAP_COUNTRY_OCEAN_TOP = TRAVEL_MAP_OCEAN_TOP;
-
-export interface TravelMapPlaceSelection {
-  rendered: TravelMapRenderedVisit;
-  pin: TravelMapPlacePin;
-}
+export { TRAVEL_MAP_COUNTRY_OCEAN_TOP };
+export type { TravelMapPlaceSelection };
 
 type Props = {
   renderedVisits: TravelMapRenderedVisit[];
@@ -80,45 +46,14 @@ type Props = {
   onCoordinatePress?: (coordinate: { latitude: number; longitude: number }) => void;
 };
 
-function pointInLayout(
-  point: [number, number],
-  viewBox: ViewBox,
-  layout: Layout,
-): { left: number; top: number } {
-  const scale = Math.min(layout.width / viewBox.width, layout.height / viewBox.height);
-  const paintedWidth = viewBox.width * scale;
-  const paintedHeight = viewBox.height * scale;
-  return {
-    left: (layout.width - paintedWidth) / 2 + (point[0] - viewBox.x) * scale,
-    top: (layout.height - paintedHeight) / 2 + (point[1] - viewBox.y) * scale,
-  };
-}
+/** World ↔ country dive: crossfade + camera push, both layers held to settle. */
+const STAGE_TIMING = {
+  duration: motion.page,
+  easing: easings.standard,
+  reduceMotion: ReduceMotion.System,
+} as const;
 
-function layoutToPoint(
-  location: { x: number; y: number },
-  viewBox: ViewBox,
-  layout: Layout,
-): [number, number] | undefined {
-  const scale = Math.min(layout.width / viewBox.width, layout.height / viewBox.height);
-  const paintedWidth = viewBox.width * scale;
-  const paintedHeight = viewBox.height * scale;
-  const offsetX = (layout.width - paintedWidth) / 2;
-  const offsetY = (layout.height - paintedHeight) / 2;
-  if (
-    location.x < offsetX ||
-    location.y < offsetY ||
-    location.x > offsetX + paintedWidth ||
-    location.y > offsetY + paintedHeight
-  ) {
-    return undefined;
-  }
-  return [
-    viewBox.x + (location.x - offsetX) / scale,
-    viewBox.y + (location.y - offsetY) / scale,
-  ];
-}
-
-export function TravelMapCanvas({
+export const TravelMapCanvas = memo(function TravelMapCanvas({
   renderedVisits,
   selectedCountryCode,
   selectedPinId,
@@ -133,18 +68,6 @@ export function TravelMapCanvas({
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const landscape = windowWidth > windowHeight;
   const selectedCountry = atlasCountryByCode(selectedCountryCode);
-  const selectedCountryDetail = useMemo(
-    () => selectedCountry ? atlasCountryDetail(selectedCountry) : undefined,
-    [selectedCountry],
-  );
-  const viewBox = useMemo<ViewBox>(
-    () =>
-      selectedCountry
-        ? countryViewBox(selectedCountry, windowWidth / Math.max(1, windowHeight))
-        : { x: 0, y: 0, ...TRAVEL_MAP_VIEWBOX },
-    [selectedCountry, windowHeight, windowWidth],
-  );
-  const [layout, setLayout] = useState<Layout>({ width: 1, height: 1 });
   const [worldAutoRotate, setWorldAutoRotate] = useState(true);
   const [worldRotation, setWorldRotation] = useState<TravelGlobeRotation>(
     TRAVEL_GLOBE_INITIAL_ROTATION,
@@ -154,70 +77,71 @@ export function TravelMapCanvas({
     [renderedVisits],
   );
 
-  const placeAtLayoutPoint = useCallback((x: number, y: number) => {
-    const point = layoutToPoint({ x, y }, viewBox, layout);
-    if (!point) return;
-    const coordinate = invertTravelCoordinate(point[0], point[1]);
-    if (coordinate) onCoordinatePress?.(coordinate);
-  }, [layout, onCoordinatePress, viewBox]);
-  const mapTapAgent = useAgentUiTarget(
-    selectedCountry ? AgentUiIds.travel.map.pinMapTarget : undefined,
-    {
-      label: 'Tap the country map to pin this location',
-      onPress: selectedCountry
-        ? () => placeAtLayoutPoint(layout.width / 2, layout.height / 2)
-        : undefined,
-    },
-  );
+  // Both stage shells stay mounted for the life of the canvas; the dive only
+  // interpolates opacity/scale and swaps content *inside* the country shell.
+  // Mounting or unmounting a GestureDetector mid-transition trips an RNGH v3
+  // native assert ("more than one child view while handlers are attached").
+  const [stageCountry, setStageCountry] = useState<AtlasCountry>();
+  const countryTransition = useSharedValue(0);
 
-  const scale = useSharedValue(1);
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const startX = useSharedValue(0);
-  const startY = useSharedValue(0);
-  const startScale = useSharedValue(1);
+  // Portrait globe ↔ landscape flat map crossfade. Both variants stay mounted
+  // (the globe carries a GestureDetector, so it must never churn mid-rotation);
+  // the parked variant is display-culled once the fade settles. Starts at the
+  // current orientation so page open stays at rest.
+  const orientation = useSharedValue(landscape ? 1 : 0);
+
+  // The hidden flat world (~235 SVG paths) is off the open critical path: it
+  // mounts once after the page transition settles — or immediately when a
+  // rotation demands it — and never unmounts. Safe to late-mount because the
+  // flat map carries no GestureDetector (the globe still mounts at first
+  // commit, keeping every detector mount atomic).
+  const [flatStagePrepared, setFlatStagePrepared] = useState(landscape);
 
   useEffect(() => {
-    scale.value = withTiming(1, { duration: motion.page });
-    translateX.value = withTiming(0, { duration: motion.page });
-    translateY.value = withTiming(0, { duration: motion.page });
-  }, [highlightedCity?.name, placing, scale, selectedCountryCode, translateX, translateY]);
+    if (flatStagePrepared) return;
+    if (landscape) {
+      setFlatStagePrepared(true);
+      return;
+    }
+    return deferAfterPageTransition(() => setFlatStagePrepared(true));
+  }, [flatStagePrepared, landscape]);
 
-  const pan = Gesture.Pan()
-    .enabled(Boolean(selectedCountry) && !placing)
-    .onBegin(() => {
-      startX.value = translateX.value;
-      startY.value = translateY.value;
-    })
-    .onUpdate((event) => {
-      translateX.value = startX.value + event.translationX;
-      translateY.value = startY.value + event.translationY;
-    });
-  const pinch = Gesture.Pinch()
-    .enabled(Boolean(selectedCountry) && !placing)
-    .onBegin(() => {
-      startScale.value = scale.value;
-    })
-    .onUpdate((event) => {
-      scale.value = Math.max(1, Math.min(4, startScale.value * event.scale));
-    });
-  const mapGesture = Gesture.Simultaneous(pan, pinch);
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
+  const flatStageReady = flatStagePrepared || landscape;
+
+  useEffect(() => {
+    orientation.value = withTiming(landscape ? 1 : 0, STAGE_TIMING);
+  }, [landscape, orientation]);
+
+  const globeLayerStyle = useAnimatedStyle(() => ({
+    opacity: 1 - orientation.value,
+    display: orientation.value >= 1 ? ('none' as const) : ('flex' as const),
+  }));
+  const flatLayerStyle = useAnimatedStyle(() => ({
+    opacity: orientation.value,
+    display: orientation.value <= 0 ? ('none' as const) : ('flex' as const),
   }));
 
-  const updateLayout = (event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    if (width > 0 && height > 0) setLayout({ width, height });
-  };
+  useEffect(() => {
+    if (selectedCountry) {
+      setStageCountry(selectedCountry);
+      countryTransition.value = withTiming(1, STAGE_TIMING);
+    } else {
+      countryTransition.value = withTiming(0, STAGE_TIMING, (finished) => {
+        if (finished) runOnJS(setStageCountry)(undefined);
+      });
+    }
+  }, [countryTransition, selectedCountry]);
 
-  const stopWorldAutoRotation = useCallback(() => {
-    setWorldAutoRotate(false);
-  }, []);
+  const worldStageStyle = useAnimatedStyle(() => ({
+    opacity: 1 - countryTransition.value,
+    transform: [{ scale: 1 + 0.16 * countryTransition.value }],
+    // Fully parked world costs nothing while the country map is open.
+    display: countryTransition.value >= 1 ? ('none' as const) : ('flex' as const),
+  }));
+  const countryStageStyle = useAnimatedStyle(() => ({
+    opacity: countryTransition.value,
+    transform: [{ scale: 1.1 - 0.1 * countryTransition.value }],
+  }));
 
   useEffect(() => {
     if (!initialGlobeCoordinate || !worldAutoRotate) return;
@@ -229,212 +153,77 @@ export function TravelMapCanvas({
     );
   }, [initialGlobeCoordinate, worldAutoRotate]);
 
-  const countryPlaces = selectedCountryCode
-    ? renderedVisits.flatMap((rendered) =>
-        rendered.visit.countryCode !== selectedCountryCode
-          ? []
-          : rendered.visit.places.map((pin) => ({ rendered, pin })),
-      )
-    : [];
-  const cityMarkers = useMemo(() => {
-    if (!selectedCountryCode) return [];
-    const occupied: { left: number; top: number }[] = [];
-    const countryCities = atlasCitiesForCountry(selectedCountryCode);
-    const orderedCities = highlightedCity
-      ? [
-          highlightedCity,
-          ...countryCities.filter((city) => city.name !== highlightedCity.name),
-        ]
-      : countryCities;
-    return orderedCities.flatMap((city) => {
-      if (!atlasCountryContainsCoordinate(
-        selectedCountryCode,
-        city.latitude,
-        city.longitude,
-      )) return [];
-      const projected = projectTravelCoordinate(city.latitude, city.longitude);
-      if (!projected) return [];
-      const position = pointInLayout(projected, viewBox, layout);
-      const overlaps = occupied.some(
-        (placed) => Math.abs(placed.left - position.left) < 60 && Math.abs(placed.top - position.top) < 18,
-      );
-      if (overlaps) return [];
-      occupied.push(position);
-      return [{
-        city,
-        position,
-        highlighted: city.name === highlightedCity?.name,
-      }];
-    });
-  }, [highlightedCity, layout, selectedCountryCode, viewBox]);
-  const selectedBorderWidth = travelMapStrokeWidth(viewBox, layout, 3);
-  const mapUnit = travelMapStrokeWidth(viewBox, layout, 1);
+  const stopWorldAutoRotation = useCallback(() => {
+    setWorldAutoRotate(false);
+  }, []);
+
+  // The globe idles only while it is the visible, interactive world layer.
+  const globeMotionEnabled =
+    worldAutoRotate && !worldMotionPaused && !selectedCountry && !landscape;
+
+  const stageCountryCode = stageCountry?.code;
+  const stagePlaces = useMemo<TravelMapPlaceSelection[]>(
+    () =>
+      stageCountryCode
+        ? renderedVisits.flatMap((rendered) =>
+            rendered.visit.countryCode !== stageCountryCode
+              ? []
+              : rendered.visit.places.map((pin) => ({ rendered, pin })),
+          )
+        : [],
+    [renderedVisits, stageCountryCode],
+  );
 
   return (
-    <View style={styles.root} onLayout={updateLayout}>
-      {selectedCountry ? (
-        <GestureDetector gesture={mapGesture}>
-          <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
-            <Svg
-              width="100%"
-              height="100%"
-              viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
-              preserveAspectRatio="xMidYMid meet">
-              <Defs>
-                <LinearGradient id="ocean" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={TRAVEL_MAP_COUNTRY_OCEAN_TOP} />
-                  <Stop offset="0.55" stopColor={TRAVEL_MAP_OCEAN_MIDDLE} />
-                  <Stop offset="1" stopColor={TRAVEL_MAP_OCEAN_BOTTOM} />
-                </LinearGradient>
-                <Pattern
-                  id="paper"
-                  width={24 * mapUnit}
-                  height={24 * mapUnit}
-                  patternUnits="userSpaceOnUse">
-                  <Circle cx={4 * mapUnit} cy={6 * mapUnit} r={1.4 * mapUnit} fill="rgba(255,255,255,0.16)" />
-                  <Circle cx={18 * mapUnit} cy={17 * mapUnit} r={mapUnit} fill="rgba(9,71,111,0.09)" />
-                </Pattern>
-              </Defs>
-              <Rect
-                x={viewBox.x}
-                y={viewBox.y}
-                width={viewBox.width}
-                height={viewBox.height}
-                fill="url(#ocean)"
-              />
-              <Rect
-                x={viewBox.x}
-                y={viewBox.y}
-                width={viewBox.width}
-                height={viewBox.height}
-                fill="url(#paper)"
-              />
-              <Path
-                d="M35 120 C180 70 300 155 430 102 S700 54 950 130"
-                stroke="rgba(239,253,249,0.36)"
-                strokeWidth={2.5 * mapUnit}
-                strokeDasharray={`${10 * mapUnit} ${12 * mapUnit}`}
-                strokeLinecap="round"
-                fill="none"
-              />
-              <Path
-                d="M70 410 C250 345 335 462 500 398 S780 322 930 420"
-                stroke="rgba(14,78,105,0.24)"
-                strokeWidth={2.5 * mapUnit}
-                strokeDasharray={`${9 * mapUnit} ${13 * mapUnit}`}
-                strokeLinecap="round"
-                fill="none"
-              />
-              <Path
-                d={selectedCountryDetail?.path ?? selectedCountry.path}
-                fill={TRAVEL_MAP_INK}
-                opacity="0.22"
-                transform={`translate(${4 * mapUnit} ${5 * mapUnit})`}
-                pointerEvents="none"
-              />
-              <Path
-                d={selectedCountryDetail?.path ?? selectedCountry.path}
-                fill={
-                  TRAVEL_MAP_LAND_COLORS[
-                    ATLAS_COUNTRIES.indexOf(selectedCountry) % TRAVEL_MAP_LAND_COLORS.length
-                  ]
-                }
-                stroke={TRAVEL_MAP_INK}
-                strokeOpacity="0.94"
-                strokeWidth={selectedBorderWidth}
-                strokeLinejoin="round"
-              />
-            </Svg>
-
-            <Pressable
-              ref={mapTapAgent.ref}
-              testID={mapTapAgent.testID}
-              onLayout={mapTapAgent.onLayout}
-              accessibilityRole="button"
-              accessibilityLabel="Tap the country map to pin this location"
-              onPress={(event) => {
-                placeAtLayoutPoint(
-                  event.nativeEvent.locationX,
-                  event.nativeEvent.locationY,
-                );
-              }}
-              style={StyleSheet.absoluteFill}
+    <View style={styles.root}>
+      <Animated.View
+        pointerEvents={selectedCountry ? 'none' : 'auto'}
+        style={[StyleSheet.absoluteFill, worldStageStyle]}
+      >
+        <Animated.View
+          pointerEvents={landscape ? 'none' : 'auto'}
+          style={[StyleSheet.absoluteFill, globeLayerStyle]}
+        >
+          <TravelMapWorldGlobe
+            autoRotate={globeMotionEnabled}
+            clusters={clusters}
+            onCountryPress={onCountryPress}
+            onInteract={stopWorldAutoRotation}
+            onRotationChange={setWorldRotation}
+            rotation={worldRotation}
+          />
+        </Animated.View>
+        <Animated.View
+          pointerEvents={landscape ? 'auto' : 'none'}
+          style={[StyleSheet.absoluteFill, flatLayerStyle]}
+        >
+          {flatStageReady ? (
+            <TravelMapWorldFlat
+              clusters={clusters}
+              onCountryPress={onCountryPress}
             />
+          ) : null}
+        </Animated.View>
+      </Animated.View>
 
-            <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-              {cityMarkers.map(({ city, highlighted, position }) => {
-                const alignRight = position.left > layout.width * 0.72;
-                return (
-                  <View
-                    key={`${city.countryCode}:${city.name}`}
-                    pointerEvents="none"
-                    style={[
-                      styles.cityMarker,
-                      alignRight
-                        ? { right: layout.width - position.left, top: position.top, flexDirection: 'row-reverse' }
-                        : { left: position.left, top: position.top },
-                    ]}>
-                    <View
-                      style={[
-                        styles.cityDot,
-                        city.capital && styles.capitalDot,
-                        highlighted && styles.highlightedCityDot,
-                      ]}
-                    />
-                    <AppText
-                      variant="caption"
-                      color={highlighted ? 'accent' : undefined}
-                      numberOfLines={1}
-                      style={[
-                        styles.cityName,
-                        highlighted && styles.highlightedCityName,
-                        alignRight && styles.cityNameRight,
-                      ]}>
-                      {city.name}
-                    </AppText>
-                  </View>
-                );
-              })}
-              {countryPlaces.map(({ rendered, pin }, index) => {
-                const projected = projectTravelCoordinate(pin.latitude, pin.longitude);
-                if (!projected) return null;
-                const position = pointInLayout(projected, viewBox, layout);
-                const offset = (index % 3) * 4 - 4;
-                return (
-                  <TravelMapPinButton
-                    key={`${rendered.person.userId}:${pin.id}`}
-                    testID={AgentUiIds.travel.map.place(pin.id)}
-                    label={`${pin.label}, ${rendered.person.displayName}`}
-                    colors={[rendered.person.color]}
-                    selected={pin.id === selectedPinId}
-                    left={position.left + offset}
-                    top={position.top - offset}
-                    onPress={() => onPlacePress({ rendered, pin })}
-                  />
-                );
-              })}
-            </View>
-          </Animated.View>
-        </GestureDetector>
-      ) : landscape ? (
-        <TravelMapWorldFlat
-          clusters={clusters}
-          onCountryPress={onCountryPress}
+      <Animated.View
+        pointerEvents={selectedCountry ? 'auto' : 'none'}
+        style={[StyleSheet.absoluteFill, countryStageStyle]}
+      >
+        <TravelMapCountryView
+          country={stageCountry}
+          active={Boolean(selectedCountry)}
+          places={stagePlaces}
+          selectedPinId={selectedPinId}
+          highlightedCity={highlightedCity}
+          placing={placing}
+          onPlacePress={onPlacePress}
+          onCoordinatePress={onCoordinatePress}
         />
-      ) : (
-        <TravelMapWorldGlobe
-          autoRotate={worldAutoRotate && !worldMotionPaused}
-          clusters={clusters}
-          onCountryPress={onCountryPress}
-          onInteract={stopWorldAutoRotation}
-          onRotationChange={setWorldRotation}
-          rotation={worldRotation}
-        />
-      )}
-
+      </Animated.View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {
@@ -442,43 +231,4 @@ const styles = StyleSheet.create({
     minHeight: 240,
     overflow: 'hidden',
   },
-  cityMarker: {
-    position: 'absolute',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    transform: [{ translateY: -5 }],
-  },
-  cityDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#FFF4C2',
-    borderWidth: 1.5,
-    borderColor: TRAVEL_MAP_INK,
-  },
-  capitalDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: '#F17868',
-  },
-  highlightedCityDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    backgroundColor: '#FFF4C2',
-  },
-  highlightedCityName: {
-    fontWeight: '700',
-  },
-  cityName: {
-    color: TRAVEL_MAP_INK,
-    fontWeight: '600',
-    textShadowColor: 'rgba(255,255,255,0.95)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  cityNameRight: { textAlign: 'right' },
 });

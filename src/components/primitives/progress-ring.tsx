@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  useAnimatedProps,
-  useSharedValue,
-  withTiming,
+    useAnimatedProps,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -65,6 +65,9 @@ export function ProgressRing({
   return (
     <View
       accessibilityRole="progressbar"
+      accessibilityLabel={
+        [label, sublabel].filter(Boolean).join(', ') || 'Progress'
+      }
       accessibilityValue={{ now: Math.round(clamped * 100), min: 0, max: 100 }}
       style={{
         width: size,

@@ -296,7 +296,6 @@ export function StayProviderScreen({ planId }: { planId: string }) {
             STAY SEARCH
           </AppText>
           <Text
-            allowFontScaling={false}
             style={[
               styles.title,
               {

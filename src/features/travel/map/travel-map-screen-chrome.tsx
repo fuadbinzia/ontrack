@@ -1,12 +1,14 @@
 import { Pressable, StyleSheet, View, type ModalProps } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import {
-  AppText,
-  Button,
-  GlassPlate,
-  Symbol,
-  appPrompt,
+    AppText,
+    Button,
+    GlassPlate,
+    Symbol,
+    appPrompt,
 } from '@/components/primitives';
+import { fadeExiting, popoverEntering } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { PeoplePicker } from '@/features/social/people-picker';
 import { setTravelMapVisibility } from '@/services/travel/travel-map-collaboration';
@@ -15,6 +17,10 @@ import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
 import type { TravelMapRenderedVisit } from './model';
 import type { TravelMapPlaceSelection } from './travel-map-canvas';
+import {
+    travelMapOverlayConfirmIds,
+    travelMapOverlayPickerIds,
+} from './travel-map-overlay-picker';
 import { TravelMapPreviewCard } from './travel-map-preview-card';
 import { TravelMapSharingRow } from './travel-map-sharing-row';
 import type { TravelMapFriendLayer, TravelMapFriendProfile } from './types';
@@ -39,16 +45,12 @@ export function TravelMapPeoplePicker({
   onChangeSelectedFriendIds: (ids: string[]) => void;
 }) {
   const friends = useFriends((state) => state.friends);
-  const visibleFriendIds = new Set(
-    friendProfiles.map((profile) => profile.userId),
-  );
-  const excludeIds = friends
-    .filter(
-      (friend) =>
-        !visibleFriendIds.has(friend.userId) ||
-        selectedFriendIds.includes(friend.userId),
-    )
-    .map((friend) => friend.userId);
+  const sharingUserIds = friendProfiles.map((profile) => profile.userId);
+  const { excludeIds, disabledIds } = travelMapOverlayPickerIds({
+    friends,
+    sharingUserIds,
+    selectedFriendIds,
+  });
 
   return (
     <PeoplePicker
@@ -81,11 +83,15 @@ export function TravelMapPeoplePicker({
       }
       supportedOrientations={supportedOrientations}
       excludeIds={excludeIds}
+      disabledIds={disabledIds}
       onConfirm={(picked) => {
-        const allowed = picked
-          .map((friend) => friend.userId)
-          .filter((id) => visibleFriendIds.has(id));
-        onChangeSelectedFriendIds([...selectedFriendIds, ...allowed]);
+        onChangeSelectedFriendIds(
+          travelMapOverlayConfirmIds(
+            picked.map((friend) => friend.userId),
+            sharingUserIds,
+            selectedFriendIds,
+          ),
+        );
       }}
     />
   );
@@ -107,7 +113,9 @@ export function TravelMapSelectionPreview({
   onOpenTrip?: () => void;
 }) {
   return (
-    <View
+    <Animated.View
+      entering={popoverEntering()}
+      exiting={fadeExiting()}
       style={
         landscape
           ? styles.previewRail
@@ -121,7 +129,7 @@ export function TravelMapSelectionPreview({
         onUnpin={onUnpin}
         onOpenTrip={onOpenTrip}
       />
-    </View>
+    </Animated.View>
   );
 }
 
@@ -181,39 +189,42 @@ export function TravelMapSuggestionCard({
   onConfirm: () => void;
 }) {
   return (
-    <GlassPlate
-      intensity={76}
+    <Animated.View
+      entering={popoverEntering()}
+      exiting={fadeExiting()}
       style={[
-        styles.suggestion,
+        styles.suggestionHost,
         landscape
           ? [styles.suggestionLandscape, { bottom }]
           : styles.suggestionPortrait,
       ]}
     >
-      <View style={styles.suggestionCopy}>
-        <AppText variant="callout" numberOfLines={1}>
-          Pin {title}?
-        </AppText>
-        <AppText variant="caption" color="secondary" numberOfLines={1}>
-          {locationLabel}
-        </AppText>
-      </View>
-      <Button
-        size="sm"
-        variant="secondary"
-        testID={AgentUiIds.travel.map.suggestionSkip}
-        onPress={onSkip}
-      >
-        Skip
-      </Button>
-      <Button
-        size="sm"
-        testID={AgentUiIds.travel.map.suggestionConfirm}
-        onPress={onConfirm}
-      >
-        Review & Pin
-      </Button>
-    </GlassPlate>
+      <GlassPlate intensity={76} style={styles.suggestion}>
+        <View style={styles.suggestionCopy}>
+          <AppText variant="callout" numberOfLines={1}>
+            Pin {title}?
+          </AppText>
+          <AppText variant="caption" color="secondary" numberOfLines={1}>
+            {locationLabel}
+          </AppText>
+        </View>
+        <Button
+          size="sm"
+          variant="secondary"
+          testID={AgentUiIds.travel.map.suggestionSkip}
+          onPress={onSkip}
+        >
+          Skip
+        </Button>
+        <Button
+          size="sm"
+          testID={AgentUiIds.travel.map.suggestionConfirm}
+          onPress={onConfirm}
+        >
+          Review & Pin
+        </Button>
+      </GlassPlate>
+    </Animated.View>
   );
 }
 
@@ -240,6 +251,7 @@ export function TravelMapIconButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
+      style={({ pressed }) => (pressed ? styles.iconButtonPressed : undefined)}
     >
       <GlassPlate
         intensity={70}
@@ -291,6 +303,7 @@ function TravelMapPersonChip({
       accessibilityRole="button"
       accessibilityLabel={`${person.displayName} map layer, double tap to remove`}
       onPress={onPress}
+      style={({ pressed }) => (pressed ? styles.chipPressed : undefined)}
     >
       {avatar}
     </Pressable>
@@ -313,10 +326,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   iconButton: { alignItems: 'center', justifyContent: 'center' },
-  suggestion: {
+  iconButtonPressed: { opacity: 0.72, transform: [{ scale: 0.94 }] },
+  chipPressed: { opacity: 0.72 },
+  suggestionHost: {
     position: 'absolute',
     left: 14,
     right: 14,
+  },
+  suggestion: {
     borderRadius: 22,
     padding: 10,
     flexDirection: 'row',

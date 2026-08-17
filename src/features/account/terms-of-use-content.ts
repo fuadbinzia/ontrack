@@ -17,6 +17,7 @@ export const TERMS_OF_USE_SECTIONS: readonly LegalSection[] = [
   {
     title: 'Accounts and Guest Use',
     paragraphs: [
+      'You must be at least 13 years old to use onTrack. If you are under 18, you may use the Service only with a parent or guardian’s permission where required by law.',
       'You may use guest mode on a single device or sign in with Apple or Google. You are responsible for activity under your account and for keeping your sign-in provider secure.',
       'Guest data is tied to that device unless you choose to upload or merge it into a signed-in account. Do not rely on guest mode as your only backup.',
       'You may delete your account from Profile. Deletion is permanent and removes cloud account data as described in the Privacy Policy.',
@@ -35,7 +36,8 @@ export const TERMS_OF_USE_SECTIONS: readonly LegalSection[] = [
     paragraphs: [
       'When you share a trip, checklist, vehicle, E-ZPass ledger, community post, chat message, or invite, the people or audience you select can view and may act on the shared content. Choose recipients carefully and do not share another person’s personal, health, location, or financial information without permission.',
       'Collaborators may change or delete shared content when their role allows it. Copies that another person exports, screenshots, or sends outside onTrack may remain after you remove the original or close your account.',
-      'You may report community content, but onTrack does not promise to monitor every post, message, or collaboration in advance. You are responsible for your interactions with other users.',
+      'You may report a person, message, or post from inside the app, and you may block someone so their messages no longer appear for you. Blocking also removes an existing friendship. onTrack does not promise to monitor every post, message, or collaboration in advance.',
+      'We have zero tolerance for objectionable content, including harassment, threats, hate, sexual exploitation, content involving minors, illegal activity, scams, doxxing, and impersonation. We may remove content, restrict features, or terminate accounts that violate these terms. Repeated or severe abuse can result in a permanent ban.',
     ],
   },
   {

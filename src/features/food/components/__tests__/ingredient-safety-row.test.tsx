@@ -46,6 +46,8 @@ describe('ingredient safety mappings', () => {
     }
     expect(ingredientSafetyTone('severe')).toBe('danger');
     expect(ingredientSafetyTone('safe')).toBe('success');
+    expect(ingredientSafetyLabel('safe')).toBe('No Conflicts Found');
+    expect(ingredientSafetyLabel('safe')).not.toBe('Safe');
     expect(ingredientSafetyLabel('avoided')).toBe('Avoided');
   });
 
@@ -84,6 +86,21 @@ describe('IngredientSafetyRow', () => {
     expect(screen.getByText('Severe')).toBeTruthy();
     expect(screen.getByTestId(`${rowId}.reasonInline`)).toBeTruthy();
     expect(screen.queryByTestId(`${rowId}.reasonBelow`)).toBeNull();
+  });
+
+  it('shows No Conflicts Found with the softer reason, never Safe', () => {
+    render(
+      <IngredientSafetyRow
+        name="Olive Oil"
+        status="safe"
+        reason="No conflicts with your saved allergies and preferences."
+      />,
+    );
+    expect(screen.getByText('No Conflicts Found')).toBeTruthy();
+    expect(screen.queryByText('Safe')).toBeNull();
+    expect(
+      screen.getByText('No conflicts with your saved allergies and preferences.'),
+    ).toBeTruthy();
   });
 
   it('moves the reason below the title on compact width', () => {

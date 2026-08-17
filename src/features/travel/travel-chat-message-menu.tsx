@@ -1,17 +1,17 @@
 import { useMemo, useRef, useState } from 'react';
 import {
-  Pressable,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-  type View as ViewType,
+    Pressable,
+    StyleSheet,
+    useWindowDimensions,
+    View,
+    type View as ViewType,
 } from 'react-native';
 import Animated, {
-  FadeIn,
-  FadeInDown,
-  FadeInUp,
-  FadeOut,
-  ReduceMotion,
+    FadeIn,
+    FadeInDown,
+    FadeInUp,
+    FadeOut,
+    ReduceMotion,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,16 +19,16 @@ import { AppText, GlassPlate, Symbol } from '@/components/primitives';
 import type { DropdownAnchor } from '@/components/primitives/dropdown-layout';
 import { clampNumber } from '@/components/primitives/dropdown-layout';
 import {
-  motion,
-  radii,
-  shadows,
-  spacing,
-  type AppIconName,
+    motion,
+    radii,
+    shadows,
+    spacing,
+    type AppIconName,
 } from '@/design-system';
 import {
-  isTravelChatMessageMine,
-  TRAVEL_CHAT_REACTION_EMOJIS,
-  type OptimisticTravelChatMessage,
+    isTravelChatMessageMine,
+    TRAVEL_CHAT_REACTION_EMOJIS,
+    type OptimisticTravelChatMessage,
 } from '@/features/travel/chat';
 import { travelChatPlateBorder } from '@/features/travel/travel-chat-chrome';
 import { placeTravelChatMessageMenu } from '@/features/travel/travel-chat-message-menu-layout';
@@ -42,10 +42,12 @@ export type TravelChatMessageMenuAction =
   | 'copy'
   | 'edit'
   | 'delete'
+  | 'report'
+  | 'block'
   | { react: string };
 
 type MenuItem = {
-  id: 'reply' | 'copy' | 'edit' | 'delete';
+  id: 'reply' | 'copy' | 'edit' | 'delete' | 'report' | 'block';
   title: string;
   icon: AppIconName;
   destructive?: boolean;
@@ -98,6 +100,15 @@ export function TravelChatMessageMenu({
         id: 'delete',
         title: 'Delete',
         icon: 'delete',
+        destructive: true,
+      });
+    }
+    if (!mine && message.senderUserId && !message.deletedAt) {
+      next.push({ id: 'report', title: 'Report', icon: 'warning' });
+      next.push({
+        id: 'block',
+        title: 'Block',
+        icon: 'minus-circle',
         destructive: true,
       });
     }
@@ -307,7 +318,11 @@ export function TravelChatMessageMenu({
                       ? AgentUiIds.travel.chat.menuCopy
                       : item.id === 'edit'
                         ? AgentUiIds.travel.chat.menuEdit
-                        : AgentUiIds.travel.chat.menuDelete
+                        : item.id === 'report'
+                          ? AgentUiIds.travel.chat.menuReport
+                          : item.id === 'block'
+                            ? AgentUiIds.travel.chat.menuBlock
+                            : AgentUiIds.travel.chat.menuDelete
                 }
                 onPress={() => {
                   haptics.tap();

@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import {
+    createLegalConsentRecord,
+    isLegalConsentRecord,
+    type LegalConsentRecord,
+} from '@/features/account/legal-consent';
+import {
     emptyAvatarMeta,
     normalizeAvatarMeta,
     type ProfileAvatarMeta,
@@ -40,6 +45,8 @@ interface PreferencesState {
    * cloud rollups only when signed in. Never includes Health note text.
    */
   usageAnalyticsEnabled: boolean;
+  /** Accepted privacy/terms version stamp. Recorded at first-run and sign-in. */
+  legalConsent: LegalConsentRecord | null;
   /** Public holidays on Calendar and Today (static all-day rail, not timeline). */
   showHolidays: boolean;
   dateLocale: string;
@@ -54,6 +61,7 @@ interface PreferencesState {
   setAiEnabled: (enabled: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
   setUsageAnalyticsEnabled: (enabled: boolean) => void;
+  recordLegalConsent: (now?: Date) => void;
   setShowHolidays: (enabled: boolean) => void;
   refreshDateLocale: () => void;
   resetAll: () => void;
@@ -73,7 +81,8 @@ export const usePreferences = create<PreferencesState>()(
       themePreference: 'system',
       aiEnabled: true,
       hapticsEnabled: true,
-      usageAnalyticsEnabled: true,
+      usageAnalyticsEnabled: false,
+      legalConsent: null,
       showHolidays: true,
       dateLocale: initialLocale,
       dateDisplayFormat: dateDisplayFormatForLocale(initialLocale),
@@ -88,6 +97,7 @@ export const usePreferences = create<PreferencesState>()(
           hasOnboarded: true,
           name: nextName,
           goal,
+          legalConsent: createLegalConsentRecord(),
           dateLocale,
           dateDisplayFormat: dateDisplayFormatForLocale(dateLocale),
         });
@@ -118,6 +128,7 @@ export const usePreferences = create<PreferencesState>()(
       setAiEnabled: (aiEnabled) => set({ aiEnabled }),
       setHapticsEnabled: (hapticsEnabled) => set({ hapticsEnabled }),
       setUsageAnalyticsEnabled: (usageAnalyticsEnabled) => set({ usageAnalyticsEnabled }),
+      recordLegalConsent: (now) => set({ legalConsent: createLegalConsentRecord(now) }),
       setShowHolidays: (showHolidays) => set({ showHolidays }),
       refreshDateLocale: () => {
         const dateLocale = deviceLocale();
@@ -137,7 +148,8 @@ export const usePreferences = create<PreferencesState>()(
           themePreference: 'system',
           aiEnabled: true,
           hapticsEnabled: true,
-          usageAnalyticsEnabled: true,
+          usageAnalyticsEnabled: false,
+          legalConsent: null,
           showHolidays: true,
           dateLocale: initialLocale,
           dateDisplayFormat: dateDisplayFormatForLocale(initialLocale),
@@ -164,6 +176,9 @@ export const usePreferences = create<PreferencesState>()(
             typeof persisted.showHolidays === 'boolean'
               ? persisted.showHolidays
               : true,
+          legalConsent: isLegalConsentRecord(persisted.legalConsent)
+            ? persisted.legalConsent
+            : currentState.legalConsent,
         };
       },
     },

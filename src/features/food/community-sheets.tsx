@@ -2,23 +2,24 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import {
-  ActionChip,
-  AppText,
-  GlassMetaChip,
-  Input,
-  appPrompt,
-  fieldTitleCase,
+    ActionChip,
+    AppText,
+    GlassMetaChip,
+    Input,
+    appPrompt,
+    fieldTitleCase,
 } from '@/components/primitives';
-import { FoodSheet } from '@/features/food/food-sheet';
 import {
-  publishFoodPost,
-  reportFoodPost,
+    publishFoodPost,
+    reportFoodPost,
 } from '@/features/food/community-data';
+import { FoodSheet } from '@/features/food/food-sheet';
 import { useResponsive } from '@/hooks/use-responsive';
 import {
-  buildFoodPostPayload,
-  buildShareProfilePreview,
+    buildFoodPostPayload,
+    buildShareProfilePreview,
 } from '@/services/food/community';
+import { reportContent, type ReportReason } from '@/services/moderation';
 import { useFoodProfile } from '@/store/food-profile';
 import type { FoodPost, Recipe } from '@/types/food';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
@@ -191,13 +192,31 @@ export function ReportContentSheet({
 
   const submit = () => {
     if (!postId || !reason) return;
-    reportFoodPost(postId);
-    onReported?.(postId);
-    onClose();
-    appPrompt.alert(
-      'Thanks for the report',
-      'We will review this post. It stays hidden from your feed in the meantime.',
-    );
+    const mappedReason: ReportReason =
+      reason === 'unsafe' ? 'unsafe' : reason === 'spam' ? 'spam' : 'other';
+    void reportContent({
+      kind: 'food_post',
+      reason: mappedReason,
+      contentId: postId,
+      note: note.trim() || null,
+    })
+      .then(() => {
+        reportFoodPost(postId);
+        onReported?.(postId);
+        onClose();
+        appPrompt.alert(
+          'Report Sent',
+          'We will review this post. It stays hidden from your feed in the meantime.',
+        );
+      })
+      .catch((error: unknown) => {
+        appPrompt.alert(
+          'Report Could Not Be Sent',
+          error instanceof Error
+            ? error.message
+            : 'Sign in and try again.',
+        );
+      });
   };
 
   return (

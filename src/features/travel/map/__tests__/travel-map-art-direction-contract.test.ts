@@ -9,13 +9,13 @@ const read = (name: string) => readFileSync(
 describe('travel map illustrated art direction', () => {
   it('shares the storybook palette and cut-paper treatment in every map mode', () => {
     const countryData = read('country-data.ts');
-    const countryMap = read('travel-map-canvas.tsx');
+    const countryMap = read('travel-map-country-view.tsx');
     const flatMap = read('travel-map-world-flat.tsx');
     const globe = read('travel-map-world-globe.tsx');
 
     expect(countryData).toContain("TRAVEL_MAP_INK = '#164B66'");
     expect(countryData).toContain("'#F3AA9E'");
-    expect(countryMap).toContain('selectedCountryDetail?.path');
+    expect(countryMap).toContain('countryDetail.path');
     expect(countryMap).toContain('strokeLinejoin="round"');
     expect(flatMap).toContain('key={`shadow-${country.code}`}');
     expect(flatMap).toContain('strokeLinejoin="round"');

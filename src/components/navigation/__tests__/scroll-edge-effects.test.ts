@@ -46,16 +46,14 @@ describe('iOS 26 overscroll cannot blank a glass page', () => {
     expect(stack).toContain('scrollEdgeEffects: HIDDEN_SCROLL_EDGE_EFFECTS');
   });
 
-  it('keeps Screen scroll as the first child so the native finder hits UIScrollView', () => {
+  it('keeps Screen scroll as the first child on iOS so the native finder hits UIScrollView', () => {
     const screen = read('src/components/primitives/screen.tsx');
     const atmosphere = read('src/components/primitives/screen-atmosphere.tsx');
-    const fillIndex = screen.indexOf('{useAtmosphere ? <ScreenAtmosphereSceneFill');
-    const shellIndex = screen.indexOf('{shell}');
-    expect(shellIndex).toBeGreaterThan(0);
-    expect(fillIndex).toBeGreaterThan(shellIndex);
+    expect(screen).toContain('screenAtmosphereFollowsScroll(Platform.OS)');
     expect(screen).toContain('alwaysBounceVertical={false}');
     expect(atmosphere).toContain('behindScroll');
     expect(atmosphere).toContain('zIndex: 0');
+    expect(atmosphere).toContain('os !== \'android\'');
   });
 
   it('keeps scroll={false} chrome above the atmosphere wash so More is not a blank page', () => {

@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colorWithAlpha, glassMaterials } from '@/design-system/glass';
@@ -102,6 +102,20 @@ export function ScreenAtmosphere() {
 export function screenAtmosphereSceneOffset(insetTop: number): number {
   if (!Number.isFinite(insetTop) || insetTop <= 0) return 0;
   return -insetTop;
+}
+
+/**
+ * Whether the scene wash is the later sibling (scroll stays first).
+ *
+ * iOS 26 `UIScrollEdgeEffect` walks the first-descendant chain, so scroll
+ * must stay first and `zIndex` keeps chrome above the wash.
+ * Android ignores `zIndex` on `ScrollView` — a later-sibling wash blanks
+ * scrolling tabs (Calendar, Profile). Paint the wash first there.
+ */
+export function screenAtmosphereFollowsScroll(
+  os: typeof Platform.OS = Platform.OS,
+): boolean {
+  return os !== 'android';
 }
 
 /**

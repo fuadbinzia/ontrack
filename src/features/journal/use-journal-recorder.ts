@@ -80,6 +80,7 @@ export function useJournalRecorder() {
   const finishingRef = useRef(false);
   const startedAtRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const limitRef = useRef<(() => void) | null>(null);
   const permissionRef = useRef<boolean | undefined>(undefined);
   const mountedRef = useRef(true);
 
@@ -88,6 +89,7 @@ export function useJournalRecorder() {
   const clearTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = undefined;
+    limitRef.current = null;
   };
 
   const stopSession = useCallback(async () => {
@@ -116,7 +118,7 @@ export function useJournalRecorder() {
   }, [stopSession]);
 
   const start = useCallback(
-    async (nextMode: JournalRecorderMode) => {
+    async (nextMode: JournalRecorderMode, onLimitReached?: () => void) => {
       if (modeRef.current) {
         await cancel();
         return false;
@@ -127,9 +129,13 @@ export function useJournalRecorder() {
           setStatusMessage('Voice capture requires the latest app build. Typing still works.');
           return false;
         }
-        if (permissionRef.current === undefined) {
-          const permission = await audioApi.requestRecordingPermissionsAsync();
-          permissionRef.current = permission.granted;
+        // Cache only grants: a denial must be re-checked so granting in
+        // Settings works without relaunching the app.
+        if (permissionRef.current !== true) {
+          const current = await audioApi.getRecordingPermissionsAsync();
+          permissionRef.current = current.granted
+            ? true
+            : (await audioApi.requestRecordingPermissionsAsync()).granted;
         }
         if (!permissionRef.current) {
           setStatusMessage('Microphone permission is required for voice. Typing still works.');
@@ -139,8 +145,10 @@ export function useJournalRecorder() {
         modeRef.current = nextMode;
         startedAtRef.current = Date.now();
         setMode(nextMode);
+        limitRef.current = onLimitReached ?? null;
         timerRef.current = setTimeout(() => {
-          finishingRef.current = true;
+          timerRef.current = undefined;
+          limitRef.current?.();
         }, MAX_RECORDING_SECONDS * 1_000);
         return true;
       } catch (error) {

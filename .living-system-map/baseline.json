@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "createdAt": "2026-08-16T23:39:29.763Z",
+  "createdAt": "2026-08-17T00:37:05.855Z",
   "git": {
-    "sha": "a3ab8fa",
+    "sha": "4a2af3f",
     "branch": "main",
     "dirty": true
   },
@@ -20,8 +20,8 @@
         "pct": 100
       },
       "criticalConnections": {
-        "total": 1558,
-        "protected": 1558,
+        "total": 1561,
+        "protected": 1561,
         "pct": 100
       },
       "flows": {
@@ -30,7 +30,7 @@
         "pct": 100
       }
     },
-    "verifiedAt": "2026-08-16T23:34:01.762Z"
+    "verifiedAt": "2026-08-17T00:35:49.528Z"
   },
   "obligations": {
     "bugFixes": [
@@ -757,6 +757,10 @@
       },
       {
         "key": "external:src/features/account/profile-identity-hero.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-location-persist.ts->external:react",
         "count": 1
       },
       {
@@ -2656,6 +2660,14 @@
         "count": 1
       },
       {
+        "key": "import:src/features/account/profile-location-persist.ts->src/features/travel/weather/provider.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-location-persist.ts->src/utils/haptics.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/account/profile-location-preferences.tsx->src/components/primitives/index.ts",
         "count": 1
       },
@@ -2668,7 +2680,7 @@
         "count": 1
       },
       {
-        "key": "import:src/features/account/profile-location-preferences.tsx->src/features/travel/weather/provider.ts",
+        "key": "import:src/features/account/profile-location-preferences.tsx->src/features/account/profile-location-persist.ts",
         "count": 1
       },
       {

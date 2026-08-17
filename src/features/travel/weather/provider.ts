@@ -1,7 +1,9 @@
 import type { AppIconName } from '@/design-system';
 import { fetchWithTimeout } from '@/services/http/fetch-with-timeout';
+import { isCityLikeFeatureCode } from '@/utils/city-lookup';
 import { addDays, todayKey } from '@/utils/date';
 import { formatOpenMeteoPlaceLabel } from '@/utils/open-meteo-place-label';
+import { abbreviateCountry, abbreviateRegion } from '@/utils/place-abbreviations';
 
 import type {
     DestinationCurrentWeather,
@@ -25,9 +27,14 @@ export function weatherFetchErrorMessage(
   return reason instanceof Error ? reason.message : fallback;
 }
 
+/** Known coordinate for a place — skips text geocoding entirely. */
+export type WeatherCoordinate = { latitude: number; longitude: number };
+
 export type TravelWeatherFetchOptions = {
   /** Include up to N calendar days before today (capped at OPEN_METEO_PAST_DAYS_MAX). */
   pastDays?: number;
+  /** Device coordinate for the place; when set the label is used verbatim. */
+  coordinate?: WeatherCoordinate;
 };
 
 interface GeocodingResult {
@@ -36,7 +43,11 @@ interface GeocodingResult {
   longitude?: unknown;
   country?: unknown;
   admin1?: unknown;
+  feature_code?: unknown;
 }
+
+/** Geocoding row proven to carry finite coordinates. */
+type GeocodedPlace = GeocodingResult & { latitude: number; longitude: number };
 
 interface GeocodingResponse {
   results?: unknown;
@@ -253,7 +264,7 @@ async function requestTravelWeather(
     };
   }
 
-  const location = await geocodeDestination(destination);
+  const location = await resolveWeatherLocation(destination, options?.coordinate);
 
   const forecastUrl = new URL('https://api.open-meteo.com/v1/forecast');
   forecastUrl.searchParams.set('latitude', String(location.latitude));
@@ -272,7 +283,7 @@ async function requestTravelWeather(
 
   return {
     availability: window.availability,
-    locationLabel: locationLabel(location, destination),
+    locationLabel: location.label,
     timezone: typeof forecast.timezone === 'string' ? forecast.timezone : undefined,
     temperatureUnit,
     days,
@@ -295,6 +306,7 @@ export function getTravelWeather(
     endDate,
     temperatureUnit,
     pastDays,
+    coordinateCacheKey(options?.coordinate),
   ].join('|');
   const cached = cache.get(key);
   // Shared cache must not bind to a caller AbortSignal — one unmount would abort
@@ -317,30 +329,116 @@ export function getTravelWeather(
   return raceWeatherPromise(promise, signal);
 }
 
+function matchesPlaceQualifier(qualifier: string, result: GeocodingResult): boolean {
+  const region = typeof result.admin1 === 'string' ? result.admin1 : '';
+  const country = typeof result.country === 'string' ? result.country : '';
+  return [region, abbreviateRegion(region), country, abbreviateCountry(country)]
+    .filter(Boolean)
+    .some((candidate) => candidate.toLocaleLowerCase() === qualifier);
+}
+
+/**
+ * Open-Meteo ranks fuzzy name hits ahead of exact ones, so “Union, CA” can come
+ * back as a different town that merely sits in the requested state. Prefer the
+ * row that matches both the place name and the state / country the caller asked
+ * for, and keep POIs (airports, parks) behind real localities.
+ */
+export function pickGeocodeMatch(
+  results: GeocodingResult[],
+  destination: string,
+): GeocodedPlace | undefined {
+  const usable = results.filter(
+    (result): result is GeocodedPlace =>
+      isFiniteNumber(result.latitude) && isFiniteNumber(result.longitude),
+  );
+  if (usable.length === 0) return undefined;
+
+  const cityLike = usable.filter((result) => isCityLikeFeatureCode(result.feature_code));
+  const pool = cityLike.length > 0 ? cityLike : usable;
+
+  const parts = destination
+    .split(',')
+    .map((part) => part.trim().toLocaleLowerCase())
+    .filter(Boolean);
+  const name = parts[0] ?? destination.trim().toLocaleLowerCase();
+  const qualifiers = parts.slice(1);
+
+  const score = (result: GeocodingResult): number => {
+    const resultName =
+      typeof result.name === 'string' ? result.name.trim().toLocaleLowerCase() : '';
+    let points = 0;
+    if (resultName && resultName === name) points += 4;
+    else if (resultName && resultName.startsWith(name)) points += 1;
+    if (
+      qualifiers.length > 0 &&
+      qualifiers.every((qualifier) => matchesPlaceQualifier(qualifier, result))
+    ) {
+      points += 2;
+    }
+    return points;
+  };
+
+  // Strict `>` keeps Open-Meteo's own ordering for ties.
+  return pool.reduce((best, result) => (score(result) > score(best) ? result : best), pool[0]!);
+}
+
 async function geocodeDestination(
   destination: string,
   signal?: AbortSignal,
-): Promise<GeocodingResult> {
+): Promise<GeocodedPlace> {
   const geocodingUrl = new URL('https://geocoding-api.open-meteo.com/v1/search');
   geocodingUrl.searchParams.set('name', destination);
-  geocodingUrl.searchParams.set('count', '1');
+  geocodingUrl.searchParams.set('count', '10');
   geocodingUrl.searchParams.set('language', 'en');
   geocodingUrl.searchParams.set('format', 'json');
   const geocoding = await fetchJson<GeocodingResponse>(geocodingUrl.toString(), signal);
-  const results = Array.isArray(geocoding.results) ? geocoding.results : [];
-  const location = results[0] as GeocodingResult | undefined;
-  if (!location || !isFiniteNumber(location.latitude) || !isFiniteNumber(location.longitude)) {
+  const results = (Array.isArray(geocoding.results) ? geocoding.results : []).filter(
+    (row): row is GeocodingResult => !!row && typeof row === 'object',
+  );
+  const location = pickGeocodeMatch(results, destination);
+  if (!location) {
     throw new Error(`Weather could not find “${destination}”. Try a city and country.`);
   }
   return location;
 }
 
+/**
+ * A device coordinate is already exact — never round-trip its label through the
+ * geocoder, which can relocate the user to a same-named town elsewhere.
+ */
+async function resolveWeatherLocation(
+  destination: string,
+  coordinate: WeatherCoordinate | undefined,
+  signal?: AbortSignal,
+): Promise<{ latitude: number; longitude: number; label: string }> {
+  if (coordinate) {
+    return {
+      latitude: coordinate.latitude,
+      longitude: coordinate.longitude,
+      label: destination,
+    };
+  }
+  const result = await geocodeDestination(destination, signal);
+  return {
+    latitude: result.latitude,
+    longitude: result.longitude,
+    label: locationLabel(result, destination),
+  };
+}
+
+function coordinateCacheKey(coordinate?: WeatherCoordinate): string {
+  return coordinate
+    ? `${coordinate.latitude.toFixed(3)},${coordinate.longitude.toFixed(3)}`
+    : '';
+}
+
 async function requestDestinationCurrentWeather(
   destination: string,
   temperatureUnit: TemperatureUnit,
+  coordinate?: WeatherCoordinate,
   signal?: AbortSignal,
 ): Promise<DestinationCurrentWeather> {
-  const location = await geocodeDestination(destination, signal);
+  const location = await resolveWeatherLocation(destination, coordinate, signal);
   const forecastUrl = new URL('https://api.open-meteo.com/v1/forecast');
   forecastUrl.searchParams.set('latitude', String(location.latitude));
   forecastUrl.searchParams.set('longitude', String(location.longitude));
@@ -354,9 +452,9 @@ async function requestDestinationCurrentWeather(
     throw new Error('Weather service returned incomplete current conditions.');
   }
   return {
-    locationLabel: locationLabel(location, destination),
-    latitude: location.latitude as number,
-    longitude: location.longitude as number,
+    locationLabel: location.label,
+    latitude: location.latitude,
+    longitude: location.longitude,
     timezone: typeof forecast.timezone === 'string' ? forecast.timezone : undefined,
     temperature: Math.round(temperature),
     temperatureUnit,
@@ -371,9 +469,15 @@ export function getDestinationCurrentWeather(
   destination: string,
   temperatureUnit: TemperatureUnit,
   signal?: AbortSignal,
+  coordinate?: WeatherCoordinate,
 ): Promise<DestinationCurrentWeather> {
   // v2: response includes `is_day` for night chrome icons.
-  const key = `current|v2|${destination.trim().toLocaleLowerCase()}|${temperatureUnit}`;
+  const key = [
+    'current|v2',
+    destination.trim().toLocaleLowerCase(),
+    temperatureUnit,
+    coordinateCacheKey(coordinate),
+  ].join('|');
   const cached = currentCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
     return raceWeatherPromise(cached.promise, signal);
@@ -382,6 +486,7 @@ export function getDestinationCurrentWeather(
   const promise = requestDestinationCurrentWeather(
     destination.trim(),
     temperatureUnit,
+    coordinate,
   ).catch((error) => {
     currentCache.delete(key);
     throw error;

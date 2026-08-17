@@ -7,6 +7,7 @@ import {
     getTravelWeather,
     weatherFetchErrorMessage,
     weatherIconForCode,
+    type WeatherCoordinate,
 } from '@/features/travel/weather/provider';
 import type {
     DestinationCurrentWeather,
@@ -36,10 +37,14 @@ export function usePlaceWeather(
   place: string,
   temperatureUnit: TemperatureUnit,
   date?: string,
+  /** Device coordinate for `place` — skips text geocoding when known. */
+  coordinate?: WeatherCoordinate,
 ) {
   const trimmed = place.trim();
   const hasLocation = trimmed.length > 0;
   const requestDay = todayKey();
+  const latitude = coordinate?.latitude;
+  const longitude = coordinate?.longitude;
 
   const [current, setCurrent] = useState<DestinationCurrentWeather>();
   const [forecast, setForecast] = useState<TravelWeather>();
@@ -81,8 +86,17 @@ export function usePlaceWeather(
 
     const forecastStart = homeWeatherHistoryFrom(requestDay);
     const forecastEnd = homeWeatherForecastThrough(requestDay);
+    const placeCoordinate =
+      latitude !== undefined && longitude !== undefined
+        ? { latitude, longitude }
+        : undefined;
 
-    void getDestinationCurrentWeather(trimmed, temperatureUnit, controller.signal)
+    void getDestinationCurrentWeather(
+      trimmed,
+      temperatureUnit,
+      controller.signal,
+      placeCoordinate,
+    )
       .then((value) => {
         nextCurrent = value;
       })
@@ -101,7 +115,7 @@ export function usePlaceWeather(
       forecastEnd,
       temperatureUnit,
       controller.signal,
-      { pastDays: HOME_WEATHER_PAST_DAYS },
+      { pastDays: HOME_WEATHER_PAST_DAYS, coordinate: placeCoordinate },
     )
       .then((value) => {
         nextForecast = value;
@@ -116,7 +130,7 @@ export function usePlaceWeather(
       });
 
     return () => controller.abort();
-  }, [hasLocation, requestDay, temperatureUnit, trimmed]);
+  }, [hasLocation, latitude, longitude, requestDay, temperatureUnit, trimmed]);
 
   const weather: HomeWeatherSnapshot | undefined = useMemo(
     () =>

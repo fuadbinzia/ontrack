@@ -38,7 +38,11 @@ jest.mock('react-native', () => ({
   Platform: { OS: 'ios' },
 }));
 
-import { persistJournalVoice } from '../voice-persist';
+import {
+  deleteJournalVoice,
+  persistJournalVoice,
+  resolveJournalVoiceUri,
+} from '../voice-persist';
 
 describe('journal voice persist', () => {
   beforeEach(() => {
@@ -53,5 +57,35 @@ describe('journal voice persist', () => {
     expect(mockCopy).toHaveBeenCalled();
     expect(uri).toContain('voice-stem.m4a');
     expect(uri).not.toContain('/tmp/Recorder.m4a');
+  });
+
+  it('re-anchors a stale container URI to the current documents directory', () => {
+    const stale =
+      'file:///var/mobile/Containers/Data/Application/OLD-UUID/Documents/journal-voice/voice-abc.m4a';
+    expect(resolveJournalVoiceUri(stale)).toBe('/documents/journal-voice/voice-abc.m4a');
+  });
+
+  it('resolves a current-container URI to the same file name', () => {
+    const current = '/documents/journal-voice/voice-abc.m4a';
+    expect(resolveJournalVoiceUri(current)).toBe(current);
+  });
+
+  it('leaves non journal-voice URIs unchanged', () => {
+    expect(resolveJournalVoiceUri('file:///tmp/Recorder.m4a')).toBe(
+      'file:///tmp/Recorder.m4a',
+    );
+    expect(resolveJournalVoiceUri('ontrack-media:abc')).toBe('ontrack-media:abc');
+  });
+
+  it('does not re-anchor when a nested path follows the voice directory', () => {
+    const nested = 'file:///old/Documents/journal-voice/sub/voice.m4a';
+    expect(resolveJournalVoiceUri(nested)).toBe(nested);
+  });
+
+  it('deletes through the re-anchored path so stale references still clean up', async () => {
+    await deleteJournalVoice(
+      'file:///var/mobile/Containers/Data/Application/OLD-UUID/Documents/journal-voice/voice-abc.m4a',
+    );
+    expect(mockDelete).toHaveBeenCalled();
   });
 });

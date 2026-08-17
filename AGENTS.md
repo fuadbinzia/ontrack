@@ -31,6 +31,7 @@ iOS-first, local-first daily-life Expo app (schedule, food, fitness, plants, tra
 ## Commands (agents)
 
 - Metro / Android / APK / `push` / user-requested dual verify → `package.json` scripts + **agent-ui** / **android-release-apk** skills. **Never** `npm start` in agent shells. Node 24 (`.nvmrc`).
+- Pull latest remote main into this branch → **sync-from-main** skill (`./scripts/sync-from-main.sh`).
 - `npm run typecheck` · `npm test` · `npm run lint` — prefer leaving Metro up for Fast Refresh.
 
 ## Agent close-out

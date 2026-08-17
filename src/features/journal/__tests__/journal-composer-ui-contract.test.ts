@@ -58,6 +58,27 @@ describe('journal page chrome', () => {
     expect(page).toContain('journalEditDismissFor');
   });
 
+  it('shows a live capture surface while recording and transcribing', () => {
+    const composer = read('journal-composer.tsx');
+    // Recording swaps the input for a wave + elapsed + stop row in the pill.
+    expect(composer).toContain('JournalRecordingWave');
+    expect(composer).toContain('composer.wave');
+    expect(composer).toContain('composer.stop');
+    expect(composer).toContain('Transcribing…');
+    // Dictation lands in the draft for review — never straight onto the page.
+    expect(composer).toContain('mergeDictationIntoDraft');
+    expect(composer).not.toContain('addText(dateKey, text)');
+    // Crossfade is a stable shell; the hidden layer must not trap taps.
+    expect(composer).toContain("pointerEvents={overlayActive ? 'none' : 'auto'}");
+    expect(composer).toContain("pointerEvents={overlayActive ? 'auto' : 'none'}");
+
+    const wave = read('journal-recording-wave.tsx');
+    // The 10Hz poll stays in the leaf so the page does not re-render per tick.
+    expect(wave).toContain('useJournalRecorderLiveState');
+    expect(wave).toContain('formatVoiceDuration');
+    expect(wave).toContain('tabular-nums');
+  });
+
   it('pins the composer above the tab dock with air between them', () => {
     const page = read('journal-page-screen.tsx');
     expect(page).toContain('scroll={false}');

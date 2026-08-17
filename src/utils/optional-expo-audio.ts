@@ -13,6 +13,7 @@ export const FALLBACK_RECORDING_OPTIONS = {
   sampleRate: 44100,
   numberOfChannels: 1,
   bitRate: 64000,
+  isMeteringEnabled: true,
   android: {
     outputFormat: 'mpeg4',
     audioEncoder: 'aac',
@@ -75,7 +76,10 @@ export function recordingOptionsFor(
   api: ExpoAudioApi | undefined,
 ): RecordingOptions {
   const preset = api?.RecordingPresets?.HIGH_QUALITY;
-  return typeof preset?.extension === 'string' ? preset : FALLBACK_RECORDING_OPTIONS;
+  const base =
+    typeof preset?.extension === 'string' ? preset : FALLBACK_RECORDING_OPTIONS;
+  // Metering feeds the live recording wave; presets ship without it.
+  return { ...base, isMeteringEnabled: true };
 }
 
 /**

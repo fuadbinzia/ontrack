@@ -1,3 +1,3 @@
-import { TodoCollaboratorsScreen } from '@/features/todos/todo-collaborators-screen';
+import { ChecklistCollaboratorsScreen } from '@/features/todos/todo-collaborators-screen';
 
-export default TodoCollaboratorsScreen;
+export default ChecklistCollaboratorsScreen;

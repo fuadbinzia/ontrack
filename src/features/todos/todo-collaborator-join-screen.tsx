@@ -13,10 +13,10 @@ import {
 } from '@/components/primitives';
 import { spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
-import { createInstalledTodoCollaboratorJoinUrl } from '@/features/todos/share';
+import { createInstalledChecklistCollaboratorJoinUrl } from '@/features/todos/share';
 import {
-  acceptTodoCollaboratorLink,
-  resolveTodoCollaboratorLink,
+  acceptChecklistCollaboratorLink,
+  resolveChecklistCollaboratorLink,
 } from '@/services/todos/collaboration';
 
 const APP_STORE_URL = 'https://apps.apple.com/app/id6789723522';
@@ -28,7 +28,7 @@ interface ResolvedInvite {
   listNames: string[];
 }
 
-export function TodoCollaboratorJoinScreen({ code }: { code: string }) {
+export function ChecklistCollaboratorJoinScreen({ code }: { code: string }) {
   const router = useRouter();
   const { user, continueWithProvider, workingProvider } = useAuthSession();
   const validCode = /^[a-f0-9]{36}$/.test(code);
@@ -39,7 +39,7 @@ export function TodoCollaboratorJoinScreen({ code }: { code: string }) {
   useEffect(() => {
     if (!user || !validCode) return;
     let active = true;
-    void resolveTodoCollaboratorLink(code)
+    void resolveChecklistCollaboratorLink(code)
       .then((result) => {
         if (!active) return;
         if (result) setResolved(result);
@@ -85,7 +85,7 @@ export function TodoCollaboratorJoinScreen({ code }: { code: string }) {
             <Button
               size="lg"
               onPress={() =>
-                void Linking.openURL(createInstalledTodoCollaboratorJoinUrl(code))
+                void Linking.openURL(createInstalledChecklistCollaboratorJoinUrl(code))
               }>
               Open onTrack
             </Button>
@@ -163,7 +163,7 @@ export function TodoCollaboratorJoinScreen({ code }: { code: string }) {
           onPress={() => {
             setJoining(true);
             setError(undefined);
-            void acceptTodoCollaboratorLink(code)
+            void acceptChecklistCollaboratorLink(code)
               .then((listIds) => {
                 const destination =
                   listIds.length === 1 ? `/(tabs)/to-do/${listIds[0]}` : '/(tabs)/to-do';

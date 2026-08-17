@@ -5,15 +5,15 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { createRef } from 'react';
 import type { TextInput } from 'react-native';
 
-import { TodoListHeader } from '@/features/todos/todo-list-header';
-import type { TodoList } from '@/store/todos';
+import { ChecklistHeader } from '@/features/todos/todo-list-header';
+import type { Checklist } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 
 jest.mock('@/features/todos/todo-list-header-toolbar', () => {
   const React = jest.requireActual('react');
   const { View } = jest.requireActual('react-native');
   return {
-    TodoListHeaderToolbar: () => React.createElement(View),
+    ChecklistHeaderToolbar: () => React.createElement(View),
   };
 });
 
@@ -27,7 +27,7 @@ jest.mock('expo-router', () => ({
 }));
 
 const createdAt = '2026-08-12T00:00:00.000Z';
-const list: TodoList = {
+const list: Checklist = {
   id: 'list-todo',
   name: 'To Do',
   kind: 'checklist',
@@ -43,10 +43,10 @@ const agent = {
 };
 
 function renderHeader(
-  overrides: Partial<Parameters<typeof TodoListHeader>[0]> = {},
+  overrides: Partial<Parameters<typeof ChecklistHeader>[0]> = {},
 ) {
   return render(
-    <TodoListHeader
+    <ChecklistHeader
       list={list}
       tasks={[]}
       categories={[]}
@@ -86,7 +86,7 @@ function renderHeader(
   );
 }
 
-describe('TodoListHeader', () => {
+describe('ChecklistHeader', () => {
   it('makes the list title tappable in owner edit mode without auto-focusing', () => {
     renderHeader({ editMode: true, nameDraft: 'To Do' });
 
@@ -125,7 +125,7 @@ describe('TodoListHeader', () => {
     expect(source).not.toContain('DisclosureChevron');
     expect(source).toContain('titleActions');
     expect(source.indexOf('filterChip')).toBeLessThan(
-      source.indexOf('<TodoListHeaderToolbar'),
+      source.indexOf('<ChecklistHeaderToolbar'),
     );
   });
 
@@ -162,7 +162,7 @@ describe('TodoListHeader', () => {
   });
 });
 
-describe('TodoListHeader layout', () => {
+describe('ChecklistHeader layout', () => {
   it('pins list actions to the top-right nav row', () => {
     const source = readFileSync(
       join(process.cwd(), 'src/features/todos/todo-list-header.tsx'),
@@ -174,10 +174,10 @@ describe('TodoListHeader layout', () => {
     expect(source.indexOf('titleActions')).toBeLessThan(
       source.indexOf('headingCopy'),
     );
-    expect(source.indexOf('<TodoListHeaderToolbar')).toBeLessThan(
+    expect(source.indexOf('<ChecklistHeaderToolbar')).toBeLessThan(
       source.indexOf('list.name'),
     );
-    expect(source.indexOf('<TodoListHeaderToolbar')).toBeLessThan(
+    expect(source.indexOf('<ChecklistHeaderToolbar')).toBeLessThan(
       source.indexOf('Add an item'),
     );
     expect(source).toContain('testID={AgentUiIds.checklists.detail.title}');

@@ -13,7 +13,7 @@ import {
 import { glassMaterials, layout, radii, spacing, typography } from '@/design-system';
 import type { CombinedCompletion } from '@/features/todos/grocery-utils';
 import { useTheme } from '@/hooks/use-theme';
-import type { TodoRecipe, TodoTask } from '@/store/todos';
+import type { ChecklistRecipe, ChecklistTask } from '@/store/todos';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { formatCount } from '@/utils/grammar';
 import { openHttpsUrl, safeHttpsUrl } from '@/utils/safe-url';
@@ -55,7 +55,7 @@ export const GroceryTaskRow = memo(function GroceryTaskRow({
   onToggle,
   onDelete,
 }: {
-  task: TodoTask;
+  task: ChecklistTask;
   canComplete: boolean;
   onToggle: () => void;
   onDelete?: () => void;
@@ -118,12 +118,12 @@ export const MealCard = memo(function MealCard({
   onToggleCollapsed,
   onDelete,
 }: {
-  recipe: TodoRecipe;
-  tasks: TodoTask[];
+  recipe: ChecklistRecipe;
+  tasks: ChecklistTask[];
   collapsed: boolean;
   listOwner: boolean;
-  canComplete: (task: TodoTask) => boolean;
-  onToggleTask: (task: TodoTask) => void;
+  canComplete: (task: ChecklistTask) => boolean;
+  onToggleTask: (task: ChecklistTask) => void;
   onToggleCollapsed: () => void;
   onDelete: () => void;
 }) {
@@ -277,14 +277,14 @@ export function OtherItems({
   onToggle,
   canComplete,
 }: {
-  tasks: TodoTask[];
+  tasks: ChecklistTask[];
   owner: boolean;
   draft: string;
   onDraftChange: (value: string) => void;
   onAdd: () => void;
   onDelete: (id: string) => void;
-  onToggle: (task: TodoTask) => void;
-  canComplete: (task: TodoTask) => boolean;
+  onToggle: (task: ChecklistTask) => void;
+  canComplete: (task: ChecklistTask) => boolean;
 }) {
   const theme = useTheme();
   const dark = theme.name === 'dark';

@@ -11,7 +11,7 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
-export function TodoLinkedTripAction({
+export function ChecklistLinkedTripAction({
   tripTitle,
   onPress,
 }: {

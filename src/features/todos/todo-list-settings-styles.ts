@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { radii } from '@/design-system';
 
-export const todoListSettingsStyles = StyleSheet.create({
+export const checklistSettingsStyles = StyleSheet.create({
   container: {
     width: '100%',
     maxWidth: 680,

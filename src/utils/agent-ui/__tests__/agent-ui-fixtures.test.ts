@@ -82,7 +82,7 @@ jest.mock('@/store/ui', () => ({
 }));
 
 jest.mock('@/store/todos', () => ({
-  useTodos: {
+  useChecklists: {
     setState: mockTodosSetState,
   },
 }));

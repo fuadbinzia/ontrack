@@ -1,17 +1,17 @@
 import { scaleIngredients } from '@/features/todos/grocery-utils';
-import type { TodoIngredientInput, TodoRecipeInput } from '@/store/todos';
+import type { ChecklistIngredientInput, ChecklistRecipeInput } from '@/store/todos';
 import type { MealPlanEntry, Recipe, RecipeIngredient } from '@/types/food';
 import { formatCount } from '@/utils/grammar';
 
 /**
  * "Generate from meal plan" bridge: turns a week of `useMealPlan` entries
- * into `TodoRecipeInput`s for the EXISTING grocery list in `@/store/todos`.
+ * into `ChecklistRecipeInput`s for the EXISTING grocery list in `@/store/todos`.
  * Pure so the quantity scaling and dedupe rules stay unit-testable — the
- * screen only calls `useTodos.addRecipe` with the result.
+ * screen only calls `useChecklists.addRecipe` with the result.
  */
 
 export interface MealPlanGroceryResult {
-  recipes: TodoRecipeInput[];
+  recipes: ChecklistRecipeInput[];
   /** Recipe titles already on the list (matched by name) — not re-added. */
   skippedExisting: string[];
   /** Freeform entries ("Dinner out") — nothing to shop for. */
@@ -20,7 +20,7 @@ export interface MealPlanGroceryResult {
 
 export function toTodoIngredientInputs(
   ingredients: readonly RecipeIngredient[],
-): TodoIngredientInput[] {
+): ChecklistIngredientInput[] {
   return ingredients.map((ingredient) => ({
     name: ingredient.name,
     canonicalKey: ingredient.canonicalKey,
@@ -54,7 +54,7 @@ export function buildMealPlanGroceryRecipes(
     );
   }
 
-  const result: TodoRecipeInput[] = [];
+  const result: ChecklistRecipeInput[] = [];
   const skippedExisting: string[] = [];
   for (const [recipeId, totalServings] of servingsByRecipeId) {
     const recipe = recipes.find((item) => item.id === recipeId);

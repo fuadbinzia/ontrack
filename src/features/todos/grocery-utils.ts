@@ -1,7 +1,7 @@
 import {
   canonicalIngredientKey,
-  type TodoIngredientInput,
-  type TodoTask,
+  type ChecklistIngredientInput,
+  type ChecklistTask,
 } from '@/store/todos';
 import { formatCompactNumber } from '@/utils/parse';
 
@@ -77,14 +77,14 @@ function formatNumber(value: number) {
   return formatCompactNumber(value);
 }
 
-function amountForTask(task: TodoTask) {
+function amountForTask(task: ChecklistTask) {
   const amount = task.quantityText?.trim();
   const unit = task.unit?.trim();
   return [amount, unit].filter(Boolean).join(' ') || 'amount not specified';
 }
 
-export function buildCombinedIngredients(tasks: TodoTask[]): CombinedIngredient[] {
-  const groups = new Map<string, TodoTask[]>();
+export function buildCombinedIngredients(tasks: ChecklistTask[]): CombinedIngredient[] {
+  const groups = new Map<string, ChecklistTask[]>();
   for (const task of tasks) {
     if (!task.recipeId) continue;
     const key =
@@ -210,7 +210,7 @@ export function parseQuantityText(value: string): number | undefined {
 }
 
 export function scaleIngredients(
-  ingredients: TodoIngredientInput[],
+  ingredients: ChecklistIngredientInput[],
   sourceServings?: number,
   targetServings?: number,
 ) {

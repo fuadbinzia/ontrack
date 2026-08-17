@@ -1,13 +1,13 @@
 import { getSupabaseClient } from '@/services/cloud/supabase';
 import {
-  normalizeTodoState,
-  type TodoSharedSnapshot,
+  normalizeChecklistState,
+  type ChecklistSharedSnapshot,
 } from '@/store/todos';
 
-export class TodoCollaborationError extends Error {
+export class ChecklistCollaborationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'TodoCollaborationError';
+    this.name = 'ChecklistCollaborationError';
   }
 }
 
@@ -18,18 +18,18 @@ export function messageFrom(error: { message?: string } | null, fallback: string
 export async function authenticatedClient() {
   const client = getSupabaseClient();
   if (!client) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       'Shared lists are not configured for this build.',
     );
   }
   const { data, error } = await client.auth.getSession();
   if (error || !data.session) {
-    throw new TodoCollaborationError('Sign in to share or join a list.');
+    throw new ChecklistCollaborationError('Sign in to share or join a list.');
   }
   return client;
 }
 
-export function sharedSnapshot(value: unknown): TodoSharedSnapshot | undefined {
+export function sharedSnapshot(value: unknown): ChecklistSharedSnapshot | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const candidate = value as {
     list?: unknown;
@@ -39,7 +39,7 @@ export function sharedSnapshot(value: unknown): TodoSharedSnapshot | undefined {
     categories?: unknown;
   };
   const includesCategories = Array.isArray(candidate.categories);
-  const normalized = normalizeTodoState({
+  const normalized = normalizeChecklistState({
     groceryMigrationVersion: 1,
     lists: candidate.list ? [candidate.list] : [],
     tasks: Array.isArray(candidate.tasks) ? candidate.tasks : [],

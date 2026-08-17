@@ -1,22 +1,22 @@
-import type { TodoInvite } from '@/store/todos';
-import { useTodos } from '@/store/todos';
+import type { ChecklistInvite } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 
 import {
   authenticatedClient,
   messageFrom,
-  TodoCollaborationError,
+  ChecklistCollaborationError,
 } from './collaboration-core';
-import { loadTodoListSnapshot } from './collaboration-mutations';
+import { loadChecklistSnapshot } from './collaboration-mutations';
 
-export async function loadTodoInvites(): Promise<TodoInvite[]> {
+export async function loadChecklistInvites(): Promise<ChecklistInvite[]> {
   const client = await authenticatedClient();
   const { data, error } = await client.rpc('list_todo_email_invites');
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'Invitations could not be loaded.'),
     );
   }
-  const invites: TodoInvite[] = Array.isArray(data)
+  const invites: ChecklistInvite[] = Array.isArray(data)
     ? data.flatMap((row) => {
         if (!row || typeof row !== 'object') return [];
         const item = row as Record<string, unknown>;
@@ -41,11 +41,11 @@ export async function loadTodoInvites(): Promise<TodoInvite[]> {
         }];
       })
     : [];
-  useTodos.getState().replaceInvites(invites);
+  useChecklists.getState().replaceInvites(invites);
   return invites;
 }
 
-export async function createTodoEmailInvite(
+export async function createChecklistEmailInvite(
   listId: string,
   email: string,
 ): Promise<void> {
@@ -55,26 +55,26 @@ export async function createTodoEmailInvite(
     requested_email: email.trim().toLowerCase(),
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'The invitation could not be created.'),
     );
   }
 }
 
-export interface PendingTodoEmailInvite {
+export interface PendingChecklistEmailInvite {
   id: string;
   createdAt: string;
 }
 
-export async function loadTodoListPendingInvites(
+export async function loadChecklistPendingInvites(
   listId: string,
-): Promise<PendingTodoEmailInvite[]> {
+): Promise<PendingChecklistEmailInvite[]> {
   const client = await authenticatedClient();
   const { data, error } = await client.rpc('todo_list_pending_invites', {
     requested_list_id: listId,
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'Pending invitations could not be loaded.'),
     );
   }
@@ -94,61 +94,61 @@ export async function loadTodoListPendingInvites(
     : [];
 }
 
-export async function revokeTodoEmailInvite(inviteId: string): Promise<void> {
+export async function revokeChecklistEmailInvite(inviteId: string): Promise<void> {
   const client = await authenticatedClient();
   const { error } = await client.rpc('revoke_todo_email_invite', {
     invite_id: inviteId,
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'The invitation could not be revoked.'),
     );
   }
 }
 
-export async function acceptTodoEmailInvite(inviteId: string): Promise<string> {
+export async function acceptChecklistEmailInvite(inviteId: string): Promise<string> {
   const client = await authenticatedClient();
   const { data, error } = await client.rpc('accept_todo_email_invite', {
     invite_id: inviteId,
   });
   if (error || typeof data !== 'string') {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'The invitation could not be accepted.'),
     );
   }
-  await loadTodoListSnapshot(data);
-  await loadTodoInvites();
+  await loadChecklistSnapshot(data);
+  await loadChecklistInvites();
   return data;
 }
 
-export async function createTodoShareLink(listId: string): Promise<string> {
+export async function createChecklistShareLink(listId: string): Promise<string> {
   const client = await authenticatedClient();
   const { data, error } = await client.rpc('create_todo_share_link', {
     requested_list_id: listId,
   });
   if (error || typeof data !== 'string') {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'A share link could not be created.'),
     );
   }
-  useTodos.getState().setShareCode(listId, data);
+  useChecklists.getState().setShareCode(listId, data);
   return data;
 }
 
-export async function revokeTodoShareLink(listId: string): Promise<void> {
+export async function revokeChecklistShareLink(listId: string): Promise<void> {
   const client = await authenticatedClient();
   const { error } = await client.rpc('revoke_todo_share_link', {
     requested_list_id: listId,
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'The share link could not be revoked.'),
     );
   }
-  useTodos.getState().setShareCode(listId, undefined);
+  useChecklists.getState().setShareCode(listId, undefined);
 }
 
-export async function resolveTodoShareLink(
+export async function resolveChecklistShareLink(
   code: string,
 ): Promise<{ listId: string; listName: string; ownerName: string } | undefined> {
   const client = await authenticatedClient();
@@ -156,7 +156,7 @@ export async function resolveTodoShareLink(
     link_code: code,
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'This list link could not be opened.'),
     );
   }
@@ -176,46 +176,46 @@ export async function resolveTodoShareLink(
   };
 }
 
-export async function acceptTodoShareLink(code: string): Promise<string> {
+export async function acceptChecklistShareLink(code: string): Promise<string> {
   const client = await authenticatedClient();
   const { data, error } = await client.rpc('accept_todo_share_link', {
     link_code: code,
   });
   if (error || typeof data !== 'string') {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'This list link is invalid or has been revoked.'),
     );
   }
-  await loadTodoListSnapshot(data);
+  await loadChecklistSnapshot(data);
   return data;
 }
 
-export async function createTodoCollaboratorLink(listIds: string[]): Promise<string> {
+export async function createChecklistCollaboratorLink(listIds: string[]): Promise<string> {
   const client = await authenticatedClient();
   const { data, error } = await client.rpc('create_todo_collaborator_link', {
     requested_list_ids: listIds,
   });
   if (error || typeof data !== 'string') {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'A collaborator link could not be created.'),
     );
   }
   return data;
 }
 
-export async function revokeTodoCollaboratorLink(code: string): Promise<void> {
+export async function revokeChecklistCollaboratorLink(code: string): Promise<void> {
   const client = await authenticatedClient();
   const { error } = await client.rpc('revoke_todo_collaborator_link', {
     link_code: code,
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'The collaborator link could not be revoked.'),
     );
   }
 }
 
-export async function resolveTodoCollaboratorLink(
+export async function resolveChecklistCollaboratorLink(
   code: string,
 ): Promise<{ inviterName: string; listNames: string[] } | undefined> {
   const client = await authenticatedClient();
@@ -223,7 +223,7 @@ export async function resolveTodoCollaboratorLink(
     link_code: code,
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'This collaborator link could not be opened.'),
     );
   }
@@ -241,7 +241,7 @@ export async function resolveTodoCollaboratorLink(
   return listNames.length ? { inviterName: row.inviter_name, listNames } : undefined;
 }
 
-export async function acceptTodoCollaboratorLink(code: string): Promise<string[]> {
+export async function acceptChecklistCollaboratorLink(code: string): Promise<string[]> {
   const client = await authenticatedClient();
   const { data, error } = await client.rpc('accept_todo_collaborator_link', {
     link_code: code,
@@ -250,10 +250,10 @@ export async function acceptTodoCollaboratorLink(code: string): Promise<string[]
     ? data.filter((id: unknown): id is string => typeof id === 'string')
     : [];
   if (error || !listIds.length) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'This collaborator link is invalid or has been revoked.'),
     );
   }
-  await Promise.all(listIds.map((listId) => loadTodoListSnapshot(listId)));
+  await Promise.all(listIds.map((listId) => loadChecklistSnapshot(listId)));
   return listIds;
 }

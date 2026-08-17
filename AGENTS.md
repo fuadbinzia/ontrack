@@ -22,7 +22,7 @@ iOS-first, local-first daily-life Expo app (schedule, food, fitness, plants, tra
 |------|------|
 | `src/app/` | Expo Router screens + API routes (`*+api.ts`) |
 | `src/features/` | Feature UI/models |
-| `src/store/` | Zustand; todo normalize in `todos-normalize.ts` |
+| `src/store/` | Zustand; checklist normalize in `todos-normalize.ts` |
 | `src/services/` | AI, cloud, domain clients, HTTP |
 | `src/utils/` | Dates, IDs, parse, image persist, agent-ui |
 | `src/addons/` | First-party add-on catalog |
@@ -54,11 +54,11 @@ Domain depth → `.cursor/skills/` (**travel**, **todos**, **workouts**, **visio
 
 | Change | Start here |
 |--------|------------|
-| Checklist / todo list UI | `features/todos/todo-list-screen.tsx` → **todos** |
+| Checklist / grocery list UI | `features/todos/todo-list-screen.tsx` → **todos** |
 | Lists overview / create list | `features/todos/todo-lists-overview.tsx` |
 | Grocery meals / combined | `features/todos/grocery-list-screen.tsx` |
 | Recipe import | `features/todos/recipe-import-screen.tsx` |
-| Todo store / normalize | `store/todos.ts`, `store/todos-normalize.ts` → **todos** |
+| Checklist store / normalize | `store/todos.ts`, `store/todos-normalize.ts` → **todos** |
 | Voice add/read (Siri / Assistant) | `features/todos/voice-lists.ts` + `modules/ontrack-voice-lists` |
 | Today / day timeline | `features/daily-tracking/day-view.tsx` |
 | Activity add/edit | `app/activity-form.tsx` |

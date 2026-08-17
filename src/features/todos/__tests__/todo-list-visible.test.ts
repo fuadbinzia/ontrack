@@ -1,21 +1,21 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { rememberVisibleTodoList } from '../todo-list-visible';
+import { rememberVisibleChecklist } from '../todo-list-visible';
 
 const list = { id: 'list-1', name: 'Weekend' };
 
-describe('rememberVisibleTodoList', () => {
+describe('rememberVisibleChecklist', () => {
   it('keeps the last painted list when a viewed checklist is deleted', () => {
-    const seen = rememberVisibleTodoList(list, undefined);
-    const afterDelete = rememberVisibleTodoList(undefined, seen.held);
+    const seen = rememberVisibleChecklist(list, undefined);
+    const afterDelete = rememberVisibleChecklist(undefined, seen.held);
 
     expect(afterDelete.value).toEqual(list);
     expect(afterDelete.vanished).toBe(true);
   });
 
   it('does not pretend a stale deep link was just deleted', () => {
-    const missing = rememberVisibleTodoList(undefined, undefined);
+    const missing = rememberVisibleChecklist(undefined, undefined);
 
     expect(missing.value).toBeUndefined();
     expect(missing.vanished).toBe(false);
@@ -23,7 +23,7 @@ describe('rememberVisibleTodoList', () => {
 
   it('updates the held snapshot when the store list is still present', () => {
     const next = { id: 'list-1', name: 'Renamed' };
-    const remembered = rememberVisibleTodoList(next, list);
+    const remembered = rememberVisibleChecklist(next, list);
 
     expect(remembered.value).toEqual(next);
     expect(remembered.held).toEqual(next);
@@ -31,8 +31,8 @@ describe('rememberVisibleTodoList', () => {
   });
 
   it('holds grocery kind so delete does not remount as the checklist unavailable screen', () => {
-    const seen = rememberVisibleTodoList('grocery' as const, undefined);
-    const afterDelete = rememberVisibleTodoList(undefined, seen.held);
+    const seen = rememberVisibleChecklist('grocery' as const, undefined);
+    const afterDelete = rememberVisibleChecklist(undefined, seen.held);
 
     expect(afterDelete.value).toBe('grocery');
     expect(afterDelete.vanished).toBe(true);
@@ -54,10 +54,10 @@ describe('todo list delete navigation', () => {
       'utf8',
     );
 
-    expect(checklist).toContain('useVisibleTodoList(listId)');
-    expect(grocery).toContain('useVisibleTodoList(listId)');
+    expect(checklist).toContain('useVisibleChecklist(listId)');
+    expect(grocery).toContain('useVisibleChecklist(listId)');
     expect(route).toContain('useHeldVisible(kind)');
-    expect(checklist).toContain('openTodoLists()');
-    expect(grocery).toContain('onPress={openTodoLists}');
+    expect(checklist).toContain('openChecklists()');
+    expect(grocery).toContain('onPress={openChecklists}');
   });
 });

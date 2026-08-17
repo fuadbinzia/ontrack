@@ -6,7 +6,7 @@ import {
   parseQuantityText,
   scaleIngredients,
 } from '@/features/todos/grocery-utils';
-import type { TodoTask } from '@/store/todos';
+import type { ChecklistTask } from '@/store/todos';
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
@@ -16,7 +16,7 @@ function ingredient(
   quantityValue: number | undefined,
   unit: string | undefined,
   completed = false,
-): TodoTask {
+): ChecklistTask {
   return {
     id,
     listId: 'list',

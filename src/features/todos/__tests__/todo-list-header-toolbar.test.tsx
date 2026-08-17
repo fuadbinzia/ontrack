@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { TodoListHeaderToolbar } from '@/features/todos/todo-list-header-toolbar';
-import type { TodoList, TodoMember } from '@/store/todos';
+import { ChecklistHeaderToolbar } from '@/features/todos/todo-list-header-toolbar';
+import type { Checklist, ChecklistMember } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 
 jest.mock('@/features/todos/checklist-popover-menu', () => {
@@ -29,7 +29,7 @@ const metrics = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
   insets: { top: 59, left: 0, right: 0, bottom: 34 },
 };
-const list: TodoList = {
+const list: Checklist = {
   id: 'list-packing',
   name: 'Packing',
   kind: 'checklist',
@@ -38,7 +38,7 @@ const list: TodoList = {
   createdAt,
   updatedAt: createdAt,
 };
-const member: TodoMember = {
+const member: ChecklistMember = {
   listId: list.id,
   userId: 'user-alex',
   displayName: 'Alex Rivera',
@@ -52,12 +52,12 @@ const editModeAgent = {
 };
 
 function renderToolbar(
-  members: TodoMember[],
-  overrides: Partial<Parameters<typeof TodoListHeaderToolbar>[0]> = {},
+  members: ChecklistMember[],
+  overrides: Partial<Parameters<typeof ChecklistHeaderToolbar>[0]> = {},
 ) {
   return render(
     <SafeAreaProvider initialMetrics={metrics}>
-      <TodoListHeaderToolbar
+      <ChecklistHeaderToolbar
         list={list}
         tasks={[]}
         members={members}
@@ -84,7 +84,7 @@ function renderToolbar(
   );
 }
 
-describe('TodoListHeaderToolbar', () => {
+describe('ChecklistHeaderToolbar', () => {
   it('keeps only edit and list-action icons on the bar', () => {
     renderToolbar([member]);
 

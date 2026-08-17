@@ -11,7 +11,7 @@ import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
 import { useRecipes } from '@/store/food-recipes';
 import { useSchedule } from '@/store/schedule';
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 import { useTravel } from '@/store/travel';
 import { useVisionBoard } from '@/store/vision-board';
 
@@ -39,7 +39,7 @@ jest.mock('@/features/account/release-notes-format', () => ({
 describe('user-owned backup archive', () => {
   beforeEach(() => {
     useJournal.getState().reset();
-    useTodos.getState().reset();
+    useChecklists.getState().reset();
     usePlants.getState().reset();
     useTravel.getState().reset();
     useSchedule.getState().resetAll();
@@ -73,17 +73,17 @@ describe('user-owned backup archive', () => {
   });
 
   it('includes private checklist data and restores it onto an empty store', () => {
-    const list = useTodos.getState().createList('Packing');
-    useTodos.getState().addTask(list!.id, 'Passport');
+    const list = useChecklists.getState().createList('Packing');
+    useChecklists.getState().addTask(list!.id, 'Passport');
     const json = serializeBackup(buildBackup());
     expect(json).toContain('Packing');
     expect(json).toContain('Passport');
     expect(json).not.toMatch(/refresh_token|access_token|ciphertext/i);
 
-    useTodos.getState().reset();
+    useChecklists.getState().reset();
     applyBackup(parseBackup(json));
-    expect(useTodos.getState().lists.some((list) => list.name === 'Packing')).toBe(true);
-    expect(useTodos.getState().tasks.some((task) => task.title === 'Passport')).toBe(true);
+    expect(useChecklists.getState().lists.some((list) => list.name === 'Packing')).toBe(true);
+    expect(useChecklists.getState().tasks.some((task) => task.title === 'Passport')).toBe(true);
   });
 
   it('writes restored domains without restarting cloud pull subscriptions', () => {
@@ -121,12 +121,12 @@ describe('user-owned backup archive', () => {
       ),
     });
 
-    const list = useTodos.getState().createList('Packing');
-    const passport = useTodos.getState().addTask(list!.id, 'Passport');
-    useTodos.getState().toggleTask(passport!.id);
-    const gone = useTodos.getState().addTask(list!.id, 'Old socks');
-    useTodos.setState({
-      tasks: useTodos.getState().tasks.map((task) =>
+    const list = useChecklists.getState().createList('Packing');
+    const passport = useChecklists.getState().addTask(list!.id, 'Passport');
+    useChecklists.getState().toggleTask(passport!.id);
+    const gone = useChecklists.getState().addTask(list!.id, 'Old socks');
+    useChecklists.setState({
+      tasks: useChecklists.getState().tasks.map((task) =>
         task.id === gone!.id
           ? { ...task, deletedAt: '2026-08-16T12:00:00.000Z' }
           : task,
@@ -224,7 +224,7 @@ describe('user-owned backup archive', () => {
       ?.some((category) => category.id === 'reading')).toBe(true);
 
     useJournal.getState().reset();
-    useTodos.getState().reset();
+    useChecklists.getState().reset();
     usePlants.getState().reset();
     useTravel.getState().reset();
     useSchedule.getState().resetAll();
@@ -237,8 +237,8 @@ describe('user-owned backup archive', () => {
       page.blocks.some((block) => block.kind === 'text' && block.text === 'Keep this page'),
     )).toBe(true);
     expect(useJournal.getState().pages.some((page) => page.dateKey === '2026-08-14')).toBe(false);
-    expect(useTodos.getState().tasks.some((task) => task.title === 'Passport' && task.completed)).toBe(true);
-    expect(useTodos.getState().tasks.some((task) => task.title === 'Old socks')).toBe(false);
+    expect(useChecklists.getState().tasks.some((task) => task.title === 'Passport' && task.completed)).toBe(true);
+    expect(useChecklists.getState().tasks.some((task) => task.title === 'Old socks')).toBe(false);
     expect(usePlants.getState().plants.some((plant) => plant.nickname === 'Basil')).toBe(true);
     expect(usePlants.getState().plants.some((plant) => plant.id === SAMPLE_PLANT_ID)).toBe(false);
     expect(useTravel.getState().plans.some((plan) => plan.title === 'Lisbon')).toBe(true);
@@ -285,7 +285,7 @@ describe('user-owned backup archive', () => {
       ],
     } as never;
     applyBackup(parsed);
-    expect(useTodos.getState().tasks.some((task) => task.title === 'Still here')).toBe(true);
-    expect(useTodos.getState().tasks.some((task) => task.title === 'Was deleted')).toBe(false);
+    expect(useChecklists.getState().tasks.some((task) => task.title === 'Still here')).toBe(true);
+    expect(useChecklists.getState().tasks.some((task) => task.title === 'Was deleted')).toBe(false);
   });
 });

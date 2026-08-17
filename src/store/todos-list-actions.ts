@@ -1,43 +1,44 @@
 import { newUuid } from '@/utils/id';
 import {
-  canDeleteTodoList,
-  canEditTodoContent,
-  markGuestEdit,
-  queuedMutation,
+    canDeleteChecklist,
+    canEditChecklistContent,
+    markGuestEdit,
+    queuedMutation,
 } from './todos-helpers';
 import { cleanName, nowIso, omitListOpenedAt } from './todos-normalize';
 import type {
-  TodoList,
-  TodoListKind,
-  TodoPersistedState,
+    Checklist,
+    ChecklistKind,
+    ChecklistPersistedState,
 } from './todos-types';
 
 type ListSet = (
   partial:
-    | Partial<TodoPersistedState>
-    | ((state: TodoPersistedState) => Partial<TodoPersistedState>),
+    | Partial<ChecklistPersistedState>
+    | ((state: ChecklistPersistedState) => Partial<ChecklistPersistedState>),
 ) => void;
 
-type ListGet = () => TodoPersistedState;
+type ListGet = () => ChecklistPersistedState;
 
-export type TodoListActions = {
-  createList: (name: string, kind?: TodoListKind) => TodoList | undefined;
+export type ChecklistListActions = {
+  createList: (name: string, kind?: ChecklistKind) => Checklist | undefined;
   reorderLists: (orderedIds: string[]) => void;
   reorderTasks: (listId: string, orderedIds: string[]) => void;
   reorderRecipes: (listId: string, orderedIds: string[]) => void;
   renameList: (id: string, name: string) => void;
-  setListKind: (id: string, kind: TodoListKind) => boolean;
+  setListKind: (id: string, kind: ChecklistKind) => boolean;
   deleteList: (id: string) => void;
-  touchList: (id: string, at?: string) => void;
+  /** Returns true when the open was recorded (callers flush it to the cloud). */
+  touchList: (id: string, at?: string) => boolean;
 };
 
-export function createTodoListActions(set: ListSet, get: ListGet): TodoListActions {
+export function createChecklistListActions(set: ListSet, get: ListGet): ChecklistListActions {
   return {
     createList: (name, kind = 'checklist') => {
       const clean = cleanName(name);
       if (!clean) return undefined;
       const now = nowIso();
-      const list: TodoList = {
+      const list: Checklist = {
         id: newUuid(),
         name: clean,
         kind,
@@ -54,12 +55,11 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
     reorderLists: (orderedIds) => {
       const listsById = new Map(get().lists.map((list) => [list.id, list]));
       const seen = new Set<string>();
-      const now = Date.now();
-      const reordered = orderedIds.flatMap((id, index) => {
+      const reordered = orderedIds.flatMap((id) => {
         const list = listsById.get(id);
         if (!list || seen.has(id)) return [];
         seen.add(id);
-        return [{ ...list, updatedAt: new Date(now - index).toISOString() }];
+        return [{ ...list }];
       });
       const unchanged = get().lists.filter((list) => !seen.has(list.id));
       if (reordered.length === 0) return;
@@ -69,7 +69,7 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
 
     reorderTasks: (listId, orderedIds) => {
       const list = get().lists.find((item) => item.id === listId);
-      if (!list || !canEditTodoContent(list)) return;
+      if (!list || !canEditChecklistContent(list)) return;
       const currentOrder = get()
         .tasks.filter((task) => task.listId === listId)
         .sort(
@@ -180,7 +180,7 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
 
     deleteList: (id) => {
       const list = get().lists.find((item) => item.id === id);
-      if (!list || !canDeleteTodoList(list) || list.mode === 'shared') return;
+      if (!list || !canDeleteChecklist(list) || list.mode === 'shared') return;
       markGuestEdit();
       set((state) => ({
         lists: state.lists.filter((item) => item.id !== id),
@@ -194,10 +194,10 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
 
     touchList: (id, at = nowIso()) => {
       const list = get().lists.find((item) => item.id === id);
-      if (!list || !at) return;
+      if (!list || !at) return false;
       const previous = get().listOpenedAt[id];
       if (previous) {
-        if (at <= previous) return;
+        if (at <= previous) return false;
         const previousMs = Date.parse(previous);
         const nextMs = Date.parse(at);
         if (
@@ -205,12 +205,19 @@ export function createTodoListActions(set: ListSet, get: ListGet): TodoListActio
           Number.isFinite(nextMs) &&
           nextMs - previousMs < 750
         ) {
-          return;
+          return false;
         }
       }
-      set((state) => ({
-        listOpenedAt: { ...state.listOpenedAt, [id]: at },
-      }));
+      set((state) => {
+        const index = state.lists.findIndex((item) => item.id === id);
+        const listOpenedAt = { ...state.listOpenedAt, [id]: at };
+        if (index <= 0) return { listOpenedAt };
+        const lists = [...state.lists];
+        const [moved] = lists.splice(index, 1);
+        lists.unshift(moved);
+        return { lists, listOpenedAt };
+      });
+      return true;
     },
 
   };

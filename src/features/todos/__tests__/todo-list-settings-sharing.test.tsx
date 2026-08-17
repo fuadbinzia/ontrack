@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { TodoListSettingsSharing } from '../todo-list-settings-sharing';
+import { ChecklistSettingsSharing } from '../todo-list-settings-sharing';
 import type { FriendProfile } from '@/services/friends';
-import type { TodoList } from '@/store/todos';
+import type { Checklist } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 
 jest.mock('@/components/primitives/dropdown', () => {
@@ -56,7 +56,7 @@ jest.mock('@/features/account/profile-avatar', () => {
   return { ProfileAvatar: () => React.createElement(View) };
 });
 
-const list: TodoList = {
+const list: Checklist = {
   id: 'list-1',
   name: 'Iceland Packing List',
   kind: 'checklist',
@@ -80,7 +80,7 @@ function renderSharing(
   const onAddEditors = jest.fn();
   const requireSignIn = jest.fn();
   render(
-    <TodoListSettingsSharing
+    <ChecklistSettingsSharing
       list={list}
       working={working}
       spacing={{ md: 16, sm: 12, xs: 8 }}
@@ -97,7 +97,7 @@ function renderSharing(
   return { onAddEditors, requireSignIn };
 }
 
-describe('TodoListSettingsSharing', () => {
+describe('ChecklistSettingsSharing', () => {
   it('opens Add Editors as a dropdown and confirms selected friends', () => {
     const handlers = renderSharing({ id: 'owner-1' });
 

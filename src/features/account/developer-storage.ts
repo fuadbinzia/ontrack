@@ -16,7 +16,7 @@ const LABELS: Record<string, string> = {
   [STORAGE_KEYS.addons]: 'Add-ons',
   [STORAGE_KEYS.agents]: 'Agents',
   [STORAGE_KEYS.travel]: 'Travel',
-  [STORAGE_KEYS.todos]: 'Todos',
+  [STORAGE_KEYS.checklists]: 'Checklists',
   [STORAGE_KEYS.authAccess]: 'Auth access',
   [STORAGE_KEYS.visionBoard]: 'Vision board',
   [STORAGE_KEYS.vehicles]: 'Vehicles',

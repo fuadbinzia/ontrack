@@ -18,7 +18,7 @@ export type DesignFeatureId =
   | 'nutrition'
   | 'plants'
   | 'social'
-  | 'todos'
+  | 'checklists'
   | 'travel'
   | 'vehicles'
   | 'vision-board'
@@ -46,7 +46,7 @@ export const DESIGN_FEATURE_LABELS: Record<DesignFeatureId, string> = {
   nutrition: 'Nutrition',
   plants: 'Plants',
   social: 'Social',
-  todos: 'Todos',
+  checklists: 'Checklists',
   travel: 'Travel',
   vehicles: 'Vehicles',
   'vision-board': 'Vision Board',

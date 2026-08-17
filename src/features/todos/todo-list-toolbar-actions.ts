@@ -3,12 +3,12 @@ import {
   checklistAssigneeFilterChoices,
 } from '@/features/todos/checklist-assignee-filter';
 import type { ChecklistPopoverItem } from '@/features/todos/checklist-popover-menu';
-import type { TodoSort } from '@/features/todos/todo-sort';
-import type { TodoMember } from '@/store/todos';
+import type { ChecklistSort } from '@/features/todos/todo-sort';
+import type { ChecklistMember } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 
-export const TODO_LIST_SORT_OPTIONS: {
-  id: TodoSort;
+export const CHECKLIST_SORT_OPTIONS: {
+  id: ChecklistSort;
   title: string;
   description: string;
   icon: ChecklistPopoverItem['icon'];
@@ -48,7 +48,7 @@ export const TODO_LIST_SORT_OPTIONS: {
 const SORT_PREFIX = 'sort:';
 const ASSIGNEE_PREFIX = 'assignee:';
 
-export function todoListToolbarActionId(
+export function checklistToolbarActionId(
   kind: 'sort' | 'assignee' | 'action',
   id: string,
 ): string {
@@ -57,7 +57,7 @@ export function todoListToolbarActionId(
   return id;
 }
 
-export function parseTodoListToolbarAction(id: string): {
+export function parseChecklistToolbarAction(id: string): {
   kind: 'sort' | 'assignee' | 'action';
   value: string;
 } {
@@ -70,8 +70,8 @@ export function parseTodoListToolbarAction(id: string): {
   return { kind: 'action', value: id };
 }
 
-export function todoListToolbarActionTestID(id: string): string {
-  const parsed = parseTodoListToolbarAction(id);
+export function checklistToolbarActionTestID(id: string): string {
+  const parsed = parseChecklistToolbarAction(id);
   if (parsed.kind === 'sort') {
     return AgentUiIds.checklists.detail.sortOption(parsed.value);
   }
@@ -81,7 +81,7 @@ export function todoListToolbarActionTestID(id: string): string {
   return AgentUiIds.checklists.detail.action(parsed.value);
 }
 
-export function todoListToolbarActionItems({
+export function checklistToolbarActionItems({
   sort,
   members,
   selectedAssigneeId,
@@ -89,8 +89,8 @@ export function todoListToolbarActionItems({
   canEdit,
   completedCount,
 }: {
-  sort: TodoSort;
-  members: readonly TodoMember[];
+  sort: ChecklistSort;
+  members: readonly ChecklistMember[];
   selectedAssigneeId: string;
   owner: boolean;
   canEdit: boolean;
@@ -100,15 +100,15 @@ export function todoListToolbarActionItems({
   const showAssignees = members.length > 0;
 
   return [
-    ...TODO_LIST_SORT_OPTIONS.map((option, index) => ({
+    ...CHECKLIST_SORT_OPTIONS.map((option, index) => ({
       ...option,
-      id: todoListToolbarActionId('sort', option.id),
+      id: checklistToolbarActionId('sort', option.id),
       selected: sort === option.id,
       dividerBefore: index === 0 ? false : undefined,
     })),
     ...(showAssignees
       ? assigneeChoices.map((choice, index) => ({
-          id: todoListToolbarActionId('assignee', choice.value),
+          id: checklistToolbarActionId('assignee', choice.value),
           title: choice.label,
           description:
             choice.value === ALL_ASSIGNEES

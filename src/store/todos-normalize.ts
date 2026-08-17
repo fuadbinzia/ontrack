@@ -1,22 +1,22 @@
-import {
-  type PendingTodoMutation,
-  type TodoCategory,
-  type TodoIngredientInput,
-  type TodoInvite,
-  type TodoList,
-  type TodoMember,
-  type TodoMutationOperation,
-  type TodoPersistedState,
-  type TodoRecipe,
-  type TodoTask,
-} from './todos-types';
 import { newUuid } from '@/utils/id';
 import {
-  asFiniteNonNegative,
-  asFiniteNumber,
-  asNonEmptyString,
-  asPositiveNumber,
+    asFiniteNonNegative,
+    asFiniteNumber,
+    asNonEmptyString,
+    asPositiveNumber,
 } from '@/utils/parse';
+import {
+    CHECKLIST_MUTATION_OPERATIONS,
+    type Checklist,
+    type ChecklistCategory,
+    type ChecklistIngredientInput,
+    type ChecklistInvite,
+    type ChecklistMember,
+    type ChecklistPersistedState,
+    type ChecklistRecipe,
+    type ChecklistTask,
+    type PendingChecklistMutation,
+} from './todos-types';
 
 export const DEFAULT_CHECKLIST_NAME = 'To Do';
 export const DEFAULT_GROCERY_LIST_NAME = 'Groceries';
@@ -81,7 +81,7 @@ export function canonicalIngredientKey(value: string) {
 
 export function formatIngredientTitle(
   ingredient: Pick<
-    TodoIngredientInput,
+    ChecklistIngredientInput,
     'name' | 'quantityText' | 'unit' | 'preparation'
   >,
 ) {
@@ -100,9 +100,9 @@ export function formatIngredientTitle(
 export function normalizeList(
   value: unknown,
   upgradeRecognizedGroceryName = false,
-): TodoList | undefined {
+): Checklist | undefined {
   if (!value || typeof value !== 'object') return undefined;
-  const candidate = value as Partial<TodoList>;
+  const candidate = value as Partial<Checklist>;
   const id = asNonEmptyString(candidate.id);
   const name = typeof candidate.name === 'string' ? cleanName(candidate.name) : '';
   if (!id || !name) return undefined;
@@ -131,9 +131,9 @@ export function normalizeList(
   };
 }
 
-export function normalizeRecipe(value: unknown): TodoRecipe | undefined {
+export function normalizeRecipe(value: unknown): ChecklistRecipe | undefined {
   if (!value || typeof value !== 'object') return undefined;
-  const candidate = value as Partial<TodoRecipe>;
+  const candidate = value as Partial<ChecklistRecipe>;
   const id = asNonEmptyString(candidate.id);
   const listId = asNonEmptyString(candidate.listId);
   const name = typeof candidate.name === 'string' ? cleanName(candidate.name) : '';
@@ -155,9 +155,9 @@ export function normalizeRecipe(value: unknown): TodoRecipe | undefined {
   };
 }
 
-export function normalizeCategory(value: unknown): TodoCategory | undefined {
+export function normalizeCategory(value: unknown): ChecklistCategory | undefined {
   if (!value || typeof value !== 'object') return undefined;
-  const candidate = value as Partial<TodoCategory>;
+  const candidate = value as Partial<ChecklistCategory>;
   const id = asNonEmptyString(candidate.id);
   const listId = asNonEmptyString(candidate.listId);
   const name = typeof candidate.name === 'string'
@@ -175,9 +175,9 @@ export function normalizeCategory(value: unknown): TodoCategory | undefined {
   };
 }
 
-export function normalizeTask(value: unknown, fallbackListId?: string): TodoTask | undefined {
+export function normalizeTask(value: unknown, fallbackListId?: string): ChecklistTask | undefined {
   if (!value || typeof value !== 'object') return undefined;
-  const candidate = value as Partial<TodoTask>;
+  const candidate = value as Partial<ChecklistTask>;
   const title = typeof candidate.title === 'string' ? cleanTitle(candidate.title) : '';
   const listId = asNonEmptyString(candidate.listId) ?? fallbackListId;
   if (!title || !listId) return undefined;
@@ -236,9 +236,9 @@ export function normalizeTask(value: unknown, fallbackListId?: string): TodoTask
   };
 }
 
-export function normalizeMember(value: unknown): TodoMember | undefined {
+export function normalizeMember(value: unknown): ChecklistMember | undefined {
   if (!value || typeof value !== 'object') return undefined;
-  const candidate = value as Partial<TodoMember>;
+  const candidate = value as Partial<ChecklistMember>;
   const listId = asNonEmptyString(candidate.listId);
   const userId = asNonEmptyString(candidate.userId);
   const displayName = asNonEmptyString(candidate.displayName);
@@ -257,9 +257,9 @@ export function normalizeMember(value: unknown): TodoMember | undefined {
   };
 }
 
-export function normalizeInvite(value: unknown): TodoInvite | undefined {
+export function normalizeInvite(value: unknown): ChecklistInvite | undefined {
   if (!value || typeof value !== 'object') return undefined;
-  const candidate = value as Partial<TodoInvite>;
+  const candidate = value as Partial<ChecklistInvite>;
   const id = asNonEmptyString(candidate.id);
   const listId = asNonEmptyString(candidate.listId);
   const listName = asNonEmptyString(candidate.listName);
@@ -278,36 +278,16 @@ export function normalizeInvite(value: unknown): TodoInvite | undefined {
   };
 }
 
-export function normalizeMutation(value: unknown): PendingTodoMutation | undefined {
+export function normalizeMutation(value: unknown): PendingChecklistMutation | undefined {
   if (!value || typeof value !== 'object') return undefined;
-  const candidate = value as Partial<PendingTodoMutation>;
+  const candidate = value as Partial<PendingChecklistMutation>;
   const id = asNonEmptyString(candidate.id);
   const listId = asNonEmptyString(candidate.listId);
-  const operations: TodoMutationOperation[] = [
-    'rename_list',
-    'set_list_kind',
-    'add_category',
-    'delete_category',
-    'set_task_category',
-    'add_task',
-    'add_recipe',
-    'update_recipe',
-    'delete_recipe',
-    'update_ingredient',
-    'reorder_tasks',
-    'reorder_recipes',
-    'update_task',
-    'delete_task',
-    'set_completion',
-    'set_tasks_completion',
-    'set_assignee',
-    'clear_completed',
-  ];
   if (
     !id ||
     !listId ||
     !candidate.operation ||
-    !operations.includes(candidate.operation) ||
+    !CHECKLIST_MUTATION_OPERATIONS.includes(candidate.operation) ||
     !candidate.payload ||
     typeof candidate.payload !== 'object' ||
     Array.isArray(candidate.payload)
@@ -336,6 +316,56 @@ export function omitListOpenedAt(
   return rest;
 }
 
+export function sameChecklist(a: Checklist, b: Checklist): boolean {
+  return (
+    a.id === b.id &&
+    a.name === b.name &&
+    a.kind === b.kind &&
+    a.mode === b.mode &&
+    a.role === b.role &&
+    a.ownerUserId === b.ownerUserId &&
+    a.ownerName === b.ownerName &&
+    a.shareCode === b.shareCode &&
+    a.createdAt === b.createdAt &&
+    a.updatedAt === b.updatedAt
+  );
+}
+
+function normalizeListOrderHint(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const ids = [
+    ...new Set(
+      value.filter(
+        (id): id is string => typeof id === 'string' && id.length > 0,
+      ),
+    ),
+  ];
+  return ids.length > 0 ? ids : undefined;
+}
+
+/**
+ * Place a newly arrived list at its remembered catalog position. Lists not in
+ * the hint (created since the last cloud push) rank ahead, mirroring
+ * createList's prepend; without a hint (or for unknown ids) this appends,
+ * matching the old behavior.
+ */
+export function insertListByOrderHint(
+  lists: Checklist[],
+  next: Checklist,
+  hint?: readonly string[],
+): Checklist[] {
+  const rank = hint ? hint.indexOf(next.id) : -1;
+  if (rank < 0) return [...lists, next];
+  let index = lists.length;
+  for (let i = 0; i < lists.length; i += 1) {
+    if ((hint as readonly string[]).indexOf(lists[i].id) > rank) {
+      index = i;
+      break;
+    }
+  }
+  return [...lists.slice(0, index), next, ...lists.slice(index)];
+}
+
 function normalizeListOpenedAt(
   value: unknown,
   validListIds: Set<string>,
@@ -351,10 +381,10 @@ function normalizeListOpenedAt(
   return next;
 }
 
-export function normalizeTodoState(value: unknown): TodoPersistedState {
+export function normalizeChecklistState(value: unknown): ChecklistPersistedState {
   const source =
     value && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Partial<TodoPersistedState>)
+      ? (value as Partial<ChecklistPersistedState>)
       : {};
   const upgradeRecognizedGroceryNames =
     source.groceryMigrationVersion !== 1;
@@ -369,13 +399,13 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
   const legacyTasks =
     rawTasks.length > 0 &&
     rawTasks.some(
-      (item) => item && typeof item === 'object' && !asNonEmptyString((item as Partial<TodoTask>).listId),
+      (item) => item && typeof item === 'object' && !asNonEmptyString((item as Partial<ChecklistTask>).listId),
     );
   let fallbackListId: string | undefined;
   if (legacyTasks) {
     const timestamps = rawTasks.flatMap((item) => {
       if (!item || typeof item !== 'object') return [];
-      const createdAt = asNonEmptyString((item as Partial<TodoTask>).createdAt);
+      const createdAt = asNonEmptyString((item as Partial<ChecklistTask>).createdAt);
       return createdAt ? [createdAt] : [];
     });
     const createdAt = timestamps.sort()[0] ?? nowIso();
@@ -451,7 +481,7 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
 
   if (lists.length === 0 && tasks.length === 0) {
     const createdAt = nowIso();
-    const list: TodoList = {
+    const list: Checklist = {
       id: newUuid(),
       name: DEFAULT_CHECKLIST_NAME,
       kind: 'checklist',
@@ -466,6 +496,13 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
   const dedupedLists = new Map(lists.map((list) => [list.id, list]));
   const validListIds = new Set(dedupedLists.keys());
   tasks = tasks.filter((task) => validListIds.has(task.listId));
+  const listOrderHint = normalizeListOrderHint(source.listOrderHint);
+  // Hinted ids cover shared lists that have not reloaded yet — keep their
+  // open recency so a restore does not forget them.
+  const listOpenedAt = normalizeListOpenedAt(
+    source.listOpenedAt,
+    listOrderHint ? new Set([...validListIds, ...listOrderHint]) : validListIds,
+  );
 
   return {
     groceryMigrationVersion: 1,
@@ -503,10 +540,11 @@ export function normalizeTodoState(value: unknown): TodoPersistedState {
           return mutation && validListIds.has(mutation.listId) ? [mutation] : [];
         })
       : [],
-    listOpenedAt: normalizeListOpenedAt(source.listOpenedAt, validListIds),
+    listOpenedAt,
+    listOrderHint,
   };
 }
 
-export function normalizeTodoTasks(value: unknown): TodoTask[] {
-  return normalizeTodoState({ tasks: value }).tasks;
+export function normalizeChecklistTasks(value: unknown): ChecklistTask[] {
+  return normalizeChecklistState({ tasks: value }).tasks;
 }

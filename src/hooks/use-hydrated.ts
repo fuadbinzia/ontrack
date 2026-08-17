@@ -10,7 +10,7 @@ import { useJournal } from '@/store/journal';
 import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 import { useTravel } from '@/store/travel';
 import { useVehicles } from '@/store/vehicles';
 import { useVisionBoard } from '@/store/vision-board';
@@ -66,7 +66,7 @@ export function useHydrated(): boolean {
       rehydrateStore(() => useTravel.persist.rehydrate()),
       rehydrateStore(() => useAgents.persist.rehydrate()),
       rehydrateStore(() => useAuthAccess.persist.rehydrate()),
-      rehydrateStore(() => useTodos.persist.rehydrate()),
+      rehydrateStore(() => useChecklists.persist.rehydrate()),
       rehydrateStore(() => useVisionBoard.persist.rehydrate()),
       rehydrateStore(() => useVehicles.persist.rehydrate()),
       rehydrateStore(() => useHealth.persist.rehydrate()),

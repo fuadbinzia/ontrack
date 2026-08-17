@@ -1,12 +1,12 @@
-import type { TodoMember, TodoTask } from '@/store/todos';
+import type { ChecklistMember, ChecklistTask } from '@/store/todos';
 
 export const ALL_ASSIGNEES = 'all';
 export const ANYONE_ASSIGNEE = 'anyone';
 
 export function checklistAssigneeFilterChoices(
-  members: readonly TodoMember[],
+  members: readonly ChecklistMember[],
 ) {
-  const membersByUserId = new Map<string, TodoMember>();
+  const membersByUserId = new Map<string, ChecklistMember>();
   for (const member of members) {
     const existing = membersByUserId.get(member.userId);
     if (!existing || member.role === 'owner') {
@@ -28,7 +28,7 @@ export function checklistAssigneeFilterChoices(
 }
 
 export function matchesChecklistAssignee(
-  task: Pick<TodoTask, 'assigneeUserIds'>,
+  task: Pick<ChecklistTask, 'assigneeUserIds'>,
   assigneeId: string,
 ) {
   if (assigneeId === ALL_ASSIGNEES) return true;
@@ -37,7 +37,7 @@ export function matchesChecklistAssignee(
   return assigneeUserIds.includes(assigneeId);
 }
 
-export function filterChecklistTasksByAssignee<T extends TodoTask>(
+export function filterChecklistTasksByAssignee<T extends ChecklistTask>(
   tasks: T[],
   assigneeId: string,
 ): T[] {

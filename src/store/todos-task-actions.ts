@@ -1,24 +1,24 @@
 import { newUuid } from '@/utils/id';
 import {
-  canCompleteTodo,
-  canEditTodoContent,
+  canCompleteChecklistTask,
+  canEditChecklistContent,
   markGuestEdit,
   queuedMutation,
   resolveListCategoryId,
 } from './todos-helpers';
 import { cleanTitle, nowIso } from './todos-normalize';
 import type {
-  TodoPersistedState,
-  TodoTask,
+  ChecklistPersistedState,
+  ChecklistTask,
 } from './todos-types';
 
 type TaskSet = (
   partial:
-    | Partial<TodoPersistedState>
-    | ((state: TodoPersistedState) => Partial<TodoPersistedState>),
+    | Partial<ChecklistPersistedState>
+    | ((state: ChecklistPersistedState) => Partial<ChecklistPersistedState>),
 ) => void;
 
-type TaskGet = () => TodoPersistedState & {
+type TaskGet = () => ChecklistPersistedState & {
   setTaskCompletion: (
     id: string,
     completed: boolean,
@@ -26,8 +26,8 @@ type TaskGet = () => TodoPersistedState & {
   ) => void;
 };
 
-export type TodoTaskActions = {
-  addTask: (listId: string, title?: string, categoryId?: string) => TodoTask | undefined;
+export type ChecklistTaskActions = {
+  addTask: (listId: string, title?: string, categoryId?: string) => ChecklistTask | undefined;
   updateTask: (id: string, title: string) => void;
   setTaskCompletion: (id: string, completed: boolean, actorUserId?: string) => void;
   setTasksCompletion: (
@@ -42,13 +42,13 @@ export type TodoTaskActions = {
   clearCompleted: (listId?: string) => void;
 };
 
-export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActions {
-  const actions: TodoTaskActions = {
+export function createChecklistTaskActions(set: TaskSet, get: TaskGet): ChecklistTaskActions {
+  const actions: ChecklistTaskActions = {
     addTask: (listId, maybeTitle, categoryId) => {
       const legacyCall = maybeTitle === undefined;
       const list = legacyCall ? get().lists[0] : get().lists.find((item) => item.id === listId);
       const clean = cleanTitle(legacyCall ? listId : maybeTitle);
-      if (!list || !canEditTodoContent(list) || !clean) return undefined;
+      if (!list || !canEditChecklistContent(list) || !clean) return undefined;
       const resolvedCategoryId = resolveListCategoryId(
         get().categories,
         list.id,
@@ -60,7 +60,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
         .flatMap((task) =>
           typeof task.position === 'number' ? [task.position] : [],
         );
-      const task: TodoTask = {
+      const task: ChecklistTask = {
         id: newUuid(),
         listId: list.id,
         categoryId: resolvedCategoryId,
@@ -96,7 +96,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
       const clean = cleanTitle(title);
       const task = get().tasks.find((item) => item.id === id);
       const list = task ? get().lists.find((item) => item.id === task.listId) : undefined;
-      if (!clean || !task || !list || !canEditTodoContent(list)) return;
+      if (!clean || !task || !list || !canEditChecklistContent(list)) return;
       const updatedAt = nowIso();
       markGuestEdit();
       set((state) => ({
@@ -116,7 +116,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
     setTaskCompletion: (id, completed, actorUserId) => {
       const task = get().tasks.find((item) => item.id === id);
       const list = task ? get().lists.find((item) => item.id === task.listId) : undefined;
-      if (!task || !list || !canCompleteTodo(list, task, actorUserId)) return;
+      if (!task || !list || !canCompleteChecklistTask(list, task, actorUserId)) return;
       const updatedAt = nowIso();
       markGuestEdit();
       set((state) => ({
@@ -152,7 +152,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
         const list = listsById.get(task.listId);
         return (
           requestedIds.has(task.id) &&
-          Boolean(list && canCompleteTodo(list, task, actorUserId))
+          Boolean(list && canCompleteChecklistTask(list, task, actorUserId))
         );
       });
       if (allowedTasks.length === 0) return;
@@ -203,7 +203,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
     toggleImportant: (id) => {
       const task = get().tasks.find((item) => item.id === id);
       const list = task ? get().lists.find((item) => item.id === task.listId) : undefined;
-      if (!task || !list || !canEditTodoContent(list)) return;
+      if (!task || !list || !canEditChecklistContent(list)) return;
       const important = !task.important;
       const updatedAt = nowIso();
       markGuestEdit();
@@ -224,7 +224,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
     setAssignee: (id, assigneeUserIds) => {
       const task = get().tasks.find((item) => item.id === id);
       const list = task ? get().lists.find((item) => item.id === task.listId) : undefined;
-      if (!task || !list || !canEditTodoContent(list)) return;
+      if (!task || !list || !canEditChecklistContent(list)) return;
       const nextAssignees = Array.from(
         new Set(
           (assigneeUserIds ?? []).filter(
@@ -263,7 +263,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
     deleteTask: (id) => {
       const task = get().tasks.find((item) => item.id === id);
       const list = task ? get().lists.find((item) => item.id === task.listId) : undefined;
-      if (!task || !list || !canEditTodoContent(list)) return;
+      if (!task || !list || !canEditChecklistContent(list)) return;
       const updatedAt = nowIso();
       const deleteRecipeId =
         task.recipeId &&
@@ -302,7 +302,7 @@ export function createTodoTaskActions(set: TaskSet, get: TaskGet): TodoTaskActio
       const list = listId
         ? get().lists.find((item) => item.id === listId)
         : get().lists[0];
-      if (!list || !canEditTodoContent(list)) return;
+      if (!list || !canEditChecklistContent(list)) return;
       const completedIds = get().tasks
         .filter((task) => task.listId === list.id && task.completed)
         .map((task) => task.id);

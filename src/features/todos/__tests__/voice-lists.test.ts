@@ -7,7 +7,7 @@ import {
   matchVoiceList,
   voiceListNameQuery,
 } from '@/features/todos/voice-lists';
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
@@ -15,7 +15,7 @@ const updatedAt = '2026-08-12T12:00:00.000Z';
 
 describe('voice lists', () => {
   beforeEach(() => {
-    useTodos.getState().reset();
+    useChecklists.getState().reset();
   });
 
   it('infers grocery vs checklist hints and ignores generic list names', () => {
@@ -76,9 +76,9 @@ describe('voice lists', () => {
   });
 
   it('adds a Siri item requested for To Do to To Do instead of another checklist', () => {
-    const toDo = useTodos.getState().lists.find((list) => list.name === 'To Do')!;
-    const other = useTodos.getState().createList('7 Maple', 'checklist')!;
-    useTodos.setState((state) => ({
+    const toDo = useChecklists.getState().lists.find((list) => list.name === 'To Do')!;
+    const other = useChecklists.getState().createList('7 Maple', 'checklist')!;
+    useChecklists.setState((state) => ({
       lists: state.lists.map((list) => ({
         ...list,
         updatedAt:
@@ -99,7 +99,7 @@ describe('voice lists', () => {
         },
       ]),
     ).toBe(1);
-    expect(useTodos.getState().tasks).toEqual([
+    expect(useChecklists.getState().tasks).toEqual([
       expect.objectContaining({ title: 'Test', listId: toDo.id }),
     ]);
   });
@@ -128,9 +128,9 @@ describe('voice lists', () => {
   });
 
   it('builds a snapshot of open titles and applies pending adds', () => {
-    const groceries = useTodos.getState().createList('Groceries', 'grocery');
-    useTodos.getState().addTask(groceries!.id, 'Eggs');
-    const snapshot = buildVoiceSnapshot(useTodos.getState());
+    const groceries = useChecklists.getState().createList('Groceries', 'grocery');
+    useChecklists.getState().addTask(groceries!.id, 'Eggs');
+    const snapshot = buildVoiceSnapshot(useChecklists.getState());
     expect(snapshot.lists).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -154,7 +154,7 @@ describe('voice lists', () => {
       ]),
     ).toBe(1);
     expect(
-      useTodos
+      useChecklists
         .getState()
         .tasks.filter((task) => !task.completed)
         .map((task) => task.title)
@@ -163,25 +163,25 @@ describe('voice lists', () => {
   });
 
   it('groups open tasks by list and preserves their position order', () => {
-    const first = useTodos.getState().createList('First', 'checklist')!;
-    const second = useTodos.getState().createList('Second', 'checklist')!;
-    useTodos.getState().addTask(first.id, 'Later');
-    useTodos.getState().addTask(first.id, 'Sooner');
-    useTodos.getState().addTask(second.id, 'Elsewhere');
+    const first = useChecklists.getState().createList('First', 'checklist')!;
+    const second = useChecklists.getState().createList('Second', 'checklist')!;
+    useChecklists.getState().addTask(first.id, 'Later');
+    useChecklists.getState().addTask(first.id, 'Sooner');
+    useChecklists.getState().addTask(second.id, 'Elsewhere');
 
-    const firstTasks = useTodos.getState().tasks.filter((task) => task.listId === first.id);
+    const firstTasks = useChecklists.getState().tasks.filter((task) => task.listId === first.id);
     const later = firstTasks.find((task) => task.title === 'Later')!;
     const sooner = firstTasks.find((task) => task.title === 'Sooner')!;
-    useTodos.setState((state) => ({
+    useChecklists.setState((state) => ({
       tasks: state.tasks.map((task) => {
         if (task.id === later.id) return { ...task, position: 2 };
         if (task.id === sooner.id) return { ...task, position: 1 };
         return task;
       }),
     }));
-    useTodos.getState().toggleTask(later.id);
+    useChecklists.getState().toggleTask(later.id);
 
-    const snapshot = buildVoiceSnapshot(useTodos.getState());
+    const snapshot = buildVoiceSnapshot(useChecklists.getState());
     expect(snapshot.lists.find((list) => list.id === first.id)?.openTitles).toEqual([
       'Sooner',
     ]);
@@ -191,7 +191,7 @@ describe('voice lists', () => {
   });
 
   it('creates To Do when no list exists yet', () => {
-    useTodos.setState({
+    useChecklists.setState({
       lists: [],
       tasks: [],
       categories: [],
@@ -203,7 +203,7 @@ describe('voice lists', () => {
         { id: 'op-empty', title: 'Pack charger', createdAt: updatedAt },
       ]),
     ).toBe(1);
-    expect(useTodos.getState().lists[0]).toMatchObject({
+    expect(useChecklists.getState().lists[0]).toMatchObject({
       name: 'To Do',
       kind: 'checklist',
     });
@@ -215,11 +215,11 @@ describe('voice lists', () => {
         { id: 'op-2', title: 'Pack charger', createdAt: updatedAt },
       ]),
     ).toBe(1);
-    expect(useTodos.getState().lists[0]).toMatchObject({
+    expect(useChecklists.getState().lists[0]).toMatchObject({
       name: 'To Do',
       kind: 'checklist',
     });
-    expect(useTodos.getState().tasks[0].title).toBe('Pack charger');
+    expect(useChecklists.getState().tasks[0].title).toBe('Pack charger');
   });
 
   it('creates a grocery list when the voice add is a grocery item', () => {
@@ -233,7 +233,7 @@ describe('voice lists', () => {
         },
       ]),
     ).toBe(1);
-    expect(useTodos.getState().lists[0]).toMatchObject({
+    expect(useChecklists.getState().lists[0]).toMatchObject({
       name: 'Groceries',
       kind: 'grocery',
     });

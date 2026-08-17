@@ -19,7 +19,7 @@ import {
 } from '@/store/appearance-sync';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
-import { DEFAULT_CHECKLIST_NAME, privateTodoPayload, useTodos } from '@/store/todos';
+import { DEFAULT_CHECKLIST_NAME, privateChecklistPayload, useChecklists } from '@/store/todos';
 import { useTravel } from '@/store/travel';
 import { privateFinancePayload, useFinance } from '@/store/finance';
 import { privateVehiclePayload, useVehicles } from '@/store/vehicles';
@@ -221,12 +221,12 @@ export const domains: SyncDomain[] = [
   },
   {
     name: 'todos',
-    read: () => privateTodoPayload(useTodos.getState()),
+    read: () => privateChecklistPayload(useChecklists.getState()),
     write: (payload) => {
-      useTodos.getState().replacePrivateData(payload);
+      useChecklists.getState().replacePrivateData(payload);
     },
-    reset: () => useTodos.getState().reset(),
-    subscribe: (onChange) => useTodos.subscribe(onChange),
+    reset: () => useChecklists.getState().reset(),
+    subscribe: (onChange) => useChecklists.subscribe(onChange),
   },
   {
     name: 'vision-board',
@@ -313,7 +313,7 @@ export function hasMeaningfulLocalData(): boolean {
   const preferences = usePreferences.getState();
   if (preferences.hasOnboarded || preferences.name.trim() || preferences.goal.trim()) return true;
   if (usePlants.getState().plants.length > 0) return true;
-  const todoState = useTodos.getState();
+  const todoState = useChecklists.getState();
   if (
     todoState.categories.length > 0 ||
     todoState.tasks.length > 0 ||

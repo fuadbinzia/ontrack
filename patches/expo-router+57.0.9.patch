@@ -1,0 +1,23 @@
+diff --git a/node_modules/expo-router/build/react-navigation/routers/StackRouter.js b/node_modules/expo-router/build/react-navigation/routers/StackRouter.js
+index ee2ac7a..eeb602b 100644
+--- a/node_modules/expo-router/build/react-navigation/routers/StackRouter.js
++++ b/node_modules/expo-router/build/react-navigation/routers/StackRouter.js
+@@ -165,7 +165,17 @@ function StackRouter(options) {
+                     const id = getId?.({ params: action.payload.params });
+                     // Re-use preloaded route if available
+                     let route = state.preloadedRoutes.find((route) => route.name === action.payload.name && id === getId?.({ params: route.params }));
+-                    if (!route) {
++                    if (route) {
++                        // PATCH(onTrack): apply the action's params like NAVIGATE does.
++                        // Without getId, any preloaded route of this name matches, and
++                        // reusing it as-is replaces to the *warmed* params — opening the
++                        // wrong dynamic screen (e.g. the wrong checklist) on first tap.
++                        route = {
++                            ...route,
++                            params: (0, createParamsFromAction_1.createParamsFromAction)({ action, routeParamList }),
++                        };
++                    }
++                    else {
+                         route = (0, createRouteFromAction_1.createRouteFromAction)({ action, routeParamList });
+                     }
+                     return {

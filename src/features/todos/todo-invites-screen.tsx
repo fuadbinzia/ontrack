@@ -13,21 +13,21 @@ import {
 import { spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import {
-  acceptTodoEmailInvite,
-  loadTodoInvites,
+  acceptChecklistEmailInvite,
+  loadChecklistInvites,
 } from '@/services/todos/collaboration';
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 
-export function TodoInvitesScreen() {
+export function ChecklistInvitesScreen() {
   const router = useRouter();
   const { user } = useAuthSession();
-  const invites = useTodos((state) => state.invites);
+  const invites = useChecklists((state) => state.invites);
   const [working, setWorking] = useState<string>();
   const [error, setError] = useState<string>();
 
   useEffect(() => {
     if (!user) return;
-    void loadTodoInvites().catch((caught: unknown) => {
+    void loadChecklistInvites().catch((caught: unknown) => {
       setError(caught instanceof Error ? caught.message : 'Invitations could not be loaded.');
     });
   }, [user]);
@@ -86,7 +86,7 @@ export function TodoInvitesScreen() {
               onPress={() => {
                 setWorking(invite.id);
                 setError(undefined);
-                void acceptTodoEmailInvite(invite.id)
+                void acceptChecklistEmailInvite(invite.id)
                   .then((listId) => router.replace(`/(tabs)/to-do/${listId}` as never))
                   .catch((caught: unknown) => {
                     setError(caught instanceof Error ? caught.message : 'The invitation could not be accepted.');

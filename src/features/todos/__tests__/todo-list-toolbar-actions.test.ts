@@ -1,14 +1,14 @@
 import { AgentUiIds } from '@/utils/agent-ui';
-import type { TodoMember } from '@/store/todos';
+import type { ChecklistMember } from '@/store/todos';
 
 import {
-  parseTodoListToolbarAction,
-  todoListToolbarActionId,
-  todoListToolbarActionItems,
-  todoListToolbarActionTestID,
+  parseChecklistToolbarAction,
+  checklistToolbarActionId,
+  checklistToolbarActionItems,
+  checklistToolbarActionTestID,
 } from '../todo-list-toolbar-actions';
 
-const member: TodoMember = {
+const member: ChecklistMember = {
   listId: 'list-1',
   userId: 'user-alex',
   displayName: 'Alex Rivera',
@@ -16,9 +16,9 @@ const member: TodoMember = {
   joinedAt: '2026-08-12T00:00:00.000Z',
 };
 
-describe('todoListToolbarActionItems', () => {
+describe('checklistToolbarActionItems', () => {
   it('puts sort, assignee, and list actions in one menu', () => {
-    const items = todoListToolbarActionItems({
+    const items = checklistToolbarActionItems({
       sort: 'smart',
       members: [member],
       selectedAssigneeId: 'all',
@@ -47,7 +47,7 @@ describe('todoListToolbarActionItems', () => {
   });
 
   it('offers Delete List only to the owner', () => {
-    const ownerItems = todoListToolbarActionItems({
+    const ownerItems = checklistToolbarActionItems({
       sort: 'manual',
       members: [],
       selectedAssigneeId: 'all',
@@ -55,7 +55,7 @@ describe('todoListToolbarActionItems', () => {
       canEdit: true,
       completedCount: 0,
     });
-    const editorItems = todoListToolbarActionItems({
+    const editorItems = checklistToolbarActionItems({
       sort: 'manual',
       members: [member],
       selectedAssigneeId: 'all',
@@ -63,7 +63,7 @@ describe('todoListToolbarActionItems', () => {
       canEdit: true,
       completedCount: 0,
     });
-    const memberItems = todoListToolbarActionItems({
+    const memberItems = checklistToolbarActionItems({
       sort: 'manual',
       members: [member],
       selectedAssigneeId: 'all',
@@ -85,7 +85,7 @@ describe('todoListToolbarActionItems', () => {
   });
 
   it('omits assignee rows on a private list', () => {
-    const items = todoListToolbarActionItems({
+    const items = checklistToolbarActionItems({
       sort: 'manual',
       members: [],
       selectedAssigneeId: 'all',
@@ -101,28 +101,28 @@ describe('todoListToolbarActionItems', () => {
 
 describe('todoListToolbarAction routing', () => {
   it('parses sort, assignee, and list-action ids', () => {
-    expect(parseTodoListToolbarAction(todoListToolbarActionId('sort', 'newest'))).toEqual({
+    expect(parseChecklistToolbarAction(checklistToolbarActionId('sort', 'newest'))).toEqual({
       kind: 'sort',
       value: 'newest',
     });
-    expect(parseTodoListToolbarAction(todoListToolbarActionId('assignee', 'all'))).toEqual({
+    expect(parseChecklistToolbarAction(checklistToolbarActionId('assignee', 'all'))).toEqual({
       kind: 'assignee',
       value: 'all',
     });
-    expect(parseTodoListToolbarAction('copy')).toEqual({
+    expect(parseChecklistToolbarAction('copy')).toEqual({
       kind: 'action',
       value: 'copy',
     });
   });
 
   it('stamps sort and assignee choices with their own testIDs', () => {
-    expect(todoListToolbarActionTestID('sort:smart')).toBe(
+    expect(checklistToolbarActionTestID('sort:smart')).toBe(
       AgentUiIds.checklists.detail.sortOption('smart'),
     );
-    expect(todoListToolbarActionTestID('assignee:all')).toBe(
+    expect(checklistToolbarActionTestID('assignee:all')).toBe(
       AgentUiIds.checklists.detail.assigneeOption('all'),
     );
-    expect(todoListToolbarActionTestID('copy')).toBe(
+    expect(checklistToolbarActionTestID('copy')).toBe(
       AgentUiIds.checklists.detail.action('copy'),
     );
   });

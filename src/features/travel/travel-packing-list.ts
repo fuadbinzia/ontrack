@@ -1,17 +1,17 @@
-import type { TodoList, TodoListKind } from '@/store/todos';
+import type { Checklist, ChecklistKind } from '@/store/todos';
 import { cleanName } from '@/store/todos-normalize';
 
 import { tripHeroPlaceName } from './trip-hero-place';
 import type { TravelPlan } from './types';
 
 export type TravelPackingListDependencies = {
-  lists: readonly TodoList[];
+  lists: readonly Checklist[];
   /** Fresh read right before create, so a stale snapshot cannot duplicate. */
-  getLists?: () => readonly TodoList[];
-  createList: (name: string, kind?: TodoListKind) => TodoList | undefined;
+  getLists?: () => readonly Checklist[];
+  createList: (name: string, kind?: ChecklistKind) => Checklist | undefined;
   savePlan: (plan: TravelPlan) => boolean;
   /** Put a remembered list back when sync/rehydrate dropped it. */
-  ensureList?: (list: TodoList) => void;
+  ensureList?: (list: Checklist) => void;
   /** Rename a leftover Packing List in place after the Checklist label change. */
   renameList?: (id: string, name: string) => void;
   /** List ids that already have tasks — prefer these over empty duplicates. */
@@ -19,7 +19,7 @@ export type TravelPackingListDependencies = {
   now?: () => string;
 };
 
-const linkedPackingListByPlanId = new Map<string, TodoList>();
+const linkedPackingListByPlanId = new Map<string, Checklist>();
 
 /** Test helper — drop session memory between cases. */
 export function resetTravelPackingListMemory() {
@@ -50,7 +50,7 @@ function legacyPackingListNameForTrip(title: string): string {
   return labeledListName(title, 'Packing List');
 }
 
-function isChecklistList(list: TodoList): boolean {
+function isChecklistList(list: Checklist): boolean {
   return list.kind !== 'grocery';
 }
 
@@ -89,9 +89,9 @@ export function packingListNameCandidatesForTrip(plan: TravelPlan): string[] {
 }
 
 function findChecklistById(
-  lists: readonly TodoList[],
+  lists: readonly Checklist[],
   listId: string | undefined,
-): TodoList | undefined {
+): Checklist | undefined {
   if (!listId) return undefined;
   return lists.find((list) => list.id === listId && isChecklistList(list));
 }
@@ -103,16 +103,16 @@ function tripChecklistNameKeys(plan: TravelPlan): Set<string> {
 }
 
 function findAllTripChecklists(
-  lists: readonly TodoList[],
+  lists: readonly Checklist[],
   plan: TravelPlan,
-): TodoList[] {
+): Checklist[] {
   const wanted = tripChecklistNameKeys(plan);
   return lists.filter(
     (list) => isChecklistList(list) && wanted.has(normalizedListName(list.name)),
   );
 }
 
-function isLegacyGeneratedPackingList(list: TodoList, plan: TravelPlan): boolean {
+function isLegacyGeneratedPackingList(list: Checklist, plan: TravelPlan): boolean {
   const legacyNames = new Set(
     tripPackingListLabels(plan).map((label) =>
       normalizedListName(legacyPackingListNameForTrip(label)),
@@ -121,7 +121,7 @@ function isLegacyGeneratedPackingList(list: TodoList, plan: TravelPlan): boolean
   return legacyNames.has(normalizedListName(list.name));
 }
 
-function pickOldestList(lists: readonly TodoList[]): TodoList {
+function pickOldestList(lists: readonly Checklist[]): Checklist {
   return [...lists].sort(
     (left, right) =>
       left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id),
@@ -131,9 +131,9 @@ function pickOldestList(lists: readonly TodoList[]): TodoList {
 /** Prefer the original Packing List over a later empty Checklist duplicate. */
 function pickBestTripChecklist(
   plan: TravelPlan,
-  lists: readonly TodoList[],
+  lists: readonly Checklist[],
   listsWithItems?: ReadonlySet<string>,
-): TodoList | undefined {
+): Checklist | undefined {
   const matches = findAllTripChecklists(lists, plan);
   const linked = findChecklistById(lists, plan.packingListId);
   const linkedIsGenerated = Boolean(
@@ -152,10 +152,10 @@ function pickBestTripChecklist(
 
 function adoptLegacyPackingListName(
   plan: TravelPlan,
-  list: TodoList,
-  lists: readonly TodoList[],
+  list: Checklist,
+  lists: readonly Checklist[],
   renameList?: (id: string, name: string) => void,
-): TodoList {
+): Checklist {
   if (!renameList || !isLegacyGeneratedPackingList(list, plan)) return list;
   const nextName = packingListNameForTrip(plan.title);
   const stored = cleanName(nextName);
@@ -173,16 +173,16 @@ function adoptLegacyPackingListName(
   return { ...list, name: stored };
 }
 
-function remember(planId: string, list: TodoList): TodoList {
+function remember(planId: string, list: Checklist): Checklist {
   linkedPackingListByPlanId.set(planId, list);
   return list;
 }
 
 function resolveExisting(
   plan: TravelPlan,
-  lists: readonly TodoList[],
+  lists: readonly Checklist[],
   listsWithItems?: ReadonlySet<string>,
-): TodoList | undefined {
+): Checklist | undefined {
   const best = pickBestTripChecklist(plan, lists, listsWithItems);
   const remembered = linkedPackingListByPlanId.get(plan.id);
   if (
@@ -199,11 +199,11 @@ function resolveExisting(
 
 function linkToPlan(
   plan: TravelPlan,
-  list: TodoList,
+  list: Checklist,
   savePlan: (plan: TravelPlan) => boolean,
   now: () => string,
-  ensureList?: (list: TodoList) => void,
-): TodoList {
+  ensureList?: (list: Checklist) => void,
+): Checklist {
   remember(plan.id, list);
   ensureList?.(list);
   if (plan.packingListId !== list.id) {
@@ -242,8 +242,8 @@ export function getOrCreateTravelPackingList(
     listsWithItems,
     now = () => new Date().toISOString(),
   }: TravelPackingListDependencies,
-): TodoList | undefined {
-  const adopt = (found: TodoList, from: readonly TodoList[]) =>
+): Checklist | undefined {
+  const adopt = (found: Checklist, from: readonly Checklist[]) =>
     linkToPlan(
       plan,
       adoptLegacyPackingListName(plan, found, from, renameList),

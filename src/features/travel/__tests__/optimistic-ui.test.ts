@@ -26,7 +26,7 @@ describe('optimistic network actions', () => {
       path.join(process.cwd(), 'src/services/todos/collaboration-members.ts'),
       'utf8',
     );
-    for (const functionName of ['leaveTodoList', 'deleteSharedTodoList']) {
+    for (const functionName of ['leaveChecklist', 'deleteSharedChecklist']) {
       const start = source.indexOf(`export async function ${functionName}`);
       const end = source.indexOf('\nexport ', start + 1);
       const implementation = source.slice(start, end);

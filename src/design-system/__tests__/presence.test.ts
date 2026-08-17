@@ -36,6 +36,10 @@ describe('list presence stagger', () => {
     expect(presence).toContain('useSettledListLayout');
     expect(presence).toContain('settled ? listLayout() : undefined');
     expect(presence).toContain('onLayout: settled ? undefined : onFirstLayout');
+    expect(presence).toContain('requestAnimationFrame(() => {');
+    expect(presence).toContain(
+      'frameRef.current = requestAnimationFrame(() => setSettled(true))',
+    );
   });
 });
 
@@ -53,5 +57,11 @@ describe('nextListEnterIds', () => {
     nextListEnterIds('hub', ['a']);
     expect([...nextListEnterIds('hub', ['a', 'b'])]).toEqual(['b']);
     expect([...nextListEnterIds('hub', ['a', 'b'])]).toEqual([]);
+  });
+
+  it('does not FadeInDown existing rows after an empty first paint', () => {
+    expect([...nextListEnterIds('todo', [])]).toEqual([]);
+    expect([...nextListEnterIds('todo', ['a', 'b'])]).toEqual([]);
+    expect([...nextListEnterIds('todo', ['a', 'b', 'c'])]).toEqual(['c']);
   });
 });

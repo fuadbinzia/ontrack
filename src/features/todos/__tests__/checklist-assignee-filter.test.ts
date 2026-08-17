@@ -5,11 +5,11 @@ import {
   filterChecklistTasksByAssignee,
   matchesChecklistAssignee,
 } from '@/features/todos/checklist-assignee-filter';
-import type { TodoTask } from '@/store/todos';
+import type { ChecklistTask } from '@/store/todos';
 
 const createdAt = '2026-08-12T00:00:00.000Z';
 
-function task(id: string, assigneeUserIds?: string[]): TodoTask {
+function task(id: string, assigneeUserIds?: string[]): ChecklistTask {
   return {
     id,
     listId: 'list-packing',

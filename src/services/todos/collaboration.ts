@@ -1,40 +1,40 @@
 /**
- * Todo collaboration public API. Implementation lives in colocated
+ * Checklist collaboration public API. Implementation lives in colocated
  * collaboration-* modules; this file re-exports so existing imports stay stable.
  */
-export { TodoCollaborationError } from './collaboration-core';
+export { ChecklistCollaborationError } from './collaboration-core';
 
 export {
-  acceptTodoCollaboratorLink,
-  acceptTodoEmailInvite,
-  acceptTodoShareLink,
-  createTodoCollaboratorLink,
-  createTodoEmailInvite,
-  createTodoShareLink,
-  loadTodoInvites,
-  loadTodoListPendingInvites,
-  type PendingTodoEmailInvite,
-  resolveTodoCollaboratorLink,
-  resolveTodoShareLink,
-  revokeTodoCollaboratorLink,
-  revokeTodoEmailInvite,
-  revokeTodoShareLink,
+  acceptChecklistCollaboratorLink,
+  acceptChecklistEmailInvite,
+  acceptChecklistShareLink,
+  createChecklistCollaboratorLink,
+  createChecklistEmailInvite,
+  createChecklistShareLink,
+  loadChecklistInvites,
+  loadChecklistPendingInvites,
+  type PendingChecklistEmailInvite,
+  resolveChecklistCollaboratorLink,
+  resolveChecklistShareLink,
+  revokeChecklistCollaboratorLink,
+  revokeChecklistEmailInvite,
+  revokeChecklistShareLink,
 } from './collaboration-invites';
 
 export {
-  addTodoFriendEditors,
-  deleteSharedTodoList,
-  leaveTodoList,
-  removeTodoMember,
-  setTodoMemberRole,
-  subscribeToTodoList,
-  transferTodoListOwnership,
+  addChecklistFriendEditors,
+  deleteSharedChecklist,
+  leaveChecklist,
+  removeChecklistMember,
+  setChecklistMemberRole,
+  subscribeToChecklist,
+  transferChecklistOwnership,
 } from './collaboration-members';
 
 export {
-  flushTodoMutations,
-  loadTodoListSnapshot,
-  publishTodoList,
+  flushChecklistMutations,
+  loadChecklistSnapshot,
+  publishChecklist,
 } from './collaboration-mutations';
 
-export { loadAllSharedTodoLists } from './collaboration-reload';
+export { loadAllSharedChecklists } from './collaboration-reload';

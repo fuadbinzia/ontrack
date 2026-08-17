@@ -1,10 +1,10 @@
-import type { TodoTask } from '@/store/todos';
+import type { ChecklistTask } from '@/store/todos';
 
 type AddChecklistTask = (
   listId: string,
   title: string,
   categoryId?: string,
-) => TodoTask | undefined;
+) => ChecklistTask | undefined;
 
 export function createChecklistTaskAndOpenDetails({
   addTask,
@@ -18,7 +18,7 @@ export function createChecklistTaskAndOpenDetails({
   listId: string;
   openDetails: (taskId: string) => void;
   title: string;
-}): TodoTask | undefined {
+}): ChecklistTask | undefined {
   const task = addTask(listId, title, categoryId);
   if (!task) return undefined;
 

@@ -97,7 +97,7 @@ export async function resetLocalDomains() {
     STORAGE_KEYS.travel,
     STORAGE_KEYS.travelMap,
     STORAGE_KEYS.travelPlanUi,
-    STORAGE_KEYS.todos,
+    STORAGE_KEYS.checklists,
     STORAGE_KEYS.visionBoard,
     STORAGE_KEYS.vehicles,
     STORAGE_KEYS.finance,

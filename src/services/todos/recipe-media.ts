@@ -3,9 +3,9 @@ import { File } from 'expo-file-system';
 import { Platform } from 'react-native';
 
 import type {
-    PendingTodoMutation,
-    TodoRecipe,
-    TodoSharedSnapshot,
+    PendingChecklistMutation,
+    ChecklistRecipe,
+    ChecklistSharedSnapshot,
 } from '@/store/todos';
 
 const BUCKET = 'todo-recipe-images';
@@ -36,7 +36,7 @@ export function recipeMediaPath(value?: string) {
 
 export async function uploadSharedRecipeImage(
   client: SupabaseClient,
-  recipe: TodoRecipe,
+  recipe: ChecklistRecipe,
 ) {
   const uri = recipe.sourceImageUri;
   if (recipe.sourceImagePath) return recipe.sourceImagePath;
@@ -72,7 +72,7 @@ function recipeImageCandidates(
 /** Upload-only prep. Deletes happen in cleanupRecipeMutationMedia after ack. */
 export async function prepareRecipeMutationMedia(
   client: SupabaseClient,
-  mutation: PendingTodoMutation,
+  mutation: PendingChecklistMutation,
 ) {
   if (
     mutation.operation !== 'add_recipe' &&
@@ -84,7 +84,7 @@ export async function prepareRecipeMutationMedia(
     mutation.payload.recipe &&
     typeof mutation.payload.recipe === 'object' &&
     !Array.isArray(mutation.payload.recipe)
-      ? (mutation.payload.recipe as TodoRecipe)
+      ? (mutation.payload.recipe as ChecklistRecipe)
       : undefined;
   if (!recipe?.sourceImageUri) return mutation;
   return {
@@ -129,7 +129,7 @@ async function remainingRecipeIds(
 /** Remove storage objects only after the matching mutation is acknowledged. */
 export async function cleanupRecipeMutationMedia(
   client: SupabaseClient,
-  mutation: PendingTodoMutation,
+  mutation: PendingChecklistMutation,
 ): Promise<void> {
   if (mutation.operation === 'clear_completed') {
     const deletedRecipes = Array.isArray(mutation.payload.deletedRecipes)
@@ -192,8 +192,8 @@ export async function cleanupRecipeMutationMedia(
 
 export async function resolveSharedRecipeMedia(
   client: SupabaseClient,
-  snapshot: TodoSharedSnapshot,
-): Promise<TodoSharedSnapshot> {
+  snapshot: ChecklistSharedSnapshot,
+): Promise<ChecklistSharedSnapshot> {
   const recipes = await Promise.all(
     (snapshot.recipes ?? []).map(async (recipe) => {
       const path = recipeMediaPath(recipe.sourceImageUri);
@@ -217,7 +217,7 @@ export async function resolveSharedRecipeMedia(
 
 export async function removeSharedRecipeImages(
   client: SupabaseClient,
-  recipes: TodoRecipe[],
+  recipes: ChecklistRecipe[],
 ) {
   const candidates = recipes.flatMap((recipe) => {
     const path = recipe.sourceImagePath ?? recipeMediaPath(recipe.sourceImageUri);

@@ -245,7 +245,7 @@ export function purgeAgentUiDemoFixtures(): void {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { useTravel } = require('@/store/travel') as typeof import('@/store/travel');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { useTodos } = require('@/store/todos') as typeof import('@/store/todos');
+  const { useChecklists } = require('@/store/todos') as typeof import('@/store/todos');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { useSchedule } =
     require('@/store/schedule') as typeof import('@/store/schedule');
@@ -265,8 +265,8 @@ export function purgeAgentUiDemoFixtures(): void {
   }
 
   for (const listId of AGENT_UI_DEMO_TODO_LIST_IDS) {
-    if (useTodos.getState().lists.some((list) => list.id === listId)) {
-      useTodos.getState().deleteList(listId);
+    if (useChecklists.getState().lists.some((list) => list.id === listId)) {
+      useChecklists.getState().deleteList(listId);
     }
   }
 

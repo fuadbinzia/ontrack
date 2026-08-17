@@ -1,16 +1,16 @@
 import {
-  createInstalledTodoCollaboratorJoinUrl,
-  createTodoCollaboratorJoinUrl,
-  formatTodoListText,
+  createInstalledChecklistCollaboratorJoinUrl,
+  createChecklistCollaboratorJoinUrl,
+  formatChecklistText,
 } from '@/features/todos/share';
 import type {
-  TodoList,
-  TodoMember,
-  TodoRecipe,
-  TodoTask,
+  Checklist,
+  ChecklistMember,
+  ChecklistRecipe,
+  ChecklistTask,
 } from '@/store/todos';
 
-const list: TodoList = {
+const list: Checklist = {
   id: 'list',
   name: 'Groceries',
   kind: 'grocery',
@@ -20,7 +20,7 @@ const list: TodoList = {
   updatedAt: '2026-07-01T10:00:00.000Z',
 };
 
-const members: TodoMember[] = [
+const members: ChecklistMember[] = [
   {
     listId: list.id,
     userId: 'owner',
@@ -37,7 +37,7 @@ const members: TodoMember[] = [
   },
 ];
 
-function task(patch: Partial<TodoTask>): TodoTask {
+function task(patch: Partial<ChecklistTask>): ChecklistTask {
   return {
     id: patch.id ?? 'task',
     listId: list.id,
@@ -62,7 +62,7 @@ function task(patch: Partial<TodoTask>): TodoTask {
 describe('pretty to-do list text', () => {
   it('formats open items, focus, and collaborative assignments', () => {
     expect(
-      formatTodoListText(
+      formatChecklistText(
         list,
         [
           task({ id: 'milk', title: 'Milk' }),
@@ -84,13 +84,13 @@ describe('pretty to-do list text', () => {
   });
 
   it('omits assignments for private lists and celebrates an empty list', () => {
-    expect(formatTodoListText({ name: 'Maintenance' }, [], [])).toBe(
+    expect(formatChecklistText({ name: 'Maintenance' }, [], [])).toBe(
       ['📝 Maintenance', '', '✓ All done!', '', 'All done · onTrack'].join('\n'),
     );
   });
 
   it('preserves meal headings and ingredient context', () => {
-    const recipe: TodoRecipe = {
+    const recipe: ChecklistRecipe = {
       id: 'recipe',
       listId: list.id,
       name: 'Tomato soup',
@@ -100,7 +100,7 @@ describe('pretty to-do list text', () => {
       createdAt: list.createdAt,
       updatedAt: list.updatedAt,
     };
-    const text = formatTodoListText(
+    const text = formatChecklistText(
       list,
       [
         task({
@@ -121,10 +121,10 @@ describe('pretty to-do list text', () => {
   });
 
   it('creates web fallback and installed-app collaborator links', () => {
-    expect(createTodoCollaboratorJoinUrl('abc123')).toBe(
+    expect(createChecklistCollaboratorJoinUrl('abc123')).toBe(
       'https://ontrack--links.expo.app/c/abc123',
     );
-    expect(createInstalledTodoCollaboratorJoinUrl('abc123')).toBe(
+    expect(createInstalledChecklistCollaboratorJoinUrl('abc123')).toBe(
       'ontrack:///c/abc123',
     );
   });

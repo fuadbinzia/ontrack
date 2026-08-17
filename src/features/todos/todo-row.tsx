@@ -12,11 +12,11 @@ import { glassMaterials, layout, radii, spacing, typography } from '@/design-sys
 import { AvatarStack } from '@/features/food/components/avatar-stack';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import type { TodoMember, TodoTask } from '@/store/todos';
+import type { ChecklistMember, ChecklistTask } from '@/store/todos';
 import { AgentTestId } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 
-export function TodoRow({
+export function ChecklistRow({
   task,
   canComplete,
   editMode,
@@ -36,13 +36,13 @@ export function TodoRow({
   onUpdate,
   testID,
 }: {
-  task: TodoTask;
+  task: ChecklistTask;
   canComplete: boolean;
   editMode: boolean;
   editing: boolean;
   isActive: boolean;
   listOwner: boolean;
-  members: TodoMember[];
+  members: ChecklistMember[];
   showCategory: boolean;
   categoryName?: string;
   onDelete: () => void;

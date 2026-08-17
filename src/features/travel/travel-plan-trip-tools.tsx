@@ -4,7 +4,7 @@ import { View } from "react-native";
 
 import { appPrompt } from "@/components/primitives";
 import { useAuthSession } from "@/features/auth/auth-provider";
-import { openTodoList } from "@/features/todos/todo-list-href";
+import { openChecklist } from "@/features/todos/todo-list-href";
 import {
   isTravelPlanOnCalendar,
   travelCalendarDrafts,
@@ -37,7 +37,7 @@ import {
 } from "@/services/partner/straiaway";
 import { usePreferences } from "@/store/preferences";
 import { useSchedule } from "@/store/schedule";
-import { useTodos } from "@/store/todos";
+import { useChecklists } from "@/store/todos";
 import { useTravel } from "@/store/travel";
 import { useUI } from "@/store/ui";
 import { AgentTestId, AgentUiIds } from "@/utils/agent-ui";
@@ -49,18 +49,18 @@ type TravelPlanTripToolsProps = {
 };
 
 function travelPackingListStoreDeps(): TravelPackingListDependencies {
-  const todos = useTodos.getState();
+  const todos = useChecklists.getState();
   return {
     lists: todos.lists,
-    getLists: () => useTodos.getState().lists,
+    getLists: () => useChecklists.getState().lists,
     listsWithItems: new Set(todos.tasks.map((task) => task.listId)),
-    createList: (name, kind) => useTodos.getState().createList(name, kind),
+    createList: (name, kind) => useChecklists.getState().createList(name, kind),
     ensureList: (item) => {
-      const current = useTodos.getState().lists;
+      const current = useChecklists.getState().lists;
       if (current.some((entry) => entry.id === item.id)) return;
-      useTodos.setState({ lists: [item, ...current] });
+      useChecklists.setState({ lists: [item, ...current] });
     },
-    renameList: (id, name) => useTodos.getState().renameList(id, name),
+    renameList: (id, name) => useChecklists.getState().renameList(id, name),
     savePlan: (next) => {
       const latest =
         useTravel.getState().plans.find((item) => item.id === next.id) ?? next;
@@ -259,7 +259,7 @@ export function TravelPlanTripTools({
                 );
                 return;
               }
-              openTodoList(list.id);
+              openChecklist(list.id);
               deferAfterPageTransition(() => recordPlanInteraction(plan.id));
             }}
             onOpenChat={() => {

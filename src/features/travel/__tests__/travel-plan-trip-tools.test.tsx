@@ -98,10 +98,10 @@ jest.mock("@/store/schedule", () => ({
 }));
 
 jest.mock("@/store/todos", () => {
-  const useTodos = (selector: (state: { createList: jest.Mock }) => unknown) =>
+  const useChecklists = (selector: (state: { createList: jest.Mock }) => unknown) =>
     selector({ createList: jest.fn() });
-  useTodos.getState = () => ({ lists: [] });
-  return { useTodos };
+  useChecklists.getState = () => ({ lists: [] });
+  return { useChecklists };
 });
 
 jest.mock("@/store/travel", () => ({

@@ -25,10 +25,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { useMealPlan } from '@/store/food-meal-plan';
 import { useRecipes } from '@/store/food-recipes';
 import {
-  canCompleteTodo,
-  canEditTodoContent,
-  useTodos,
-  type TodoTask,
+  canCompleteChecklistTask,
+  canEditChecklistContent,
+  useChecklists,
+  type ChecklistTask,
 } from '@/store/todos';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { addDays, todayKey } from '@/utils/date';
@@ -37,7 +37,7 @@ import { listReferenceEquality } from '@/utils/list-equality';
 
 /**
  * Shopping list panel — a Food-flavored window onto the EXISTING todos
- * grocery list (SCREENS.md §10). All reads/writes go through `useTodos`;
+ * grocery list (SCREENS.md §10). All reads/writes go through `useChecklists`;
  * combined rows reuse `grocery-rows` + `buildCombinedIngredients`.
  */
 export function PlanShoppingPanel() {
@@ -46,34 +46,34 @@ export function PlanShoppingPanel() {
   const { spacing } = useResponsive();
   const { user } = useAuthSession();
 
-  const groceryLists = useTodos(
+  const groceryLists = useChecklists(
     (state) => state.lists.filter((list) => list.kind === 'grocery'),
     listReferenceEquality,
   );
-  const createList = useTodos((state) => state.createList);
-  const addRecipe = useTodos((state) => state.addRecipe);
-  const setTasksCompletion = useTodos((state) => state.setTasksCompletion);
-  const setTaskCompletion = useTodos((state) => state.setTaskCompletion);
+  const createList = useChecklists((state) => state.createList);
+  const addRecipe = useChecklists((state) => state.addRecipe);
+  const setTasksCompletion = useChecklists((state) => state.setTasksCompletion);
+  const setTaskCompletion = useChecklists((state) => state.setTaskCompletion);
 
   const [selectedListId, setSelectedListId] = useState<string | undefined>();
   const list =
     groceryLists.find((item) => item.id === selectedListId) ?? groceryLists[0];
 
-  const tasks = useTodos(
+  const tasks = useChecklists(
     (state) => state.tasks.filter((task) => task.listId === list?.id),
     listReferenceEquality,
   );
-  const todoRecipes = useTodos(
+  const todoRecipes = useChecklists(
     (state) => state.recipes.filter((recipe) => recipe.listId === list?.id),
     listReferenceEquality,
   );
-  const members = useTodos(
+  const members = useChecklists(
     (state) => state.members.filter((member) => member.listId === list?.id),
     listReferenceEquality,
   );
 
   const [editorVisible, setEditorVisible] = useState(false);
-  const [editingTask, setEditingTask] = useState<TodoTask | undefined>();
+  const [editingTask, setEditingTask] = useState<ChecklistTask | undefined>();
 
   const combined = useMemo(() => buildCombinedIngredients(tasks), [tasks]);
   const tasksById = useMemo(
@@ -85,9 +85,9 @@ export function PlanShoppingPanel() {
     [tasks],
   );
 
-  const canEdit = list ? canEditTodoContent(list) : false;
+  const canEdit = list ? canEditChecklistContent(list) : false;
 
-  const openEditor = (task?: TodoTask) => {
+  const openEditor = (task?: ChecklistTask) => {
     setEditingTask(task);
     setEditorVisible(true);
   };
@@ -218,11 +218,11 @@ export function PlanShoppingPanel() {
               {combined.map((group, index) => {
                 const groupTasks = group.taskIds
                   .map((id) => tasksById.get(id))
-                  .filter((task): task is TodoTask => Boolean(task));
+                  .filter((task): task is ChecklistTask => Boolean(task));
                 const canToggle =
                   groupTasks.length > 0 &&
                   groupTasks.every((task) =>
-                    canCompleteTodo(list, task, user?.id),
+                    canCompleteChecklistTask(list, task, user?.id),
                   );
                 return (
                   <CombinedRow
@@ -256,7 +256,7 @@ export function PlanShoppingPanel() {
                   task={task}
                   first={index === 0}
                   separatorColor={theme.separator}
-                  canComplete={canCompleteTodo(list, task, user?.id)}
+                  canComplete={canCompleteChecklistTask(list, task, user?.id)}
                   canEdit={canEdit}
                   onToggle={() => {
                     haptics.select();
@@ -293,7 +293,7 @@ function StandaloneItemRow({
   onToggle,
   onEdit,
 }: {
-  task: TodoTask;
+  task: ChecklistTask;
   first: boolean;
   separatorColor: string;
   canComplete: boolean;

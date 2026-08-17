@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.117",
+    "date": "2026-08-16",
+    "notes": [
+      "Keep the lists hub in one persisted order, open the tapped list on first tap, and restore that order after sign-in."
+    ]
+  },
+  {
     "version": "1.0.116",
     "date": "2026-08-16",
     "notes": [

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { TodoList } from '@/store/todos';
+import type { Checklist } from '@/store/todos';
 
 import {
   getOrCreateTravelPackingList,
@@ -26,7 +26,7 @@ const plan: TravelPlan = {
   updatedAt: '2026-08-12T00:00:00.000Z',
 };
 
-const list: TodoList = {
+const list: Checklist = {
   id: 'list-1',
   name: 'Iceland Checklist',
   kind: 'checklist',
@@ -313,9 +313,9 @@ describe('travel packing list link', () => {
       'utf8',
     );
     expect(source).toContain('travelPackingListStoreDeps()');
-    expect(source).toContain('getLists: () => useTodos.getState().lists');
+    expect(source).toContain('getLists: () => useChecklists.getState().lists');
     expect(source).toContain('useTravel.getState().plans.find');
-    expect(source).toContain('openTodoList(list.id)');
+    expect(source).toContain('openChecklist(list.id)');
     expect(source).toContain('ensureList:');
     expect(source).toContain('listsWithItems:');
     expect(source).toContain('renameList:');

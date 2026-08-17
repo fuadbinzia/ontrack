@@ -1,3 +1,3 @@
-import { TodoInvitesScreen } from '@/features/todos/todo-invites-screen';
+import { ChecklistInvitesScreen } from '@/features/todos/todo-invites-screen';
 
-export default TodoInvitesScreen;
+export default ChecklistInvitesScreen;

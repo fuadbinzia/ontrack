@@ -21,7 +21,9 @@ export function nextListEnterIds(
   ids: readonly string[],
 ): Set<string> {
   const prev = seenListItems.get(listKey);
-  if (!prev) {
+  if (!prev || prev.size === 0) {
+    // Empty first paint (hydrate / lazy tab) must not FadeInDown existing rows
+    // from below once ids arrive. First sight of real ids stays at rest.
     seenListItems.set(listKey, new Set(ids));
     return new Set();
   }

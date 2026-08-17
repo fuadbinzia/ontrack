@@ -26,45 +26,49 @@ import {
     spacing,
 } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
-import { TodoListHeader } from '@/features/todos/todo-list-header';
 import {
-  ALL_ASSIGNEES,
-  ANYONE_ASSIGNEE,
-  filterChecklistTasksByAssignee,
+    ALL_ASSIGNEES,
+    ANYONE_ASSIGNEE,
+    filterChecklistTasksByAssignee,
 } from '@/features/todos/checklist-assignee-filter';
 import {
-  partitionChecklistCategories,
-  sortCategoriesForList,
+    partitionChecklistCategories,
+    sortCategoriesForList,
 } from '@/features/todos/checklist-category-helpers';
 import { ALL_CATEGORIES } from '@/features/todos/checklist-category-tabs';
-import {
-  ChecklistTaskDetailsSheetHost,
-  type ChecklistTaskDetailsSheetHandle,
-} from '@/features/todos/checklist-task-details-sheet';
 import { createChecklistTaskAndOpenDetails } from '@/features/todos/checklist-task-creation';
-import { TodoEmptyState } from '@/features/todos/todo-empty-state';
-import { openTodoLists } from '@/features/todos/todo-list-href';
-import { confirmRemoveTodoList } from '@/features/todos/todo-list-remove';
-import { useVisibleTodoList } from '@/features/todos/todo-list-visible';
-import { TodoListSettingsSheet } from '@/features/todos/todo-list-settings-screen';
-import { ChecklistItemSeparator, TodoRow } from '@/features/todos/todo-row';
-import { sortTodoTasks, type TodoFilter, type TodoSort } from '@/features/todos/todo-sort';
+import {
+    ChecklistTaskDetailsSheetHost,
+    type ChecklistTaskDetailsSheetHandle,
+} from '@/features/todos/checklist-task-details-sheet';
+import { ChecklistEmptyState } from '@/features/todos/todo-empty-state';
+import { ChecklistHeader } from '@/features/todos/todo-list-header';
+import { openChecklists } from '@/features/todos/todo-list-href';
+import { confirmRemoveChecklist } from '@/features/todos/todo-list-remove';
+import {
+    checklistDismissFooterStyle,
+    checklistScrollContentStyle,
+} from '@/features/todos/todo-list-scroll-style';
+import { ChecklistSettingsSheet } from '@/features/todos/todo-list-settings-screen';
+import { useVisibleChecklist } from '@/features/todos/todo-list-visible';
+import { ChecklistItemSeparator, ChecklistRow } from '@/features/todos/todo-row';
+import { sortChecklistTasks, type ChecklistFilter, type ChecklistSort } from '@/features/todos/todo-sort';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useTheme } from '@/hooks/use-theme';
 import {
-    canCompleteTodo,
-    canEditTodoContent,
-    useTodos,
+    canCompleteChecklistTask,
+    canEditChecklistContent,
+    useChecklists,
 } from '@/store/todos';
 import { useTravel } from '@/store/travel';
 import { useUI } from '@/store/ui';
+import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
 import { listReferenceEquality } from '@/utils/list-equality';
-import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export function TodoListScreen({ listId }: { listId: string }) {
+export function ChecklistScreen({ listId }: { listId: string }) {
   const router = useRouter();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -74,39 +78,39 @@ export function TodoListScreen({ listId }: { listId: string }) {
     measuredTabBarHeight ||
     layout.bottomNavBarBaseHeight + insets.bottom;
   const { user } = useAuthSession();
-  const list = useVisibleTodoList(listId);
+  const list = useVisibleChecklist(listId);
   const linkedTrip = useTravel((state) =>
     state.plans.find((plan) => plan.packingListId === listId),
   );
-  const tasks = useTodos(
+  const tasks = useChecklists(
     (state) => state.tasks.filter((task) => task.listId === listId),
     listReferenceEquality,
   );
-  const categories = useTodos(
+  const categories = useChecklists(
     (state) => sortCategoriesForList(state.categories, listId),
     listReferenceEquality,
   );
-  const members = useTodos(
+  const members = useChecklists(
     (state) => state.members.filter((member) => member.listId === listId),
     listReferenceEquality,
   );
-  const addTask = useTodos((state) => state.addTask);
-  const toggleTask = useTodos((state) => state.toggleTask);
-  const toggleImportant = useTodos((state) => state.toggleImportant);
-  const updateTask = useTodos((state) => state.updateTask);
-  const deleteTask = useTodos((state) => state.deleteTask);
-  const deleteCategory = useTodos((state) => state.deleteCategory);
-  const reorderTasks = useTodos((state) => state.reorderTasks);
-  const clearCompleted = useTodos((state) => state.clearCompleted);
-  const renameList = useTodos((state) => state.renameList);
-  const syncError = useTodos((state) => state.syncError);
-  const clearSyncError = useTodos((state) => state.clearSyncError);
+  const addTask = useChecklists((state) => state.addTask);
+  const toggleTask = useChecklists((state) => state.toggleTask);
+  const toggleImportant = useChecklists((state) => state.toggleImportant);
+  const updateTask = useChecklists((state) => state.updateTask);
+  const deleteTask = useChecklists((state) => state.deleteTask);
+  const deleteCategory = useChecklists((state) => state.deleteCategory);
+  const reorderTasks = useChecklists((state) => state.reorderTasks);
+  const clearCompleted = useChecklists((state) => state.clearCompleted);
+  const renameList = useChecklists((state) => state.renameList);
+  const syncError = useChecklists((state) => state.syncError);
+  const clearSyncError = useChecklists((state) => state.clearSyncError);
   const inputRef = useRef<TextInput>(null);
   const detailsSheetRef = useRef<ChecklistTaskDetailsSheetHandle>(null);
   const [draft, setDraft] = useState('');
   const [nameDraft, setNameDraft] = useState('');
-  const [filter, setFilter] = useState<TodoFilter>('open');
-  const [sort, setSort] = useState<TodoSort>('smart');
+  const [filter, setFilter] = useState<ChecklistFilter>('open');
+  const [sort, setSort] = useState<ChecklistSort>('smart');
   const [selectedCategoryId, setSelectedCategoryId] = useState(ALL_CATEGORIES);
   const [selectedAssigneeId, setSelectedAssigneeId] = useState(ALL_ASSIGNEES);
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -153,11 +157,11 @@ export function TodoListScreen({ listId }: { listId: string }) {
   };
 
   const openTasks = useMemo(
-    () => sortTodoTasks(tasks.filter((task) => !task.completed), sort, 'open'),
+    () => sortChecklistTasks(tasks.filter((task) => !task.completed), sort, 'open'),
     [sort, tasks],
   );
   const completedTasks = useMemo(
-    () => sortTodoTasks(tasks.filter((task) => task.completed), sort, 'completed'),
+    () => sortChecklistTasks(tasks.filter((task) => task.completed), sort, 'completed'),
     [sort, tasks],
   );
   const assigneeOpenTasks = filterChecklistTasksByAssignee(
@@ -215,6 +219,15 @@ export function TodoListScreen({ listId }: { listId: string }) {
     setInlineEditingTaskId(null);
     if (renamed) haptics.success();
     else haptics.select();
+  };
+
+  /** Filter/category/assignee taps drop edit mode silently and close the keyboard. */
+  const leaveEditModeForBrowse = () => {
+    dismissChrome();
+    if (!editMode) return;
+    commitListName();
+    setEditingTaskIds(null);
+    setInlineEditingTaskId(null);
   };
 
   const enterEditMode = () => {
@@ -278,8 +291,8 @@ export function TodoListScreen({ listId }: { listId: string }) {
 
   const removeList = () => {
     if (!list) return;
-    confirmRemoveTodoList(list, {
-      afterRemoved: () => openTodoLists(),
+    confirmRemoveChecklist(list, {
+      afterRemoved: () => openChecklists(),
     });
   };
 
@@ -293,7 +306,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
         </AppText>
         <Pressable
           accessibilityRole="button"
-          onPress={openTodoLists}>
+          onPress={openChecklists}>
           <AppText variant="callout" color="accent">Back to Lists</AppText>
         </Pressable>
       </Screen>
@@ -301,7 +314,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
   }
 
   const owner = list.role === 'owner';
-  const canEdit = canEditTodoContent(list);
+  const canEdit = canEditChecklistContent(list);
 
   return (
     <Screen
@@ -319,9 +332,8 @@ export function TodoListScreen({ listId }: { listId: string }) {
             autoscrollThreshold={80}
             containerStyle={styles.list}
             contentContainerStyle={[
-              styles.listContent,
+              checklistScrollContentStyle(visibleTasks.length > 0),
               { paddingBottom: tabBarHeight + spacing.lg },
-              visibleTasks.length === 0 && styles.listEmptyContent,
             ]}
             contentInsetAdjustmentBehavior="never"
             automaticallyAdjustKeyboardInsets
@@ -345,11 +357,11 @@ export function TodoListScreen({ listId }: { listId: string }) {
                   inlineEditingTaskId ? 'Finish editing' : undefined
                 }
                 onPress={dismissChrome}
-                style={styles.listDismissFooter}
+                style={checklistDismissFooterStyle()}
               />
             }
             ListHeaderComponent={
-              <TodoListHeader
+              <ChecklistHeader
                 list={list}
                 tasks={tasks}
                 categories={populatedCategories}
@@ -381,12 +393,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
                   Keyboard.dismiss();
                 }}
                 onFilterToggle={() => {
-                  dismissChrome();
-                  if (editMode) {
-                    commitListName();
-                    setEditingTaskIds(null);
-                    setInlineEditingTaskId(null);
-                  }
+                  leaveEditModeForBrowse();
                   setFilter(filter === 'open' ? 'completed' : 'open');
                   haptics.select();
                 }}
@@ -394,22 +401,12 @@ export function TodoListScreen({ listId }: { listId: string }) {
                 onSortChange={setSort}
                 onClearDone={clearDone}
                 onCategorySelect={(categoryId) => {
-                  dismissChrome();
-                  if (editMode) {
-                    commitListName();
-                    setEditingTaskIds(null);
-                    setInlineEditingTaskId(null);
-                  }
+                  leaveEditModeForBrowse();
                   setSelectedCategoryId(categoryId);
                   haptics.select();
                 }}
                 onAssigneeSelect={(assigneeId) => {
-                  dismissChrome();
-                  if (editMode) {
-                    commitListName();
-                    setEditingTaskIds(null);
-                    setInlineEditingTaskId(null);
-                  }
+                  leaveEditModeForBrowse();
                   setSelectedAssigneeId(assigneeId);
                 }}
                 onManageSettings={() => setSettingsVisible(true)}
@@ -426,7 +423,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
               />
             }
             ListEmptyComponent={
-              <TodoEmptyState
+              <ChecklistEmptyState
                 filter={filter}
                 hasTasks={tasks.length > 0}
                 assigneeFilterLabel={
@@ -453,14 +450,14 @@ export function TodoListScreen({ listId }: { listId: string }) {
               haptics.select();
             }}
             renderItem={({ item, drag, getIndex, isActive }) => (
-              <TodoTaskMotion
+              <ChecklistTaskMotion
                 enter={taskEnterIds.has(item.id)}
                 index={getIndex() ?? 0}
                 isActive={isActive}
               >
-                <TodoRow
+                <ChecklistRow
                   task={item}
-                  canComplete={canCompleteTodo(list, item, user?.id)}
+                  canComplete={canCompleteChecklistTask(list, item, user?.id)}
                   editMode={editMode}
                   editing={inlineEditingTaskId === item.id}
                   isActive={isActive}
@@ -496,12 +493,12 @@ export function TodoListScreen({ listId }: { listId: string }) {
                   }
                   onUpdate={(title) => updateTask(item.id, title)}
                 />
-              </TodoTaskMotion>
+              </ChecklistTaskMotion>
             )}
             showsVerticalScrollIndicator={false}
             style={styles.list}
           />
-          <TodoListSettingsSheet
+          <ChecklistSettingsSheet
             listId={listId}
             visible={settingsVisible}
             onClose={() => setSettingsVisible(false)}
@@ -513,7 +510,7 @@ export function TodoListScreen({ listId }: { listId: string }) {
   );
 }
 
-function TodoTaskMotion({
+function ChecklistTaskMotion({
   enter,
   index,
   isActive,
@@ -554,9 +551,6 @@ const styles = StyleSheet.create({
   },
   flex: { flex: 1 },
   list: { flex: 1 },
-  listContent: { flexGrow: 1 },
-  listDismissFooter: { minHeight: spacing.xxl * 3, flexGrow: 1 },
-  listEmptyContent: { flexGrow: 1 },
   missingList: {
     flex: 1,
     alignItems: 'center',

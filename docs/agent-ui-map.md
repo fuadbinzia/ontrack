@@ -266,7 +266,7 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.food.plan.list.<listId>`                 | Grocery list picker chip (todos list id)                             |
 | `ontrack.food.plan.createList`                    | Empty-state CTA → create a todos grocery list                        |
 | `ontrack.food.plan.openList`                      | Open the full grocery list in Checklists                             |
-| `ontrack.food.plan.generate`                      | Generate from meal plan → `useTodos.addRecipe` per planned recipe    |
+| `ontrack.food.plan.generate`                      | Generate from meal plan → `useChecklists.addRecipe` per planned recipe    |
 | `ontrack.food.plan.addItem`                       | Add item → Grocery Item Editor sheet                                 |
 | `ontrack.food.plan.item.<canonicalKey>`           | Combined ingredient row toggle (`setTasksCompletion`)                |
 | `ontrack.food.plan.other.<taskId>`                | Standalone item checkbox toggle                                      |

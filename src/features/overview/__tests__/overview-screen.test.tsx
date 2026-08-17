@@ -226,7 +226,7 @@ jest.mock("@/store/schedule", () => ({
   }),
 }));
 jest.mock("@/store/todos", () => ({
-  useTodos: (
+  useChecklists: (
     selector: (state: { lists: never[]; tasks: never[] }) => unknown,
   ) => selector({ lists: [], tasks: [] }),
 }));

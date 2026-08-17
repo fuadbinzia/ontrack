@@ -4,7 +4,7 @@ import { AppText, GlassPlate, Symbol } from '@/components/primitives';
 import { glassMaterials, layout, radii, spacing } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import type { TodoFilter } from './todo-sort';
+import type { ChecklistFilter } from './todo-sort';
 
 const QUICK_START_TASKS = [
   'Plan tomorrow',
@@ -12,7 +12,7 @@ const QUICK_START_TASKS = [
   'Call someone I care about',
 ] as const;
 
-export function TodoEmptyState({
+export function ChecklistEmptyState({
   filter,
   hasTasks,
   assigneeFilterLabel,
@@ -20,7 +20,7 @@ export function TodoEmptyState({
   onFocusComposer,
   onShowCompleted,
 }: {
-  filter: TodoFilter;
+  filter: ChecklistFilter;
   hasTasks: boolean;
   assigneeFilterLabel?: string;
   onAddSuggestion: (title: string) => void;

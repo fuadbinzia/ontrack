@@ -1,17 +1,17 @@
-import type { TodoList, TodoTask } from '@/store/todos';
+import type { ChecklistTask } from '@/store/todos';
 
-export type TodoFilter = 'open' | 'completed';
-export type TodoSort = 'manual' | 'smart' | 'newest' | 'oldest' | 'alphabetical';
+export type ChecklistFilter = 'open' | 'completed';
+export type ChecklistSort = 'manual' | 'smart' | 'newest' | 'oldest' | 'alphabetical';
 
-function byPriorityAndRecency(a: TodoTask, b: TodoTask) {
+function byPriorityAndRecency(a: ChecklistTask, b: ChecklistTask) {
   if (a.important !== b.important) return a.important ? -1 : 1;
   return b.createdAt.localeCompare(a.createdAt);
 }
 
-export function sortTodoTasks(
-  tasks: TodoTask[],
-  sort: TodoSort,
-  filter: TodoFilter,
+export function sortChecklistTasks(
+  tasks: ChecklistTask[],
+  sort: ChecklistSort,
+  filter: ChecklistFilter,
 ) {
   return [...tasks].sort((a, b) => {
     if (sort === 'manual') {
@@ -42,27 +42,4 @@ export function sortTodoTasks(
     }
     return byPriorityAndRecency(a, b) || a.id.localeCompare(b.id);
   });
-}
-
-export function listRecencyAt(
-  list: TodoList,
-  openedAt?: Readonly<Record<string, string>>,
-): string {
-  const opened = openedAt?.[list.id];
-  if (!opened) return list.updatedAt;
-  return opened > list.updatedAt ? opened : list.updatedAt;
-}
-
-export function sortTodoListsByRecent(
-  lists: TodoList[],
-  openedAt?: Readonly<Record<string, string>>,
-): TodoList[] {
-  if (lists.length < 2) return lists;
-  const sorted = [...lists].sort(
-    (a, b) =>
-      listRecencyAt(b, openedAt).localeCompare(listRecencyAt(a, openedAt)) ||
-      b.createdAt.localeCompare(a.createdAt) ||
-      a.id.localeCompare(b.id),
-  );
-  return sorted.every((list, index) => list === lists[index]) ? lists : sorted;
 }

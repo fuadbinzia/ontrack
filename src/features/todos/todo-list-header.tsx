@@ -11,18 +11,18 @@ import {
 } from '@/components/primitives';
 import { fontFamilies, glassMaterials, radii, spacing, typography } from '@/design-system';
 import { ChecklistCategoryTabs } from '@/features/todos/checklist-category-tabs';
-import { TodoLinkedTripAction } from '@/features/todos/todo-linked-trip-action';
-import { openTodoLists } from '@/features/todos/todo-list-href';
-import { TodoListHeaderToolbar } from '@/features/todos/todo-list-header-toolbar';
-import type { TodoFilter, TodoSort } from '@/features/todos/todo-sort';
+import { ChecklistLinkedTripAction } from '@/features/todos/todo-linked-trip-action';
+import { openChecklists } from '@/features/todos/todo-list-href';
+import { ChecklistHeaderToolbar } from '@/features/todos/todo-list-header-toolbar';
+import type { ChecklistFilter, ChecklistSort } from '@/features/todos/todo-sort';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import type { TodoCategory, TodoList, TodoMember, TodoTask } from '@/store/todos';
+import type { ChecklistCategory, Checklist, ChecklistMember, ChecklistTask } from '@/store/todos';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
 type AgentUiTargetApi = ReturnType<typeof useAgentUiTarget>;
 
-export function TodoListHeader({
+export function ChecklistHeader({
   list,
   tasks,
   categories,
@@ -61,19 +61,19 @@ export function TodoListHeader({
   linkedTripTitle,
   onOpenLinkedTrip,
 }: {
-  list: TodoList;
-  tasks: TodoTask[];
-  categories: TodoCategory[];
+  list: Checklist;
+  tasks: ChecklistTask[];
+  categories: ChecklistCategory[];
   selectedCategoryId: string;
   selectedAssigneeId: string;
-  members: TodoMember[];
+  members: ChecklistMember[];
   owner: boolean;
   canEdit: boolean;
   completedCount: number;
   progress: number;
   draft: string;
-  filter: TodoFilter;
-  sort: TodoSort;
+  filter: ChecklistFilter;
+  sort: ChecklistSort;
   editMode: boolean;
   nameDraft: string;
   openTasksCount: number;
@@ -90,7 +90,7 @@ export function TodoListHeader({
   onClearSyncError: () => void;
   onFilterToggle: () => void;
   onToggleEditMode: () => void;
-  onSortChange: (sort: TodoSort) => void;
+  onSortChange: (sort: ChecklistSort) => void;
   onClearDone: () => void;
   onCategorySelect: (id: string) => void;
   onAssigneeSelect: (id: string) => void;
@@ -128,7 +128,7 @@ export function TodoListHeader({
             label="Checklists"
             accessibilityLabel="Back to checklists"
             testID={AgentUiIds.checklists.detail.back}
-            onPress={openTodoLists}
+            onPress={openChecklists}
           />
           <View style={styles.titleActions}>
             <Pressable
@@ -159,7 +159,7 @@ export function TodoListHeader({
                 </AppText>
               </GlassPlate>
             </Pressable>
-            <TodoListHeaderToolbar
+            <ChecklistHeaderToolbar
               list={list}
               tasks={tasks}
               members={members}
@@ -220,7 +220,7 @@ export function TodoListHeader({
       </View>
 
       {linkedTripTitle && onOpenLinkedTrip ? (
-        <TodoLinkedTripAction
+        <ChecklistLinkedTripAction
           tripTitle={linkedTripTitle}
           onPress={onOpenLinkedTrip}
         />

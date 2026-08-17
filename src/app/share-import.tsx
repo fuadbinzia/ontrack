@@ -25,7 +25,7 @@ import {
   shouldConfirmShareDiscard,
 } from '@/features/share-import/share-session';
 import { useTheme } from '@/hooks/use-theme';
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 
 function isCalendarPayload(payload: SharePayload) {
   return (
@@ -47,12 +47,12 @@ export default function ShareImportScreen() {
   const theme = useTheme();
   const router = useRouter();
   const navigation = useNavigation();
-  const lists = useTodos((state) =>
+  const lists = useChecklists((state) =>
     state.lists.filter(
       (list) => list.kind === 'grocery' && list.role === 'owner',
     ),
   );
-  const createList = useTodos((state) => state.createList);
+  const createList = useChecklists((state) => state.createList);
   const [payloads] = useState(() => getSharedPayloads());
   const [mode, setMode] = useState<'destination' | 'recipe'>();
   const [newListName, setNewListName] = useState('Groceries');

@@ -1,22 +1,32 @@
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 
 import {
   authenticatedClient,
   messageFrom,
-  TodoCollaborationError,
+  ChecklistCollaborationError,
 } from './collaboration-core';
-import { loadTodoInvites } from './collaboration-invites';
+import { loadChecklistInvites } from './collaboration-invites';
 import {
-  flushTodoMutations,
-  loadTodoListSnapshot,
+  flushChecklistMutations,
+  fetchChecklistSnapshot,
 } from './collaboration-mutations';
 
-export async function loadAllSharedTodoLists(): Promise<void> {
+let sharedCatalogLoad: Promise<void> | null = null;
+
+export async function loadAllSharedChecklists(): Promise<void> {
+  if (sharedCatalogLoad) return sharedCatalogLoad;
+  sharedCatalogLoad = loadSharedTodoCatalog().finally(() => {
+    sharedCatalogLoad = null;
+  });
+  return sharedCatalogLoad;
+}
+
+async function loadSharedTodoCatalog(): Promise<void> {
   const client = await authenticatedClient();
-  await flushTodoMutations();
+  await flushChecklistMutations();
   const { data, error } = await client.rpc('todo_shared_list_ids');
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'Shared lists could not be loaded.'),
     );
   }
@@ -28,21 +38,34 @@ export async function loadAllSharedTodoLists(): Promise<void> {
       )
     : [];
   const remoteIds = new Set(ids);
-  for (const list of useTodos.getState().lists) {
-    if (list.mode === 'shared' && !remoteIds.has(list.id)) {
-      useTodos.getState().removeSharedList(list.id);
-    }
-  }
   const pendingListIds = new Set(
-    useTodos
+    useChecklists
       .getState()
       .pendingMutations.map((mutation) => mutation.listId),
   );
-  await Promise.all(
+  const dropIds = useChecklists
+    .getState()
+    .lists.filter(
+      (list) =>
+        list.mode === 'shared' &&
+        !remoteIds.has(list.id) &&
+        !pendingListIds.has(list.id),
+    )
+    .map((list) => list.id);
+  const fetched = await Promise.all(
     ids.map((id) =>
-      // Keep optimistic local edits when flush could not clear the queue.
-      pendingListIds.has(id) ? Promise.resolve() : loadTodoListSnapshot(id),
+      pendingListIds.has(id) ? Promise.resolve('skipped' as const) : fetchChecklistSnapshot(id),
     ),
   );
-  await loadTodoInvites();
+  const snapshots = fetched.flatMap((snapshot) =>
+    snapshot && snapshot !== 'skipped' ? [snapshot] : [],
+  );
+  const missingIds = ids.filter((id, index) => {
+    if (pendingListIds.has(id)) return false;
+    return fetched[index] !== 'skipped' && !fetched[index];
+  });
+  useChecklists.getState().replaceSharedSnapshots(snapshots, {
+    dropIds: [...dropIds, ...missingIds],
+  });
+  await loadChecklistInvites();
 }

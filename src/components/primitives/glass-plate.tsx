@@ -368,14 +368,14 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   androidTintLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.58)',
+    backgroundColor: 'rgba(255, 255, 255, 0.82)',
     experimental_backgroundImage:
-      'linear-gradient(160deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.42) 45%, rgba(255,255,255,0.62) 100%)',
+      'linear-gradient(160deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.74) 45%, rgba(255,255,255,0.84) 100%)',
   },
   androidTintLightAiry: {
-    backgroundColor: 'rgba(255, 255, 255, 0.48)',
+    backgroundColor: 'rgba(255, 255, 255, 0.76)',
     experimental_backgroundImage:
-      'linear-gradient(160deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.34) 45%, rgba(255,255,255,0.5) 100%)',
+      'linear-gradient(160deg, rgba(255,255,255,0.86) 0%, rgba(255,255,255,0.66) 45%, rgba(255,255,255,0.78) 100%)',
   },
   /** Shared iOS+Android mist wash — never BlurView (clipped parents → milk). */
   mistTint: glassMistWashStyle.onDark,

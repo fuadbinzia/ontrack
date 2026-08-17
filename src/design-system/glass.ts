@@ -215,15 +215,15 @@ export function glassDynamicTintMaterials(
         ? 0.22
         : 0.14
       : darkMaterial
-        ? 0.52
-        : 0.38;
+        ? 0.68
+        : 0.56;
     const mistBorder = allowsBlur
       ? darkMaterial
         ? 0.38
         : 0.22
       : darkMaterial
-        ? 0.58
-        : 0.4;
+        ? 0.72
+        : 0.52;
     return {
       fill: colorWithAlpha(hex, mistFill),
       border: colorWithAlpha(hex, mistBorder),
@@ -238,13 +238,15 @@ export function glassDynamicTintMaterials(
     : airy
       ? 0.38
       : 0.46;
+  // Fill-only (Android / blur-gated): BlurView is what hides sharp artwork.
+  // Light airy at ~0.62 still lets busy itinerary atlas read through plates.
   const solidAlpha = darkMaterial
     ? airy
-      ? 0.72
-      : 0.8
+      ? 0.84
+      : 0.9
     : airy
-      ? 0.62
-      : 0.7;
+      ? 0.86
+      : 0.9;
   return {
     fill: colorWithAlpha(hex, allowsBlur ? blurAlpha : solidAlpha),
     border: colorWithAlpha(

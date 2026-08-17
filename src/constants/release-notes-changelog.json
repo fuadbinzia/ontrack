@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.126",
+    "date": "2026-08-17",
+    "notes": [
+      "Add a skill to merge remote main into the current branch.",
+      "Ship via ship:push (TestFlight + device OTA)."
+    ]
+  },
+  {
     "version": "1.0.125",
     "date": "2026-08-17",
     "notes": [

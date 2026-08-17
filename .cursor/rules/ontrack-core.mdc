@@ -17,6 +17,7 @@ Keep this file short on purpose. Load detail only when the task needs it.
 | Transitions / sheets snap / list add-remove | `~/.cursor/skills/smooth-transitions/SKILL.md` + Development `smooth-transitions.mdc` |
 | Cleanup / “optimize” | `~/.cursor/skills/optimize-code/SKILL.md` |
 | Domain feature work | `.cursor/skills/<domain>/` (travel, todos, workouts, …) + `AGENTS.md` feature table |
+| Pull / merge remote main into this branch | `.cursor/skills/sync-from-main/SKILL.md` |
 | Form field icons / numeric inputs / migrations | matching `.cursor/rules/*` via globs |
 
 ## Non-negotiables (every session)

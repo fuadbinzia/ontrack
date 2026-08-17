@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.121",
+    "date": "2026-08-17",
+    "notes": [
+      "Keep Android Calendar and Profile from going blank under the atmosphere wash."
+    ]
+  },
+  {
     "version": "1.0.120",
     "date": "2026-08-16",
     "notes": [

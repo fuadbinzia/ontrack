@@ -25,6 +25,7 @@ import {
 } from './safe-area-chrome';
 import {
     ScreenAtmosphereSceneFill,
+    screenAtmosphereFollowsScroll,
     useScreenAtmosphereChrome,
 } from './screen-atmosphere';
 
@@ -147,12 +148,19 @@ export function Screen({
     </View>
   );
 
-  // Scroll must be the first child so iOS 26 `UIScrollEdgeEffect` lookup
-  // (first-descendant chain) hits the UIScrollView, not the atmosphere fill.
-  const frame = (
+  const sceneFill = useAtmosphere ? <ScreenAtmosphereSceneFill /> : null;
+  // iOS 26: scroll first so UIScrollEdgeEffect finds UIScrollView.
+  // Android: wash first — zIndex on ScrollView is ignored, so a later
+  // sibling fill blanks Calendar / Profile.
+  const frame = screenAtmosphereFollowsScroll(Platform.OS) ? (
     <>
       {shell}
-      {useAtmosphere ? <ScreenAtmosphereSceneFill /> : null}
+      {sceneFill}
+    </>
+  ) : (
+    <>
+      {sceneFill}
+      {shell}
     </>
   );
 

@@ -65,6 +65,7 @@ export {
     ScreenAtmosphere,
     ScreenAtmosphereSceneFill,
     screenAtmosphereBottomColor,
+    screenAtmosphereFollowsScroll,
     screenAtmosphereSceneOffset,
     screenAtmosphereTopColor,
     useScreenAtmosphereChrome

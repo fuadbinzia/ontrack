@@ -73,10 +73,10 @@ describe('accessible authentication errors', () => {
   it('maps network, configuration, and callback errors to actionable copy', () => {
     expect(accessibleAuthError(new Error('Failed to fetch'))).toContain('offline');
     expect(accessibleAuthError(new Error('Cloud sync is not configured'))).toContain(
-      'continue as a guest',
+      'keep going as a guest',
     );
     expect(accessibleAuthError(new Error('The callback was malformed'))).toContain(
-      'invalid or expired',
+      'expired',
     );
   });
 

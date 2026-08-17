@@ -1,15 +1,17 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Symbol } from '@/components/primitives';
 import { shadows } from '@/design-system/shadows';
+import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { AgentTestId } from '@/utils/agent-ui';
+
+import type { TravelMapPerson } from './types';
 
 /** Memoized — globe frames and chrome state changes reuse settled pins. */
 export const TravelMapPinButton = memo(function TravelMapPinButton({
   testID,
   label,
-  colors,
+  people,
   left,
   top,
   selected,
@@ -17,19 +19,19 @@ export const TravelMapPinButton = memo(function TravelMapPinButton({
 }: {
   testID: string;
   label: string;
-  colors: string[];
+  people: TravelMapPerson[];
   left: number;
   top: number;
   selected?: boolean;
   onPress: () => void;
 }) {
-  const primary = colors[0] ?? '#155EA8';
+  const primary = people[0];
   return (
     <AgentTestId
       testID={testID}
       label={label}
       onPress={onPress}
-      style={[styles.pinHit, { left: left - 22, top: top - 36 }]}
+      style={[styles.pinHit, { left: left - 22, top: top - 22 }]}
     >
       <Pressable
         accessibilityRole="button"
@@ -40,22 +42,39 @@ export const TravelMapPinButton = memo(function TravelMapPinButton({
           styles.pinButton,
           shadows.card,
           {
-            borderColor: selected ? '#FFFFFF' : 'rgba(255,255,255,0.78)',
+            borderColor: selected ? '#FFFFFF' : 'rgba(255,255,255,0.72)',
             borderWidth: selected ? 3 : 2,
-            backgroundColor: `${primary}E8`,
             transform: [{ scale: pressed ? 0.92 : selected ? 1.12 : 1 }],
           },
         ]}
       >
-        <Symbol name="map-pin" size={20} color="#FFFFFF" />
-        {colors.slice(1, 4).map((color, index) => (
-          <View
-            key={color}
-            style={[
-              styles.colorDot,
-              { backgroundColor: color, right: -3 + index * 7 },
-            ]}
+        {primary ? (
+          <ProfileAvatar
+            displayName={primary.displayName}
+            userId={primary.userId}
+            avatar={primary.avatar}
+            isSelf={primary.isSelf}
+            size={30}
+            borderColor={primary.color}
+            borderWidth={2}
+            accessibilityLabel={`${primary.displayName} map pin`}
           />
+        ) : null}
+        {people.slice(1, 4).map((person, index) => (
+          <View
+            key={person.userId}
+            style={[styles.extraAvatar, { right: -4 + index * 8 }]}
+          >
+            <ProfileAvatar
+              displayName={person.displayName}
+              userId={person.userId}
+              avatar={person.avatar}
+              isSelf={person.isSelf}
+              size={12}
+              borderColor={person.color}
+              borderWidth={1.5}
+            />
+          </View>
         ))}
       </Pressable>
     </AgentTestId>
@@ -76,14 +95,10 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
-  colorDot: {
+  extraAvatar: {
     position: 'absolute',
     bottom: -3,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
   },
 });

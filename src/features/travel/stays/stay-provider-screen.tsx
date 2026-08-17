@@ -250,7 +250,7 @@ export function StayProviderScreen({ planId }: { planId: string }) {
       <Screen style={travelStyle} refresh={false}>
         <EmptyState
           icon="lodging"
-          title="Trip Not Found"
+          title="This Trip Isn’t Here"
           message="This trip may have been removed."
         />
       </Screen>

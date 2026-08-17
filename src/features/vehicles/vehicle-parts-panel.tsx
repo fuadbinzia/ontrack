@@ -40,7 +40,7 @@ export function VehiclePartsPanel({
     if (!title) return;
     const safeVendorUrl = safeHttpsUrl(vendorUrl);
     if (vendorUrl.trim() && !safeVendorUrl) {
-      appPrompt.alert('Use an HTTPS vendor link', 'Vendor links must start with https://.');
+      appPrompt.alert('Use a Secure Link', 'Vendor links need to start with https://.');
       return;
     }
     const now = new Date().toISOString();

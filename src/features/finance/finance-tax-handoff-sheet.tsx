@@ -69,8 +69,8 @@ export function FinanceTaxHandoffSheet({
         await Linking.openURL(url);
       } catch {
         appPrompt.alert(
-          'Could not open link',
-          'Open the site manually after sharing your package.',
+          'Couldn’t Open That Site',
+          'Open the site in your browser after sharing your package.',
         );
       }
     }

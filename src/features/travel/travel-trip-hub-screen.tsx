@@ -46,8 +46,8 @@ export function TravelTripHubScreen({ planId }: TravelTripHubScreenProps) {
         />
         <EmptyState
           icon="flight"
-          title="Trip not found"
-          message="This trip is no longer available."
+          title="This Trip Isn’t Here"
+          message="It may have been removed, or the invite is no longer open."
           actionLabel="Back to Travel"
           actionTestID={AgentUiIds.travel.hub.backToTravel}
           onAction={() => goBackOrReplace(router, '/(tabs)/travel')}

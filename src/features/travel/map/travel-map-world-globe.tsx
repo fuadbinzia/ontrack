@@ -36,8 +36,13 @@ import {
     createTravelGlobeSnapshot,
     normalizeTravelGlobeRotation,
     travelGlobeCameraForLayout,
+    travelGlobeCoastStep,
     travelGlobeCoordinateAtPoint,
+    travelGlobeDetailForMotion,
+    travelGlobeFlickVelocity,
+    TRAVEL_GLOBE_FAST_DEGREES_PER_SECOND,
     travelGlobeUnzoomPoint,
+    type TravelGlobeCoastVelocity,
     type TravelGlobeRotation,
     type TravelGlobeSnapshot,
 } from './globe-projection';
@@ -53,8 +58,8 @@ export const TRAVEL_MAP_WORLD_BACKDROP_TOP = '#071426';
 const IDLE_SPIN_DEGREES_PER_SECOND = 1.9;
 /** Idle spin renders at ~30fps — imperceptible for slow rotation, half the work. */
 const IDLE_SPIN_MIN_FRAME_MS = 30;
-const DRAG_DEGREES_PER_PX_X = 0.28;
-const DRAG_DEGREES_PER_PX_Y = 0.22;
+const DRAG_DEGREES_PER_PX_X = 0.34;
+const DRAG_DEGREES_PER_PX_Y = 0.26;
 
 /** Pre-layout frame: paints the backdrop only, no projection work. */
 const EMPTY_TRAVEL_GLOBE_SNAPSHOT: TravelGlobeSnapshot = {
@@ -81,12 +86,19 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
 }) {
   const [layout, setLayout] = useState<Layout>({ width: 1, height: 1 });
   const [dragging, setDragging] = useState(false);
+  const [coasting, setCoasting] = useState(false);
+  const [fastMotion, setFastMotion] = useState(false);
   const rotationRef = useRef(rotation);
   const dragStartRef = useRef(rotation);
   const pendingDragRef = useRef<{ x: number; y: number } | undefined>(
     undefined,
   );
   const dragFrameRef = useRef<number | undefined>(undefined);
+  const coastFrameRef = useRef<number | undefined>(undefined);
+  const coastVelocityRef = useRef<TravelGlobeCoastVelocity | undefined>(
+    undefined,
+  );
+  const fastMotionRef = useRef(false);
   const idleUntilRef = useRef(0);
   const { allowsLoopMotion } = usePerformanceTier();
   const routeIsActive = useRouteIsActive();
@@ -111,11 +123,19 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
         ? createTravelGlobeSnapshot(
             rotation,
             camera,
-            dragging || spinning || !warmedUp ? 'motion' : 'rest',
+            travelGlobeDetailForMotion({
+              dragging,
+              coasting,
+              spinning,
+              warmedUp,
+              fast: fastMotion || coasting,
+            }),
+            !dragging && !fastMotion && !coasting,
           )
         : EMPTY_TRAVEL_GLOBE_SNAPSHOT,
-    [camera, dragging, hasLayout, rotation, spinning, warmedUp],
+    [camera, coasting, dragging, fastMotion, hasLayout, rotation, spinning, warmedUp],
   );
+  const showPins = !(dragging || fastMotion || coasting);
   const clusterByCountry = useMemo(
     () => new Map(clusters.map((cluster) => [cluster.countryCode, cluster])),
     [clusters],
@@ -136,10 +156,28 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
     onInteract();
   }, [onInteract]);
 
+  const setFast = useCallback((next: boolean) => {
+    if (fastMotionRef.current === next) return;
+    fastMotionRef.current = next;
+    setFastMotion(next);
+  }, []);
+
+  const stopCoast = useCallback(() => {
+    if (coastFrameRef.current != null) {
+      cancelAnimationFrame(coastFrameRef.current);
+      coastFrameRef.current = undefined;
+    }
+    coastVelocityRef.current = undefined;
+    setCoasting(false);
+    setFast(false);
+  }, [setFast]);
+
   const beginRotation = useCallback(() => {
+    stopCoast();
     dragStartRef.current = rotationRef.current;
     stopIdleRotation();
-  }, [stopIdleRotation]);
+    setFast(true);
+  }, [setFast, stopCoast, stopIdleRotation]);
 
   const rotationForDrag = useCallback(
     (translationX: number, translationY: number): TravelGlobeRotation => [
@@ -160,17 +198,33 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
   }, [commitRotation, rotationForDrag]);
 
   const updateRotation = useCallback(
-    (translationX: number, translationY: number) => {
+    (
+      translationX: number,
+      translationY: number,
+      velocityX: number,
+      velocityY: number,
+    ) => {
       pendingDragRef.current = { x: translationX, y: translationY };
+      setFast(
+        Math.hypot(
+          velocityX * DRAG_DEGREES_PER_PX_X,
+          velocityY * DRAG_DEGREES_PER_PX_Y,
+        ) >= TRAVEL_GLOBE_FAST_DEGREES_PER_SECOND,
+      );
       if (dragFrameRef.current == null) {
         dragFrameRef.current = requestAnimationFrame(flushPendingDrag);
       }
     },
-    [flushPendingDrag],
+    [flushPendingDrag, setFast],
   );
 
   const finishRotation = useCallback(
-    (translationX: number, translationY: number) => {
+    (
+      translationX: number,
+      translationY: number,
+      velocityX: number,
+      velocityY: number,
+    ) => {
       pendingDragRef.current = undefined;
       if (dragFrameRef.current != null) {
         cancelAnimationFrame(dragFrameRef.current);
@@ -182,14 +236,56 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
         commitRotation(rotationForDrag(translationX, translationY));
       }
       setDragging(false);
+
+      const flick = travelGlobeFlickVelocity(
+        velocityX,
+        velocityY,
+        DRAG_DEGREES_PER_PX_X,
+        DRAG_DEGREES_PER_PX_Y,
+      );
+      if (!flick) {
+        setFast(false);
+        return;
+      }
+
+      coastVelocityRef.current = flick;
+      setCoasting(true);
+      setFast(true);
+      let lastFrameTime = 0;
+      const tick = (now: number) => {
+        const velocity = coastVelocityRef.current;
+        if (!velocity) return;
+        if (lastFrameTime === 0) {
+          lastFrameTime = now;
+          coastFrameRef.current = requestAnimationFrame(tick);
+          return;
+        }
+        const step = travelGlobeCoastStep(
+          rotationRef.current,
+          velocity,
+          now - lastFrameTime,
+        );
+        lastFrameTime = now;
+        commitRotation(step.rotation);
+        if (step.done) {
+          stopCoast();
+          return;
+        }
+        coastVelocityRef.current = step.velocity;
+        coastFrameRef.current = requestAnimationFrame(tick);
+      };
+      coastFrameRef.current = requestAnimationFrame(tick);
     },
-    [commitRotation, rotationForDrag],
+    [commitRotation, rotationForDrag, setFast, stopCoast],
   );
 
   useEffect(
     () => () => {
       if (dragFrameRef.current != null) {
         cancelAnimationFrame(dragFrameRef.current);
+      }
+      if (coastFrameRef.current != null) {
+        cancelAnimationFrame(coastFrameRef.current);
       }
     },
     [],
@@ -255,10 +351,20 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
         .onBegin(beginRotation)
         .onStart(() => setDragging(true))
         .onUpdate((event) =>
-          updateRotation(event.translationX, event.translationY),
+          updateRotation(
+            event.translationX,
+            event.translationY,
+            event.velocityX,
+            event.velocityY,
+          ),
         )
         .onFinalize((event) =>
-          finishRotation(event.translationX, event.translationY),
+          finishRotation(
+            event.translationX,
+            event.translationY,
+            event.velocityX,
+            event.velocityY,
+          ),
         ),
     [beginRotation, finishRotation, updateRotation],
   );
@@ -267,6 +373,7 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
       Gesture.Pinch()
         .onBegin(() => {
           zoomStart.value = zoom.value;
+          runOnJS(stopCoast)();
           runOnJS(stopIdleRotation)();
         })
         .onUpdate((event) => {
@@ -275,7 +382,7 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
             Math.min(1.42, zoomStart.value * event.scale),
           );
         }),
-    [stopIdleRotation, zoom, zoomStart],
+    [stopCoast, stopIdleRotation, zoom, zoomStart],
   );
   const tapGesture = useMemo(
     () =>
@@ -426,25 +533,27 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
           </Svg>
 
           <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-            {snapshot.countries.map(({ country, center }) => {
-              const cluster = clusterByCountry.get(country.code);
-              if (!cluster || !center) return null;
-              return (
-                <TravelMapPinButton
-                  key={cluster.countryCode}
-                  testID={AgentUiIds.travel.map.countryCluster(
-                    cluster.countryCode,
-                  )}
-                  label={`${cluster.countryName}, ${cluster.visits.length} trip${
-                    cluster.visits.length === 1 ? '' : 's'
-                  }`}
-                  colors={cluster.colors}
-                  left={center[0]}
-                  top={center[1]}
-                  onPress={() => selectCountry(cluster.countryCode)}
-                />
-              );
-            })}
+            {showPins
+              ? snapshot.countries.map(({ country, center }) => {
+                  const cluster = clusterByCountry.get(country.code);
+                  if (!cluster || !center) return null;
+                  return (
+                    <TravelMapPinButton
+                      key={cluster.countryCode}
+                      testID={AgentUiIds.travel.map.countryCluster(
+                        cluster.countryCode,
+                      )}
+                      label={`${cluster.countryName}, ${cluster.visits.length} trip${
+                        cluster.visits.length === 1 ? '' : 's'
+                      }`}
+                      people={cluster.people}
+                      left={center[0]}
+                      top={center[1]}
+                      onPress={() => selectCountry(cluster.countryCode)}
+                    />
+                  );
+                })
+              : null}
           </View>
         </Animated.View>
       </GestureDetector>

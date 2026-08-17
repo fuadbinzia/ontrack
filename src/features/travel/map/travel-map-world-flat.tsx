@@ -161,7 +161,7 @@ export const TravelMapWorldFlat = memo(function TravelMapWorldFlat({
               label={`${cluster.countryName}, ${cluster.visits.length} trip${
                 cluster.visits.length === 1 ? '' : 's'
               }`}
-              colors={cluster.colors}
+              people={cluster.people}
               left={country.center[0] / TRAVEL_MAP_FLAT_VIEWBOX.width * layout.width}
               top={country.center[1] / TRAVEL_MAP_FLAT_VIEWBOX.height * layout.height}
               onPress={() => onCountryPress(cluster.countryCode)}

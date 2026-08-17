@@ -1,0 +1,40 @@
+---
+description: All user-facing copy is pleasant and friendly — errors, prompts, modals, empties
+alwaysApply: true
+---
+
+# Friendly copy (mandatory)
+
+**Every user-facing string is warm, helpful, and human.** That includes errors, `appPrompt`s, sheets, modals, empty states, toasts, placeholders, confirmations, and validation.
+
+## Voice
+
+- Speak like a kind friend who wants to help — never blame, scold, or talk down.
+- Be clear first; warmth second. Do not hide the next step behind cute or vague wording.
+- Stay calm. No shouting, sarcasm, ALL CAPS, or “Failed” / “Error” / “Invalid” as a title.
+- Destructive confirms stay honest and kind: say what happens, then offer a clear choice.
+- Empty states invite the next action; they do not scold the user for having nothing yet.
+
+## Errors & system copy
+
+- Show what happened in plain language and what they can do next.
+- Never surface raw HTTP, stack traces, provider codes, or backend/outage text.
+- Operational / provider outages stay off screen — `userVisibleError` + `reportOperationalFailure`.
+- Prefer `appPrompt` (never RN `Alert`). Destructive flows use `confirmDestructiveAction`.
+
+```ts
+// ❌
+appPrompt.alert('Delete failed', 'Account deletion failed.');
+appPrompt.alert('Error', 'HTTP_503: PROVIDER_UNAVAILABLE');
+
+// ✅
+appPrompt.alert('Couldn’t Delete Account', 'We couldn’t finish that just now. Your account is still here.');
+```
+
+## When editing UI
+
+1. New or touched copy → friendly in the **same change** (no “fix tone later”).
+2. If you see harsh/robotic copy on a surface you touch → rewrite it in that change.
+3. Title Case still applies to chrome labels; body / prompt messages stay sentence case.
+
+Preserve product names and acronyms (`onTrack`, `StraiAway`, `iOS`, `API`, `FX`).

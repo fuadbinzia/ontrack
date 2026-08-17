@@ -115,7 +115,7 @@ export function TravelPlanDetail(props: TravelPlanDetailProps) {
       <Screen style={travelStyle}>
         <EmptyState
           icon="flight"
-          title="Trip Not Found"
+          title="This Trip Isn’t Here"
           message="This trip may have been removed on another device."
           actionLabel="Back to Travel"
           actionTestID={AgentUiIds.travel.planDetail.backToTravel}

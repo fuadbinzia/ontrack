@@ -65,7 +65,7 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
   const openedApproved = useRef(false);
   const previewMessage =
     !validCode || !code
-      ? 'This join link is invalid or incomplete.'
+      ? 'This join link looks incomplete. Ask the host for a fresh link.'
       : previewError;
 
   const openApprovedTrip = useCallback(async () => {
@@ -189,7 +189,7 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
         if (!active) return;
         if (!result) {
           setPreview(undefined);
-          setPreviewError('This join link is invalid or has expired.');
+          setPreviewError('This join link expired. Ask the host for a fresh one.');
           return;
         }
         setPreview(result);
@@ -320,7 +320,7 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
           ) : (
             <ErrorMessage
               message={
-                previewMessage ?? 'This join link is invalid or incomplete.'
+                previewMessage ?? 'This join link looks incomplete. Ask the host for a fresh link.'
               }
               variant="body"
             />
@@ -357,7 +357,7 @@ export function TravelOpenJoinLanding({ code }: { code?: string }) {
       <Screen contentStyle={styles.center}>
         <Symbol name="airplane" size={44} />
         <ErrorMessage
-          message={previewMessage ?? 'This join link is invalid or incomplete.'}
+          message={previewMessage ?? 'This join link looks incomplete. Ask the host for a fresh link.'}
           variant="heading"
           align="center"
         />

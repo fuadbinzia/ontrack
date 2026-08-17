@@ -52,7 +52,7 @@ export function validateTravelRangeSchedule(
   if (!Number.isFinite(duration) || duration <= 0) {
     return {
       ok: false,
-      error: `${labels.end[0].toUpperCase()}${labels.end.slice(1)} must be after ${labels.start}.`,
+      error: `${labels.end[0].toUpperCase()}${labels.end.slice(1)} needs to be after ${labels.start}.`,
     };
   }
   return {

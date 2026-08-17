@@ -2,10 +2,15 @@ import { atlasCountryByCode } from '../country-data';
 import {
     createTravelGlobeSnapshot,
     normalizeTravelGlobeRotation,
+    TRAVEL_GLOBE_COAST_MAX_DEGREES_PER_SECOND,
     TRAVEL_GLOBE_INITIAL_ROTATION,
     travelGlobeCameraForLayout,
+    travelGlobeCoastStep,
+    travelGlobeCoastVelocity,
     travelGlobeCoordinateAtPoint,
     travelGlobeCoordinateVisible,
+    travelGlobeDetailForMotion,
+    travelGlobeFlickVelocity,
     travelGlobeRotationForCoordinate,
     travelGlobeUnzoomPoint,
 } from '../globe-projection';
@@ -92,5 +97,67 @@ describe('travel globe projection', () => {
     expect(portrait.radius * 2).toBeGreaterThan(portrait.height * 0.85);
     expect(landscape.radius * 2).toBeGreaterThanOrEqual(landscape.width);
     expect(landscape.radius * 2).toBeGreaterThan(landscape.height * 2);
+  });
+
+  it('ignores a soft release and clamps a violent flick', () => {
+    expect(travelGlobeCoastVelocity(10, 0)).toBeUndefined();
+    const clamped = travelGlobeCoastVelocity(4000, 0);
+    expect(clamped).toEqual({
+      x: TRAVEL_GLOBE_COAST_MAX_DEGREES_PER_SECOND,
+      y: 0,
+    });
+  });
+
+  it('inverts flick pitch so an upward swipe looks north', () => {
+    const flick = travelGlobeFlickVelocity(200, -300, 0.34, 0.26);
+    expect(flick).toBeDefined();
+    expect(flick!.x).toBeCloseTo(68);
+    expect(flick!.y).toBeCloseTo(78);
+  });
+
+  it('coasts with friction and slides along the pitch clamp', () => {
+    const first = travelGlobeCoastStep([0, 0, 0], { x: 180, y: 0 }, 16);
+    expect(first.done).toBe(false);
+    expect(first.rotation[0]).toBeGreaterThan(0);
+    expect(first.velocity.x).toBeLessThan(180);
+
+    const againstPole = travelGlobeCoastStep(
+      [0, 64, 0],
+      { x: 80, y: 200 },
+      16,
+    );
+    expect(againstPole.rotation[1]).toBe(65);
+    expect(againstPole.velocity.y).toBe(0);
+    expect(againstPole.velocity.x).toBeGreaterThan(0);
+  });
+
+  it('picks rest, motion, and fast path quality from the current gesture', () => {
+    expect(
+      travelGlobeDetailForMotion({
+        dragging: false,
+        coasting: false,
+        spinning: false,
+        warmedUp: true,
+        fast: false,
+      }),
+    ).toBe('rest');
+    expect(
+      travelGlobeDetailForMotion({
+        dragging: true,
+        coasting: false,
+        spinning: false,
+        warmedUp: true,
+        fast: false,
+      }),
+    ).toBe('motion');
+    expect(
+      travelGlobeDetailForMotion({
+        dragging: false,
+        coasting: true,
+        spinning: false,
+        warmedUp: true,
+        fast: true,
+      }),
+    ).toBe('fast');
   });
 });

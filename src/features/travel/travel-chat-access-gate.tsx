@@ -48,7 +48,11 @@ export function TravelChatAccessGate(props: TravelChatAccessGateProps) {
           paddingTop={rs.sm}
           onClose={props.onClose}
         />
-        <EmptyState icon="chat" title="Trip Not Found" message="This trip is no longer available." />
+        <EmptyState
+          icon="chat"
+          title="This Trip Isn’t Here"
+          message="It may have been removed, or the invite is no longer open."
+        />
       </View>
     );
   }
@@ -85,12 +89,12 @@ export function TravelChatAccessGate(props: TravelChatAccessGateProps) {
             title={
               signedInElsewhere
                 ? 'Sign In With the Account That Joined'
-                : 'Couldn’t Open Shared Chat'
+                : 'Chat Isn’t Ready'
             }
             message={
               signedInElsewhere
                 ? 'This trip is linked to a different onTrack account on this device. Sign in with the account that accepted the invite, or open the join link again.'
-                : 'Force-quit onTrack and reopen to install the latest update, then open Group Chat again. If it still fails, open the host’s join link while signed in.'
+                : 'Close onTrack and open it again. If it’s still quiet, open the host’s join link while signed in.'
             }
           />
         )}

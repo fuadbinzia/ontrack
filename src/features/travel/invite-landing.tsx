@@ -51,9 +51,11 @@ export function TravelInviteLanding({ invite }: { invite?: string }) {
   const resolving = !isWeb && Boolean(user) && isShortInvite && !decoded && !inviteError;
   const nativeError =
     !invite
-      ? 'This travel invitation is invalid or incomplete.'
+      ? 'This invitation looks incomplete. Ask the host for a fresh link.'
       : inviteError ??
-        (!resolving && !decoded ? 'This travel invitation is invalid or expired.' : undefined);
+        (!resolving && !decoded
+          ? 'This invitation expired. Ask the host for a fresh link.'
+          : undefined);
 
   useEffect(() => {
     // The hosted page does not share the installed app's authenticated
@@ -302,7 +304,7 @@ export function TravelInviteLanding({ invite }: { invite?: string }) {
           </AppText>
         ) : (
           <ErrorMessage
-            message="This invitation is invalid or incomplete."
+            message="This invitation looks incomplete. Ask the host for a fresh link."
             variant="body"
           />
         )}

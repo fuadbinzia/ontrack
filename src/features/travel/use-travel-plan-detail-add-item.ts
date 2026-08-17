@@ -211,10 +211,10 @@ export function useTravelPlanDetailAddItem({
       if (!Number.isFinite(span) || span <= 0) {
         return addItemError(
           form.kind === 'flight'
-            ? 'Arrival must be after departure.'
+            ? 'Arrival needs to be after departure.'
             : form.kind === 'rental'
-              ? 'Drop-off must be after pick-up.'
-              : 'Check-out must be after check-in.',
+              ? 'Drop-off needs to be after pick-up.'
+              : 'Check-out needs to be after check-in.',
         );
       }
       durationMinutes = form.kind === 'flight' ? span : 60;
@@ -231,7 +231,7 @@ export function useTravelPlanDetailAddItem({
       }
       const span = form.endMinutes - form.startMinutes;
       if (!Number.isFinite(span) || span <= 0) {
-        return addItemError('End time must be after start time.');
+        return addItemError('End time needs to be after start time.');
       }
       if (span > 1440) {
         return addItemError('Duration must be between 1 and 1,440 minutes.');

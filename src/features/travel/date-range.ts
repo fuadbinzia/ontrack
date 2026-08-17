@@ -58,7 +58,7 @@ export function validateTravelDateRange(
     return { error: 'Choose valid travel dates.', conflicts: [] };
   }
   if (endDate < startDate) {
-    return { error: 'The return date must be on or after departure.', conflicts: [] };
+    return { error: 'The return date needs to be on or after departure.', conflicts: [] };
   }
 
   // Moments may live in Pre-trip / Post trip outside the trip window.

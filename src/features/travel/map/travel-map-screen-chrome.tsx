@@ -19,7 +19,8 @@ import type { TravelMapRenderedVisit } from './model';
 import type { TravelMapPlaceSelection } from './travel-map-canvas';
 import {
     travelMapOverlayConfirmIds,
-    travelMapOverlayPickerIds,
+    travelMapOverlayEmptyCopy,
+    travelMapOverlayPickerState,
 } from './travel-map-overlay-picker';
 import { TravelMapPreviewCard } from './travel-map-preview-card';
 import { TravelMapSharingRow } from './travel-map-sharing-row';
@@ -46,17 +47,21 @@ export function TravelMapPeoplePicker({
 }) {
   const friends = useFriends((state) => state.friends);
   const sharingUserIds = friendProfiles.map((profile) => profile.userId);
-  const { excludeIds, disabledIds } = travelMapOverlayPickerIds({
-    friends,
-    sharingUserIds,
-    selectedFriendIds,
-  });
+  const { includeIds, excludeIds, showSearch, emptyKind } =
+    travelMapOverlayPickerState({
+      friends,
+      sharingUserIds,
+      selectedFriendIds,
+    });
 
   return (
     <PeoplePicker
       visible={visible}
       onClose={onClose}
+      eyebrow="Travel Atlas"
       title="Overlay Friend Maps"
+      subtitle="Friends who share their map"
+      subtitleIcon="people"
       confirmLabel="Show Maps"
       headerContent={
         <TravelMapSharingRow
@@ -82,8 +87,14 @@ export function TravelMapPeoplePicker({
         />
       }
       supportedOrientations={supportedOrientations}
+      includeIds={includeIds}
       excludeIds={excludeIds}
-      disabledIds={disabledIds}
+      showSearch={showSearch}
+      emptyState={
+        emptyKind ? travelMapOverlayEmptyCopy(emptyKind) : undefined
+      }
+      emptySearchState={travelMapOverlayEmptyCopy('no-search-match')}
+      emptyTestID={AgentUiIds.travel.map.overlayEmpty}
       onConfirm={(picked) => {
         onChangeSelectedFriendIds(
           travelMapOverlayConfirmIds(

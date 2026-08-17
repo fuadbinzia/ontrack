@@ -1,20 +1,20 @@
 import { useEffect } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
-  ReduceMotion,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
+    ReduceMotion,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 
 import {
-  colorWithAlpha,
-  easings,
-  glassMaterials,
-  glassMistWashStyle,
-  motion,
-  radii,
+    colorWithAlpha,
+    easings,
+    glassMaterials,
+    glassMistWashStyle,
+    motion,
+    radii,
 } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
@@ -22,6 +22,7 @@ import { useTheme } from '@/hooks/use-theme';
 type GlassSwitchProps = {
   value: boolean;
   disabled?: boolean;
+  accessible?: boolean;
   accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
 };
@@ -35,6 +36,7 @@ type GlassSwitchProps = {
 export function GlassSwitch({
   value,
   disabled,
+  accessible = true,
   accessibilityLabel,
   style,
 }: GlassSwitchProps) {
@@ -67,9 +69,12 @@ export function GlassSwitch({
 
   return (
     <View
-      accessibilityRole="switch"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ checked: value, disabled: Boolean(disabled) }}
+      accessible={accessible}
+      accessibilityRole={accessible ? 'switch' : undefined}
+      accessibilityLabel={accessible ? accessibilityLabel : undefined}
+      accessibilityState={
+        accessible ? { checked: value, disabled: Boolean(disabled) } : undefined
+      }
       collapsable={false}
       style={[
         styles.track,

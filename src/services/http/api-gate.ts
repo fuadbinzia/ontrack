@@ -22,3 +22,12 @@ export async function gatePaidApiRequest(
   }
   return 'ok';
 }
+
+/** IP-scoped limit for unauthenticated lookup routes (covers, VIN, brands). */
+export async function gatePublicApiRequest(request: Request): Promise<PaidApiGate> {
+  const auth = await authenticateApiRequest(request);
+  if (checkApiRateLimit('public', apiRateLimitSubject(request, auth)) === 'limited') {
+    return 'rate_limited';
+  }
+  return 'ok';
+}

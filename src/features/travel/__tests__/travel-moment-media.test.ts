@@ -4,6 +4,9 @@ jest.mock('expo-file-system', () => {
     exists: boolean;
     size: number;
     constructor(uriOrRoot: string | { uri: string }, ...segments: string[]) {
+      if (typeof uriOrRoot === 'string' && !uriOrRoot.startsWith('file://') && segments.length === 0) {
+        throw new Error(`File probe is unsafe for ${uriOrRoot}`);
+      }
       if (typeof uriOrRoot === 'string') {
         this.uri = segments.length
           ? `${uriOrRoot.replace(/\/$/, '')}/${segments.join('/')}`
@@ -27,8 +30,8 @@ jest.mock('expo-file-system', () => {
 });
 
 import {
-  isLoadableTravelPhotoUri,
-  resolveTravelPhotoUris,
+    isLoadableTravelPhotoUri,
+    resolveTravelPhotoUris,
 } from '@/features/travel/travel-moment-media';
 
 function setFiles(
@@ -71,5 +74,21 @@ describe('travel-moment-media photo resolve', () => {
     expect(isLoadableTravelPhotoUri('https://cdn.example/a.jpg')).toBe(true);
     expect(isLoadableTravelPhotoUri('content://media/1')).toBe(true);
     expect(isLoadableTravelPhotoUri('ontrack-media:user/x.jpg')).toBe(false);
+  });
+
+  it('does not probe content or https covers with the native File constructor', () => {
+    expect(() =>
+      resolveTravelPhotoUris([
+        'content://media/external/images/media/1',
+        'https://cdn.example/cover.jpg',
+        'ph://asset-id',
+      ]),
+    ).not.toThrow();
+    expect(
+      resolveTravelPhotoUris([
+        'content://media/external/images/media/1',
+        'https://cdn.example/cover.jpg',
+      ]),
+    ).toEqual([]);
   });
 });

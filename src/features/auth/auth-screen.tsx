@@ -279,6 +279,13 @@ export function AuthScreen({
             ) : null}
 
             {legalLinks}
+            <AppText
+              variant="caption"
+              color="tertiary"
+              align="center"
+              testID={AgentUiIds.auth.ageConfirm}>
+              By continuing you confirm you are 13 or older.
+            </AppText>
           </GlassPlate>
         </View>
       </Screen>

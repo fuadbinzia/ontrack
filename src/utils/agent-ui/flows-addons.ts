@@ -104,6 +104,25 @@ export const AGENT_UI_ADDON_FLOWS = {
     },
     { op: 'wait', ms: 250 },
   ],
+  'profile-privacy-data': [
+    { op: 'goto', to: 'profile' },
+    {
+      op: 'wait',
+      id: 'ontrack.profile.section.privacyData',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'scroll', id: 'ontrack.profile.section.privacyData' },
+    { op: 'wait', ms: 250 },
+  ],
+  'profile-download-data': [
+    { op: 'goto', to: 'profile-download-data' },
+    {
+      op: 'wait',
+      id: 'ontrack.profile.downloadData',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'wait', ms: 250 },
+  ],
   'profile-usage-analytics': [
     { op: 'goto', to: 'profile' },
     {

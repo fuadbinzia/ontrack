@@ -195,7 +195,7 @@ export function Input({
               placeholder={placeholder}
               placeholderTextColor={placeholderTextColor ?? theme.textTertiary}
               allowFontScaling
-              maxFontSizeMultiplier={1.3}
+              maxFontSizeMultiplier={2}
               multiline={multiline}
               keyboardType={keyboardType}
               onChangeText={handleChangeText}
@@ -263,7 +263,7 @@ export function Input({
                 placeholder={placeholder}
                 placeholderTextColor={placeholderTextColor ?? theme.textTertiary}
                 allowFontScaling
-                maxFontSizeMultiplier={1.3}
+                maxFontSizeMultiplier={2}
                 multiline={multiline}
                 keyboardType={keyboardType}
                 onChangeText={handleChangeText}
@@ -344,7 +344,7 @@ export function Input({
                 value={numericValue}
                 placeholder={undefined}
                 allowFontScaling
-                maxFontSizeMultiplier={1.3}
+                maxFontSizeMultiplier={2}
                 multiline={multiline}
                 keyboardType={keyboardType}
                 onChangeText={handleChangeText}
@@ -378,7 +378,7 @@ export function Input({
                 value={numericValue}
                 caretHidden
                 allowFontScaling
-                maxFontSizeMultiplier={1.3}
+                maxFontSizeMultiplier={2}
                 keyboardType={keyboardType}
                 onChangeText={handleChangeText}
                 onFocus={handleFocus}
@@ -417,7 +417,7 @@ export function Input({
           placeholder={placeholder}
           placeholderTextColor={placeholderTextColor ?? theme.textTertiary}
           allowFontScaling
-          maxFontSizeMultiplier={1.3}
+          maxFontSizeMultiplier={2}
           multiline={multiline}
           keyboardType={keyboardType}
           onChangeText={handleChangeText}

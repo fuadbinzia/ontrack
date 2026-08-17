@@ -60,10 +60,30 @@ export async function authenticateApiRequest(request: Request): Promise<ApiAuthR
  * when ALLOW_UNAUTHENTICATED_API=true so local hosts can opt in explicitly
  * instead of failing open whenever NODE_ENV is not production.
  */
+/** Local Metro only. Production / preview / TestFlight must never fail open. */
+export function isUnauthenticatedApiAllowed(): boolean {
+  if (process.env.ALLOW_UNAUTHENTICATED_API !== 'true') return false;
+  const appEnv = (
+    process.env.EXPO_PUBLIC_APP_ENV ||
+    process.env.EAS_BUILD_PROFILE ||
+    process.env.NODE_ENV ||
+    ''
+  ).toLowerCase();
+  if (
+    appEnv === 'production' ||
+    appEnv === 'preview' ||
+    appEnv === 'testflight' ||
+    appEnv === 'device'
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export function isApiRequestBlocked(result: ApiAuthResult): boolean {
   if (result.status === 'ok') return false;
   if (result.status === 'unauthenticated') return true;
-  return process.env.ALLOW_UNAUTHENTICATED_API !== 'true';
+  return !isUnauthenticatedApiAllowed();
 }
 
 /** Stable subject key for per-user rate limits (falls back for local opt-in). */

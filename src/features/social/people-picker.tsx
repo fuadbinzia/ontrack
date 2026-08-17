@@ -2,11 +2,11 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { Pressable, StyleSheet, TextInput, View, type ModalProps } from 'react-native';
 
 import {
-  AppText,
-  Dropdown,
-  GlassPlate,
-  GlassPrimaryAction,
-  SheetScaffold,
+    AppText,
+    Dropdown,
+    GlassPlate,
+    GlassPrimaryAction,
+    SheetScaffold,
 } from '@/components/primitives';
 import { radii } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -32,9 +32,11 @@ export function PeoplePicker({
   onConfirm,
   multi = true,
   excludeIds = [],
+  disabledIds = [],
   includeIds,
   title = 'Choose Friends',
   confirmLabel = 'Add',
+  disabledLabel = 'Not Sharing',
   headerContent,
   supportedOrientations,
   presentation = 'list',
@@ -44,10 +46,13 @@ export function PeoplePicker({
   onConfirm: (friends: FriendProfile[]) => void;
   multi?: boolean;
   excludeIds?: string[];
+  /** Shown in the list but not selectable — used when a friend cannot take the action yet. */
+  disabledIds?: string[];
   /** Optional allowlist used by collaboration surfaces with an established roster. */
   includeIds?: string[];
   title?: string;
   confirmLabel?: string;
+  disabledLabel?: string;
   headerContent?: ReactNode;
   supportedOrientations?: ModalProps['supportedOrientations'];
   presentation?: 'list' | 'searchable-dropdown';
@@ -67,6 +72,7 @@ export function PeoplePicker({
     }
   }, [visible]);
 
+  const disabled = useMemo(() => new Set(disabledIds), [disabledIds]);
   const available = useMemo(() => {
     const excluded = new Set(excludeIds);
     const included = includeIds ? new Set(includeIds) : undefined;
@@ -81,6 +87,7 @@ export function PeoplePicker({
 
   const toggle = useCallback(
     (userId: string) => {
+      if (disabled.has(userId)) return;
       setSelected((current) => {
         if (!multi) return new Set([userId]);
         const next = new Set(current);
@@ -89,11 +96,13 @@ export function PeoplePicker({
         return next;
       });
     },
-    [multi],
+    [disabled, multi],
   );
 
   const confirm = () => {
-    const picked = friends.filter((friend) => selected.has(friend.userId));
+    const picked = friends.filter(
+      (friend) => selected.has(friend.userId) && !disabled.has(friend.userId),
+    );
     onConfirm(picked);
     onClose();
   };
@@ -202,6 +211,8 @@ export function PeoplePicker({
                 key={friend.userId}
                 friend={friend}
                 selected={selected.has(friend.userId)}
+                disabled={disabled.has(friend.userId)}
+                disabledLabel={disabledLabel}
                 accentBorder={theme.accentPrimary}
                 idleBorder={theme.separator}
                 minHeight={Math.max(52, s(56))}
@@ -220,6 +231,8 @@ export function PeoplePicker({
 function PeoplePickerFriendRow({
   friend,
   selected,
+  disabled,
+  disabledLabel,
   accentBorder,
   idleBorder,
   minHeight,
@@ -229,6 +242,8 @@ function PeoplePickerFriendRow({
 }: {
   friend: FriendProfile;
   selected: boolean;
+  disabled: boolean;
+  disabledLabel: string;
   accentBorder: string;
   idleBorder: string;
   minHeight: number;
@@ -238,7 +253,7 @@ function PeoplePickerFriendRow({
 }) {
   const agent = useAgentUiTarget(AgentUiIds.peoplePicker.friend(friend.userId), {
     label: friend.displayName,
-    onPress,
+    onPress: disabled ? undefined : onPress,
   });
   return (
     <Pressable
@@ -247,9 +262,10 @@ function PeoplePickerFriendRow({
       onLayout={agent.onLayout}
       accessibilityRole="button"
       accessibilityLabel={friend.displayName}
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={styles.rowWrap}
+      style={[styles.rowWrap, disabled ? styles.rowDisabled : undefined]}
     >
       <GlassPlate
         airy
@@ -269,8 +285,12 @@ function PeoplePickerFriendRow({
             {friend.displayName}
           </AppText>
         </View>
-        <AppText variant="caption" color={selected ? 'accent' : 'secondary'} fit>
-          {selected ? 'Selected' : 'Select'}
+        <AppText
+          variant="caption"
+          color={disabled ? 'tertiary' : selected ? 'accent' : 'secondary'}
+          fit
+        >
+          {disabled ? disabledLabel : selected ? 'Selected' : 'Select'}
         </AppText>
       </GlassPlate>
     </Pressable>
@@ -288,6 +308,9 @@ const styles = StyleSheet.create({
   },
   rowWrap: {
     width: '100%',
+  },
+  rowDisabled: {
+    opacity: 0.62,
   },
   row: {
     flexDirection: 'row',

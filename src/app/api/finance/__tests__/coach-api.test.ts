@@ -58,7 +58,7 @@ describe('Finance coach API route', () => {
     expect(mockAuthorizeFinanceCoach).toHaveBeenCalledWith(request);
     expect(mockPolishFinanceCoachInsights).toHaveBeenCalledWith([insight], {
       referenceSavingsApr: 5.1,
-      safetyIdentifier: 'user-1',
+      safetyIdentifier: expect.stringMatching(/^[a-f0-9]{32}$/),
     });
     await expect(response.json()).resolves.toMatchObject({ source: 'ai' });
   });

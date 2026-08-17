@@ -50,6 +50,13 @@ export const agentUiIdsShellProfile = {
     deleteAccount: 'ontrack.profile.deleteAccount',
     privacy: 'ontrack.profile.privacy',
     terms: 'ontrack.profile.terms',
+    privacyData: 'ontrack.profile.privacyData',
+    downloadData: 'ontrack.profile.downloadData',
+    downloadDataShare: 'ontrack.profile.downloadData.share',
+    blockedUsers: 'ontrack.profile.blockedUsers',
+    blockedUserUnblock: (userId: string) =>
+      `ontrack.profile.blockedUsers.unblock.${userId}`,
+    support: 'ontrack.profile.support',
     tmdb: 'ontrack.profile.tmdb',
     theme: (themeId: string) => `ontrack.profile.theme.${themeId}`,
     appearance: {
@@ -74,6 +81,7 @@ export const agentUiIdsShellProfile = {
       features: 'ontrack.profile.section.features',
       addons: 'ontrack.profile.section.addons',
       about: 'ontrack.profile.section.about',
+      privacyData: 'ontrack.profile.section.privacyData',
       legal: 'ontrack.profile.section.legal',
       dangerZone: 'ontrack.profile.section.dangerZone',
       disclaimers: 'ontrack.profile.section.disclaimers',
@@ -100,6 +108,7 @@ export const agentUiIdsShellProfile = {
     status: 'ontrack.backup.status',
     sectionDevice: 'ontrack.backup.section.device',
     sectionDrive: 'ontrack.backup.section.drive',
+    includeSensitive: 'ontrack.backup.includeSensitive',
     download: 'ontrack.backup.download',
     connectDrive: 'ontrack.backup.connectDrive',
     saveDrive: 'ontrack.backup.saveDrive',
@@ -144,6 +153,7 @@ export const agentUiIdsShellProfile = {
     dismissError: 'ontrack.auth.dismissError',
     privacy: 'ontrack.auth.privacy',
     terms: 'ontrack.auth.terms',
+    ageConfirm: 'ontrack.auth.ageConfirm',
     themeMode: 'ontrack.auth.themeMode',
     dataChoice: {
       merge: 'ontrack.auth.dataChoice.merge',

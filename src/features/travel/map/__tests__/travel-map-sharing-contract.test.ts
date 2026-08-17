@@ -18,4 +18,11 @@ describe('travel map friend sharing controls', () => {
     expect(sharingRow).toContain('AgentUiIds.travel.map.shareToggle');
     expect(sharingRow).toContain('Accepted friends can see your pins and trip summaries.');
   });
+
+  it('does not hide accepted friends just because they have not shared a map', () => {
+    const mapChrome = read('src/features/travel/map/travel-map-screen-chrome.tsx');
+    expect(mapChrome).toContain('travelMapOverlayPickerIds');
+    expect(mapChrome).toContain('disabledIds={disabledIds}');
+    expect(mapChrome).not.toContain('!visibleFriendIds.has');
+  });
 });

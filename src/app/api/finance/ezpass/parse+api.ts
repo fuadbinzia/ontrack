@@ -1,7 +1,8 @@
+import { openaiSafetyIdentifier } from '@/services/ai/openai-safety-id';
 import {
-  analyzeEzPassFiles,
-  authorizeEzPassAi,
-  type EzPassAiFile,
+    analyzeEzPassFiles,
+    authorizeEzPassAi,
+    type EzPassAiFile,
 } from '@/services/finance/ezpass-ai-server';
 import { apiCorsHeaders, apiOptionsResponse } from '@/services/http/cors';
 
@@ -21,7 +22,9 @@ export async function POST(request: Request) {
   try {
     const activities = await analyzeEzPassFiles(
       body.files,
-      authorization.auth.status === 'ok' ? authorization.auth.userId : 'finance-import',
+      openaiSafetyIdentifier(
+        authorization.auth.status === 'ok' ? authorization.auth.userId : 'finance-import',
+      ),
     );
     return json(request, { activities });
   } catch (error) {

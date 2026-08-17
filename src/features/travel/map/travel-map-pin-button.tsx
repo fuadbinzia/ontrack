@@ -1,10 +1,12 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Symbol } from '@/components/primitives';
 import { shadows } from '@/design-system/shadows';
 import { AgentTestId } from '@/utils/agent-ui';
 
-export function TravelMapPinButton({
+/** Memoized — globe frames and chrome state changes reuse settled pins. */
+export const TravelMapPinButton = memo(function TravelMapPinButton({
   testID,
   label,
   colors,
@@ -58,7 +60,7 @@ export function TravelMapPinButton({
       </Pressable>
     </AgentTestId>
   );
-}
+});
 
 const styles = StyleSheet.create({
   pinHit: {

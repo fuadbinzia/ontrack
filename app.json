@@ -2,7 +2,7 @@
   "expo": {
     "name": "onTrack",
     "slug": "onTrack",
-    "version": "1.0.124",
+    "version": "1.0.125",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "ontrack",
@@ -40,10 +40,10 @@
           }
         ],
         "LSSupportsOpeningDocumentsInPlace": false,
-        "NSCameraUsageDescription": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos.",
+        "NSCameraUsageDescription": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos, plus avatars, travel confirmations, E-ZPass statements, and tax documents.",
         "NSMicrophoneUsageDescription": "onTrack uses the microphone to record journal voice notes, dictate journal text, and translate short phrases you choose to record during a trip.",
-        "NSPhotoLibraryUsageDescription": "onTrack accesses your photo library so you can attach meal, activity, plant-care, and vision-board photos.",
-        "NSMotionUsageDescription": "onTrack uses device motion for activity features and so the travel sky can twinkle and shimmer as you move your phone.",
+        "NSPhotoLibraryUsageDescription": "onTrack accesses your photo library so you can attach meal, activity, plant-care, and vision-board photos, plus avatars, travel confirmations, E-ZPass statements, and tax documents.",
+        "NSMotionUsageDescription": "onTrack uses the motion sensors so Today activity cards can detect movement and so the travel sky can twinkle as you tilt the phone.",
         "NSFaceIDUsageDescription": "onTrack uses Face ID to unlock your signed-in session on this device.",
         "ITSAppUsesNonExemptEncryption": false,
         "LSApplicationQueriesSchemes": [
@@ -53,7 +53,7 @@
       "appleTeamId": "F5HRXF5795"
     },
     "android": {
-      "versionCode": 124,
+      "versionCode": 125,
       "package": "com.imtihoss.ontracknow",
       "intentFilters": [
         {
@@ -110,8 +110,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
     "web": {
@@ -130,8 +129,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "onTrack accesses your photos so you can attach meal, activity, plant-care, and vision-board photos.",
-          "cameraPermission": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos.",
+          "photosPermission": "onTrack accesses your photos so you can attach meal, activity, plant-care, and vision-board photos, plus avatars, travel confirmations, E-ZPass statements, and tax documents.",
+          "cameraPermission": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos, plus avatars, travel confirmations, E-ZPass statements, and tax documents.",
           "microphonePermission": "onTrack uses the microphone to record journal voice notes, dictate journal text, and translate short phrases you choose to record during a trip."
         }
       ],
@@ -165,7 +164,7 @@
       [
         "expo-sensors",
         {
-          "motionPermission": "onTrack uses device motion for activity features and so the travel sky can twinkle and shimmer as you move your phone."
+          "motionPermission": "onTrack uses the motion sensors so Today activity cards can detect movement and so the travel sky can twinkle as you tilt the phone."
         }
       ],
       "./plugins/with-ontrack-healthkit.js",

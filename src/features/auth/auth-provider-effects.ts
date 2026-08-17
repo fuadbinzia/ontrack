@@ -2,15 +2,17 @@ import type { Session } from '@supabase/supabase-js';
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { Platform } from 'react-native';
 
+import { legalConsentMatchesCurrent } from '@/features/account/legal-consent';
 import {
-  accessibleAuthError,
-  type AuthProvider,
+    accessibleAuthError,
+    type AuthProvider,
 } from '@/services/cloud/account';
 import { loadAccountFlags } from '@/services/cloud/account-flags';
 import { getSupabaseClient } from '@/services/cloud/supabase';
 import { cancelAccountSync } from '@/services/cloud/sync';
 import { useAuthAccess } from '@/store/auth-access';
 import { useFriends } from '@/store/friends';
+import { usePreferences } from '@/store/preferences';
 import { setAgentUiLoginHandler } from '@/utils/agent-ui/agent-login';
 
 import { signInAgentTestAccount } from './agent-account-login';
@@ -19,10 +21,10 @@ import { subscribeGuestDirtyStores } from './auth-guest-dirty';
 import { authCancelPhase, guestShellConflictsWithDiskSession } from './auth-guest-session';
 import type { AuthPhase } from './auth-phase';
 import {
-  getSessionAuthSnapshot,
-  isStickyAuthPhase,
-  setSessionAuthSnapshot,
-  type LockedAccount,
+    getSessionAuthSnapshot,
+    isStickyAuthPhase,
+    setSessionAuthSnapshot,
+    type LockedAccount,
 } from './auth-session-snapshot';
 import { markSessionUnlocked, requiresSessionUnlock } from './session-lock';
 
@@ -293,6 +295,9 @@ export function useAuthProviderEffects({
   useEffect(() => {
     if (phase !== 'authenticated' || !session?.user?.id) return;
     void loadAccountFlags(session.user.id);
+    if (!legalConsentMatchesCurrent(usePreferences.getState().legalConsent)) {
+      usePreferences.getState().recordLegalConsent();
+    }
   }, [phase, session?.user?.id]);
 
   // Dev-only: let the agent-ui `login` op sign the leased device into its own

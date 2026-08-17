@@ -38,6 +38,8 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('open-developer');
     expect(listAgentUiFlowNames()).toContain('open-backup');
     expect(listAgentUiFlowNames()).toContain('profile-usage-analytics');
+    expect(listAgentUiFlowNames()).toContain('profile-privacy-data');
+    expect(listAgentUiFlowNames()).toContain('profile-download-data');
     expect(listAgentUiFlowNames()).toContain('checklist-demo');
     expect(listAgentUiFlowNames()).toContain('checklist-demo-item-details');
     expect(listAgentUiFlowNames()).toContain('grocery-demo');

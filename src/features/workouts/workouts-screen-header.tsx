@@ -93,7 +93,6 @@ export function WorkoutsScreenHeader({
         </View>
         <Text
           accessibilityRole="header"
-          allowFontScaling={false}
           numberOfLines={2}
           style={[
             styles.titleText,

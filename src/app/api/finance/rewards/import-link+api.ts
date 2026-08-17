@@ -1,10 +1,11 @@
-import { apiOptionsResponse } from '@/services/http/cors';
-import { gatePaidApiRequest } from '@/services/http/api-gate';
+import { openaiSafetyIdentifier } from '@/services/ai/openai-safety-id';
 import {
-  analyzeRewardCardLink,
-  manualFallbackRewardDraft,
+    analyzeRewardCardLink,
+    manualFallbackRewardDraft,
 } from '@/services/finance/rewards-link-server';
 import { authenticateApiRequest } from '@/services/http/api-auth';
+import { gatePaidApiRequest } from '@/services/http/api-gate';
+import { apiOptionsResponse } from '@/services/http/cors';
 
 export function OPTIONS(request: Request) {
   return apiOptionsResponse(request);
@@ -36,7 +37,9 @@ export async function POST(request: Request) {
   }
   try {
     const auth = await authenticateApiRequest(request);
-    const safetyIdentifier = auth.status === 'ok' ? auth.userId : 'finance-reward-import';
+    const safetyIdentifier = openaiSafetyIdentifier(
+      auth.status === 'ok' ? auth.userId : 'finance-reward-import',
+    );
     return Response.json(await analyzeRewardCardLink(url, safetyIdentifier));
   } catch (error) {
     const code = error instanceof Error ? error.message : 'IMPORT_FAILED';

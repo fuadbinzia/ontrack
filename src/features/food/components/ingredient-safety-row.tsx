@@ -81,7 +81,7 @@ export function ingredientSafetyIcon(
 export function ingredientSafetyLabel(status: IngredientSafetyStatus): string {
   switch (status) {
     case 'safe':
-      return 'Safe';
+      return 'No Conflicts Found';
     case 'avoided':
       return 'Avoided';
     case 'mild':

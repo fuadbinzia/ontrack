@@ -3,20 +3,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
-  ActionChip,
-  AppText,
-  Card,
-  GlassMetaChip,
-  SectionHeader,
-  Symbol,
+    ActionChip,
+    AppText,
+    Card,
+    GlassMetaChip,
+    SectionHeader,
+    Symbol,
 } from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { dietaryPreferenceLabel } from '@/services/food/labels';
 import {
-  assessIngredientSafety,
-  profileHasSafetySignals,
-  type IngredientSafetyAssessment,
+    assessIngredientSafety,
+    profileHasSafetySignals,
+    type IngredientSafetyAssessment,
 } from '@/services/food/safety';
 import type { IngredientScanAnalysis } from '@/services/food/types';
 import { useFoodProfile } from '@/store/food-profile';
@@ -26,14 +26,14 @@ import { formatDateKeyMedium } from '@/utils/date';
 import { openHttpsUrl } from '@/utils/safe-url';
 
 import {
-  CountryRestrictionRow,
-  IngredientSafetyRow,
-  ingredientSafetyStatusForLevel,
+    CountryRestrictionRow,
+    IngredientSafetyRow,
+    ingredientSafetyStatusForLevel,
 } from './components';
 import { FoodSheet } from './food-sheet';
 import {
-  findIngredientKnowledge,
-  renderableJurisdictionStatuses,
+    findIngredientKnowledge,
+    renderableJurisdictionStatuses,
 } from './ingredient-knowledge';
 import { ScanIngredientReview } from './scan-ingredient-review';
 
@@ -228,9 +228,7 @@ export function ScanResultSheet({
                 key={entry.name}
                 name={entry.name}
                 status={status}
-                reason={
-                  entry.assessment.level === 'none' ? undefined : entry.assessment.reason
-                }
+                reason={entry.assessment.reason}
                 onPress={onPress}
               />
             );

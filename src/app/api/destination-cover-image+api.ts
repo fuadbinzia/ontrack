@@ -2,6 +2,7 @@ import {
     DESTINATION_COVER_UA,
     isAllowedDestinationCoverImageUrl,
 } from '@/features/travel/destination-cover-lookup';
+import { gatePublicApiRequest } from '@/services/http/api-gate';
 import { apiCorsHeaders, apiOptionsResponse } from '@/services/http/cors';
 import { fetchWithTimeout } from '@/services/http/fetch-with-timeout';
 
@@ -52,6 +53,13 @@ export function rewriteDestinationCoverFetchUrl(
  * RN Image cannot set UA, so upload.wikimedia.org often fails without this.
  */
 export async function GET(request: Request) {
+  const gate = await gatePublicApiRequest(request);
+  if (gate === 'rate_limited') {
+    return Response.json(
+      { error: 'Too many image lookups. Try again later.' },
+      { status: 429, headers: apiCorsHeaders(request, 'GET, OPTIONS') },
+    );
+  }
   const src = new URL(request.url).searchParams.get('src')?.trim() ?? '';
   if (!src || !isAllowedDestinationCoverImageUrl(src)) {
     return Response.json(

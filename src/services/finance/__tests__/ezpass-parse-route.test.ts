@@ -72,7 +72,10 @@ describe('E-ZPass statement parsing API', () => {
     const response = await route.POST(incoming);
 
     expect(mockAuthorizeEzPassAi).toHaveBeenCalledWith(incoming);
-    expect(mockAnalyzeEzPassFiles).toHaveBeenCalledWith(files, 'user-synthetic');
+    expect(mockAnalyzeEzPassFiles).toHaveBeenCalledWith(
+      files,
+      expect.stringMatching(/^[a-f0-9]{32}$/),
+    );
     expect(response!.headers.get('Access-Control-Allow-Origin')).toBe('https://ontrack.example');
     await expect(response!.json()).resolves.toEqual({
       activities: [{ merchant: 'Synthetic Toll', amount: 3.25 }],

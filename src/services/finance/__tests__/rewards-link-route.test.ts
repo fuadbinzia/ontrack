@@ -67,7 +67,7 @@ describe('reward-card link import route', () => {
     expect(response.status).toBe(200);
     expect(mockAnalyzeRewardCardLink).toHaveBeenCalledWith(
       'https://issuer.example/card',
-      'user-1',
+      expect.stringMatching(/^[a-f0-9]{32}$/),
     );
   });
 

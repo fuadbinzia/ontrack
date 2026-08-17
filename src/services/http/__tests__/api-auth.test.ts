@@ -1,8 +1,8 @@
 import {
-  apiRateLimitSubject,
-  isApiRequestBlocked,
-  resolveSupabaseAuthConfig,
-  type ApiAuthResult,
+    apiRateLimitSubject,
+    isApiRequestBlocked,
+    resolveSupabaseAuthConfig,
+    type ApiAuthResult,
 } from '../api-auth';
 import { checkApiRateLimit, resetApiRateLimitsForTests } from '../api-rate-limit';
 
@@ -56,10 +56,13 @@ describe('resolveSupabaseAuthConfig', () => {
 
 describe('isApiRequestBlocked', () => {
   const original = process.env.ALLOW_UNAUTHENTICATED_API;
+  const originalAppEnv = process.env.EXPO_PUBLIC_APP_ENV;
 
   afterEach(() => {
     if (original === undefined) delete process.env.ALLOW_UNAUTHENTICATED_API;
     else process.env.ALLOW_UNAUTHENTICATED_API = original;
+    if (originalAppEnv === undefined) delete process.env.EXPO_PUBLIC_APP_ENV;
+    else process.env.EXPO_PUBLIC_APP_ENV = originalAppEnv;
   });
 
   it('allows verified users', () => {
@@ -74,7 +77,15 @@ describe('isApiRequestBlocked', () => {
     delete process.env.ALLOW_UNAUTHENTICATED_API;
     expect(isApiRequestBlocked({ status: 'unconfigured' })).toBe(true);
     process.env.ALLOW_UNAUTHENTICATED_API = 'true';
+    delete process.env.EXPO_PUBLIC_APP_ENV;
+    process.env.NODE_ENV = 'test';
     expect(isApiRequestBlocked({ status: 'unconfigured' })).toBe(false);
+  });
+
+  it('ignores ALLOW_UNAUTHENTICATED_API in production-like app env', () => {
+    process.env.ALLOW_UNAUTHENTICATED_API = 'true';
+    process.env.EXPO_PUBLIC_APP_ENV = 'production';
+    expect(isApiRequestBlocked({ status: 'unconfigured' })).toBe(true);
   });
 });
 

@@ -405,6 +405,8 @@ Named flow: `social-friends-invite-tools` (signed-in session) opens Friends, the
 | `ontrack.social.request.cancel.<requestId>`         | Cancel outgoing request                 |
 | `ontrack.social.friend.addToTrip.<friendId>`        | Add a friend to a trip                  |
 | `ontrack.social.friend.remove.<friendId>`           | Remove a friend                         |
+| `ontrack.social.friend.block.<friendId>`            | Block a friend                          |
+| `ontrack.social.friend.report.<friendId>`           | Report a friend                         |
 
 ## Games
 
@@ -776,6 +778,12 @@ Demo fixture: `vision-mindset` / `vision-sample-forest` via `vision-board-demo` 
 | `ontrack.calendarSync.direction.twoWay`                          | Select two-way calendar sync                                   |
 | `ontrack.calendarSync.direction.toGoogle`                        | Select one-way sync to Google                                  |
 | `ontrack.calendarSync.direction.fromGoogle`                      | Select one-way sync from Google                                |
+| `ontrack.profile.section.privacyData`                            | Privacy & Data section                                         |
+| `ontrack.profile.downloadData`                                   | Download My Data                                               |
+| `ontrack.profile.downloadData.share`                             | Share Data Export                                              |
+| `ontrack.profile.blockedUsers`                                   | Blocked Users                                                  |
+| `ontrack.profile.blockedUsers.unblock.<userId>`                  | Unblock a person                                               |
+| `ontrack.profile.support`                                        | Contact Support                                                |
 | `ontrack.profile.privacy`                                        | Privacy Policy                                                 |
 | `ontrack.profile.terms`                                          | Terms of Use                                                   |
 | `ontrack.legal.document`                                         | Privacy / Terms document body                                  |
@@ -822,6 +830,7 @@ dock); legacy `/(tabs)/profile/account` redirects there.
 | `ontrack.auth.dismissError`             | Dismiss sign-in error                                          |
 | `ontrack.auth.privacy`                  | Privacy Policy link (upgrade / locked)                         |
 | `ontrack.auth.terms`                  | Terms of Use link (upgrade / locked)       |
+| `ontrack.auth.ageConfirm`             | 13-or-older confirmation line              |
 | `ontrack.auth.themeMode`              | Light/dark toggle (welcome)                |
 | `ontrack.auth.dataChoice.merge`       | Merge device into cloud (existing account) |
 | `ontrack.auth.dataChoice.discardDevice` | Use cloud only / discard device          |
@@ -1188,6 +1197,7 @@ Deep link: `ontrack://health` / Expo route `/(tabs)/health`
 | `ontrack.health.playbook.<id>.edit`                    | Edit or delete a playbook           |
 | `ontrack.health.playbookRun.<id>.complete` / `.cancel` | Finish or stop a playbook run       |
 | `ontrack.health.settings`                              | Open Health settings                |
+| `ontrack.health.privacy`                               | Open Privacy Policy from Health     |
 | `ontrack.health.settings.stateSync.<off                | on>`                                | Configure State of Mind sync |
 | `ontrack.trackers.addon.health`                        | Toggle the iPhone Health add-on     |
 
@@ -1426,6 +1436,9 @@ Deep link: `ontrack://travel/<planId>` → `/travel/[id]`
 | `ontrack.travel.chat.menuCopy`            | Popover Copy          |
 | `ontrack.travel.chat.menuEdit`            | Popover Edit          |
 | `ontrack.travel.chat.menuDelete`          | Popover Delete        |
+| `ontrack.travel.chat.menuReport`          | Popover Report        |
+| `ontrack.travel.chat.menuBlock`           | Popover Block         |
+| `ontrack.travel.chat.showPreviews`        | Lock-screen message previews |
 | `ontrack.travel.chat.reaction.<emoji>`    | Reaction chip / tray emoji |
 
 Deep link: `ontrack://travel/<planId>/chat` → `/travel/[id]/chat`

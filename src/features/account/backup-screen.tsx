@@ -2,38 +2,40 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
 import {
-  appPrompt,
-  HeaderBackButton,
-  Screen,
-  ScreenHeader,
+    appPrompt,
+    HeaderBackButton,
+    Screen,
+    ScreenHeader,
+    SettingsGroup,
+    SettingsToggleRow,
 } from '@/components/primitives';
 import { restoreBackup } from '@/features/account/backup-actions';
 import {
-  BackupDeviceCard,
-  BackupDriveCard,
-  BackupStatusNotice,
-  formatBackupTime,
+    BackupDeviceCard,
+    BackupDriveCard,
+    BackupStatusNotice,
+    formatBackupTime,
 } from '@/features/account/backup-screen-panels';
 import { downloadBackup, pickBackupFile, writeBackupFile } from '@/features/account/backup-share';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { useResponsive } from '@/hooks/use-responsive';
 import {
-  connectGoogleDriveBackup,
-  disconnectGoogleDriveBackup,
-  getGoogleDriveBackupStatus,
-  googleDriveBackupErrorMessage,
-  googleDriveConnectErrorMessage,
-  GoogleDriveBackupError,
-  isGoogleDriveAuthError,
-  googleDriveUploadSession,
-  markGoogleDriveBackupComplete,
-  type GoogleDriveBackupFile,
-  type GoogleDriveBackupStatus,
+    connectGoogleDriveBackup,
+    disconnectGoogleDriveBackup,
+    getGoogleDriveBackupStatus,
+    GoogleDriveBackupError,
+    googleDriveBackupErrorMessage,
+    googleDriveConnectErrorMessage,
+    googleDriveUploadSession,
+    isGoogleDriveAuthError,
+    markGoogleDriveBackupComplete,
+    type GoogleDriveBackupFile,
+    type GoogleDriveBackupStatus,
 } from '@/services/backup/google-drive-client';
 import {
-  downloadGoogleDriveBackup,
-  listGoogleDriveBackups,
-  uploadBackupToGoogleDrive,
+    downloadGoogleDriveBackup,
+    listGoogleDriveBackups,
+    uploadBackupToGoogleDrive,
 } from '@/services/backup/google-drive-upload';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
@@ -44,6 +46,7 @@ export default function BackupScreen() {
   const { isGuest } = useAuthSession();
   const { spacing } = useResponsive();
   const [status, setStatus] = useState<GoogleDriveBackupStatus>({ connected: false });
+  const [includeSensitiveLocal, setIncludeSensitiveLocal] = useState(false);
   const [busy, setBusy] = useState<'download' | 'connect' | 'save' | 'restore' | 'disconnect'>();
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
@@ -95,7 +98,7 @@ export default function BackupScreen() {
     setMessage(undefined);
     setError(undefined);
     try {
-      const { name } = await downloadBackup();
+      const { name } = await downloadBackup({ includeSensitiveLocal });
       setMessage(`Backup ready · ${name}`);
     } catch (caught) {
       setError(googleDriveBackupErrorMessage(caught, 'Backup could not be downloaded.'));
@@ -192,7 +195,7 @@ export default function BackupScreen() {
     setMessage(undefined);
     setError(undefined);
     try {
-      const { name, json } = await writeBackupFile();
+      const { name, json } = await writeBackupFile(undefined, { includeSensitiveLocal });
       await uploadBackupToGoogleDrive({
         accessToken: session.accessToken,
         folderId: session.folderId,
@@ -279,7 +282,7 @@ export default function BackupScreen() {
         <ScreenHeader
           eyebrow="Profile"
           title="Your Backup"
-          subtitle="A private copy of this device — journal, Health, photos, videos, voice notes, and your customizations."
+          subtitle="A private copy of this device — photos, videos, and your customizations. Health and Journal stay off unless you include them."
           leading={
             <HeaderBackButton
               compact
@@ -291,6 +294,17 @@ export default function BackupScreen() {
       </AgentTestId>
 
       <BackupStatusNotice error={error} message={message} />
+
+      <SettingsGroup>
+        <SettingsToggleRow
+          label="Include Health & Journal"
+          detail="The backup file is not encrypted. Leave this off unless you need those pages on another device."
+          icon="shield"
+          value={includeSensitiveLocal}
+          onValueChange={setIncludeSensitiveLocal}
+          testID={AgentUiIds.backup.includeSensitive}
+        />
+      </SettingsGroup>
 
       <BackupDeviceCard
         disabled={disabled}

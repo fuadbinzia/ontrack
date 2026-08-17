@@ -1,7 +1,8 @@
+import { gatePublicApiRequest } from '@/services/http/api-gate';
 import {
-  decodeVinWithNhtsa,
-  jsonResponse,
-  optionsResponse,
+    decodeVinWithNhtsa,
+    jsonResponse,
+    optionsResponse,
 } from '@/services/vehicles/server';
 
 export function OPTIONS(request: Request) {
@@ -9,6 +10,10 @@ export function OPTIONS(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const gate = await gatePublicApiRequest(request);
+  if (gate === 'rate_limited') {
+    return jsonResponse(request, { error: 'Too many VIN lookups. Try again later.' }, 429);
+  }
   const vin = new URL(request.url).searchParams.get('vin')?.trim() ?? '';
   if (!vin) {
     return jsonResponse(request, { error: 'VIN is required.' }, 400);
@@ -29,6 +34,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const gate = await gatePublicApiRequest(request);
+  if (gate === 'rate_limited') {
+    return jsonResponse(request, { error: 'Too many VIN lookups. Try again later.' }, 429);
+  }
   let body: { vin?: string } = {};
   try {
     body = (await request.json()) as { vin?: string };

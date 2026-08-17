@@ -3,45 +3,45 @@ import { useRouter, type Href } from 'expo-router';
 import { useBottomTabBarHeight } from 'expo-router/js-tabs';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import {
-  Platform,
-  StyleSheet,
-  useWindowDimensions,
-  View,
+    Platform,
+    StyleSheet,
+    useWindowDimensions,
+    View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { bottomNavBottomPad } from '@/components/navigation/bottom-nav-inset';
 import {
-  EmptyState,
-  ErrorMessage,
-  IconButton,
-  LoadingBlock,
-  ScreenAtmosphere,
-  screenAtmosphereBottomColor,
-  screenAtmosphereTopColor,
-  usePageSurfaceBackground,
-  useSafeAreaChrome,
-  useSafeAreaChromeOverlay,
+    EmptyState,
+    ErrorMessage,
+    IconButton,
+    LoadingBlock,
+    ScreenAtmosphere,
+    screenAtmosphereBottomColor,
+    screenAtmosphereTopColor,
+    usePageSurfaceBackground,
+    useSafeAreaChrome,
+    useSafeAreaChromeOverlay,
 } from '@/components/primitives';
 import { layout, spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import {
-  buildTravelChatListItems,
-  dismissTravelChatAlertsBanner,
-  type OptimisticTravelChatMessage,
-  type TravelChatListItem,
+    buildTravelChatListItems,
+    dismissTravelChatAlertsBanner,
+    type OptimisticTravelChatMessage,
+    type TravelChatListItem,
 } from '@/features/travel/chat';
-import {
-  TravelChatAlertsBanner,
-  TravelChatAlertsSettings,
-} from '@/features/travel/travel-chat-alerts';
 import { TravelChatAccessGate } from '@/features/travel/travel-chat-access-gate';
 import {
-  TravelChatDateSeparator,
-  TravelChatDestinationStamp,
-  TravelChatLandscape,
-  TravelChatMemberStack,
-  travelChatPalette,
+    TravelChatAlertsBanner,
+    TravelChatAlertsSettings,
+} from '@/features/travel/travel-chat-alerts';
+import {
+    TravelChatDateSeparator,
+    TravelChatDestinationStamp,
+    TravelChatLandscape,
+    TravelChatMemberStack,
+    travelChatPalette,
 } from '@/features/travel/travel-chat-chrome';
 import { TravelChatComposer } from '@/features/travel/travel-chat-composer';
 import { TravelChatMessageMenu } from '@/features/travel/travel-chat-message-menu';
@@ -222,8 +222,10 @@ export function TravelChatScreen({ planId }: { planId: string }) {
         enablingNotifications={actions.enablingNotifications}
         notificationsEnabled={session.notificationsEnabled}
         notificationsAvailable={session.notificationsAvailable}
+        showPreviews={actions.showPreviews}
         onClose={() => actions.setSettingsOpen(false)}
         onEnableNotifications={() => void actions.enableNotifications()}
+        onShowPreviewsChange={(value) => void actions.updateShowPreviews(value)}
       />
 
       <TravelChatAlertsBanner

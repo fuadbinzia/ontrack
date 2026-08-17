@@ -3,19 +3,19 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
-  AppText,
-  appPrompt,
-  Button,
-  EmptyState,
-  ErrorMessage,
-  GlassIconWell,
-  GlassPlate,
-  GlassTonePill,
-  IconButton,
-  Input,
-  LoadingBlock,
-  SheetScaffold,
-  Symbol,
+    appPrompt,
+    AppText,
+    Button,
+    EmptyState,
+    ErrorMessage,
+    GlassIconWell,
+    GlassPlate,
+    GlassTonePill,
+    IconButton,
+    Input,
+    LoadingBlock,
+    SheetScaffold,
+    Symbol,
 } from '@/components/primitives';
 import { radii } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
@@ -50,6 +50,8 @@ type SocialFriendsModalProps = {
   onDecline: (request: FriendRequestItem) => void;
   onCancel: (request: FriendRequestItem) => void;
   onRemove: (friend: FriendProfile) => void;
+  onBlock: (friend: FriendProfile) => void;
+  onReport: (friend: FriendProfile) => void;
 };
 
 export function SocialFriendsModal(props: SocialFriendsModalProps) {
@@ -137,6 +139,24 @@ export function SocialFriendsModal(props: SocialFriendsModalProps) {
                     <View style={styles.friendCopy}>
                       <SocialIdentityName>{friend.displayName}</SocialIdentityName>
                     </View>
+                    <IconButton
+                      testID={AgentUiIds.social.friendReport(friend.userId)}
+                      icon="warning"
+                      color={theme.textSecondary}
+                      background="transparent"
+                      accessibilityLabel={`Report ${friend.displayName}`}
+                      disabled={Boolean(props.working)}
+                      onPress={() => props.onReport(friend)}
+                    />
+                    <IconButton
+                      testID={AgentUiIds.social.friendBlock(friend.userId)}
+                      icon="minus-circle"
+                      color={theme.danger}
+                      background="transparent"
+                      accessibilityLabel={`Block ${friend.displayName}`}
+                      disabled={Boolean(props.working)}
+                      onPress={() => props.onBlock(friend)}
+                    />
                     <IconButton
                       testID={AgentUiIds.social.friendRemove(friend.userId)}
                       icon="delete"

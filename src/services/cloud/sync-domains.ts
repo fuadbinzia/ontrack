@@ -3,25 +3,26 @@ import type { AddonEnabledState } from '@/addons/types';
 import type { AgentConversations, AgentInstallations } from '@/agents/types';
 import { mergeDefaultCategories } from '@/constants/categories';
 import { ALL_ACCOUNTS_TEST_TRIP } from '@/constants/travel';
+import { isLegalConsentRecord } from '@/features/account/legal-consent';
 import { ensurePlantSample } from '@/features/plants/sample';
 import {
-  hasCustomizedVisionBoardCategories,
-  hasCustomizedVisionBoardItems,
+    hasCustomizedVisionBoardCategories,
+    hasCustomizedVisionBoardItems,
 } from '@/features/vision-board/selectors';
 import type { VisionBoardCategory, VisionBoardItem } from '@/features/vision-board/types';
 import { useAddons } from '@/store/addons';
 import { useAgents } from '@/store/agents';
-import { usePlants } from '@/store/plants';
 import {
-  appearanceSyncFields,
-  applyAppearancePayload,
-  snapshotAppearance,
+    appearanceSyncFields,
+    applyAppearancePayload,
+    snapshotAppearance,
 } from '@/store/appearance-sync';
+import { privateFinancePayload, useFinance } from '@/store/finance';
+import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { DEFAULT_CHECKLIST_NAME, privateChecklistPayload, useChecklists } from '@/store/todos';
 import { useTravel } from '@/store/travel';
-import { privateFinancePayload, useFinance } from '@/store/finance';
 import { privateVehiclePayload, useVehicles } from '@/store/vehicles';
 import { useVisionBoard } from '@/store/vision-board';
 import type { Plant } from '@/types/models';
@@ -98,6 +99,7 @@ export const domains: SyncDomain[] = [
         aiEnabled: state.aiEnabled,
         hapticsEnabled: state.hapticsEnabled,
         usageAnalyticsEnabled: state.usageAnalyticsEnabled,
+        legalConsent: state.legalConsent,
         showHolidays: state.showHolidays,
       };
     },
@@ -122,6 +124,9 @@ export const domains: SyncDomain[] = [
           typeof payload.usageAnalyticsEnabled === 'boolean'
             ? payload.usageAnalyticsEnabled
             : local.usageAnalyticsEnabled,
+        legalConsent: isLegalConsentRecord(payload.legalConsent)
+          ? payload.legalConsent
+          : local.legalConsent,
         showHolidays:
           typeof payload.showHolidays === 'boolean' ? payload.showHolidays : true,
         // avatar stays device-only — never in app_state preferences payload.

@@ -73,7 +73,7 @@ export const AppText = forwardRef<Text, AppTextProps>(function AppText(
     <Text
       ref={ref}
       allowFontScaling
-      maxFontSizeMultiplier={maxFontSizeMultiplier ?? (shouldFit ? 1.15 : 1.3)}
+      maxFontSizeMultiplier={maxFontSizeMultiplier ?? (shouldFit ? 1.35 : 2)}
       numberOfLines={numberOfLines ?? (shouldFit ? 1 : undefined)}
       adjustsFontSizeToFit={shouldFit}
       minimumFontScale={minimumFontScale ?? (shouldFit ? fitMinimumScale : undefined)}

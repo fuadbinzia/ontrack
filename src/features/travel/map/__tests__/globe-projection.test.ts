@@ -1,10 +1,13 @@
+import { atlasCountryByCode } from '../country-data';
 import {
-  createTravelGlobeSnapshot,
-  normalizeTravelGlobeRotation,
-  travelGlobeCameraForLayout,
-  travelGlobeCoordinateVisible,
-  travelGlobeRotationForCoordinate,
-  TRAVEL_GLOBE_INITIAL_ROTATION,
+    createTravelGlobeSnapshot,
+    normalizeTravelGlobeRotation,
+    TRAVEL_GLOBE_INITIAL_ROTATION,
+    travelGlobeCameraForLayout,
+    travelGlobeCoordinateAtPoint,
+    travelGlobeCoordinateVisible,
+    travelGlobeRotationForCoordinate,
+    travelGlobeUnzoomPoint,
 } from '../globe-projection';
 
 describe('travel globe projection', () => {
@@ -41,6 +44,44 @@ describe('travel globe projection', () => {
     expect(travelGlobeRotationForCoordinate(Number.NaN, 20)).toEqual(
       TRAVEL_GLOBE_INITIAL_ROTATION,
     );
+  });
+
+  it('inverts a tap at the camera center onto the faced country', () => {
+    const france = atlasCountryByCode('FR');
+    if (!france) throw new Error('missing atlas country FR');
+    const rotation = travelGlobeRotationForCoordinate(
+      france.geographicCenter[0],
+      france.geographicCenter[1],
+    );
+    const camera = travelGlobeCameraForLayout({ width: 400, height: 800 });
+    const coordinate = travelGlobeCoordinateAtPoint(
+      camera.center[0],
+      camera.center[1],
+      rotation,
+      camera,
+    );
+    expect(coordinate).toBeDefined();
+    expect(coordinate!.longitude).toBeCloseTo(france.geographicCenter[0], 0);
+    expect(coordinate!.latitude).toBeCloseTo(france.geographicCenter[1], 0);
+  });
+
+  it('returns undefined when a tap misses the sphere', () => {
+    const camera = travelGlobeCameraForLayout({ width: 400, height: 800 });
+    expect(
+      travelGlobeCoordinateAtPoint(0, 0, TRAVEL_GLOBE_INITIAL_ROTATION, camera),
+    ).toBeUndefined();
+  });
+
+  it('unzooms a tap around the camera center', () => {
+    const camera = travelGlobeCameraForLayout({ width: 400, height: 800 });
+    const [x, y] = travelGlobeUnzoomPoint(
+      camera.center[0] + 20,
+      camera.center[1],
+      camera,
+      2,
+    );
+    expect(x).toBeCloseTo(camera.center[0] + 10);
+    expect(y).toBeCloseTo(camera.center[1]);
   });
 
   it('uses an edge-to-edge globe camera in both orientations', () => {

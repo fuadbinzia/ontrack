@@ -175,6 +175,33 @@ describe('critical persistence migration boundaries', () => {
     expect(source).not.toMatch(/grant execute .* to (anon|authenticated)/);
   });
 
+  it('keeps block and report tables RPC-only and hides blocked chat senders', () => {
+    const source = migration('202608170001_moderation_privacy_hardening.sql');
+    expect(source).toContain('alter table public.user_blocks enable row level security');
+    expect(source).toContain('alter table public.content_reports enable row level security');
+    expect(source).toContain('revoke all on public.user_blocks from anon, authenticated');
+    expect(source).toContain('revoke all on public.content_reports from anon, authenticated');
+    expect(source).toContain('grant execute on function public.block_user(uuid) to authenticated');
+    expect(source).toContain('grant execute on function public.report_content(text, text, uuid, text, text) to authenticated');
+    expect(source).toContain('or not public.users_are_blocked(auth.uid(), message.sender_user_id)');
+    expect(source).toContain("raise exception 'this message was blocked because it appears to contain prohibited content.'");
+    expect(source).toContain('delete from public.ezpass_ledgers where owner_user_id = target_user_id');
+    expect(source).toContain('show_previews boolean not null default false');
+    expect(source).not.toContain('using (bucket_id = \'profile-avatars\')');
+    expect(source).toContain('owner friends or trip mates read profile avatars');
+  });
+
+  it('binds travel chat devices to the signed-in owner and hides peer device ids', () => {
+    const source = migration('202608170002_travel_chat_device_ownership.sql');
+    expect(source).toContain('add column if not exists user_id uuid');
+    expect(source).toContain('and device.user_id <> actor');
+    expect(source).toContain('and user_id = actor');
+    expect(source).toContain('this device could not update chat alerts.');
+    expect(source).toContain('when message.sender_user_id is not distinct from auth.uid()');
+    expect(source).toContain('revoke all on function public.users_are_blocked(uuid, uuid) from public, anon, authenticated');
+    expect(source).not.toContain('grant execute on function public.users_are_blocked');
+  });
+
   it('rejects todo list deletion unless the caller is the owner', () => {
     const source = migration('202608160001_todo_delete_owner_only.sql');
     expect(source).toContain('create or replace function public.delete_todo_list(requested_list_id uuid)');

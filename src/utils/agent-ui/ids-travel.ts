@@ -451,6 +451,9 @@ export const agentUiIdsTravel = {
       menuCopy: 'ontrack.travel.chat.menuCopy',
       menuEdit: 'ontrack.travel.chat.menuEdit',
       menuDelete: 'ontrack.travel.chat.menuDelete',
+      menuReport: 'ontrack.travel.chat.menuReport',
+      menuBlock: 'ontrack.travel.chat.menuBlock',
+      showPreviews: 'ontrack.travel.chat.showPreviews',
       reaction: (emoji: string) =>
         `ontrack.travel.chat.reaction.${encodeURIComponent(emoji)}`,
     },

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Linking, ScrollView, View } from 'react-native';
 
 import {
     appPrompt,
@@ -12,17 +12,18 @@ import {
     SettingsGroup,
     SettingsToggleRow,
 } from '@/components/primitives';
+import { ONTRACK_SUPPORT_EMAIL } from '@/constants/legal';
 import { THEME_PRESETS } from '@/design-system';
 import { CloudAccountCard } from '@/features/account/cloud-account-card';
-import { ProfileBiometricUnlockRow } from '@/features/account/profile-biometric-unlock-row';
 import { useCanUseDeveloperTools } from '@/features/account/dev-access';
 import { ProfileAboutSection } from '@/features/account/profile-about-section';
 import { ProfileAvatarEditorSheet } from '@/features/account/profile-avatar-editor-sheet';
+import { ProfileBiometricUnlockRow } from '@/features/account/profile-biometric-unlock-row';
 import { ProfileIdentityEditorSheet } from '@/features/account/profile-identity-editor-sheet';
 import { ProfileIdentityHero } from '@/features/account/profile-identity-hero';
 import {
-  ProfileLocationPreferences,
-  type ProfileLocationReveal,
+    ProfileLocationPreferences,
+    type ProfileLocationReveal,
 } from '@/features/account/profile-location-preferences';
 import { ProfileSection } from '@/features/account/profile-section';
 import { getAppBuild, getAppVersion } from '@/features/account/release-notes';
@@ -241,7 +242,7 @@ export default function ProfileSettingsScreen() {
           <SettingsGroup>
             <SettingsToggleRow
               label="Usage Analytics"
-              detail="Screen time to improve the product"
+              detail="Off unless you turn it on. Measures time on screens to improve the product. Never includes Health notes."
               icon="insights"
               value={usageAnalyticsEnabled}
               onValueChange={setUsageAnalyticsEnabled}
@@ -297,6 +298,39 @@ export default function ProfileSettingsScreen() {
           </SettingsGroup>
         </ProfileSection>
       ) : null}
+
+      <ProfileSection
+        testID={AgentUiIds.profile.section.privacyData}
+        title="Privacy & Data">
+        <SettingsGroup>
+          <SettingsActionRow
+            label="Download My Data"
+            detail="Export a copy of your onTrack data"
+            icon="download"
+            testID={AgentUiIds.profile.downloadData}
+            onPress={() => router.push('/(tabs)/profile/download-data' as never)}
+            accessibilityLabel="Download My Data"
+          />
+          <SettingsActionRow
+            label="Blocked Users"
+            detail="People whose messages you hid"
+            icon="minus-circle"
+            testID={AgentUiIds.profile.blockedUsers}
+            onPress={() => router.push('/(tabs)/profile/blocked' as never)}
+            accessibilityLabel="Blocked Users"
+          />
+          <SettingsActionRow
+            label="Contact Support"
+            detail={ONTRACK_SUPPORT_EMAIL}
+            icon="note"
+            testID={AgentUiIds.profile.support}
+            onPress={() => {
+              void Linking.openURL(`mailto:${ONTRACK_SUPPORT_EMAIL}`);
+            }}
+            accessibilityLabel="Contact Support"
+          />
+        </SettingsGroup>
+      </ProfileSection>
 
       <ProfileAboutSection
         versionDetail={versionDetail}

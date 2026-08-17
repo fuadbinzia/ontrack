@@ -1,7 +1,8 @@
+import { openaiSafetyIdentifier } from '@/services/ai/openai-safety-id';
 import {
-  authorizeFinanceCoach,
-  polishFinanceCoachInsights,
-  type CoachInsightPayload,
+    authorizeFinanceCoach,
+    polishFinanceCoachInsights,
+    type CoachInsightPayload,
 } from '@/services/finance/coach-server';
 
 function json(body: unknown, status = 200) {
@@ -46,8 +47,9 @@ export async function POST(request: Request) {
   try {
     const polished = await polishFinanceCoachInsights(insights, {
       referenceSavingsApr,
-      safetyIdentifier:
+      safetyIdentifier: openaiSafetyIdentifier(
         authorization.auth.status === 'ok' ? authorization.auth.userId : 'finance-local',
+      ),
     });
     return json({ insights: polished, source: 'ai', disclaimer });
   } catch {

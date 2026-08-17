@@ -1,7 +1,8 @@
+import { openaiSafetyIdentifier } from '@/services/ai/openai-safety-id';
 import {
-  authorizeTravelTranslator,
-  parseTravelTranslatorLanguagesInput,
-  resolveTravelTranslatorLanguages,
+    authorizeTravelTranslator,
+    parseTravelTranslatorLanguagesInput,
+    resolveTravelTranslatorLanguages,
 } from '@/services/travel/translator-server';
 
 export async function POST(request: Request) {
@@ -20,9 +21,11 @@ export async function POST(request: Request) {
     return Response.json(
       await resolveTravelTranslatorLanguages(
         input,
-        authorization.auth.status === 'ok'
-          ? authorization.auth.userId
-          : 'local-travel',
+        openaiSafetyIdentifier(
+          authorization.auth.status === 'ok'
+            ? authorization.auth.userId
+            : 'local-travel',
+        ),
       ),
     );
   } catch (error) {

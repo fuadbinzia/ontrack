@@ -1,34 +1,37 @@
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Svg, {
-  Circle,
-  Defs,
-  LinearGradient,
-  Path,
-  Pattern,
-  Rect,
-  Stop,
+    Circle,
+    Defs,
+    LinearGradient,
+    Path,
+    Pattern,
+    Rect,
+    Stop,
 } from 'react-native-svg';
 
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 
 import {
-  ATLAS_COUNTRIES,
-  TRAVEL_MAP_INK,
-  TRAVEL_MAP_LAND_COLORS,
-  TRAVEL_MAP_FLAT_VIEWBOX,
-  TRAVEL_MAP_OCEAN_BOTTOM,
-  TRAVEL_MAP_OCEAN_MIDDLE,
-  TRAVEL_MAP_OCEAN_TOP,
-  TRAVEL_MAP_VIEWBOX,
-  atlasCountryByCode,
+    ATLAS_COUNTRIES,
+    TRAVEL_MAP_FLAT_VIEWBOX,
+    TRAVEL_MAP_INK,
+    TRAVEL_MAP_LAND_COLORS,
+    TRAVEL_MAP_OCEAN_BOTTOM,
+    TRAVEL_MAP_OCEAN_MIDDLE,
+    TRAVEL_MAP_OCEAN_TOP,
+    TRAVEL_MAP_VIEWBOX,
+    atlasCountryAtCoordinate,
+    atlasCountryByCode,
+    invertTravelCoordinate,
 } from './country-data';
 import type { TravelMapCountryCluster } from './model';
+import { isDrawableSvgPath } from './svg-path';
 import { TravelMapPinButton } from './travel-map-pin-button';
 
 type Layout = { width: number; height: number };
 
-export function TravelMapWorldFlat({
+export const TravelMapWorldFlat = memo(function TravelMapWorldFlat({
   clusters,
   onCountryPress,
 }: {
@@ -49,13 +52,40 @@ export function TravelMapWorldFlat({
     if (width > 0 && height > 0) setLayout({ width, height });
   };
 
+  const selectCountryAtPoint = useCallback(
+    (x: number, y: number) => {
+      if (layout.width <= 1 || layout.height <= 1) return;
+      const coordinate = invertTravelCoordinate(
+        (x / layout.width) * TRAVEL_MAP_FLAT_VIEWBOX.width,
+        (y / layout.height) * TRAVEL_MAP_FLAT_VIEWBOX.height,
+      );
+      if (!coordinate) return;
+      const country = atlasCountryAtCoordinate(
+        coordinate.latitude,
+        coordinate.longitude,
+      );
+      if (country) onCountryPress(country.code);
+    },
+    [layout.height, layout.width, onCountryPress],
+  );
+
   return (
     <AgentTestId
       testID={AgentUiIds.travel.map.flatWorld}
       label="Full-screen flat world map"
       style={styles.root}>
-      <View style={StyleSheet.absoluteFill} onLayout={updateLayout}>
+      <View
+        style={StyleSheet.absoluteFill}
+        onLayout={updateLayout}
+        onStartShouldSetResponder={() => true}
+        onResponderRelease={(event) => {
+          selectCountryAtPoint(
+            event.nativeEvent.locationX,
+            event.nativeEvent.locationY,
+          );
+        }}>
         <Svg
+          pointerEvents="none"
           width="100%"
           height="100%"
           viewBox={`0 0 ${TRAVEL_MAP_FLAT_VIEWBOX.width} ${TRAVEL_MAP_FLAT_VIEWBOX.height}`}
@@ -95,28 +125,32 @@ export function TravelMapWorldFlat({
             strokeWidth="3"
             strokeLinecap="round"
           />
-          {ATLAS_COUNTRIES.map((country) => (
-            <Path
-              key={`shadow-${country.code}`}
-              d={country.path}
-              fill={TRAVEL_MAP_INK}
-              opacity="0.18"
-              transform="translate(2 3)"
-              pointerEvents="none"
-            />
-          ))}
-          {ATLAS_COUNTRIES.map((country, index) => (
-            <Path
-              key={country.code}
-              d={country.path}
-              fill={TRAVEL_MAP_LAND_COLORS[index % TRAVEL_MAP_LAND_COLORS.length]}
-              stroke={TRAVEL_MAP_INK}
-              strokeOpacity="0.64"
-              strokeWidth="0.95"
-              strokeLinejoin="round"
-              onPress={() => onCountryPress(country.code)}
-            />
-          ))}
+          {ATLAS_COUNTRIES.map((country) =>
+            isDrawableSvgPath(country.path) ? (
+              <Path
+                key={`shadow-${country.code}`}
+                d={country.path}
+                fill={TRAVEL_MAP_INK}
+                opacity="0.18"
+                transform="translate(2 3)"
+                pointerEvents="none"
+              />
+            ) : null,
+          )}
+          {ATLAS_COUNTRIES.map((country, index) =>
+            isDrawableSvgPath(country.path) ? (
+              <Path
+                key={country.code}
+                d={country.path}
+                fill={TRAVEL_MAP_LAND_COLORS[index % TRAVEL_MAP_LAND_COLORS.length]}
+                stroke={TRAVEL_MAP_INK}
+                strokeOpacity="0.64"
+                strokeWidth="0.95"
+                strokeLinejoin="round"
+                pointerEvents="none"
+              />
+            ) : null,
+          )}
         </Svg>
 
         <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
@@ -137,7 +171,7 @@ export function TravelMapWorldFlat({
       </View>
     </AgentTestId>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {

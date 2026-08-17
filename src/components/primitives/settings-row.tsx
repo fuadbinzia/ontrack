@@ -1,5 +1,11 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import {
+    Pressable,
+    StyleSheet,
+    View,
+    type AccessibilityRole,
+    type AccessibilityState,
+} from 'react-native';
 
 import { radii, type AppIconName } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -22,6 +28,8 @@ interface SettingsRowProps {
   trailing?: ReactNode;
   onPress?: () => void;
   accessibilityLabel?: string;
+  accessibilityRole?: AccessibilityRole;
+  accessibilityState?: AccessibilityState;
   testID?: string;
   /**
    * Flush row inside `SettingsGroup` — no outer border/margin (group owns the chrome).
@@ -37,6 +45,8 @@ export function SettingsRow({
   trailing,
   onPress,
   accessibilityLabel = label,
+  accessibilityRole = 'button',
+  accessibilityState,
   testID,
   grouped = false,
 }: SettingsRowProps) {
@@ -103,7 +113,8 @@ export function SettingsRow({
       ref={agent.ref}
       testID={testID}
       onLayout={agent.onLayout}
-      accessibilityRole="button"
+      accessibilityRole={accessibilityRole}
+      accessibilityState={accessibilityState}
       accessibilityLabel={accessibilityLabel}
       onPress={handlePress}
       style={({ pressed }) => [surface, { opacity: pressed ? 0.78 : 1 }]}>
@@ -141,11 +152,17 @@ export function SettingsToggleRow({
       detailNumberOfLines={detailNumberOfLines}
       icon={icon}
       accessibilityLabel={accessibilityLabel}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value, disabled: Boolean(disabled) }}
       testID={testID}
       grouped={grouped}
-      onPress={disabled ? undefined : () => onValueChange(!value)}
+      onPress={() => {
+        if (disabled) return;
+        onValueChange(!value);
+      }}
       trailing={
         <GlassSwitch
+          accessible={false}
           accessibilityLabel={accessibilityLabel}
           disabled={disabled}
           value={value}

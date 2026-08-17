@@ -12,4 +12,4 @@ export const PRIVACY_POLICY_URL = `${ONTRACK_LEGAL_BASE_URL}/privacy`;
 export const TERMS_OF_USE_URL = `${ONTRACK_LEGAL_BASE_URL}/terms`;
 
 export const PRIVACY_POLICY_UPDATED = 'August 17, 2026';
-export const TERMS_OF_USE_UPDATED = 'August 16, 2026';
+export const TERMS_OF_USE_UPDATED = 'August 17, 2026';

@@ -2,6 +2,11 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 
 export type ScreenOrientationNativeModule = {
   lockAsync?: (orientationLock: number) => Promise<void>;
+  /** Fires at the start of the OS rotation transition — before Dimensions. */
+  addListener?: (
+    eventName: 'expoDidUpdateDimensions',
+    listener: () => void,
+  ) => { remove: () => void };
 };
 
 type ScreenOrientationLoader = () => ScreenOrientationNativeModule | null;

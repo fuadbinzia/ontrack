@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, GlassIconWell, GlassSwitch, Symbol } from '@/components/primitives';
-import { radii } from '@/design-system';
 import type { AppIconName } from '@/design-system';
+import { radii } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
@@ -61,7 +61,12 @@ export function AuthBiometricToggle({
         </AppText>
       </View>
       <View pointerEvents="none" accessible={false}>
-        <GlassSwitch accessibilityLabel={label} disabled={disabled} value={value} />
+        <GlassSwitch
+          accessible={false}
+          accessibilityLabel={label}
+          disabled={disabled}
+          value={value}
+        />
       </View>
     </Pressable>
   );

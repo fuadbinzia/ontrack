@@ -1,49 +1,70 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
+    runOnJS,
+    useAnimatedStyle,
+    useSharedValue,
 } from 'react-native-reanimated';
 import Svg, {
-  Circle,
-  Defs,
-  LinearGradient,
-  Path,
-  Pattern,
-  RadialGradient,
-  Rect,
-  Stop,
+    Circle,
+    Defs,
+    LinearGradient,
+    Path,
+    Pattern,
+    RadialGradient,
+    Rect,
+    Stop,
 } from 'react-native-svg';
 
-import {
-  useLiveFxReady,
-  usePerformanceTier,
-} from '@/hooks/use-performance-tier';
 import { useRouteIsActive } from '@/hooks/use-app-activity';
+import {
+    useLiveFxReady,
+    usePerformanceTier,
+} from '@/hooks/use-performance-tier';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 
 import {
-  TRAVEL_MAP_INK,
-  TRAVEL_MAP_LAND_COLORS,
-  TRAVEL_MAP_OCEAN_BOTTOM,
-  TRAVEL_MAP_OCEAN_MIDDLE,
+    atlasCountryAtCoordinate,
+    TRAVEL_MAP_INK,
+    TRAVEL_MAP_LAND_COLORS,
+    TRAVEL_MAP_OCEAN_BOTTOM,
+    TRAVEL_MAP_OCEAN_MIDDLE,
 } from './country-data';
 import {
-  createTravelGlobeSnapshot,
-  normalizeTravelGlobeRotation,
-  travelGlobeCameraForLayout,
-  type TravelGlobeRotation,
+    createTravelGlobeSnapshot,
+    normalizeTravelGlobeRotation,
+    travelGlobeCameraForLayout,
+    travelGlobeCoordinateAtPoint,
+    travelGlobeUnzoomPoint,
+    type TravelGlobeRotation,
+    type TravelGlobeSnapshot,
 } from './globe-projection';
 import type { TravelMapCountryCluster } from './model';
+import { isDrawableSvgPath } from './svg-path';
 import { TravelMapPinButton } from './travel-map-pin-button';
 
 type Layout = { width: number; height: number };
 
 export const TRAVEL_MAP_WORLD_BACKDROP_TOP = '#071426';
 
-export function TravelMapWorldGlobe({
+/** Slow tourist-globe spin; advanced by frame delta so it never steps. */
+const IDLE_SPIN_DEGREES_PER_SECOND = 1.9;
+/** Idle spin renders at ~30fps — imperceptible for slow rotation, half the work. */
+const IDLE_SPIN_MIN_FRAME_MS = 30;
+const DRAG_DEGREES_PER_PX_X = 0.28;
+const DRAG_DEGREES_PER_PX_Y = 0.22;
+
+/** Pre-layout frame: paints the backdrop only, no projection work. */
+const EMPTY_TRAVEL_GLOBE_SNAPSHOT: TravelGlobeSnapshot = {
+  spherePath: '',
+  graticulePath: '',
+  countries: [],
+};
+
+/** Memoized — parked world frames skip re-rendering 190+ SVG paths. */
+export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
   autoRotate,
   clusters,
   onCountryPress,
@@ -59,20 +80,41 @@ export function TravelMapWorldGlobe({
   rotation: TravelGlobeRotation;
 }) {
   const [layout, setLayout] = useState<Layout>({ width: 1, height: 1 });
+  const [dragging, setDragging] = useState(false);
   const rotationRef = useRef(rotation);
   const dragStartRef = useRef(rotation);
-  const lastGestureFrameRef = useRef(0);
+  const pendingDragRef = useRef<{ x: number; y: number } | undefined>(
+    undefined,
+  );
+  const dragFrameRef = useRef<number | undefined>(undefined);
   const idleUntilRef = useRef(0);
   const { allowsLoopMotion } = usePerformanceTier();
   const routeIsActive = useRouteIsActive();
   const idleMotionReady = useLiveFxReady(routeIsActive && allowsLoopMotion);
+  const spinning = autoRotate && idleMotionReady;
 
   const zoom = useSharedValue(1);
   const zoomStart = useSharedValue(1);
   const camera = useMemo(() => travelGlobeCameraForLayout(layout), [layout]);
+
+  // First paint ships the coarse motion geometry; the fine rest pass runs only
+  // after the open transition settles (the idle spin re-renders coarse anyway).
+  const [warmedUp, setWarmedUp] = useState(false);
+  useEffect(() => deferAfterPageTransition(() => setWarmedUp(true)), []);
+
+  // No projection work until the real layout lands — the 1×1 pre-layout frame
+  // would otherwise project every visible country just to throw it away.
+  const hasLayout = layout.width > 1 && layout.height > 1;
   const snapshot = useMemo(
-    () => createTravelGlobeSnapshot(rotation, camera),
-    [camera, rotation],
+    () =>
+      hasLayout
+        ? createTravelGlobeSnapshot(
+            rotation,
+            camera,
+            dragging || spinning || !warmedUp ? 'motion' : 'rest',
+          )
+        : EMPTY_TRAVEL_GLOBE_SNAPSHOT,
+    [camera, dragging, hasLayout, rotation, spinning, warmedUp],
   );
   const clusterByCountry = useMemo(
     () => new Map(clusters.map((cluster) => [cluster.countryCode, cluster])),
@@ -99,44 +141,84 @@ export function TravelMapWorldGlobe({
     stopIdleRotation();
   }, [stopIdleRotation]);
 
+  const rotationForDrag = useCallback(
+    (translationX: number, translationY: number): TravelGlobeRotation => [
+      dragStartRef.current[0] + translationX * DRAG_DEGREES_PER_PX_X,
+      dragStartRef.current[1] - translationY * DRAG_DEGREES_PER_PX_Y,
+      0,
+    ],
+    [],
+  );
+
+  /** One commit per frame: gesture events outpace paint, extra sets are waste. */
+  const flushPendingDrag = useCallback(() => {
+    dragFrameRef.current = undefined;
+    const pending = pendingDragRef.current;
+    if (!pending) return;
+    pendingDragRef.current = undefined;
+    commitRotation(rotationForDrag(pending.x, pending.y));
+  }, [commitRotation, rotationForDrag]);
+
   const updateRotation = useCallback(
     (translationX: number, translationY: number) => {
-      const now = Date.now();
-      if (now - lastGestureFrameRef.current < 24) return;
-      lastGestureFrameRef.current = now;
-      commitRotation([
-        dragStartRef.current[0] + translationX * 0.28,
-        dragStartRef.current[1] - translationY * 0.22,
-        0,
-      ]);
+      pendingDragRef.current = { x: translationX, y: translationY };
+      if (dragFrameRef.current == null) {
+        dragFrameRef.current = requestAnimationFrame(flushPendingDrag);
+      }
     },
-    [commitRotation],
+    [flushPendingDrag],
   );
 
   const finishRotation = useCallback(
     (translationX: number, translationY: number) => {
-      commitRotation([
-        dragStartRef.current[0] + translationX * 0.28,
-        dragStartRef.current[1] - translationY * 0.22,
-        0,
-      ]);
+      pendingDragRef.current = undefined;
+      if (dragFrameRef.current != null) {
+        cancelAnimationFrame(dragFrameRef.current);
+        dragFrameRef.current = undefined;
+      }
+      // Plain taps finalize with zero translation; committing would rebuild
+      // the full projection snapshot mid country-dive for no visual change.
+      if (translationX !== 0 || translationY !== 0) {
+        commitRotation(rotationForDrag(translationX, translationY));
+      }
+      setDragging(false);
     },
-    [commitRotation],
+    [commitRotation, rotationForDrag],
+  );
+
+  useEffect(
+    () => () => {
+      if (dragFrameRef.current != null) {
+        cancelAnimationFrame(dragFrameRef.current);
+      }
+    },
+    [],
   );
 
   useEffect(() => {
-    if (!autoRotate || !idleMotionReady) return;
+    if (!spinning) return;
     idleUntilRef.current = Date.now() + 1000;
-    const interval = setInterval(() => {
-      if (Date.now() < idleUntilRef.current) return;
+    let frame = 0;
+    let lastFrameTime = 0;
+    const tick = (now: number) => {
+      frame = requestAnimationFrame(tick);
+      if (Date.now() < idleUntilRef.current) {
+        lastFrameTime = now;
+        return;
+      }
+      const elapsed = now - lastFrameTime;
+      if (elapsed < IDLE_SPIN_MIN_FRAME_MS) return;
+      lastFrameTime = now;
       commitRotation([
-        rotationRef.current[0] + 0.22,
+        rotationRef.current[0] +
+          (IDLE_SPIN_DEGREES_PER_SECOND * Math.min(elapsed, 250)) / 1000,
         rotationRef.current[1],
         0,
       ]);
-    }, 120);
-    return () => clearInterval(interval);
-  }, [autoRotate, commitRotation, idleMotionReady]);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [commitRotation, spinning]);
 
   const selectCountry = useCallback(
     (countryCode: string) => {
@@ -146,12 +228,32 @@ export function TravelMapWorldGlobe({
     [onCountryPress, stopIdleRotation],
   );
 
+  const selectCountryAtPoint = useCallback(
+    (x: number, y: number) => {
+      const [px, py] = travelGlobeUnzoomPoint(x, y, camera, zoom.value);
+      const coordinate = travelGlobeCoordinateAtPoint(
+        px,
+        py,
+        rotationRef.current,
+        camera,
+      );
+      if (!coordinate) return;
+      const country = atlasCountryAtCoordinate(
+        coordinate.latitude,
+        coordinate.longitude,
+      );
+      if (country) selectCountry(country.code);
+    },
+    [camera, selectCountry, zoom],
+  );
+
   const rotateGesture = useMemo(
     () =>
       Gesture.Pan()
         .minDistance(4)
         .runOnJS(true)
         .onBegin(beginRotation)
+        .onStart(() => setDragging(true))
         .onUpdate((event) =>
           updateRotation(event.translationX, event.translationY),
         )
@@ -175,9 +277,21 @@ export function TravelMapWorldGlobe({
         }),
     [stopIdleRotation, zoom, zoomStart],
   );
+  const tapGesture = useMemo(
+    () =>
+      Gesture.Tap()
+        .maxDistance(8)
+        .runOnJS(true)
+        .onEnd((event) => selectCountryAtPoint(event.x, event.y)),
+    [selectCountryAtPoint],
+  );
   const globeGesture = useMemo(
-    () => Gesture.Simultaneous(rotateGesture, pinchGesture),
-    [pinchGesture, rotateGesture],
+    () =>
+      Gesture.Simultaneous(
+        Gesture.Exclusive(rotateGesture, tapGesture),
+        pinchGesture,
+      ),
+    [pinchGesture, rotateGesture, tapGesture],
   );
   const globeStyle = useAnimatedStyle(() => ({
     transform: [{ scale: zoom.value }],
@@ -200,6 +314,7 @@ export function TravelMapWorldGlobe({
           onLayout={updateLayout}
         >
           <Svg
+            pointerEvents="none"
             width="100%"
             height="100%"
             viewBox={`0 0 ${camera.width} ${camera.height}`}
@@ -256,23 +371,33 @@ export function TravelMapWorldGlobe({
               height={camera.height}
               fill="url(#spaceStars)"
             />
-            <Path
-              d={snapshot.spherePath}
-              fill="#000000"
-              opacity="0.42"
-              transform="translate(0 8)"
-              pointerEvents="none"
-            />
-            <Path d={snapshot.spherePath} fill="url(#globeOcean)" />
-            <Path
-              d={snapshot.graticulePath}
-              fill="none"
-              stroke="rgba(236,253,250,0.3)"
-              strokeWidth="0.8"
-              pointerEvents="none"
-            />
+            {isDrawableSvgPath(snapshot.spherePath) ? (
+              <Path
+                d={snapshot.spherePath}
+                fill="#000000"
+                opacity="0.42"
+                transform="translate(0 8)"
+                pointerEvents="none"
+              />
+            ) : null}
+            {isDrawableSvgPath(snapshot.spherePath) ? (
+              <Path
+                d={snapshot.spherePath}
+                fill="url(#globeOcean)"
+                pointerEvents="none"
+              />
+            ) : null}
+            {isDrawableSvgPath(snapshot.graticulePath) ? (
+              <Path
+                d={snapshot.graticulePath}
+                fill="none"
+                stroke="rgba(236,253,250,0.3)"
+                strokeWidth="0.8"
+                pointerEvents="none"
+              />
+            ) : null}
             {snapshot.countries.map(({ country, path }, index) =>
-              path ? (
+              isDrawableSvgPath(path) ? (
                 <Path
                   key={country.code}
                   d={path}
@@ -285,17 +410,19 @@ export function TravelMapWorldGlobe({
                   strokeOpacity="0.72"
                   strokeWidth="1.1"
                   strokeLinejoin="round"
-                  onPress={() => selectCountry(country.code)}
+                  pointerEvents="none"
                 />
               ) : null,
             )}
-            <Path
-              d={snapshot.spherePath}
-              fill="none"
-              stroke="rgba(239,253,248,0.88)"
-              strokeWidth="5"
-              pointerEvents="none"
-            />
+            {isDrawableSvgPath(snapshot.spherePath) ? (
+              <Path
+                d={snapshot.spherePath}
+                fill="none"
+                stroke="rgba(239,253,248,0.88)"
+                strokeWidth="5"
+                pointerEvents="none"
+              />
+            ) : null}
           </Svg>
 
           <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
@@ -323,7 +450,7 @@ export function TravelMapWorldGlobe({
       </GestureDetector>
     </AgentTestId>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {

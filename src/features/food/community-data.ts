@@ -67,7 +67,7 @@ export function suggestedCreators(posts: readonly FoodPost[]): CommunityCreator[
   return creators;
 }
 
-/** Records the report locally until a moderation backend exists. */
+/** Hides a reported post from this device after the server report is saved. */
 export function reportFoodPost(postId: string): void {
   if (!reportedPostIds.includes(postId)) {
     reportedPostIds = [...reportedPostIds, postId];

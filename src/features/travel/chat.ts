@@ -576,3 +576,18 @@ export async function enableTravelChatNotifications(
   });
   if (error) throw new TravelChatError('This device could not be registered for chat alerts.');
 }
+
+export async function setTravelChatPreviewPreference(input: {
+  accessCode: string;
+  deviceId: string;
+  showPreviews: boolean;
+}): Promise<void> {
+  const { error } = await requireClient().rpc('set_travel_chat_preview_preference', {
+    chat_access_code: input.accessCode,
+    chat_device_id: input.deviceId,
+    chat_show_previews: input.showPreviews,
+  });
+  if (error) {
+    throw new TravelChatError('Message preview preference could not be saved.');
+  }
+}

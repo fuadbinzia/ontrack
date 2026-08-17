@@ -1,10 +1,11 @@
-import { apiCorsHeaders, apiOptionsResponse } from '@/services/http/cors';
 import {
-  DESTINATION_COVER_POOL_MAX,
-  DESTINATION_COVER_UA,
-  lookupDestinationCoverUrl,
-  lookupDestinationCoverUrls,
+    DESTINATION_COVER_POOL_MAX,
+    DESTINATION_COVER_UA,
+    lookupDestinationCoverUrl,
+    lookupDestinationCoverUrls,
 } from '@/features/travel/destination-cover-lookup';
+import { gatePublicApiRequest } from '@/services/http/api-gate';
+import { apiCorsHeaders, apiOptionsResponse } from '@/services/http/cors';
 
 export function OPTIONS(request: Request) {
   return apiOptionsResponse(request, 'GET, OPTIONS');
@@ -12,6 +13,13 @@ export function OPTIONS(request: Request) {
 
 /** Destination cover(s) for travel heroes — Unsplash scenic, Wiki lead fallback. */
 export async function GET(request: Request) {
+  const gate = await gatePublicApiRequest(request);
+  if (gate === 'rate_limited') {
+    return Response.json(
+      { error: 'Too many destination lookups. Try again later.' },
+      { status: 429, headers: apiCorsHeaders(request, 'GET, OPTIONS') },
+    );
+  }
   const url = new URL(request.url);
   const query = url.searchParams.get('q')?.trim() ?? '';
   if (query.length < 2 || query.length > 120) {

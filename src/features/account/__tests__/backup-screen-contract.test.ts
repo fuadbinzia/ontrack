@@ -31,7 +31,9 @@ describe('profile backup', () => {
     expect(panels).toContain('AgentUiIds.backup.saveDrive');
     expect(panels).toContain('AgentUiIds.backup.restoreFile');
     expect(panels).toContain('AgentUiIds.backup.restoreDrive');
-    expect(screen).toContain('photos, videos, voice notes');
+    expect(screen).toContain('photos, videos, and your customizations');
+    expect(screen).toContain('includeSensitiveLocal');
+    expect(screen).toContain('AgentUiIds.backup.includeSensitive');
     expect(screen).not.toContain('stay as links to files already on this phone');
   });
 

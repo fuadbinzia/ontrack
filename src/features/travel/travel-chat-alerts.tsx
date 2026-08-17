@@ -5,6 +5,7 @@ import {
     Button,
     GlassPlate,
     IconButton,
+    SettingsToggleRow,
 } from '@/components/primitives';
 import { radii, spacing } from '@/design-system';
 import { travelChatPlateBorder } from '@/features/travel/travel-chat-chrome';
@@ -20,16 +21,20 @@ export function TravelChatAlertsSettings({
   enablingNotifications,
   notificationsEnabled,
   notificationsAvailable,
+  showPreviews,
   onClose,
   onEnableNotifications,
+  onShowPreviewsChange,
 }: {
   visible: boolean;
   canEnableAlerts: boolean;
   enablingNotifications: boolean;
   notificationsEnabled: boolean;
   notificationsAvailable: boolean;
+  showPreviews: boolean;
   onClose: () => void;
   onEnableNotifications: () => void;
+  onShowPreviewsChange: (value: boolean) => void;
 }) {
   return (
     <TravelSheetModal
@@ -59,6 +64,16 @@ export function TravelChatAlertsSettings({
             ? 'Stay in the loop when the app is closed. Turn on alerts anytime from here.'
             : 'Push alerts aren’t available in this app build. Chat still works normally.'}
       </AppText>
+      {notificationsEnabled ? (
+        <SettingsToggleRow
+          label="Show Message Previews"
+          detail="Lock screens show the message text. Leave off to see only who wrote."
+          icon="chat"
+          value={showPreviews}
+          onValueChange={onShowPreviewsChange}
+          testID={AgentUiIds.travel.chat.showPreviews}
+        />
+      ) : null}
     </TravelSheetModal>
   );
 }

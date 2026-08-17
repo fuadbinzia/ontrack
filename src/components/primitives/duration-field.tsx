@@ -81,7 +81,7 @@ export function DurationField({
               maxLength={3}
               selectTextOnFocus
               allowFontScaling
-              maxFontSizeMultiplier={1.3}
+              maxFontSizeMultiplier={2}
               style={[
                 styles.input,
                 inputTypography,
@@ -114,7 +114,7 @@ export function DurationField({
               maxLength={2}
               selectTextOnFocus
               allowFontScaling
-              maxFontSizeMultiplier={1.3}
+              maxFontSizeMultiplier={2}
               style={[
                 styles.input,
                 inputTypography,

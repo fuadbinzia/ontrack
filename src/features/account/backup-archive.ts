@@ -1,34 +1,34 @@
-import {
-  normalizeAvatarMeta,
-  type ProfileAvatarMeta,
-} from '@/features/account/profile-avatar-model';
 import type { BackupMediaEntry } from '@/features/account/backup-media';
 import { prepareBackupForRestore, sanitizeBackup } from '@/features/account/backup-sanitize';
+import {
+    normalizeAvatarMeta,
+    type ProfileAvatarMeta,
+} from '@/features/account/profile-avatar-model';
 import { getAppVersion } from '@/features/account/release-notes-format';
 import { DEFAULT_EMOTIONS } from '@/features/health/defaults';
 import type {
-  DailyHealthSummary,
-  EmotionDefinition,
-  HealthWorkoutSummary,
-  MoodEntry,
-  MoodFactor,
-  MoodPlaybook,
-  MoodPlaybookRun,
+    DailyHealthSummary,
+    EmotionDefinition,
+    HealthWorkoutSummary,
+    MoodEntry,
+    MoodFactor,
+    MoodPlaybook,
+    MoodPlaybookRun,
 } from '@/features/health/types';
 import { normalizeJournalPages } from '@/features/journal/model';
 import type { JournalPage } from '@/features/journal/types';
 import {
-  DEFAULT_TRAVEL_MAP_SETTINGS,
-  normalizeTravelMapSettings,
-  normalizeTravelMapVisits,
+    DEFAULT_TRAVEL_MAP_SETTINGS,
+    normalizeTravelMapSettings,
+    normalizeTravelMapVisits,
 } from '@/features/travel/map/normalize';
 import type { TravelMapSettings, TravelMapVisit } from '@/features/travel/map/types';
 import { domains } from '@/services/cloud/sync-domains';
 import type { JsonObject, SyncDomainName } from '@/services/cloud/sync-types';
 import { useFinanceEzPassStatements } from '@/store/finance-ezpass-statements';
-import { useFoodProfile } from '@/store/food-profile';
 import { useMealPlan } from '@/store/food-meal-plan';
 import { usePantry } from '@/store/food-pantry';
+import { useFoodProfile } from '@/store/food-profile';
 import { useRecipes } from '@/store/food-recipes';
 import { useHealth } from '@/store/health';
 import { useJournal } from '@/store/journal';
@@ -97,7 +97,16 @@ export function backupFileName(createdAt = new Date()): string {
   return `onTrack-backup-${backupStamp(createdAt)}.json`;
 }
 
-export function buildBackup(createdAt = new Date().toISOString()): OnTrackBackup {
+export type BuildBackupOptions = {
+  /** Health and journal stay off the plaintext file unless the user opts in. */
+  includeSensitiveLocal?: boolean;
+};
+
+export function buildBackup(
+  createdAt = new Date().toISOString(),
+  options: BuildBackupOptions = {},
+): OnTrackBackup {
+  const includeSensitiveLocal = options.includeSensitiveLocal === true;
   const journal = useJournal.getState();
   const health = useHealth.getState();
   const recipes = useRecipes.getState();
@@ -114,25 +123,29 @@ export function buildBackup(createdAt = new Date().toISOString()): OnTrackBackup
     appVersion: getAppVersion(),
     domains: domainsPayload,
     local: {
-      journal: {
-        version: 1,
-        aiDisclosureAccepted: journal.aiDisclosureAccepted,
-        pages: journal.pages,
-      },
-      health: {
-        version: 1,
-        accessReviewed: health.accessReviewed,
-        stateOfMindSyncEnabled: health.stateOfMindSyncEnabled,
-        aiDisclosureAccepted: health.aiDisclosureAccepted,
-        dailySummaries: health.dailySummaries,
-        workouts: health.workouts,
-        lastRefreshAt: health.lastRefreshAt,
-        emotions: health.emotions,
-        factors: health.factors,
-        moodEntries: health.moodEntries,
-        playbooks: health.playbooks,
-        playbookRuns: health.playbookRuns,
-      },
+      journal: includeSensitiveLocal
+        ? {
+            version: 1,
+            aiDisclosureAccepted: journal.aiDisclosureAccepted,
+            pages: journal.pages,
+          }
+        : undefined,
+      health: includeSensitiveLocal
+        ? {
+            version: 1,
+            accessReviewed: health.accessReviewed,
+            stateOfMindSyncEnabled: health.stateOfMindSyncEnabled,
+            aiDisclosureAccepted: health.aiDisclosureAccepted,
+            dailySummaries: health.dailySummaries,
+            workouts: health.workouts,
+            lastRefreshAt: health.lastRefreshAt,
+            emotions: health.emotions,
+            factors: health.factors,
+            moodEntries: health.moodEntries,
+            playbooks: health.playbooks,
+            playbookRuns: health.playbookRuns,
+          }
+        : undefined,
       foodProfile: useFoodProfile.getState().profile,
       foodPantry: usePantry.getState().items,
       foodRecipes: { seeded: recipes.seeded, recipes: recipes.recipes },

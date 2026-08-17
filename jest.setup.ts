@@ -9,9 +9,24 @@ jest.mock('react-native-reanimated', () => {
     createAnimatedComponent: (Component: unknown) => Component,
     Text: require('react-native').Text,
   };
+  // Animations resolve instantly in tests but completion callbacks are only
+  // delivered when a suite asks for them (via __flushAnimationCallbacks), so
+  // held-exit cleanup can be exercised without surprising other suites.
+  const mockAnimationCallbacks: Function[] = [];
+  const withCallback = (value: unknown, callback?: unknown) => {
+    if (typeof callback === 'function') {
+      mockAnimationCallbacks.push(callback);
+    }
+    return value;
+  };
   return {
     __esModule: true,
     default: Animated,
+    __flushAnimationCallbacks: () => {
+      while (mockAnimationCallbacks.length) {
+        mockAnimationCallbacks.shift()?.(true);
+      }
+    },
     Easing: {
       bezier: () => ({}),
       quad: (t: number) => t,
@@ -27,8 +42,10 @@ jest.mock('react-native-reanimated', () => {
     useAnimatedStyle: () => ({}),
     // jest.fn so suites can flip Reduce Motion per case.
     useReducedMotion: jest.fn(() => false),
-    withTiming: (value: unknown) => value,
-    withSpring: (value: unknown) => value,
+    withTiming: (value: unknown, _config?: unknown, callback?: unknown) =>
+      withCallback(value, callback),
+    withSpring: (value: unknown, _config?: unknown, callback?: unknown) =>
+      withCallback(value, callback),
     withRepeat: (value: unknown) => value,
     withSequence: (...values: unknown[]) => values[0],
     withDelay: (_ms: number, value: unknown) => value,

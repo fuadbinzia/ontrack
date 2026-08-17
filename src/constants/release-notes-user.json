@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.123",
+    "date": "2026-08-17",
+    "notes": [
+      "Add Face ID unlock and skip the web export on UI-only pushes."
+    ]
+  },
+  {
     "version": "1.0.122",
     "date": "2026-08-17",
     "notes": [

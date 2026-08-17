@@ -8,6 +8,8 @@
 #   ./scripts/android-release-to-drive.sh
 #   ./scripts/android-release-to-drive.sh --upload-only   # reuse newest staged APK
 #   ./scripts/android-release-to-drive.sh --no-upload     # build only
+#   ./scripts/android-release-to-drive.sh --clean-native  # force modules/* clean
+#   ./scripts/android-release-to-drive.sh --all-abis      # all ABIs (default: arm64)
 #
 # Prerequisites:
 #   - JDK 17 (Homebrew openjdk@17)
@@ -42,13 +44,16 @@ JAVA_HOME_DEFAULT="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Hom
 
 DO_BUILD=1
 DO_UPLOAD=1
-CLEAN_NATIVE=1
+CLEAN_NATIVE=0
+ALL_ABIS=0
 
 for arg in "$@"; do
   case "$arg" in
     --upload-only) DO_BUILD=0 ;;
     --no-upload) DO_UPLOAD=0 ;;
+    --clean-native) CLEAN_NATIVE=1 ;;
     --no-clean-native) CLEAN_NATIVE=0 ;;
+    --all-abis) ALL_ABIS=1 ;;
     -h|--help)
       awk 'NR==1{next} /^#/{sub(/^# ?/,""); print; next} {exit}' "$0"
       exit 0
@@ -134,7 +139,11 @@ if [[ "$DO_BUILD" -eq 1 ]]; then
     done
   fi
   GRADLE_ARGS+=(":app:assembleRelease")
-  ./gradlew --no-daemon "${GRADLE_ARGS[@]}"
+  if [[ "$ALL_ABIS" -eq 0 ]]; then
+    # Phone sideload only needs arm64. --all-abis for emulators / Play-style fat APKs.
+    GRADLE_ARGS+=("-PreactNativeArchitectures=arm64-v8a")
+  fi
+  ./gradlew "${GRADLE_ARGS[@]}"
   if [[ ! -f "$APK_SRC" ]]; then
     echo "error: expected APK missing: $APK_SRC" >&2
     exit 1

@@ -17,7 +17,7 @@ function documentText(
 
 describe('current legal disclosures', () => {
   it('dates both legal documents to the current product update', () => {
-    expect(PRIVACY_POLICY_UPDATED).toBe('August 16, 2026');
+    expect(PRIVACY_POLICY_UPDATED).toBe('August 17, 2026');
     expect(TERMS_OF_USE_UPDATED).toBe('August 16, 2026');
   });
 
@@ -32,6 +32,7 @@ describe('current legal disclosures', () => {
       'Google Drive',
       'StraiAway',
       'Siri',
+      'Face ID',
       'Resend',
       'Food community posts',
       'anonymous device label',

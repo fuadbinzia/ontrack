@@ -3,6 +3,15 @@ import { resolve } from 'node:path';
 
 const profile = readFileSync(resolve(process.cwd(), 'src/app/(tabs)/profile/index.tsx'), 'utf8');
 
+it('places Face ID unlock on Account before Connections', () => {
+  const account = profile.indexOf('AgentUiIds.profile.section.account');
+  const biometric = profile.indexOf('<ProfileBiometricUnlockRow');
+  const accountSyncing = profile.indexOf('AgentUiIds.profile.section.accountSyncing');
+
+  expect(biometric).toBeGreaterThan(account);
+  expect(accountSyncing).toBeGreaterThan(biometric);
+});
+
 it('places Calendar Sync once between Account and Appearance', () => {
   const account = profile.indexOf('AgentUiIds.profile.section.account');
   const accountSyncing = profile.indexOf('AgentUiIds.profile.section.accountSyncing');

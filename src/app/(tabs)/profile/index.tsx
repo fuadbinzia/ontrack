@@ -14,6 +14,7 @@ import {
 } from '@/components/primitives';
 import { THEME_PRESETS } from '@/design-system';
 import { CloudAccountCard } from '@/features/account/cloud-account-card';
+import { ProfileBiometricUnlockRow } from '@/features/account/profile-biometric-unlock-row';
 import { useCanUseDeveloperTools } from '@/features/account/dev-access';
 import { ProfileAboutSection } from '@/features/account/profile-about-section';
 import { ProfileAvatarEditorSheet } from '@/features/account/profile-avatar-editor-sheet';
@@ -193,6 +194,7 @@ export default function ProfileSettingsScreen() {
 
       <ProfileSection testID={AgentUiIds.profile.section.account} title="Account">
         <CloudAccountCard />
+        <ProfileBiometricUnlockRow />
         <AgentTestId testID={AgentUiIds.profile.section.accountSyncing} label="Connections">
           <SettingsGroup>
             <SettingsActionRow

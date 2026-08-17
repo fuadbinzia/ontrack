@@ -43,6 +43,14 @@ describe('AuthHero', () => {
     }
   });
 
+  it('asks the locked gate to unlock this device, not sign in again', () => {
+    render(<AuthHero variant="locked" bleed={20} />);
+
+    expect(screen.getByText('Welcome back.')).toBeTruthy();
+    expect(screen.getByText('Unlock this device to keep going. Your data is still here.')).toBeTruthy();
+    expect(screen.queryByText(/sign in again/i)).toBeNull();
+  });
+
   it('drops the theme toggle on the upgrade variant', () => {
     // A preferences write there would dirty guest data before a data-choice.
     render(<AuthHero variant="upgrade" bleed={20} />);

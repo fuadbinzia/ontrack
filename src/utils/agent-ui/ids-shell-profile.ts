@@ -43,6 +43,7 @@ export const agentUiIdsShellProfile = {
     showHolidays: 'ontrack.profile.showHolidays',
     resetData: 'ontrack.profile.resetData',
     signOut: 'ontrack.profile.signOut',
+    biometricUnlock: 'ontrack.profile.biometricUnlock',
     createOrSignIn: 'ontrack.profile.createOrSignIn',
     /** Active SSO method under the account email (`Apple` or `Google`). */
     accountProviders: 'ontrack.profile.accountProviders',
@@ -139,6 +140,7 @@ export const agentUiIdsShellProfile = {
     google: 'ontrack.auth.google',
     guest: 'ontrack.auth.guest',
     switchAccount: 'ontrack.auth.switchAccount',
+    unlockBiometric: 'ontrack.auth.unlockBiometric',
     dismissError: 'ontrack.auth.dismissError',
     privacy: 'ontrack.auth.privacy',
     terms: 'ontrack.auth.terms',

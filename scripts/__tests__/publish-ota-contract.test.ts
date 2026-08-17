@@ -91,5 +91,10 @@ describe('publish OTA once then republish', () => {
     const ship = read('scripts/ship-push.sh');
     expect(ship).toContain("npx expo export -p web");
     expect(ship).toContain('deploy --prod --environment production');
+    expect(ship).toContain('hosting-deploy-needed.mjs');
+    expect(ship).toContain('--git-range HEAD^1 HEAD');
+    expect(ship).toContain('--force-hosting');
+    expect(ship).toContain('--skip-hosting');
+    expect(ship).toContain('no API / hosting-config change');
   });
 });

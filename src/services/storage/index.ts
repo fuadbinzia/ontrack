@@ -43,6 +43,8 @@ export const STORAGE_KEYS = {
   overviewAffinity: 'ontrack/overview-affinity/v1',
   /** Dev Mode toggle + live-account snapshot (sandbox isolation). */
   devMode: 'ontrack/dev-mode/v1',
+  /** Device-local Face ID / fingerprint unlock opt-in; never cloud-synced. */
+  biometricUnlock: 'ontrack/biometric-unlock/v1',
 } as const;
 
 const MIGRATION_FLAG = 'ontrack/storage/mmkv-migrated/v1';

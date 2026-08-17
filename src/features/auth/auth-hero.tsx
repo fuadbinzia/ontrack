@@ -22,7 +22,7 @@ const COPY = {
   },
   locked: {
     headline: 'Welcome back.',
-    intro: 'Sign in again to unlock onTrack on this device. Your data is still here.',
+    intro: 'Unlock this device to keep going. Your data is still here.',
   },
 } as const;
 

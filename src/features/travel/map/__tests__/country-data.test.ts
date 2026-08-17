@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import {
   ATLAS_COUNTRIES,
   TRAVEL_MAP_FLAT_VIEWBOX,
@@ -13,6 +16,19 @@ import {
 } from '../country-data';
 
 describe('travel atlas country geometry', () => {
+  it('keeps the 10m atlas out of the Hermes catalog bundle', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/features/travel/map/country-data.ts'),
+      'utf8',
+    );
+    expect(source).not.toContain('countries-10m');
+    expect(source).toContain('countries-110m');
+    expect(source).toContain('countries-50m');
+    expect(atlasCountryByCode('TV')).toBeUndefined();
+    expect(atlasCountryByCode('GI')).toBeUndefined();
+    expect(atlasCountryByCode('UM')).toBeUndefined();
+  });
+
   it('bundles interactive Natural Earth country paths and ISO lookup', () => {
     expect(ATLAS_COUNTRIES.length).toBeGreaterThan(230);
     expect(new Set(ATLAS_COUNTRIES.map((country) => country.code)).size).toBe(

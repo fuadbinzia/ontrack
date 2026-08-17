@@ -1,10 +1,18 @@
 [
   {
+    "version": "1.0.127",
+    "date": "2026-08-17",
+    "notes": [
+      "Automated ship push.",
+      "Touched: features/travel."
+    ]
+  },
+  {
     "version": "1.0.126",
     "date": "2026-08-17",
     "notes": [
       "Ship release.",
-      "Touched: app routes."
+      "Touched: app routes.",
       "Add a skill to merge remote main into the current branch.",
       "Ship via ship:push (TestFlight + device OTA)."
     ]

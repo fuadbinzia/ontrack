@@ -1,4 +1,4 @@
-import type { TodoList, TodoRecipe, TodoTask } from '@/store/todos-types';
+import type { Checklist, ChecklistRecipe, ChecklistTask } from '@/store/todos-types';
 
 import {
     AGENT_UI_DEMO_CHECKLIST_LIST_ID,
@@ -11,10 +11,10 @@ import {
 } from './fixtures-constants';
 
 export function buildAgentUiDemoChecklist(nowIso = new Date().toISOString()): {
-  list: TodoList;
-  tasks: TodoTask[];
+  list: Checklist;
+  tasks: ChecklistTask[];
 } {
-  const list: TodoList = {
+  const list: Checklist = {
     id: AGENT_UI_DEMO_CHECKLIST_LIST_ID,
     name: 'Agent UI Checklist',
     kind: 'checklist',
@@ -23,7 +23,7 @@ export function buildAgentUiDemoChecklist(nowIso = new Date().toISOString()): {
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: nowIso,
   };
-  const tasks: TodoTask[] = [
+  const tasks: ChecklistTask[] = [
     {
       id: AGENT_UI_DEMO_CHECKLIST_TASK_PLAN_ID,
       listId: list.id,
@@ -52,11 +52,11 @@ export function buildAgentUiDemoChecklist(nowIso = new Date().toISOString()): {
 }
 
 export function buildAgentUiDemoGrocery(nowIso = new Date().toISOString()): {
-  list: TodoList;
-  recipe: TodoRecipe;
-  tasks: TodoTask[];
+  list: Checklist;
+  recipe: ChecklistRecipe;
+  tasks: ChecklistTask[];
 } {
-  const list: TodoList = {
+  const list: Checklist = {
     id: AGENT_UI_DEMO_GROCERY_LIST_ID,
     name: 'Agent UI Grocery',
     kind: 'grocery',
@@ -65,7 +65,7 @@ export function buildAgentUiDemoGrocery(nowIso = new Date().toISOString()): {
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: nowIso,
   };
-  const recipe: TodoRecipe = {
+  const recipe: ChecklistRecipe = {
     id: AGENT_UI_DEMO_GROCERY_RECIPE_ID,
     listId: list.id,
     name: 'Demo Pasta',
@@ -76,7 +76,7 @@ export function buildAgentUiDemoGrocery(nowIso = new Date().toISOString()): {
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: nowIso,
   };
-  const tasks: TodoTask[] = [
+  const tasks: ChecklistTask[] = [
     {
       id: AGENT_UI_DEMO_GROCERY_TASK_TOMATOES_ID,
       listId: list.id,
@@ -114,17 +114,17 @@ export function buildAgentUiDemoGrocery(nowIso = new Date().toISOString()): {
 }
 
 
-export function upsertTodoFixtureLists(input: {
-  lists: TodoList[];
-  tasks: TodoTask[];
-  recipes?: TodoRecipe[];
+export function upsertChecklistFixtureLists(input: {
+  lists: Checklist[];
+  tasks: ChecklistTask[];
+  recipes?: ChecklistRecipe[];
 }): void {
   // Lazy require keeps agent-ui unit tests free of Zustand/AsyncStorage.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { useTodos } = require('@/store/todos') as typeof import('@/store/todos');
+  const { useChecklists } = require('@/store/todos') as typeof import('@/store/todos');
   const listIds = new Set(input.lists.map((list) => list.id));
   const recipes = input.recipes ?? [];
-  useTodos.setState((state) => ({
+  useChecklists.setState((state) => ({
     lists: [
       ...state.lists.filter((list) => !listIds.has(list.id)),
       ...input.lists,

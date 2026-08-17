@@ -1,85 +1,77 @@
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 
-import {
-    canCompleteTodo,
-    canDeleteTodoList,
-    canEditTodoContent,
-    canLeaveTodoList,
-    normalizeTodoState,
-    privateTodoPayload,
-    useTodos,
-} from '@/store/todos';
+import { normalizeChecklistState, useChecklists } from '@/store/todos';
 import { useAuthAccess } from '@/store/auth-access';
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
-describe('to-do store', () => {
+describe('checklist store', () => {
   beforeEach(() => {
-    useTodos.getState().reset();
+    useChecklists.getState().reset();
     useAuthAccess.getState().resetAccess();
   });
 
   it('captures, edits, prioritizes, and completes a task', () => {
-    const task = useTodos.getState().addTask('  Make a thoughtful plan  ');
+    const task = useChecklists.getState().addTask('  Make a thoughtful plan  ');
     expect(task?.title).toBe('Make a thoughtful plan');
 
-    useTodos.getState().toggleImportant(task!.id);
-    useTodos.getState().updateTask(task!.id, 'Make a simple plan');
-    useTodos.getState().toggleTask(task!.id);
+    useChecklists.getState().toggleImportant(task!.id);
+    useChecklists.getState().updateTask(task!.id, 'Make a simple plan');
+    useChecklists.getState().toggleTask(task!.id);
 
-    expect(useTodos.getState().tasks[0]).toMatchObject({
+    expect(useChecklists.getState().tasks[0]).toMatchObject({
       title: 'Make a simple plan',
       important: true,
       completed: true,
     });
-    expect(useTodos.getState().tasks[0].completedAt).toBeDefined();
+    expect(useChecklists.getState().tasks[0].completedAt).toBeDefined();
   });
 
   it('ignores empty tasks and clears only completed work', () => {
-    expect(useTodos.getState().addTask('   ')).toBeUndefined();
-    const done = useTodos.getState().addTask('Done');
-    useTodos.getState().addTask('Still open');
-    useTodos.getState().toggleTask(done!.id);
-    useTodos.getState().clearCompleted();
+    expect(useChecklists.getState().addTask('   ')).toBeUndefined();
+    const done = useChecklists.getState().addTask('Done');
+    useChecklists.getState().addTask('Still open');
+    useChecklists.getState().toggleTask(done!.id);
+    useChecklists.getState().clearCompleted();
 
-    expect(useTodos.getState().tasks.map((task) => task.title)).toEqual(['Still open']);
+    expect(useChecklists.getState().tasks.map((task) => task.title)).toEqual(['Still open']);
   });
 
   it('keeps tasks isolated inside multiple named lists', () => {
-    const groceries = useTodos.getState().createList('  Groceries  ');
-    const maintenance = useTodos.getState().createList('Maintenance');
-    useTodos.getState().addTask(groceries!.id, 'Milk');
-    useTodos.getState().addTask(maintenance!.id, 'Replace air filter');
+    const groceries = useChecklists.getState().createList('  Groceries  ');
+    const maintenance = useChecklists.getState().createList('Maintenance');
+    useChecklists.getState().addTask(groceries!.id, 'Milk');
+    useChecklists.getState().addTask(maintenance!.id, 'Replace air filter');
 
     expect(
-      useTodos.getState().tasks
+      useChecklists.getState().tasks
         .filter((task) => task.listId === groceries!.id)
         .map((task) => task.title),
     ).toEqual(['Milk']);
     expect(
-      useTodos.getState().tasks
+      useChecklists.getState().tasks
         .filter((task) => task.listId === maintenance!.id)
         .map((task) => task.title),
     ).toEqual(['Replace air filter']);
   });
 
   it('creates categories, assigns items, and uncategorizes on removal', () => {
-    const list = useTodos.getState().createList('Projects');
-    const category = useTodos.getState().addCategory(list!.id, 'Finance');
-    const task = useTodos.getState().addTask(list!.id, 'Review budget', category!.id);
+    const list = useChecklists.getState().createList('Projects');
+    const category = useChecklists.getState().addCategory(list!.id, 'Finance');
+    const task = useChecklists.getState().addTask(list!.id, 'Review budget', category!.id);
 
     expect(task?.categoryId).toBe(category?.id);
-    expect(useTodos.getState().categories).toEqual([category]);
+    expect(useChecklists.getState().categories).toEqual([category]);
 
-    useTodos.getState().deleteCategory(category!.id);
+    useChecklists.getState().deleteCategory(category!.id);
 
-    expect(useTodos.getState().categories).toEqual([]);
-    expect(useTodos.getState().tasks.find((item) => item.id === task?.id)?.categoryId)
+    expect(useChecklists.getState().categories).toEqual([]);
+    expect(useChecklists.getState().tasks.find((item) => item.id === task?.id)?.categoryId)
       .toBeUndefined();
   });
 
   it('normalizes category assignments only within known categories', () => {
-    const normalized = normalizeTodoState({
+    const normalized = normalizeChecklistState({
       groceryMigrationVersion: 1,
       lists: [{
         id: 'list-1',
@@ -111,7 +103,7 @@ describe('to-do store', () => {
   });
 
   it('drops category assignments that belong to another checklist', () => {
-    const normalized = normalizeTodoState({
+    const normalized = normalizeChecklistState({
       groceryMigrationVersion: 1,
       lists: [
         {
@@ -153,21 +145,21 @@ describe('to-do store', () => {
   });
 
   it('queues shared task creation before its category assignment', () => {
-    const list = useTodos.getState().lists[0];
-    useTodos.setState((state) => ({
+    const list = useChecklists.getState().lists[0];
+    useChecklists.setState((state) => ({
       lists: state.lists.map((item) =>
         item.id === list.id ? { ...item, mode: 'shared', role: 'owner' } : item,
       ),
     }));
-    const category = useTodos.getState().addCategory(list.id, 'Finance')!;
-    useTodos.getState().addTask(list.id, 'Review budget', category.id);
+    const category = useChecklists.getState().addCategory(list.id, 'Finance')!;
+    useChecklists.getState().addTask(list.id, 'Review budget', category.id);
 
-    expect(useTodos.getState().pendingMutations.map((mutation) => mutation.operation))
+    expect(useChecklists.getState().pendingMutations.map((mutation) => mutation.operation))
       .toEqual(['add_category', 'add_task', 'set_task_category']);
   });
 
   it('preserves shared categories when a legacy snapshot omits the field', () => {
-    const initial = useTodos.getState();
+    const initial = useChecklists.getState();
     const list = {
       ...initial.lists[0],
       mode: 'shared' as const,
@@ -185,24 +177,24 @@ describe('to-do store', () => {
       ...initial.addTask(list.id, 'Review budget')!,
       categoryId: category.id,
     };
-    useTodos.getState().replaceSharedSnapshot({
+    useChecklists.getState().replaceSharedSnapshot({
       list,
       categories: [category],
       tasks: [task],
       members: [],
     });
 
-    useTodos.getState().replaceSharedSnapshot({
+    useChecklists.getState().replaceSharedSnapshot({
       list: { ...list, updatedAt: '2026-08-12T12:00:00.000Z' },
       tasks: [{ ...task, title: 'Review updated budget' }],
       members: [],
     });
 
-    expect(useTodos.getState().categories).toEqual([category]);
+    expect(useChecklists.getState().categories).toEqual([category]);
   });
 
   it('keeps shared snapshot tasks and members inside their checklist', () => {
-    const state = useTodos.getState();
+    const state = useChecklists.getState();
     const privateList = state.lists[0];
     const sharedList = {
       ...privateList,
@@ -212,7 +204,7 @@ describe('to-do store', () => {
     };
     const privateCategory = state.addCategory(privateList.id, 'Private')!;
 
-    useTodos.getState().replaceSharedSnapshot({
+    useChecklists.getState().replaceSharedSnapshot({
       list: sharedList,
       tasks: [{
         id: 'task-shared',
@@ -234,62 +226,62 @@ describe('to-do store', () => {
       }],
     });
 
-    expect(useTodos.getState().tasks.find((task) => task.id === 'task-shared'))
+    expect(useChecklists.getState().tasks.find((task) => task.id === 'task-shared'))
       .toMatchObject({ listId: sharedList.id, categoryId: undefined });
-    expect(useTodos.getState().members.find((member) => member.userId === 'member-a'))
+    expect(useChecklists.getState().members.find((member) => member.userId === 'member-a'))
       .toMatchObject({ listId: sharedList.id });
     expect(
-      useTodos.getState().categories.find((category) => category.id === privateCategory.id),
+      useChecklists.getState().categories.find((category) => category.id === privateCategory.id),
     ).toMatchObject({ listId: privateList.id });
   });
 
   it('renames a checklist and normalizes its name', () => {
-    const list = useTodos.getState().lists[0];
+    const list = useChecklists.getState().lists[0];
 
-    useTodos.getState().renameList(list.id, '  Weekend   errands  ');
+    useChecklists.getState().renameList(list.id, '  Weekend   errands  ');
 
-    expect(useTodos.getState().lists[0].name).toBe('Weekend errands');
+    expect(useChecklists.getState().lists[0].name).toBe('Weekend errands');
   });
 
   it('lets only the owner delete a private checklist', () => {
-    const owned = useTodos.getState().createList('Weekend')!;
-    useTodos.getState().addTask(owned.id, 'Pack bags');
+    const owned = useChecklists.getState().createList('Weekend')!;
+    useChecklists.getState().addTask(owned.id, 'Pack bags');
 
-    useTodos.getState().deleteList(owned.id);
+    useChecklists.getState().deleteList(owned.id);
 
-    expect(useTodos.getState().lists.find((list) => list.id === owned.id)).toBeUndefined();
-    expect(useTodos.getState().tasks.some((task) => task.listId === owned.id)).toBe(false);
+    expect(useChecklists.getState().lists.find((list) => list.id === owned.id)).toBeUndefined();
+    expect(useChecklists.getState().tasks.some((task) => task.listId === owned.id)).toBe(false);
   });
 
   it('does not let an editor or member delete a shared checklist from local store', () => {
     for (const role of ['editor', 'member'] as const) {
-      const seed = useTodos.getState().createList(`Trip ${role}`)!;
-      useTodos.getState().replaceSharedSnapshot({
+      const seed = useChecklists.getState().createList(`Trip ${role}`)!;
+      useChecklists.getState().replaceSharedSnapshot({
         list: { ...seed, mode: 'shared', role },
         tasks: [],
         members: [],
       });
 
-      useTodos.getState().deleteList(seed.id);
+      useChecklists.getState().deleteList(seed.id);
 
-      expect(useTodos.getState().lists.some((list) => list.id === seed.id)).toBe(true);
+      expect(useChecklists.getState().lists.some((list) => list.id === seed.id)).toBe(true);
     }
   });
 
   it('persists a manual task order inside its checklist', () => {
-    const list = useTodos.getState().lists[0];
-    const first = useTodos.getState().addTask(list.id, 'First')!;
-    const second = useTodos.getState().addTask(list.id, 'Second')!;
-    const third = useTodos.getState().addTask(list.id, 'Third')!;
+    const list = useChecklists.getState().lists[0];
+    const first = useChecklists.getState().addTask(list.id, 'First')!;
+    const second = useChecklists.getState().addTask(list.id, 'Second')!;
+    const third = useChecklists.getState().addTask(list.id, 'Third')!;
 
-    useTodos.getState().reorderTasks(list.id, [
+    useChecklists.getState().reorderTasks(list.id, [
       first.id,
       third.id,
       second.id,
     ]);
 
     expect(
-      [...useTodos.getState().tasks]
+      [...useChecklists.getState().tasks]
         .filter((task) => task.listId === list.id)
         .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
         .map((task) => task.title),
@@ -297,27 +289,27 @@ describe('to-do store', () => {
   });
 
   it('preserves hidden task slots when reordering a filtered checklist', () => {
-    const list = useTodos.getState().lists[0];
-    const first = useTodos.getState().addTask(list.id, 'First')!;
-    const hidden = useTodos.getState().addTask(list.id, 'Hidden')!;
-    const third = useTodos.getState().addTask(list.id, 'Third')!;
-    useTodos.getState().reorderTasks(list.id, [first.id, hidden.id, third.id]);
-    useTodos.setState((state) => ({
+    const list = useChecklists.getState().lists[0];
+    const first = useChecklists.getState().addTask(list.id, 'First')!;
+    const hidden = useChecklists.getState().addTask(list.id, 'Hidden')!;
+    const third = useChecklists.getState().addTask(list.id, 'Third')!;
+    useChecklists.getState().reorderTasks(list.id, [first.id, hidden.id, third.id]);
+    useChecklists.setState((state) => ({
       lists: state.lists.map((item) =>
         item.id === list.id ? { ...item, mode: 'shared' } : item,
       ),
       pendingMutations: [],
     }));
 
-    useTodos.getState().reorderTasks(list.id, [third.id, first.id]);
+    useChecklists.getState().reorderTasks(list.id, [third.id, first.id]);
 
-    const ordered = [...useTodos.getState().tasks]
+    const ordered = [...useChecklists.getState().tasks]
       .filter((task) => task.listId === list.id)
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     expect(ordered.map((task) => task.title)).toEqual(['Third', 'Hidden', 'First']);
     expect(ordered.map((task) => task.position)).toEqual([0, 1, 2]);
-    expect(useTodos.getState().pendingMutations).toHaveLength(1);
-    expect(useTodos.getState().pendingMutations[0]).toMatchObject({
+    expect(useChecklists.getState().pendingMutations).toHaveLength(1);
+    expect(useChecklists.getState().pendingMutations[0]).toMatchObject({
       operation: 'reorder_tasks',
       payload: { orderedIds: [third.id, hidden.id, first.id] },
     });
@@ -325,57 +317,58 @@ describe('to-do store', () => {
 
   it('marks guest checklist data dirty when assignees change', () => {
     useAuthAccess.getState().enterGuest();
-    const list = useTodos.getState().lists[0];
-    const task = useTodos.getState().addTask(list.id, 'Review plans')!;
+    const list = useChecklists.getState().lists[0];
+    const task = useChecklists.getState().addTask(list.id, 'Review plans')!;
     useAuthAccess.getState().enterGuest();
 
-    useTodos.getState().setAssignee(task.id, ['member-a']);
+    useChecklists.getState().setAssignee(task.id, ['member-a']);
 
     expect(useAuthAccess.getState().guestDataDirty).toBe(true);
   });
 
   it('persists an explicit list order without changing list contents', () => {
-    const groceries = useTodos.getState().createList('Groceries')!;
-    const maintenance = useTodos.getState().createList('Maintenance')!;
-    const originalIds = useTodos.getState().lists.map((list) => list.id);
+    const groceries = useChecklists.getState().createList('Groceries')!;
+    const maintenance = useChecklists.getState().createList('Maintenance')!;
+    const originalIds = useChecklists.getState().lists.map((list) => list.id);
+    const stampsById = Object.fromEntries(
+      useChecklists.getState().lists.map((list) => [list.id, list.updatedAt]),
+    );
 
-    useTodos.getState().reorderLists([
+    useChecklists.getState().reorderLists([
       groceries.id,
       originalIds.find((id) => id !== groceries.id && id !== maintenance.id)!,
       maintenance.id,
     ]);
 
-    expect(useTodos.getState().lists.map((list) => list.name)).toEqual([
+    expect(useChecklists.getState().lists.map((list) => list.name)).toEqual([
       'Groceries',
       'To Do',
       'Maintenance',
     ]);
-    expect(
-      [...useTodos.getState().lists]
-        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-        .map((list) => list.name),
-    ).toEqual(['Groceries', 'To Do', 'Maintenance']);
+    expect(useChecklists.getState().lists.map((list) => list.updatedAt)).toEqual(
+      useChecklists.getState().lists.map((list) => stampsById[list.id]),
+    );
 
     const shared = {
-      ...useTodos.getState().lists[0],
+      ...useChecklists.getState().lists[0],
       id: '9a21f566-3bc6-43df-a125-03e4c4541963',
       name: 'Shared errands',
       mode: 'shared' as const,
     };
-    useTodos.getState().replaceSharedSnapshot({ list: shared, tasks: [], members: [] });
-    useTodos.getState().reorderLists([
+    useChecklists.getState().replaceSharedSnapshot({ list: shared, tasks: [], members: [] });
+    useChecklists.getState().reorderLists([
       maintenance.id,
       shared.id,
       groceries.id,
       originalIds.find((id) => id !== groceries.id && id !== maintenance.id)!,
     ]);
-    useTodos.getState().replaceSharedSnapshot({
+    useChecklists.getState().replaceSharedSnapshot({
       list: { ...shared, updatedAt: '2026-07-28T12:00:00.000Z' },
       tasks: [],
       members: [],
     });
 
-    expect(useTodos.getState().lists.map((list) => list.name)).toEqual([
+    expect(useChecklists.getState().lists.map((list) => list.name)).toEqual([
       'Maintenance',
       'Shared errands',
       'Groceries',
@@ -383,281 +376,44 @@ describe('to-do store', () => {
     ]);
   });
 
-  it('migrates the legacy flat checklist into a default list with new task ids', () => {
-    const migrated = normalizeTodoState({
-      tasks: [{
-        id: 'legacy-task',
-        title: 'Keep me',
-        completed: true,
-        important: true,
-        createdAt: '2026-07-01T10:00:00.000Z',
-        updatedAt: '2026-07-02T10:00:00.000Z',
-        completedAt: '2026-07-02T10:00:00.000Z',
-      }],
-    });
+  it('appends newly shared lists without reshuffling the existing catalog', () => {
+    const groceries = useChecklists.getState().createList('Groceries')!;
+    expect(useChecklists.getState().lists.map((list) => list.name)).toEqual([
+      'Groceries',
+      'To Do',
+    ]);
 
-    expect(migrated.lists).toHaveLength(1);
-    expect(migrated.lists[0].name).toBe('To Do');
-    expect(migrated.tasks[0]).toMatchObject({
-      listId: migrated.lists[0].id,
-      title: 'Keep me',
-      completed: true,
-      important: true,
-    });
-    expect(migrated.tasks[0].id).not.toBe('legacy-task');
-  });
-
-  it('applies server task positions from shared snapshots', () => {
-    const shared = {
-      ...useTodos.getState().lists[0],
-      id: '9a21f566-3bc6-43df-a125-03e4c4541963',
-      name: 'Shared order',
-      mode: 'shared' as const,
-    };
-    const base = {
-      listId: shared.id,
-      completed: false,
-      important: false,
-      createdAt: '2026-07-01T10:00:00.000Z',
-      updatedAt: '2026-07-01T10:00:00.000Z',
-      version: 0,
-    };
-    useTodos.getState().replaceSharedSnapshot({
-      list: shared,
-      tasks: [
-        { ...base, id: 'task-a', title: 'A', position: 0 },
-        { ...base, id: 'task-b', title: 'B', position: 1 },
-      ],
-      members: [],
-    });
-    // Local optimistic order differs from a later server reorder.
-    useTodos.setState((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === 'task-a'
-          ? { ...task, position: 1 }
-          : task.id === 'task-b'
-            ? { ...task, position: 0 }
-            : task,
-      ),
-    }));
-    useTodos.getState().replaceSharedSnapshot({
-      list: { ...shared, updatedAt: '2026-07-28T12:00:00.000Z' },
-      tasks: [
-        { ...base, id: 'task-a', title: 'A', position: 0 },
-        { ...base, id: 'task-b', title: 'B', position: 1 },
-      ],
-      members: [],
-    });
-    const ordered = useTodos
-      .getState()
-      .tasks.filter((task) => task.listId === shared.id)
-      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-    expect(ordered.map((task) => task.id)).toEqual(['task-a', 'task-b']);
-  });
-
-  it('excludes shared caches and mutations from the private account payload', () => {
-    const state = useTodos.getState();
-    const privateList = state.lists[0];
-    const sharedList = {
-      ...privateList,
-      id: '6af777b8-a5d6-4bb3-a117-484918e333b9',
-      name: 'Shared',
-      mode: 'shared' as const,
-    };
-    const sharedTask = {
-      ...state.addTask(privateList.id, 'Private')!,
-      id: 'abed5890-e04b-47ea-89cc-08d3f3d9837f',
-      listId: sharedList.id,
-      title: 'Shared task',
-    };
-    useTodos.getState().replaceSharedSnapshot({
-      list: sharedList,
-      tasks: [sharedTask],
-      members: [],
-    });
-
-    const payload = privateTodoPayload(useTodos.getState());
-    expect(payload.lists.map((list) => list.name)).not.toContain('Shared');
-    expect(payload.tasks.map((task) => task.title)).not.toContain('Shared task');
-  });
-
-  it('allows members to complete only assigned or anyone items', () => {
-    const state = normalizeTodoState(undefined);
-    const list = { ...state.lists[0], mode: 'shared' as const, role: 'member' as const };
-    const baseTask = {
-      id: 'task',
-      listId: list.id,
-      title: 'Task',
-      completed: false,
-      important: false,
-      createdAt: '2026-07-01T10:00:00.000Z',
-      updatedAt: '2026-07-01T10:00:00.000Z',
-      version: 0,
-    };
-
-    expect(canCompleteTodo(list, baseTask, 'member-a')).toBe(true);
-    expect(
-      canCompleteTodo(list, { ...baseTask, assigneeUserIds: ['member-a'] }, 'member-a'),
-    ).toBe(true);
-    expect(
-      canCompleteTodo(
-        list,
-        { ...baseTask, assigneeUserIds: ['member-a', 'member-c'] },
-        'member-a',
-      ),
-    ).toBe(true);
-    expect(
-      canCompleteTodo(list, { ...baseTask, assigneeUserIds: ['member-b'] }, 'member-a'),
-    ).toBe(false);
-  });
-
-  it('lets editors complete any item and edit content', () => {
-    const state = normalizeTodoState(undefined);
-    const editorList = {
-      ...state.lists[0],
-      mode: 'shared' as const,
-      role: 'editor' as const,
-    };
-    const memberList = { ...editorList, role: 'member' as const };
-    const baseTask = {
-      id: 'task',
-      listId: editorList.id,
-      title: 'Task',
-      completed: false,
-      important: false,
-      assigneeUserIds: ['someone-else'],
-      createdAt: '2026-07-01T10:00:00.000Z',
-      updatedAt: '2026-07-01T10:00:00.000Z',
-      version: 0,
-    };
-
-    expect(canEditTodoContent(editorList)).toBe(true);
-    expect(canEditTodoContent(memberList)).toBe(false);
-    expect(canCompleteTodo(editorList, baseTask, 'editor-a')).toBe(true);
-    expect(canCompleteTodo(memberList, baseTask, 'member-a')).toBe(false);
-    expect(canDeleteTodoList(editorList)).toBe(false);
-    expect(canDeleteTodoList(memberList)).toBe(false);
-    expect(canDeleteTodoList({ ...editorList, kind: 'grocery', role: 'editor' })).toBe(false);
-    expect(canDeleteTodoList({ ...editorList, role: 'owner' })).toBe(true);
-    expect(canLeaveTodoList(editorList)).toBe(true);
-    expect(canLeaveTodoList(memberList)).toBe(true);
-    expect(canLeaveTodoList({ ...editorList, role: 'owner' })).toBe(false);
-    expect(canLeaveTodoList({ ...editorList, mode: 'private', role: 'editor' })).toBe(false);
-  });
-
-  it('migrates recognized grocery names but preserves explicit checklist kinds', () => {
-    const migrated = normalizeTodoState({
-      groceryMigrationVersion: 1,
-      lists: [
-        {
-          id: 'list-grocery',
-          name: 'Weekly Groceries',
-          mode: 'private',
-          role: 'owner',
-          createdAt: '2026-07-01T00:00:00.000Z',
-          updatedAt: '2026-07-01T00:00:00.000Z',
+    useChecklists.getState().replaceSharedSnapshots([
+      {
+        list: {
+          ...useChecklists.getState().lists[0],
+          id: '11111111-1111-4111-8111-111111111111',
+          name: 'Shared A',
+          mode: 'shared',
+          updatedAt: '2099-01-01T12:00:00.000Z',
         },
-        {
-          id: 'list-explicit',
-          name: 'Supermarket planning',
-          kind: 'checklist',
-          mode: 'private',
-          role: 'owner',
-          createdAt: '2026-07-01T00:00:00.000Z',
-          updatedAt: '2026-07-01T00:00:00.000Z',
+        tasks: [],
+        members: [],
+      },
+      {
+        list: {
+          ...useChecklists.getState().lists[0],
+          id: '22222222-2222-4222-8222-222222222222',
+          name: 'Shared B',
+          mode: 'shared',
+          updatedAt: '2099-01-01T13:00:00.000Z',
         },
-      ],
-    });
+        tasks: [],
+        members: [],
+      },
+    ]);
 
-    expect(migrated.lists.find((list) => list.id === 'list-grocery')?.kind)
-      .toBe('grocery');
-    expect(migrated.lists.find((list) => list.id === 'list-explicit')?.kind)
-      .toBe('checklist');
-  });
-
-  it('repairs grocery lists from the pre-feature in-memory schema once', () => {
-    const legacy = {
-      lists: [{
-        id: 'legacy-groceries',
-        name: 'Groceries',
-        kind: 'checklist',
-        mode: 'private',
-        role: 'owner',
-        createdAt: '2026-07-01T00:00:00.000Z',
-        updatedAt: '2026-07-01T00:00:00.000Z',
-      }],
-    };
-    expect(normalizeTodoState(legacy).lists[0].kind).toBe('grocery');
-    expect(
-      normalizeTodoState({
-        ...legacy,
-        groceryMigrationVersion: 1,
-      }).lists[0].kind,
-    ).toBe('checklist');
-  });
-
-  it('adds a recipe and prevents converting back while its group exists', () => {
-    const list = useTodos.getState().createList('Meal shop', 'grocery')!;
-    const recipe = useTodos.getState().addRecipe(list.id, {
-      name: 'Pasta',
-      sourceKind: 'url',
-      sourceUrl: 'https://example.com/pasta',
-      originalServings: 2,
-      targetServings: 4,
-      ingredients: [
-        {
-          name: 'Tomato',
-          canonicalKey: 'tomato',
-          quantityValue: 4,
-          quantityText: '4',
-          unit: 'count',
-        },
-        { name: 'Salt', quantityText: 'to taste' },
-      ],
-    });
-
-    expect(recipe).toBeDefined();
-    expect(
-      useTodos.getState().tasks.filter((task) => task.recipeId === recipe?.id),
-    ).toHaveLength(2);
-    expect(useTodos.getState().setListKind(list.id, 'checklist')).toBe(false);
-
-    useTodos.getState().deleteRecipe(recipe!.id);
-    expect(useTodos.getState().setListKind(list.id, 'checklist')).toBe(true);
-  });
-
-  it('batch completion updates every permitted occurrence only', () => {
-    const list = useTodos.getState().createList('Shop', 'grocery')!;
-    const recipe = useTodos.getState().addRecipe(list.id, {
-      name: 'Dinner',
-      sourceKind: 'url',
-      ingredients: [{ name: 'Onion' }, { name: 'Garlic' }],
-    })!;
-    const tasks = useTodos
-      .getState()
-      .tasks.filter((task) => task.recipeId === recipe.id);
-    useTodos.setState((state) => ({
-      lists: state.lists.map((item) =>
-        item.id === list.id
-          ? { ...item, mode: 'shared', role: 'member' }
-          : item,
-      ),
-      tasks: state.tasks.map((task) =>
-        task.id === tasks[1].id
-          ? { ...task, assigneeUserIds: ['someone-else'] }
-          : task,
-      ),
-    }));
-
-    useTodos
-      .getState()
-      .setTasksCompletion(tasks.map((task) => task.id), true, 'member-a');
-
-    expect(
-      useTodos.getState().tasks.find((task) => task.id === tasks[0].id)?.completed,
-    ).toBe(true);
-    expect(
-      useTodos.getState().tasks.find((task) => task.id === tasks[1].id)?.completed,
-    ).toBe(false);
+    expect(useChecklists.getState().lists.map((list) => list.name)).toEqual([
+      'Groceries',
+      'To Do',
+      'Shared A',
+      'Shared B',
+    ]);
+    expect(useChecklists.getState().lists[0]?.id).toBe(groceries.id);
   });
 });

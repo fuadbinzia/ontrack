@@ -12,10 +12,18 @@ describe('critical domain integration boundaries', () => {
     expect(provider).toContain('resolveAccountSync(');
   });
 
-  it('keeps todo collaboration orchestration connected to both service and store state', () => {
+  it('keeps checklist collaboration orchestration connected to both service and store state', () => {
     const hook = source('src/hooks/use-todo-collaboration.ts');
     expect(hook).toContain("from '@/services/todos/collaboration'");
     expect(hook).toContain("from '@/store/todos'");
+  });
+
+  it('packs backup attachments through the shared cloud media client', () => {
+    const backupMedia = source('src/features/account/backup-media.ts');
+    const mediaClient = source('src/services/cloud/media.ts');
+    expect(backupMedia).toContain("from '@/services/cloud/media'");
+    expect(backupMedia).toContain('resolveCloudMediaUri(');
+    expect(mediaClient).toContain('export async function resolveCloudMediaUri');
   });
 
   it('keeps vehicle collaboration orchestration connected to both service and store state', () => {

@@ -1,9 +1,9 @@
 import type { AppIconName } from '@/design-system';
-import { isGroceryListName, type TodoListKind } from '@/store/todos';
+import { isGroceryListName, type ChecklistKind } from '@/store/todos';
 
-export function todoListIcon(
+export function checklistIcon(
   name: string,
-  kind?: TodoListKind,
+  kind?: ChecklistKind,
 ): AppIconName {
   if (kind === 'grocery' || isGroceryListName(name)) return 'groceries';
   if (/\b(maintenance|repair|repairs)\b/i.test(name.trim())) return 'maintenance';

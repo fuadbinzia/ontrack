@@ -1,36 +1,36 @@
 import { newUuid } from '@/utils/id';
 import {
-  canEditTodoContent,
+  canEditChecklistContent,
   markGuestEdit,
   queuedMutation,
   resolveListCategoryId,
 } from './todos-helpers';
 import { cleanName, nowIso } from './todos-normalize';
-import type { TodoCategory, TodoPersistedState } from './todos-types';
+import type { ChecklistCategory, ChecklistPersistedState } from './todos-types';
 
 type CategorySet = (
   partial:
-    | Partial<TodoPersistedState>
-    | ((state: TodoPersistedState) => Partial<TodoPersistedState>),
+    | Partial<ChecklistPersistedState>
+    | ((state: ChecklistPersistedState) => Partial<ChecklistPersistedState>),
 ) => void;
 
-type CategoryGet = () => TodoPersistedState;
+type CategoryGet = () => ChecklistPersistedState;
 
-export type TodoCategoryActions = {
-  addCategory: (listId: string, name: string) => TodoCategory | undefined;
+export type ChecklistCategoryActions = {
+  addCategory: (listId: string, name: string) => ChecklistCategory | undefined;
   deleteCategory: (id: string) => void;
   setTaskCategory: (taskId: string, categoryId?: string) => void;
 };
 
-export function createTodoCategoryActions(
+export function createChecklistCategoryActions(
   set: CategorySet,
   get: CategoryGet,
-): TodoCategoryActions {
+): ChecklistCategoryActions {
   return {
     addCategory: (listId, name) => {
       const list = get().lists.find((item) => item.id === listId);
       const clean = cleanName(name).slice(0, 40);
-      if (!list || !canEditTodoContent(list) || !clean) return undefined;
+      if (!list || !canEditChecklistContent(list) || !clean) return undefined;
       if (
         get().categories.some(
           (category) =>
@@ -45,7 +45,7 @@ export function createTodoCategoryActions(
       const positions = get()
         .categories.filter((category) => category.listId === listId)
         .map((category) => category.position);
-      const category: TodoCategory = {
+      const category: ChecklistCategory = {
         id: newUuid(),
         listId,
         name: clean,
@@ -72,7 +72,7 @@ export function createTodoCategoryActions(
       const list = category
         ? get().lists.find((item) => item.id === category.listId)
         : undefined;
-      if (!category || !list || !canEditTodoContent(list)) return;
+      if (!category || !list || !canEditChecklistContent(list)) return;
       const updatedAt = nowIso();
       markGuestEdit();
       set((state) => ({
@@ -105,7 +105,7 @@ export function createTodoCategoryActions(
       if (
         !task ||
         !list ||
-        !canEditTodoContent(list) ||
+        !canEditChecklistContent(list) ||
         (categoryId && !resolvedCategoryId)
       )
         return;

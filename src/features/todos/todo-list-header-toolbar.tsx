@@ -2,21 +2,21 @@ import { StyleSheet, View } from 'react-native';
 
 import { IconButton } from '@/components/primitives';
 import { ChecklistPopoverMenu } from '@/features/todos/checklist-popover-menu';
-import { copyTodoListText } from '@/features/todos/share';
+import { copyChecklistText } from '@/features/todos/share';
 import {
-  parseTodoListToolbarAction,
-  todoListToolbarActionItems,
-  todoListToolbarActionTestID,
+  parseChecklistToolbarAction,
+  checklistToolbarActionItems,
+  checklistToolbarActionTestID,
 } from '@/features/todos/todo-list-toolbar-actions';
-import type { TodoFilter, TodoSort } from '@/features/todos/todo-sort';
+import type { ChecklistFilter, ChecklistSort } from '@/features/todos/todo-sort';
 import { useTheme } from '@/hooks/use-theme';
-import type { TodoList, TodoMember, TodoTask } from '@/store/todos';
+import type { Checklist, ChecklistMember, ChecklistTask } from '@/store/todos';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 
 type AgentUiTargetApi = ReturnType<typeof useAgentUiTarget>;
 
-export function TodoListHeaderToolbar({
+export function ChecklistHeaderToolbar({
   list,
   tasks,
   members,
@@ -34,14 +34,14 @@ export function TodoListHeaderToolbar({
   onManageSettings,
   onRemoveList,
 }: {
-  list: TodoList;
-  tasks: TodoTask[];
-  members: TodoMember[];
+  list: Checklist;
+  tasks: ChecklistTask[];
+  members: ChecklistMember[];
   owner: boolean;
   canEdit: boolean;
-  filter: TodoFilter;
+  filter: ChecklistFilter;
   selectedAssigneeId: string;
-  sort: TodoSort;
+  sort: ChecklistSort;
   editMode: boolean;
   openTasksCount: number;
   closedTasksCount: number;
@@ -50,7 +50,7 @@ export function TodoListHeaderToolbar({
   onFilterToggle: () => void;
   onAssigneeSelect: (id: string) => void;
   onToggleEditMode: () => void;
-  onSortChange: (sort: TodoSort) => void;
+  onSortChange: (sort: ChecklistSort) => void;
   onClearDone: () => void;
   onManageSettings: () => void;
   onRemoveList: () => void;
@@ -83,8 +83,8 @@ export function TodoListHeaderToolbar({
         presentation="sheet"
         sheetSubtitle={list.name}
         closeTestID={AgentUiIds.checklists.detail.actionsClose}
-        itemTestID={todoListToolbarActionTestID}
-        items={todoListToolbarActionItems({
+        itemTestID={checklistToolbarActionTestID}
+        items={checklistToolbarActionItems({
           sort,
           members,
           selectedAssigneeId,
@@ -93,9 +93,9 @@ export function TodoListHeaderToolbar({
           completedCount,
         })}
         onSelect={(action) => {
-          const parsed = parseTodoListToolbarAction(action);
+          const parsed = parseChecklistToolbarAction(action);
           if (parsed.kind === 'sort') {
-            onSortChange(parsed.value as TodoSort);
+            onSortChange(parsed.value as ChecklistSort);
             haptics.select();
             return;
           }
@@ -105,7 +105,7 @@ export function TodoListHeaderToolbar({
             return;
           }
           if (parsed.value === 'copy') {
-            void copyTodoListText(list, tasks, members).then((copied) => {
+            void copyChecklistText(list, tasks, members).then((copied) => {
               if (copied) haptics.success();
             });
           }

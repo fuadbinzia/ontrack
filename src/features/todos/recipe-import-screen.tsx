@@ -47,9 +47,9 @@ import {
     type RecipeImportIngredient,
 } from '@/services/recipes';
 import {
-    useTodos,
-    type TodoIngredientInput,
-    type TodoRecipeSourceKind,
+    useChecklists,
+    type ChecklistIngredientInput,
+    type ChecklistRecipeSourceKind,
 } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
@@ -66,10 +66,10 @@ export function RecipeImportScreen({ listId }: { listId: string }) {
   const router = useRouter();
   const navigation = useNavigation();
   const { source } = useLocalSearchParams<{ source?: string }>();
-  const list = useTodos((state) =>
+  const list = useChecklists((state) =>
     state.lists.find((item) => item.id === listId),
   );
-  const addRecipe = useTodos((state) => state.addRecipe);
+  const addRecipe = useChecklists((state) => state.addRecipe);
   const [url, setUrl] = useState('');
   const [draft, setDraft] = useState<RecipeImportDraft>();
   const [ingredients, setIngredients] = useState<EditableRecipeIngredient[]>([]);
@@ -293,7 +293,7 @@ export function RecipeImportScreen({ listId }: { listId: string }) {
     const targetNumber = asPositiveNumber(Number(targetValue));
     const scaled = scaleIngredients(
       baseIngredients.current.map(
-        ({ id: _id, ...ingredient }): TodoIngredientInput => ({
+        ({ id: _id, ...ingredient }): ChecklistIngredientInput => ({
           name: ingredient.name,
           canonicalKey: ingredient.canonicalKey,
           quantityValue: ingredient.quantityValue ?? undefined,
@@ -341,7 +341,7 @@ export function RecipeImportScreen({ listId }: { listId: string }) {
           : undefined;
       const recipe = addRecipe(listId, {
         name,
-        sourceKind: (draft?.sourceKind ?? 'url') as TodoRecipeSourceKind,
+        sourceKind: (draft?.sourceKind ?? 'url') as ChecklistRecipeSourceKind,
         sourceUrl: sanitizedSourceUrl,
         sourceImageUri: durableImageUri,
         originalServings: asPositiveNumber(Number(sourceServings)),

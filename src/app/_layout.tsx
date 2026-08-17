@@ -40,7 +40,7 @@ import { useHydrated } from '@/hooks/use-hydrated';
 import { useMealPhotoMigration } from '@/hooks/use-meal-photo-migration';
 import { useRootStartupEffects } from '@/hooks/use-root-startup-effects';
 import { useTheme } from '@/hooks/use-theme';
-import { useTodoCollaboration } from '@/hooks/use-todo-collaboration';
+import { useChecklistCollaboration } from '@/hooks/use-todo-collaboration';
 import { useVehicleCollaboration } from '@/hooks/use-vehicle-collaboration';
 import { useAuthAccess } from '@/store/auth-access';
 import { useAccountFlags } from '@/store/account-flags';
@@ -213,7 +213,7 @@ function RootNavigator({
     ((phase === 'guest' || phase === 'authenticated') && showWelcome);
   const collaborationReady =
     hydrated && phase === 'authenticated' && appIsActive;
-  useTodoCollaboration(
+  useChecklistCollaboration(
     collaborationReady &&
       pathIsWithin(pathname, [
         '/to-do',

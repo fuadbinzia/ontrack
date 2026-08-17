@@ -18,7 +18,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 import { formatCount } from '@/utils/grammar';
 
-export function TodoListsOverviewHeader({
+export function ChecklistsOverviewHeader({
   listCount,
   totalOpen,
   editMode,

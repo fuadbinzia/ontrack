@@ -13,10 +13,10 @@ import {
 } from '@/components/primitives';
 import { spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
-import { createInstalledTodoJoinUrl } from '@/features/todos/share';
+import { createInstalledChecklistJoinUrl } from '@/features/todos/share';
 import {
-  acceptTodoShareLink,
-  resolveTodoShareLink,
+  acceptChecklistShareLink,
+  resolveChecklistShareLink,
 } from '@/services/todos/collaboration';
 
 interface ResolvedList {
@@ -29,7 +29,7 @@ const APP_STORE_URL = 'https://apps.apple.com/app/id6789723522';
 const PLAY_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.imtihoss.ontracknow';
 
-export function TodoJoinScreen({ code }: { code: string }) {
+export function ChecklistJoinScreen({ code }: { code: string }) {
   const router = useRouter();
   const { user, continueWithProvider, workingProvider } = useAuthSession();
   const validCode = /^[a-f0-9]{36}$/.test(code);
@@ -40,7 +40,7 @@ export function TodoJoinScreen({ code }: { code: string }) {
   useEffect(() => {
     if (!user || !validCode) return;
     let active = true;
-    void resolveTodoShareLink(code)
+    void resolveChecklistShareLink(code)
       .then((result) => {
         if (!active) return;
         if (result) setResolved(result);
@@ -88,7 +88,7 @@ export function TodoJoinScreen({ code }: { code: string }) {
           <>
             <Button
               size="lg"
-              onPress={() => void Linking.openURL(createInstalledTodoJoinUrl(code))}>
+              onPress={() => void Linking.openURL(createInstalledChecklistJoinUrl(code))}>
               Open onTrack
             </Button>
             <Button
@@ -136,7 +136,7 @@ export function TodoJoinScreen({ code }: { code: string }) {
           onPress={() => {
             setJoining(true);
             setError(undefined);
-            void acceptTodoShareLink(code)
+            void acceptChecklistShareLink(code)
               .then((listId) => router.replace(`/(tabs)/to-do/${listId}` as never))
               .catch((caught: unknown) => {
                 setError(caught instanceof Error ? caught.message : 'The list could not be joined.');

@@ -1,63 +1,99 @@
-import { sortTodoListsByRecent } from '@/features/todos/todo-sort';
-import type { TodoList } from '@/store/todos';
+import { sortChecklistTasks } from '@/features/todos/todo-sort';
+import type { ChecklistTask } from '@/store/todos';
 
-const createdAt = '2026-08-01T00:00:00.000Z';
-
-function list(
+function task(
   id: string,
-  name: string,
-  updatedAt: string,
-): TodoList {
+  overrides: Partial<ChecklistTask> = {},
+): ChecklistTask {
   return {
     id,
-    name,
-    kind: 'checklist',
-    mode: 'private',
-    role: 'owner',
-    createdAt,
-    updatedAt,
+    listId: 'list',
+    title: id,
+    completed: false,
+    important: false,
+    createdAt: '2026-08-01T00:00:00.000Z',
+    updatedAt: '2026-08-01T00:00:00.000Z',
+    version: 0,
+    ...overrides,
   };
 }
 
-describe('sortTodoListsByRecent', () => {
-  it('puts the most recently edited checklist first', () => {
-    const features = list('features', 'Features', '2026-08-10T00:00:00.000Z');
-    const todo = list('todo', 'To Do', '2026-08-12T18:00:00.000Z');
-    const groceries = list('groceries', 'Groceries', '2026-08-11T00:00:00.000Z');
+describe('sortChecklistTasks', () => {
+  it('smart sort puts important tasks first, then newest', () => {
+    const chores = task('chores', { createdAt: '2026-08-03T00:00:00.000Z' });
+    const passport = task('passport', {
+      important: true,
+      createdAt: '2026-08-01T00:00:00.000Z',
+    });
+    const milk = task('milk', { createdAt: '2026-08-02T00:00:00.000Z' });
 
     expect(
-      sortTodoListsByRecent([features, groceries, todo]).map((item) => item.name),
-    ).toEqual(['To Do', 'Groceries', 'Features']);
+      sortChecklistTasks([chores, milk, passport], 'smart', 'open').map(
+        (item) => item.id,
+      ),
+    ).toEqual(['passport', 'chores', 'milk']);
   });
 
-  it('puts the last opened checklist first even when it was edited earlier', () => {
-    const features = list('features', 'Features', '2026-08-10T00:00:00.000Z');
-    const iceland = list('iceland', 'Iceland Checklist', '2026-08-12T18:00:00.000Z');
-    const ideas = list('ideas', 'Ideas', '2026-08-11T00:00:00.000Z');
+  it('smart sort orders the completed filter by most recently completed', () => {
+    const first = task('first', {
+      completed: true,
+      completedAt: '2026-08-10T00:00:00.000Z',
+    });
+    const latest = task('latest', {
+      completed: true,
+      completedAt: '2026-08-12T00:00:00.000Z',
+    });
+    const never = task('never', { completed: true });
 
     expect(
-      sortTodoListsByRecent([features, iceland, ideas], {
-        features: '2026-08-14T09:00:00.000Z',
-      }).map((item) => item.name),
-    ).toEqual(['Features', 'Iceland Checklist', 'Ideas']);
+      sortChecklistTasks([never, first, latest], 'smart', 'completed').map(
+        (item) => item.id,
+      ),
+    ).toEqual(['latest', 'first', 'never']);
   });
 
-  it('keeps a newer edit above a stale open', () => {
-    const features = list('features', 'Features', '2026-08-10T00:00:00.000Z');
-    const ideas = list('ideas', 'Ideas', '2026-08-14T12:00:00.000Z');
+  it('manual sort follows saved positions and keeps unpositioned tasks last', () => {
+    const second = task('second', { position: 2 });
+    const first = task('first', { position: 1 });
+    const unplaced = task('unplaced', {
+      createdAt: '2026-08-05T00:00:00.000Z',
+    });
 
     expect(
-      sortTodoListsByRecent([features, ideas], {
-        features: '2026-08-13T00:00:00.000Z',
-      }).map((item) => item.name),
-    ).toEqual(['Ideas', 'Features']);
+      sortChecklistTasks([unplaced, second, first], 'manual', 'open').map(
+        (item) => item.id,
+      ),
+    ).toEqual(['first', 'second', 'unplaced']);
   });
 
-  it('returns the same array when lists are already in recency order', () => {
-    const lists = [
-      list('todo', 'To Do', '2026-08-12T18:00:00.000Z'),
-      list('features', 'Features', '2026-08-10T00:00:00.000Z'),
-    ];
-    expect(sortTodoListsByRecent(lists)).toBe(lists);
+  it('newest and oldest sorts mirror each other by creation time', () => {
+    const early = task('early', { createdAt: '2026-08-01T00:00:00.000Z' });
+    const late = task('late', { createdAt: '2026-08-09T00:00:00.000Z' });
+
+    expect(
+      sortChecklistTasks([early, late], 'newest', 'open').map((item) => item.id),
+    ).toEqual(['late', 'early']);
+    expect(
+      sortChecklistTasks([early, late], 'oldest', 'open').map((item) => item.id),
+    ).toEqual(['early', 'late']);
+  });
+
+  it('alphabetical sort ignores case', () => {
+    const apples = task('a', { title: 'apples' });
+    const bread = task('b', { title: 'Bread' });
+    const cheese = task('c', { title: 'CHEESE' });
+
+    expect(
+      sortChecklistTasks([cheese, apples, bread], 'alphabetical', 'open').map(
+        (item) => item.title,
+      ),
+    ).toEqual(['apples', 'Bread', 'CHEESE']);
+  });
+
+  it('does not mutate the input array', () => {
+    const tasks = [task('b'), task('a')];
+    const copy = [...tasks];
+    sortChecklistTasks(tasks, 'alphabetical', 'open');
+    expect(tasks).toEqual(copy);
   });
 });

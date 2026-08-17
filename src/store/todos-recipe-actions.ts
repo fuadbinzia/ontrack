@@ -10,38 +10,38 @@ import {
 } from './todos-normalize';
 import { markGuestEdit, queuedMutation } from './todos-helpers';
 import type {
-  TodoIngredientInput,
-  TodoList,
-  TodoPersistedState,
-  TodoRecipe,
-  TodoRecipeInput,
-  TodoTask,
+  ChecklistIngredientInput,
+  Checklist,
+  ChecklistPersistedState,
+  ChecklistRecipe,
+  ChecklistRecipeInput,
+  ChecklistTask,
 } from './todos-types';
 
 type RecipeSet = (
   partial:
-    | Partial<TodoPersistedState>
-    | ((state: TodoPersistedState) => Partial<TodoPersistedState>),
+    | Partial<ChecklistPersistedState>
+    | ((state: ChecklistPersistedState) => Partial<ChecklistPersistedState>),
 ) => void;
 
-type RecipeGet = () => TodoPersistedState & {
-  lists: TodoList[];
+type RecipeGet = () => ChecklistPersistedState & {
+  lists: Checklist[];
 };
 
-export type TodoRecipeActions = {
-  addRecipe: (listId: string, input: TodoRecipeInput) => TodoRecipe | undefined;
+export type ChecklistRecipeActions = {
+  addRecipe: (listId: string, input: ChecklistRecipeInput) => ChecklistRecipe | undefined;
   updateRecipe: (
     id: string,
-    patch: Partial<Pick<TodoRecipe, 'name' | 'sourceUrl' | 'targetServings'>>,
+    patch: Partial<Pick<ChecklistRecipe, 'name' | 'sourceUrl' | 'targetServings'>>,
   ) => void;
   deleteRecipe: (id: string) => void;
-  updateIngredient: (id: string, patch: Partial<TodoIngredientInput>) => void;
+  updateIngredient: (id: string, patch: Partial<ChecklistIngredientInput>) => void;
 };
 
-export function createTodoRecipeActions(
+export function createChecklistRecipeActions(
   set: RecipeSet,
   get: RecipeGet,
-): TodoRecipeActions {
+): ChecklistRecipeActions {
   return {
     addRecipe: (listId, input) => {
       const list = get().lists.find((item) => item.id === listId);
@@ -55,7 +55,7 @@ export function createTodoRecipeActions(
           (quantityValue !== undefined
             ? formatCompactNumber(quantityValue)
             : undefined);
-        const normalized: TodoIngredientInput = {
+        const normalized: ChecklistIngredientInput = {
           name: ingredientName,
           canonicalKey:
             cleanOptional(ingredient.canonicalKey, 120) ??
@@ -89,7 +89,7 @@ export function createTodoRecipeActions(
         .flatMap((recipe) =>
           typeof recipe.position === 'number' ? [recipe.position] : [],
         );
-      const recipe: TodoRecipe = {
+      const recipe: ChecklistRecipe = {
         id: newUuid(),
         listId,
         name,
@@ -109,7 +109,7 @@ export function createTodoRecipeActions(
         createdAt: now,
         updatedAt: now,
       };
-      const tasks: TodoTask[] = ingredients.map((ingredient, index) => ({
+      const tasks: ChecklistTask[] = ingredients.map((ingredient, index) => ({
         id: newUuid(),
         listId,
         recipeId: recipe.id,
@@ -155,7 +155,7 @@ export function createTodoRecipeActions(
         patch.name === undefined ? recipe.name : cleanName(patch.name);
       if (!name) return;
       const updatedAt = nowIso();
-      const next: TodoRecipe = {
+      const next: ChecklistRecipe = {
         ...recipe,
         name,
         sourceUrl:
@@ -225,7 +225,7 @@ export function createTodoRecipeActions(
           ? task.quantityText
           : cleanOptional(patch.quantityText, 40);
       const updatedAt = nowIso();
-      const next: TodoTask = {
+      const next: ChecklistTask = {
         ...task,
         ingredientName,
         canonicalKey:

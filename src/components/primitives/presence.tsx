@@ -38,7 +38,12 @@ export function useSettledListLayout() {
   );
   const onFirstLayout = useCallback(() => {
     if (frameRef.current != null) return;
-    frameRef.current = requestAnimationFrame(() => setSettled(true));
+    // Two frames: FlatList often corrects header/item Y on the pass after
+    // the first onLayout. Enabling LinearTransition on that pass animates
+    // existing rows from their previous place up to the top.
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = requestAnimationFrame(() => setSettled(true));
+    });
   }, []);
   return {
     layout: settled ? listLayout() : undefined,

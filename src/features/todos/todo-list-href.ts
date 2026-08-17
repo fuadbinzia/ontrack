@@ -1,16 +1,16 @@
 import { router } from 'expo-router';
 
-export const TODO_LISTS_HREF = '/to-do' as const;
+export const CHECKLISTS_HREF = '/to-do' as const;
 
 /** Same href goto uses. `push` / `/(tabs)/to-do/${id}` is a same-tab no-op. */
-export function todoListDetailHref(listId: string) {
+export function checklistDetailHref(listId: string) {
   return `/to-do/${listId}` as const;
 }
 
-export function openTodoList(listId: string) {
-  router.replace(todoListDetailHref(listId));
+export function openChecklist(listId: string) {
+  router.replace(checklistDetailHref(listId));
 }
 
-export function openTodoLists() {
-  router.replace(TODO_LISTS_HREF);
+export function openChecklists() {
+  router.replace(CHECKLISTS_HREF);
 }

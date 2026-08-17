@@ -11,12 +11,12 @@ import {
 } from '@/components/primitives';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
 import type { FriendProfile } from '@/services/friends';
-import { revokeTodoShareLink } from '@/services/todos/collaboration';
-import type { TodoList } from '@/store/todos';
+import { revokeChecklistShareLink } from '@/services/todos/collaboration';
+import type { Checklist } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 
-export type TodoListSettingsSharingProps = {
-  list: TodoList;
+export type ChecklistSettingsSharingProps = {
+  list: Checklist;
   working: string | undefined;
   spacing: { md: number; sm: number; xs: number };
   beginSharing: () => void;
@@ -32,7 +32,7 @@ export type TodoListSettingsSharingProps = {
   user: { id: string } | null | undefined;
 };
 
-export function TodoListSettingsSharing({
+export function ChecklistSettingsSharing({
   list,
   working,
   spacing,
@@ -44,7 +44,7 @@ export function TodoListSettingsSharing({
   onAddEditors,
   requireSignIn,
   user,
-}: TodoListSettingsSharingProps) {
+}: ChecklistSettingsSharingProps) {
   const shared = list.mode === 'shared';
   const busy = Boolean(working);
   const [editorDropdownOpen, setEditorDropdownOpen] = useState(false);
@@ -173,7 +173,7 @@ export function TodoListSettingsSharing({
             disabled={busy}
             hitSlop={8}
             onPress={() =>
-              void run('revoke', () => revokeTodoShareLink(list.id))
+              void run('revoke', () => revokeChecklistShareLink(list.id))
             }
             style={({ pressed }) => ({
               alignSelf: 'center',

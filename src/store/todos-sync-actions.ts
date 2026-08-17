@@ -1,33 +1,39 @@
 import {
-  normalizeCategory,
-  normalizeInvite,
-  normalizeList,
-  normalizeMember,
-  normalizeRecipe,
-  normalizeTask,
-  normalizeTodoState,
-  omitListOpenedAt,
+    insertListByOrderHint,
+    normalizeCategory,
+    normalizeChecklistState,
+    normalizeInvite,
+    normalizeList,
+    normalizeMember,
+    normalizeRecipe,
+    normalizeTask,
+    omitListOpenedAt,
+    sameChecklist,
 } from './todos-normalize';
 import type {
-  TodoInvite,
-  TodoPersistedState,
-  TodoSharedSnapshot,
+    ChecklistInvite,
+    ChecklistPersistedState,
+    ChecklistSharedSnapshot,
 } from './todos-types';
 
 type SyncSet = (
   partial:
-    | Partial<TodoPersistedState & { syncError?: string }>
+    | Partial<ChecklistPersistedState & { syncError?: string }>
     | ((
-        state: TodoPersistedState & { syncError?: string },
-      ) => Partial<TodoPersistedState & { syncError?: string }>),
+        state: ChecklistPersistedState & { syncError?: string },
+      ) => Partial<ChecklistPersistedState & { syncError?: string }>),
 ) => void;
 
-export type TodoSyncActions = {
+export type ChecklistSyncActions = {
   replacePrivateData: (value: unknown) => void;
-  replaceSharedSnapshot: (snapshot: TodoSharedSnapshot) => void;
+  replaceSharedSnapshot: (snapshot: ChecklistSharedSnapshot) => void;
+  replaceSharedSnapshots: (
+    snapshots: ChecklistSharedSnapshot[],
+    options?: { dropIds?: readonly string[] },
+  ) => void;
   removeSharedList: (listId: string) => void;
   setShareCode: (listId: string, code?: string) => void;
-  replaceInvites: (invites: TodoInvite[]) => void;
+  replaceInvites: (invites: ChecklistInvite[]) => void;
   markMutationAttempt: (id: string) => void;
   acknowledgeMutation: (id: string) => void;
   rejectMutation: (id: string, message: string) => void;
@@ -59,10 +65,100 @@ function keepSharedOrLocal(
   return sharedIds.has(listId) || keptLocalOnlyIds.has(listId);
 }
 
-export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
+function dropSharedList(
+  state: ChecklistPersistedState,
+  listId: string,
+): ChecklistPersistedState {
+  return {
+    ...state,
+    lists: state.lists.filter((list) => list.id !== listId),
+    categories: state.categories.filter((category) => category.listId !== listId),
+    tasks: state.tasks.filter((task) => task.listId !== listId),
+    recipes: state.recipes.filter((recipe) => recipe.listId !== listId),
+    members: state.members.filter((member) => member.listId !== listId),
+    pendingMutations: state.pendingMutations.filter(
+      (mutation) => mutation.listId !== listId,
+    ),
+    listOpenedAt: omitListOpenedAt(state.listOpenedAt, listId),
+  };
+}
+
+function mergeSharedSnapshot(
+  state: ChecklistPersistedState,
+  snapshot: ChecklistSharedSnapshot,
+): ChecklistPersistedState {
+  const list = normalizeList({ ...snapshot.list, mode: 'shared' }, false);
+  if (!list) return state;
+  const tasks = snapshot.tasks.flatMap((item) => {
+    const task = normalizeTask({ ...item, listId: list.id }, list.id);
+    return task ? [task] : [];
+  });
+  const categories = (snapshot.categories ?? []).flatMap((item) => {
+    const category = normalizeCategory({ ...item, listId: list.id });
+    return category ? [category] : [];
+  });
+  const recipes = (snapshot.recipes ?? []).flatMap((item) => {
+    const recipe = normalizeRecipe({ ...item, listId: list.id });
+    return recipe ? [recipe] : [];
+  });
+  const members = snapshot.members.flatMap((item) => {
+    const member = normalizeMember({ ...item, listId: list.id });
+    return member ? [member] : [];
+  });
+  const existingIndex = state.lists.findIndex((item) => item.id === list.id);
+  const nextList = {
+    ...list,
+    shareCode:
+      list.shareCode ??
+      state.lists.find((item) => item.id === list.id)?.shareCode,
+  };
+  const existing = existingIndex >= 0 ? state.lists[existingIndex] : undefined;
+  const lists =
+    existing && sameChecklist(existing, nextList)
+      ? state.lists
+      : existingIndex >= 0
+        ? state.lists.map((item, index) =>
+            index === existingIndex ? nextList : item,
+          )
+        : insertListByOrderHint(state.lists, nextList, state.listOrderHint);
+  const nextCategories = snapshot.categories === undefined
+    ? state.categories.filter((item) => item.listId === list.id)
+    : categories;
+  const categoryIds = new Set(nextCategories.map((category) => category.id));
+  const orderedTasks = tasks.map((task, index) => ({
+    ...task,
+    categoryId:
+      task.categoryId && categoryIds.has(task.categoryId)
+        ? task.categoryId
+        : undefined,
+    position: task.position ?? index,
+  }));
+  return {
+    ...state,
+    lists,
+    tasks: [
+      ...orderedTasks,
+      ...state.tasks.filter((item) => item.listId !== list.id),
+    ],
+    categories: [
+      ...nextCategories,
+      ...state.categories.filter((item) => item.listId !== list.id),
+    ],
+    recipes: [
+      ...recipes,
+      ...state.recipes.filter((item) => item.listId !== list.id),
+    ],
+    members: [
+      ...members,
+      ...state.members.filter((item) => item.listId !== list.id),
+    ],
+  };
+}
+
+export function createChecklistSyncActions(set: SyncSet): ChecklistSyncActions {
   return {
     replacePrivateData: (value) => {
-      const incoming = normalizeTodoState(value);
+      const incoming = normalizeChecklistState(value);
       set((state) => {
         const sharedIds = new Set(
           state.lists.filter((list) => list.mode === 'shared').map((list) => list.id),
@@ -86,13 +182,32 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
             return [];
           }
           retainedIds.add(list.id);
-          return [replacement];
+          return [sameChecklist(list, replacement) ? list : replacement];
         });
+        let nextLists = lists;
+        for (const list of incomingPrivate) {
+          if (retainedIds.has(list.id)) continue;
+          nextLists = insertListByOrderHint(
+            nextLists,
+            list,
+            incoming.listOrderHint,
+          );
+        }
+        const listsUnchanged =
+          nextLists.length === state.lists.length &&
+          nextLists.every((list, index) => list === state.lists[index]);
+        const restoredOpenedAt = Object.fromEntries(
+          Object.entries(incoming.listOpenedAt).filter(
+            ([id]) => !(id in state.listOpenedAt),
+          ),
+        );
         return {
-          lists: [
-            ...lists,
-            ...incomingPrivate.filter((list) => !retainedIds.has(list.id)),
-          ],
+          lists: listsUnchanged ? state.lists : nextLists,
+          listOrderHint: incoming.listOrderHint ?? state.listOrderHint,
+          listOpenedAt:
+            Object.keys(restoredOpenedAt).length === 0
+              ? state.listOpenedAt
+              : { ...restoredOpenedAt, ...state.listOpenedAt },
           tasks: [
             ...incoming.tasks.filter((task) =>
               incoming.lists.some(
@@ -129,88 +244,24 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
     },
 
     replaceSharedSnapshot: (snapshot) => {
-      const list = normalizeList(
-        { ...snapshot.list, mode: 'shared' },
-        false,
-      );
-      if (!list) return;
-      const tasks = snapshot.tasks.flatMap((item) => {
-        const task = normalizeTask({ ...item, listId: list.id }, list.id);
-        return task ? [task] : [];
-      });
-      const categories = (snapshot.categories ?? []).flatMap((item) => {
-        const category = normalizeCategory({ ...item, listId: list.id });
-        return category ? [category] : [];
-      });
-      const recipes = (snapshot.recipes ?? []).flatMap((item) => {
-        const recipe = normalizeRecipe({ ...item, listId: list.id });
-        return recipe ? [recipe] : [];
-      });
-      const members = snapshot.members.flatMap((item) => {
-        const member = normalizeMember({ ...item, listId: list.id });
-        return member ? [member] : [];
-      });
+      set((state) => mergeSharedSnapshot(state, snapshot));
+    },
+
+    replaceSharedSnapshots: (snapshots, options) => {
       set((state) => {
-        const existingIndex = state.lists.findIndex((item) => item.id === list.id);
-        const nextList = {
-          ...list,
-          shareCode:
-            list.shareCode ??
-            state.lists.find((item) => item.id === list.id)?.shareCode,
-        };
-        const lists = [...state.lists];
-        if (existingIndex >= 0) lists[existingIndex] = nextList;
-        else lists.unshift(nextList);
-        const nextCategories = snapshot.categories === undefined
-          ? state.categories.filter((item) => item.listId === list.id)
-          : categories;
-        const categoryIds = new Set(
-          nextCategories.map((category) => category.id),
-        );
-        // Prefer server positions so collaborator reorders propagate. Pending
-        // local mutations skip snapshot apply until flushed.
-        const orderedTasks = tasks.map((task, index) => ({
-          ...task,
-          categoryId:
-            task.categoryId && categoryIds.has(task.categoryId)
-              ? task.categoryId
-              : undefined,
-          position: task.position ?? index,
-        }));
-        return {
-          lists,
-          tasks: [
-            ...orderedTasks,
-            ...state.tasks.filter((item) => item.listId !== list.id),
-          ],
-          categories: [
-            ...nextCategories,
-            ...state.categories.filter((item) => item.listId !== list.id),
-          ],
-          recipes: [
-            ...recipes,
-            ...state.recipes.filter((item) => item.listId !== list.id),
-          ],
-          members: [
-            ...members,
-            ...state.members.filter((item) => item.listId !== list.id),
-          ],
-        };
+        let next = state;
+        for (const listId of options?.dropIds ?? []) {
+          next = dropSharedList(next, listId);
+        }
+        for (const snapshot of snapshots) {
+          next = mergeSharedSnapshot(next, snapshot);
+        }
+        return next;
       });
     },
 
     removeSharedList: (listId) =>
-      set((state) => ({
-        lists: state.lists.filter((list) => list.id !== listId),
-        categories: state.categories.filter((category) => category.listId !== listId),
-        tasks: state.tasks.filter((task) => task.listId !== listId),
-        recipes: state.recipes.filter((recipe) => recipe.listId !== listId),
-        members: state.members.filter((member) => member.listId !== listId),
-        pendingMutations: state.pendingMutations.filter(
-          (mutation) => mutation.listId !== listId,
-        ),
-        listOpenedAt: omitListOpenedAt(state.listOpenedAt, listId),
-      })),
+      set((state) => dropSharedList(state, listId)),
 
     setShareCode: (listId, shareCode) =>
       set((state) => ({
@@ -254,6 +305,6 @@ export function createTodoSyncActions(set: SyncSet): TodoSyncActions {
 
     clearSyncError: () => set({ syncError: undefined }),
 
-    reset: () => set({ ...normalizeTodoState(undefined), syncError: undefined }),
+    reset: () => set({ ...normalizeChecklistState(undefined), syncError: undefined }),
   };
 }

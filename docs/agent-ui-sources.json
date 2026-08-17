@@ -1181,7 +1181,7 @@
     "ontrack.checklists.collaborators": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/_layout.tsx",
         "src/app/todo-collaborators.tsx",
@@ -1202,7 +1202,7 @@
     "ontrack.checklists.createList": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/share-import.tsx",
         "src/features/daily-tracking/day-view.tsx",
@@ -1223,7 +1223,7 @@
     "ontrack.checklists.detail.actions": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
@@ -1246,7 +1246,7 @@
     "ontrack.checklists.detail.actionsClose": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-list-header-toolbar.tsx"
       ],
@@ -1258,7 +1258,7 @@
     "ontrack.checklists.detail.addTask": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/activity-form-detail-editors.tsx",
         "src/app/activity-form-editors.tsx",
@@ -1281,7 +1281,7 @@
     "ontrack.checklists.detail.assigneeFilter": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-empty-state.tsx",
         "src/features/todos/todo-list-screen.tsx"
@@ -1294,7 +1294,7 @@
     "ontrack.checklists.detail.back": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-list-header.tsx",
         "src/utils/agent-ui/flows-lists.ts"
@@ -1306,7 +1306,7 @@
     "ontrack.checklists.detail.categoryTabs": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/checklist-category-tabs.tsx"
       ],
@@ -1318,7 +1318,7 @@
     "ontrack.checklists.detail.editMode": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-list-screen.tsx"
       ],
@@ -1329,7 +1329,7 @@
     "ontrack.checklists.detail.filter": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/agents/runtime.ts",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
@@ -1352,7 +1352,7 @@
     "ontrack.checklists.detail.linkedTrip": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-linked-trip-action.tsx",
         "src/features/todos/todo-list-header.tsx",
@@ -1368,7 +1368,7 @@
     "ontrack.checklists.detail.newTask": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-list-header.tsx",
         "src/features/todos/todo-list-screen.tsx",
@@ -1383,7 +1383,7 @@
     "ontrack.checklists.detail.sort": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-list-toolbar-actions.ts"
       ],
@@ -1394,7 +1394,7 @@
     "ontrack.checklists.detail.title": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-list-header.tsx"
       ],
@@ -1405,7 +1405,7 @@
     "ontrack.checklists.editMode": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/todo-lists-overview-header.tsx"
       ],
@@ -1416,7 +1416,7 @@
     "ontrack.checklists.itemDetails.assignee": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/checklist-assignee-filter.ts",
         "src/features/todos/checklist-task-details-sheet.tsx",
@@ -1439,7 +1439,7 @@
     "ontrack.checklists.itemDetails.category": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/addons/registry.ts",
         "src/addons/types.ts",
@@ -1462,7 +1462,7 @@
     "ontrack.checklists.itemDetails.close": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/checklist-task-details-sheet.tsx"
       ],
@@ -1473,7 +1473,7 @@
     "ontrack.checklists.itemDetails.createCategory": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/components/shared/category-creator-selector.tsx",
         "src/features/finance/finance-transaction-category-sheet.tsx",
@@ -1487,7 +1487,7 @@
     "ontrack.checklists.itemDetails.newCategoryName": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/components/shared/category-creator-selector.tsx",
         "src/features/finance/finance-transaction-category-sheet.tsx",
@@ -1501,7 +1501,7 @@
     "ontrack.checklists.itemDetails.saveTitle": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/checklist-task-details-sheet.tsx"
       ],
@@ -1513,7 +1513,7 @@
     "ontrack.checklists.itemDetails.title": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/checklist-task-details-sheet.tsx"
       ],
@@ -1524,7 +1524,7 @@
     "ontrack.checklists.newListName": {
       "feature": "checklists",
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/share-import.tsx",
         "src/features/todos/todo-lists-overview-header.tsx",
@@ -5802,7 +5802,7 @@
     "ontrack.grocery.detail.addRecipe": {
       "feature": "grocery",
       "entry": "src/features/todos/grocery-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/food/plan-generate.ts",
         "src/features/food/plan-shopping.tsx",
@@ -5820,7 +5820,7 @@
     "ontrack.grocery.detail.back": {
       "feature": "grocery",
       "entry": "src/features/todos/grocery-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/grocery-list-header.tsx"
       ],
@@ -5831,7 +5831,7 @@
     "ontrack.grocery.detail.copy": {
       "feature": "grocery",
       "entry": "src/features/todos/grocery-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/grocery-list-screen.tsx",
         "src/utils/agent-ui/flows-lists.ts"
@@ -5843,7 +5843,7 @@
     "ontrack.grocery.detail.settings": {
       "feature": "grocery",
       "entry": "src/features/todos/grocery-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/grocery-list-screen.tsx",
         "src/utils/agent-ui/flows-lists.ts"
@@ -5855,7 +5855,7 @@
     "ontrack.grocery.detail.share": {
       "feature": "grocery",
       "entry": "src/features/todos/grocery-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/(tabs)/food/community.tsx",
         "src/app/(tabs)/food/preferences.tsx",
@@ -8273,7 +8273,7 @@
     "ontrack.recipeImport.analyze": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/recipe-import-screen.tsx"
       ],
@@ -8284,7 +8284,7 @@
     "ontrack.recipeImport.camera": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/recipe-import-screen.tsx"
       ],
@@ -8295,7 +8295,7 @@
     "ontrack.recipeImport.cancel": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/recipe-import-screen.tsx"
       ],
@@ -8306,7 +8306,7 @@
     "ontrack.recipeImport.ingredient.add": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/recipe-ingredient-editor.tsx"
       ],
@@ -8318,7 +8318,7 @@
     "ontrack.recipeImport.library": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/recipe-import-screen.tsx"
       ],
@@ -8329,7 +8329,7 @@
     "ontrack.recipeImport.mealName": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/meal-analysis/photo+api.ts",
         "src/app/meal-images/enhance+api.ts",
@@ -8348,7 +8348,7 @@
     "ontrack.recipeImport.save": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/recipe-import-draft-panel.tsx"
       ],
@@ -8359,7 +8359,7 @@
     "ontrack.recipeImport.sourceServings": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/grocery-utils.ts",
         "src/features/todos/recipe-import-draft-panel.tsx",
@@ -8373,7 +8373,7 @@
     "ontrack.recipeImport.sourceUrl": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/food/ingredients/[id].tsx",
@@ -8396,7 +8396,7 @@
     "ontrack.recipeImport.stop": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/todos/recipe-import-screen.tsx"
       ],
@@ -8407,7 +8407,7 @@
     "ontrack.recipeImport.targetServings": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/features/food/plan-generate.ts",
         "src/features/todos/grocery-rows.tsx",
@@ -8430,7 +8430,7 @@
     "ontrack.recipeImport.url": {
       "feature": "recipeImport",
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "files": [
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
@@ -14122,7 +14122,7 @@
     },
     "checklists": {
       "entry": "src/features/todos/todo-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "ids": [
         "ontrack.checklists.collaborators",
         "ontrack.checklists.createList",
@@ -14525,7 +14525,7 @@
     },
     "grocery": {
       "entry": "src/features/todos/grocery-list-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "ids": [
         "ontrack.grocery.detail.addRecipe",
         "ontrack.grocery.detail.back",
@@ -14770,7 +14770,7 @@
     },
     "recipeImport": {
       "entry": "src/features/todos/recipe-import-screen.tsx",
-      "skill": ".cursor/skills/todos/SKILL.md",
+      "skill": ".cursor/skills/checklists/SKILL.md",
       "ids": [
         "ontrack.recipeImport.analyze",
         "ontrack.recipeImport.camera",

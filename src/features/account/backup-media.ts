@@ -1,5 +1,6 @@
 import { Directory, File, Paths } from 'expo-file-system';
 
+import { resolveCloudMediaUri } from '@/services/cloud/media';
 import type { OnTrackBackup } from './backup-archive';
 
 export type BackupMediaEntry = {
@@ -132,7 +133,6 @@ async function defaultReadBase64(uri: string): Promise<string | undefined> {
     return undefined;
   }
   try {
-    const { resolveCloudMediaUri } = await import('@/services/cloud/media');
     const resolved = await resolveCloudMediaUri(uri);
     if (resolved.startsWith('file://') || resolved.startsWith('content://')) {
       return defaultReadBase64(resolved);

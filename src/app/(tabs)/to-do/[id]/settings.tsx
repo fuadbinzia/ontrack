@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from 'react';
 import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo } from 'react';
 
-import { TodoListSettingsSheet } from '@/features/todos/todo-list-settings-screen';
+import { ChecklistSettingsSheet } from '@/features/todos/todo-list-settings-screen';
 import { goBackOrReplace } from '@/utils/navigation';
 
 function paramId(value: string | string[] | undefined): string | undefined {
@@ -13,7 +13,7 @@ function paramId(value: string | string[] | undefined): string | undefined {
   return undefined;
 }
 
-export default function TodoListSettingsRoute() {
+export default function ChecklistSettingsRoute() {
   const router = useRouter();
   const focused = useIsFocused();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -27,7 +27,7 @@ export default function TodoListSettingsRoute() {
   if (!listId) return null;
 
   return (
-    <TodoListSettingsSheet
+    <ChecklistSettingsSheet
       listId={listId}
       visible={focused}
       onClose={() =>

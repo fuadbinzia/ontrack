@@ -15,7 +15,7 @@ export const STORAGE_KEYS = {
   travelMap: 'ontrack/travel-map/v1',
   /** Device-local expand/collapse chrome for trip detail (not cloud-synced). */
   travelPlanUi: 'ontrack/travel-plan-ui/v1',
-  todos: 'ontrack/todos/v1',
+  checklists: 'ontrack/todos/v1',
   authAccess: 'ontrack/auth-access/v1',
   visionBoard: 'ontrack/vision-board/v1',
   vehicles: 'ontrack/vehicles/v1',

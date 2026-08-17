@@ -21,7 +21,7 @@ import {
   type AgentUiFixtureName,
 } from './fixtures-constants';
 import type { AgentUiSeedResult } from './fixtures-seed-types';
-import { buildAgentUiDemoChecklist, buildAgentUiDemoGrocery, upsertTodoFixtureLists } from './fixtures-todos';
+import { buildAgentUiDemoChecklist, buildAgentUiDemoGrocery, upsertChecklistFixtureLists } from './fixtures-todos';
 
 type DomainFixtureName = Exclude<
   AgentUiFixtureName,
@@ -39,7 +39,7 @@ export function seedDomainAgentUiFixture(
 ): AgentUiSeedResult | null {
   if (fixture === 'checklist-demo') {
     const built = buildAgentUiDemoChecklist();
-    upsertTodoFixtureLists({
+    upsertChecklistFixtureLists({
       lists: [built.list],
       tasks: built.tasks,
     });
@@ -53,7 +53,7 @@ export function seedDomainAgentUiFixture(
 
   if (fixture === 'grocery-demo') {
     const built = buildAgentUiDemoGrocery();
-    upsertTodoFixtureLists({
+    upsertChecklistFixtureLists({
       lists: [built.list],
       tasks: built.tasks,
       recipes: [built.recipe],

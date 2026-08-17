@@ -4,7 +4,7 @@ import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { AppText, GlassPlate } from '@/components/primitives';
 import { layout, radii, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
-import type { TodoCategory } from '@/store/todos';
+import type { ChecklistCategory } from '@/store/todos';
 
 export const ALL_CATEGORIES = 'all';
 
@@ -13,7 +13,7 @@ export function ChecklistCategoryTabs({
   selectedId,
   onSelect,
 }: {
-  categories: TodoCategory[];
+  categories: ChecklistCategory[];
   selectedId: string;
   onSelect: (id: string) => void;
 }) {

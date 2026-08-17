@@ -1,9 +1,9 @@
-import type { TodoCategory, TodoTask } from '@/store/todos';
+import type { ChecklistCategory, ChecklistTask } from '@/store/todos';
 
 export function sortCategoriesForList(
-  categories: TodoCategory[],
+  categories: ChecklistCategory[],
   listId: string,
-): TodoCategory[] {
+): ChecklistCategory[] {
   return categories
     .filter((category) => category.listId === listId)
     .sort(
@@ -13,8 +13,8 @@ export function sortCategoriesForList(
 }
 
 export function partitionChecklistCategories(
-  categories: readonly TodoCategory[],
-  tasks: readonly Pick<TodoTask, 'categoryId'>[],
+  categories: readonly ChecklistCategory[],
+  tasks: readonly Pick<ChecklistTask, 'categoryId'>[],
 ) {
   const populatedCategoryIds = new Set(
     tasks.flatMap((task) => (task.categoryId ? [task.categoryId] : [])),

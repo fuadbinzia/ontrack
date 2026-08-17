@@ -3,14 +3,14 @@ import { join } from 'node:path';
 
 import { render, screen } from '@testing-library/react-native';
 
-import { TodoListsOverviewHeader } from '@/features/todos/todo-lists-overview-header';
+import { ChecklistsOverviewHeader } from '@/features/todos/todo-lists-overview-header';
 import { AgentUiIds } from '@/utils/agent-ui';
 
 function renderHeader(
-  overrides: Partial<Parameters<typeof TodoListsOverviewHeader>[0]> = {},
+  overrides: Partial<Parameters<typeof ChecklistsOverviewHeader>[0]> = {},
 ) {
   return render(
-    <TodoListsOverviewHeader
+    <ChecklistsOverviewHeader
       listCount={8}
       totalOpen={84}
       editMode={false}
@@ -23,7 +23,7 @@ function renderHeader(
   );
 }
 
-describe('TodoListsOverviewHeader', () => {
+describe('ChecklistsOverviewHeader', () => {
   it('leads with the open-work summary instead of a redundant eyebrow', () => {
     renderHeader();
 

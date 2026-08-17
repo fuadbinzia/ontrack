@@ -1,7 +1,7 @@
 import { createChecklistTaskAndOpenDetails } from '@/features/todos/checklist-task-creation';
-import type { TodoTask } from '@/store/todos';
+import type { ChecklistTask } from '@/store/todos';
 
-const task: TodoTask = {
+const task: ChecklistTask = {
   id: 'task-new',
   listId: 'list-checklist',
   title: 'Pack rain jacket',

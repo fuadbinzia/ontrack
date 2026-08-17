@@ -25,10 +25,10 @@ import { sortCategoriesForList } from '@/features/todos/checklist-category-helpe
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import {
-  useTodos,
-  type TodoCategory,
-  type TodoMember,
-  type TodoTask,
+  useChecklists,
+  type ChecklistCategory,
+  type ChecklistMember,
+  type ChecklistTask,
 } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
@@ -46,21 +46,21 @@ export const ChecklistTaskDetailsSheetHost = forwardRef<
   { listId: string }
 >(function ChecklistTaskDetailsSheetHost({ listId }, ref) {
   const [taskId, setTaskId] = useState<string | null>(null);
-  const task = useTodos((state) =>
+  const task = useChecklists((state) =>
     state.tasks.find((item) => item.id === taskId),
   );
-  const members = useTodos(
+  const members = useChecklists(
     (state) => state.members.filter((member) => member.listId === listId),
     listReferenceEquality,
   );
-  const categories = useTodos(
+  const categories = useChecklists(
     (state) => sortCategoriesForList(state.categories, listId),
     listReferenceEquality,
   );
-  const addCategory = useTodos((state) => state.addCategory);
-  const setAssignee = useTodos((state) => state.setAssignee);
-  const setTaskCategory = useTodos((state) => state.setTaskCategory);
-  const updateTask = useTodos((state) => state.updateTask);
+  const addCategory = useChecklists((state) => state.addCategory);
+  const setAssignee = useChecklists((state) => state.setAssignee);
+  const setTaskCategory = useChecklists((state) => state.setTaskCategory);
+  const updateTask = useChecklists((state) => state.updateTask);
 
   useImperativeHandle(ref, () => ({
     open: (nextTaskId: string) => {
@@ -143,13 +143,13 @@ export function ChecklistTaskDetailsSheet({
   onCreateCategory,
   onClose,
 }: {
-  task?: TodoTask;
-  members: TodoMember[];
-  categories: TodoCategory[];
+  task?: ChecklistTask;
+  members: ChecklistMember[];
+  categories: ChecklistCategory[];
   onUpdateTitle: (title: string) => void;
   onSetAssignee: (userIds?: string[]) => void;
   onSetCategory: (categoryId?: string) => void;
-  onCreateCategory: (name: string) => TodoCategory | undefined;
+  onCreateCategory: (name: string) => ChecklistCategory | undefined;
   onClose: () => void;
 }) {
   const theme = useTheme();

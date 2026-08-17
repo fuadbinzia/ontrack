@@ -2,34 +2,34 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 
 import { getSupabaseClient } from '@/services/cloud/supabase';
 import { removeSharedRecipeImages } from '@/services/todos/recipe-media';
-import { canDeleteTodoList } from '@/store/todos-helpers';
+import { canDeleteChecklist } from '@/store/todos-helpers';
 import {
-  type TodoList,
-  type TodoSharedSnapshot,
-  useTodos,
+  type Checklist,
+  type ChecklistSharedSnapshot,
+  useChecklists,
 } from '@/store/todos';
 
 import {
   authenticatedClient,
   messageFrom,
-  TodoCollaborationError,
+  ChecklistCollaborationError,
 } from './collaboration-core';
 import {
   ensureListMutationsFlushed,
-  loadTodoListSnapshot,
+  loadChecklistSnapshot,
 } from './collaboration-mutations';
 
-export async function removeTodoMember(listId: string, userId: string) {
+export async function removeChecklistMember(listId: string, userId: string) {
   const client = await authenticatedClient();
   const { error } = await client.rpc('remove_todo_member', {
     requested_list_id: listId,
     requested_user_id: userId,
   });
-  if (error) throw new TodoCollaborationError(error.message);
-  await loadTodoListSnapshot(listId);
+  if (error) throw new ChecklistCollaborationError(error.message);
+  await loadChecklistSnapshot(listId);
 }
 
-export async function setTodoMemberRole(
+export async function setChecklistMemberRole(
   listId: string,
   userId: string,
   role: 'editor' | 'member',
@@ -41,14 +41,14 @@ export async function setTodoMemberRole(
     requested_role: role,
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'That member role could not be updated.'),
     );
   }
-  await loadTodoListSnapshot(listId);
+  await loadChecklistSnapshot(listId);
 }
 
-export async function addTodoFriendEditors(
+export async function addChecklistFriendEditors(
   listId: string,
   userIds: string[],
 ) {
@@ -58,14 +58,14 @@ export async function addTodoFriendEditors(
     requested_user_ids: userIds,
   });
   if (error) {
-    throw new TodoCollaborationError(
+    throw new ChecklistCollaborationError(
       messageFrom(error, 'Friends could not be added as editors.'),
     );
   }
-  await loadTodoListSnapshot(listId);
+  await loadChecklistSnapshot(listId);
 }
 
-export async function transferTodoListOwnership(
+export async function transferChecklistOwnership(
   listId: string,
   newOwnerUserId: string,
 ) {
@@ -75,29 +75,29 @@ export async function transferTodoListOwnership(
     requested_list_id: listId,
     new_owner_user_id: newOwnerUserId,
   });
-  if (error) throw new TodoCollaborationError(error.message);
+  if (error) throw new ChecklistCollaborationError(error.message);
   // Former owner's plaintext join code is no longer valid after transfer.
-  useTodos.getState().setShareCode(listId, undefined);
-  await loadTodoListSnapshot(listId);
+  useChecklists.getState().setShareCode(listId, undefined);
+  await loadChecklistSnapshot(listId);
 }
 
 function restoreSharedListRollback(
   listId: string,
   rollback:
     | {
-        list: TodoList;
-        categories: TodoSharedSnapshot['categories'];
-        tasks: TodoSharedSnapshot['tasks'];
-        recipes: TodoSharedSnapshot['recipes'];
-        members: TodoSharedSnapshot['members'];
+        list: Checklist;
+        categories: ChecklistSharedSnapshot['categories'];
+        tasks: ChecklistSharedSnapshot['tasks'];
+        recipes: ChecklistSharedSnapshot['recipes'];
+        members: ChecklistSharedSnapshot['members'];
       }
     | undefined,
-  pendingRollback: ReturnType<typeof useTodos.getState>['pendingMutations'],
+  pendingRollback: ReturnType<typeof useChecklists.getState>['pendingMutations'],
 ) {
   if (!rollback) return;
-  useTodos.getState().replaceSharedSnapshot(rollback);
+  useChecklists.getState().replaceSharedSnapshot(rollback);
   if (!pendingRollback.length) return;
-  useTodos.setState((state) => ({
+  useChecklists.setState((state) => ({
     pendingMutations: [
       ...state.pendingMutations.filter((mutation) => mutation.listId !== listId),
       ...pendingRollback,
@@ -105,9 +105,9 @@ function restoreSharedListRollback(
   }));
 }
 
-export async function leaveTodoList(listId: string) {
+export async function leaveChecklist(listId: string) {
   await ensureListMutationsFlushed(listId);
-  const state = useTodos.getState();
+  const state = useChecklists.getState();
   const list = state.lists.find((item) => item.id === listId);
   const pendingRollback = state.pendingMutations.filter(
     (mutation) => mutation.listId === listId,
@@ -121,22 +121,22 @@ export async function leaveTodoList(listId: string) {
         members: state.members.filter((member) => member.listId === listId),
       }
     : undefined;
-  useTodos.getState().removeSharedList(listId);
+  useChecklists.getState().removeSharedList(listId);
   try {
     const client = await authenticatedClient();
     const { error } = await client.rpc('leave_todo_list', {
       requested_list_id: listId,
     });
-    if (error) throw new TodoCollaborationError(error.message);
+    if (error) throw new ChecklistCollaborationError(error.message);
   } catch (error) {
     restoreSharedListRollback(listId, rollback, pendingRollback);
     throw error;
   }
 }
 
-export async function deleteSharedTodoList(listId: string) {
+export async function deleteSharedChecklist(listId: string) {
   await ensureListMutationsFlushed(listId);
-  const state = useTodos.getState();
+  const state = useChecklists.getState();
   const list = state.lists.find((item) => item.id === listId);
   const pendingRollback = state.pendingMutations.filter(
     (mutation) => mutation.listId === listId,
@@ -150,17 +150,17 @@ export async function deleteSharedTodoList(listId: string) {
         members: state.members.filter((member) => member.listId === listId),
       }
     : undefined;
-  if (list && !canDeleteTodoList(list)) {
-    throw new TodoCollaborationError('Only the owner can delete this list.');
+  if (list && !canDeleteChecklist(list)) {
+    throw new ChecklistCollaborationError('Only the owner can delete this list.');
   }
-  useTodos.getState().removeSharedList(listId);
+  useChecklists.getState().removeSharedList(listId);
   let client: Awaited<ReturnType<typeof authenticatedClient>>;
   try {
     client = await authenticatedClient();
     const { error } = await client.rpc('delete_todo_list', {
       requested_list_id: listId,
     });
-    if (error) throw new TodoCollaborationError(error.message);
+    if (error) throw new ChecklistCollaborationError(error.message);
   } catch (error) {
     restoreSharedListRollback(listId, rollback, pendingRollback);
     throw error;
@@ -172,8 +172,8 @@ export async function deleteSharedTodoList(listId: string) {
   }
 }
 
-export function subscribeToTodoList(
-  list: Pick<TodoList, 'id'>,
+export function subscribeToChecklist(
+  list: Pick<Checklist, 'id'>,
   onChange: () => void,
 ): RealtimeChannel | undefined {
   const client = getSupabaseClient();

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
 
-import { todoListSettingsStyles as styles } from './todo-list-settings-styles';
+import { checklistSettingsStyles as styles } from './todo-list-settings-styles';
 
 import {
   AppText,
@@ -20,28 +20,28 @@ import {
 import { glassMaterials } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { useAuthSession } from '@/features/auth/auth-provider';
-import { shareTodoInvite } from '@/features/todos/share';
-import { TodoListSettingsSharing } from '@/features/todos/todo-list-settings-sharing';
-import { performTodoListRemoval } from '@/features/todos/todo-list-remove';
+import { shareChecklistInvite } from '@/features/todos/share';
+import { ChecklistSettingsSharing } from '@/features/todos/todo-list-settings-sharing';
+import { performChecklistRemoval } from '@/features/todos/todo-list-remove';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { FriendProfile } from '@/services/friends';
 import {
-  addTodoFriendEditors,
-  createTodoShareLink,
-  leaveTodoList,
-  publishTodoList,
-  removeTodoMember,
-  setTodoMemberRole,
-  transferTodoListOwnership,
+  addChecklistFriendEditors,
+  createChecklistShareLink,
+  leaveChecklist,
+  publishChecklist,
+  removeChecklistMember,
+  setChecklistMemberRole,
+  transferChecklistOwnership,
 } from '@/services/todos/collaboration';
 import { useFriends } from '@/store/friends';
-import { canDeleteTodoList, useTodos, type TodoMember } from '@/store/todos';
+import { canDeleteChecklist, useChecklists, type ChecklistMember } from '@/store/todos';
 import { AgentUiIds, AgentTestId } from '@/utils/agent-ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
 import { haptics } from '@/utils/haptics';
 
-export function TodoListSettingsSheet({
+export function ChecklistSettingsSheet({
   listId,
   visible,
   onClose,
@@ -58,8 +58,8 @@ export function TodoListSettingsSheet({
     : glassMaterials.border.light;
   const { spacing, s } = useResponsive();
   const { user } = useAuthSession();
-  const list = useTodos((state) => state.lists.find((item) => item.id === listId));
-  const allMembers = useTodos((state) => state.members);
+  const list = useChecklists((state) => state.lists.find((item) => item.id === listId));
+  const allMembers = useChecklists((state) => state.members);
   const members = useMemo(
     () =>
       allMembers
@@ -81,9 +81,9 @@ export function TodoListSettingsSheet({
     [members],
   );
   const friends = useFriends((state) => state.friends);
-  const renameList = useTodos((state) => state.renameList);
-  const setListKind = useTodos((state) => state.setListKind);
-  const recipeCount = useTodos(
+  const renameList = useChecklists((state) => state.renameList);
+  const setListKind = useChecklists((state) => state.setListKind);
+  const recipeCount = useChecklists(
     (state) =>
       state.recipes.filter((recipe) => recipe.listId === listId).length,
   );
@@ -138,8 +138,8 @@ export function TodoListSettingsSheet({
   const addFriendEditors = (friends: FriendProfile[]) => {
     if (!friends.length) return;
     void run('friends', async () => {
-      if (list.mode === 'private') await publishTodoList(list.id);
-      await addTodoFriendEditors(
+      if (list.mode === 'private') await publishChecklist(list.id);
+      await addChecklistFriendEditors(
         list.id,
         friends.map((friend) => friend.userId),
       );
@@ -152,7 +152,7 @@ export function TodoListSettingsSheet({
     });
   };
 
-  const roleLabel = (role: TodoMember['role']) => {
+  const roleLabel = (role: ChecklistMember['role']) => {
     if (role === 'owner') return 'Owner';
     if (role === 'editor') return 'Editor';
     return 'Member';
@@ -168,17 +168,17 @@ export function TodoListSettingsSheet({
   const beginSharing = () => {
     if (!user) return requireSignIn();
     void run('publish', async () => {
-      await publishTodoList(list.id);
-      const code = await createTodoShareLink(list.id);
-      await shareTodoInvite(list.name, code);
+      await publishChecklist(list.id);
+      const code = await createChecklistShareLink(list.id);
+      await shareChecklistInvite(list.name, code);
     });
   };
 
   const shareLink = () => {
     if (!user) return requireSignIn();
     void run('link', async () => {
-      const code = list.shareCode ?? await createTodoShareLink(list.id);
-      await shareTodoInvite(list.name, code);
+      const code = list.shareCode ?? await createChecklistShareLink(list.id);
+      await shareChecklistInvite(list.name, code);
     });
   };
 
@@ -189,18 +189,18 @@ export function TodoListSettingsSheet({
       actionLabel: 'Leave',
       onConfirm: () =>
         void run('leave', async () => {
-          await leaveTodoList(list.id);
+          await leaveChecklist(list.id);
           onClose();
           router.replace('/(tabs)/to-do' as never);
         }),
     });
   };
 
-  const transferOwnership = (member: TodoMember, leaveAfter: boolean) => {
+  const transferOwnership = (member: ChecklistMember, leaveAfter: boolean) => {
     void run(`transfer-${member.userId}`, async () => {
-      await transferTodoListOwnership(list.id, member.userId);
+      await transferChecklistOwnership(list.id, member.userId);
       if (leaveAfter) {
-        await leaveTodoList(list.id);
+        await leaveChecklist(list.id);
         onClose();
         router.replace('/(tabs)/to-do' as never);
         return;
@@ -212,7 +212,7 @@ export function TodoListSettingsSheet({
     });
   };
 
-  const promptTransfer = (member: TodoMember) => {
+  const promptTransfer = (member: ChecklistMember) => {
     appPrompt.alert(
       'Transfer Ownership?',
       `${member.displayName} will become the owner and manage this list. You become a member, or you can leave now.`,
@@ -232,7 +232,7 @@ export function TodoListSettingsSheet({
   };
 
   const removeList = () => {
-    if (!canDeleteTodoList(list)) return;
+    if (!canDeleteChecklist(list)) return;
     const sharedWithOthers =
       list.mode === 'shared' && otherMembers.length > 0;
     confirmDestructiveAction({
@@ -242,7 +242,7 @@ export function TodoListSettingsSheet({
         : 'The list and every item in it will be permanently deleted.',
       onConfirm: () => {
         void run('delete', async () => {
-          await performTodoListRemoval(list);
+          await performChecklistRemoval(list);
           onClose();
           router.replace('/(tabs)/to-do' as never);
         });
@@ -408,7 +408,7 @@ export function TodoListSettingsSheet({
                           label={`Make ${member.displayName} an editor`}
                           onPress={() =>
                             void run(`role-${member.userId}`, () =>
-                              setTodoMemberRole(list.id, member.userId, 'editor'),
+                              setChecklistMemberRole(list.id, member.userId, 'editor'),
                             )
                           }>
                           <Pressable
@@ -418,7 +418,7 @@ export function TodoListSettingsSheet({
                             hitSlop={8}
                             onPress={() =>
                               void run(`role-${member.userId}`, () =>
-                                setTodoMemberRole(list.id, member.userId, 'editor'),
+                                setChecklistMemberRole(list.id, member.userId, 'editor'),
                               )
                             }>
                             <AppText variant="caption" color="accent" fit>
@@ -432,7 +432,7 @@ export function TodoListSettingsSheet({
                           label={`Make ${member.displayName} a member`}
                           onPress={() =>
                             void run(`role-${member.userId}`, () =>
-                              setTodoMemberRole(list.id, member.userId, 'member'),
+                              setChecklistMemberRole(list.id, member.userId, 'member'),
                             )
                           }>
                           <Pressable
@@ -442,7 +442,7 @@ export function TodoListSettingsSheet({
                             hitSlop={8}
                             onPress={() =>
                               void run(`role-${member.userId}`, () =>
-                                setTodoMemberRole(list.id, member.userId, 'member'),
+                                setChecklistMemberRole(list.id, member.userId, 'member'),
                               )
                             }>
                             <AppText variant="caption" color="accent" fit>
@@ -477,7 +477,7 @@ export function TodoListSettingsSheet({
                                 style: 'destructive',
                                 onPress: () =>
                                   void run(`member-${member.userId}`, () =>
-                                    removeTodoMember(list.id, member.userId),
+                                    removeChecklistMember(list.id, member.userId),
                                   ),
                               },
                             ],
@@ -496,7 +496,7 @@ export function TodoListSettingsSheet({
         ) : null}
 
         {owner ? (
-          <TodoListSettingsSharing
+          <ChecklistSettingsSharing
             list={list}
             working={working}
             spacing={spacing}
@@ -516,7 +516,7 @@ export function TodoListSettingsSheet({
         {list.kind === 'grocery' ? (
           <View style={{ gap: spacing.xs }}>
             <SectionHeader flush title="List Access" />
-            {canDeleteTodoList(list) ? (
+            {canDeleteChecklist(list) ? (
               <>
                 {list.mode === 'shared' && otherMembers.length > 0 ? (
                   <AppText variant="caption" color="secondary">

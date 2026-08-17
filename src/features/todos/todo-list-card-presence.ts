@@ -1,4 +1,4 @@
-export type TodoListCardPresence = {
+export type ChecklistCardPresence = {
   clear: boolean;
   empty: boolean;
   label: string;
@@ -12,10 +12,10 @@ function finiteCount(value: number): number {
 }
 
 /** Open-count pulse for a checklist hub card. */
-export function todoListCardPresence(
+export function checklistCardPresence(
   open: number,
   total: number,
-): TodoListCardPresence {
+): ChecklistCardPresence {
   const safeTotal = finiteCount(total);
   const safeOpen = Math.min(finiteCount(open), safeTotal);
   const empty = safeTotal === 0;

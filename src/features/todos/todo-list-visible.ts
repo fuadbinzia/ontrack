@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 
-import { openTodoLists } from '@/features/todos/todo-list-href';
-import { useTodos, type TodoList } from '@/store/todos';
+import { openChecklists } from '@/features/todos/todo-list-href';
+import { useChecklists, type Checklist } from '@/store/todos';
 
 /** Keep the last painted list while it leaves the store so delete can go to the hub. */
-export function rememberVisibleTodoList<T>(
+export function rememberVisibleChecklist<T>(
   current: T | undefined,
   held: T | undefined,
 ): { value: T | undefined; held: T | undefined; vanished: boolean } {
@@ -21,22 +21,22 @@ export function useHeldVisible<T>(
   current: T | undefined,
 ): { value: T | undefined; vanished: boolean } {
   const heldRef = useRef(current);
-  const remembered = rememberVisibleTodoList(current, heldRef.current);
+  const remembered = rememberVisibleChecklist(current, heldRef.current);
   heldRef.current = remembered.held;
   return remembered;
 }
 
-export function useVisibleTodoList(
+export function useVisibleChecklist(
   listId: string | undefined,
-): TodoList | undefined {
-  const storeList = useTodos((state) =>
+): Checklist | undefined {
+  const storeList = useChecklists((state) =>
     listId ? state.lists.find((item) => item.id === listId) : undefined,
   );
   const remembered = useHeldVisible(storeList);
 
   useEffect(() => {
     if (!remembered.vanished) return;
-    openTodoLists();
+    openChecklists();
   }, [remembered.vanished]);
 
   return remembered.value;

@@ -1,16 +1,16 @@
-/** Todo domain types — kept separate from the Zustand store for agent locality. */
+/** Checklist domain types — kept separate from the Zustand store for agent locality. */
 
-export type TodoListMode = 'private' | 'shared';
-export type TodoListRole = 'owner' | 'editor' | 'member';
-export type TodoListKind = 'checklist' | 'grocery';
-export type TodoRecipeSourceKind = 'url' | 'image';
+export type ChecklistMode = 'private' | 'shared';
+export type ChecklistRole = 'owner' | 'editor' | 'member';
+export type ChecklistKind = 'checklist' | 'grocery';
+export type ChecklistRecipeSourceKind = 'url' | 'image';
 
-export interface TodoList {
+export interface Checklist {
   id: string;
   name: string;
-  kind: TodoListKind;
-  mode: TodoListMode;
-  role: TodoListRole;
+  kind: ChecklistKind;
+  mode: ChecklistMode;
+  role: ChecklistRole;
   ownerUserId?: string;
   ownerName?: string;
   shareCode?: string;
@@ -18,7 +18,7 @@ export interface TodoList {
   updatedAt: string;
 }
 
-export interface TodoCategory {
+export interface ChecklistCategory {
   id: string;
   listId: string;
   name: string;
@@ -27,11 +27,11 @@ export interface TodoCategory {
   updatedAt: string;
 }
 
-export interface TodoRecipe {
+export interface ChecklistRecipe {
   id: string;
   listId: string;
   name: string;
-  sourceKind: TodoRecipeSourceKind;
+  sourceKind: ChecklistRecipeSourceKind;
   sourceUrl?: string;
   sourceImageUri?: string;
   sourceImagePath?: string;
@@ -42,7 +42,7 @@ export interface TodoRecipe {
   updatedAt: string;
 }
 
-export interface TodoIngredientInput {
+export interface ChecklistIngredientInput {
   name: string;
   canonicalKey?: string;
   quantityValue?: number;
@@ -53,17 +53,17 @@ export interface TodoIngredientInput {
   confidence?: number;
 }
 
-export interface TodoRecipeInput {
+export interface ChecklistRecipeInput {
   name: string;
-  sourceKind: TodoRecipeSourceKind;
+  sourceKind: ChecklistRecipeSourceKind;
   sourceUrl?: string;
   sourceImageUri?: string;
   originalServings?: number;
   targetServings?: number;
-  ingredients: TodoIngredientInput[];
+  ingredients: ChecklistIngredientInput[];
 }
 
-export interface TodoTask {
+export interface ChecklistTask {
   id: string;
   listId: string;
   position?: number;
@@ -90,15 +90,15 @@ export interface TodoTask {
   version: number;
 }
 
-export interface TodoMember {
+export interface ChecklistMember {
   listId: string;
   userId: string;
   displayName: string;
-  role: TodoListRole;
+  role: ChecklistRole;
   joinedAt: string;
 }
 
-export interface TodoInvite {
+export interface ChecklistInvite {
   id: string;
   listId: string;
   listName: string;
@@ -107,52 +107,62 @@ export interface TodoInvite {
   createdAt: string;
 }
 
-export type TodoMutationOperation =
-  | 'rename_list'
-  | 'set_list_kind'
-  | 'add_category'
-  | 'delete_category'
-  | 'set_task_category'
-  | 'add_task'
-  | 'add_recipe'
-  | 'update_recipe'
-  | 'delete_recipe'
-  | 'update_ingredient'
-  | 'reorder_tasks'
-  | 'reorder_recipes'
-  | 'update_task'
-  | 'delete_task'
-  | 'set_completion'
-  | 'set_tasks_completion'
-  | 'set_assignee'
-  | 'clear_completed';
+export const CHECKLIST_MUTATION_OPERATIONS = [
+  'rename_list',
+  'set_list_kind',
+  'add_category',
+  'delete_category',
+  'set_task_category',
+  'add_task',
+  'add_recipe',
+  'update_recipe',
+  'delete_recipe',
+  'update_ingredient',
+  'reorder_tasks',
+  'reorder_recipes',
+  'update_task',
+  'delete_task',
+  'set_completion',
+  'set_tasks_completion',
+  'set_assignee',
+  'clear_completed',
+] as const;
 
-export interface PendingTodoMutation {
+export type ChecklistMutationOperation =
+  (typeof CHECKLIST_MUTATION_OPERATIONS)[number];
+
+export interface PendingChecklistMutation {
   id: string;
   listId: string;
-  operation: TodoMutationOperation;
+  operation: ChecklistMutationOperation;
   payload: Record<string, unknown>;
   createdAt: string;
   attempts: number;
 }
 
-export interface TodoPersistedState {
+export interface ChecklistPersistedState {
   groceryMigrationVersion: 1;
-  lists: TodoList[];
-  categories: TodoCategory[];
-  tasks: TodoTask[];
-  recipes: TodoRecipe[];
-  members: TodoMember[];
-  invites: TodoInvite[];
-  pendingMutations: PendingTodoMutation[];
+  lists: Checklist[];
+  categories: ChecklistCategory[];
+  tasks: ChecklistTask[];
+  recipes: ChecklistRecipe[];
+  members: ChecklistMember[];
+  invites: ChecklistInvite[];
+  pendingMutations: PendingChecklistMutation[];
   /** Local-only; opening a list does not sync as an edit. */
   listOpenedAt: Record<string, string>;
+  /**
+   * Catalog order (all list ids) from the last cloud payload. Restored lists
+   * — including shared ones that reload after a wipe — reclaim their old
+   * position instead of appending at the end.
+   */
+  listOrderHint?: string[];
 }
 
-export interface TodoSharedSnapshot {
-  list: TodoList;
-  categories?: TodoCategory[];
-  tasks: TodoTask[];
-  recipes?: TodoRecipe[];
-  members: TodoMember[];
+export interface ChecklistSharedSnapshot {
+  list: Checklist;
+  categories?: ChecklistCategory[];
+  tasks: ChecklistTask[];
+  recipes?: ChecklistRecipe[];
+  members: ChecklistMember[];
 }

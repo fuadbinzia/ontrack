@@ -36,20 +36,20 @@ import {
     MealCard,
     OtherItems,
 } from '@/features/todos/grocery-rows';
-import { copyTodoListText, shareTodoListText } from '@/features/todos/share';
-import { openTodoLists } from '@/features/todos/todo-list-href';
-import { TodoListSettingsSheet } from '@/features/todos/todo-list-settings-screen';
-import { useVisibleTodoList } from '@/features/todos/todo-list-visible';
+import { copyChecklistText, shareChecklistText } from '@/features/todos/share';
+import { openChecklists } from '@/features/todos/todo-list-href';
+import { ChecklistSettingsSheet } from '@/features/todos/todo-list-settings-screen';
+import { useVisibleChecklist } from '@/features/todos/todo-list-visible';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { deletePersistedRecipeImage } from '@/services/recipes';
 import {
-    canCompleteTodo,
-    canEditTodoContent,
-    useTodos,
-    type TodoRecipe,
-    type TodoTask,
+    canCompleteChecklistTask,
+    canEditChecklistContent,
+    useChecklists,
+    type ChecklistRecipe,
+    type ChecklistTask,
 } from '@/store/todos';
 import { useUI } from '@/store/ui';
 import { confirmDestructiveAction } from '@/utils/confirm-destructive';
@@ -61,7 +61,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type GroceryView = 'meal' | 'combined';
 
 type GroceryListRow =
-  | { type: 'meal'; key: string; recipe: TodoRecipe; tasks: TodoTask[] }
+  | { type: 'meal'; key: string; recipe: ChecklistRecipe; tasks: ChecklistTask[] }
   | { type: 'empty-recipes'; key: 'empty-recipes' }
   | { type: 'combined-heading'; key: 'combined-heading' }
   | { type: 'combined-card'; key: 'combined-card'; groups: CombinedIngredient[] }
@@ -84,12 +84,12 @@ export function GroceryListScreen({ listId }: { listId: string }) {
     measuredTabBarHeight ||
     layout.bottomNavBarBaseHeight + insets.bottom;
   const { user } = useAuthSession();
-  const list = useVisibleTodoList(listId);
-  const tasks = useTodos(
+  const list = useVisibleChecklist(listId);
+  const tasks = useChecklists(
     (state) => state.tasks.filter((task) => task.listId === listId),
     listReferenceEquality,
   );
-  const recipes = useTodos(
+  const recipes = useChecklists(
     (state) =>
       state.recipes
         .filter((recipe) => recipe.listId === listId)
@@ -101,17 +101,17 @@ export function GroceryListScreen({ listId }: { listId: string }) {
         ),
     listReferenceEquality,
   );
-  const members = useTodos(
+  const members = useChecklists(
     (state) => state.members.filter((member) => member.listId === listId),
     listReferenceEquality,
   );
-  const addTask = useTodos((state) => state.addTask);
-  const setTasksCompletion = useTodos((state) => state.setTasksCompletion);
-  const deleteTask = useTodos((state) => state.deleteTask);
-  const deleteRecipe = useTodos((state) => state.deleteRecipe);
-  const clearCompleted = useTodos((state) => state.clearCompleted);
-  const syncError = useTodos((state) => state.syncError);
-  const clearSyncError = useTodos((state) => state.clearSyncError);
+  const addTask = useChecklists((state) => state.addTask);
+  const setTasksCompletion = useChecklists((state) => state.setTasksCompletion);
+  const deleteTask = useChecklists((state) => state.deleteTask);
+  const deleteRecipe = useChecklists((state) => state.deleteRecipe);
+  const clearCompleted = useChecklists((state) => state.clearCompleted);
+  const syncError = useChecklists((state) => state.syncError);
+  const clearSyncError = useChecklists((state) => state.clearSyncError);
   const [view, setView] = useState<GroceryView>('meal');
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(
     new Set(),
@@ -163,7 +163,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
   );
 
   const owner = list?.role === 'owner';
-  const canEdit = list ? canEditTodoContent(list) : false;
+  const canEdit = list ? canEditChecklistContent(list) : false;
   const completedCount = tasks.filter((task) => task.completed).length;
   const progress = tasks.length ? completedCount / tasks.length : 0;
 
@@ -255,7 +255,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
                 onToggleTask={(task) =>
                   setTasksCompletion([task.id], !task.completed, user?.id)
                 }
-                canComplete={(task) => canCompleteTodo(list, task, user?.id)}
+                canComplete={(task) => canCompleteChecklistTask(list, task, user?.id)}
               />
             </View>
           );
@@ -287,7 +287,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
                 onLayout={copyAgent.onLayout}
                 accessibilityRole="button"
                 accessibilityLabel="Copy grocery list"
-                onPress={() => void copyTodoListText(list, tasks, members, recipes)}>
+                onPress={() => void copyChecklistText(list, tasks, members, recipes)}>
                 <AppText variant="caption" color="accent">
                   Copy
                 </AppText>
@@ -306,7 +306,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
                     disabled={!group.taskIds.some((id) => {
                       const task = tasks.find((entry) => entry.id === id);
                       return task
-                        ? canCompleteTodo(list, task, user?.id)
+                        ? canCompleteChecklistTask(list, task, user?.id)
                         : false;
                     })}
                     first={index === 0}
@@ -344,7 +344,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
                 onToggle={(task) =>
                   setTasksCompletion([task.id], !task.completed, user?.id)
                 }
-                canComplete={(task) => canCompleteTodo(list, task, user?.id)}
+                canComplete={(task) => canCompleteChecklistTask(list, task, user?.id)}
               />
             </View>
           );
@@ -412,7 +412,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
       <Screen contentStyle={styles.center}>
         <Symbol name="groceries" size={42} color={theme.textTertiary} />
         <AppText variant="heading">Grocery List Unavailable</AppText>
-        <Button onPress={openTodoLists}>
+        <Button onPress={openChecklists}>
           Back to Lists
         </Button>
       </Screen>
@@ -464,7 +464,7 @@ export function GroceryListScreen({ listId }: { listId: string }) {
         }
         renderItem={renderItem}
       />
-      <TodoListSettingsSheet
+      <ChecklistSettingsSheet
         listId={listId}
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}

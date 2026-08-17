@@ -15,17 +15,17 @@ import {
 import { glassMaterials, radii, spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { PeoplePicker } from '@/features/social/people-picker';
-import { shareTodoCollaboratorInvite } from '@/features/todos/share';
+import { shareChecklistCollaboratorInvite } from '@/features/todos/share';
 import { useTheme } from '@/hooks/use-theme';
 import type { FriendProfile } from '@/services/friends';
 import {
-  addTodoFriendEditors,
-  createTodoCollaboratorLink,
-  publishTodoList,
+  addChecklistFriendEditors,
+  createChecklistCollaboratorLink,
+  publishChecklist,
 } from '@/services/todos/collaboration';
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 
-export function TodoCollaboratorsScreen() {
+export function ChecklistCollaboratorsScreen() {
   const router = useRouter();
   const theme = useTheme();
   const dark = theme.name === 'dark';
@@ -33,7 +33,7 @@ export function TodoCollaboratorsScreen() {
     ? glassMaterials.border.dark
     : glassMaterials.border.light;
   const { user } = useAuthSession();
-  const lists = useTodos((state) => state.lists);
+  const lists = useChecklists((state) => state.lists);
   const ownedLists = useMemo(
     () => lists.filter((list) => list.role === 'owner'),
     [lists],
@@ -74,12 +74,12 @@ export function TodoCollaboratorsScreen() {
     setError(undefined);
     try {
       for (const list of selectedLists) {
-        if (list.mode === 'private') await publishTodoList(list.id);
+        if (list.mode === 'private') await publishChecklist(list.id);
       }
-      const code = await createTodoCollaboratorLink(
+      const code = await createChecklistCollaboratorLink(
         selectedLists.map((list) => list.id),
       );
-      await shareTodoCollaboratorInvite(
+      await shareChecklistCollaboratorInvite(
         selectedLists.map((list) => list.name),
         code,
       );
@@ -100,8 +100,8 @@ export function TodoCollaboratorsScreen() {
     setError(undefined);
     try {
       for (const list of selectedLists) {
-        if (list.mode === 'private') await publishTodoList(list.id);
-        await addTodoFriendEditors(
+        if (list.mode === 'private') await publishChecklist(list.id);
+        await addChecklistFriendEditors(
           list.id,
           friends.map((friend) => friend.userId),
         );

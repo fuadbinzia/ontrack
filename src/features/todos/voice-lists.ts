@@ -1,10 +1,10 @@
 import {
-  canEditTodoContent,
+  canEditChecklistContent,
   DEFAULT_CHECKLIST_NAME,
   DEFAULT_GROCERY_LIST_NAME,
-  useTodos,
+  useChecklists,
 } from '@/store/todos';
-import type { TodoList, TodoListKind, TodoPersistedState } from '@/store/todos';
+import type { Checklist, ChecklistKind, ChecklistPersistedState } from '@/store/todos';
 import OnTrackVoiceLists from '../../../modules/ontrack-voice-lists';
 import type {
   VoiceKindHint,
@@ -67,7 +67,7 @@ export function matchVoiceList(
   );
 }
 
-export function buildVoiceSnapshot(state: TodoPersistedState): VoiceListSnapshot {
+export function buildVoiceSnapshot(state: ChecklistPersistedState): VoiceListSnapshot {
   const openTasksByList = new Map<string, typeof state.tasks>();
   for (const task of state.tasks) {
     if (task.completed) continue;
@@ -83,7 +83,7 @@ export function buildVoiceSnapshot(state: TodoPersistedState): VoiceListSnapshot
     id: list.id,
     name: list.name,
     kind: list.kind,
-    canEdit: canEditTodoContent(list),
+    canEdit: canEditChecklistContent(list),
     updatedAt: list.updatedAt,
     openTitles: (openTasksByList.get(list.id) ?? [])
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
@@ -92,18 +92,18 @@ export function buildVoiceSnapshot(state: TodoPersistedState): VoiceListSnapshot
   return { lists };
 }
 
-function ensureVoiceList(op: VoicePendingOp): TodoList | undefined {
-  const state = useTodos.getState();
+function ensureVoiceList(op: VoicePendingOp): Checklist | undefined {
+  const state = useChecklists.getState();
   const match = matchVoiceList(buildVoiceSnapshot(state).lists, op.listName, op.kindHint);
   if (match?.canEdit) {
     return state.lists.find((list) => list.id === match.id);
   }
 
-  const kind: TodoListKind = op.kindHint === 'grocery' ? 'grocery' : 'checklist';
+  const kind: ChecklistKind = op.kindHint === 'grocery' ? 'grocery' : 'checklist';
   const name =
     voiceListNameQuery(op.listName) ??
     (kind === 'grocery' ? DEFAULT_GROCERY_LIST_NAME : DEFAULT_CHECKLIST_NAME);
-  return useTodos.getState().createList(name, kind);
+  return useChecklists.getState().createList(name, kind);
 }
 
 export function applyVoicePendingToStore(ops: VoicePendingOp[]): number {
@@ -112,12 +112,12 @@ export function applyVoicePendingToStore(ops: VoicePendingOp[]): number {
     const title = op.title.trim();
     if (!title) continue;
     const list = op.listId
-      ? useTodos.getState().lists.find((item) => item.id === op.listId)
+      ? useChecklists.getState().lists.find((item) => item.id === op.listId)
       : undefined;
     const target =
-      (list && canEditTodoContent(list) ? list : undefined) ?? ensureVoiceList(op);
+      (list && canEditChecklistContent(list) ? list : undefined) ?? ensureVoiceList(op);
     if (!target) continue;
-    if (useTodos.getState().addTask(target.id, title)) applied += 1;
+    if (useChecklists.getState().addTask(target.id, title)) applied += 1;
   }
   return applied;
 }
@@ -130,7 +130,7 @@ export async function applyVoicePendingOps(): Promise<number> {
 
 export async function publishVoiceSnapshot(): Promise<void> {
   if (!OnTrackVoiceLists) return;
-  const snapshot = buildVoiceSnapshot(useTodos.getState());
+  const snapshot = buildVoiceSnapshot(useChecklists.getState());
   await OnTrackVoiceLists.publishSnapshotAsync(JSON.stringify(snapshot));
 }
 

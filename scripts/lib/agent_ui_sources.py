@@ -24,19 +24,19 @@ FEATURE_ENTRIES: dict[str, dict[str, str]] = {
     "calendar": {"entry": "src/app/(tabs)/calendar.tsx"},
     "checklists": {
         "entry": "src/features/todos/todo-list-screen.tsx",
-        "skill": ".cursor/skills/todos/SKILL.md",
+        "skill": ".cursor/skills/checklists/SKILL.md",
     },
     "todos": {
         "entry": "src/features/todos/todo-list-screen.tsx",
-        "skill": ".cursor/skills/todos/SKILL.md",
+        "skill": ".cursor/skills/checklists/SKILL.md",
     },
     "grocery": {
         "entry": "src/features/todos/grocery-list-screen.tsx",
-        "skill": ".cursor/skills/todos/SKILL.md",
+        "skill": ".cursor/skills/checklists/SKILL.md",
     },
     "recipeImport": {
         "entry": "src/features/todos/recipe-import-screen.tsx",
-        "skill": ".cursor/skills/todos/SKILL.md",
+        "skill": ".cursor/skills/checklists/SKILL.md",
     },
     "social": {"entry": "src/app/(tabs)/social.tsx"},
     "insights": {"entry": "src/app/(tabs)/insights.tsx"},

@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
+    FlatList,
     Keyboard,
     Platform,
     StyleSheet,
     View,
+    type ListRenderItemInfo,
 } from 'react-native';
 import DraggableFlatList, {
     type RenderItemParams,
@@ -14,33 +16,30 @@ import { bottomNavContentInset } from '@/components/navigation/bottom-nav-inset'
 import { Screen } from '@/components/primitives';
 import { layout, spacing } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
-import { EmptyChecklists } from '@/features/todos/empty-checklists';
 import { canShowChecklistCollaborator } from '@/features/todos/checklist-collaborator-visibility';
-import { TodoListCard } from '@/features/todos/todo-list-card';
-import { openTodoList, todoListDetailHref } from '@/features/todos/todo-list-href';
-import { TodoListsOverviewHeader } from '@/features/todos/todo-lists-overview-header';
-import { confirmRemoveTodoList } from '@/features/todos/todo-list-remove';
-import { sortTodoListsByRecent } from '@/features/todos/todo-sort';
+import { EmptyChecklists } from '@/features/todos/empty-checklists';
+import { ChecklistCard } from '@/features/todos/todo-list-card';
+import { checklistDetailHref, openChecklist } from '@/features/todos/todo-list-href';
+import { checklistHubWindowing } from '@/features/todos/todo-list-hub-windowing';
+import { confirmRemoveChecklist } from '@/features/todos/todo-list-remove';
+import { ChecklistsOverviewHeader } from '@/features/todos/todo-lists-overview-header';
 import { usePullToRefresh } from '@/hooks/use-pull-to-refresh';
-import {
-    useTodos,
-    type TodoList,
-} from '@/store/todos';
 import { useFriends } from '@/store/friends';
+import {
+    useChecklists,
+    type Checklist,
+} from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 import { listReferenceEquality } from '@/utils/list-equality';
 import { useWarmHrefs } from '@/utils/warm-navigation';
 
-export function TodoListsOverview() {
+export function ChecklistsOverview() {
   const insets = useSafeAreaInsets();
   const { user } = useAuthSession();
   const { refreshControl } = usePullToRefresh();
-  const lists = useTodos(
-    (state) => sortTodoListsByRecent(state.lists, state.listOpenedAt),
-    listReferenceEquality,
-  );
-  const counts = useTodos(
+  const lists = useChecklists((state) => state.lists, listReferenceEquality);
+  const counts = useChecklists(
     (state) => {
       const next = new Map<string, { open: number; total: number }>();
       for (const task of state.tasks) {
@@ -63,11 +62,11 @@ export function TodoListsOverview() {
       return true;
     },
   );
-  const members = useTodos((state) => state.members, listReferenceEquality);
+  const members = useChecklists((state) => state.members, listReferenceEquality);
   const friends = useFriends((state) => state.friends);
-  const createList = useTodos((state) => state.createList);
-  const reorderLists = useTodos((state) => state.reorderLists);
-  const renameList = useTodos((state) => state.renameList);
+  const createList = useChecklists((state) => state.createList);
+  const reorderLists = useChecklists((state) => state.reorderLists);
+  const renameList = useChecklists((state) => state.renameList);
   const [draft, setDraft] = useState('');
   const [nameDrafts, setNameDrafts] = useState<Record<string, string>>({});
   const [editingListIds, setEditingListIds] =
@@ -75,7 +74,10 @@ export function TodoListsOverview() {
   const editMode =
     editingListIds !== null &&
     lists.some((list) => editingListIds.has(list.id));
-  useWarmHrefs(lists.map((list) => todoListDetailHref(list.id)));
+  // Warm only the top list: the router keeps one preloaded route per screen
+  // name, so warming every id is mount/unmount churn with a single survivor —
+  // and a surviving wrong-id route is what made first taps open the wrong list.
+  useWarmHrefs(lists.slice(0, 1).map((list) => checklistDetailHref(list.id)));
 
   const totalOpen = useMemo(() => {
     let open = 0;
@@ -127,7 +129,7 @@ export function TodoListsOverview() {
     setDraft('');
     Keyboard.dismiss();
     haptics.success();
-    openTodoList(list.id);
+    openChecklist(list.id);
   };
 
   const moveList = useCallback((id: string, offset: number) => {
@@ -179,18 +181,17 @@ export function TodoListsOverview() {
     else haptics.select();
   };
 
-  const renderList = useCallback(
-    ({
-      item,
-      isActive,
-      drag,
-      getIndex,
-    }: RenderItemParams<TodoList>) => {
+  const renderCard = useCallback(
+    (
+      item: Checklist,
+      index: number,
+      drag: () => void,
+      isActive: boolean,
+    ) => {
       const count = counts.get(item.id) ?? { open: 0, total: 0 };
-      const index = getIndex() ?? lists.findIndex((list) => list.id === item.id);
       return (
         <View style={styles.listItem}>
-          <TodoListCard
+          <ChecklistCard
             editMode={editMode}
             isActive={isActive}
             list={item}
@@ -199,7 +200,7 @@ export function TodoListsOverview() {
             total={count.total}
             nameDraft={nameDrafts[item.id] ?? item.name}
             testID={AgentUiIds.checklists.list(item.id)}
-            onDragStart={drag}
+            onDragStart={editMode ? drag : () => undefined}
             onNameChange={(name) =>
               setNameDrafts((current) => ({ ...current, [item.id]: name }))
             }
@@ -209,10 +210,10 @@ export function TodoListsOverview() {
             }}
             onMoveDown={() => moveList(item.id, 1)}
             onMoveUp={() => moveList(item.id, -1)}
-            onRemove={() => confirmRemoveTodoList(item)}
+            onRemove={() => confirmRemoveChecklist(item)}
             canMoveDown={index < lists.length - 1}
             canMoveUp={index > 0}
-            onPress={() => openTodoList(item.id)}
+            onPress={() => openChecklist(item.id)}
           />
         </View>
       );
@@ -221,12 +222,60 @@ export function TodoListsOverview() {
       collaboratorsByList,
       counts,
       editMode,
-      lists,
+      lists.length,
       nameDrafts,
       commitListName,
       moveList,
     ],
   );
+
+  const renderBrowseItem = useCallback(
+    ({ item, index }: ListRenderItemInfo<Checklist>) =>
+      renderCard(item, index, () => undefined, false),
+    [renderCard],
+  );
+
+  const renderDragItem = useCallback(
+    ({ item, isActive, drag, getIndex }: RenderItemParams<Checklist>) =>
+      renderCard(
+        item,
+        getIndex() ?? lists.findIndex((list) => list.id === item.id),
+        drag,
+        isActive,
+      ),
+    [lists, renderCard],
+  );
+
+  const listHeader = (
+    <ChecklistsOverviewHeader
+      listCount={lists.length}
+      totalOpen={totalOpen}
+      editMode={editMode}
+      draft={draft}
+      onDraftChange={setDraft}
+      onSubmitDraft={add}
+      onToggleEditMode={() => {
+        if (editMode) finishEditing();
+        else beginEditing();
+      }}
+    />
+  );
+  const listShared = {
+    automaticallyAdjustKeyboardInsets: true,
+    contentContainerStyle: listContentStyle,
+    contentInsetAdjustmentBehavior: 'never' as const,
+    data: lists,
+    extraData: editMode,
+    ...checklistHubWindowing(lists.length),
+    refreshControl,
+    keyboardDismissMode:
+      Platform.OS === 'ios' ? ('interactive' as const) : ('on-drag' as const),
+    keyboardShouldPersistTaps: 'handled' as const,
+    keyExtractor: (item: Checklist) => item.id,
+    ListHeaderComponent: listHeader,
+    ListEmptyComponent: <EmptyChecklists />,
+    showsVerticalScrollIndicator: false,
+  };
 
   return (
     <Screen
@@ -234,46 +283,31 @@ export function TodoListsOverview() {
       bottomInset={false}
       contentStyle={styles.screenContent}>
       <View style={styles.content}>
-        <DraggableFlatList
-          activationDistance={8}
-          automaticallyAdjustKeyboardInsets
-          autoscrollSpeed={180}
-          autoscrollThreshold={80}
-          containerStyle={styles.dragList}
-          contentContainerStyle={listContentStyle}
-          contentInsetAdjustmentBehavior="never"
-          data={lists}
-          refreshControl={refreshControl}
-          dragItemOverflow={false}
-          onDragBegin={() => {
-            haptics.heavy();
-          }}
-          onDragEnd={({ data, from, to }) => {
-            if (!editMode || from < 0 || to < 0) return;
-            haptics.select();
-            reorderLists(data.map((list) => list.id));
-          }}
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-          keyboardShouldPersistTaps="handled"
-          keyExtractor={(item) => item.id}
-          ListHeaderComponent={
-            <TodoListsOverviewHeader
-              listCount={lists.length}
-              totalOpen={totalOpen}
-              editMode={editMode}
-              draft={draft}
-              onDraftChange={setDraft}
-              onSubmitDraft={add}
-              onToggleEditMode={() => {
-                if (editMode) finishEditing();
-                else beginEditing();
-              }}
-            />
-          }
-          ListEmptyComponent={<EmptyChecklists />}
-          renderItem={renderList}
-          showsVerticalScrollIndicator={false}
-        />
+        {editMode ? (
+          <DraggableFlatList
+            {...listShared}
+            activationDistance={8}
+            autoscrollSpeed={180}
+            autoscrollThreshold={80}
+            containerStyle={styles.dragList}
+            dragItemOverflow={false}
+            onDragBegin={() => {
+              haptics.heavy();
+            }}
+            onDragEnd={({ data, from, to }) => {
+              if (from < 0 || to < 0 || from === to) return;
+              haptics.select();
+              reorderLists(data.map((list) => list.id));
+            }}
+            renderItem={renderDragItem}
+          />
+        ) : (
+          <FlatList
+            {...listShared}
+            style={styles.dragList}
+            renderItem={renderBrowseItem}
+          />
+        )}
       </View>
     </Screen>
   );

@@ -1,9 +1,9 @@
 import { partitionChecklistCategories } from '@/features/todos/checklist-category-helpers';
-import type { TodoCategory } from '@/store/todos';
+import type { ChecklistCategory } from '@/store/todos';
 
 const createdAt = '2026-08-12T00:00:00.000Z';
 
-function category(id: string, name: string): TodoCategory {
+function category(id: string, name: string): ChecklistCategory {
   return {
     id,
     listId: 'list-packing',

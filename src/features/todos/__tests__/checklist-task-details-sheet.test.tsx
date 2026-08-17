@@ -5,7 +5,7 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ChecklistTaskDetailsSheet } from '@/features/todos/checklist-task-details-sheet';
-import type { TodoCategory, TodoMember, TodoTask } from '@/store/todos';
+import type { ChecklistCategory, ChecklistMember, ChecklistTask } from '@/store/todos';
 
 jest.mock('@/components/primitives/sheet-scaffold', () => {
   const React = jest.requireActual('react');
@@ -134,7 +134,7 @@ const metrics = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
   insets: { top: 59, left: 0, right: 0, bottom: 34 },
 };
-const category: TodoCategory = {
+const category: ChecklistCategory = {
   id: 'category-finance',
   listId: 'list-checklist',
   name: 'Finance',
@@ -142,14 +142,14 @@ const category: TodoCategory = {
   createdAt,
   updatedAt: createdAt,
 };
-const member: TodoMember = {
+const member: ChecklistMember = {
   listId: category.listId,
   userId: 'member-jordan',
   displayName: 'Jordan Lee',
   role: 'member',
   joinedAt: createdAt,
 };
-const task: TodoTask = {
+const task: ChecklistTask = {
   id: 'task-finance',
   listId: category.listId,
   title: 'Review property tax tracker',
@@ -362,7 +362,7 @@ describe('ChecklistTaskDetailsSheet', () => {
 
   it('keeps Assigned to open after a selection and supports multi-assign', () => {
     const onSetAssignee = jest.fn();
-    const alex: TodoMember = {
+    const alex: ChecklistMember = {
       ...member,
       userId: 'member-alex',
       displayName: 'Alex Morgan',
@@ -391,7 +391,7 @@ describe('ChecklistTaskDetailsSheet', () => {
   });
 
   it('creates a category and selects it without leaving the sheet', () => {
-    const createdCategory: TodoCategory = {
+    const createdCategory: ChecklistCategory = {
       ...category,
       id: 'category-pet',
       name: 'Pet',
@@ -449,22 +449,22 @@ describe('ChecklistTaskDetailsSheet', () => {
   });
 
   it('pins each selection first and alphabetizes the remaining options', () => {
-    const alex: TodoMember = {
+    const alex: ChecklistMember = {
       ...member,
       userId: 'member-alex',
       displayName: 'Alex Morgan',
     };
-    const zoe: TodoMember = {
+    const zoe: ChecklistMember = {
       ...member,
       userId: 'member-zoe',
       displayName: 'Zoe Chen',
     };
-    const food: TodoCategory = {
+    const food: ChecklistCategory = {
       ...category,
       id: 'category-food',
       name: 'Food',
     };
-    const travel: TodoCategory = {
+    const travel: ChecklistCategory = {
       ...category,
       id: 'category-travel',
       name: 'Travel',

@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import type { ComponentProps } from 'react';
 import { render, screen } from '@testing-library/react-native';
 
-import { TodoListCard } from '@/features/todos/todo-list-card';
-import type { TodoList } from '@/store/todos';
+import { ChecklistCard } from '@/features/todos/todo-list-card';
+import type { Checklist } from '@/store/todos';
 
 jest.mock('@/components/primitives/symbol', () => {
   const React = jest.requireActual('react');
@@ -28,7 +28,7 @@ jest.mock('@/features/account/profile-avatar', () => {
 });
 
 const createdAt = '2026-08-12T00:00:00.000Z';
-const list: TodoList = {
+const list: Checklist = {
   id: 'list-features',
   name: 'Features',
   kind: 'checklist',
@@ -39,10 +39,10 @@ const list: TodoList = {
 };
 
 function renderCard(
-  overrides: Partial<ComponentProps<typeof TodoListCard>> = {},
+  overrides: Partial<ComponentProps<typeof ChecklistCard>> = {},
 ) {
   return render(
-    <TodoListCard
+    <ChecklistCard
       editMode={false}
       list={list}
       nameDraft={list.name}
@@ -63,7 +63,7 @@ function renderCard(
   );
 }
 
-describe('TodoListCard', () => {
+describe('ChecklistCard', () => {
   it('shows collaborator avatars without rendering their names as tile text', () => {
     renderCard({
       collaborators: [
@@ -150,7 +150,7 @@ describe('TodoListCard', () => {
     expect(screen.queryByRole('progressbar')).toBeNull();
 
     rerender(
-      <TodoListCard
+      <ChecklistCard
         editMode={false}
         list={list}
         nameDraft={list.name}
@@ -172,7 +172,7 @@ describe('TodoListCard', () => {
     expect(screen.queryByRole('progressbar')).toBeNull();
 
     rerender(
-      <TodoListCard
+      <ChecklistCard
         editMode={false}
         list={list}
         nameDraft={list.name}

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 import {
   applyVoicePendingOps,
   publishVoiceSnapshot,
@@ -23,7 +23,7 @@ export function useVoiceListsSync(enabled: boolean) {
     };
 
     sync();
-    const unsubscribe = useTodos.subscribe(() => {
+    const unsubscribe = useChecklists.subscribe(() => {
       if (active) void publishVoiceSnapshot().catch(() => undefined);
     });
     const appState = AppState.addEventListener('change', (state) => {

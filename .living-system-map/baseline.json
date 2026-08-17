@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "createdAt": "2026-08-13T19:18:51.066Z",
+  "createdAt": "2026-08-16T23:39:29.763Z",
   "git": {
-    "sha": "fcac843",
+    "sha": "a3ab8fa",
     "branch": "main",
     "dirty": true
   },
@@ -10,27 +10,27 @@
     "score": 100,
     "categories": {
       "regressions": {
-        "total": 30,
-        "protected": 30,
+        "total": 33,
+        "protected": 33,
         "pct": 100
       },
       "criticalNodes": {
-        "total": 28,
-        "protected": 28,
+        "total": 44,
+        "protected": 44,
         "pct": 100
       },
       "criticalConnections": {
-        "total": 1078,
-        "protected": 1078,
+        "total": 1558,
+        "protected": 1558,
         "pct": 100
       },
       "flows": {
-        "total": 101,
-        "protected": 101,
+        "total": 140,
+        "protected": 140,
         "pct": 100
       }
     },
-    "verifiedAt": "2026-08-13T19:18:39.035Z"
+    "verifiedAt": "2026-08-16T23:34:01.762Z"
   },
   "obligations": {
     "bugFixes": [
@@ -40,13 +40,16 @@
       "2d1f0bf00dd89fc91a525b047975cabea0203cd8",
       "3b420243a7ab694c2783c60bffa73d11580332c4",
       "418ae4e6bc5751f6d1a59eacd0b5699e64359e99",
+      "4727cb6ec913f47198915db01d1c002455f954e4",
       "4b40a42d9534b6aa155a844195b439b1a55f67b1",
+      "550ae9e0013801617050d0263c75251587d4afd8",
       "67088f1dd937493d2a4e4b1635b12db486eb5230",
       "6dbfd0223344580ed98b5562bca6801234c0f631",
       "78d14b50e129e104db28f332f0146fd013f88ad6",
       "863b0befe2dfe6f3041c81739838c581254cf03c",
       "8fd6a7d20b5123d3c89e6fc6b8b65337e8441105",
       "9442697fabb8abf29794397e1584443d008aed6c",
+      "9838c5acd46ad0d0d8c7438a29138d31384416ff",
       "9877dfde45600728f22230dc4348d84a0882d088",
       "990cbb89ef4f1a3f6fd71cdb3fb0abefc4d74d3f",
       "99904037672ec3a0c23a31d526858ba029cf493d",
@@ -67,19 +70,31 @@
     ],
     "criticalNodes": [
       "src/app/api/calendar/google/sync+api.ts",
+      "src/app/api/events/sync+api.ts",
       "src/app/api/finance/coach+api.ts",
+      "src/app/api/finance/ezpass/parse+api.ts",
       "src/app/api/finance/plaid/disconnect+api.ts",
       "src/app/api/finance/plaid/exchange+api.ts",
       "src/app/api/finance/plaid/link-token+api.ts",
       "src/app/api/finance/plaid/sync+api.ts",
+      "src/app/api/finance/rewards/import-link+api.ts",
+      "src/app/api/finance/teller/complete+api.ts",
+      "src/app/api/finance/teller/connect+api.ts",
+      "src/app/api/finance/teller/disconnect+api.ts",
+      "src/app/api/finance/teller/finish+api.ts",
+      "src/app/api/finance/teller/session+api.ts",
+      "src/app/api/finance/teller/sync+api.ts",
       "src/app/api/usage/reset+api.ts",
       "src/features/account/dev-access-gate.tsx",
       "src/features/auth/auth-provider.tsx",
+      "src/features/finance/finance-screen.tsx",
       "src/features/finance/finance-subpage-header.tsx",
+      "src/features/finance/recurring-expense-delete.ts",
       "src/features/travel/travel-remove-confirm-modal.tsx",
       "src/services/cloud/sync-local-reset.ts",
       "src/store/account-flags.ts",
       "src/store/auth-access.ts",
+      "src/store/finance-ezpass-statements.ts",
       "src/store/finance.ts",
       "supabase/migrations/202607250001_app_sync.sql",
       "supabase/migrations/202607270006_travel_invite_authenticated_only.sql",
@@ -93,7 +108,11 @@
       "supabase/migrations/202608120007_finance_addon.sql",
       "supabase/migrations/202608120010_complete_account_data_purge.sql",
       "supabase/migrations/202608120011_storage_api_account_purge.sql",
-      "supabase/migrations/202608120012_preserve_account_capabilities_on_reset.sql"
+      "supabase/migrations/202608120012_preserve_account_capabilities_on_reset.sql",
+      "supabase/migrations/202608130007_living_system_map_account_cost_summary.sql",
+      "supabase/migrations/202608140002_ezpass_collaboration.sql",
+      "supabase/migrations/202608140003_collaboration_email_privacy.sql",
+      "supabase/migrations/202608160001_todo_delete_owner_only.sql"
     ],
     "criticalConnections": [
       {
@@ -137,11 +156,19 @@
         "count": 1
       },
       {
+        "key": "contract-test:src/features/trackers/__tests__/tracker-presence.test.ts->src/features/trackers/tracker-presence.ts",
+        "count": 1
+      },
+      {
         "key": "contract-test:src/features/travel/__tests__/historical-bugfix-regressions.test.ts->src/features/travel/travel-remove-confirm-modal.tsx",
         "count": 1
       },
       {
         "key": "contract-test:src/services/cloud/__tests__/sign-out-rule.test.ts->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "data-access:scripts/living-system-map-accounts.mjs->data:living_system_map_account_cost_summary",
         "count": 1
       },
       {
@@ -158,6 +185,10 @@
       },
       {
         "key": "data-access:src/services/analytics/sync.ts->data:upsert_analytics_daily",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/backup/google-drive-oauth.ts->data:google_drive_connections",
         "count": 1
       },
       {
@@ -209,12 +240,52 @@
         "count": 2
       },
       {
+        "key": "data-access:src/services/finance/ezpass-collaboration.ts->data:add_ezpass_friend_members",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/finance/ezpass-collaboration.ts->data:add_ezpass_ledger_members",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/finance/ezpass-collaboration.ts->data:ezpass_ledger_snapshots",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/finance/ezpass-collaboration.ts->data:remove_ezpass_ledger_member",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/finance/ezpass-collaboration.ts->data:set_ezpass_member_role",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/finance/ezpass-collaboration.ts->data:sync_ezpass_transactions",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/finance/ezpass-collaboration.ts->data:tag_ezpass_transaction",
+        "count": 1
+      },
+      {
         "key": "data-access:src/services/finance/plaid-server.ts->data:plaid_items",
         "count": 4
       },
       {
         "key": "data-access:src/services/finance/plaid-server.ts->data:plaid_link_sessions",
         "count": 4
+      },
+      {
+        "key": "data-access:src/services/finance/teller-server.ts->data:complete_teller_link_session",
+        "count": 1
+      },
+      {
+        "key": "data-access:src/services/finance/teller-server.ts->data:teller_enrollments",
+        "count": 3
+      },
+      {
+        "key": "data-access:src/services/finance/teller-server.ts->data:teller_link_sessions",
+        "count": 3
       },
       {
         "key": "data-access:src/services/todos/collaboration-invites.ts->data:accept_todo_collaborator_link",
@@ -345,6 +416,10 @@
         "count": 1
       },
       {
+        "key": "data-access:src/services/travel/itinerary-collaboration.ts->data:is_travel_trip_manager",
+        "count": 1
+      },
+      {
         "key": "data-access:src/services/travel/itinerary-collaboration.ts->data:travel_trip_id_for_access",
         "count": 1
       },
@@ -421,7 +496,15 @@
         "count": 1
       },
       {
-        "key": "external:src/app/(tabs)/finance/_layout.tsx->external:expo-router",
+        "key": "external:scripts/living-system-map-accounts.mjs->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:scripts/living-system-map-accounts.mjs->external:node:path",
+        "count": 1
+      },
+      {
+        "key": "external:scripts/living-system-map-accounts.mjs->external:node:url",
         "count": 1
       },
       {
@@ -502,6 +585,42 @@
       },
       {
         "key": "external:src/features/account/avatar-color-picker.tsx->external:reanimated-color-picker",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-media.ts->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-screen-panels.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-screen-panels.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-share.ts->external:expo-document-picker",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-share.ts->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-share.ts->external:expo-sharing",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/backup-share.ts->external:react-native",
         "count": 1
       },
       {
@@ -637,11 +756,19 @@
         "count": 1
       },
       {
+        "key": "external:src/features/account/profile-identity-hero.tsx->external:react-native",
+        "count": 1
+      },
+      {
         "key": "external:src/features/account/profile-location-preferences.tsx->external:react",
         "count": 1
       },
       {
         "key": "external:src/features/account/profile-location-preferences.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/account/profile-section.tsx->external:react",
         "count": 1
       },
       {
@@ -761,6 +888,10 @@
         "count": 1
       },
       {
+        "key": "external:src/features/auth/auth-ring-copy.tsx->external:react-native",
+        "count": 1
+      },
+      {
         "key": "external:src/features/auth/auth-screen.tsx->external:expo-router",
         "count": 1
       },
@@ -774,6 +905,10 @@
       },
       {
         "key": "external:src/features/auth/auth-session-snapshot.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/auth/auth-wordmark.tsx->external:react-native",
         "count": 1
       },
       {
@@ -833,19 +968,43 @@
         "count": 1
       },
       {
+        "key": "external:src/features/finance/ezpass-import.ts->external:expo-document-picker",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/ezpass-import.ts->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/ezpass-import.ts->external:xlsx",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/ezpass-official-site.ts->external:expo-web-browser",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/ezpass-shared-statement.ts->external:expo-sharing",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/ezpass-statements.ts->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/ezpass-statements.ts->external:expo-linking",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/ezpass-statements.ts->external:react-native",
+        "count": 1
+      },
+      {
         "key": "external:src/features/finance/finance-accounts-screen.tsx->external:react",
         "count": 1
       },
       {
         "key": "external:src/features/finance/finance-accounts-screen.tsx->external:react-native",
-        "count": 1
-      },
-      {
-        "key": "external:src/features/finance/finance-bills-screen.tsx->external:react",
-        "count": 1
-      },
-      {
-        "key": "external:src/features/finance/finance-bills-screen.tsx->external:react-native",
         "count": 1
       },
       {
@@ -885,7 +1044,107 @@
         "count": 1
       },
       {
+        "key": "external:src/features/finance/finance-ezpass-friend-tag.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-import-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-import-screen.tsx->external:expo-sharing",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-import-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-import-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-import-source-cards.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-member-management.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-month-chart.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-overview-card.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-ezpass-statement-files.tsx->external:react-native",
+        "count": 1
+      },
+      {
         "key": "external:src/features/finance/finance-progress-bar.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-recurring-classification-sheet.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-recurring-classification-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-reward-link-sheet.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-reward-link-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-reward-profile-sheet.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-reward-profile-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-rewards-csv-sheet.tsx->external:expo-document-picker",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-rewards-csv-sheet.tsx->external:expo-file-system",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-rewards-csv-sheet.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-rewards-csv-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-rewards-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-rewards-screen.tsx->external:react-native",
         "count": 1
       },
       {
@@ -905,6 +1164,26 @@
         "count": 1
       },
       {
+        "key": "external:src/features/finance/finance-subscription-form-sheet.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-subscription-form-sheet.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-subscriptions-screen.tsx->external:expo-router",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-subscriptions-screen.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-subscriptions-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
         "key": "external:src/features/finance/finance-tax-handoff-sheet.tsx->external:react-native",
         "count": 1
       },
@@ -914,6 +1193,10 @@
       },
       {
         "key": "external:src/features/finance/finance-tax-screen.tsx->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/features/finance/finance-transaction-category-sheet.tsx->external:react",
         "count": 1
       },
       {
@@ -989,6 +1272,18 @@
         "count": 1
       },
       {
+        "key": "external:src/hooks/use-event-follow-sync.ts->external:react",
+        "count": 1
+      },
+      {
+        "key": "external:src/hooks/use-event-follow-sync.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/hooks/use-ezpass-collaboration.ts->external:react",
+        "count": 1
+      },
+      {
         "key": "external:src/hooks/use-todo-collaboration.ts->external:react",
         "count": 1
       },
@@ -1041,6 +1336,14 @@
         "count": 1
       },
       {
+        "key": "external:src/services/finance/ezpass-collaboration.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/finance/ezpass.ts->external:react-native",
+        "count": 1
+      },
+      {
         "key": "external:src/services/finance/plaid-server.ts->external:@supabase/supabase-js",
         "count": 1
       },
@@ -1050,6 +1353,18 @@
       },
       {
         "key": "external:src/services/finance/plaid.ts->external:react-native",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/finance/teller-server.ts->external:@supabase/supabase-js",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/finance/teller.ts->external:expo-web-browser",
+        "count": 1
+      },
+      {
+        "key": "external:src/services/finance/teller.ts->external:react-native",
         "count": 1
       },
       {
@@ -1093,6 +1408,10 @@
         "count": 2
       },
       {
+        "key": "external:src/store/finance-ezpass-statements.ts->external:zustand",
+        "count": 2
+      },
+      {
         "key": "external:src/store/finance.ts->external:zustand",
         "count": 2
       },
@@ -1106,6 +1425,10 @@
       },
       {
         "key": "external:src/utils/agent-ui/AgentUiRouteSync.tsx->external:react",
+        "count": 1
+      },
+      {
+        "key": "import:scripts/living-system-map-accounts.mjs->scripts/lib/local-env.cjs",
         "count": 1
       },
       {
@@ -1145,15 +1468,15 @@
         "count": 1
       },
       {
-        "key": "import:src/app/_layout.tsx->src/utils/agent-ui/AgentUiRouteSync.tsx",
-        "count": 1
-      },
-      {
         "key": "import:src/app/(tabs)/_layout.tsx->src/features/auth/welcome-preview.ts",
         "count": 1
       },
       {
-        "key": "import:src/app/(tabs)/finance/_layout.tsx->src/design-system/index.ts",
+        "key": "import:src/app/(tabs)/(today)/detail/generic/[id].tsx->src/services/events/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/_layout.tsx->src/components/navigation/app-stack.tsx",
         "count": 1
       },
       {
@@ -1177,7 +1500,23 @@
         "count": 1
       },
       {
+        "key": "import:src/app/(tabs)/finance/ezpass-import.tsx->src/features/finance/finance-ezpass-import-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/ezpass.tsx->src/features/finance/finance-ezpass-screen.tsx",
+        "count": 1
+      },
+      {
         "key": "import:src/app/(tabs)/finance/index.tsx->src/features/finance/finance-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/rewards.tsx->src/features/finance/finance-rewards-screen.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/finance/subscriptions.tsx->src/features/finance/finance-subscriptions-screen.tsx",
         "count": 1
       },
       {
@@ -1201,6 +1540,14 @@
         "count": 1
       },
       {
+        "key": "import:src/app/(tabs)/profile/appearance.tsx->src/features/account/avatar-color-picker.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/backup.tsx->src/features/account/backup-screen.tsx",
+        "count": 1
+      },
+      {
         "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/components/primitives/index.ts",
         "count": 1
       },
@@ -1218,6 +1565,14 @@
       },
       {
         "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/services/calendar/google-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/store/schedule.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/calendar-sync.tsx->src/utils/activity-time.ts",
         "count": 1
       },
       {
@@ -1249,11 +1604,11 @@
         "count": 1
       },
       {
-        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-avatar-editor-sheet.tsx",
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-about-section.tsx",
         "count": 1
       },
       {
-        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-avatar.tsx",
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-avatar-editor-sheet.tsx",
         "count": 1
       },
       {
@@ -1261,7 +1616,15 @@
         "count": 1
       },
       {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-identity-hero.tsx",
+        "count": 1
+      },
+      {
         "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-location-preferences.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/(tabs)/profile/index.tsx->src/features/account/profile-section.tsx",
         "count": 1
       },
       {
@@ -1293,6 +1656,10 @@
         "count": 1
       },
       {
+        "key": "import:src/app/(tabs)/to-do/[id].tsx->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/app/(tabs)/vehicles/[id]/settings.tsx->src/features/auth/auth-provider.tsx",
         "count": 1
       },
@@ -1313,6 +1680,14 @@
         "count": 1
       },
       {
+        "key": "import:src/app/api/backup/google/callback+api.ts->src/services/backup/google-drive-oauth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/backup/google/connect+api.ts->src/services/backup/google-drive-oauth.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/app/api/calendar/google/sync+api.ts->src/services/calendar/google-api-route.ts",
         "count": 1
       },
@@ -1325,7 +1700,23 @@
         "count": 1
       },
       {
+        "key": "import:src/app/api/events/sync+api.ts->src/services/events/server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/events/sync+api.ts->src/services/http/compression.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/app/api/finance/coach+api.ts->src/services/finance/coach-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/ezpass/parse+api.ts->src/services/finance/ezpass-ai-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/ezpass/parse+api.ts->src/services/http/cors.ts",
         "count": 1
       },
       {
@@ -1353,6 +1744,10 @@
         "count": 1
       },
       {
+        "key": "import:src/app/api/finance/plaid/link-token+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/app/api/finance/plaid/sync+api.ts->src/services/finance/plaid-data.ts",
         "count": 1
       },
@@ -1362,6 +1757,70 @@
       },
       {
         "key": "import:src/app/api/finance/plaid/sync+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/rewards/import-link+api.ts->src/services/finance/rewards-link-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/rewards/import-link+api.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/rewards/import-link+api.ts->src/services/http/api-gate.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/rewards/import-link+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/complete+api.ts->src/services/finance/teller-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/complete+api.ts->src/services/http/api-rate-limit.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/complete+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/connect+api.ts->src/services/finance/teller-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/disconnect+api.ts->src/services/finance/teller-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/disconnect+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/finish+api.ts->src/services/finance/teller-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/finish+api.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/session+api.ts->src/services/finance/teller-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/sync+api.ts->src/services/finance/teller-data.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/sync+api.ts->src/services/finance/teller-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/api/finance/teller/sync+api.ts->src/services/http/cors.ts",
         "count": 1
       },
       {
@@ -1405,6 +1864,10 @@
         "count": 1
       },
       {
+        "key": "import:src/app/f/[code].tsx->src/features/auth/auth-brand-mark.tsx",
+        "count": 1
+      },
+      {
         "key": "import:src/app/f/[code].tsx->src/features/auth/auth-provider.tsx",
         "count": 1
       },
@@ -1414,6 +1877,10 @@
       },
       {
         "key": "import:src/app/privacy.tsx->src/features/account/privacy-policy-content.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/app/share-import.tsx->src/features/finance/ezpass-shared-statement.ts",
         "count": 1
       },
       {
@@ -1502,6 +1969,190 @@
       },
       {
         "key": "import:src/features/account/avatar-color-picker.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-actions.ts->src/features/account/backup-archive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-actions.ts->src/features/account/backup-media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-actions.ts->src/features/account/backup-share.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-actions.ts->src/services/cloud/sync-session.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-actions.ts->src/services/cloud/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/features/account/backup-sanitize.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/features/account/profile-avatar-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/features/account/release-notes-format.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/features/health/defaults.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/features/journal/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/features/travel/map/normalize.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/services/cloud/sync-domains.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/finance-ezpass-statements.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/food-meal-plan.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/food-pantry.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/food-profile.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/food-recipes.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/health.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/journal.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/tab-pins.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-archive.ts->src/store/travel-map.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-media.ts->src/services/cloud/media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-sanitize.ts->src/constants/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-sanitize.ts->src/constants/travel.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-sanitize.ts->src/features/food/fixtures.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-sanitize.ts->src/features/plants/sample.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-sanitize.ts->src/features/vision-board/defaults.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-sanitize.ts->src/features/vision-board/sample.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-sanitize.ts->src/features/vision-board/selectors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen-panels.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen-panels.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen-panels.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen-panels.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/features/account/backup-actions.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/features/account/backup-screen-panels.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/features/account/backup-share.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/services/backup/google-drive-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/services/backup/google-drive-upload.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-screen.tsx->src/utils/confirm-destructive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-share.ts->src/features/account/backup-archive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/backup-share.ts->src/features/account/backup-media.ts",
         "count": 1
       },
       {
@@ -1625,6 +2276,10 @@
         "count": 1
       },
       {
+        "key": "import:src/features/account/dev-mode-controller.ts->src/store/journal.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/account/dev-mode-controller.ts->src/store/travel.ts",
         "count": 1
       },
@@ -1721,6 +2376,10 @@
         "count": 1
       },
       {
+        "key": "import:src/features/account/developer-insights-panel.tsx->src/utils/grammar.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/account/developer-release-notes-panel.tsx->src/components/primitives/index.ts",
         "count": 1
       },
@@ -1802,6 +2461,22 @@
       },
       {
         "key": "import:src/features/account/privacy-policy-content.ts->src/constants/legal.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-about-section.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-about-section.tsx->src/features/account/profile-section.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-about-section.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-about-section.tsx->src/utils/agent-ui/index.ts",
         "count": 1
       },
       {
@@ -1961,6 +2636,26 @@
         "count": 1
       },
       {
+        "key": "import:src/features/account/profile-identity-hero.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-hero.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-hero.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-hero.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-identity-hero.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/account/profile-location-preferences.tsx->src/components/primitives/index.ts",
         "count": 1
       },
@@ -2009,11 +2704,23 @@
         "count": 1
       },
       {
+        "key": "import:src/features/account/profile-section.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-section.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/account/profile-section.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/account/release-notes-format.ts->src/utils/date.ts",
         "count": 1
       },
       {
-        "key": "import:src/features/account/release-notes.ts->src/features/account/release-notes-changelog.ts",
+        "key": "import:src/features/account/release-notes.ts->src/constants/release-notes-data.ts",
         "count": 2
       },
       {
@@ -2023,10 +2730,6 @@
       {
         "key": "import:src/features/account/release-notes.ts->src/features/account/release-notes-types.ts",
         "count": 1
-      },
-      {
-        "key": "import:src/features/account/release-notes.ts->src/features/account/release-notes-user.ts",
-        "count": 2
       },
       {
         "key": "import:src/features/account/self-display-name.ts->src/utils/parse.ts",
@@ -2253,10 +2956,6 @@
         "count": 1
       },
       {
-        "key": "import:src/features/auth/auth-hero.tsx->src/components/primitives/index.ts",
-        "count": 1
-      },
-      {
         "key": "import:src/features/auth/auth-hero.tsx->src/features/auth/auth-brand-mark.tsx",
         "count": 1
       },
@@ -2265,15 +2964,19 @@
         "count": 1
       },
       {
+        "key": "import:src/features/auth/auth-hero.tsx->src/features/auth/auth-ring-copy.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-hero.tsx->src/features/auth/auth-wordmark.tsx",
+        "count": 1
+      },
+      {
         "key": "import:src/features/auth/auth-hero.tsx->src/features/auth/theme-mode-toggle.tsx",
         "count": 1
       },
       {
         "key": "import:src/features/auth/auth-hero.tsx->src/hooks/use-responsive.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/auth/auth-hero.tsx->src/hooks/use-theme.ts",
         "count": 1
       },
       {
@@ -2381,6 +3084,26 @@
         "count": 1
       },
       {
+        "key": "import:src/features/auth/auth-ring-copy.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-ring-copy.tsx->src/features/auth/auth-constellation.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-ring-copy.tsx->src/features/auth/auth-ring-copy-type.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-ring-copy.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-ring-copy.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/auth/auth-screen.tsx->src/components/primitives/index.ts",
         "count": 1
       },
@@ -2418,6 +3141,10 @@
       },
       {
         "key": "import:src/features/auth/auth-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/auth-wordmark.tsx->src/components/primitives/index.ts",
         "count": 1
       },
       {
@@ -2493,6 +3220,14 @@
         "count": 1
       },
       {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/auth-ring-copy.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/auth-wordmark.tsx",
+        "count": 1
+      },
+      {
         "key": "import:src/features/auth/welcome-onboard-screen.tsx->src/features/auth/google-provider-button.tsx",
         "count": 1
       },
@@ -2545,6 +3280,10 @@
         "count": 1
       },
       {
+        "key": "import:src/features/events/event-discovery-editor.tsx->src/services/events/sync.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/apply-plaid-link.ts->src/features/finance/create.ts",
         "count": 1
       },
@@ -2553,11 +3292,35 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/apply-plaid-link.ts->src/features/finance/refresh-subscription-candidates.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-plaid-link.ts->src/features/finance/subscriptions.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/apply-plaid-link.ts->src/store/finance.ts",
         "count": 1
       },
       {
         "key": "import:src/features/finance/apply-plaid-link.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-teller-link.ts->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-teller-link.ts->src/features/finance/refresh-subscription-candidates.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-teller-link.ts->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/apply-teller-link.ts->src/utils/date.ts",
         "count": 1
       },
       {
@@ -2573,6 +3336,38 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/ezpass-collaboration-model.ts->src/features/finance/ezpass-deduplication.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/ezpass-collaboration-model.ts->src/features/finance/ezpass-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/ezpass-import.ts->src/features/finance/ezpass-parser.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/ezpass-import.ts->src/services/document-text.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/ezpass-import.ts->src/utils/pick-image.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/ezpass-model.ts->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/ezpass-parser.ts->src/features/finance/ezpass-deduplication.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/ezpass-statements.ts->modules/travel-document-reader/index.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/finance-accounts-screen.tsx->src/components/primitives/index.ts",
         "count": 1
       },
@@ -2582,6 +3377,10 @@
       },
       {
         "key": "import:src/features/finance/finance-accounts-screen.tsx->src/features/finance/apply-plaid-link.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/features/finance/apply-teller-link.ts",
         "count": 1
       },
       {
@@ -2625,51 +3424,15 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/finance-accounts-screen.tsx->src/utils/grammar.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/finance-accounts-screen.tsx->src/utils/parse.ts",
         "count": 1
       },
       {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/components/primitives/index.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/components/shared/index.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/finance/create.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/finance/finance-subpage-header.tsx",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/finance/types.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/travel/expenses/format-money.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/hooks/use-responsive.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/store/finance.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/utils/agent-ui/index.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/utils/date.ts",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/finance/finance-bills-screen.tsx->src/utils/parse.ts",
+        "key": "import:src/features/finance/finance-bills-screen.tsx->src/features/finance/finance-subscriptions-screen.tsx",
         "count": 1
       },
       {
@@ -2817,11 +3580,451 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/finance-ezpass-friend-tag.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-friend-tag.tsx->src/features/account/profile-avatar.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-friend-tag.tsx->src/features/finance/ezpass-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-friend-tag.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-friend-tag.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-friend-tag.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-friend-tag.tsx->src/utils/haptics.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-deduplication.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-document-open.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-import.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-locations.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-official-site.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-parser.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-shared-statement.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/ezpass-statements.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/finance-ezpass-import-source-cards.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/services/finance/ezpass.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/store/finance-ezpass-statements.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-screen.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-source-cards.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-source-cards.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-source-cards.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-import-source-cards.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-member-management.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-member-management.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-member-management.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-month-chart.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-month-chart.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-month-chart.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-month-chart.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-month-chart.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-month-chart.tsx->src/utils/haptics.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-overview-card.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-overview-card.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-overview-card.tsx->src/design-system/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-overview-card.tsx->src/features/finance/finance-ezpass-month-chart.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-overview-card.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-overview-card.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-overview-card.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-overview-card.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/finance/ezpass-collaboration-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/finance/ezpass-locations.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/finance/ezpass-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/finance/finance-ezpass-friend-tag.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/finance/finance-ezpass-member-management.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/finance/finance-ezpass-overview-card.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/finance/finance-ezpass-statement-files.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/social/people-picker.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/hooks/use-ezpass-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/services/finance/ezpass-collaboration.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/store/finance-ezpass-statements.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/utils/confirm-destructive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-screen.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-statement-files.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-statement-files.tsx->src/features/finance/ezpass-statements.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-statement-files.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-statement-files.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-statement-files.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-ezpass-statement-files.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/finance-progress-bar.tsx->src/hooks/use-responsive.ts",
         "count": 1
       },
       {
         "key": "import:src/features/finance/finance-progress-bar.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-recurring-classification-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-recurring-classification-sheet.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-recurring-classification-sheet.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-recurring-classification-sheet.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-recurring-classification-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-recurring-classification-sheet.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-recurring-classification-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-link-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-link-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-link-sheet.tsx->src/services/finance/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-link-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-profile-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-profile-sheet.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-profile-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-profile-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-profile-sheet.tsx->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-reward-profile-sheet.tsx->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-csv-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-csv-sheet.tsx->src/features/finance/rewards-csv.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-csv-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-csv-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/features/finance/finance-reward-link-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/features/finance/finance-reward-profile-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/features/finance/finance-rewards-csv-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/features/finance/rewards-engine.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-rewards-screen.tsx->src/utils/date.ts",
         "count": 1
       },
       {
@@ -2838,6 +4041,10 @@
       },
       {
         "key": "import:src/features/finance/finance-screen.tsx->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/features/finance/subscriptions.ts",
         "count": 1
       },
       {
@@ -2865,7 +4072,19 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/finance-screen.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/finance-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-screen.tsx->src/utils/warm-navigation.ts",
         "count": 1
       },
       {
@@ -2874,6 +4093,98 @@
       },
       {
         "key": "import:src/features/finance/finance-subpage-header.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscription-form-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscription-form-sheet.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscription-form-sheet.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscription-form-sheet.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscription-form-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscription-form-sheet.tsx->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscription-form-sheet.tsx->src/utils/parse.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/finance/finance-recurring-classification-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/finance/finance-subpage-header.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/finance/finance-subscription-form-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/finance/recurring-expense-delete.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/finance/refresh-finance-subscriptions.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/finance/subscriptions.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/finance/types.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/hooks/use-responsive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-subscriptions-screen.tsx->src/utils/date.ts",
         "count": 1
       },
       {
@@ -2957,7 +4268,59 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/finance-transaction-category-sheet.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-category-sheet.tsx->src/components/shared/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-category-sheet.tsx->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-category-sheet.tsx->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-category-sheet.tsx->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-list.ts->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-list.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-search.ts->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-search.ts->src/features/finance/ezpass-locations.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-search.ts->src/features/finance/ezpass-model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-search.ts->src/features/travel/expenses/format-money.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transaction-search.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/finance-transactions-screen.tsx->src/components/primitives/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/design-system/index.ts",
         "count": 1
       },
       {
@@ -2969,6 +4332,22 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/features/finance/finance-transaction-category-sheet.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/features/finance/finance-transaction-list.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/features/finance/finance-transaction-search.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/finance-transactions-screen.tsx->src/features/travel/expenses/format-money.ts",
         "count": 1
       },
@@ -2977,7 +4356,15 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/hooks/use-theme.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/finance-transactions-screen.tsx->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/finance-transactions-screen.tsx->src/store/preferences.ts",
         "count": 1
       },
       {
@@ -2997,7 +4384,19 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/normalize.ts->src/features/finance/categories.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/normalize.ts->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/normalize.ts->src/features/finance/ezpass-deduplication.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/normalize.ts->src/features/finance/finance-merchant-category.ts",
         "count": 1
       },
       {
@@ -3025,6 +4424,66 @@
         "count": 1
       },
       {
+        "key": "import:src/features/finance/recurring-expense-delete.ts->src/utils/agent-ui/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/recurring-expense-delete.ts->src/utils/confirm-destructive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/refresh-finance-subscriptions.ts->src/features/finance/apply-plaid-link.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/refresh-finance-subscriptions.ts->src/features/finance/apply-teller-link.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/refresh-finance-subscriptions.ts->src/services/finance/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/refresh-finance-subscriptions.ts->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/refresh-subscription-candidates.ts->src/features/finance/subscriptions.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/refresh-subscription-candidates.ts->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/rewards-csv.ts->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/rewards-csv.ts->src/features/finance/stable-hash.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/rewards-csv.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/subscriptions.ts->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/subscriptions.ts->src/features/finance/model.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/subscriptions.ts->src/features/finance/stable-hash.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/subscriptions.ts->src/utils/date.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/finance/tax-export.ts->src/features/finance/categories.ts",
         "count": 1
       },
@@ -3046,6 +4505,10 @@
       },
       {
         "key": "import:src/features/finance/use-finance-coach.ts->src/store/finance.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/features/finance/use-finance-coach.ts->src/utils/defer-after-page-transition.ts",
         "count": 1
       },
       {
@@ -3130,10 +4593,6 @@
       },
       {
         "key": "import:src/features/todos/todo-list-card.tsx->src/features/account/profile-avatar.tsx",
-        "count": 1
-      },
-      {
-        "key": "import:src/features/todos/todo-list-header-toolbar.tsx->src/features/account/profile-avatar.tsx",
         "count": 1
       },
       {
@@ -3317,6 +4776,10 @@
         "count": 1
       },
       {
+        "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/features/travel/travel-friends-roster-model.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/features/travel/use-travel-friends-sheet-sync.ts->src/features/travel/trip-roster.ts",
         "count": 1
       },
@@ -3349,11 +4812,35 @@
         "count": 1
       },
       {
+        "key": "import:src/hooks/use-event-follow-sync.ts->src/services/events/sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-ezpass-collaboration.ts->src/features/auth/auth-provider.tsx",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-ezpass-collaboration.ts->src/services/finance/ezpass-collaboration.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/hooks/use-hydrated.ts->src/features/account/dev-mode-controller.ts",
         "count": 1
       },
       {
         "key": "import:src/hooks/use-hydrated.ts->src/store/auth-access.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-incoming-ezpass-document.ts->src/features/finance/ezpass-document-open.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-incoming-ezpass-document.ts->src/features/finance/ezpass-official-site.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-incoming-share-routing.ts->src/features/finance/ezpass-shared-statement.ts",
         "count": 1
       },
       {
@@ -3366,6 +4853,10 @@
       },
       {
         "key": "import:src/hooks/use-root-startup-effects.ts->src/features/todos/use-voice-lists-sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/hooks/use-root-startup-effects.ts->src/hooks/use-event-follow-sync.ts",
         "count": 1
       },
       {
@@ -3405,6 +4896,30 @@
         "count": 1
       },
       {
+        "key": "import:src/services/backup/google-drive-oauth.ts->src/services/calendar/google-fetch.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/backup/google-drive-oauth.ts->src/services/calendar/google-oauth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/backup/google-drive-server.ts->src/services/backup/google-drive-oauth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/backup/google-drive-server.ts->src/services/calendar/google-oauth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/backup/google-drive-upload.ts->src/features/account/backup-archive.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/backup/google-drive-upload.ts->src/services/backup/google-drive-oauth.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/services/calendar/google-api-route.ts->src/services/calendar/google-oauth.ts",
         "count": 1
       },
@@ -3430,6 +4945,10 @@
       },
       {
         "key": "import:src/services/calendar/google-sync-policy.ts->src/services/calendar/google-mapping.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/calendar/google-sync.ts->src/services/calendar/calendar-invitations.ts",
         "count": 1
       },
       {
@@ -3505,11 +5024,19 @@
         "count": 1
       },
       {
+        "key": "import:src/services/cloud/sync-account.ts->src/services/todos/collaboration.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/services/cloud/sync-account.ts->src/store/nutrition.ts",
         "count": 1
       },
       {
         "key": "import:src/services/cloud/sync-domains.ts->src/addons/registry.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/constants/categories.ts",
         "count": 1
       },
       {
@@ -3530,6 +5057,10 @@
       },
       {
         "key": "import:src/services/cloud/sync-domains.ts->src/store/agents.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-domains.ts->src/store/appearance-sync.ts",
         "count": 1
       },
       {
@@ -3597,6 +5128,18 @@
         "count": 1
       },
       {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/appearance-sync.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/finance-ezpass-statements.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/flow-analytics.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/services/cloud/sync-local-reset.ts->src/store/food-meal-plan.ts",
         "count": 1
       },
@@ -3614,6 +5157,10 @@
       },
       {
         "key": "import:src/services/cloud/sync-local-reset.ts->src/store/health.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/cloud/sync-local-reset.ts->src/store/journal.ts",
         "count": 1
       },
       {
@@ -3733,6 +5280,14 @@
         "count": 1
       },
       {
+        "key": "import:src/services/events/sync.ts->src/services/events/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/events/sync.ts->src/store/schedule.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/services/finance/coach-client.ts->src/services/http/api-client.ts",
         "count": 1
       },
@@ -3753,11 +5308,51 @@
         "count": 1
       },
       {
+        "key": "import:src/services/finance/ezpass-ai-server.ts->src/services/ai/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/ezpass-ai-server.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/ezpass-ai-server.ts->src/services/http/api-rate-limit.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/ezpass-collaboration.ts->src/features/finance/ezpass-deduplication.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/ezpass-collaboration.ts->src/services/cloud/supabase.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/ezpass.ts->src/features/finance/ezpass-parser.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/ezpass.ts->src/services/http/api-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/ezpass.ts->src/services/http/api-url.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/services/finance/index.ts->src/services/finance/coach-client.ts",
         "count": 1
       },
       {
         "key": "import:src/services/finance/index.ts->src/services/finance/plaid.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/index.ts->src/services/finance/rewards-link-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/index.ts->src/services/finance/teller.ts",
         "count": 1
       },
       {
@@ -3793,6 +5388,62 @@
         "count": 1
       },
       {
+        "key": "import:src/services/finance/rewards-link-client.ts->src/services/http/api-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/rewards-link-client.ts->src/services/http/api-url.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/rewards-link-server.ts->src/services/ai/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/rewards-link-server.ts->src/services/http/dependency-guard.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/rewards-link-server.ts->src/services/nutrition/url-safety.server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/rewards-link-server.ts->src/services/nutrition/url-safety.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/rewards-link-server.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/teller-data.ts->src/services/finance/teller-server.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/teller-server.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/teller-server.ts->src/services/http/api-rate-limit.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/teller-server.ts->src/services/http/cors.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/teller.ts->src/services/finance/plaid.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/teller.ts->src/services/http/api-client.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/finance/teller.ts->src/services/http/api-url.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/services/friends/index.ts->src/features/account/profile-avatar-model.ts",
         "count": 1
       },
@@ -3810,6 +5461,10 @@
       },
       {
         "key": "import:src/services/http/api-usage.ts->src/services/http/api-auth.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/journal/transcribe-server.ts->src/services/http/api-auth.ts",
         "count": 1
       },
       {
@@ -3850,6 +5505,10 @@
       },
       {
         "key": "import:src/services/todos/collaboration-members.ts->src/services/todos/recipe-media.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/services/todos/collaboration-members.ts->src/store/todos-helpers.ts",
         "count": 1
       },
       {
@@ -4037,6 +5696,26 @@
         "count": 1
       },
       {
+        "key": "import:src/store/appearance-sync.ts->src/design-system/font-presets.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/appearance-sync.ts->src/design-system/theme-overrides.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/appearance-sync.ts->src/design-system/theme-presets.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/appearance-sync.ts->src/store/preferences.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/appearance-sync.ts->src/store/theme-overrides.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/store/auth-access.ts->src/services/storage/index.ts",
         "count": 1
       },
@@ -4049,7 +5728,23 @@
         "count": 1
       },
       {
+        "key": "import:src/store/finance-ezpass-statements.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance-ezpass-statements.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
         "key": "import:src/store/finance.ts->src/features/finance/create.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/features/finance/ezpass-deduplication.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/finance.ts->src/features/finance/finance-merchant-category.ts",
         "count": 1
       },
       {
@@ -4074,6 +5769,10 @@
       },
       {
         "key": "import:src/store/finance.ts->src/utils/id.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/flow-analytics.ts->src/services/storage/index.ts",
         "count": 1
       },
       {
@@ -4102,6 +5801,14 @@
       },
       {
         "key": "import:src/store/health.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/journal.ts->src/services/storage/index.ts",
+        "count": 1
+      },
+      {
+        "key": "import:src/store/overview-affinity.ts->src/services/storage/index.ts",
         "count": 1
       },
       {
@@ -4229,10 +5936,6 @@
         "count": 1
       },
       {
-        "key": "import:src/utils/agent-ui/index.ts->src/utils/agent-ui/AgentUiRouteSync.tsx",
-        "count": 1
-      },
-      {
         "key": "migration-contract-test:src/services/cloud/__tests__/critical-migrations-contract.test.ts->supabase/migrations/202607250001_app_sync.sql",
         "count": 1
       },
@@ -4285,17 +5988,265 @@
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.auth.section.providers",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.accounts",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.accounts.linkBank",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.accounts.linkInvestments",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.file",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.home",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.memberManagement",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.monthChart",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.monthDetail",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.officialSite",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.screenshots",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.share",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.statements",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.statements.toggle",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.upload",
+        "count": 1
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.hub",
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.add",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.form",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.form.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.save",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.type.bill",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.type.subscription",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.addManual",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.createFromLink",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.profile.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.profile.save",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.profile.sheet",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.section.hero",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.subscriptions.refresh",
+        "count": 1
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.tax",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.category.newName",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.category.save",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.category.selector",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.category.sheet",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.filter.categories",
+        "count": 4
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.filter.category.other",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.search",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.sort",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.sort.amount_high",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.calendarSync.screen",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.calendarSync.section.inviteReview",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.auth.section.providers",
         "count": 1
       }
     ],
     "flows": [
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.auth.section.providers",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.backup.download",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.backup.screen",
+        "count": 1
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.developer.devMode",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.accounts",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.accounts.linkBank",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.accounts.linkInvestments",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.file",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.home",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.memberManagement",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.monthChart",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.monthDetail",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.officialSite",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.screenshots",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.share",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.statements",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.statements.toggle",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.ezpass.upload",
         "count": 1
       },
       {
@@ -4303,8 +6254,108 @@
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.add",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.form",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.form.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.save",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.type.bill",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.recurring.type.subscription",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.addManual",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.createFromLink",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.profile.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.profile.save",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.profile.sheet",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.rewards.section.hero",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.subscriptions.refresh",
+        "count": 1
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.tax",
         "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.category.newName",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.category.save",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.category.selector",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.category.sheet",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.filter.categories",
+        "count": 4
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.filter.category.other",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.search",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.sort",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.finance.transactions.sort.amount_high",
+        "count": 2
       },
       {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.games.balloonPop.play",
@@ -4319,6 +6370,38 @@
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.journal.hub",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.journal.nextDay",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.journal.openToday",
+        "count": 7
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.journal.prevDay",
+        "count": 4
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.journal.screen",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.journal.today",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.peoplePicker.dropdown",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.peoplePicker.search",
+        "count": 1
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.plants.detail.logWatering",
         "count": 3
       },
@@ -4328,6 +6411,10 @@
       },
       {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.plants.new.camera",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.profile.appearance.preview",
         "count": 1
       },
       {
@@ -4349,6 +6436,34 @@
       {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.profile.usageAnalytics",
         "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.social.friendInvite.signIn",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.social.friends.inviteTools.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.social.friends.openInviteTools",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.social.header.addFriend",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.trackers.manage",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.trackers.manage.sheet",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.trackers.screen",
+        "count": 1
       },
       {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.vehicles.detail.section.expenses",
@@ -4383,8 +6498,16 @@
         "count": 1
       },
       {
-        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.",
-        "count": 1
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.dayPlanner.close",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.dayPlanner.section",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.exploreMuscles",
+        "count": 4
       },
       {
         "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.explorer.anatomySex.female",
@@ -4403,11 +6526,63 @@
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.selectedDay.next",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.selectedDay.plan",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.selectedDay.previous",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-addons.ts->test-id:ontrack.workouts.selectedDay.section",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.activityForm.attendeeEmails",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.activityForm.backdrop",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.activityForm.category.mindfulness",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.activityForm.save",
+        "count": 2
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.calendar.",
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.calendar.jumpToday",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.calendarSync.screen",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.calendarSync.section.inviteReview",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.eventDetail.close",
+        "count": 1
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.eventDetail.edit",
+        "count": 3
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.eventDetail.fightCard.modal",
         "count": 1
       },
       {
@@ -4419,6 +6594,18 @@
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.overview.eventUpdates",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.overview.screen",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.plants.detail.logWatering",
+        "count": 1
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.profile.homeLocation",
         "count": 1
       },
@@ -4427,7 +6614,31 @@
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.prompt.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.shell.swipeBack",
+        "count": 4
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.shell.swipeForward",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.today.addActivity",
+        "count": 6
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.today.addEvent",
+        "count": 3
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.today.nextDay",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.today.nonToday",
         "count": 2
       },
       {
@@ -4436,7 +6647,143 @@
       },
       {
         "key": "ui-flow:src/utils/agent-ui/flows-daily.ts->test-id:ontrack.today.weather",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.auth.section.providers",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.games.balloonPop.play",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.games.hub.balloonPop",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.plants.detail.logWatering",
+        "count": 3
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.plants.detail.undoWatering",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.plants.new.camera",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.social.friendInvite.signIn",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.social.friends.inviteTools.close",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.social.friends.openInviteTools",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.social.header.addFriend",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.trackers.manage",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.trackers.manage.sheet",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.trackers.screen",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.vehicles.detail.section.expenses",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.vehicles.detail.settings",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.vehicles.expenses.amount",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.vehicles.new.nickname",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.vision.category.addAffirmation",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.vision.category.selection.edit",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.vision.dashboard.filter",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.vision.itemEditor.primary",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.dayPlanner.close",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.dayPlanner.section",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.exploreMuscles",
         "count": 4
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.explorer.anatomySex.female",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.explorer.muscle.chest",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.gym.start",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.gymActive.completeSet",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.selectedDay.next",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.selectedDay.plan",
+        "count": 2
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.selectedDay.previous",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-life.ts->test-id:ontrack.workouts.selectedDay.section",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.checklists.detail.back",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.checklists.itemDetails.category",
+        "count": 1
       },
       {
         "key": "ui-flow:src/utils/agent-ui/flows-lists.ts->test-id:ontrack.checklists.newListName",
@@ -4467,8 +6814,12 @@
         "count": 1
       },
       {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.checklists.detail.newTask",
+        "count": 1
+      },
+      {
         "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.",
-        "count": 20
+        "count": 21
       },
       {
         "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.chrome.skyDecor",
@@ -4484,6 +6835,10 @@
       },
       {
         "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.list.empty.create",
+        "count": 1
+      },
+      {
+        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.list.packingList.trip-travel-home-iceland",
         "count": 1
       },
       {
@@ -4522,6 +6877,7 @@
         "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.planDetail.section.transport",
         "count": 2
       }
-    ]
+    ],
+    "flowProofs": []
   }
 }

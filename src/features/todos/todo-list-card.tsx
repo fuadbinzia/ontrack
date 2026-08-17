@@ -4,19 +4,19 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText, DragHandle, GlassPlate, Symbol } from '@/components/primitives';
 import { glassMaterials, layout, radii } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
-import { todoListCardPresence } from '@/features/todos/todo-list-card-presence';
+import { checklistCardPresence } from '@/features/todos/todo-list-card-presence';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
-import { canLeaveTodoList, type TodoList } from '@/store/todos';
+import { canLeaveChecklist, type Checklist } from '@/store/todos';
 import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
-export type TodoListCollaboratorChip = {
+export type ChecklistCollaboratorChip = {
   userId?: string;
   displayName: string;
   isSelf?: boolean;
 };
 
-export function TodoListCard({
+export function ChecklistCard({
   editMode,
   list,
   nameDraft,
@@ -36,9 +36,9 @@ export function TodoListCard({
   testID,
 }: {
   editMode: boolean;
-  list: TodoList;
+  list: Checklist;
   nameDraft: string;
-  collaborators?: TodoListCollaboratorChip[];
+  collaborators?: ChecklistCollaboratorChip[];
   open: number;
   total: number;
   onPress: () => void;
@@ -56,7 +56,7 @@ export function TodoListCard({
   const theme = useTheme();
   const { spacing, typography, s } = useResponsive();
   const nameInputRef = useRef<TextInput>(null);
-  const presence = todoListCardPresence(open, total);
+  const presence = checklistCardPresence(open, total);
   const collaboratorChip = Math.max(16, Math.round(s(18)));
   const collaboratorRing = 1;
   const openAgent = useAgentUiTarget(editMode ? undefined : testID, {
@@ -65,7 +65,7 @@ export function TodoListCard({
   });
   const collaboratorNames = collaborators?.map((person) => person.displayName);
   const collaboratorLabel = collaboratorNames?.join(', ');
-  const leaving = canLeaveTodoList(list);
+  const leaving = canLeaveChecklist(list);
   const canRename = editMode && list.role === 'owner';
   const dark = theme.name === 'dark';
   const cardContents = (

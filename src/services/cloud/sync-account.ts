@@ -1,3 +1,4 @@
+import { loadAllSharedChecklists } from '@/services/todos/collaboration';
 import { useNutrition } from '@/store/nutrition';
 
 import { mergeDomainPayload } from './account-data-merge';
@@ -45,6 +46,12 @@ async function finishAccountSyncReady(isCurrent: () => boolean) {
   }
   clearPendingDataChoice();
   await loadEntitlements(syncRuntime.activeUserId);
+  await Promise.race([
+    loadAllSharedChecklists().catch(() => undefined),
+    new Promise<void>((resolve) => {
+      setTimeout(resolve, 8_000);
+    }),
+  ]);
   startSubscriptions(syncRuntime.activeUserId, syncRuntime.activeEmail);
   useCloudSyncStatus.setState({
     state: 'synced',

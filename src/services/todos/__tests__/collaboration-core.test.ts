@@ -9,7 +9,7 @@ import {
   authenticatedClient,
   messageFrom,
   sharedSnapshot,
-  TodoCollaborationError,
+  ChecklistCollaborationError,
 } from '../collaboration-core';
 
 describe('todo collaboration boundary', () => {
@@ -18,14 +18,14 @@ describe('todo collaboration boundary', () => {
   it('distinguishes an unconfigured build from a signed-out client', async () => {
     mockGetSupabaseClient.mockReturnValueOnce(undefined);
     await expect(authenticatedClient()).rejects.toEqual(
-      new TodoCollaborationError('Shared lists are not configured for this build.'),
+      new ChecklistCollaborationError('Shared lists are not configured for this build.'),
     );
 
     mockGetSupabaseClient.mockReturnValueOnce({
       auth: { getSession: jest.fn().mockResolvedValue({ data: { session: null }, error: null }) },
     });
     await expect(authenticatedClient()).rejects.toEqual(
-      new TodoCollaborationError('Sign in to share or join a list.'),
+      new ChecklistCollaborationError('Sign in to share or join a list.'),
     );
   });
 

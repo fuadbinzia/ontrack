@@ -8,7 +8,7 @@ import { useRecipes } from '@/store/food-recipes';
 import { usePlants } from '@/store/plants';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
-import { useTodos } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
 import { useTravel } from '@/store/travel';
 import { useVehicles } from '@/store/vehicles';
 import { useVisionBoard } from '@/store/vision-board';
@@ -33,7 +33,7 @@ export function subscribeGuestDirtyStores(): () => void {
     useAddons.subscribe(mark),
     useAgents.subscribe(mark),
     useTravel.subscribe(mark),
-    useTodos.subscribe(mark),
+    useChecklists.subscribe(mark),
     useVehicles.subscribe(mark),
     useVisionBoard.subscribe(mark),
     useFoodProfile.subscribe(mark),

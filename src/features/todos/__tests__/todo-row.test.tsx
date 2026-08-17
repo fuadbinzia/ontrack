@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { TodoRow } from '@/features/todos/todo-row';
-import type { TodoTask } from '@/store/todos';
+import { ChecklistRow } from '@/features/todos/todo-row';
+import type { ChecklistTask } from '@/store/todos';
 
-const task: TodoTask = {
+const task: ChecklistTask = {
   id: 'task-test-copy',
   listId: 'list-test-checklist',
   title: 'Copy this checklist item',
@@ -14,10 +14,10 @@ const task: TodoTask = {
   version: 1,
 };
 
-describe('TodoRow', () => {
+describe('ChecklistRow', () => {
   it('allows the checklist item title to use the native copy menu', () => {
     render(
-      <TodoRow
+      <ChecklistRow
         task={task}
         canComplete
         editMode={false}
@@ -44,7 +44,7 @@ describe('TodoRow', () => {
   it('renders one metadata line and opens item details from the row', () => {
     const onOpenDetails = jest.fn();
     render(
-      <TodoRow
+      <ChecklistRow
         task={{ ...task, assigneeUserIds: ['member'] }}
         canComplete
         editMode={false}
@@ -89,7 +89,7 @@ describe('TodoRow', () => {
 
   it('omits uncategorized metadata and its separator', () => {
     render(
-      <TodoRow
+      <ChecklistRow
         task={task}
         canComplete
         editMode={false}
@@ -129,7 +129,7 @@ describe('TodoRow', () => {
 
   it('shows a category without an Anyone placeholder', () => {
     render(
-      <TodoRow
+      <ChecklistRow
         task={task}
         canComplete
         editMode={false}
@@ -156,7 +156,7 @@ describe('TodoRow', () => {
 
   it('lets a completed item recede without a filled checkbox well', () => {
     render(
-      <TodoRow
+      <ChecklistRow
         task={{ ...task, completed: true }}
         canComplete
         editMode={false}
@@ -188,7 +188,7 @@ describe('TodoRow', () => {
 
   it('does not print a Focus caption on important items', () => {
     render(
-      <TodoRow
+      <ChecklistRow
         task={{ ...task, important: true }}
         canComplete
         editMode={false}

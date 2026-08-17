@@ -9,8 +9,8 @@ import {
 } from '@/components/primitives';
 import { FoodSheet } from '@/features/food/food-sheet';
 import { useResponsive } from '@/hooks/use-responsive';
-import { useTodos } from '@/store/todos';
-import type { TodoTask } from '@/store/todos';
+import { useChecklists } from '@/store/todos';
+import type { ChecklistTask } from '@/store/todos';
 import { AgentUiIds } from '@/utils/agent-ui';
 import { haptics } from '@/utils/haptics';
 
@@ -29,14 +29,14 @@ export function GroceryItemEditorSheet({
   /** Target grocery list for add mode. */
   listId: string;
   /** Existing task when editing; omit to add a standalone item. */
-  task?: TodoTask;
+  task?: ChecklistTask;
   onClose: () => void;
 }) {
   const { spacing } = useResponsive();
-  const addTask = useTodos((state) => state.addTask);
-  const updateTask = useTodos((state) => state.updateTask);
-  const updateIngredient = useTodos((state) => state.updateIngredient);
-  const deleteTask = useTodos((state) => state.deleteTask);
+  const addTask = useChecklists((state) => state.addTask);
+  const updateTask = useChecklists((state) => state.updateTask);
+  const updateIngredient = useChecklists((state) => state.updateIngredient);
+  const deleteTask = useChecklists((state) => state.deleteTask);
 
   const isIngredient = Boolean(task?.recipeId);
   const [name, setName] = useState('');

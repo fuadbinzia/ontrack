@@ -2,7 +2,7 @@ import {
     cleanupRecipeMutationMedia,
     prepareRecipeMutationMedia,
 } from '@/services/todos/recipe-media';
-import type { PendingTodoMutation } from '@/store/todos';
+import type { PendingChecklistMutation } from '@/store/todos';
 
 describe('recipe mutation media lifecycle', () => {
   const remove = jest.fn(async () => ({ data: null, error: null }));
@@ -66,7 +66,7 @@ describe('recipe mutation media lifecycle', () => {
   });
 
   it('does not delete thumbnails while preparing clear/delete mutations', async () => {
-    const clearMutation: PendingTodoMutation = {
+    const clearMutation: PendingChecklistMutation = {
       id: 'm1',
       listId: 'list-1',
       operation: 'clear_completed',
@@ -77,7 +77,7 @@ describe('recipe mutation media lifecycle', () => {
         ],
       },
     };
-    const deleteMutation: PendingTodoMutation = {
+    const deleteMutation: PendingChecklistMutation = {
       id: 'm2',
       listId: 'list-1',
       operation: 'delete_recipe',

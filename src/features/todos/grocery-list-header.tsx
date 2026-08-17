@@ -10,20 +10,20 @@ import {
   ProgressRing,
   Symbol,
 } from '@/components/primitives';
-import { shareTodoListText } from '@/features/todos/share';
-import { openTodoLists } from '@/features/todos/todo-list-href';
+import { shareChecklistText } from '@/features/todos/share';
+import { openChecklists } from '@/features/todos/todo-list-href';
 import { haptics } from '@/utils/haptics';
-import type { TodoList, TodoMember, TodoRecipe, TodoTask } from '@/store/todos';
+import type { Checklist, ChecklistMember, ChecklistRecipe, ChecklistTask } from '@/store/todos';
 import { AgentUiIds, type AgentUiTarget } from '@/utils/agent-ui';
 import { formatCount } from '@/utils/grammar';
 import { groceryListScreenStyles as styles } from './grocery-list-screen-styles';
 
 export type GroceryListHeaderProps = {
-  list: TodoList;
+  list: Checklist;
   listId: string;
-  tasks: TodoTask[];
-  members: TodoMember[];
-  recipes: TodoRecipe[];
+  tasks: ChecklistTask[];
+  members: ChecklistMember[];
+  recipes: ChecklistRecipe[];
   completedCount: number;
   progress: number;
   owner: boolean;
@@ -84,7 +84,7 @@ export function GroceryListHeader(props: GroceryListHeaderProps) {
                   accessibilityLabel="Back to checklists"
                   testID={AgentUiIds.grocery.back}
                   onPress={() => {
-                    openTodoLists();
+                    openChecklists();
                   }}
                 />
                 <AppText
@@ -155,7 +155,7 @@ export function GroceryListHeader(props: GroceryListHeaderProps) {
                 accessibilityLabel="Share grocery list"
                 accessibilityRole="button"
                 onPress={() =>
-                  void shareTodoListText(list, tasks, members, recipes)
+                  void shareChecklistText(list, tasks, members, recipes)
                 }
                 style={({ pressed }) => [
                   styles.iconButtonWrap,

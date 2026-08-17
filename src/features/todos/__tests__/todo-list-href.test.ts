@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { TODO_LISTS_HREF, todoListDetailHref } from '@/features/todos/todo-list-href';
+import { CHECKLISTS_HREF, checklistDetailHref } from '@/features/todos/todo-list-href';
 
-describe('todoListDetailHref', () => {
+describe('checklistDetailHref', () => {
   it('uses the goto path so Expo does not treat the open as a same-tab jump', () => {
-    expect(todoListDetailHref('list-agent-ui-demo-checklist')).toBe(
+    expect(checklistDetailHref('list-agent-ui-demo-checklist')).toBe(
       '/to-do/list-agent-ui-demo-checklist',
     );
-    expect(TODO_LISTS_HREF).toBe('/to-do');
+    expect(CHECKLISTS_HREF).toBe('/to-do');
   });
 
   it('sends Checklists back to the hub instead of tab history', () => {
@@ -20,9 +20,9 @@ describe('todoListDetailHref', () => {
       join(process.cwd(), 'src/features/todos/grocery-list-header.tsx'),
       'utf8',
     );
-    expect(header).toContain('onPress={openTodoLists}');
+    expect(header).toContain('onPress={openChecklists}');
     expect(header).not.toContain('router.canGoBack()');
-    expect(grocery).toContain('openTodoLists()');
+    expect(grocery).toContain('openChecklists()');
     expect(grocery).not.toContain('router.canGoBack()');
   });
 });

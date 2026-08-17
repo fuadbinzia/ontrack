@@ -1,4 +1,4 @@
-import { loadAllSharedTodoLists } from '@/services/todos/collaboration';
+import { loadAllSharedChecklists } from '@/services/todos/collaboration';
 import { pullAllTravelTripExpenses } from '@/services/travel/expense-collaboration';
 import { pullAllTravelTripItineraries } from '@/services/travel/itinerary-collaboration';
 import { loadAllSharedVehicles } from '@/services/vehicles/collaboration';
@@ -99,7 +99,7 @@ export async function refreshAppData() {
         if (!stillActive()) return;
 
         await Promise.all([
-          loadAllSharedTodoLists().catch(() => undefined),
+          loadAllSharedChecklists().catch(() => undefined),
           loadAllSharedVehicles().catch(() => undefined),
           pullAllTravelTripExpenses().catch(() => undefined),
           pullAllTravelTripItineraries().catch(() => undefined),

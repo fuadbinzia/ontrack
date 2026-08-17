@@ -6,6 +6,7 @@ import Animated, {
     useAnimatedStyle,
     useSharedValue,
 } from 'react-native-reanimated';
+import { geoOrthographic } from 'd3-geo';
 import Svg, {
     Circle,
     Defs,
@@ -27,6 +28,7 @@ import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 
 import {
     atlasCountryAtCoordinate,
+    atlasCountryByCode,
     TRAVEL_MAP_INK,
     TRAVEL_MAP_LAND_COLORS,
     TRAVEL_MAP_OCEAN_BOTTOM,
@@ -41,6 +43,7 @@ import {
     travelGlobeDetailForMotion,
     travelGlobeFlickVelocity,
     TRAVEL_GLOBE_FAST_DEGREES_PER_SECOND,
+    travelGlobeCoordinateVisible,
     travelGlobeUnzoomPoint,
     type TravelGlobeCoastVelocity,
     type TravelGlobeRotation,
@@ -130,16 +133,38 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
               warmedUp,
               fast: fastMotion || coasting,
             }),
-            !dragging && !fastMotion && !coasting,
+            false,
           )
         : EMPTY_TRAVEL_GLOBE_SNAPSHOT,
     [camera, coasting, dragging, fastMotion, hasLayout, rotation, spinning, warmedUp],
   );
-  const showPins = !(dragging || fastMotion || coasting);
-  const clusterByCountry = useMemo(
-    () => new Map(clusters.map((cluster) => [cluster.countryCode, cluster])),
-    [clusters],
-  );
+  const pinPositions = useMemo(() => {
+    if (!hasLayout || clusters.length === 0) return [];
+    const projection = geoOrthographic()
+      .translate(camera.center)
+      .scale(camera.radius)
+      .clipAngle(90)
+      .rotate(rotation);
+    return clusters.flatMap((cluster) => {
+      const country = atlasCountryByCode(cluster.countryCode);
+      if (!country) return [];
+      if (
+        !travelGlobeCoordinateVisible(
+          country.geographicCenter[0],
+          country.geographicCenter[1],
+          rotation,
+          0.08,
+        )
+      ) {
+        return [];
+      }
+      const projected = projection(country.geographicCenter);
+      if (!projected || projected.length < 2) return [];
+      const [left, top] = projected;
+      if (!Number.isFinite(left) || !Number.isFinite(top)) return [];
+      return [{ cluster, left, top }];
+    });
+  }, [camera, clusters, hasLayout, rotation]);
 
   const commitRotation = useCallback((next: readonly number[]) => {
     const normalized = normalizeTravelGlobeRotation(next);
@@ -533,27 +558,21 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
           </Svg>
 
           <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-            {showPins
-              ? snapshot.countries.map(({ country, center }) => {
-                  const cluster = clusterByCountry.get(country.code);
-                  if (!cluster || !center) return null;
-                  return (
-                    <TravelMapPinButton
-                      key={cluster.countryCode}
-                      testID={AgentUiIds.travel.map.countryCluster(
-                        cluster.countryCode,
-                      )}
-                      label={`${cluster.countryName}, ${cluster.visits.length} trip${
-                        cluster.visits.length === 1 ? '' : 's'
-                      }`}
-                      people={cluster.people}
-                      left={center[0]}
-                      top={center[1]}
-                      onPress={() => selectCountry(cluster.countryCode)}
-                    />
-                  );
-                })
-              : null}
+            {pinPositions.map(({ cluster, left, top }) => {
+              return (
+                <TravelMapPinButton
+                  key={cluster.countryCode}
+                  testID={AgentUiIds.travel.map.countryCluster(cluster.countryCode)}
+                  label={`${cluster.countryName}, ${cluster.visits.length} trip${
+                    cluster.visits.length === 1 ? '' : 's'
+                  }`}
+                  people={cluster.people}
+                  left={left}
+                  top={top}
+                  onPress={() => selectCountry(cluster.countryCode)}
+                />
+              );
+            })}
           </View>
         </Animated.View>
       </GestureDetector>

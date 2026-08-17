@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.124",
+    "date": "2026-08-17",
+    "notes": [
+      "Turn biometric unlock into a Remember Me toggle, keep Your Trips search open, hide scroll indicators app-wide, and add a USB iPhone OTA script.",
+      "Touched: app routes, features/account, features/auth."
+    ]
+  },
+  {
     "version": "1.0.123",
     "date": "2026-08-17",
     "notes": [

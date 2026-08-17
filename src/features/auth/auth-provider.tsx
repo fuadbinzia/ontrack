@@ -44,6 +44,7 @@ import {
 import { readInitialAuthState, useAuthProviderEffects } from './auth-provider-effects';
 import { type LockedAccount } from './auth-session-snapshot';
 import {
+    applyRememberMeForUser,
     authenticateBiometricUnlock,
     resolveBiometricUnlockSession,
 } from './biometric-unlock';
@@ -135,6 +136,7 @@ export function AuthSessionProvider({
         return;
       }
       useAuthAccess.getState().finishAuthentication();
+      applyRememberMeForUser(nextSession.user.id);
       setError(undefined);
       setPhase('authenticated');
       void useFriends.getState().hydrate({
@@ -189,7 +191,7 @@ export function AuthSessionProvider({
       const disk = live?.data.session ?? null;
       const expectedUserId = locked?.userId ?? disk?.user.id;
       if (!expectedUserId || !disk) {
-        setError('Sign in with Apple or Google first. Face ID unlocks this device after that.');
+        // Remember Me opts in quietly — Apple / Google bind the account first.
         if (locked) setPhase('locked');
         return;
       }

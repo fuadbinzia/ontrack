@@ -115,11 +115,6 @@ export const AGENT_UI_TRAVEL_FLOWS = {
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
     { op: 'tap', id: 'ontrack.travel.list.search' },
-    {
-      op: 'wait',
-      id: 'ontrack.travel.list.searchMinimize',
-      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
-    },
     { op: 'wait', ms: 350 },
   ],
   'travel-home-empty': [

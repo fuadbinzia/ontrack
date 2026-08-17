@@ -31,7 +31,7 @@ import {
   AUTH_ORBIT_GUIDES,
   AUTH_ORBIT_TABS,
   AUTH_PLANET_ICON_GAP_FRAC,
-  authCopyFrame,
+  authCopyFramePx,
   authCopyMaxHeightFrac,
   authOrbitLabelStyle,
   authOrbitNodesForTabs,
@@ -234,8 +234,11 @@ export function AuthConstellation({
   }, []);
   const well = Math.min(48, Math.max(30, height * 0.115));
   const slot = well * 1.95;
-  const copyFrame = authCopyFrame();
-  const copyMaxHeight = height * authCopyMaxHeightFrac(well / height);
+  const copyFrame = authCopyFramePx(width, height, well);
+  const copyMaxHeight = Math.min(
+    copyFrame.height,
+    height * authCopyMaxHeightFrac(well / height),
+  );
   const copyScale = Math.min(
     1,
     Math.max(AUTH_COPY_SCALE_MIN, height / AUTH_COPY_BASE_HEIGHT),
@@ -362,12 +365,11 @@ export function AuthConstellation({
         style={[
           styles.copy,
           {
-            left: width * copyFrame.left,
-            top: height * copyFrame.top,
-            width: width * copyFrame.width,
+            left: copyFrame.left,
+            top: copyFrame.top,
+            width: copyFrame.width,
             maxHeight: copyMaxHeight,
             gap: spacing.xs * copyScale,
-            paddingHorizontal: spacing.xs,
           },
         ]}>
         <CopyScaleContext.Provider value={copyScale}>

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { AUTH_COPY_SCALE_MIN } from '@/features/auth/auth-constellation-layout';
 import {
   AUTH_RING_HEADLINE_MIN_PT,
   AUTH_RING_INTRO_MIN_PT,
@@ -26,6 +27,15 @@ describe('authRingCopyType', () => {
     const full = authRingCopyType(1, TOKENS);
     expect(full.intro.fontSize).toBe(TOKENS.body.fontSize);
     expect(full.headline.fontSize).toBe(TOKENS.display.fontSize);
+  });
+
+  it('keeps type floors when the planet column is narrow', () => {
+    const compact = authRingCopyType(AUTH_COPY_SCALE_MIN, TOKENS);
+    expect(compact.headline.fontSize).toBeGreaterThanOrEqual(
+      AUTH_RING_HEADLINE_MIN_PT,
+    );
+    expect(compact.intro.fontSize).toBe(TOKENS.body.fontSize);
+    expect(compact.intro.fontSize).toBeGreaterThanOrEqual(AUTH_RING_INTRO_MIN_PT);
   });
 
   it('keeps welcome and upgrade heroes on the shared ring copy', () => {

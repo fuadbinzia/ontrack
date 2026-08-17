@@ -24,6 +24,20 @@ describe('trackers screen contract', () => {
     expect(screen).toContain('TrackersManageSheet');
     expect(screen).toContain('AgentUiIds.trackers.manage');
     expect(screen).toContain('scroll={false}');
+    expect(screen).toContain('showsVerticalScrollIndicator={false}');
+    expect(screen).toContain('showsHorizontalScrollIndicator={false}');
+  });
+
+  it('hides the Sections drag-list scroll indicator', () => {
+    const screen = read('src/features/trackers/trackers-screen.tsx');
+    const listStart = screen.indexOf('<DraggableFlatList');
+    const listEnd = screen.indexOf('/>', listStart);
+    const list = screen.slice(listStart, listEnd);
+
+    expect(listStart).toBeGreaterThan(-1);
+    expect(list).toContain('showsVerticalScrollIndicator={false}');
+    expect(list).toContain('showsHorizontalScrollIndicator={false}');
+    expect(list).not.toContain('showsVerticalScrollIndicator={true}');
   });
 
   it('does not render an Open label between Manage Sections add-on rows', () => {

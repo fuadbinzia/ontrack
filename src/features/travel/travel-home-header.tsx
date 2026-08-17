@@ -30,8 +30,6 @@ type TravelHomeHeaderProps = {
   locationLabel?: string;
   /** Plate-aware header ink (`light` = white over dark washes). */
   headerInk?: TravelAtmosphereHeaderInk;
-  /** Collapse expanded trip search when the user taps header chrome. */
-  onPressAway?: () => void;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -41,7 +39,6 @@ export function TravelHomeHeader({
   onOpenMap,
   locationLabel,
   headerInk = 'light',
-  onPressAway,
   style,
 }: TravelHomeHeaderProps) {
   const theme = useTheme();
@@ -284,18 +281,6 @@ export function TravelHomeHeader({
       </View>
     </>
   );
-
-  if (onPressAway) {
-    return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Dismiss trip search"
-        onPress={onPressAway}
-        style={rootStyle}>
-        {content}
-      </Pressable>
-    );
-  }
 
   return <View style={rootStyle}>{content}</View>;
 }

@@ -342,7 +342,7 @@ export function AddressAutofindField({
                   bounces={contentHeight > MENU_MAX_HEIGHT}
                   keyboardShouldPersistTaps="handled"
                   nestedScrollEnabled
-                  showsVerticalScrollIndicator={contentHeight > MENU_MAX_HEIGHT}
+                  showsVerticalScrollIndicator={false}
                   style={{ maxHeight: placement.maxHeight - MENU_PADDING * 2 }}>
                   {suggestions.map((suggestion, index) => (
                     <SuggestionRow

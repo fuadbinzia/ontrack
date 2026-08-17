@@ -538,7 +538,7 @@ export function Dropdown<T extends string = string>(props: DropdownProps<T>) {
                 bounces={visibleOptions.length * itemHeight > listMaxHeight}
                 keyboardShouldPersistTaps="handled"
                 nestedScrollEnabled
-                showsVerticalScrollIndicator={visibleOptions.length * itemHeight > listMaxHeight}
+                showsVerticalScrollIndicator={false}
                 style={{
                   zIndex: 1,
                   maxHeight: listMaxHeight,

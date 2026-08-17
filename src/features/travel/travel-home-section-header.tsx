@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import {
     Keyboard,
     Pressable,
@@ -7,17 +7,6 @@ import {
     TextInput,
     View,
 } from 'react-native';
-import Animated, {
-    Easing,
-    Extrapolation,
-    interpolate,
-    ReduceMotion,
-    runOnJS,
-    useAnimatedStyle,
-    useReducedMotion,
-    useSharedValue,
-    withTiming,
-} from 'react-native-reanimated';
 
 import { Symbol } from '@/components/primitives';
 import { TravelHomeGlass } from '@/features/travel/travel-home-glass';
@@ -35,49 +24,21 @@ type TravelHomeSectionHeaderProps = {
   count?: number;
   searchQuery?: string;
   onSearchQueryChange?: (query: string) => void;
-  /** Controlled open state (parent can collapse on scroll / chrome taps). */
-  searchOpen?: boolean;
-  onSearchOpenChange?: (open: boolean) => void;
 };
 
-const EXPAND_MS = 280;
-const COLLAPSE_MS = 340;
-const EXPAND_EASING = Easing.bezier(0.22, 1, 0.36, 1);
-const COLLAPSE_EASING = Easing.bezier(0.33, 0, 0.2, 1);
-
 /**
- * Compact “Your Trips” search chip that expands to a full-width field on tap.
- * Width + label/field crossfade for a smooth open/close (no outer plate).
+ * Full-width “Your Trips” search field — stays open; never collapses to a chip.
  */
 export function TravelHomeSectionHeader({
   title,
   count,
   searchQuery = '',
   onSearchQueryChange,
-  searchOpen: searchOpenProp,
-  onSearchOpenChange,
 }: TravelHomeSectionHeaderProps) {
   const theme = useTheme();
   const { s, spacing: rs } = useResponsive();
-  const reduceMotion = useReducedMotion();
   const inputRef = useRef<TextInput>(null);
-  const ignoreBlurRef = useRef(false);
-  const wasOpenRef = useRef(false);
   const hasQuery = Boolean(searchQuery.trim());
-  const [searchOpenState, setSearchOpenState] = useState(false);
-  const [trackWidth, setTrackWidth] = useState(0);
-  const [titleWidth, setTitleWidth] = useState(0);
-  const searchOpen =
-    searchOpenProp !== undefined ? searchOpenProp : searchOpenState;
-  const setSearchOpen = useCallback(
-    (open: boolean) => {
-      onSearchOpenChange?.(open);
-      if (searchOpenProp === undefined) {
-        setSearchOpenState(open);
-      }
-    },
-    [onSearchOpenChange, searchOpenProp],
-  );
   const dark = theme.name === 'dark';
   // Theme-native glass: light frost in light mode, dark frost in dark.
   const plateInk = dark ? '#FFFFFF' : travelHomeTokens.colors.ink;
@@ -106,134 +67,16 @@ export function TravelHomeSectionHeader({
     travelHomeTokens.sizes.touchTargetMin - 12,
     fieldHeight - s(4),
   );
-  // Match visual air after the glyph (hit-box inset + row gap).
   const iconToTitleGap =
     Math.round((iconHitW - searchIconSize) / 2) + scoopGap;
-  // Hug icon + full title + badge — never rely on a too-small fallback width.
-  const chipWidth =
-    titleWidth > 0
-      ? Math.ceil(
-          scoopPadL +
-            iconHitW +
-            scoopGap +
-            titleWidth +
-            (showCount ? iconToTitleGap + circle : 0) +
-            scoopPadR +
-            StyleSheet.hairlineWidth * 2 +
-            2,
-        )
-      : 0;
   const showSearch = typeof onSearchQueryChange === 'function';
-  // Drive open from searchOpen only — keep query until the collapse animation settles.
-  const openSearch = showSearch && searchOpen;
-  const progress = useSharedValue(openSearch ? 1 : 0);
-  const collapsedW = useSharedValue(0);
-  const expandedW = useSharedValue(0);
-
-  const finishCollapseCleanup = useCallback(() => {
-    onSearchQueryChange?.('');
-    Keyboard.dismiss();
-  }, [onSearchQueryChange]);
-
-  const collapseSearch = useCallback(() => {
-    ignoreBlurRef.current = true;
-    inputRef.current?.blur();
-    setSearchOpen(false);
-  }, [setSearchOpen]);
-
-  useEffect(() => {
-    if (chipWidth > 0) collapsedW.value = chipWidth;
-  }, [chipWidth, collapsedW]);
-
-  useEffect(() => {
-    if (trackWidth > 0) expandedW.value = trackWidth;
-  }, [trackWidth, expandedW]);
-
-  useEffect(() => {
-    const opening = openSearch;
-    const closing = wasOpenRef.current && !opening;
-    wasOpenRef.current = opening;
-    const duration = reduceMotion
-      ? 0
-      : opening
-        ? EXPAND_MS
-        : COLLAPSE_MS;
-    progress.value = withTiming(
-      opening ? 1 : 0,
-      {
-        duration,
-        easing: opening ? EXPAND_EASING : COLLAPSE_EASING,
-        reduceMotion: ReduceMotion.System,
-      },
-      (finished) => {
-        if (!finished || !closing) return;
-        runOnJS(finishCollapseCleanup)();
-      },
-    );
-  }, [finishCollapseCleanup, openSearch, progress, reduceMotion]);
-
-  useEffect(() => {
-    if (!openSearch) return;
-    const delay = reduceMotion ? 0 : Math.round(EXPAND_MS * 0.55);
-    const id = setTimeout(() => {
-      inputRef.current?.focus();
-    }, delay);
-    return () => clearTimeout(id);
-  }, [openSearch, reduceMotion]);
-
-  const shellStyle = useAnimatedStyle(() => {
-    const from = collapsedW.value > 0 ? collapsedW.value : expandedW.value;
-    const to = expandedW.value > 0 ? expandedW.value : from;
-    if (from <= 0 && to <= 0) {
-      return { alignSelf: 'flex-start' as const };
-    }
-    return {
-      width: interpolate(
-        progress.value,
-        [0, 1],
-        [from > 0 ? from : to, to > 0 ? to : from],
-        Extrapolation.CLAMP,
-      ),
-    };
-  });
-
-  // Wide overlap so label eases in while the field eases out (no hard cut).
-  const labelStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0, 0.35, 0.75, 1],
-      [1, 1, 0.25, 0],
-      Extrapolation.CLAMP,
-    ),
-  }));
-
-  const fieldStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0, 0.25, 0.65, 1],
-      [0, 0.15, 0.85, 1],
-      Extrapolation.CLAMP,
-    ),
-  }));
 
   const searchAgent = useAgentUiTarget(AgentUiIds.travel.list.search, {
     label: title,
     value: searchQuery,
-    onPress: showSearch && !openSearch
-      ? () => {
-          setSearchOpen(true);
-        }
-      : undefined,
   });
-  const minimizeAgent = useAgentUiTarget(
-    openSearch ? AgentUiIds.travel.list.searchMinimize : undefined,
-    {
-      label: 'Minimize trip search',
-      onPress: collapseSearch,
-    },
-  );
   const clearAgent = useAgentUiTarget(
-    openSearch && hasQuery ? AgentUiIds.travel.list.searchClear : undefined,
+    showSearch && hasQuery ? AgentUiIds.travel.list.searchClear : undefined,
     {
       label: 'Clear trip search',
       onPress: () => onSearchQueryChange?.(''),
@@ -330,171 +173,85 @@ export function TravelHomeSectionHeader({
     );
   }
 
-  const iconHit = {
-    width: iconHitW,
-    height: iconHitH,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  };
-
   return (
-    <View
-      style={styles.track}
-      onLayout={(event) => {
-        const next = Math.round(event.nativeEvent.layout.width);
-        if (next > 0 && next !== trackWidth) setTrackWidth(next);
-      }}>
-      {/* Measure full title width so the collapsed pill never ellipsizes. */}
-      <Text
-        pointerEvents="none"
-        allowFontScaling
-        maxFontSizeMultiplier={1.15}
-        numberOfLines={1}
-        style={[titleTextStyle, styles.measureTitle]}
-        onTextLayout={(event) => {
-          const next = Math.ceil(
-            event.nativeEvent.lines.reduce(
-              (max, line) => Math.max(max, line.width),
-              0,
-            ),
-          );
-          if (next > 0 && next !== titleWidth) setTitleWidth(next);
-        }}>
-        {title}
-      </Text>
+    <View style={styles.track}>
+      <TravelHomeGlass
+        intensity={dark ? 36 : 52}
+        style={[styles.search, scoopStyle, styles.searchFill]}>
+        <View
+          pointerEvents="none"
+          style={{
+            width: iconHitW,
+            height: iconHitH,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Symbol name="search" size={searchIconSize} color={fieldMuted} />
+        </View>
 
-      <Animated.View style={[styles.shell, shellStyle]}>
-        <TravelHomeGlass
-          intensity={dark ? 36 : 52}
-          style={[styles.search, scoopStyle, styles.searchFill]}>
+        <TextInput
+          ref={(node) => {
+            inputRef.current = node;
+            searchAgent.ref(node as never);
+          }}
+          testID={searchAgent.testID}
+          onLayout={searchAgent.onLayout}
+          value={searchQuery}
+          onChangeText={onSearchQueryChange}
+          placeholder={title}
+          placeholderTextColor={fieldMuted}
+          accessibilityLabel={title}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          clearButtonMode="never"
+          underlineColorAndroid="transparent"
+          onSubmitEditing={() => Keyboard.dismiss()}
+          style={[
+            titleTextStyle,
+            {
+              flex: 1,
+              flexShrink: 1,
+              minWidth: 0,
+              paddingVertical: 0,
+              color: fieldInk,
+            },
+          ]}
+        />
+
+        {hasQuery ? (
           <Pressable
-            ref={
-              (openSearch ? minimizeAgent.ref : searchAgent.ref) as never
-            }
-            testID={
-              openSearch ? minimizeAgent.testID : searchAgent.testID
-            }
-            onLayout={
-              openSearch ? minimizeAgent.onLayout : searchAgent.onLayout
-            }
+            ref={clearAgent.ref as never}
+            testID={clearAgent.testID}
+            onLayout={clearAgent.onLayout}
             accessibilityRole="button"
-            accessibilityLabel={
-              openSearch ? 'Minimize trip search' : `Search ${title}`
-            }
+            accessibilityLabel="Clear trip search"
             hitSlop={8}
             onPress={() => {
-              if (openSearch) collapseSearch();
-              else setSearchOpen(true);
+              onSearchQueryChange?.('');
+              requestAnimationFrame(() => {
+                inputRef.current?.focus();
+              });
             }}
-            style={iconHit}>
-            <Symbol name="search" size={searchIconSize} color={fieldMuted} />
+            style={{
+              width: Math.max(22, s(22)),
+              height: Math.max(22, s(22)),
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Symbol
+              name="close"
+              size={Math.max(12, s(13))}
+              color={fieldMuted}
+            />
           </Pressable>
-
-          <View style={[styles.fieldSlot, styles.fieldSlotOpen]}>
-            <Animated.View
-              pointerEvents={openSearch ? 'none' : 'auto'}
-              style={[styles.fieldLayer, labelStyle]}>
-              <Pressable
-                accessibilityElementsHidden={openSearch}
-                importantForAccessibility={
-                  openSearch ? 'no-hide-descendants' : 'yes'
-                }
-                disabled={openSearch}
-                onPress={() => setSearchOpen(true)}
-                style={styles.fieldPress}>
-                <Text
-                  allowFontScaling
-                  maxFontSizeMultiplier={1.15}
-                  numberOfLines={1}
-                  style={titleTextStyle}>
-                  {title}
-                </Text>
-              </Pressable>
-            </Animated.View>
-
-            <Animated.View
-              pointerEvents={openSearch ? 'auto' : 'none'}
-              style={[styles.fieldLayer, fieldStyle]}>
-              <TextInput
-                ref={(node) => {
-                  inputRef.current = node;
-                  if (openSearch) {
-                    searchAgent.ref(node as never);
-                  }
-                }}
-                testID={openSearch ? searchAgent.testID : undefined}
-                onLayout={openSearch ? searchAgent.onLayout : undefined}
-                value={searchQuery}
-                onChangeText={onSearchQueryChange}
-                placeholder={title}
-                placeholderTextColor={fieldMuted}
-                accessibilityLabel={title}
-                editable={openSearch}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="search"
-                clearButtonMode="never"
-                underlineColorAndroid="transparent"
-                onSubmitEditing={collapseSearch}
-                onBlur={() => {
-                  if (ignoreBlurRef.current) {
-                    ignoreBlurRef.current = false;
-                    return;
-                  }
-                  if (openSearch) collapseSearch();
-                }}
-                style={[
-                  titleTextStyle,
-                  {
-                    flex: 1,
-                    flexShrink: 1,
-                    minWidth: 0,
-                    paddingVertical: 0,
-                    color: fieldInk,
-                  },
-                ]}
-              />
-            </Animated.View>
+        ) : null}
+        {showCount ? (
+          <View style={{ marginLeft: iconToTitleGap - scoopGap }}>
+            {renderCountBadge()}
           </View>
-
-          {hasQuery ? (
-            <Pressable
-              ref={clearAgent.ref as never}
-              testID={clearAgent.testID}
-              onLayout={clearAgent.onLayout}
-              accessibilityRole="button"
-              accessibilityLabel="Clear trip search"
-              hitSlop={8}
-              onPressIn={() => {
-                ignoreBlurRef.current = true;
-              }}
-              onPress={() => {
-                onSearchQueryChange?.('');
-                requestAnimationFrame(() => {
-                  inputRef.current?.focus();
-                  ignoreBlurRef.current = false;
-                });
-              }}
-              style={{
-                width: Math.max(22, s(22)),
-                height: Math.max(22, s(22)),
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-              <Symbol
-                name="close"
-                size={Math.max(12, s(13))}
-                color={fieldMuted}
-              />
-            </Pressable>
-          ) : null}
-          {showCount ? (
-            <View style={{ marginLeft: iconToTitleGap - scoopGap }}>
-              {renderCountBadge()}
-            </View>
-          ) : null}
-        </TravelHomeGlass>
-      </Animated.View>
+        ) : null}
+      </TravelHomeGlass>
     </View>
   );
 }
@@ -503,17 +260,6 @@ const styles = StyleSheet.create({
   track: {
     width: '100%',
     alignSelf: 'stretch',
-  },
-  measureTitle: {
-    position: 'absolute',
-    opacity: 0,
-    left: 0,
-    top: 0,
-    zIndex: -1,
-  },
-  shell: {
-    maxWidth: '100%',
-    alignSelf: 'flex-start',
   },
   plate: {
     flexDirection: 'row',
@@ -525,22 +271,6 @@ const styles = StyleSheet.create({
   },
   searchFill: {
     width: '100%',
-  },
-  fieldSlot: {
-    height: '100%',
-    justifyContent: 'center',
-  },
-  fieldSlotOpen: {
-    flex: 1,
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  fieldLayer: {
-    ...StyleSheet.absoluteFill,
-    justifyContent: 'center',
-  },
-  fieldPress: {
-    justifyContent: 'center',
   },
   badge: {
     alignItems: 'center',

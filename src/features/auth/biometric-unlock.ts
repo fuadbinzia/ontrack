@@ -5,6 +5,7 @@ import type { AppIconName } from '@/design-system';
 import {
     isBiometricUnlockEnabledFor,
     setBiometricUnlockUserId,
+    useBiometricUnlock,
 } from '@/store/biometric-unlock';
 
 export type BiometricKind = 'face' | 'fingerprint' | 'iris' | 'generic';
@@ -90,9 +91,34 @@ export function resolveBiometricUnlockSession(input: {
   return 'unlocked';
 }
 
-/** Face ID / fingerprint CTA on every AuthScreen once the device can do it. */
+export const AUTH_REMEMBER_ME_LABEL = 'Remember Me';
+
+/** Face ID / fingerprint toggle on every AuthScreen once the device can do it. */
 export function canOfferBiometricUnlock(available: boolean): boolean {
   return available;
+}
+
+/** On when Remember Me is pending or this lock/session account already opted in. */
+export function isAuthBiometricToggleOn(input: {
+  enabledUserId: string | null | undefined;
+  unlockUserId?: string;
+  rememberMe?: boolean;
+}): boolean {
+  return (
+    Boolean(input.rememberMe) ||
+    (Boolean(input.unlockUserId) && input.enabledUserId === input.unlockUserId)
+  );
+}
+
+export function setRememberMeEnabled(value: boolean): void {
+  useBiometricUnlock.getState().setRememberMe(value);
+  if (!value) setBiometricUnlockUserId(null);
+}
+
+export function applyRememberMeForUser(userId: string): void {
+  if (useBiometricUnlock.getState().rememberMe) {
+    setBiometricUnlockUserId(userId);
+  }
 }
 
 /** Auto-prompt only after this account already opted in and a lock target exists. */
@@ -165,7 +191,7 @@ export async function enableBiometricUnlockForUser(
 }
 
 export function disableBiometricUnlock(): void {
-  setBiometricUnlockUserId(null);
+  setRememberMeEnabled(false);
 }
 
 export { isBiometricUnlockEnabledFor };

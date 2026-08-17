@@ -1,0 +1,33 @@
+diff --git a/node_modules/react-native/Libraries/Components/ScrollView/ScrollView.js b/node_modules/react-native/Libraries/Components/ScrollView/ScrollView.js
+index c8392ea..8b9f759 100644
+--- a/node_modules/react-native/Libraries/Components/ScrollView/ScrollView.js
++++ b/node_modules/react-native/Libraries/Components/ScrollView/ScrollView.js
+@@ -1943,15 +1943,26 @@ const ScrollViewWrapper: component(
+   ...props: ScrollViewProps
+ ) = function Wrapper({
+   ref,
++  showsHorizontalScrollIndicator = false,
++  showsVerticalScrollIndicator = false,
+   ...props
+ }: {
+   ref?: React.RefSetter<PublicScrollViewInstance>,
+   ...ScrollViewProps,
+ }): React.Node {
+   return ref == null ? (
+-    <ScrollView {...props} />
++    <ScrollView
++      {...props}
++      showsHorizontalScrollIndicator={showsHorizontalScrollIndicator}
++      showsVerticalScrollIndicator={showsVerticalScrollIndicator}
++    />
+   ) : (
+-    <ScrollView {...props} scrollViewRef={ref} />
++    <ScrollView
++      {...props}
++      scrollViewRef={ref}
++      showsHorizontalScrollIndicator={showsHorizontalScrollIndicator}
++      showsVerticalScrollIndicator={showsVerticalScrollIndicator}
++    />
+   );
+ };
+ ScrollViewWrapper.displayName = 'ScrollView';

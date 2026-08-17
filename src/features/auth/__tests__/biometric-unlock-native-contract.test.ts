@@ -23,7 +23,9 @@ describe('biometric unlock native contract', () => {
     expect(provider).toContain('unlockWithBiometrics');
     expect(provider).toContain('authenticateBiometricUnlock');
     expect(provider).toContain('setBiometricUnlockUserId');
+    expect(provider).toContain('applyRememberMeForUser');
     expect(provider).toContain('initializeAccount(disk)');
+    expect(provider).not.toContain('Face ID unlocks this device after that');
     expect(provider).not.toContain('isBiometricUnlockEnabledFor');
     expect(provider).not.toContain('requireAuthentication');
     expect(storage).not.toContain('requireAuthentication');

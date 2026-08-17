@@ -61,7 +61,7 @@ export function DesignSystemThemeHistory() {
         ) : (
           <ScrollView
             nestedScrollEnabled
-            showsVerticalScrollIndicator={history.length > VISIBLE_HISTORY_CARDS}
+            showsVerticalScrollIndicator={false}
             // Nested in Screen's ScrollView: use fixed height (not maxHeight) so the
             // list actually clips to ~3 cards instead of expanding with content.
             style={

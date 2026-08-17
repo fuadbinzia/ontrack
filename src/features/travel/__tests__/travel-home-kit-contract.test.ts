@@ -229,15 +229,6 @@ describe('travel home kit contract', () => {
     expect(header).toContain('flexDirection: \'row\'');
     expect(header).toContain('styles.search');
     expect(header).toContain('styles.badge');
-    // Compact title chip until tap; width + crossfade expand/collapse.
-    expect(header).toContain('withTiming');
-    expect(header).toContain('shellStyle');
-    expect(header).toContain('onTextLayout');
-    expect(header).toContain('setSearchOpen(true)');
-    expect(header).toContain('collapseSearch');
-    // A populated query must not override an explicit minimize/blur/submit.
-    expect(header).not.toMatch(/if \(hasQuery\) setSearchOpen\(true\)/);
-    expect(header).toContain('searchMinimize');
     expect(header).toContain('{title}');
     // Theme-native plate/scoop; count badge stays inverted + white ink.
     expect(header).toMatch(/<TravelHomeGlass[\s\S]*?\binverted\b/);
@@ -248,6 +239,42 @@ describe('travel home kit contract', () => {
     expect(header).not.toContain('scoopLight');
     // Count sits at the far right inside the search scoop.
     expect(header).toMatch(/\{renderCountBadge\(\)\}/);
+  });
+
+  it('keeps the Your Trips search bar open instead of collapsing to a chip', () => {
+    const header = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-home-section-header.tsx'),
+      'utf8',
+    );
+    const yourTrips = readFileSync(
+      join(process.cwd(), 'src/features/travel/travel-home-your-trips.tsx'),
+      'utf8',
+    );
+    const screen = readFileSync(
+      join(
+        process.cwd(),
+        'src/features/travel/travel-home-screen-content.tsx',
+      ),
+      'utf8',
+    );
+    const hook = readFileSync(
+      join(process.cwd(), 'src/features/travel/use-travel-home-screen.ts'),
+      'utf8',
+    );
+    expect(header).toContain('width: \'100%\'');
+    expect(header).toContain('AgentUiIds.travel.list.search');
+    expect(header).toContain('onSubmitEditing={() => Keyboard.dismiss()}');
+    expect(header).not.toContain('withTiming');
+    expect(header).not.toContain('collapseSearch');
+    expect(header).not.toContain('searchOpen');
+    expect(header).not.toContain('searchMinimize');
+    expect(header).not.toContain('onBlur');
+    expect(yourTrips).not.toContain('searchOpen');
+    expect(yourTrips).not.toContain('onDismissSearch');
+    expect(screen).not.toContain('searchOpen');
+    expect(screen).not.toContain('collapseTripSearch');
+    expect(hook).not.toContain('tripSearchOpen');
+    expect(hook).not.toContain('collapseTripSearch');
   });
 
   it('grounds a solo trip with an atmosphere-tinted bottom shadow', () => {
@@ -296,6 +323,8 @@ describe('travel home kit contract', () => {
       'utf8',
     );
     expect(yourTrips).not.toContain("searchActive ? 'search' : 'browse'");
+    expect(yourTrips).not.toContain('searchOpen');
+    expect(yourTrips).not.toContain('onDismissSearch');
     expect(yourTrips).toContain('animateEntrance={tripEnterIds.has(plan.id)}');
     expect(card).toContain('animateEntrance = false');
     expect(card).toMatch(/animateEntrance \? listEntering\(index\) : undefined/);

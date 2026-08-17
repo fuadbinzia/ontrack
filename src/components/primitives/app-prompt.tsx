@@ -332,7 +332,7 @@ export function AppPromptHost({ embedded = false }: { embedded?: boolean }) {
                   bounces={false}
                   contentContainerStyle={styles.messageScrollContent}
                   nestedScrollEnabled
-                  showsVerticalScrollIndicator>
+                  showsVerticalScrollIndicator={false}>
                   {promptBody}
                 </ScrollView>
               </AgentTestId>

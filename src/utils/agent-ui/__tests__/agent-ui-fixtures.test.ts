@@ -313,8 +313,11 @@ describe('agent-ui fixtures', () => {
           op: 'tap',
           id: 'ontrack.travel.list.search',
         }),
+      ]),
+    );
+    expect(resolveAgentUiFlow('travel-home-search')).not.toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
-          op: 'wait',
           id: 'ontrack.travel.list.searchMinimize',
         }),
       ]),

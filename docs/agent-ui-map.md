@@ -818,7 +818,7 @@ dock); legacy `/(tabs)/profile/account` redirects there.
 | `ontrack.auth.apple`                    | Continue with Apple                                            |
 | `ontrack.auth.google`                   | Continue with Google                                           |
 | `ontrack.auth.switchAccount`            | Use a different account (locked gate only)                     |
-| `ontrack.auth.unlockBiometric`          | Unlock With Face ID / fingerprint (welcome / upgrade / locked when enrolled) |
+| `ontrack.auth.unlockBiometric`          | Remember Me toggle below Google (Face ID / fingerprint; welcome / upgrade / locked when enrolled) |
 | `ontrack.auth.dismissError`             | Dismiss sign-in error                                          |
 | `ontrack.auth.privacy`                  | Privacy Policy link (upgrade / locked)                         |
 | `ontrack.auth.terms`                  | Terms of Use link (upgrade / locked)       |
@@ -839,8 +839,8 @@ canvas (device must be signed out / not yet onboarded).
 
 Killing the app on a **physical device** re-arms the sign-in gate (`locked` phase →
 `/welcome` with re-authentication copy). Enrolled devices show `ontrack.auth.unlockBiometric`
-on welcome, upgrade, and the lock gate. Auto-prompt once only when that account already
-enabled Face ID / fingerprint on this device. Simulators and emulators are exempt
+as a Remember Me toggle under Google on welcome, upgrade, and the lock gate. Auto-prompt once
+only when that account already enabled Face ID / fingerprint on this device. Simulators and emulators are exempt
 (`Device.isDevice === false`), so agent flows never see it; to inspect the gate on a
 sim, tap `ontrack.developer.lockSession`.
 
@@ -857,9 +857,7 @@ Trip launcher home. Wire testIDs stay under historical `ontrack.travel.list.*` (
 | `ontrack.travel.list.section.yourTrips`          | Layout anchor — Your Trips section (`travel.home.section.yourTrips` alias) |
 | `ontrack.travel.list.section.empty`              | Layout anchor — zero-trip welcome                         |
 | `ontrack.travel.list.section.atmosphereLocation` | Layout anchor — atmosphere photo place caption            |
-| `ontrack.travel.list.search`                     | Your Trips search — chip expands; field when open         |
-| `ontrack.travel.list.searchMinimize`             | Collapse expanded trip search (leading search icon)       |
-| `ontrack.travel.list.searchDismiss`              | Atmosphere/header band — dismiss expanded trip search      |
+| `ontrack.travel.list.search`                     | Your Trips search — always-open full-width field          |
 | `ontrack.travel.list.searchClear`                | Clear trip list search                                    |
 | `ontrack.travel.list.empty.create`               | Empty-state Add Your First Trip                           |
 | `ontrack.travel.list.empty.search`               | No trips match the current search                         |

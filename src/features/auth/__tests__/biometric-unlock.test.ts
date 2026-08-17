@@ -6,7 +6,10 @@ import {
     biometricUnlockIcon,
     biometricUnlockLabel,
     canOfferBiometricUnlock,
+    isAuthBiometricToggleOn,
     capabilityFromHardware,
+    applyRememberMeForUser,
+    AUTH_REMEMBER_ME_LABEL,
     enableBiometricUnlockForUser,
     isBiometricCancelError,
     resolveBiometricUnlockSession,
@@ -22,7 +25,7 @@ describe('biometric unlock helpers', () => {
   const originalOs = Platform.OS;
 
   beforeEach(() => {
-    useBiometricUnlock.setState({ enabledUserId: null });
+    useBiometricUnlock.setState({ enabledUserId: null, rememberMe: false });
     LocalAuthentication.authenticateAsync.mockReset();
     Platform.OS = originalOs;
   });
@@ -67,6 +70,20 @@ describe('biometric unlock helpers', () => {
   it('offers Face ID on sign-in as soon as the device is enrolled', () => {
     expect(canOfferBiometricUnlock(true)).toBe(true);
     expect(canOfferBiometricUnlock(false)).toBe(false);
+    expect(
+      isAuthBiometricToggleOn({ enabledUserId: 'user-1', unlockUserId: 'user-1' }),
+    ).toBe(true);
+    expect(
+      isAuthBiometricToggleOn({ enabledUserId: 'user-1', unlockUserId: 'user-2' }),
+    ).toBe(false);
+    expect(isAuthBiometricToggleOn({ enabledUserId: 'user-1' })).toBe(false);
+    expect(
+      isAuthBiometricToggleOn({
+        enabledUserId: null,
+        rememberMe: true,
+      }),
+    ).toBe(true);
+    expect(AUTH_REMEMBER_ME_LABEL).toBe('Remember Me');
     expect(
       shouldAutoPromptBiometricUnlock({
         available: true,
@@ -115,6 +132,15 @@ describe('biometric unlock helpers', () => {
     expect(isBiometricUnlockEnabledFor('user-1')).toBe(true);
     expect(isBiometricUnlockEnabledFor('user-2')).toBe(false);
     expect(isBiometricUnlockEnabledFor(undefined)).toBe(false);
+  });
+
+  it('binds Remember Me to the signed-in user without a second prompt', () => {
+    applyRememberMeForUser('user-1');
+    expect(isBiometricUnlockEnabledFor('user-1')).toBe(false);
+
+    useBiometricUnlock.setState({ rememberMe: true });
+    applyRememberMeForUser('user-1');
+    expect(isBiometricUnlockEnabledFor('user-1')).toBe(true);
   });
 
   it('does not enable when hardware is not available', async () => {

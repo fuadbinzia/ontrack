@@ -44,10 +44,7 @@ import {
 import { TravelHomeEmpty } from '@/features/travel/travel-home-empty';
 import { TravelHomeHeader } from '@/features/travel/travel-home-header';
 import { filterTravelPlansByQuery } from '@/features/travel/travel-home-plan-search';
-import {
-    TravelHomeYourTrips,
-    isTravelHomeTripSearchActive,
-} from '@/features/travel/travel-home-your-trips';
+import { TravelHomeYourTrips } from '@/features/travel/travel-home-your-trips';
 import { TravelNewTripSheet } from '@/features/travel/travel-new-trip-sheet';
 import {
     stripTripCoverUploads,
@@ -112,8 +109,6 @@ export function TravelScreenContent() {
     activeTripId,
     tripSearchQuery,
     setTripSearchQuery,
-    tripSearchOpen,
-    setTripSearchOpen,
     theme,
     travelStyle,
     insets,
@@ -136,8 +131,6 @@ export function TravelScreenContent() {
     sortedPlans,
     currentPlans,
     launcherPlans,
-    collapseTripSearch,
-    tripSearchActive,
     visibleLauncherPlans,
     hasCurrentTrips,
     interactWithPlan,
@@ -246,7 +239,6 @@ export function TravelScreenContent() {
           onAddTrip={!showForm && !hasNoTrips ? openCreateTrip : undefined}
           locationLabel={atmosphereImage.label}
           headerInk={atmosphereImage.headerInk}
-          onPressAway={tripSearchActive ? collapseTripSearch : undefined}
         />
 
         {hasNoTrips ? (
@@ -256,9 +248,6 @@ export function TravelScreenContent() {
             plans={visibleLauncherPlans}
             searchQuery={tripSearchQuery}
             onSearchQueryChange={setTripSearchQuery}
-            searchOpen={tripSearchOpen}
-            onSearchOpenChange={setTripSearchOpen}
-            onDismissSearch={collapseTripSearch}
             selfDisplayName={selfDisplayName}
             atmosphereAverageColor={atmosphereImage.averageColor}
             onOpenTrip={openItinerary}

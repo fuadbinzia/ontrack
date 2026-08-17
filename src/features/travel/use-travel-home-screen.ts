@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     NativeScrollEvent,
     NativeSyntheticEvent,
@@ -44,10 +44,6 @@ import { TravelHomeEmpty } from '@/features/travel/travel-home-empty';
 import { TravelHomeHeader } from '@/features/travel/travel-home-header';
 import { filterTravelPlansByQuery } from '@/features/travel/travel-home-plan-search';
 import { travelHomeTokens } from '@/features/travel/travel-home-tokens';
-import {
-    TravelHomeYourTrips,
-    isTravelHomeTripSearchActive,
-} from '@/features/travel/travel-home-your-trips';
 import { TravelNewTripSheet } from '@/features/travel/travel-new-trip-sheet';
 import {
     stripTripCoverUploads,
@@ -162,15 +158,6 @@ export function useTravelHomeScreen() {
     [plans, recentPlanIds, today],
   );
   const [tripSearchQuery, setTripSearchQuery] = useState('');
-  const [tripSearchOpen, setTripSearchOpen] = useState(false);
-  // Close only — section header clears query + keyboard after collapse settles.
-  const collapseTripSearch = useCallback(() => {
-    setTripSearchOpen(false);
-  }, []);
-  const tripSearchActive = isTravelHomeTripSearchActive(
-    tripSearchOpen,
-    tripSearchQuery,
-  );
   const visibleLauncherPlans = useMemo(
     () => filterTravelPlansByQuery(launcherPlans, tripSearchQuery),
     [launcherPlans, tripSearchQuery],
@@ -482,8 +469,6 @@ export function useTravelHomeScreen() {
     setActiveTripId,
     tripSearchQuery,
     setTripSearchQuery,
-    tripSearchOpen,
-    setTripSearchOpen,
     theme,
     travelStyle,
     insets,
@@ -506,8 +491,6 @@ export function useTravelHomeScreen() {
     sortedPlans,
     currentPlans,
     launcherPlans,
-    collapseTripSearch,
-    tripSearchActive,
     visibleLauncherPlans,
     hasCurrentTrips,
     interactWithPlan,

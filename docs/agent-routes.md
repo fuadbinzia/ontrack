@@ -152,7 +152,7 @@ Do **not** dump before every tap when the id is already in [`agent-ui-map.md`](.
 | `travel-punta-cana` | Seed Airbnb Punta Cana stay mock → open plan detail (`trip-agent-ui-punta-cana`) |
 | `travel-demo-list` | Seed → travel list with demo itinerary button |
 | `travel-home` | Seed Iceland/Antigua visual fixtures → Travel Home list. Smoke: `verify-both --route /travel --flow travel-home --exists travel.list.section.yourTrips` (H18 — bare goto fails empty guest) |
-| `travel-home-search` | Seed Travel Home, expand Your Trips search, and settle the static search-results card layout. |
+| `travel-home-search` | Seed Travel Home, focus the always-open Your Trips search, and settle the static search-results card layout. |
 | `travel-home-empty` | Clear trips → Travel Home zero-trip welcome (`travel.list.empty.create`) |
 | `travel-home-iceland` | Seed travel-home → open Iceland itinerary (`skyDecor`) |
 | `travel-demo-add-flight` | Seed → add-flight sheet |

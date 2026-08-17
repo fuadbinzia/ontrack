@@ -24,7 +24,7 @@ export default function RootHtml({ children }: PropsWithChildren) {
         <style
           dangerouslySetInnerHTML={{
             __html:
-              'html, body, #root { height: 100%; min-height: 100%; margin: 0; } #root { display: flex; } body { min-height: 100vh; min-height: 100dvh; background: #FBFAF7; }',
+              'html, body, #root { height: 100%; min-height: 100%; margin: 0; } #root { display: flex; } body { min-height: 100vh; min-height: 100dvh; background: #FBFAF7; } * { scrollbar-width: none; -ms-overflow-style: none; } *::-webkit-scrollbar { display: none; width: 0; height: 0; }',
           }}
         />
       </head>

@@ -1,4 +1,4 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { EmptyState, useListEnterIds } from '@/components/primitives';
 import { resolveTravelCoTravelerPeople } from '@/features/travel/travel-cotraveler-people';
@@ -16,10 +16,6 @@ type TravelHomeYourTripsProps = {
   plans: readonly TravelPlan[];
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
-  searchOpen: boolean;
-  onSearchOpenChange: (open: boolean) => void;
-  /** Collapse expanded search (atmosphere peek + parent chrome). */
-  onDismissSearch: () => void;
   selfDisplayName: string;
   atmosphereAverageColor?: string;
   onOpenTrip: (tripId: string) => void;
@@ -28,24 +24,13 @@ type TravelHomeYourTripsProps = {
   onLayoutY?: (tripId: string, y: number) => void;
 };
 
-/** True when trip search is expanded or has a non-empty query. */
-export function isTravelHomeTripSearchActive(
-  searchOpen: boolean,
-  searchQuery: string,
-): boolean {
-  return searchOpen || Boolean(searchQuery.trim());
-}
-
 /**
- * Your Trips band — atmosphere dismiss peek, expandable search chip, and cards.
+ * Your Trips band — always-open search field and cards.
  */
 export function TravelHomeYourTrips({
   plans,
   searchQuery,
   onSearchQueryChange,
-  searchOpen,
-  onSearchOpenChange,
-  onDismissSearch,
   selfDisplayName,
   atmosphereAverageColor,
   onOpenTrip,
@@ -54,7 +39,6 @@ export function TravelHomeYourTrips({
   onLayoutY,
 }: TravelHomeYourTripsProps) {
   const { s } = useResponsive();
-  const searchActive = isTravelHomeTripSearchActive(searchOpen, searchQuery);
   const peekHeight = s(travelHomeTokens.spacing.headerToSection);
   const showEmptySearch = plans.length === 0 && Boolean(searchQuery.trim());
   const tripEnterIds = useListEnterIds(
@@ -65,30 +49,13 @@ export function TravelHomeYourTrips({
   return (
     <View style={{ gap: s(travelHomeTokens.spacing.sectionGap) }}>
       <View>
-        {searchActive ? (
-          <AgentTestId
-            testID={AgentUiIds.travel.list.searchDismiss}
-            label="Dismiss trip search"
-            onPress={onDismissSearch}
-            style={{ height: peekHeight }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Dismiss trip search"
-              onPress={onDismissSearch}
-              style={{ flex: 1 }}
-            />
-          </AgentTestId>
-        ) : (
-          <View style={{ height: peekHeight }} />
-        )}
+        <View style={{ height: peekHeight }} />
         <AgentTestId testID={AgentUiIds.travel.home.sectionYourTrips}>
           <TravelHomeSectionHeader
             title="Your Trips"
             count={plans.length}
             searchQuery={searchQuery}
             onSearchQueryChange={onSearchQueryChange}
-            searchOpen={searchOpen}
-            onSearchOpenChange={onSearchOpenChange}
           />
         </AgentTestId>
       </View>
@@ -105,9 +72,7 @@ export function TravelHomeYourTrips({
         </AgentTestId>
       ) : null}
 
-      <View
-        style={{ gap: travelHomeTokens.spacing.cardGap }}
-        onTouchStart={searchActive ? onDismissSearch : undefined}>
+      <View style={{ gap: travelHomeTokens.spacing.cardGap }}>
         {plans.map((plan, index) => (
           <TravelHomeTripCard
             key={plan.id}

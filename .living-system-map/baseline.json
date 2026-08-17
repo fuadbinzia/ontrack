@@ -6858,10 +6858,6 @@
         "count": 2
       },
       {
-        "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.list.searchMinimize",
-        "count": 1
-      },
-      {
         "key": "ui-flow:src/utils/agent-ui/flows-travel.ts->test-id:ontrack.travel.map.section.world",
         "count": 1
       },

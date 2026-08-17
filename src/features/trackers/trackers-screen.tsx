@@ -286,6 +286,8 @@ export function TrackersScreen() {
               paddingBottom: spacing.xl,
             }}
             data={listData}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
             keyExtractor={(item) => item.id}
             ListHeaderComponent={
               <View style={{ marginBottom: spacing.md }}>

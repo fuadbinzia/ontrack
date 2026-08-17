@@ -96,6 +96,11 @@ export const AUTH_ORBIT_WELL_FRAC = 0.115;
 export const AUTH_PLANET_ICON_GAP_FRAC = 0.035;
 /** Extra inset so glyphs stay inside the planet face (not on the rim). */
 export const AUTH_COPY_PLANET_PAD = 0.03;
+/**
+ * Copy column as a share of the inner planet diameter. Wide enough to use
+ * the side room inside the disc — type size is unchanged.
+ */
+export const AUTH_COPY_INNER_WIDTH = 0.86;
 
 /** Planet radius as a canvas fraction (orbit minus well/2 minus gap). */
 export function authPlanetRadiusFrac(
@@ -109,13 +114,27 @@ export function authPlanetRadiusFrac(
   );
 }
 
+/** Live planet radius in px — matches constellation `Planet` (min side + well clamp). */
+export function authPlanetRadiusPx(
+  canvasW: number,
+  canvasH: number,
+  wellPx: number = Math.min(48, Math.max(30, canvasH * AUTH_ORBIT_WELL_FRAC)),
+): number {
+  const orbitPx = Math.min(
+    canvasW * AUTH_ORBIT_ELLIPSE.rx,
+    canvasH * AUTH_ORBIT_ELLIPSE.ry,
+  );
+  const gap = Math.min(canvasW, canvasH) * AUTH_PLANET_ICON_GAP_FRAC;
+  return Math.max(0, orbitPx - wellPx / 2 - gap);
+}
+
 /**
  * Copy band centred on the planet — width/height satisfy
  * `(w/2)² + (h/2)² ≤ (planetR − pad)²` so text cannot spill past the disc.
  */
 const AUTH_COPY_INNER_R =
   authPlanetRadiusFrac() - AUTH_COPY_PLANET_PAD;
-export const AUTH_COPY_WIDTH = 0.42;
+export const AUTH_COPY_WIDTH = AUTH_COPY_INNER_R * 2 * AUTH_COPY_INNER_WIDTH;
 export const AUTH_COPY_HEIGHT =
   2 *
   Math.sqrt(
@@ -149,6 +168,34 @@ export function authCopyFrame(
     width: widthFrac,
     height: heightFrac,
     center: ellipse.cx,
+  };
+}
+
+/**
+ * Pixel copy band inscribed in the live planet. Uses the same radius as the
+ * disc (min of canvas sides) so a wide/short slot cannot stretch text into the rim.
+ */
+export function authCopyFramePx(
+  canvasW: number,
+  canvasH: number,
+  wellPx?: number,
+): { left: number; top: number; width: number; height: number; center: number } {
+  const cx = canvasW * AUTH_ORBIT_ELLIPSE.cx;
+  const cy = canvasH * AUTH_ORBIT_ELLIPSE.cy;
+  const innerR = Math.max(
+    0,
+    authPlanetRadiusPx(canvasW, canvasH, wellPx) -
+      Math.min(canvasW, canvasH) * AUTH_COPY_PLANET_PAD,
+  );
+  const width = innerR * 2 * AUTH_COPY_INNER_WIDTH;
+  const height =
+    2 * Math.sqrt(Math.max(0, innerR ** 2 - (width / 2) ** 2));
+  return {
+    left: cx - width / 2,
+    top: cy - height / 2,
+    width,
+    height,
+    center: cx,
   };
 }
 

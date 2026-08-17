@@ -74,7 +74,7 @@ describe('AuthScreen locked variant', () => {
     mockAuthSession.isGuest = false;
     mockAuthSession.lockedEmail = 'alex.rivera@example.com';
     mockAuthSession.lockedUserId = 'user-1';
-    useBiometricUnlock.setState({ enabledUserId: null });
+    useBiometricUnlock.setState({ enabledUserId: null, rememberMe: false });
     LocalAuthentication.hasHardwareAsync.mockResolvedValue(false);
     LocalAuthentication.isEnrolledAsync.mockResolvedValue(false);
     LocalAuthentication.supportedAuthenticationTypesAsync.mockResolvedValue([]);
@@ -92,18 +92,40 @@ describe('AuthScreen locked variant', () => {
     expect(mockContinueWithProvider).toHaveBeenCalledWith('apple', undefined);
   });
 
-  it('shows Face ID when enrolled even before this account enables it', async () => {
+  it('lists Google above Apple with Face ID as a toggle below them', async () => {
+    await enrollFaceId();
+    const view = renderAuth();
+
+    await waitFor(() => {
+      expect(screen.getByTestId(AgentUiIds.auth.unlockBiometric)).toBeTruthy();
+    });
+    const tree = JSON.stringify(view.toJSON());
+    expect(tree.indexOf(AgentUiIds.auth.google)).toBeGreaterThan(-1);
+    expect(tree.indexOf(AgentUiIds.auth.google)).toBeLessThan(
+      tree.indexOf(AgentUiIds.auth.apple),
+    );
+    expect(tree.indexOf(AgentUiIds.auth.apple)).toBeLessThan(
+      tree.indexOf(AgentUiIds.auth.unlockBiometric),
+    );
+    expect(screen.getByRole('switch', { name: 'Remember Me' })).toBeTruthy();
+  });
+
+  it('shows Remember Me when enrolled even before this account enables it', async () => {
     await enrollFaceId();
     renderAuth();
 
     await waitFor(() => {
       expect(screen.getByTestId(AgentUiIds.auth.unlockBiometric)).toBeTruthy();
     });
-    expect(screen.getByText('Unlock with Face ID')).toBeTruthy();
+    expect(screen.getByText('Remember Me')).toBeTruthy();
+    expect(screen.getByRole('switch', { name: 'Remember Me' })).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ checked: false }),
+    );
     expect(mockUnlockWithBiometrics).not.toHaveBeenCalled();
   });
 
-  it('shows Face ID on the welcome sign-in shell when enrolled', async () => {
+  it('shows Remember Me on the welcome sign-in shell when enrolled', async () => {
     await enrollFaceId();
     mockAuthSession.phase = 'guest';
     mockAuthSession.isGuest = true;
@@ -114,25 +136,79 @@ describe('AuthScreen locked variant', () => {
     await waitFor(() => {
       expect(screen.getByTestId(AgentUiIds.auth.unlockBiometric)).toBeTruthy();
     });
-    expect(screen.getByText('Unlock with Face ID')).toBeTruthy();
+    expect(screen.getByText('Remember Me')).toBeTruthy();
     expect(mockUnlockWithBiometrics).not.toHaveBeenCalled();
   });
 
-  it('offers Face ID and auto-prompts once when this account enabled it', async () => {
+  it('keeps Remember Me for fingerprint hardware', async () => {
+    LocalAuthentication.hasHardwareAsync.mockResolvedValue(true);
+    LocalAuthentication.isEnrolledAsync.mockResolvedValue(true);
+    LocalAuthentication.supportedAuthenticationTypesAsync.mockResolvedValue([1]);
+    mockAuthSession.phase = 'guest';
+    mockAuthSession.isGuest = true;
+    mockAuthSession.lockedEmail = undefined;
+    mockAuthSession.lockedUserId = undefined;
+    renderAuth('welcome');
+
+    await waitFor(() => {
+      expect(screen.getByTestId(AgentUiIds.auth.unlockBiometric)).toBeTruthy();
+    });
+    expect(screen.getByText('Remember Me')).toBeTruthy();
+    expect(screen.queryByText('Unlock with Fingerprint')).toBeNull();
+    expect(screen.queryByText('Unlock with Touch ID')).toBeNull();
+  });
+
+  it('opts in on welcome without unlocking or showing a sign-in-first error', async () => {
     await enrollFaceId();
-    useBiometricUnlock.setState({ enabledUserId: 'user-1' });
+    mockAuthSession.phase = 'guest';
+    mockAuthSession.isGuest = true;
+    mockAuthSession.lockedEmail = undefined;
+    mockAuthSession.lockedUserId = undefined;
+    renderAuth('welcome');
+
+    await waitFor(() => {
+      expect(screen.getByTestId(AgentUiIds.auth.unlockBiometric)).toBeTruthy();
+    });
+    fireEvent.press(screen.getByTestId(AgentUiIds.auth.unlockBiometric));
+    expect(mockUnlockWithBiometrics).not.toHaveBeenCalled();
+    expect(useBiometricUnlock.getState().rememberMe).toBe(true);
+    expect(
+      screen.queryByText('Sign in with Apple or Google first. Face ID unlocks this device after that.'),
+    ).toBeNull();
+  });
+
+  it('turns Remember Me off to disable biometric unlock', async () => {
+    await enrollFaceId();
+    useBiometricUnlock.setState({ enabledUserId: 'user-1', rememberMe: true });
     renderAuth();
 
     await waitFor(() => {
       expect(screen.getByTestId(AgentUiIds.auth.unlockBiometric)).toBeTruthy();
     });
-    expect(screen.getByText('Unlock with Face ID')).toBeTruthy();
+    expect(screen.getByRole('switch', { name: 'Remember Me' })).toHaveProp(
+      'accessibilityState',
+      expect.objectContaining({ checked: true }),
+    );
     await waitFor(() => {
       expect(mockUnlockWithBiometrics).toHaveBeenCalledTimes(1);
     });
 
     fireEvent.press(screen.getByTestId(AgentUiIds.auth.unlockBiometric));
-    expect(mockUnlockWithBiometrics).toHaveBeenCalledTimes(2);
+    expect(mockUnlockWithBiometrics).toHaveBeenCalledTimes(1);
+    expect(useBiometricUnlock.getState().enabledUserId).toBeNull();
+    expect(useBiometricUnlock.getState().rememberMe).toBe(false);
+  });
+
+  it('unlocks when Remember Me is off and the locked toggle is turned on', async () => {
+    await enrollFaceId();
+    renderAuth();
+
+    await waitFor(() => {
+      expect(screen.getByTestId(AgentUiIds.auth.unlockBiometric)).toBeTruthy();
+    });
+    fireEvent.press(screen.getByTestId(AgentUiIds.auth.unlockBiometric));
+    expect(mockUnlockWithBiometrics).toHaveBeenCalledTimes(1);
+    expect(useBiometricUnlock.getState().rememberMe).toBe(true);
   });
 
   it('replaces the guest row with an account switch that signs out', async () => {

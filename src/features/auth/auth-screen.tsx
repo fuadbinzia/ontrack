@@ -8,7 +8,7 @@ import {
     useWindowDimensions,
 } from 'react-native';
 
-import { AppText, Button, ErrorMessage, GlassPlate, Screen } from '@/components/primitives';
+import { AppText, ErrorMessage, GlassPlate, Screen } from '@/components/primitives';
 import { radii, shadows, spacing } from '@/design-system';
 import { useTheme } from '@/hooks/use-theme';
 import { useBiometricUnlock } from '@/store/biometric-unlock';
@@ -16,11 +16,15 @@ import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
 import { AppleProviderButton } from './apple-provider-button';
 import { AuthAtmosphere } from './auth-atmosphere';
+import { AuthBiometricToggle } from './auth-biometric-toggle';
 import { HERO_MAX_WIDTH } from './auth-constellation';
 import { AuthHero } from './auth-hero';
 import { useAuthSession } from './auth-provider';
 import {
+    AUTH_REMEMBER_ME_LABEL,
     canOfferBiometricUnlock,
+    isAuthBiometricToggleOn,
+    setRememberMeEnabled,
     shouldAutoPromptBiometricUnlock,
     useBiometricCapability,
 } from './biometric-unlock';
@@ -44,6 +48,7 @@ export function AuthScreen({
     workingProvider,
     workingUnlock,
     lockedUserId,
+    user,
     error,
     continueWithProvider,
     unlockWithBiometrics,
@@ -54,7 +59,14 @@ export function AuthScreen({
   const locked = variant === 'locked';
   const capability = useBiometricCapability();
   const enabledUserId = useBiometricUnlock((state) => state.enabledUserId);
+  const rememberMe = useBiometricUnlock((state) => state.rememberMe);
   const canOfferBiometric = canOfferBiometricUnlock(capability.available);
+  const unlockUserId = lockedUserId ?? user?.id;
+  const biometricEnabled = isAuthBiometricToggleOn({
+    enabledUserId,
+    unlockUserId,
+    rememberMe,
+  });
   const canAutoPrompt = shouldAutoPromptBiometricUnlock({
     available: capability.available,
     enabledUserId,
@@ -216,29 +228,9 @@ export function AuthScreen({
               </AppText>
             ) : null}
 
-            {canOfferBiometric ? (
-              <Button
-                icon={capability.icon}
-                loading={Boolean(workingUnlock)}
-                disabled={providersLocked}
-                testID={AgentUiIds.auth.unlockBiometric}
-                accessibilityLabel={capability.label}
-                onPress={() => void unlockWithBiometrics()}>
-                {capability.label}
-              </Button>
-            ) : null}
-
             <AgentTestId
               testID={AgentUiIds.auth.section.providers}
               style={styles.providers}>
-              <AppleProviderButton
-                dark={theme.name === 'dark'}
-                disabled={providersLocked}
-                testID={AgentUiIds.auth.apple}
-                buttonRef={appleAgent.ref}
-                onLayout={appleAgent.onLayout}
-                onPress={() => void continueWithProvider('apple', returnTo)}
-              />
               <GoogleProviderButton
                 dark={theme.name === 'dark'}
                 disabled={providersLocked}
@@ -247,7 +239,28 @@ export function AuthScreen({
                 onLayout={googleAgent.onLayout}
                 onPress={() => void continueWithProvider('google', returnTo)}
               />
+              <AppleProviderButton
+                dark={theme.name === 'dark'}
+                disabled={providersLocked}
+                testID={AgentUiIds.auth.apple}
+                buttonRef={appleAgent.ref}
+                onLayout={appleAgent.onLayout}
+                onPress={() => void continueWithProvider('apple', returnTo)}
+              />
             </AgentTestId>
+
+            {canOfferBiometric ? (
+              <AuthBiometricToggle
+                label={AUTH_REMEMBER_ME_LABEL}
+                icon={capability.icon}
+                value={biometricEnabled}
+                disabled={busy}
+                onValueChange={(next) => {
+                  setRememberMeEnabled(next);
+                  if (next && lockedUserId) void unlockWithBiometrics();
+                }}
+              />
+            ) : null}
 
             {locked ? (
               <Pressable

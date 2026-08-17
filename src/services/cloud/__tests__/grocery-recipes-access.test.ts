@@ -37,8 +37,11 @@ describe('collaborative grocery recipe contract', () => {
     expect(migration).toContain("operation = 'add_recipe'");
     expect(migration).toContain("operation = 'set_tasks_completion'");
     expect(migration).toContain("'recipes', coalesce((");
+    // Snapshots still scope recipes to the list, but an absent `recipes`
+    // payload must stay undefined ("unchanged") instead of wiping groups.
+    expect(collaboration).toContain('recipes: includesRecipes');
     expect(collaboration).toContain(
-      'recipes: normalized.recipes.filter((recipe) => recipe.listId === list.id)',
+      'normalized.recipes.filter((recipe) => recipe.listId === list.id)',
     );
     expect(collaboration).toContain('resolveSharedRecipeMedia');
   });

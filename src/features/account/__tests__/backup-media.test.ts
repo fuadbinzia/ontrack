@@ -9,6 +9,7 @@ import {
     documentsRelativePath,
     mimeFromMediaUri,
     packBackupMedia,
+    safeBackupMediaPath,
     unpackBackupMedia,
 } from '../backup-media';
 
@@ -175,6 +176,78 @@ describe('user-owned backup media', () => {
     );
 
     globalThis.fetch = previousFetch;
+  });
+
+  it('never writes archive media outside the documents sandbox on restore', async () => {
+    const writes: string[] = [];
+    const io = {
+      readBase64: async () => undefined,
+      writeBytes: async (path: string) => {
+        writes.push(path);
+        return `file:///new/Documents/${path}`;
+      },
+    };
+    const restored = await unpackBackupMedia(backup({
+      domains: {
+        travel: {
+          plans: [{
+            id: 'trip-1',
+            title: 'Lisbon',
+            coverUris: [
+              'file:///old/Documents/travel-moments/cover.jpg',
+              'file:///old/Documents/travel-moments/escape.jpg',
+              'file:///old/Documents/travel-moments/nested-escape.jpg',
+              'file:///old/Documents/travel-moments/backslash.jpg',
+            ],
+          }],
+        },
+      },
+      media: {
+        'file:///old/Documents/travel-moments/cover.jpg': {
+          path: 'travel-moments/cover.jpg',
+          mime: 'image/jpeg',
+          data: 'cGhvdG8=',
+        },
+        'file:///old/Documents/travel-moments/escape.jpg': {
+          path: '../escape.jpg',
+          mime: 'image/jpeg',
+          data: 'cGhvdG8=',
+        },
+        'file:///old/Documents/travel-moments/nested-escape.jpg': {
+          path: 'travel-moments/../../nested-escape.jpg',
+          mime: 'image/jpeg',
+          data: 'cGhvdG8=',
+        },
+        'file:///old/Documents/travel-moments/backslash.jpg': {
+          path: '..\\backslash.jpg',
+          mime: 'image/jpeg',
+          data: 'cGhvdG8=',
+        },
+      },
+    }), io);
+
+    expect(writes).toEqual(['travel-moments/cover.jpg']);
+    expect(
+      (restored.domains.travel?.plans as { coverUris?: string[] }[] | undefined)?.[0]?.coverUris,
+    ).toEqual([
+      'file:///new/Documents/travel-moments/cover.jpg',
+      'file:///old/Documents/travel-moments/escape.jpg',
+      'file:///old/Documents/travel-moments/nested-escape.jpg',
+      'file:///old/Documents/travel-moments/backslash.jpg',
+    ]);
+  });
+
+  it('normalizes archive media paths and rejects traversal segments', () => {
+    expect(safeBackupMediaPath('journal-voice/note.m4a')).toBe('journal-voice/note.m4a');
+    expect(safeBackupMediaPath('/journal-voice/note.m4a')).toBe('journal-voice/note.m4a');
+    expect(safeBackupMediaPath('a//b.jpg')).toBe('a/b.jpg');
+    expect(safeBackupMediaPath('../escape.bin')).toBeUndefined();
+    expect(safeBackupMediaPath('a/../escape.bin')).toBeUndefined();
+    expect(safeBackupMediaPath('./escape.bin')).toBeUndefined();
+    expect(safeBackupMediaPath('..\\escape.bin')).toBeUndefined();
+    expect(safeBackupMediaPath('')).toBeUndefined();
+    expect(safeBackupMediaPath('/')).toBeUndefined();
+    expect(safeBackupMediaPath(undefined)).toBeUndefined();
   });
 
   it('keeps packing when cloud media resolution fails', async () => {

@@ -58,7 +58,7 @@ export function mergeAppStackScreenOptions(
 export function composeSwipeBackScreenLayout(
   callerLayout?: ScreenLayout,
 ): ScreenLayout {
-  return (props) => {
+  return function SwipeBackScreenLayout(props) {
     const inner = callerLayout ? callerLayout(props) : props.children;
     return (
       <SwipeBackScene

@@ -162,6 +162,101 @@ describe('journal composer dictate', () => {
     );
   });
 
+  it('keeps Transcribing when a second stop lands while the first is in flight', async () => {
+    let resolveTranscribe!: (value: { text: string }) => void;
+    mockRequestJournalTranscribe.mockImplementationOnce(
+      () =>
+        new Promise<{ text: string }>((resolve) => {
+          resolveTranscribe = resolve;
+        }),
+    );
+    const { result } = renderHook(() => useJournalComposer(DATE_KEY, jest.fn()));
+
+    await act(async () => {
+      // 60s cap and manual stop racing (or a fast double-tap on Stop).
+      result.current.stopRecording();
+      result.current.stopRecording();
+      await Promise.resolve();
+    });
+
+    expect(mockFinish).toHaveBeenCalledTimes(1);
+    expect(result.current.transcribing).toBe(true);
+    expect(result.current.busy).toBe(true);
+
+    await act(async () => {
+      resolveTranscribe({ text: 'kept words' });
+    });
+    expect(result.current.draft).toBe('kept words');
+    expect(result.current.transcribing).toBe(false);
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('saves one voice note and stays busy when the cap and a manual stop race', async () => {
+    mockRecorder.mode = 'voice';
+    let resolvePersist!: (uri: string) => void;
+    mockPersistJournalVoice.mockImplementationOnce(
+      () =>
+        new Promise<string>((resolve) => {
+          resolvePersist = resolve;
+        }),
+    );
+    mockFinish.mockResolvedValueOnce({
+      uri: 'file:///tmp/take.m4a',
+      durationMs: 60_000,
+      mode: 'voice',
+    });
+    const { result } = renderHook(() => useJournalComposer(DATE_KEY, jest.fn()));
+
+    act(() => {
+      result.current.startVoice();
+    });
+    const voiceLimit = mockStart.mock.calls.find((call) => call[0] === 'voice')?.[1] as
+      | (() => void)
+      | undefined;
+    await act(async () => {
+      voiceLimit?.();
+      result.current.stopRecording();
+      await Promise.resolve();
+    });
+
+    expect(mockFinish).toHaveBeenCalledTimes(1);
+    expect(result.current.busy).toBe(true);
+
+    await act(async () => {
+      resolvePersist('file:///documents/journal-voice/voice-1.m4a');
+    });
+    expect(mockAddVoice).toHaveBeenCalledTimes(1);
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('saves a voice note to the day where capture started, not the visible day', async () => {
+    mockRecorder.mode = 'voice';
+    const { result, rerender } = renderHook(
+      ({ dateKey }: { dateKey: string }) => useJournalComposer(dateKey, jest.fn()),
+      { initialProps: { dateKey: DATE_KEY } },
+    );
+
+    act(() => {
+      result.current.startVoice();
+    });
+    // The visible date changes before the take finishes.
+    rerender({ dateKey: '2026-08-15' });
+    mockFinish.mockResolvedValueOnce({
+      uri: 'file:///tmp/take.m4a',
+      durationMs: 900,
+      mode: 'voice',
+    });
+    await act(async () => {
+      result.current.stopRecording();
+    });
+
+    expect(mockAddVoice).toHaveBeenCalledWith(
+      DATE_KEY,
+      'file:///documents/journal-voice/voice-1.m4a',
+      900,
+    );
+  });
+
   it('arms dictate and voice starts with an auto-finisher for the 60s cap', async () => {
     const { result } = renderHook(() => useJournalComposer(DATE_KEY, jest.fn()));
 

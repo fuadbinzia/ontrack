@@ -179,7 +179,20 @@ export function useJournalRecorder() {
           setStatusMessage('Microphone permission is required for voice. Typing still works.');
           return false;
         }
+        // The screen can unmount while permissions were awaited — its cleanup
+        // cancel() saw no active mode, so arming now would leak the mic.
+        if (!mountedRef.current) return false;
         await beginExpoRecording(audioApi, recorder);
+        if (!mountedRef.current) {
+          try {
+            if (recorder.isRecording) await recorder.stop();
+            await audioApi.setAudioModeAsync({ allowsRecording: false });
+          } catch {
+            // Best-effort teardown of an orphan take.
+          }
+          deleteRecordedAudio(recorder.uri);
+          return false;
+        }
         modeRef.current = nextMode;
         startedAtRef.current = Date.now();
         setMode(nextMode);

@@ -52,6 +52,12 @@ export function useJournalComposer(dateKey: string, onRequestLink: () => void) {
   const acceptAiDisclosure = useJournal((state) => state.acceptAiDisclosure);
   const recorder = useJournalRecorder();
   const controlSize = Math.max(30, s(32));
+  // The 60s cap and a manual stop can land together — only the first finisher
+  // may run, or the loser's cleanup clears Transcribing/busy mid-flight.
+  const finishingRef = useRef(false);
+  // A take belongs to the day where capture started, even if the visible date
+  // changes before a late finisher (the 60s cap) lands.
+  const captureDateRef = useRef(dateKey);
 
   const sendText = () => {
     if (!draft.trim()) return;
@@ -62,6 +68,8 @@ export function useJournalComposer(dateKey: string, onRequestLink: () => void) {
   };
 
   const finishDictate = async () => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
     setBusy(true);
     // Flip before the recorder settles so the pill morphs straight from the
     // wave into Transcribing without a blank frame.
@@ -82,32 +90,34 @@ export function useJournalComposer(dateKey: string, onRequestLink: () => void) {
     } catch (error) {
       recorder.setStatusMessage(journalDictateStatusMessage(error));
     } finally {
+      finishingRef.current = false;
       setTranscribing(false);
       setBusy(false);
     }
   };
 
   const finishVoiceNote = async () => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
     setBusy(true);
-    const captured = await recorder.finish();
-    if (!captured?.uri) {
-      setBusy(false);
-      return;
-    }
     try {
+      const captured = await recorder.finish();
+      if (!captured?.uri) return;
       const uri = await persistJournalVoice(captured.uri);
       deleteRecordedAudio(captured.uri);
-      addVoice(dateKey, uri, captured.durationMs);
+      addVoice(captureDateRef.current, uri, captured.durationMs);
       haptics.success();
     } catch {
       recorder.setStatusMessage('That voice note could not be saved.');
     } finally {
+      finishingRef.current = false;
       setBusy(false);
     }
   };
 
   const startDictate = () => {
     const begin = () => {
+      captureDateRef.current = dateKey;
       void recorder.start('dictate', () => void finishDictate());
     };
     if (aiDisclosureAccepted) {
@@ -146,7 +156,10 @@ export function useJournalComposer(dateKey: string, onRequestLink: () => void) {
     recorder,
     sendText,
     startDictate,
-    startVoice: () => void recorder.start('voice', () => void finishVoiceNote()),
+    startVoice: () => {
+      captureDateRef.current = dateKey;
+      void recorder.start('voice', () => void finishVoiceNote());
+    },
     onRequestLink,
     stopRecording: () => {
       if (recorder.mode === 'voice') void finishVoiceNote();

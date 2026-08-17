@@ -101,6 +101,10 @@ export function JournalPageScreen({ dateKey }: { dateKey: string }) {
     openJournalDate(shiftJournalDate(dateKey, delta, today));
   };
 
+  // Day flips during an active take would strand the recording, draft, and
+  // Transcribing state on the wrong date — hold navigation until it settles.
+  const navLocked = composer.recording || composer.busy;
+
   const blocks = page?.blocks ?? [];
 
   return (
@@ -130,13 +134,14 @@ export function JournalPageScreen({ dateKey }: { dateKey: string }) {
                 icon="chevron-left"
                 accessibilityLabel="Previous Day"
                 testID={AgentUiIds.journal.prevDay}
+                disabled={navLocked}
                 onPress={() => goAdjacent(-1)}
               />
               <IconButton
                 icon="chevron-right"
                 accessibilityLabel="Next Day"
                 testID={AgentUiIds.journal.nextDay}
-                disabled={!canShiftJournalDate(dateKey, 1, today)}
+                disabled={navLocked || !canShiftJournalDate(dateKey, 1, today)}
                 onPress={() => goAdjacent(1)}
               />
             </View>

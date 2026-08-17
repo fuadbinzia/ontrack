@@ -71,6 +71,21 @@ export function documentsRelativePath(uri: string): string {
   return `${folder}/${stableHash(uri)}${ext}`;
 }
 
+/**
+ * Archive paths are untrusted input — a crafted backup must not climb out of
+ * the documents sandbox. Returns the normalized relative path, or undefined
+ * when any segment could traverse upward.
+ */
+export function safeBackupMediaPath(path: unknown): string | undefined {
+  if (typeof path !== 'string') return undefined;
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length === 0) return undefined;
+  const unsafe = segments.some(
+    (segment) => segment === '.' || segment === '..' || segment.includes('\\'),
+  );
+  return unsafe ? undefined : segments.join('/');
+}
+
 export function collectLocalMediaUris(value: unknown, found = new Set<string>()): string[] {
   if (typeof value === 'string') {
     if (isPackableMediaUri(value)) found.add(value);
@@ -194,9 +209,10 @@ export async function unpackBackupMedia(
   if (!packed || Object.keys(packed).length === 0) return backup;
   const rewritten: Record<string, string> = {};
   for (const [sourceUri, entry] of Object.entries(packed)) {
-    if (!entry?.data || !entry.path) continue;
+    const path = safeBackupMediaPath(entry?.path);
+    if (!entry?.data || !path) continue;
     try {
-      rewritten[sourceUri] = await io.writeBytes(entry.path, decodeMediaBase64(entry.data));
+      rewritten[sourceUri] = await io.writeBytes(path, decodeMediaBase64(entry.data));
     } catch {
       // Keep the original reference; restore of the rest of the archive still proceeds.
     }

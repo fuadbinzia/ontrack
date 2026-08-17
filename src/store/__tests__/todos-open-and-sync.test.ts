@@ -447,6 +447,138 @@ describe('to-do store recency and trip-linked sync', () => {
     ).toBe(false);
   });
 
+  it('does not duplicate a list id when a stale private row collides with a shared list', () => {
+    const sharedId = '9a21f566-3bc6-43df-a125-03e4c4541963';
+    useChecklists.getState().replaceSharedSnapshots([
+      {
+        list: {
+          ...useChecklists.getState().lists[0],
+          id: sharedId,
+          name: 'Family Errands',
+          mode: 'shared' as const,
+        },
+        tasks: [
+          {
+            id: 'abed5890-e04b-47ea-89cc-08d3f3d9837f',
+            listId: sharedId,
+            title: 'Shared task',
+          },
+        ],
+        members: [],
+      },
+    ]);
+
+    // A stale cloud blob (applied without a reset) still carries the list as
+    // private with its pre-publish task.
+    useChecklists.getState().replacePrivateData({
+      lists: [
+        {
+          id: sharedId,
+          name: 'Family Errands',
+          kind: 'checklist',
+          mode: 'private',
+          role: 'owner',
+          createdAt: '2026-08-01T00:00:00.000Z',
+          updatedAt: '2026-08-01T00:00:00.000Z',
+        },
+        ...useChecklists.getState().lists.filter((list) => list.mode === 'private'),
+      ],
+      tasks: [
+        {
+          id: 'bbed5890-e04b-47ea-89cc-08d3f3d9837f',
+          listId: sharedId,
+          title: 'Old private task',
+        },
+      ],
+      categories: [],
+      recipes: [],
+    });
+
+    const state = useChecklists.getState();
+    expect(state.lists.filter((list) => list.id === sharedId)).toHaveLength(1);
+    expect(state.lists.find((list) => list.id === sharedId)?.mode).toBe('shared');
+    expect(
+      state.tasks.filter((task) => task.listId === sharedId).map((task) => task.title),
+    ).toEqual(['Shared task']);
+  });
+
+  it('keeps shared recipe groups when a snapshot omits recipes', () => {
+    const sharedId = '9a21f566-3bc6-43df-a125-03e4c4541963';
+    const list = {
+      ...useChecklists.getState().lists[0],
+      id: sharedId,
+      name: 'Groceries',
+      mode: 'shared' as const,
+    };
+    const recipe = {
+      id: 'cbed5890-e04b-47ea-89cc-08d3f3d9837f',
+      listId: sharedId,
+      name: 'Pasta Night',
+      createdAt: '2026-08-01T00:00:00.000Z',
+      updatedAt: '2026-08-01T00:00:00.000Z',
+    };
+    useChecklists.getState().replaceSharedSnapshot({
+      list,
+      tasks: [],
+      recipes: [recipe],
+      members: [],
+    });
+    expect(
+      useChecklists.getState().recipes.filter((item) => item.listId === sharedId),
+    ).toHaveLength(1);
+
+    // Partial refresh without a recipes key must not wipe the groups.
+    useChecklists.getState().replaceSharedSnapshot({
+      list: { ...list, updatedAt: '2026-08-16T09:00:00.000Z' },
+      tasks: [],
+      members: [],
+    });
+    expect(
+      useChecklists.getState().recipes.filter((item) => item.listId === sharedId),
+    ).toHaveLength(1);
+
+    // An explicit empty array still clears them (real remote deletion).
+    useChecklists.getState().replaceSharedSnapshot({
+      list: { ...list, updatedAt: '2026-08-16T10:00:00.000Z' },
+      tasks: [],
+      recipes: [],
+      members: [],
+    });
+    expect(
+      useChecklists.getState().recipes.filter((item) => item.listId === sharedId),
+    ).toHaveLength(0);
+  });
+
+  it('appends a rejoined list at the end instead of reclaiming its pre-leave slot', () => {
+    const sharedId = '9a21f566-3bc6-43df-a125-03e4c4541963';
+    const snapshot = {
+      list: {
+        ...useChecklists.getState().lists[0],
+        id: sharedId,
+        name: 'Family Errands',
+        mode: 'shared' as const,
+      },
+      tasks: [],
+      members: [],
+    };
+    useChecklists.getState().createList('Groceries');
+    useChecklists.getState().replaceSharedSnapshots([snapshot]);
+    useChecklists.getState().touchList(sharedId, '2026-08-15T20:00:00.000Z');
+    expect(useChecklists.getState().lists[0]?.id).toBe(sharedId);
+    // Seed the persisted hint the way a sign-in restore would.
+    useChecklists
+      .getState()
+      .replacePrivateData(privateChecklistPayload(useChecklists.getState()));
+    expect(useChecklists.getState().listOrderHint).toContain(sharedId);
+
+    useChecklists.getState().removeSharedList(sharedId);
+    expect(useChecklists.getState().listOrderHint ?? []).not.toContain(sharedId);
+
+    // Rejoining is a fresh invite — it appends rather than jumping back on top.
+    useChecklists.getState().replaceSharedSnapshots([snapshot]);
+    expect(useChecklists.getState().lists.at(-1)?.id).toBe(sharedId);
+  });
+
   it('does not import the travel store at module load', () => {
     const source = readFileSync(
       join(process.cwd(), 'src/store/todos-sync-actions.ts'),

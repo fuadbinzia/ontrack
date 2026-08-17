@@ -69,6 +69,9 @@ function dropSharedList(
   state: ChecklistPersistedState,
   listId: string,
 ): ChecklistPersistedState {
+  // Scrub the order hint too — a rejoin after leave is a fresh invite and
+  // must append, not silently reclaim the old slot.
+  const listOrderHint = state.listOrderHint?.filter((id) => id !== listId);
   return {
     ...state,
     lists: state.lists.filter((list) => list.id !== listId),
@@ -80,6 +83,7 @@ function dropSharedList(
       (mutation) => mutation.listId !== listId,
     ),
     listOpenedAt: omitListOpenedAt(state.listOpenedAt, listId),
+    listOrderHint: listOrderHint?.length ? listOrderHint : undefined,
   };
 }
 
@@ -124,6 +128,11 @@ function mergeSharedSnapshot(
   const nextCategories = snapshot.categories === undefined
     ? state.categories.filter((item) => item.listId === list.id)
     : categories;
+  // Like categories, an omitted `recipes` means "unchanged" — only an explicit
+  // array (even empty) replaces the list's recipe groups.
+  const nextRecipes = snapshot.recipes === undefined
+    ? state.recipes.filter((item) => item.listId === list.id)
+    : recipes;
   const categoryIds = new Set(nextCategories.map((category) => category.id));
   const orderedTasks = tasks.map((task, index) => ({
     ...task,
@@ -145,7 +154,7 @@ function mergeSharedSnapshot(
       ...state.categories.filter((item) => item.listId !== list.id),
     ],
     recipes: [
-      ...recipes,
+      ...nextRecipes,
       ...state.recipes.filter((item) => item.listId !== list.id),
     ],
     members: [
@@ -186,7 +195,9 @@ export function createChecklistSyncActions(set: SyncSet): ChecklistSyncActions {
         });
         let nextLists = lists;
         for (const list of incomingPrivate) {
-          if (retainedIds.has(list.id)) continue;
+          // A stale private row for a list that is shared on this device must
+          // not insert a duplicate id — the shared copy is authoritative.
+          if (retainedIds.has(list.id) || sharedIds.has(list.id)) continue;
           nextLists = insertListByOrderHint(
             nextLists,
             list,
@@ -209,31 +220,37 @@ export function createChecklistSyncActions(set: SyncSet): ChecklistSyncActions {
               ? state.listOpenedAt
               : { ...restoredOpenedAt, ...state.listOpenedAt },
           tasks: [
-            ...incoming.tasks.filter((task) =>
-              incoming.lists.some(
-                (list) => list.id === task.listId && list.mode === 'private',
-              ),
+            ...incoming.tasks.filter(
+              (task) =>
+                !sharedIds.has(task.listId) &&
+                incoming.lists.some(
+                  (list) => list.id === task.listId && list.mode === 'private',
+                ),
             ),
             ...state.tasks.filter((task) =>
               keepSharedOrLocal(task.listId, sharedIds, keptLocalOnlyIds),
             ),
           ],
           categories: [
-            ...incoming.categories.filter((category) =>
-              incoming.lists.some(
-                (list) => list.id === category.listId && list.mode === 'private',
-              ),
+            ...incoming.categories.filter(
+              (category) =>
+                !sharedIds.has(category.listId) &&
+                incoming.lists.some(
+                  (list) => list.id === category.listId && list.mode === 'private',
+                ),
             ),
             ...state.categories.filter((category) =>
               keepSharedOrLocal(category.listId, sharedIds, keptLocalOnlyIds),
             ),
           ],
           recipes: [
-            ...incoming.recipes.filter((recipe) =>
-              incoming.lists.some(
-                (list) =>
-                  list.id === recipe.listId && list.mode === 'private',
-              ),
+            ...incoming.recipes.filter(
+              (recipe) =>
+                !sharedIds.has(recipe.listId) &&
+                incoming.lists.some(
+                  (list) =>
+                    list.id === recipe.listId && list.mode === 'private',
+                ),
             ),
             ...state.recipes.filter((recipe) =>
               keepSharedOrLocal(recipe.listId, sharedIds, keptLocalOnlyIds),

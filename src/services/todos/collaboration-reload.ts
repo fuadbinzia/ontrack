@@ -43,22 +43,32 @@ async function loadSharedTodoCatalog(): Promise<void> {
       .getState()
       .pendingMutations.map((mutation) => mutation.listId),
   );
-  const dropIds = useChecklists
-    .getState()
-    .lists.filter(
-      (list) =>
-        list.mode === 'shared' &&
-        !remoteIds.has(list.id) &&
-        !pendingListIds.has(list.id),
-    )
-    .map((list) => list.id);
+  const localSharedIdsAtStart = new Set(
+    useChecklists
+      .getState()
+      .lists.filter((list) => list.mode === 'shared')
+      .map((list) => list.id),
+  );
+  const dropIds = [...localSharedIdsAtStart].filter(
+    (id) => !remoteIds.has(id) && !pendingListIds.has(id),
+  );
   const fetched = await Promise.all(
     ids.map((id) =>
       pendingListIds.has(id) ? Promise.resolve('skipped' as const) : fetchChecklistSnapshot(id),
     ),
   );
+  // A list the user left or deleted while these snapshots were in flight must
+  // not be merged back by this stale load.
+  const currentListIds = new Set(
+    useChecklists.getState().lists.map((list) => list.id),
+  );
+  const removedMidFlight = new Set(
+    [...localSharedIdsAtStart].filter((id) => !currentListIds.has(id)),
+  );
   const snapshots = fetched.flatMap((snapshot) =>
-    snapshot && snapshot !== 'skipped' ? [snapshot] : [],
+    snapshot && snapshot !== 'skipped' && !removedMidFlight.has(snapshot.list.id)
+      ? [snapshot]
+      : [],
   );
   const missingIds = ids.filter((id, index) => {
     if (pendingListIds.has(id)) return false;

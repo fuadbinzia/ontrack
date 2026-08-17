@@ -153,6 +153,56 @@ describe('useJournalRecorder start', () => {
     }
   });
 
+  it('does not arm the mic when the screen unmounts during permission checks', async () => {
+    let resolvePermission!: (value: { granted: boolean }) => void;
+    mockGetRecordingPermissionsAsync.mockImplementationOnce(
+      () =>
+        new Promise<{ granted: boolean }>((resolve) => {
+          resolvePermission = resolve;
+        }),
+    );
+    const { result, unmount } = renderHook(() => useJournalRecorder());
+
+    let startPromise!: Promise<boolean>;
+    act(() => {
+      startPromise = result.current.start('voice');
+    });
+    unmount();
+    resolvePermission({ granted: true });
+
+    await expect(startPromise).resolves.toBe(false);
+    expect(mockRecord).not.toHaveBeenCalled();
+  });
+
+  it('stops an orphan take when unmount lands while the recorder is arming', async () => {
+    let resolvePrepare!: () => void;
+    mockPrepareToRecordAsync.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolvePrepare = resolve;
+        }),
+    );
+    const { result, unmount } = renderHook(() => useJournalRecorder());
+
+    let startPromise!: Promise<boolean>;
+    act(() => {
+      startPromise = result.current.start('voice');
+    });
+    // Let the cached-permission check settle so start reaches the recorder.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    unmount();
+    mockRecorder.isRecording = true;
+    resolvePrepare();
+
+    await expect(startPromise).resolves.toBe(false);
+    expect(mockStop).toHaveBeenCalled();
+    expect(mockSetAudioModeAsync).toHaveBeenLastCalledWith({
+      allowsRecording: false,
+    });
+  });
+
   it('re-checks a denied microphone permission on the next attempt', async () => {
     mockGetRecordingPermissionsAsync.mockResolvedValueOnce({ granted: false });
     mockRequestRecordingPermissionsAsync.mockResolvedValueOnce({ granted: false });

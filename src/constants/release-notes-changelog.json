@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.120",
+    "date": "2026-08-16",
+    "notes": [
+      "Keep shared lists from duplicating or resurrecting during sync, hold journal day flips while a take records, and stop backup restore from writing outside the sandbox.",
+      "Touched: features/account, features/daily-tracking."
+    ]
+  },
+  {
     "version": "1.0.119",
     "date": "2026-08-16",
     "notes": [

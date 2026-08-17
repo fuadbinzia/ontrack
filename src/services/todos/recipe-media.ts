@@ -194,8 +194,11 @@ export async function resolveSharedRecipeMedia(
   client: SupabaseClient,
   snapshot: ChecklistSharedSnapshot,
 ): Promise<ChecklistSharedSnapshot> {
+  // Absent recipes means "unchanged" — do not materialize an empty array that
+  // the merge would treat as a full replace.
+  if (!snapshot.recipes) return snapshot;
   const recipes = await Promise.all(
-    (snapshot.recipes ?? []).map(async (recipe) => {
+    snapshot.recipes.map(async (recipe) => {
       const path = recipeMediaPath(recipe.sourceImageUri);
       const storedPath = recipe.sourceImagePath ?? path;
       if (!storedPath) return recipe;

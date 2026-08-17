@@ -51,8 +51,12 @@ behavior → edit the bullet; add the regression test that enforces it to
     lands first.
   - Lists created after the last sync stay above restored positions.
   - A shared list never seen before (fresh invite) appends at the end.
+  - Rejoining a list after leaving it is a fresh invite — it appends at the
+    end instead of reclaiming its pre-leave slot.
 - A mid-session cloud pull never reshuffles lists already on the device; a
   stale remote order cannot demote a locally promoted list.
+- A stale private blob row for a list that is shared on this device never
+  duplicates the list — the shared copy is authoritative.
 
 ## Collaboration
 
@@ -64,6 +68,10 @@ behavior → edit the bullet; add the regression test that enforces it to
   (collaborator multi-list).
 - Remote snapshots are not applied to a list that still has pending local
   mutations.
+- Leaving or deleting a list wins over any catalog reload already in flight —
+  a stale snapshot must not resurrect the list.
+- A snapshot that omits `recipes` (or `categories`) leaves those groups
+  unchanged; only an explicit array — even empty — replaces them.
 
 ## Grocery lists
 
@@ -87,3 +95,5 @@ behavior → edit the bullet; add the regression test that enforces it to
 | Promotion + order survive restart and sign-in restore (private and shared, both sync arrival orders) | `src/store/__tests__/todos-open-and-sync.test.ts` |
 | Browse list is static; drag only in Edit | `src/features/todos/__tests__/todo-list-scroll-style.test.ts` |
 | Roles / completion permissions | `src/services/todos/__tests__/collaboration-core.test.ts` |
+| No duplicate list id from a stale private row; omitted snapshot recipes preserved; rejoin appends | `src/store/__tests__/todos-open-and-sync.test.ts` |
+| Leave/delete during an in-flight catalog reload does not resurrect the list | `src/services/todos/__tests__/collaboration-reload.test.ts` |

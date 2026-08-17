@@ -62,6 +62,39 @@ describe('formatWeatherPlaceLabel', () => {
       false,
     );
   });
+
+  it('matches a picker home against the shorter GPS label for the same place', () => {
+    // GPS labels drop a level (`City, Province` in Canada, `City, Country`
+    // elsewhere) — the same place must not render dual weather tiles.
+    expect(weatherPlacesMatch('Toronto, Ontario, Canada', 'Toronto, Ontario')).toBe(true);
+    expect(weatherPlacesMatch('London, England, United Kingdom', 'London, United Kingdom')).toBe(true);
+    expect(weatherPlacesMatch('Sydney, New South Wales, Australia', 'Sydney, Australia')).toBe(true);
+    expect(weatherPlacesMatch('Brooklyn, New York', 'Brooklyn, New York, United States')).toBe(true);
+    expect(weatherPlacesMatch('Toronto, Canada', 'Toronto, Ontario, Canada')).toBe(true);
+  });
+
+  it('keeps genuinely different places apart', () => {
+    expect(weatherPlacesMatch('Springfield, Illinois', 'Springfield, Missouri')).toBe(false);
+    expect(weatherPlacesMatch('Paris, France', 'Paris, Texas')).toBe(false);
+    expect(weatherPlacesMatch('Vancouver, WA', 'Vancouver, British Columbia, Canada')).toBe(false);
+    expect(weatherPlacesMatch('Austin', 'Austin, TX')).toBe(false);
+    expect(weatherPlacesMatch('', '')).toBe(false);
+  });
+
+  it('never rewrites an ambiguous or foreign qualifier into a US state', () => {
+    // Country Georgia must not become `Tbilisi, GA, US`.
+    expect(formatWeatherPlaceLabel('Tbilisi, Georgia')).toBe('Tbilisi, Georgia');
+    // ISO country codes that collide with state codes stay as typed.
+    expect(formatWeatherPlaceLabel('Jakarta, ID')).toBe('Jakarta, ID');
+    expect(formatWeatherPlaceLabel('Toronto, CA')).toBe('Toronto, CA');
+    // Two-part US labels abbreviate but no longer fabricate a country.
+    expect(formatWeatherPlaceLabel('Brooklyn, New York')).toBe('Brooklyn, NY');
+    expect(formatWeatherPlaceLabel('Brooklyn, New York', { detail: 'region' })).toBe(
+      'Brooklyn, NY',
+    );
+    // Three-part labels stay fully disambiguated.
+    expect(formatWeatherPlaceLabel('Atlanta, Georgia, United States')).toBe('Atlanta, GA, US');
+  });
 });
 
 const current: DestinationCurrentWeather = {

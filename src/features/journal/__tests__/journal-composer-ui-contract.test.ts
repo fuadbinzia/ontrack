@@ -79,6 +79,16 @@ describe('journal page chrome', () => {
     expect(wave).toContain('tabular-nums');
   });
 
+  it('locks day navigation while a take is recording or settling', () => {
+    const page = read('journal-page-screen.tsx');
+    // Flipping days mid-capture strands the recording on the wrong date.
+    expect(page).toContain('const navLocked = composer.recording || composer.busy');
+    expect(page).toContain('disabled={navLocked}');
+    expect(page).toContain(
+      'disabled={navLocked || !canShiftJournalDate(dateKey, 1, today)}',
+    );
+  });
+
   it('pins the composer above the tab dock with air between them', () => {
     const page = read('journal-page-screen.tsx');
     expect(page).toContain('scroll={false}');

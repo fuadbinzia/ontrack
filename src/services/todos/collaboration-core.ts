@@ -39,6 +39,7 @@ export function sharedSnapshot(value: unknown): ChecklistSharedSnapshot | undefi
     categories?: unknown;
   };
   const includesCategories = Array.isArray(candidate.categories);
+  const includesRecipes = Array.isArray(candidate.recipes);
   const normalized = normalizeChecklistState({
     groceryMigrationVersion: 1,
     lists: candidate.list ? [candidate.list] : [],
@@ -55,7 +56,10 @@ export function sharedSnapshot(value: unknown): ChecklistSharedSnapshot | undefi
       ? normalized.categories.filter((category) => category.listId === list.id)
       : undefined,
     tasks: normalized.tasks.filter((task) => task.listId === list.id),
-    recipes: normalized.recipes.filter((recipe) => recipe.listId === list.id),
+    // Absent = unchanged; only an explicit array replaces recipe groups.
+    recipes: includesRecipes
+      ? normalized.recipes.filter((recipe) => recipe.listId === list.id)
+      : undefined,
     members: normalized.members.filter((member) => member.listId === list.id),
   };
 }

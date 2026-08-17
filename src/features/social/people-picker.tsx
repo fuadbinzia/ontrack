@@ -1,19 +1,22 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, TextInput, View, type ModalProps } from 'react-native';
+import { Pressable, StyleSheet, View, type ModalProps } from 'react-native';
 
 import {
-    AppText,
-    Dropdown,
-    GlassPlate,
-    GlassPrimaryAction,
-    SheetScaffold,
+  AppText,
+  Dropdown,
+  EmptyState,
+  GlassPlate,
+  GlassPrimaryAction,
+  Input,
+  SheetScaffold,
 } from '@/components/primitives';
-import { radii } from '@/design-system';
+import { radii, type AppIconName } from '@/design-system';
+import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { type FriendProfile } from '@/services/friends';
 import { useFriends } from '@/store/friends';
-import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
+import { AgentTestId, AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
 
 export function peoplePickerIdentity(
   friend: Pick<FriendProfile, 'displayName'>,
@@ -32,12 +35,17 @@ export function PeoplePicker({
   onConfirm,
   multi = true,
   excludeIds = [],
-  disabledIds = [],
   includeIds,
   title = 'Choose Friends',
+  eyebrow,
+  subtitle,
+  subtitleIcon,
   confirmLabel = 'Add',
-  disabledLabel = 'Not Sharing',
   headerContent,
+  emptyState,
+  emptySearchState,
+  emptyTestID,
+  showSearch = true,
   supportedOrientations,
   presentation = 'list',
 }: {
@@ -46,19 +54,23 @@ export function PeoplePicker({
   onConfirm: (friends: FriendProfile[]) => void;
   multi?: boolean;
   excludeIds?: string[];
-  /** Shown in the list but not selectable — used when a friend cannot take the action yet. */
-  disabledIds?: string[];
   /** Optional allowlist used by collaboration surfaces with an established roster. */
   includeIds?: string[];
   title?: string;
+  eyebrow?: string;
+  subtitle?: string;
+  subtitleIcon?: AppIconName;
   confirmLabel?: string;
-  disabledLabel?: string;
   headerContent?: ReactNode;
+  emptyState?: { icon: AppIconName; title: string; message: string };
+  emptySearchState?: { icon: AppIconName; title: string; message: string };
+  emptyTestID?: string;
+  showSearch?: boolean;
   supportedOrientations?: ModalProps['supportedOrientations'];
   presentation?: 'list' | 'searchable-dropdown';
 }) {
   const theme = useTheme();
-  const { spacing, s, typography } = useResponsive();
+  const { spacing, s } = useResponsive();
   const friends = useFriends((state) => state.friends);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -72,7 +84,6 @@ export function PeoplePicker({
     }
   }, [visible]);
 
-  const disabled = useMemo(() => new Set(disabledIds), [disabledIds]);
   const available = useMemo(() => {
     const excluded = new Set(excludeIds);
     const included = includeIds ? new Set(includeIds) : undefined;
@@ -87,7 +98,6 @@ export function PeoplePicker({
 
   const toggle = useCallback(
     (userId: string) => {
-      if (disabled.has(userId)) return;
       setSelected((current) => {
         if (!multi) return new Set([userId]);
         const next = new Set(current);
@@ -96,20 +106,15 @@ export function PeoplePicker({
         return next;
       });
     },
-    [disabled, multi],
+    [multi],
   );
 
   const confirm = () => {
-    const picked = friends.filter(
-      (friend) => selected.has(friend.userId) && !disabled.has(friend.userId),
-    );
+    const picked = friends.filter((friend) => selected.has(friend.userId));
     onConfirm(picked);
     onClose();
   };
 
-  const searchAgent = useAgentUiTarget(AgentUiIds.peoplePicker.search, {
-    label: 'Search names',
-  });
   const confirmText = `${confirmLabel}${selected.size > 0 ? ` (${selected.size})` : ''}`;
   const dropdownOptions = useMemo(
     () =>
@@ -125,24 +130,49 @@ export function PeoplePicker({
       }),
     [available],
   );
+  const hasQuery = query.trim().length > 0;
+  const resolvedEmpty =
+    hasQuery
+      ? (emptySearchState ?? {
+          icon: 'search' as const,
+          title: 'No One Matches That',
+          message: 'Try a different name.',
+        })
+      : (emptyState ??
+        (friends.length === 0
+          ? {
+              icon: 'people' as const,
+              title: 'Invite a Friend First',
+              message: 'Add someone on Social, then you can pick them here.',
+            }
+          : {
+              icon: 'people' as const,
+              title: 'No One Matches That',
+              message: 'Try a different name.',
+            }));
 
   return (
     <SheetScaffold
       visible={visible}
+      eyebrow={eyebrow}
       title={title}
+      subtitle={subtitle}
+      subtitleIcon={subtitleIcon}
       onClose={onClose}
       closeAccessibilityLabel="Close"
       closeTestID={AgentUiIds.peoplePicker.close}
       supportedOrientations={supportedOrientations}
       surface="glass"
-      contentContainerStyle={{ gap: spacing.sm }}
+      contentContainerStyle={{ gap: spacing.md }}
       footer={
-        <GlassPrimaryAction
-          label={confirmText}
-          disabled={selected.size === 0}
-          onPress={confirm}
-          testID={AgentUiIds.peoplePicker.confirm}
-        />
+        available.length === 0 && selected.size === 0 ? undefined : (
+          <GlassPrimaryAction
+            label={confirmText}
+            disabled={selected.size === 0}
+            onPress={confirm}
+            testID={AgentUiIds.peoplePicker.confirm}
+          />
+        )
       }
     >
       {headerContent}
@@ -161,61 +191,46 @@ export function PeoplePicker({
           searchPlaceholder="Search Names"
           searchTestID={AgentUiIds.peoplePicker.search}
           emptyMessage={
-            friends.length === 0 ? 'Add Friends On The Social Tab First' : 'No Matching Friends'
+            friends.length === 0 ? 'Invite a Friend First' : 'No One Matches That'
           }
           testID={AgentUiIds.peoplePicker.dropdown}
           supportedOrientations={supportedOrientations}
         />
       ) : (
         <>
-          <GlassPlate
-            airy
-            style={[
-              styles.search,
-              {
-                minHeight: Math.max(44, s(48)),
-                paddingHorizontal: spacing.md,
-                marginBottom: spacing.sm,
-              },
-            ]}
-          >
-            <TextInput
-              ref={searchAgent.ref as never}
-              testID={searchAgent.testID}
-              onLayout={searchAgent.onLayout}
+          {showSearch ? (
+            <Input
+              icon="search"
               value={query}
               onChangeText={setQuery}
               placeholder="Search names"
-              placeholderTextColor={theme.textTertiary}
               autoCapitalize="none"
               autoCorrect={false}
-              style={[
-                styles.searchInput,
-                {
-                  color: theme.textPrimary,
-                  fontSize: typography.callout.fontSize,
-                },
-              ]}
+              testID={AgentUiIds.peoplePicker.search}
+              accessibilityLabel="Search names"
             />
-          </GlassPlate>
+          ) : null}
 
           {available.length === 0 ? (
-            <AppText variant="body" color="secondary" style={{ marginTop: spacing.md }}>
-              {friends.length === 0
-                ? 'Add friends on the Social tab first.'
-                : 'No matching friends.'}
-            </AppText>
+            <AgentTestId
+              testID={emptyTestID ?? AgentUiIds.peoplePicker.empty}
+              label={resolvedEmpty.title}
+            >
+              <EmptyState
+                icon={resolvedEmpty.icon}
+                title={resolvedEmpty.title}
+                message={resolvedEmpty.message}
+              />
+            </AgentTestId>
           ) : (
             available.map((friend) => (
               <PeoplePickerFriendRow
                 key={friend.userId}
                 friend={friend}
                 selected={selected.has(friend.userId)}
-                disabled={disabled.has(friend.userId)}
-                disabledLabel={disabledLabel}
                 accentBorder={theme.accentPrimary}
                 idleBorder={theme.separator}
-                minHeight={Math.max(52, s(56))}
+                minHeight={Math.max(56, s(60))}
                 paddingHorizontal={spacing.md}
                 gap={spacing.md}
                 onPress={() => toggle(friend.userId)}
@@ -231,8 +246,6 @@ export function PeoplePicker({
 function PeoplePickerFriendRow({
   friend,
   selected,
-  disabled,
-  disabledLabel,
   accentBorder,
   idleBorder,
   minHeight,
@@ -242,8 +255,6 @@ function PeoplePickerFriendRow({
 }: {
   friend: FriendProfile;
   selected: boolean;
-  disabled: boolean;
-  disabledLabel: string;
   accentBorder: string;
   idleBorder: string;
   minHeight: number;
@@ -253,7 +264,7 @@ function PeoplePickerFriendRow({
 }) {
   const agent = useAgentUiTarget(AgentUiIds.peoplePicker.friend(friend.userId), {
     label: friend.displayName,
-    onPress: disabled ? undefined : onPress,
+    onPress,
   });
   return (
     <Pressable
@@ -262,10 +273,9 @@ function PeoplePickerFriendRow({
       onLayout={agent.onLayout}
       accessibilityRole="button"
       accessibilityLabel={friend.displayName}
-      accessibilityState={{ selected, disabled }}
-      disabled={disabled}
+      accessibilityState={{ selected }}
       onPress={onPress}
-      style={[styles.rowWrap, disabled ? styles.rowDisabled : undefined]}
+      style={styles.rowWrap}
     >
       <GlassPlate
         airy
@@ -280,17 +290,19 @@ function PeoplePickerFriendRow({
           },
         ]}
       >
+        <ProfileAvatar
+          displayName={friend.displayName}
+          userId={friend.userId}
+          avatar={friend.avatar}
+          size={36}
+        />
         <View style={styles.rowCopy}>
           <AppText variant="callout" fit>
             {friend.displayName}
           </AppText>
         </View>
-        <AppText
-          variant="caption"
-          color={disabled ? 'tertiary' : selected ? 'accent' : 'secondary'}
-          fit
-        >
-          {disabled ? disabledLabel : selected ? 'Selected' : 'Select'}
+        <AppText variant="caption" color={selected ? 'accent' : 'secondary'} fit>
+          {selected ? 'Selected' : 'Select'}
         </AppText>
       </GlassPlate>
     </Pressable>
@@ -298,24 +310,13 @@ function PeoplePickerFriendRow({
 }
 
 const styles = StyleSheet.create({
-  search: {
-    borderRadius: radii.md,
-  },
-  searchInput: {
-    minWidth: 0,
-    flex: 1,
-    paddingVertical: 0,
-  },
   rowWrap: {
     width: '100%',
-  },
-  rowDisabled: {
-    opacity: 0.62,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: radii.md,
+    borderRadius: radii.lg,
   },
   rowCopy: {
     flex: 1,

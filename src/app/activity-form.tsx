@@ -336,16 +336,16 @@ export default function ActivityFormScreen() {
 
   const save = () => {
     setError(undefined);
-    if (!title.trim()) return setError('Title is required.');
+    if (!title.trim()) return setError('Add a short title to save this.');
     if (!isDateKey(date)) return setError('Choose a valid date.');
     const dateKey = date;
     if (!category) return setError('Choose an event type.');
     const totalDurationMinutes = durationPartsToMinutes(durationHours, durationMinutes);
     if (!Number.isFinite(totalDurationMinutes)) {
-      return setError('Enter hours and mins; mins must be between 0 and 59.');
+      return setError('Minutes go from 0 to 59.');
     }
     if (totalDurationMinutes < 5) {
-      return setError('Duration must be at least 5 minutes.');
+      return setError('Give it at least 5 minutes so it can land on Today.');
     }
     if (category.detailKind === 'food' && meal.items.some((item) => !item.name.trim())) {
       return setError('Every food item needs a name.');

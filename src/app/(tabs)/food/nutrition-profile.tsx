@@ -168,7 +168,7 @@ export default function NutritionProfileScreen() {
       <Input label="Allergies" value={allergies} onChangeText={setAllergies} placeholder="peanuts, shellfish" testID={AgentUiIds.nutritionProfile.allergies} />
       {age >= 2 && age < 18 ? (
         <Button testID={AgentUiIds.nutritionProfile.guardianAcknowledgment} variant={guardianAcknowledged ? 'secondary' : 'danger'} onPress={() => setGuardianAcknowledged((value) => !value)}>
-          {guardianAcknowledged ? 'Guardian acknowledged' : 'Guardian acknowledgment required'}
+          {guardianAcknowledged ? 'Guardian Acknowledged' : 'Waiting On a Guardian'}
         </Button>
       ) : null}
       {age < 2 ? <AppText variant="caption" color="danger">Infant targets can only be activated by a verified pediatric clinician.</AppText> : null}

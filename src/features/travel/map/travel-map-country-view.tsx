@@ -410,7 +410,7 @@ function CountryStageContent({
               <TravelMapPinButton
                 testID={AgentUiIds.travel.map.place(pin.id)}
                 label={`${pin.label}, ${rendered.person.displayName}`}
-                colors={[rendered.person.color]}
+                people={[rendered.person]}
                 selected={pin.id === selectedPinId}
                 left={position.left + offset}
                 top={position.top - offset}

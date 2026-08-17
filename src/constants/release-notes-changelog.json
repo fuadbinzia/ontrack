@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.126",
+    "date": "2026-08-17",
+    "notes": [
+      "Ship release.",
+      "Touched: app routes."
+    ]
+  },
+  {
     "version": "1.0.125",
     "date": "2026-08-17",
     "notes": [

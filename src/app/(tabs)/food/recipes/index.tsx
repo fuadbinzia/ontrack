@@ -116,7 +116,7 @@ export default function FoodRecipesScreen() {
         {recipes.length === 0 ? (
           <EmptyState
             icon="recipe"
-            title="No recipes saved"
+            title="Your Recipe Box Is Empty"
             message="Save your favorites or ask AI for ideas that fit your profile."
             actionLabel="Ask AI"
             actionTestID={AgentUiIds.food.recipes.emptyAction}
@@ -125,8 +125,8 @@ export default function FoodRecipesScreen() {
         ) : filtered.length === 0 ? (
           <EmptyState
             icon="search"
-            title="No matches"
-            message="Nothing fits that search and filter combination."
+            title="Nothing Fits That Mix"
+            message="Try a different search, or clear the filters."
             actionLabel={hasActiveNarrowing ? "Clear filters" : undefined}
             actionTestID={
               hasActiveNarrowing

@@ -55,7 +55,7 @@ describe('travel range schedules', () => {
       ),
     ).toEqual({
       ok: false,
-      error: 'Drop-off must be after pick-up.',
+      error: 'Drop-off needs to be after pick-up.',
     });
   });
 });

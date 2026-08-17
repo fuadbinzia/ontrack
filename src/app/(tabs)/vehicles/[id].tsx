@@ -120,7 +120,7 @@ function VehicleDetailContent() {
   const saveOdometer = () => {
     const miles = asFiniteNonNegative(Number(odometerDraft));
     if (miles === undefined) {
-      appPrompt.alert('Enter a valid mileage', 'Mileage must be a non-negative number.');
+      appPrompt.alert('Check the Mileage', 'Use a number 0 or higher.');
       return;
     }
     const now = new Date().toISOString();

@@ -77,10 +77,13 @@ export function calculateNutritionTargets(
     );
   }
   if (age < 18 && !profile.guardianAcknowledgedAt) {
-    throw new NutritionTargetError('Guardian acknowledgment is required.', 'GUARDIAN_ACK_REQUIRED');
+    throw new NutritionTargetError(
+      'A parent or guardian needs to confirm this first.',
+      'GUARDIAN_ACK_REQUIRED',
+    );
   }
   if (!profile.heightCm || profile.heightCm <= 0) {
-    throw new NutritionTargetError('Height is required.', 'MISSING_INPUT');
+    throw new NutritionTargetError('Add a height so we can estimate targets.', 'MISSING_INPUT');
   }
 
   if (age < 18) return macroTargets(pediatricCalories(profile, age), profile.weightKg, age);

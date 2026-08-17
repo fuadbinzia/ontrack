@@ -133,6 +133,7 @@ export interface TravelMapCountryCluster {
   countryCode: string;
   countryName: string;
   colors: string[];
+  people: TravelMapPerson[];
   visits: TravelMapRenderedVisit[];
 }
 
@@ -145,7 +146,10 @@ export function travelMapCountryClusters(
     const current = clusters.get(key);
     if (current) {
       current.visits.push(rendered);
-      if (!current.colors.includes(rendered.person.color)) {
+      if (
+        !current.people.some((person) => person.userId === rendered.person.userId)
+      ) {
+        current.people.push(rendered.person);
         current.colors.push(rendered.person.color);
       }
     } else {
@@ -153,6 +157,7 @@ export function travelMapCountryClusters(
         countryCode: key,
         countryName: rendered.visit.countryName,
         colors: [rendered.person.color],
+        people: [rendered.person],
         visits: [rendered],
       });
     }

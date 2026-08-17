@@ -31,7 +31,7 @@ export function FinanceEntitiesScreen() {
 
   const save = () => {
     if (!name.trim()) {
-      setError('Name is required.');
+      setError('Give this a name so you can find it later.');
       return;
     }
     saveEntity(

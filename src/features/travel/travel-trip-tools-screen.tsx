@@ -56,7 +56,7 @@ export function TravelTripToolsScreen({ planId }: { planId: string }) {
         />
         <EmptyState
           icon="flight"
-          title="Trip Not Found"
+          title="This Trip Isn’t Here"
           message="This trip may have been removed on another device."
           actionLabel="Back to Travel"
           actionTestID={AgentUiIds.travel.tripTools.backToTravel}

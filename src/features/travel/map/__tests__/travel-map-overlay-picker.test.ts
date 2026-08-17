@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
-    travelMapOverlayConfirmIds,
-    travelMapOverlayPickerIds,
+  travelMapOverlayConfirmIds,
+  travelMapOverlayEmptyCopy,
+  travelMapOverlayPickerState,
 } from '../travel-map-overlay-picker';
 
 const read = (relativePath: string) =>
@@ -16,41 +17,63 @@ const friends = [
 ];
 
 describe('travel map overlay friend picker', () => {
-  it('still lists accepted friends when none of them are sharing a map', () => {
-    const { excludeIds, disabledIds } = travelMapOverlayPickerIds({
+  it('hides accepted friends who are not sharing and explains the empty list', () => {
+    const state = travelMapOverlayPickerState({
       friends,
       sharingUserIds: [],
       selectedFriendIds: [],
     });
 
-    expect(excludeIds).toEqual([]);
-    expect(disabledIds).toEqual([
-      'friend-alex',
-      'friend-jordan',
-      'friend-riley',
-    ]);
+    expect(state).toEqual({
+      includeIds: [],
+      excludeIds: [],
+      showSearch: false,
+      emptyKind: 'none-sharing',
+    });
+    expect(travelMapOverlayEmptyCopy('none-sharing')).toEqual({
+      icon: 'globe',
+      title: 'Waiting On Their Maps',
+      message: expect.stringContaining('Share My Map'),
+    });
   });
 
-  it('only hides friends already on the map, not friends who have not shared', () => {
-    const { excludeIds, disabledIds } = travelMapOverlayPickerIds({
-      friends,
-      sharingUserIds: ['friend-jordan'],
-      selectedFriendIds: ['friend-jordan'],
+  it('lists only sharing friends who are not already on the map', () => {
+    expect(
+      travelMapOverlayPickerState({
+        friends,
+        sharingUserIds: ['friend-jordan', 'friend-riley'],
+        selectedFriendIds: ['friend-jordan'],
+      }),
+    ).toEqual({
+      includeIds: ['friend-jordan', 'friend-riley'],
+      excludeIds: ['friend-jordan'],
+      showSearch: true,
+      emptyKind: null,
     });
-
-    expect(excludeIds).toEqual(['friend-jordan']);
-    expect(disabledIds).toEqual(['friend-alex', 'friend-riley']);
   });
 
-  it('keeps sharing friends selectable when they are not already overlaid', () => {
-    const { excludeIds, disabledIds } = travelMapOverlayPickerIds({
-      friends,
-      sharingUserIds: ['friend-alex', 'friend-jordan'],
-      selectedFriendIds: [],
+  it('says the maps are already overlaid when every sharing friend is selected', () => {
+    expect(
+      travelMapOverlayPickerState({
+        friends,
+        sharingUserIds: ['friend-jordan'],
+        selectedFriendIds: ['friend-jordan'],
+      }),
+    ).toMatchObject({
+      showSearch: false,
+      emptyKind: 'all-overlaid',
     });
+  });
 
-    expect(excludeIds).toEqual([]);
-    expect(disabledIds).toEqual(['friend-riley']);
+  it('asks the user to add friends when the social list is empty', () => {
+    expect(
+      travelMapOverlayPickerState({
+        friends: [],
+        sharingUserIds: [],
+        selectedFriendIds: [],
+      }).emptyKind,
+    ).toBe('no-friends');
+    expect(travelMapOverlayEmptyCopy('no-friends').title).toBe('Invite a Friend First');
   });
 
   it('confirms only friends who are currently sharing a map', () => {

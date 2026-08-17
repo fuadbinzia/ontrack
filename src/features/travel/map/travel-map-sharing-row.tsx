@@ -1,6 +1,12 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, GlassPlate, GlassSwitch } from '@/components/primitives';
+import {
+  AppText,
+  GlassIconWell,
+  GlassPlate,
+  GlassSwitch,
+  Symbol,
+} from '@/components/primitives';
 import { radii } from '@/design-system';
 import { useResponsive } from '@/hooks/use-responsive';
 import { AgentUiIds, useAgentUiTarget } from '@/utils/agent-ui';
@@ -14,7 +20,7 @@ export function TravelMapSharingRow({
   disabled: boolean;
   onPress: () => void;
 }) {
-  const { spacing } = useResponsive();
+  const { spacing, s } = useResponsive();
   const agent = useAgentUiTarget(AgentUiIds.travel.map.shareToggle, {
     label: 'Share my map with friends',
     onPress,
@@ -28,15 +34,26 @@ export function TravelMapSharingRow({
       accessibilityRole="switch"
       accessibilityLabel="Share my map with friends"
       accessibilityState={{ checked: enabled, disabled }}
-      onPress={onPress}>
+      onPress={onPress}
+    >
       <GlassPlate
         airy
         style={[
           styles.plate,
-          { gap: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-        ]}>
+          {
+            gap: spacing.md,
+            paddingHorizontal: spacing.md,
+            paddingVertical: spacing.sm,
+          },
+        ]}
+      >
+        <GlassIconWell size={s(40)} borderRadius={radii.md}>
+          <Symbol name="globe" size={18} />
+        </GlassIconWell>
         <View style={styles.copy}>
-          <AppText variant="callout" fit>Share my map</AppText>
+          <AppText variant="callout" fit>
+            Share My Map
+          </AppText>
           <AppText variant="caption" color="secondary">
             Accepted friends can see your pins and trip summaries.
           </AppText>
@@ -52,7 +69,7 @@ const styles = StyleSheet.create({
     minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: radii.md,
+    borderRadius: radii.lg,
   },
   copy: {
     flex: 1,

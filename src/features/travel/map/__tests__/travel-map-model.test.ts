@@ -75,6 +75,21 @@ describe('travel map model', () => {
     ]);
     expect(clusters).toHaveLength(1);
     expect(clusters[0]?.colors).toEqual(['#111', '#222']);
+    expect(clusters[0]?.people.map((person) => person.userId)).toEqual([
+      'self',
+      'friend',
+    ]);
+  });
+
+  it('keeps one cluster person per user when they have several pins', () => {
+    const visit = createTravelMapVisit({ plan, countryCode: 'IS', countryName: 'Iceland' });
+    const person = { userId: 'self', displayName: 'Me', color: '#111', isSelf: true as const };
+    const clusters = travelMapCountryClusters([
+      { visit, person, canOpenTrip: true },
+      { visit: { ...visit, id: 'second' }, person, canOpenTrip: true },
+    ]);
+    expect(clusters[0]?.people).toHaveLength(1);
+    expect(clusters[0]?.colors).toEqual(['#111']);
   });
 
   it('assigns deterministic high-contrast friend colors', () => {

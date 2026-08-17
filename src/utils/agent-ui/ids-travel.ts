@@ -134,6 +134,7 @@ export const agentUiIdsTravel = {
       previewUnpinConfirm: 'ontrack.travel.map.preview.unpin.confirm',
       previewClose: 'ontrack.travel.map.preview.close',
       people: 'ontrack.travel.map.people.open',
+      overlayEmpty: 'ontrack.travel.map.overlay.empty',
       person: (userId: string) => `ontrack.travel.map.person.${userId}`,
       shareToggle: 'ontrack.travel.map.share.toggle',
       suggestionConfirm: 'ontrack.travel.map.suggestion.confirm',

@@ -44,7 +44,7 @@ export function ChecklistJoinScreen({ code }: { code: string }) {
       .then((result) => {
         if (!active) return;
         if (result) setResolved(result);
-        else setError('This list link is invalid or has been revoked.');
+        else setError('This list link is no longer open. Ask the owner for a fresh invite.');
       })
       .catch((caught: unknown) => {
         if (active) {
@@ -59,7 +59,7 @@ export function ChecklistJoinScreen({ code }: { code: string }) {
   if (!validCode) {
     return (
       <Screen contentStyle={styles.center}>
-        <ErrorMessage message="This list link is invalid or incomplete." variant="heading" align="center" />
+        <ErrorMessage message="This list link looks incomplete. Ask the owner for a fresh invite." variant="heading" align="center" />
         <Button onPress={() => router.replace('/' as never)}>Go to onTrack</Button>
       </Screen>
     );

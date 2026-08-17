@@ -427,6 +427,7 @@ Named flow: `social-friends-invite-tools` (signed-in session) opens Friends, the
 | `ontrack.peoplePicker.close`            | Close sheet          |
 | `ontrack.peoplePicker.dropdown`          | Open friend dropdown |
 | `ontrack.peoplePicker.search`           | Search field         |
+| `ontrack.peoplePicker.empty`            | Empty friend list    |
 | `ontrack.peoplePicker.friend.<friendId>`| Select friend row    |
 | `ontrack.peoplePicker.confirm`          | Confirm selection    |
 
@@ -922,6 +923,7 @@ portrait Travel screen.
 | `ontrack.travel.map.preview.openTrip` / `.close` | Authorized full-trip action / close preview |
 | `ontrack.travel.map.preview.unpin` / `.unpin.confirm` | Owner-only unpin action / destructive confirmation |
 | `ontrack.travel.map.people.open` | Open friend overlay picker |
+| `ontrack.travel.map.overlay.empty` | Overlay sheet empty (no friends sharing / already overlaid) |
 | `ontrack.travel.map.person.<userId>` | Colored avatar-ring layer control |
 | `ontrack.travel.map.share.toggle` | Owner friend-sharing opt-in inside the friend-overlay sheet |
 | `ontrack.travel.map.suggestion.confirm` / `.skip` | Review or dismiss an inferred existing-trip pin |

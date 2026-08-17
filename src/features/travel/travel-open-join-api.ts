@@ -254,7 +254,7 @@ export async function resolveTravelOpenJoin(code: string): Promise<{
     );
   }
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    throw new TravelInviteError('This join link is invalid or has expired.');
+    throw new TravelInviteError('This join link expired. Ask the host for a fresh one.');
   }
   const row = data as Record<string, unknown>;
   const invite =
@@ -262,7 +262,7 @@ export async function resolveTravelOpenJoin(code: string): Promise<{
   const tripId = typeof row.tripId === 'string' ? row.tripId : undefined;
   const status = asOpenJoinStatus(row.status);
   if (!invite || !tripId || !status) {
-    throw new TravelInviteError('This join link is invalid or has expired.');
+    throw new TravelInviteError('This join link expired. Ask the host for a fresh one.');
   }
   return {
     plan: invite,

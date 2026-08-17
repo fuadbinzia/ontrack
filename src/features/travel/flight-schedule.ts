@@ -58,7 +58,7 @@ export function validateFlightSchedule(
     arrivalAirport: details?.arrivalAirport,
   });
   if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
-    return { ok: false, error: 'Arrival must be after departure.' };
+    return { ok: false, error: 'Arrival needs to be after departure.' };
   }
   if (durationMinutes > 3 * 24 * 60) {
     return { ok: false, error: 'Flight duration looks too long. Check the arrival time.' };

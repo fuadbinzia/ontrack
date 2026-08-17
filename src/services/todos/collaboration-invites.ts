@@ -183,7 +183,7 @@ export async function acceptChecklistShareLink(code: string): Promise<string> {
   });
   if (error || typeof data !== 'string') {
     throw new ChecklistCollaborationError(
-      messageFrom(error, 'This list link is invalid or has been revoked.'),
+      messageFrom(error, 'This list link is no longer open. Ask the owner for a fresh invite.'),
     );
   }
   await loadChecklistSnapshot(data);
@@ -251,7 +251,7 @@ export async function acceptChecklistCollaboratorLink(code: string): Promise<str
     : [];
   if (error || !listIds.length) {
     throw new ChecklistCollaborationError(
-      messageFrom(error, 'This collaborator link is invalid or has been revoked.'),
+      messageFrom(error, 'This collaborator link is no longer open. Ask the owner for a fresh invite.'),
     );
   }
   await Promise.all(listIds.map((listId) => loadChecklistSnapshot(listId)));

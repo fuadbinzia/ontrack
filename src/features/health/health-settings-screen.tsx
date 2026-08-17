@@ -32,14 +32,20 @@ export function HealthSettingsScreen() {
     try {
       if (await requestAppleHealthAccess(stateWrite)) markAccessReviewed();
     } catch {
-      appPrompt.alert('Apple Health unavailable', 'Install the latest native build and try again on an iPhone.');
+      appPrompt.alert(
+        'Couldn’t Reach Apple Health',
+        'This needs the latest onTrack on an iPhone. Your mood journal still works here.',
+      );
     }
   };
 
   const changeSync = async (value: Toggle) => {
     if (value === 'off') { setSyncEnabled(false); return; }
     if (!mindAvailable) {
-      appPrompt.alert('State of Mind unavailable', 'Apple Health State of Mind requires iOS 18 or later. Your onTrack mood journal still works privately.');
+      appPrompt.alert(
+        'Apple Health Needs iOS 18',
+        'Apple Health State of Mind needs iOS 18 or later. Your onTrack mood journal still works privately.',
+      );
       return;
     }
     await connect(true);

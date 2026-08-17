@@ -40,6 +40,7 @@ App-affecting → typecheck/tests. Do **not** run device, simulator, emulator, o
 ## Non-negotiable UI
 
 - **Glass UI:** product chrome is glass — see `.cursor/rules/glass-ui.mdc`.
+- **Friendly copy:** warm, helpful voice on every user-facing string (errors, prompts, modals, empties) — `.cursor/rules/friendly-copy.mdc`.
 - **Smooth transitions:** pages, sheets, add/remove, open/close ease — `Presence` / `useListEnterIds` / sheet `held` exit. Page open stays at rest. Never snap-unmount visible chrome.
 - **Safe area:** `AppSafeArea`; never `insets.top` in scroll content; native Modals pad non-scrolling parent with `insets.top`.
 - **Responsive:** `useResponsive()` + `AppText fit` — `.cursor/rules/responsive-layout.mdc`.

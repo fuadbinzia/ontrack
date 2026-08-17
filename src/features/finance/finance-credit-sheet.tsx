@@ -53,7 +53,7 @@ export function FinanceCreditSheet({
   const save = () => {
     const score = Number.parseInt(scoreText.replace(/\D/g, ''), 10);
     if (!Number.isFinite(score) || score < 300 || score > 850) {
-      appPrompt.alert('Invalid score', 'Enter a score between 300 and 850.');
+      appPrompt.alert('Check the Score', 'Credit scores usually sit between 300 and 850.');
       return;
     }
     setCreditScore({
@@ -70,7 +70,7 @@ export function FinanceCreditSheet({
     try {
       await Linking.openURL(url);
     } catch {
-      appPrompt.alert('Could not open link', 'Open the site in a browser instead.');
+      appPrompt.alert('Couldn’t Open That Site', 'Try opening it in your browser instead.');
     }
   };
 

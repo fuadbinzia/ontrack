@@ -162,7 +162,13 @@ export const TravelMapWorldGlobe = memo(function TravelMapWorldGlobe({
       if (!projected || projected.length < 2) return [];
       const [left, top] = projected;
       if (!Number.isFinite(left) || !Number.isFinite(top)) return [];
-      return [{ cluster, left, top }];
+      return [
+        {
+          cluster,
+          left: Math.round(left),
+          top: Math.round(top),
+        },
+      ];
     });
   }, [camera, clusters, hasLayout, rotation]);
 

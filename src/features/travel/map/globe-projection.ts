@@ -1,9 +1,10 @@
 import {
-    geoDistance,
-    geoGraticule10,
-    geoOrthographic,
-    geoPath,
+  geoDistance,
+  geoGraticule10,
+  geoOrthographic,
+  geoPath,
 } from 'd3-geo';
+import { Platform } from 'react-native';
 
 import { ATLAS_COUNTRIES, type AtlasCountry } from './country-data';
 
@@ -280,16 +281,17 @@ export function travelGlobeCoordinateAtPoint(
 export function travelGlobeCameraForLayout(
   layout: { width: number; height: number },
 ): TravelGlobeCamera {
-  const width = Math.max(1, layout.width);
-  const height = Math.max(1, layout.height);
+  const width = Math.max(1, Math.round(layout.width));
+  const height = Math.max(1, Math.round(layout.height));
   const landscape = width > height;
+  const portraitCenterY = Platform.OS === 'android' ? 0.5 : 0.55;
   const radius = landscape
     ? Math.max(height * 0.68, width * 0.5)
     : Math.max(width * 0.78, height * 0.46);
   return {
     width,
     height,
-    center: [width / 2, height * (landscape ? 0.52 : 0.55)],
+    center: [width / 2, height * (landscape ? 0.52 : portraitCenterY)],
     radius,
   };
 }

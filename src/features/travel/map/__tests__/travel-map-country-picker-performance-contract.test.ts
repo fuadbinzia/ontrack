@@ -16,6 +16,7 @@ describe('travel map country picker performance contract', () => {
     expect(countryPicker).toContain("import { FlashList");
     expect(countryPicker).toContain('bodyScrollMode="external"');
     expect(countryPicker).not.toContain('countries.map(');
+    expect(countryPicker).not.toContain('.slice(0, 80)');
     expect(sheetScaffold).toContain("bodyScrollMode === 'external'");
   });
 });

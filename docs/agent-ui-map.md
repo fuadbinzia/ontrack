@@ -904,6 +904,7 @@ portrait Travel screen.
 | `ontrack.travel.map.section.globe` | Interactive orthographic world globe anchor |
 | `ontrack.travel.map.section.flatWorld` | Landscape edge-to-edge flat world map anchor |
 | `ontrack.travel.map.layout.portrait` / `.landscape` | Orientation-specific layout anchors |
+| `ontrack.travel.map.orientationHint` | Opens tip explaining landscape mode for a wider atlas view |
 | `ontrack.travel.map.countryPicker.open` | Searchable country picker |
 | `ontrack.travel.map.country.<ISO>` | Country picker option |
 | `ontrack.travel.map.citySearch.open` | Open city search inside the selected country |

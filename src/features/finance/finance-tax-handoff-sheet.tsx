@@ -1,4 +1,4 @@
-import { Linking, View } from 'react-native';
+import { View } from 'react-native';
 
 import {
   appPrompt,
@@ -12,6 +12,7 @@ import {
 import { useResponsive } from '@/hooks/use-responsive';
 import { useFinance } from '@/store/finance';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
+import { openHttpsUrl } from '@/utils/safe-url';
 
 import { shareTaxExportPackage } from './share-tax-package';
 import { buildTaxExportPackage } from './tax-export';
@@ -20,6 +21,19 @@ import {
   type TaxHandoffId,
 } from './tax-handoff';
 import type { FinanceTaxYear } from './types';
+
+export function openTaxHandoffUrl(url: string): Promise<boolean> {
+  return openHttpsUrl(url);
+}
+
+export async function openTaxHandoffUrlOrAlert(
+  url: string,
+  onInvalidUrl?: () => void,
+): Promise<boolean> {
+  const opened = await openTaxHandoffUrl(url);
+  if (!opened) onInvalidUrl?.();
+  return opened;
+}
 
 export function FinanceTaxHandoffSheet({
   visible,
@@ -36,6 +50,19 @@ export function FinanceTaxHandoffSheet({
   const documents = useFinance((s) => s.documents);
   const customHandoffUrl = useFinance((s) => s.customHandoffUrl);
   const setCustomHandoffUrl = useFinance((s) => s.setCustomHandoffUrl);
+
+  const openTaxDestination = async (url: string): Promise<boolean> => {
+    const opened = await openTaxHandoffUrlOrAlert(url, () => {
+      appPrompt.alert(
+        'Couldn’t Open That Site',
+        'Open the site in your browser after sharing your package.',
+      );
+    });
+    if (!opened) {
+      return false;
+    }
+    return true;
+  };
 
   const runHandoff = async (id: TaxHandoffId) => {
     if (!taxYear) return;
@@ -65,13 +92,10 @@ export function FinanceTaxHandoffSheet({
       url = customHandoffUrl.trim();
     }
     if (url) {
-      try {
-        await Linking.openURL(url);
-      } catch {
-        appPrompt.alert(
-          'Couldn’t Open That Site',
-          'Open the site in your browser after sharing your package.',
-        );
+      const opened = await openTaxDestination(url);
+      if (!opened) {
+        onClose();
+        return;
       }
     }
 

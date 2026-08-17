@@ -1,6 +1,13 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AppText, Card, CollapsibleSection, GlassPlate, Symbol } from '@/components/primitives';
+import {
+  appPrompt,
+  AppText,
+  Card,
+  CollapsibleSection,
+  GlassPlate,
+  Symbol,
+} from '@/components/primitives';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import type { SavedEzPassStatement } from '@/store/finance-ezpass-statements';
@@ -18,6 +25,15 @@ export function FinanceEzPassStatementFiles({
   const { spacing, layout } = useResponsive();
   if (!statements.length) return null;
   const fileCount = `${statements.length} ${statements.length === 1 ? 'File' : 'Files'}`;
+  const openStatement = async (statement: SavedEzPassStatement) => {
+    const opened = await openEzPassStatement(statement.uris);
+    if (!opened) {
+      appPrompt.alert(
+        'Couldn’t open statement',
+        'The selected statement is not available right now. Save it again or check storage access.',
+      );
+    }
+  };
 
   return (
     <Card variant="sunken" testID={AgentUiIds.finance.ezpass.statements}>
@@ -35,7 +51,7 @@ export function FinanceEzPassStatementFiles({
               accessibilityRole={canOpen ? 'link' : undefined}
               accessibilityLabel={`Open ${statement.name}`}
               disabled={!canOpen}
-              onPress={() => void openEzPassStatement(statement.uris)}
+              onPress={() => void openStatement(statement)}
               testID={AgentUiIds.finance.ezpass.statement(statement.id)}
               style={({ pressed }) => ({ opacity: pressed && canOpen ? 0.82 : 1 })}>
               <GlassPlate

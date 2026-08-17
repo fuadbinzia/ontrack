@@ -17,6 +17,65 @@ export function clampCountryZoomScale(scale: number): number {
   return Math.max(COUNTRY_ZOOM_MIN, Math.min(COUNTRY_ZOOM_MAX, scale));
 }
 
+export type CountryMapTransform = {
+  scale: number;
+  translateX: number;
+  translateY: number;
+};
+
+type ViewBox = { x: number; y: number; width: number; height: number };
+type Layout = { width: number; height: number };
+
+function layoutScale(viewBox: ViewBox, layout: Layout): number {
+  return Math.min(layout.width / viewBox.width, layout.height / viewBox.height);
+}
+
+function untransformLayoutPoint(
+  location: { x: number; y: number },
+  layout: Layout,
+  transform: CountryMapTransform,
+): { x: number; y: number } {
+  const centerX = layout.width / 2;
+  const centerY = layout.height / 2;
+  const safeScale = Number.isFinite(transform.scale) ? transform.scale : 1;
+  return {
+    x: centerX + (location.x - transform.translateX - centerX) / safeScale,
+    y: centerY + (location.y - transform.translateY - centerY) / safeScale,
+  };
+}
+
+/**
+ * Converts a layout-space tap into map-projected coordinates for an actively
+ * zoom/panned map that was transformed about the layout center.
+ */
+export function layoutToProjectedPoint(
+  location: { x: number; y: number },
+  viewBox: ViewBox,
+  layout: Layout,
+  transform: CountryMapTransform,
+): [number, number] | undefined {
+  const scale = layoutScale(viewBox, layout);
+  const paintedWidth = viewBox.width * scale;
+  const paintedHeight = viewBox.height * scale;
+  const offsetX = (layout.width - paintedWidth) / 2;
+  const offsetY = (layout.height - paintedHeight) / 2;
+  const point = untransformLayoutPoint(location, layout, transform);
+
+  if (
+    point.x < offsetX ||
+    point.y < offsetY ||
+    point.x > offsetX + paintedWidth ||
+    point.y > offsetY + paintedHeight
+  ) {
+    return undefined;
+  }
+
+  return [
+    viewBox.x + (point.x - offsetX) / scale,
+    viewBox.y + (point.y - offsetY) / scale,
+  ];
+}
+
 /** Max pan from center so a zoomed map can never be flung off screen. */
 export function countryZoomTranslateBound(
   scale: number,

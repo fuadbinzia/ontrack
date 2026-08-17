@@ -63,19 +63,24 @@ export function resolveEzPassStatementUri(uri: string): string | undefined {
   }
 }
 
-export async function openEzPassStatement(uris: string[]): Promise<void> {
+export async function openEzPassStatement(uris: string[]): Promise<boolean> {
   const openable = uris.flatMap((uri) => {
     const resolved = resolveEzPassStatementUri(uri);
     return resolved ? [resolved] : [];
   });
-  if (!openable.length) return;
+  if (!openable.length) return false;
   if (Platform.OS !== 'web' && TravelDocumentReader?.previewDocumentsAsync) {
     try {
       await TravelDocumentReader.previewDocumentsAsync(openable);
-      return;
+      return true;
     } catch {
       // Fall through to the platform URL handler.
     }
   }
-  await Linking.openURL(openable[0]);
+  try {
+    await Linking.openURL(openable[0]);
+    return true;
+  } catch {
+    return false;
+  }
 }

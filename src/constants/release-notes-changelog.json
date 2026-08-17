@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.119",
+    "date": "2026-08-16",
+    "notes": [
+      "Let journal dictation play a live wave in the composer and land in the input for review.",
+      "Touched: features/journal."
+    ]
+  },
+  {
     "version": "1.0.118",
     "date": "2026-08-16",
     "notes": [

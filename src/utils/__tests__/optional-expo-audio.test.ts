@@ -108,7 +108,21 @@ describe('recordingOptionsFor', () => {
       },
     } as Partial<ExpoAudioApi>);
 
-    expect(recordingOptionsFor(api)).toBe(highQuality);
+    expect(recordingOptionsFor(api)).toMatchObject(highQuality);
+  });
+
+  it('always enables metering so the recording wave has levels', () => {
+    expect(recordingOptionsFor(undefined).isMeteringEnabled).toBe(true);
+    expect(
+      recordingOptionsFor(
+        usableApi({
+          RecordingPresets: {
+            HIGH_QUALITY: { extension: '.m4a' },
+            LOW_QUALITY: { extension: '.m4a' },
+          },
+        } as Partial<ExpoAudioApi>),
+      ).isMeteringEnabled,
+    ).toBe(true);
   });
 });
 

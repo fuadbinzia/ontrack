@@ -33,6 +33,8 @@ export const agentUiIdsJournal = {
       dictate: 'ontrack.journal.composer.dictate',
       voiceNote: 'ontrack.journal.composer.voiceNote',
       stop: 'ontrack.journal.composer.stop',
+      wave: 'ontrack.journal.composer.wave',
+      transcribing: 'ontrack.journal.composer.transcribing',
       link: 'ontrack.journal.composer.link',
     },
     sectionSheet: {

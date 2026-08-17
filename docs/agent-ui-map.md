@@ -1218,6 +1218,7 @@ Deep link: `ontrack://journal` / Expo route `/(tabs)/journal` · flows `journal`
 | `ontrack.journal.link.<id>` | Open a linked section |
 | `ontrack.journal.composer.menu` / `.dictate` / `.voiceNote` / `.link` | Header plus menu (dictate, voice note, link) |
 | `ontrack.journal.composer.input` / `.send` / `.stop` | Docked page composer (send in the field) |
+| `ontrack.journal.composer.wave` / `.transcribing` | Live recording wave + Transcribing status (anchors, mic-driven) |
 | `ontrack.journal.sections.sheet` / `.close` / `.<section>` | Link-a-section sheet |
 
 Demo fixture: `journal-agent-ui-demo-page` / `jtext-agent-ui-demo` via `./scripts/agent-ui-seed.sh journal-demo` or flow `journal-demo`.

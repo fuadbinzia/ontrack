@@ -12,7 +12,11 @@ import {
 
 const MAX_RECORDING_SECONDS = 60;
 
+/** Poll fast enough that the recording wave feels live. */
+const RECORDER_STATE_INTERVAL_MS = 100;
+
 type AudioRecorderHook = ExpoAudioApi['useAudioRecorder'];
+type AudioRecorderStateHook = ExpoAudioApi['useAudioRecorderState'];
 
 const audioApi = loadOptionalExpoAudio();
 
@@ -30,8 +34,25 @@ function useUnavailableAudioRecorder(
   return unavailableRecorder;
 }
 
+const unavailableRecorderState = {
+  canRecord: false,
+  isRecording: false,
+  durationMillis: 0,
+  mediaServicesDidReset: false,
+  url: null,
+} as ReturnType<AudioRecorderStateHook>;
+
+function useUnavailableAudioRecorderState(
+  ..._args: Parameters<AudioRecorderStateHook>
+): ReturnType<AudioRecorderStateHook> {
+  return unavailableRecorderState;
+}
+
 const useCompatibleAudioRecorder =
   audioApi?.useAudioRecorder ?? useUnavailableAudioRecorder;
+
+const useCompatibleAudioRecorderState =
+  audioApi?.useAudioRecorderState ?? useUnavailableAudioRecorderState;
 
 function recordedAudioMimeType(uri: string): string {
   if (uri.toLowerCase().includes('.webm')) return 'audio/webm';
@@ -71,6 +92,23 @@ export function deleteRecordedAudio(uri: string | null | undefined) {
 }
 
 export type JournalRecorderMode = 'dictate' | 'voice';
+
+export type JournalAudioRecorder = ReturnType<AudioRecorderHook>;
+
+/**
+ * Live take state (metering + elapsed) at wave cadence. Call from the leaf
+ * that renders the wave so 10Hz polling never re-renders the whole page.
+ */
+export function useJournalRecorderLiveState(audioRecorder: JournalAudioRecorder) {
+  const state = useCompatibleAudioRecorderState(
+    audioRecorder,
+    RECORDER_STATE_INTERVAL_MS,
+  );
+  return {
+    meteringDb: state.metering ?? null,
+    elapsedMs: state.durationMillis,
+  };
+}
 
 export function useJournalRecorder() {
   const recorder = useCompatibleAudioRecorder(recordingOptionsFor(audioApi));
@@ -198,6 +236,8 @@ export function useJournalRecorder() {
     recording: mode != null,
     nativeAvailable,
     statusMessage,
+    /** Raw expo recorder handle for leaf components that watch live state. */
+    audioRecorder: recorder,
     start,
     finish,
     cancel,

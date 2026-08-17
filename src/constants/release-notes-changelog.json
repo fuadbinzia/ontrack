@@ -5,6 +5,8 @@
     "notes": [
       "Ship release.",
       "Touched: app routes."
+      "Add a skill to merge remote main into the current branch.",
+      "Ship via ship:push (TestFlight + device OTA)."
     ]
   },
   {

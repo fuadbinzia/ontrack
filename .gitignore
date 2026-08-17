@@ -64,10 +64,12 @@ modules/*/android/build/
 .gradle/
 modules/**/.gradle/
 
-# Agent scratch under .cursor (keep committed rules)
+# Agent scratch under .cursor (keep committed rules + skills)
 .cursor/*
 !.cursor/rules/
 !.cursor/rules/**
+!.cursor/skills/
+!.cursor/skills/**
 
 # Local agent artifacts
 .kiro/

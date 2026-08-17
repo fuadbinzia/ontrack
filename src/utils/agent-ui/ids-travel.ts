@@ -110,6 +110,10 @@ export const agentUiIdsTravel = {
       landscape: 'ontrack.travel.map.layout.landscape',
       countryPicker: 'ontrack.travel.map.countryPicker.open',
       countryOption: (code: string) => `ontrack.travel.map.country.${code}`,
+      countryList: 'ontrack.travel.map.countryList',
+      countryListToggle: 'ontrack.travel.map.countryList.toggle',
+      countryListItem: (code: string) =>
+        `ontrack.travel.map.countryList.item.${code}`,
       citySearchOpen: 'ontrack.travel.map.citySearch.open',
       citySearchInput: 'ontrack.travel.map.citySearch.input',
       citySearchResult: (index: number) =>
@@ -117,6 +121,7 @@ export const agentUiIdsTravel = {
       backToWorld: 'ontrack.travel.map.backToWorld',
       pinPlace: 'ontrack.travel.map.pinPlace.open',
       pinClose: 'ontrack.travel.map.pinPlace.close',
+      orientationHint: 'ontrack.travel.map.orientationHint',
       pinTrip: 'ontrack.travel.map.pinPlace.trip',
       pinTripNone: 'ontrack.travel.map.pinPlace.trip.none',
       pinSearch: 'ontrack.travel.map.pinPlace.search',

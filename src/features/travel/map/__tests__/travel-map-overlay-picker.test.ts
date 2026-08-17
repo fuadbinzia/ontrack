@@ -86,6 +86,16 @@ describe('travel map overlay friend picker', () => {
     ).toEqual(['friend-jordan', 'friend-riley']);
   });
 
+  it('deduplicates ids when selected friends and picked friends overlap', () => {
+    expect(
+      travelMapOverlayConfirmIds(
+        ['friend-riley', 'friend-jordan', 'friend-riley'],
+        ['friend-jordan', 'friend-riley'],
+        ['friend-jordan', 'friend-riley'],
+      ),
+    ).toEqual(['friend-jordan', 'friend-riley']);
+  });
+
   it('loads friend profiles even if the owner map pull fails', () => {
     const hook = read('src/features/travel/map/use-travel-map-collaboration.ts');
     expect(hook).not.toContain('Promise.all([');

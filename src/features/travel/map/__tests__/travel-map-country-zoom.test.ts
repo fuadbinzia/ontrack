@@ -2,6 +2,7 @@ import {
     COUNTRY_ZOOM_MAX,
     COUNTRY_ZOOM_MIN,
     clampCountryZoomScale,
+    layoutToProjectedPoint,
     clampZoomTranslate,
     countryMarkerShift,
     countryZoomTranslateBound,
@@ -82,5 +83,28 @@ describe('travel map country zoom math', () => {
     expect(countryMarkerShift(150, 200, 2, 0)).toBe(-50);
     // Pan adds directly on top.
     expect(countryMarkerShift(150, 200, 2, 30)).toBe(-20);
+  });
+
+  it('maps tapped screen points through active zoom/pan before projection', () => {
+    const point = layoutToProjectedPoint(
+      { x: 10, y: 30 },
+      { x: 0, y: 0, width: 100, height: 50 },
+      { width: 200, height: 100 },
+      { scale: 2, translateX: 10, translateY: -20 },
+    );
+
+    expect(point?.[0]).toBeCloseTo(25, 6);
+    expect(point?.[1]).toBeCloseTo(25, 6);
+  });
+
+  it('returns undefined when the tapped point is outside the painted country area', () => {
+    expect(
+      layoutToProjectedPoint(
+        { x: -5, y: 50 },
+        { x: 0, y: 0, width: 100, height: 50 },
+        { width: 200, height: 100 },
+        { scale: 1, translateX: 0, translateY: 0 },
+      ),
+    ).toBeUndefined();
   });
 });

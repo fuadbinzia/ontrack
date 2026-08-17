@@ -27,4 +27,10 @@ describe('travel map friend sharing controls', () => {
     expect(mapChrome).toContain('emptyTestID={AgentUiIds.travel.map.overlayEmpty}');
     expect(mapChrome).not.toContain('disabledIds');
   });
+
+  it('keeps map sharing errors friendly even if the service returns a raw message', () => {
+    const mapChrome = read('src/features/travel/map/travel-map-screen-chrome.tsx');
+    expect(mapChrome).not.toContain('error.message');
+    expect(mapChrome).toContain("Couldn’t update your map sharing setting");
+  });
 });

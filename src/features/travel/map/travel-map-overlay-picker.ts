@@ -86,6 +86,11 @@ export function travelMapOverlayConfirmIds(
   selectedFriendIds: readonly string[],
 ): string[] {
   const sharing = new Set(sharingUserIds);
-  const added = pickedUserIds.filter((id) => sharing.has(id));
-  return [...selectedFriendIds, ...added];
+  const next = new Set<string>(selectedFriendIds);
+  for (const id of pickedUserIds) {
+    if (sharing.has(id)) {
+      next.add(id);
+    }
+  }
+  return [...next];
 }

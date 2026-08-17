@@ -60,6 +60,7 @@ import {
     clampCountryZoomScale,
     clampZoomTranslate,
     countryMarkerShift,
+    layoutToProjectedPoint,
     countryZoomTranslateBound,
     pinchFocalTranslate,
     rubberBandZoomTranslate,
@@ -93,30 +94,6 @@ function pointInLayout(
     left: (layout.width - paintedWidth) / 2 + (point[0] - viewBox.x) * scale,
     top: (layout.height - paintedHeight) / 2 + (point[1] - viewBox.y) * scale,
   };
-}
-
-function layoutToPoint(
-  location: { x: number; y: number },
-  viewBox: ViewBox,
-  layout: Layout,
-): [number, number] | undefined {
-  const scale = Math.min(layout.width / viewBox.width, layout.height / viewBox.height);
-  const paintedWidth = viewBox.width * scale;
-  const paintedHeight = viewBox.height * scale;
-  const offsetX = (layout.width - paintedWidth) / 2;
-  const offsetY = (layout.height - paintedHeight) / 2;
-  if (
-    location.x < offsetX ||
-    location.y < offsetY ||
-    location.x > offsetX + paintedWidth ||
-    location.y > offsetY + paintedHeight
-  ) {
-    return undefined;
-  }
-  return [
-    viewBox.x + (location.x - offsetX) / scale,
-    viewBox.y + (location.y - offsetY) / scale,
-  ];
 }
 
 /**
@@ -209,12 +186,21 @@ function CountryStageContent({
 
   const placeAtLayoutPoint = useCallback(
     (x: number, y: number) => {
-      const point = layoutToPoint({ x, y }, viewBox, layout);
+      const point = layoutToProjectedPoint(
+        { x, y },
+        viewBox,
+        layout,
+        {
+          scale: scale.value,
+          translateX: translateX.value,
+          translateY: translateY.value,
+        },
+      );
       if (!point) return;
       const coordinate = invertTravelCoordinate(point[0], point[1]);
       if (coordinate) onCoordinatePress?.(coordinate);
     },
-    [layout, onCoordinatePress, viewBox],
+    [layout, onCoordinatePress, scale, translateX, translateY, viewBox],
   );
   const mapTapAgent = useAgentUiTarget(AgentUiIds.travel.map.pinMapTarget, {
     label: 'Tap the country map to pin this location',

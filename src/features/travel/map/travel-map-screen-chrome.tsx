@@ -4,12 +4,12 @@ import { Pressable, StyleSheet, View, type ModalProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import {
-    AppText,
-    Button,
-    CollapsibleBody,
-    GlassPlate,
-    Symbol,
-    appPrompt,
+  AppText,
+  Button,
+  CollapsibleBody,
+  GlassPlate,
+  Symbol,
+  appPrompt,
 } from '@/components/primitives';
 import { fadeEntering, fadeExiting, popoverEntering } from '@/design-system';
 import type { ProfileAvatarMeta } from '@/features/account/profile-avatar-model';
@@ -94,27 +94,31 @@ export function TravelMapCountryList({
   const cityLabel = cityCount === 1 ? 'city' : 'cities';
   return (
     <CollapsibleBody expanded={expanded} style={styles.countryListHost}>
-      <GlassPlate airy style={styles.countryListHostHeader}>
-        <AppText variant="callout" style={styles.countryListTitle} fit>
-          Visited Countries
-        </AppText>
-        <AppText variant="caption" color="secondary" numberOfLines={1}>
-          {`${countries.length} ${countryLabel} · ${cityCount} ${cityLabel}`}
-        </AppText>
-      </GlassPlate>
-      <GlassPlate airy style={styles.countryListPlate}>
-        <FlashList
-          data={countries}
-          keyExtractor={(item) => item.countryCode}
-          renderItem={renderCountry}
-          ItemSeparatorComponent={renderSeparator}
-          showsVerticalScrollIndicator={false}
-          estimatedItemSize={56}
-          contentContainerStyle={contentStyle}
-          style={styles.countryList}
-          keyboardShouldPersistTaps="handled"
-        />
-      </GlassPlate>
+      <View>
+        <GlassPlate airy style={styles.countryListHostHeader}>
+          <AppText variant="callout" style={styles.countryListTitle} fit>
+            Visited Countries
+          </AppText>
+          <AppText variant="caption" color="secondary" numberOfLines={1}>
+            {`${countries.length} ${countryLabel} · ${cityCount} ${cityLabel}`}
+          </AppText>
+        </GlassPlate>
+        <View style={styles.countryListPlate}>
+          <GlassPlate airy style={styles.countryListPlateContent}>
+            <FlashList
+              data={countries}
+              keyExtractor={(item) => item.countryCode}
+              renderItem={renderCountry}
+              ItemSeparatorComponent={renderSeparator}
+              showsVerticalScrollIndicator={false}
+              estimatedItemSize={56}
+              contentContainerStyle={contentStyle}
+              style={styles.countryList}
+              keyboardShouldPersistTaps="handled"
+            />
+          </GlassPlate>
+        </View>
+      </View>
     </CollapsibleBody>
   );
 }
@@ -445,6 +449,7 @@ export function TravelMapIconButton({
   onPress,
   compact,
   selected,
+  dimWhenInactive,
 }: {
   testID: string;
   label: string;
@@ -458,11 +463,13 @@ export function TravelMapIconButton({
   onPress: () => void;
   compact?: boolean;
   selected?: boolean;
+  dimWhenInactive?: boolean;
 }) {
   const theme = useTheme();
   const agent = useAgentUiTarget(testID, { label, onPress });
   const size = compact ? 36 : 46;
   const isSelected = Boolean(selected);
+  const isDimmed = Boolean(dimWhenInactive && !isSelected);
   return (
     <Pressable
       ref={agent.ref}
@@ -473,11 +480,11 @@ export function TravelMapIconButton({
       onPress={onPress}
       style={({ pressed }) => [
         pressed ? styles.iconButtonPressed : undefined,
-        isSelected ? styles.iconButtonSelected : styles.iconButtonDimmed,
+        isDimmed ? styles.iconButtonDimmed : undefined,
       ]}
     >
       <GlassPlate
-        intensity={isSelected ? 70 : 58}
+        intensity={isSelected || !isDimmed ? 70 : 58}
         style={[
           styles.iconButton,
           { width: size, height: size, borderRadius: size / 2 },
@@ -486,7 +493,13 @@ export function TravelMapIconButton({
         <Symbol
           name={icon}
           size={compact ? 18 : 21}
-          color={isSelected ? theme.accentPrimary : theme.textSecondary}
+          color={
+            isSelected
+              ? theme.accentPrimary
+              : isDimmed
+                ? theme.textTertiary
+                : theme.textPrimary
+          }
         />
       </GlassPlate>
     </Pressable>
@@ -554,7 +567,6 @@ const styles = StyleSheet.create({
   },
   iconButton: { alignItems: 'center', justifyContent: 'center' },
   iconButtonDimmed: { opacity: 0.56 },
-  iconButtonSelected: { opacity: 1 },
   iconButtonPressed: { opacity: 0.72, transform: [{ scale: 0.94 }] },
   chipPressed: { opacity: 0.72 },
   suggestionHost: {
@@ -594,6 +606,9 @@ const styles = StyleSheet.create({
   countryListTitle: { flex: 1, minWidth: 0, gap: 2 },
   countryList: { maxHeight: 220 },
   countryListPlate: {
+    overflow: 'hidden',
+  },
+  countryListPlateContent: {
     borderRadius: 16,
     paddingHorizontal: 6,
     paddingTop: 4,

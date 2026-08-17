@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.129",
+    "date": "2026-08-17",
+    "notes": [
+      "Update travel map screen state for latest UI tweaks.",
+      "Touched: features/travel."
+    ]
+  },
+  {
     "version": "1.0.128",
     "date": "2026-08-17",
     "notes": [

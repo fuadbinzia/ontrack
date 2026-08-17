@@ -598,6 +598,7 @@ export function TravelMapScreen() {
             testID={AgentUiIds.travel.map.orientationHint}
             label="Rotate map hint"
             icon="tip"
+            dimWhenInactive
             selected={landscapeHintOpen}
             onPress={toggleLandscapeHint}
           />

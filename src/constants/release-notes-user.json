@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.133",
+    "date": "2026-08-18",
+    "notes": [
+      "Update search tab to onTrack logo with Ask AI label and smooth open transition."
+    ]
+  },
+  {
     "version": "1.0.132",
     "date": "2026-08-18",
     "notes": [

@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.0.131",
+    "date": "2026-08-17",
+    "notes": [
+      "Align today-page date chevrons.",
+      "Touched: features/daily-tracking."
+    ]
+  },
+  {
     "version": "1.0.130",
     "date": "2026-08-17",
     "notes": [

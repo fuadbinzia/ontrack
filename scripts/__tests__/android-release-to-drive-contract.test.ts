@@ -19,4 +19,14 @@ describe('android release APK build defaults', () => {
     expect(script).toContain('--all-abis) ALL_ABIS=1');
     expect(script).toContain('-PreactNativeArchitectures=arm64-v8a');
   });
+
+  it('does not ship a Drive APK that strips RECORD_AUDIO from Android settings', () => {
+    expect(script).toContain('ensure_record_audio_permission');
+    expect(script).toContain('tools:node="remove"');
+    expect(script).toContain('android.permission.RECORD_AUDIO');
+    expect(script).toContain('npx expo prebuild --platform android --no-install --no-clean');
+    const prebuildAt = script.indexOf('npx expo prebuild --platform android --no-install --no-clean');
+    const ensureAfterPrebuild = script.indexOf('ensure_record_audio_permission', prebuildAt);
+    expect(ensureAfterPrebuild).toBeGreaterThan(prebuildAt);
+  });
 });

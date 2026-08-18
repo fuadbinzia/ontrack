@@ -1,10 +1,16 @@
 const mockGuardedFetch = jest.fn();
+const mockGateGuestPaidApiRequest = jest.fn();
 
 jest.mock('@/services/http/dependency-guard', () => ({
   guardedFetch: (...args: unknown[]) => mockGuardedFetch(...args),
 }));
 
+jest.mock('@/services/http/api-gate', () => ({
+  gateGuestPaidApiRequest: (...args: unknown[]) => mockGateGuestPaidApiRequest(...args),
+}));
+
 import {
+  authorizeJournalTranscribe,
   geminiAudioMime,
   journalTranscribeProvider,
   parseAudioDataUrl,
@@ -138,5 +144,33 @@ describe('journal transcribe server', () => {
   it('fails closed when no free or paid transcribe provider is configured', async () => {
     await expect(transcribeJournalAudio(AUDIO_DATA_URL)).rejects.toThrow('NOT_CONFIGURED');
     expect(mockGuardedFetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('journal transcribe authorize', () => {
+  const request = new Request('https://api.example.test/journal/transcribe');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGateGuestPaidApiRequest.mockResolvedValue('ok');
+  });
+
+  it('allows guests without a sign-in gate', async () => {
+    const result = await authorizeJournalTranscribe(request);
+    expect(mockGateGuestPaidApiRequest).toHaveBeenCalledWith(request, 'journal');
+    expect(result).toEqual({ ok: true });
+    expect('response' in result).toBe(false);
+  });
+
+  it('still rate-limits guests on the journal bucket', async () => {
+    mockGateGuestPaidApiRequest.mockResolvedValue('rate_limited');
+    const result = await authorizeJournalTranscribe(request);
+    expect('response' in result).toBe(true);
+    if (!('response' in result)) return;
+    expect(result.response.status).toBe(429);
+    await expect(result.response.json()).resolves.toEqual({
+      error: 'Journal dictate limit reached. Try again later.',
+      code: 'RATE_LIMITED',
+    });
   });
 });

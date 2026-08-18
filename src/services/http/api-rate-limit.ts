@@ -15,6 +15,7 @@ export type PaidApiBucket =
   | 'finance'
   | 'travel'
   | 'journal'
+  | 'agents'
   | 'public';
 
 export const PAID_API_BUCKETS: readonly PaidApiBucket[] = [
@@ -29,6 +30,7 @@ export const PAID_API_BUCKETS: readonly PaidApiBucket[] = [
   'finance',
   'travel',
   'journal',
+  'agents',
   'public',
 ] as const;
 
@@ -44,6 +46,7 @@ export const PAID_API_LIMITS: Record<PaidApiBucket, { max: number; windowMs: num
   finance: { max: 30, windowMs: 60 * 60 * 1000 },
   travel: { max: 80, windowMs: 60 * 60 * 1000 },
   journal: { max: 30, windowMs: 60 * 60 * 1000 },
+  agents: { max: 40, windowMs: 60 * 60 * 1000 },
   public: { max: 60, windowMs: 60 * 60 * 1000 },
 };
 

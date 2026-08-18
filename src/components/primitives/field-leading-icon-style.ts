@@ -15,6 +15,21 @@ export function fieldLeadingIconRowStyle(
   };
 }
 
+/**
+ * Optically center the first line inside an icon+multiline chrome row.
+ *
+ * Do not vertically center the TextInput itself: iOS contentSize jitters a
+ * few pixels on each letter before wrap, and alignItems/alignSelf center
+ * turns that into a caret refresh on line 1.
+ */
+export function iconMultilineOpticalPad(
+  rowMinHeight: number,
+  oneLineHeight: number,
+): number {
+  if (rowMinHeight <= 0 || oneLineHeight <= 0) return 0;
+  return Math.max(0, (rowMinHeight - oneLineHeight) / 2);
+}
+
 /** Square plate size for `FieldLeadingIcon` (with or without tint background). */
 export function fieldLeadingIconPlateSize({
   iconSize,

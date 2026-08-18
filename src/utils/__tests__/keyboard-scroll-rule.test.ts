@@ -43,6 +43,14 @@ describe('keyboard scrolling invariant', () => {
       join(process.cwd(), 'src/features/travel/travel-itinerary-add-sheet.tsx'),
       'utf8',
     );
+    const dock = readFileSync(
+      join(process.cwd(), 'src/components/navigation/bottom-nav-dock.tsx'),
+      'utf8',
+    );
+    const dockSearchOverlay = readFileSync(
+      join(process.cwd(), 'src/features/search/dock-search-overlay.tsx'),
+      'utf8',
+    );
 
     expect(hook).toContain('dockedKeyboardInsetFromEvent');
     expect(hook).toContain("androidMode === 'resize'");
@@ -63,6 +71,17 @@ describe('keyboard scrolling invariant', () => {
     expect(addSheet).toContain('sheetBottom');
     expect(addSheet).not.toContain('screenY - insets.bottom');
     expect(addSheet).not.toContain('kbHeight - insets.bottom');
+    // Absolute dock overlay: Android IME does not shrink the window, so search
+    // must switch to modal lift while expanded (held through collapse).
+    expect(dock).toContain('useDockedKeyboardInset');
+    expect(dock).toContain('useHeldOverlay');
+    expect(dock).toMatch(
+      /searchHeld \? \{ androidMode: 'modal' \} : \{ androidMode: 'resize' \}/,
+    );
+    expect(dock).toContain('bottom: keyboardInset');
+    expect(dock).not.toContain('<KeyboardAvoidingView');
+    expect(dockSearchOverlay).not.toContain('useDockedKeyboardInset');
+    expect(dockSearchOverlay).not.toContain('<KeyboardAvoidingView');
   });
 
   it('keeps sheet CTAs in-scroll (never pinned under the tab dock)', () => {

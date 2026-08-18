@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import {
   fieldLeadingIconRowStyle,
+  iconMultilineOpticalPad,
   stackedFieldMinHeight,
 } from '@/components/primitives/field-leading-icon-style';
 
@@ -41,6 +42,25 @@ describe('fieldLeadingIconRowStyle', () => {
 
     expect(style.alignItems).toBe('center');
     expect(style.flexDirection).toBe('row');
+  });
+});
+
+describe('iconMultilineOpticalPad', () => {
+  it('pads a 44pt well by half the leftover after one line so glyphs do not bounce', () => {
+    expect(iconMultilineOpticalPad(44, 22)).toBe(11);
+  });
+
+  it('shrinks padding as the chrome row and line height converge', () => {
+    expect(iconMultilineOpticalPad(44, 44)).toBe(0);
+    expect(iconMultilineOpticalPad(44, 28)).toBe(8);
+    expect(iconMultilineOpticalPad(66, 22)).toBe(22);
+  });
+
+  it('does not invert when the line is taller than the row or sizes are missing', () => {
+    expect(iconMultilineOpticalPad(22, 44)).toBe(0);
+    expect(iconMultilineOpticalPad(0, 22)).toBe(0);
+    expect(iconMultilineOpticalPad(44, 0)).toBe(0);
+    expect(iconMultilineOpticalPad(-8, 22)).toBe(0);
   });
 });
 

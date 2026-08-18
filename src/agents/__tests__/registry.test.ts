@@ -21,8 +21,11 @@ const TEST_AGENT: AgentDefinition = {
 };
 
 describe('agent registry', () => {
-  it('ships the platform without creating concrete agents', () => {
-    expect(AGENTS).toEqual([]);
+  it('ships the included onTrack companion', () => {
+    expect(AGENTS.map((agent) => agent.id)).toEqual(['ontrack-companion']);
+    expect(AGENTS[0]?.access).toBe('included');
+    expect(getAgentCapability('todos.read')?.name).toBe('View Checklists');
+    expect(getAgentCapability('shell.act')?.name).toBe('Navigate And Speak');
   });
 
   it('validates a declarative agent manifest', () => {

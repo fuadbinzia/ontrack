@@ -115,7 +115,24 @@ assert_device_channel_headers() {
   fi
 }
 
-assert_device_channel_headers
+# Stale `tools:node="remove"` from image-picker microphonePermission:false
+# survives `prebuild --no-clean` and hides Microphone in Android settings.
+ensure_record_audio_permission() {
+  local manifest="$ROOT/android/app/src/main/AndroidManifest.xml"
+  if [[ ! -f "$manifest" ]]; then
+    echo "error: missing $manifest" >&2
+    exit 1
+  fi
+  perl -i -0pe 's#<uses-permission android:name="android\.permission\.RECORD_AUDIO" tools:node="remove"\s*/>#<uses-permission android:name="android.permission.RECORD_AUDIO"/>#g' "$manifest"
+  if rg -q 'android.permission.RECORD_AUDIO"[^>]*tools:node="remove"|tools:node="remove"[^>]*android.permission.RECORD_AUDIO' "$manifest"; then
+    echo "error: AndroidManifest still blocks RECORD_AUDIO (tools:node=remove)" >&2
+    exit 1
+  fi
+  if ! rg -q 'android.permission.RECORD_AUDIO' "$manifest"; then
+    echo "error: AndroidManifest missing android.permission.RECORD_AUDIO" >&2
+    exit 1
+  fi
+}
 
 if [[ "$DO_BUILD" -eq 1 ]]; then
   BUILD_STAMP="$(date +%Y%m%d-%H%M%S)"
@@ -127,6 +144,7 @@ if [[ "$DO_BUILD" -eq 1 ]]; then
   cd "$ROOT"
   npx expo prebuild --platform android --no-install --no-clean
   assert_device_channel_headers
+  ensure_record_audio_permission
   cd "$ROOT/android"
   GRADLE_ARGS=()
   if [[ "$CLEAN_NATIVE" -eq 1 ]]; then
@@ -166,6 +184,8 @@ else
   fi
   APK_NAME="$(basename "$APK_DEST")"
   echo "==> Reusing local APK $APK_NAME"
+  assert_device_channel_headers
+  ensure_record_audio_permission
 fi
 
 if [[ "$DO_UPLOAD" -eq 0 ]]; then

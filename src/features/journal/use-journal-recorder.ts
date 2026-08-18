@@ -2,7 +2,9 @@ import { File as ExpoFile } from 'expo-file-system';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
+import { ensureRecordingPermission } from '@/utils/microphone-permission';
 import {
+  MICROPHONE_PERMISSION_REQUIRED,
   beginExpoRecording,
   loadOptionalExpoAudio,
   recordingOptionsFor,
@@ -170,13 +172,10 @@ export function useJournalRecorder() {
         // Cache only grants: a denial must be re-checked so granting in
         // Settings works without relaunching the app.
         if (permissionRef.current !== true) {
-          const current = await audioApi.getRecordingPermissionsAsync();
-          permissionRef.current = current.granted
-            ? true
-            : (await audioApi.requestRecordingPermissionsAsync()).granted;
+          permissionRef.current = await ensureRecordingPermission(audioApi);
         }
         if (!permissionRef.current) {
-          setStatusMessage('Microphone permission is required for voice. Typing still works.');
+          setStatusMessage(MICROPHONE_PERMISSION_REQUIRED);
           return false;
         }
         // The screen can unmount while permissions were awaited — its cleanup

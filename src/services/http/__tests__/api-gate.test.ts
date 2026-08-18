@@ -14,7 +14,7 @@ jest.mock('../api-rate-limit', () => ({
 }));
 
 // eslint-disable-next-line import/first
-import { gatePaidApiRequest } from '../api-gate';
+import { gateGuestPaidApiRequest, gatePaidApiRequest } from '../api-gate';
 
 describe('paid API request gate', () => {
   const request = new Request('https://api.example.test/paid');
@@ -49,5 +49,52 @@ describe('paid API request gate', () => {
   it('allows authenticated traffic below the configured limit', async () => {
     await expect(gatePaidApiRequest(request, 'flights')).resolves.toBe('ok');
     expect(mockCheckApiRateLimit).toHaveBeenCalledWith('flights', 'user-1');
+  });
+});
+
+describe('guest paid companion gate', () => {
+  const request = new Request('https://api.example.test/agents', {
+    headers: { 'x-forwarded-for': '203.0.113.9' },
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockAuthenticateApiRequest.mockResolvedValue({ status: 'unauthenticated' });
+    mockIsApiRequestBlocked.mockReturnValue(true);
+    mockApiRateLimitSubject.mockReturnValue('anon:203.0.113.9');
+    mockCheckApiRateLimit.mockReturnValue('ok');
+  });
+
+  it('allows unauthenticated callers and rate-limits them by anon subject', async () => {
+    await expect(gateGuestPaidApiRequest(request, 'agents')).resolves.toBe('ok');
+    expect(mockIsApiRequestBlocked).not.toHaveBeenCalled();
+    expect(mockApiRateLimitSubject).toHaveBeenCalledWith(
+      request,
+      { status: 'unauthenticated' },
+    );
+    expect(mockCheckApiRateLimit).toHaveBeenCalledWith('agents', 'anon:203.0.113.9');
+  });
+
+  it('reports rate limiting for the anon subject', async () => {
+    mockCheckApiRateLimit.mockReturnValue('limited');
+
+    await expect(gateGuestPaidApiRequest(request, 'journal')).resolves.toBe('rate_limited');
+    expect(mockCheckApiRateLimit).toHaveBeenCalledWith('journal', 'anon:203.0.113.9');
+  });
+
+  it('still authenticates signed-in callers and rate-limits by user id', async () => {
+    mockAuthenticateApiRequest.mockResolvedValue({ status: 'ok', userId: 'user-1' });
+    mockIsApiRequestBlocked.mockReturnValue(false);
+    mockApiRateLimitSubject.mockReturnValue('user-1');
+
+    await expect(gateGuestPaidApiRequest(request, 'agents')).resolves.toBe('ok');
+    expect(mockCheckApiRateLimit).toHaveBeenCalledWith('agents', 'user-1');
+  });
+
+  it('does not fail-open without a rate-limit check', async () => {
+    mockCheckApiRateLimit.mockReturnValue('limited');
+
+    await expect(gateGuestPaidApiRequest(request, 'agents')).resolves.toBe('rate_limited');
+    expect(mockCheckApiRateLimit).toHaveBeenCalled();
   });
 });

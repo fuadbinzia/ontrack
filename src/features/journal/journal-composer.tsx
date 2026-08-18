@@ -19,6 +19,7 @@ import {
 import { motion, radii } from '@/design-system';
 import { useAutoGrowingNote } from '@/features/travel/use-auto-growing-note';
 import { useResponsive } from '@/hooks/use-responsive';
+import { useHeldOverlay } from '@/hooks/use-held-overlay';
 import { useTheme } from '@/hooks/use-theme';
 import { requestJournalTranscribe } from '@/services/journal/transcribe-client';
 import { useJournal } from '@/store/journal';
@@ -223,20 +224,6 @@ export function JournalAddMenu({ session }: { session: JournalComposerSession })
       )}
     />
   );
-}
-
-/** Keep the capture overlay mounted through its fade-out so it never pops. */
-function useHeldOverlay(active: boolean): boolean {
-  const [held, setHeld] = useState(active);
-  useEffect(() => {
-    if (active) {
-      setHeld(true);
-      return undefined;
-    }
-    const timer = setTimeout(() => setHeld(false), motion.fade);
-    return () => clearTimeout(timer);
-  }, [active]);
-  return held || active;
 }
 
 export function JournalComposer({

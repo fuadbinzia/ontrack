@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-17T06:56:22Z",
-  "idCount": 982,
+  "generatedAt": "2026-08-18T01:11:01Z",
+  "idCount": 1004,
   "byId": {
     "ontrack.activityForm.analyzePhoto": {
       "feature": "activityForm",
@@ -25,6 +25,7 @@
         "src/app/(tabs)/profile/calendar-sync.tsx",
         "src/app/activity-form-sections.tsx",
         "src/app/activity-form.tsx",
+        "src/features/search/companion-redact.ts",
         "src/features/workouts/workout-day-planner-model.ts",
         "src/services/calendar/calendar-invitations.ts",
         "src/services/calendar/google-mapping.ts",
@@ -547,6 +548,22 @@
         "apiUsage.sync"
       ]
     },
+    "ontrack.auth.ageConfirm": {
+      "feature": "auth",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/features/auth/auth-screen.tsx",
+        "src/features/travel/confirmation-attachments.ts",
+        "src/features/travel/confirmation-document-cue.tsx",
+        "src/features/travel/confirmation-import-banner.tsx",
+        "docs/compliance/REGIONAL_REQUIREMENTS.md"
+      ],
+      "keyPaths": [
+        "ageConfirm",
+        "auth.ageConfirm"
+      ]
+    },
     "ontrack.auth.apple": {
       "feature": "auth",
       "entry": null,
@@ -697,13 +714,13 @@
         "src/app/activity-form-sections.tsx",
         "src/app/activity-form.tsx",
         "src/app/auth/data-choice.tsx",
+        "src/app/delete-account.tsx",
         "src/app/welcome.tsx",
         "src/features/account/developer-hub.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/profile-avatar-model.ts",
         "src/features/account/self-display-name.ts",
-        "src/features/account/terms-of-use-content.ts",
-        "src/features/auth/auth-canvas-extent.ts"
+        "src/features/account/terms-of-use-content.ts"
       ],
       "keyPaths": [
         "auth.guest",
@@ -767,7 +784,7 @@
         "src/features/auth/auth-screen.tsx",
         "src/features/auth/welcome-onboard-screen.tsx",
         "src/features/finance/finance-credit-sheet.tsx",
-        "src/features/travel/expenses/fx-rates.ts"
+        "src/features/search/companion-runtime.ts"
       ],
       "keyPaths": [
         "auth.section.providers",
@@ -878,6 +895,7 @@
       "entry": null,
       "skill": null,
       "files": [
+        "src/app/(tabs)/profile/download-data.tsx",
         "src/app/(tabs)/profile/index.tsx",
         "src/app/p/straiaway.tsx",
         "src/design-system/icons.ts",
@@ -885,15 +903,28 @@
         "src/features/account/backup-screen-panels.tsx",
         "src/features/account/backup-screen.tsx",
         "src/features/account/backup-share.ts",
+        "src/features/account/download-data-screen.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/terms-of-use-content.ts",
-        "src/features/finance/ezpass-locations.ts",
-        "src/features/finance/ezpass-official-site.ts",
-        "src/features/finance/finance-ezpass-import-source-cards.tsx"
+        "src/features/finance/ezpass-locations.ts"
       ],
       "keyPaths": [
         "backup.download",
         "download"
+      ]
+    },
+    "ontrack.backup.includeSensitive": {
+      "feature": "backup",
+      "entry": null,
+      "skill": null,
+      "files": [
+        "src/features/account/backup-archive.ts",
+        "src/features/account/backup-screen.tsx",
+        "src/features/account/data-export.ts"
+      ],
+      "keyPaths": [
+        "backup.includeSensitive",
+        "includeSensitive"
       ]
     },
     "ontrack.backup.restoreDrive": {
@@ -1220,6 +1251,7 @@
         "src/app/share-import.tsx",
         "src/features/daily-tracking/day-view.tsx",
         "src/features/food/plan-shopping.tsx",
+        "src/features/search/companion-tools.ts",
         "src/features/todos/todo-lists-overview-header.tsx",
         "src/features/todos/todo-lists-overview.tsx",
         "src/features/todos/voice-lists.ts",
@@ -1279,13 +1311,13 @@
         "src/app/activity-form.tsx",
         "src/features/daily-tracking/day-view.tsx",
         "src/features/food/grocery-item-editor-sheet.tsx",
+        "src/features/search/companion-tools.ts",
         "src/features/todos/checklist-task-creation.ts",
         "src/features/todos/grocery-list-screen.tsx",
         "src/features/todos/todo-list-header.tsx",
         "src/features/todos/todo-list-screen.tsx",
         "src/features/todos/voice-lists.ts",
-        "src/store/todos-task-actions.ts",
-        "src/store/todos.ts"
+        "src/store/todos-task-actions.ts"
       ],
       "keyPaths": [
         "addTask",
@@ -1750,7 +1782,8 @@
         "src/store/schedule-types.ts",
         "src/store/schedule.ts",
         "src/store/theme-overrides.ts",
-        "src/utils/agent-ui/handle-agent-ui-gates.ts"
+        "src/utils/agent-ui/handle-agent-ui-gates.ts",
+        "docs/compliance/DATA_RETENTION_POLICY.md"
       ],
       "keyPaths": [
         "designSystem.resetAll",
@@ -1993,14 +2026,14 @@
         "src/app/(tabs)/food/recipes/index.tsx",
         "src/app/(tabs)/profile/index.tsx",
         "src/app/_layout.tsx",
+        "src/components/navigation/bottom-nav-bar.tsx",
+        "src/components/navigation/bottom-nav-dock.tsx",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/navigation/scroll-edge-effects.tsx",
         "src/components/primitives/app-prompt.tsx",
         "src/components/primitives/app-safe-area.tsx",
         "src/components/primitives/date-field.tsx",
-        "src/components/primitives/dropdown-layout.ts",
-        "src/components/primitives/dropdown.tsx",
-        "src/components/primitives/food-image.tsx",
-        "src/components/primitives/safe-area-chrome-stack.ts"
+        "src/components/primitives/dropdown-layout.ts"
       ],
       "keyPaths": [
         "developer.overlay",
@@ -2204,8 +2237,8 @@
         "src/features/account/developer-hub.tsx",
         "src/features/daily-tracking/day-header.tsx",
         "src/features/overview/overview-summary-row.tsx",
-        "src/features/social/social-hub-screen.tsx",
-        "src/features/trackers/trackers-screen.tsx"
+        "src/features/search/companion-navigate.ts",
+        "src/features/search/companion-tools.ts"
       ],
       "keyPaths": [
         "developer.section.navigate",
@@ -2286,6 +2319,7 @@
       "files": [
         "src/app/(tabs)/food/tracker.tsx",
         "src/app/(tabs)/profile/index.tsx",
+        "src/app/delete-account.tsx",
         "src/components/primitives/meta-list.tsx",
         "src/features/account/developer-hub.tsx",
         "src/features/account/developer-storage.ts",
@@ -2294,8 +2328,7 @@
         "src/features/account/profile-avatar-model.ts",
         "src/features/agents/agent-manager.tsx",
         "src/features/finance/finance-subscription-form-sheet.tsx",
-        "src/features/travel/chat.ts",
-        "src/features/travel/confirmation-attachments.ts"
+        "src/features/travel/chat.ts"
       ],
       "keyPaths": [
         "developer.storage",
@@ -5543,12 +5576,12 @@
         "src/features/account/privacy-policy-content.ts",
         "src/features/journal/journal-composer.tsx",
         "src/features/journal/use-journal-recorder.ts",
+        "src/features/search/use-voice-session.ts",
         "src/features/todos/grocery-list-header.tsx",
         "src/features/travel/translator/use-travel-translator.ts",
         "src/features/travel/use-travel-currency-sheet-state.ts",
         "src/features/vision-board/vision-board-category-screen.tsx",
-        "src/store/dev-mode.ts",
-        "docs/agent-routes.md"
+        "src/store/dev-mode.ts"
       ],
       "keyPaths": [
         "capture",
@@ -5586,6 +5619,7 @@
         "src/app/(tabs)/food/scan.tsx",
         "src/components/primitives/collapsible-body.tsx",
         "src/design-system/presence.ts",
+        "src/features/search/companion-tools.ts",
         "src/features/travel/address-autofind-field.tsx",
         "src/features/travel/travel-chat-access-gate.tsx",
         "src/features/travel/travel-chat-roster.ts",
@@ -6161,6 +6195,29 @@
         "suggestPlaybook"
       ]
     },
+    "ontrack.health.privacy": {
+      "feature": "health",
+      "entry": "src/app/(tabs)/health/index.tsx",
+      "skill": ".cursor/skills/health/SKILL.md",
+      "files": [
+        "src/app/(tabs)/food/preferences.tsx",
+        "src/app/(tabs)/profile/index.tsx",
+        "src/app/_layout.tsx",
+        "src/app/privacy.tsx",
+        "src/app/travel-confirmations/parse+api.ts",
+        "src/constants/legal.ts",
+        "src/features/account/backup-sanitize.ts",
+        "src/features/account/blocked-users-screen.tsx",
+        "src/features/account/legal-consent.ts",
+        "src/features/account/privacy-policy-content.ts",
+        "src/features/account/profile-about-section.tsx",
+        "src/features/account/terms-of-use-content.ts"
+      ],
+      "keyPaths": [
+        "health.privacy",
+        "privacy"
+      ]
+    },
     "ontrack.health.settings": {
       "feature": "health",
       "entry": "src/app/(tabs)/health/index.tsx",
@@ -6266,6 +6323,8 @@
         "src/features/journal/journal-dictate-status.ts",
         "src/features/journal/journal-landing-empty.tsx",
         "src/features/journal/use-journal-recorder.ts",
+        "src/features/search/use-voice-session.ts",
+        "src/services/http/api-gate.ts",
         "src/services/http/api-usage-catalog.ts",
         "src/services/journal/transcribe-client.ts",
         "src/services/journal/transcribe-server.ts"
@@ -6347,7 +6406,8 @@
       "entry": null,
       "skill": null,
       "files": [
-        "src/features/journal/journal-composer.tsx"
+        "src/features/journal/journal-composer.tsx",
+        "src/features/search/use-voice-session.ts"
       ],
       "keyPaths": [
         "journal.composer.transcribing",
@@ -6376,6 +6436,8 @@
         "src/features/journal/journal-recording-wave.tsx",
         "src/features/journal/use-journal-recorder.ts",
         "src/features/journal/voice-wave.ts",
+        "src/features/search/dock-search-overlay.tsx",
+        "src/features/search/voice-endpoint.ts",
         "src/features/travel/travel-sky-day-fx.tsx",
         "src/utils/optional-expo-audio.ts"
       ],
@@ -6477,9 +6539,9 @@
         "src/constants/legal.ts",
         "src/features/account/backup-archive.ts",
         "src/features/account/backup-sanitize.ts",
+        "src/features/account/backup-screen.tsx",
         "src/features/account/dev-mode-controller.ts",
-        "src/features/account/privacy-policy-content.ts",
-        "src/features/auth/auth-provider-effects.ts"
+        "src/features/account/privacy-policy-content.ts"
       ],
       "keyPaths": [
         "earlier",
@@ -6550,6 +6612,7 @@
       "entry": null,
       "skill": null,
       "files": [
+        "src/agents/registry.ts",
         "src/app/(tabs)/(today)/_layout.tsx",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/_layout.tsx",
@@ -6560,8 +6623,7 @@
         "src/app/(tabs)/finance/entities.tsx",
         "src/app/(tabs)/finance/expense.tsx",
         "src/app/(tabs)/finance/ezpass-import.tsx",
-        "src/app/(tabs)/finance/ezpass.tsx",
-        "src/app/(tabs)/finance/index.tsx"
+        "src/app/(tabs)/finance/ezpass.tsx"
       ],
       "keyPaths": [
         "journal.screen",
@@ -6618,7 +6680,7 @@
         "src/features/daily-tracking/day-view.tsx",
         "src/features/journal/journal-page-screen.tsx",
         "src/features/journal/model.ts",
-        "src/features/travel/destination-cover-fetch.ts"
+        "src/features/search/companion-tools.ts"
       ],
       "keyPaths": [
         "journal.undo",
@@ -6631,6 +6693,7 @@
       "skill": null,
       "files": [
         "src/app/api/finance/teller/connect+api.ts",
+        "src/app/delete-account.tsx",
         "src/app/privacy.tsx",
         "src/app/terms.tsx",
         "src/design-system/icons.ts",
@@ -6640,8 +6703,7 @@
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/profile-avatar-media.ts",
         "src/features/account/terms-of-use-content.ts",
-        "src/features/calendar-import/incoming-share.ts",
-        "src/features/finance/create.ts"
+        "src/features/calendar-import/incoming-share.ts"
       ],
       "keyPaths": [
         "document",
@@ -6934,6 +6996,7 @@
       "files": [
         "src/app/(tabs)/insights.tsx",
         "src/app/+native-intent.ts",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/primitives/sheet-dismiss.ts",
         "src/components/shared/activity-card.tsx",
         "src/constants/seed.ts",
@@ -6942,8 +7005,7 @@
         "src/features/account/profile-avatar.tsx",
         "src/features/account/profile-location-persist.ts",
         "src/features/account/profile-location-preferences.tsx",
-        "src/features/auth/auth-constellation.tsx",
-        "src/features/auth/auth-provider-effects.ts"
+        "src/features/auth/auth-constellation.tsx"
       ],
       "keyPaths": [
         "onboarding.skip",
@@ -7186,6 +7248,7 @@
       "entry": null,
       "skill": null,
       "files": [
+        "src/agents/registry.ts",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
         "src/app/(tabs)/_layout.tsx",
@@ -7195,9 +7258,8 @@
         "src/app/activity-form-copy.ts",
         "src/app/api/crash-report+api.ts",
         "src/app/api/events/ufc-live+api.ts",
-        "src/app/onboarding.tsx",
-        "src/components/navigation/swipe-back-scene.tsx",
-        "src/components/navigation/swipe-back.ts"
+        "src/app/delete-account.tsx",
+        "src/app/onboarding.tsx"
       ],
       "keyPaths": [
         "live",
@@ -7473,11 +7535,11 @@
       "entry": "src/features/account/",
       "skill": null,
       "files": [
-        "src/agents/registry.ts",
         "src/app/(tabs)/profile/agents.tsx",
         "src/app/(tabs)/profile/index.tsx",
         "src/app/_layout.tsx",
         "src/app/agents.tsx",
+        "src/app/api/agents/run+api.ts",
         "src/design-system/icons.ts",
         "src/features/account/developer-storage.ts",
         "src/features/agents/agent-manager.tsx",
@@ -7713,6 +7775,19 @@
         "profile.biometricUnlock"
       ]
     },
+    "ontrack.profile.blockedUsers": {
+      "feature": "profile",
+      "entry": "src/features/account/",
+      "skill": null,
+      "files": [
+        "src/app/(tabs)/profile/index.tsx",
+        "src/features/account/blocked-users-screen.tsx"
+      ],
+      "keyPaths": [
+        "blockedUsers",
+        "profile.blockedUsers"
+      ]
+    },
     "ontrack.profile.blurb": {
       "feature": "profile",
       "entry": "src/features/account/",
@@ -7834,16 +7909,42 @@
         "src/app/(tabs)/profile/index.tsx",
         "src/app/(tabs)/vehicles/[id]/settings.tsx",
         "src/app/f/[code].tsx",
+        "src/features/account/blocked-users-screen.tsx",
         "src/features/account/profile-avatar-editor-sheet.tsx",
         "src/features/account/profile-avatar.tsx",
         "src/features/account/profile-identity-editor-sheet.tsx",
         "src/features/account/profile-identity-hero.tsx",
-        "src/features/finance/ezpass-collaboration-model.ts",
-        "src/features/finance/ezpass-model.ts"
+        "src/features/finance/ezpass-collaboration-model.ts"
       ],
       "keyPaths": [
         "displayName",
         "profile.displayName"
+      ]
+    },
+    "ontrack.profile.downloadData": {
+      "feature": "profile",
+      "entry": "src/features/account/",
+      "skill": null,
+      "files": [
+        "src/app/(tabs)/profile/index.tsx",
+        "src/features/account/download-data-screen.tsx",
+        "src/utils/agent-ui/flows-addons.ts"
+      ],
+      "keyPaths": [
+        "downloadData",
+        "profile.downloadData"
+      ]
+    },
+    "ontrack.profile.downloadData.share": {
+      "feature": "profile",
+      "entry": "src/features/account/",
+      "skill": null,
+      "files": [
+        "src/features/account/download-data-screen.tsx"
+      ],
+      "keyPaths": [
+        "downloadDataShare",
+        "profile.downloadDataShare"
       ]
     },
     "ontrack.profile.guestStatus": {
@@ -7957,6 +8058,15 @@
         "profile.privacy"
       ]
     },
+    "ontrack.profile.privacyData": {
+      "feature": "profile",
+      "entry": "src/features/account/",
+      "skill": null,
+      "files": [],
+      "keyPaths": [
+        "profile.privacyData"
+      ]
+    },
     "ontrack.profile.resetData": {
       "feature": "profile",
       "entry": "src/features/account/",
@@ -7985,7 +8095,7 @@
         "src/features/performance/performance-metrics.ts",
         "src/features/social/social-friends-modal.tsx",
         "src/features/todos/todo-empty-state.tsx",
-        "src/features/travel/travel-chat-alerts.tsx"
+        "src/features/travel/map/travel-map-country-zoom.ts"
       ],
       "keyPaths": [
         "about",
@@ -8005,10 +8115,10 @@
         "src/app/(tabs)/profile/api-usage.tsx",
         "src/app/(tabs)/profile/appearance.tsx",
         "src/app/(tabs)/profile/backup.tsx",
+        "src/app/(tabs)/profile/blocked.tsx",
         "src/app/(tabs)/profile/calendar-sync.tsx",
         "src/app/(tabs)/profile/design-system.tsx",
-        "src/app/(tabs)/profile/developer.tsx",
-        "src/app/(tabs)/profile/index.tsx"
+        "src/app/(tabs)/profile/developer.tsx"
       ],
       "keyPaths": [
         "account",
@@ -8069,6 +8179,7 @@
       "files": [
         "src/app/(tabs)/profile/appearance.tsx",
         "src/app/(tabs)/profile/index.tsx",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/primitives/button.tsx",
         "src/components/primitives/date-field-calendar.tsx",
         "src/components/primitives/date-field.tsx",
@@ -8077,8 +8188,7 @@
         "src/design-system/glass.ts",
         "src/design-system/theme-presets.ts",
         "src/design-system/themes.ts",
-        "src/features/account/privacy-policy-content.ts",
-        "src/features/auth/auth-palette.ts"
+        "src/features/account/privacy-policy-content.ts"
       ],
       "keyPaths": [
         "appearance",
@@ -8122,6 +8232,7 @@
       "entry": "src/features/account/",
       "skill": null,
       "files": [
+        "src/agents/registry.ts",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
         "src/app/(tabs)/(today)/detail/gym/[id].tsx",
@@ -8132,8 +8243,7 @@
         "src/app/(tabs)/(today)/index.tsx",
         "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/calendar.tsx",
-        "src/app/(tabs)/finance/accounts.tsx",
-        "src/app/(tabs)/finance/bills.tsx"
+        "src/app/(tabs)/finance/accounts.tsx"
       ],
       "keyPaths": [
         "features",
@@ -8146,17 +8256,17 @@
       "skill": null,
       "files": [
         "src/app/(tabs)/food/nutrition-profile.tsx",
+        "src/app/(tabs)/profile/index.tsx",
         "src/app/_layout.tsx",
+        "src/app/delete-account.tsx",
         "src/app/privacy.tsx",
         "src/app/terms.tsx",
         "src/constants/legal.ts",
         "src/features/account/backup-sanitize.ts",
+        "src/features/account/legal-consent.ts",
         "src/features/account/legal-document-screen.tsx",
         "src/features/account/privacy-policy-content.ts",
-        "src/features/account/profile-about-section.tsx",
-        "src/features/account/terms-of-use-content.ts",
-        "src/features/auth/auth-screen.tsx",
-        "src/features/finance/categories.ts"
+        "src/features/account/profile-about-section.tsx"
       ],
       "keyPaths": [
         "legal",
@@ -8173,6 +8283,19 @@
       ],
       "keyPaths": [
         "profile.section.preferences"
+      ]
+    },
+    "ontrack.profile.section.privacyData": {
+      "feature": "profile",
+      "entry": "src/features/account/",
+      "skill": null,
+      "files": [
+        "src/app/(tabs)/profile/index.tsx",
+        "src/features/account/blocked-users-screen.tsx",
+        "src/utils/agent-ui/flows-addons.ts"
+      ],
+      "keyPaths": [
+        "profile.section.privacyData"
       ]
     },
     "ontrack.profile.showHolidays": {
@@ -8229,6 +8352,29 @@
       "keyPaths": [
         "profile.straiaway",
         "straiaway"
+      ]
+    },
+    "ontrack.profile.support": {
+      "feature": "profile",
+      "entry": "src/features/account/",
+      "skill": null,
+      "files": [
+        "src/agents/registry.ts",
+        "src/app/(tabs)/profile/appearance.tsx",
+        "src/app/(tabs)/profile/index.tsx",
+        "src/app/activity-form.tsx",
+        "src/app/api/destination-cover-image+api.ts",
+        "src/app/api/finance/ezpass/parse+api.ts",
+        "src/app/api/finance/rewards/import-link+api.ts",
+        "src/components/primitives/app-prompt.tsx",
+        "src/components/primitives/dropdown.tsx",
+        "src/components/primitives/form-section.tsx",
+        "src/components/primitives/input.tsx",
+        "src/components/primitives/sheet-scaffold.tsx"
+      ],
+      "keyPaths": [
+        "profile.support",
+        "support"
       ]
     },
     "ontrack.profile.terms": {
@@ -8289,6 +8435,7 @@
       "entry": "src/features/account/",
       "skill": null,
       "files": [
+        "src/agents/registry.ts",
         "src/agents/types.ts",
         "src/app/(tabs)/food/nutrition-profile.tsx",
         "src/app/(tabs)/insights.tsx",
@@ -8299,8 +8446,7 @@
         "src/features/account/backup-archive.ts",
         "src/features/account/dev-mode-controller.ts",
         "src/features/account/developer-release-notes-panel.tsx",
-        "src/features/account/privacy-policy-content.ts",
-        "src/features/account/profile-about-section.tsx"
+        "src/features/account/privacy-policy-content.ts"
       ],
       "keyPaths": [
         "profile.version",
@@ -8520,14 +8666,14 @@
         "src/app/(tabs)/calendar.tsx",
         "src/app/(tabs)/vehicles/new.tsx",
         "src/app/(tabs)/workouts.tsx",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/navigation/scroll-edge-effects.tsx",
         "src/components/primitives/action-chip.tsx",
         "src/components/primitives/app-prompt.tsx",
         "src/components/primitives/button.tsx",
         "src/components/primitives/card.tsx",
         "src/components/primitives/danger-zone.tsx",
-        "src/components/primitives/date-field.tsx",
-        "src/components/primitives/dropdown.tsx"
+        "src/components/primitives/date-field.tsx"
       ],
       "keyPaths": [
         "plate",
@@ -8630,12 +8776,12 @@
         "src/app/v/[code].tsx",
         "src/components/primitives/settings-group.tsx",
         "src/design-system/icons.ts",
+        "src/features/account/legal-consent.ts",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/events/event-discovery-editor.tsx",
         "src/features/finance/finance-ezpass-import-source-cards.tsx",
-        "src/features/health/playbook-editor-screen.tsx",
-        "src/features/journal/journal-composer.tsx"
+        "src/features/health/playbook-editor-screen.tsx"
       ],
       "keyPaths": [
         "accept",
@@ -8824,17 +8970,17 @@
       "skill": null,
       "files": [
         "src/agents/types.ts",
+        "src/app/(tabs)/profile/index.tsx",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/terms-of-use-content.ts",
+        "src/features/search/companion-runtime.ts",
+        "src/features/search/companion-tools.ts",
         "src/features/social/social-hub-screen.tsx",
         "src/features/social/social-hub-sections.tsx",
         "src/features/travel/chat.ts",
         "src/features/travel/travel-chat-alerts.tsx",
         "src/features/travel/travel-chat-screen.tsx",
-        "src/features/travel/use-travel-chat-actions.ts",
-        "src/features/travel/use-travel-chat-session.ts",
-        "src/services/ai/vision-transport.ts",
-        "src/services/travel/travel-collaboration-shared.ts"
+        "src/features/travel/use-travel-chat-actions.ts"
       ],
       "keyPaths": [
         "messages",
@@ -9070,11 +9216,11 @@
         "src/features/design-system/design-system-catalog-data.ts",
         "src/features/design-system/design-system-catalog-types.ts",
         "src/features/overview/overview-affinity.ts",
+        "src/features/search/companion-tools.ts",
         "src/features/todos/checklist-category-tabs.tsx",
         "src/features/todos/checklist-task-details-sheet.tsx",
         "src/features/todos/grocery-list-header.tsx",
-        "src/features/todos/share.ts",
-        "src/features/todos/todo-collaborator-join-screen.tsx"
+        "src/features/todos/share.ts"
       ],
       "keyPaths": [
         "checklists",
@@ -9091,13 +9237,13 @@
         "src/components/navigation/bottom-nav-bar.tsx",
         "src/components/navigation/bottom-nav-dock.tsx",
         "src/components/navigation/bottom-nav-inset.ts",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/navigation/tab-lane-preload.ts",
         "src/components/primitives/dropdown.tsx",
         "src/components/primitives/safe-area-chrome.tsx",
         "src/components/primitives/screen.tsx",
         "src/components/primitives/sheet-dismiss.ts",
-        "src/components/primitives/sheet-scaffold.tsx",
-        "src/features/auth/auth-screen.tsx"
+        "src/components/primitives/sheet-scaffold.tsx"
       ],
       "keyPaths": [
         "dock",
@@ -9217,11 +9363,11 @@
         "src/app/(tabs)/journal/index.tsx",
         "src/app/activity-form-copy.ts",
         "src/app/journal/transcribe+api.ts",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/navigation/bottom-nav-tab-meta.ts",
         "src/components/navigation/tab-pins.ts",
         "src/components/navigation/tab-recency.ts",
-        "src/design-system/icons.ts",
-        "src/features/account/backup-archive.ts"
+        "src/design-system/icons.ts"
       ],
       "keyPaths": [
         "journal",
@@ -9318,6 +9464,132 @@
       "keyPaths": [
         "profile",
         "tabs.profile"
+      ]
+    },
+    "ontrack.tabs.search": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/components/navigation/bottom-nav-search.tsx",
+        "src/features/search/dock-search-overlay.tsx",
+        "src/utils/agent-ui/flows-daily.ts"
+      ],
+      "keyPaths": [
+        "tabs.search"
+      ]
+    },
+    "ontrack.tabs.search.clear": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/components/navigation/bottom-nav-search.tsx",
+        "src/features/search/dock-search-overlay.tsx"
+      ],
+      "keyPaths": [
+        "tabs.searchClear"
+      ]
+    },
+    "ontrack.tabs.search.clearConversation": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/features/search/dock-search-overlay.tsx"
+      ],
+      "keyPaths": [
+        "searchClearConversation",
+        "tabs.searchClearConversation"
+      ]
+    },
+    "ontrack.tabs.search.close": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/components/navigation/bottom-nav-search.tsx"
+      ],
+      "keyPaths": [
+        "searchClose",
+        "tabs.searchClose"
+      ]
+    },
+    "ontrack.tabs.search.field": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/components/navigation/bottom-nav-bar.tsx",
+        "src/components/navigation/bottom-nav-search.tsx",
+        "src/features/travel/travel-home-section-header.tsx",
+        "src/features/travel/travel-home-tokens.ts",
+        "src/utils/agent-ui/flows-daily.ts"
+      ],
+      "keyPaths": [
+        "searchField",
+        "tabs.searchField"
+      ]
+    },
+    "ontrack.tabs.search.mic": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/components/navigation/bottom-nav-search.tsx"
+      ],
+      "keyPaths": [
+        "searchMic",
+        "tabs.searchMic"
+      ]
+    },
+    "ontrack.tabs.search.results": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/app/(tabs)/plants/new.tsx",
+        "src/features/search/dock-search-overlay.tsx"
+      ],
+      "keyPaths": [
+        "searchResults",
+        "tabs.searchResults"
+      ]
+    },
+    "ontrack.tabs.search.send": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/components/navigation/bottom-nav-search.tsx"
+      ],
+      "keyPaths": [
+        "searchSend",
+        "tabs.searchSend"
+      ]
+    },
+    "ontrack.tabs.search.stop": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/components/navigation/bottom-nav-search.tsx"
+      ],
+      "keyPaths": [
+        "searchStop",
+        "tabs.searchStop"
+      ]
+    },
+    "ontrack.tabs.search.transcript": {
+      "feature": "tabs",
+      "entry": "src/app/(tabs)/_layout.tsx",
+      "skill": null,
+      "files": [
+        "src/features/search/dock-search-overlay.tsx"
+      ],
+      "keyPaths": [
+        "searchTranscript",
+        "tabs.searchTranscript"
       ]
     },
     "ontrack.tabs.social": {
@@ -9464,6 +9736,7 @@
       "skill": null,
       "files": [
         "src/features/daily-tracking/day-view.tsx",
+        "src/features/search/companion-tools.ts",
         "src/store/schedule-types.ts",
         "src/store/schedule.ts",
         "src/utils/agent-ui/flows-daily.ts",
@@ -9557,9 +9830,9 @@
         "src/app/(tabs)/(today)/detail/work/[id].tsx",
         "src/app/(tabs)/profile/appearance.tsx",
         "src/app/activity-form.tsx",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/navigation/tab-recency.ts",
-        "src/components/primitives/app-prompt.tsx",
-        "src/components/primitives/collapsible-body.tsx"
+        "src/components/primitives/app-prompt.tsx"
       ],
       "keyPaths": [
         "close",
@@ -9942,6 +10215,18 @@
         "travel.chat.menu"
       ]
     },
+    "ontrack.travel.chat.menuBlock": {
+      "feature": "travel",
+      "entry": "src/app/(tabs)/travel.tsx",
+      "skill": ".cursor/skills/travel/SKILL.md",
+      "files": [
+        "src/features/travel/travel-chat-message-menu.tsx"
+      ],
+      "keyPaths": [
+        "menuBlock",
+        "travel.chat.menuBlock"
+      ]
+    },
     "ontrack.travel.chat.menuCopy": {
       "feature": "travel",
       "entry": "src/app/(tabs)/travel.tsx",
@@ -9990,6 +10275,18 @@
         "travel.chat.menuReply"
       ]
     },
+    "ontrack.travel.chat.menuReport": {
+      "feature": "travel",
+      "entry": "src/app/(tabs)/travel.tsx",
+      "skill": ".cursor/skills/travel/SKILL.md",
+      "files": [
+        "src/features/travel/travel-chat-message-menu.tsx"
+      ],
+      "keyPaths": [
+        "menuReport",
+        "travel.chat.menuReport"
+      ]
+    },
     "ontrack.travel.chat.messageActions": {
       "feature": "travel",
       "entry": "src/app/(tabs)/travel.tsx",
@@ -10024,13 +10321,13 @@
         "src/app/(tabs)/vehicles/[id]/settings.tsx",
         "src/app/activity-form-sections.tsx",
         "src/app/api/partner/straiaway/stays+api.ts",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/primitives/route-error-boundary.tsx",
         "src/design-system/icons.ts",
         "src/features/account/privacy-policy-content.ts",
         "src/features/account/terms-of-use-content.ts",
         "src/features/food/community-sheets.tsx",
-        "src/features/food/recipe-detail-sheets.tsx",
-        "src/features/journal/journal-composer.tsx"
+        "src/features/food/recipe-detail-sheets.tsx"
       ],
       "keyPaths": [
         "send",
@@ -10055,6 +10352,21 @@
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [],
       "keyPaths": []
+    },
+    "ontrack.travel.chat.showPreviews": {
+      "feature": "travel",
+      "entry": "src/app/(tabs)/travel.tsx",
+      "skill": ".cursor/skills/travel/SKILL.md",
+      "files": [
+        "src/features/travel/chat.ts",
+        "src/features/travel/travel-chat-alerts.tsx",
+        "src/features/travel/travel-chat-screen.tsx",
+        "src/features/travel/use-travel-chat-actions.ts"
+      ],
+      "keyPaths": [
+        "showPreviews",
+        "travel.chat.showPreviews"
+      ]
     },
     "ontrack.travel.chrome.flightPath": {
       "feature": "travel",
@@ -10223,7 +10535,6 @@
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
         "src/addons/registry.ts",
-        "src/agents/registry.ts",
         "src/app/(tabs)/(today)/detail/food/[id].tsx",
         "src/app/(tabs)/(today)/detail/movie/[id].tsx",
         "src/app/(tabs)/(today)/detail/plant/[id].tsx",
@@ -10233,7 +10544,8 @@
         "src/app/(tabs)/plants/index.tsx",
         "src/app/(tabs)/plants/new.tsx",
         "src/app/(tabs)/travel/_layout.tsx",
-        "src/app/_layout.tsx"
+        "src/app/_layout.tsx",
+        "src/app/activity-form-assistant.tsx"
       ],
       "keyPaths": [
         "cover",
@@ -10310,12 +10622,12 @@
         "src/features/events/event-discovery-editor.tsx",
         "src/features/overview/overview-model.ts",
         "src/features/overview/overview-summary.ts",
+        "src/features/search/companion-tools.ts",
         "src/features/social/social-feed-model.ts",
         "src/features/social/social-trip-membership.ts",
         "src/features/social/social-upcoming-together.tsx",
         "src/features/travel/calendar.ts",
-        "src/features/travel/date-range.ts",
-        "src/features/travel/expenses/expense-form.tsx"
+        "src/features/travel/date-range.ts"
       ],
       "keyPaths": [
         "startDate",
@@ -10398,6 +10710,7 @@
       "entry": "src/app/(tabs)/travel.tsx",
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
+        "src/agents/registry.ts",
         "src/app/(tabs)/_layout.tsx",
         "src/app/(tabs)/food/index.tsx",
         "src/app/(tabs)/food/ingredients/[id].tsx",
@@ -10408,8 +10721,7 @@
         "src/app/(tabs)/plants/index.tsx",
         "src/app/(tabs)/profile/calendar-sync.tsx",
         "src/app/(tabs)/profile/index.tsx",
-        "src/app/(tabs)/profile/straiaway.tsx",
-        "src/app/(tabs)/to-do/[id].tsx"
+        "src/app/(tabs)/profile/straiaway.tsx"
       ],
       "keyPaths": [
         "list",
@@ -11357,6 +11669,8 @@
       "entry": "src/app/(tabs)/travel.tsx",
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
+        "src/components/navigation/bottom-nav-search.tsx",
+        "src/features/search/dock-search-overlay.tsx",
         "src/features/travel/travel-home-section-header.tsx"
       ],
       "keyPaths": [
@@ -11478,9 +11792,9 @@
         "src/features/travel/map/travel-map-preview-card.tsx",
         "src/features/travel/map/travel-map-screen-chrome.tsx",
         "src/features/travel/map/travel-map-screen.tsx",
+        "src/features/travel/map/use-orientation-settle.ts",
         "src/features/travel/map/use-travel-map-unpin.ts",
-        "src/features/travel/travel-chat-chrome.tsx",
-        "src/features/travel/travel-home-atmosphere-queries.ts"
+        "src/features/travel/travel-chat-chrome.tsx"
       ],
       "keyPaths": [
         "landscape",
@@ -11501,9 +11815,9 @@
         "src/features/travel/map/optional-screen-orientation.ts",
         "src/features/travel/map/travel-map-preview-card.tsx",
         "src/features/travel/map/travel-map-screen.tsx",
+        "src/features/travel/map/use-orientation-settle.ts",
         "src/features/travel/map/use-travel-map-unpin.ts",
-        "src/features/travel/travel-home-atmosphere-catalog.ts",
-        "src/hooks/use-responsive.ts"
+        "src/features/travel/travel-home-atmosphere-catalog.ts"
       ],
       "keyPaths": [
         "portrait",
@@ -11574,7 +11888,7 @@
       "entry": "src/app/(tabs)/travel.tsx",
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
-        "src/features/travel/map/travel-map-canvas.tsx"
+        "src/features/travel/map/travel-map-country-view.tsx"
       ],
       "keyPaths": [
         "pinMapTarget",
@@ -11770,6 +12084,7 @@
         "src/features/travel/airline-logo.tsx",
         "src/features/travel/map/globe-projection.ts",
         "src/features/travel/map/travel-map-canvas.tsx",
+        "src/features/travel/map/travel-map-pin-button.tsx",
         "src/features/travel/map/travel-map-screen.tsx",
         "src/features/travel/map/travel-map-world-globe.tsx",
         "src/features/travel/translator/travel-translator-sheet.tsx"
@@ -12370,12 +12685,12 @@
         "src/app/activity-form-sections.tsx",
         "src/app/activity-form.tsx",
         "src/app/share-import.tsx",
+        "src/components/navigation/bottom-nav-bar.tsx",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/primitives/action-chip.tsx",
         "src/components/primitives/app-prompt.tsx",
         "src/components/primitives/app-text.tsx",
-        "src/components/primitives/button.tsx",
-        "src/components/primitives/collapsible-section.tsx",
-        "src/components/primitives/date-field.tsx"
+        "src/components/primitives/button.tsx"
       ],
       "keyPaths": [
         "field",
@@ -12428,8 +12743,8 @@
         "src/app/(tabs)/vehicles/[id]/settings.tsx",
         "src/app/activity-form.tsx",
         "src/app/api/partner/straiaway/callback+api.ts",
-        "src/app/meal-analysis/confirm+api.ts",
-        "src/app/share-event.tsx"
+        "src/app/delete-account.tsx",
+        "src/app/meal-analysis/confirm+api.ts"
       ],
       "keyPaths": [
         "confirm",
@@ -12499,6 +12814,7 @@
         "src/addons/registry.ts",
         "src/app/(tabs)/(today)/detail/generic/[id].tsx",
         "src/app/(tabs)/profile/calendar-sync.tsx",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/components/navigation/bottom-nav-tab-item.tsx",
         "src/components/navigation/swipe-back.ts",
         "src/components/primitives/collapsible-body.tsx",
@@ -12506,8 +12822,7 @@
         "src/components/primitives/index.ts",
         "src/components/primitives/loading-spinner.tsx",
         "src/components/primitives/progress-ring.tsx",
-        "src/features/auth/app-boot-loader.tsx",
-        "src/features/auth/theme-mode-toggle.tsx"
+        "src/features/auth/app-boot-loader.tsx"
       ],
       "keyPaths": [
         "progress",
@@ -12626,13 +12941,13 @@
         "src/app/(tabs)/food/ai-ideas.tsx",
         "src/app/(tabs)/plants/[id]/edit.tsx",
         "src/app/(tabs)/profile/index.tsx",
+        "src/app/api/agents/run+api.ts",
         "src/app/food/ingredient-scan+api.ts",
         "src/app/food/recipe-ideas+api.ts",
         "src/app/health/action-suggestions+api.ts",
         "src/app/journal/transcribe+api.ts",
         "src/app/meal-analysis/confirm+api.ts",
-        "src/app/meal-analysis/link+api.ts",
-        "src/app/meal-analysis/photo+api.ts"
+        "src/app/meal-analysis/link+api.ts"
       ],
       "keyPaths": [
         "input",
@@ -12680,8 +12995,8 @@
         "src/features/food/recipe-detail-sections.tsx",
         "src/features/journal/journal-composer.tsx",
         "src/features/travel/flight-roundtrip-draft.ts",
-        "src/features/travel/translator/travel-translator-sheet.tsx",
-        "src/features/travel/translator/use-travel-translator.ts"
+        "src/features/travel/map/travel-map-canvas.tsx",
+        "src/features/travel/map/travel-map-country-view.tsx"
       ],
       "keyPaths": [
         "swap",
@@ -12719,6 +13034,7 @@
       "files": [
         "src/app/(tabs)/profile/calendar-sync.tsx",
         "src/app/(tabs)/profile/straiaway.tsx",
+        "src/components/navigation/bottom-nav-search.tsx",
         "src/design-system/icons.ts",
         "src/design-system/themes.ts",
         "src/features/account/backup-actions.ts",
@@ -12727,8 +13043,7 @@
         "src/features/account/terms-of-use-content.ts",
         "src/features/auth/auth-palette.ts",
         "src/features/daily-tracking/day-header.tsx",
-        "src/features/food/allergy-editor-sheet.tsx",
-        "src/features/journal/journal-composer.tsx"
+        "src/features/food/allergy-editor-sheet.tsx"
       ],
       "keyPaths": [
         "stop",
@@ -12928,6 +13243,7 @@
       "files": [
         "src/components/primitives/use-sheet-dismiss-pan.ts",
         "src/features/travel/flight-confirmation-parser-dates.ts",
+        "src/features/travel/map/globe-projection.ts",
         "src/features/travel/transport-details-editor.tsx",
         "src/features/travel/transport-details-summary.tsx",
         "src/features/travel/transport-details.ts",
@@ -13020,7 +13336,9 @@
         "src/features/travel/transport-details.ts",
         "src/features/travel/travel-invite-codec.ts",
         "src/features/travel/types.ts",
-        "src/services/nutrition/url-safety.ts"
+        "src/services/nutrition/url-safety.ts",
+        "docs/compliance/DATA_RETENTION_POLICY.md",
+        "docs/compliance/UGC_MODERATION_POLICY.md"
       ],
       "keyPaths": [
         "operator",
@@ -13055,7 +13373,6 @@
       "entry": "src/app/(tabs)/travel.tsx",
       "skill": ".cursor/skills/travel/SKILL.md",
       "files": [
-        "src/agents/registry.ts",
         "src/components/navigation/bottom-nav-inset.ts",
         "src/components/primitives/sheet-scaffold.tsx",
         "src/components/primitives/symbol.tsx",
@@ -13066,7 +13383,8 @@
         "src/features/travel/address-map-link.ts",
         "src/features/travel/transport-details-editor.tsx",
         "src/features/travel/transport-details-summary.tsx",
-        "src/features/travel/transport-details.ts"
+        "src/features/travel/transport-details.ts",
+        "src/features/travel/travel-home-tokens.ts"
       ],
       "keyPaths": [
         "platform",
@@ -13366,8 +13684,8 @@
         "src/components/primitives/segmented-control-layout.ts",
         "src/features/food/fixture-ai-fallbacks.ts",
         "src/features/food/plan-week.tsx",
-        "src/features/todos/checklist-task-details-sheet.tsx",
-        "src/features/todos/todo-list-remove.ts"
+        "src/features/search/search-documents.ts",
+        "src/features/todos/checklist-task-details-sheet.tsx"
       ],
       "keyPaths": [
         "make",
@@ -13479,11 +13797,11 @@
         "src/app/api/vehicles/parts/search+api.ts",
         "src/components/primitives/date-field-calendar.tsx",
         "src/features/account/release-notes-format.ts",
+        "src/features/account/terms-of-use-content.ts",
         "src/features/calendar-import/parser.ts",
         "src/features/calendar/holiday-icon.ts",
         "src/features/calendar/holidays.ts",
-        "src/features/calendar/month-grid.tsx",
-        "src/features/calendar/use-calendar-holidays.ts"
+        "src/features/calendar/month-grid.tsx"
       ],
       "keyPaths": [
         "vehicles.new.year",
@@ -14095,6 +14413,7 @@
       "entry": null,
       "skill": null,
       "ids": [
+        "ontrack.auth.ageConfirm",
         "ontrack.auth.apple",
         "ontrack.auth.dataChoice.cancel",
         "ontrack.auth.dataChoice.discardDevice",
@@ -14123,6 +14442,7 @@
         "ontrack.backup.connectDrive",
         "ontrack.backup.disconnectDrive",
         "ontrack.backup.download",
+        "ontrack.backup.includeSensitive",
         "ontrack.backup.restoreDrive",
         "ontrack.backup.restoreFile",
         "ontrack.backup.saveDrive",
@@ -14597,6 +14917,7 @@
         "ontrack.health.playbook.save",
         "ontrack.health.playbook.steps",
         "ontrack.health.playbook.suggest",
+        "ontrack.health.privacy",
         "ontrack.health.settings",
         "ontrack.health.settings.connect",
         "ontrack.health.settings.openAppleHealth",
@@ -14763,6 +15084,7 @@
         "ontrack.profile.avatar.takePhoto",
         "ontrack.profile.backup",
         "ontrack.profile.biometricUnlock",
+        "ontrack.profile.blockedUsers",
         "ontrack.profile.blurb",
         "ontrack.profile.calendarSync",
         "ontrack.profile.createOrSignIn",
@@ -14772,6 +15094,8 @@
         "ontrack.profile.designSystem",
         "ontrack.profile.developer",
         "ontrack.profile.displayName",
+        "ontrack.profile.downloadData",
+        "ontrack.profile.downloadData.share",
         "ontrack.profile.guestStatus",
         "ontrack.profile.homeLocation",
         "ontrack.profile.identity.close",
@@ -14780,6 +15104,7 @@
         "ontrack.profile.identity.save",
         "ontrack.profile.nutrition",
         "ontrack.profile.privacy",
+        "ontrack.profile.privacyData",
         "ontrack.profile.resetData",
         "ontrack.profile.section.about",
         "ontrack.profile.section.account",
@@ -14793,9 +15118,11 @@
         "ontrack.profile.section.features",
         "ontrack.profile.section.legal",
         "ontrack.profile.section.preferences",
+        "ontrack.profile.section.privacyData",
         "ontrack.profile.showHolidays",
         "ontrack.profile.signOut",
         "ontrack.profile.straiaway",
+        "ontrack.profile.support",
         "ontrack.profile.terms",
         "ontrack.profile.tmdb",
         "ontrack.profile.usageAnalytics",
@@ -14906,6 +15233,16 @@
         "ontrack.tabs.overview",
         "ontrack.tabs.plants",
         "ontrack.tabs.profile",
+        "ontrack.tabs.search",
+        "ontrack.tabs.search.clear",
+        "ontrack.tabs.search.clearConversation",
+        "ontrack.tabs.search.close",
+        "ontrack.tabs.search.field",
+        "ontrack.tabs.search.mic",
+        "ontrack.tabs.search.results",
+        "ontrack.tabs.search.send",
+        "ontrack.tabs.search.stop",
+        "ontrack.tabs.search.transcript",
         "ontrack.tabs.social",
         "ontrack.tabs.today",
         "ontrack.tabs.travel",
@@ -14965,15 +15302,18 @@
         "ontrack.travel.chat.dismissNotifications",
         "ontrack.travel.chat.enableNotifications",
         "ontrack.travel.chat.menu",
+        "ontrack.travel.chat.menuBlock",
         "ontrack.travel.chat.menuCopy",
         "ontrack.travel.chat.menuDelete",
         "ontrack.travel.chat.menuEdit",
         "ontrack.travel.chat.menuReply",
+        "ontrack.travel.chat.menuReport",
         "ontrack.travel.chat.messageActions",
         "ontrack.travel.chat.replyCancel",
         "ontrack.travel.chat.send",
         "ontrack.travel.chat.settingsClose",
         "ontrack.travel.chat.settingsEnableNotifications",
+        "ontrack.travel.chat.showPreviews",
         "ontrack.travel.chrome.flightPath",
         "ontrack.travel.chrome.skyDecor",
         "ontrack.travel.confirmation.close",

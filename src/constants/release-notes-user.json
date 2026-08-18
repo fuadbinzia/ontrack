@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.132",
+    "date": "2026-08-18",
+    "notes": [
+      "Auto ship from task."
+    ]
+  },
+  {
     "version": "1.0.131",
     "date": "2026-08-17",
     "notes": [

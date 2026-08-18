@@ -41,6 +41,14 @@ describe('dock search overlay chrome', () => {
     expect(overlay).not.toContain("variant=\"mist\"");
   });
 
+  it('shows a pull-down grabber for expanded results only', () => {
+    expect(overlay).toContain('SheetGrabber');
+    expect(overlay).toContain('AgentUiIds.tabs.searchClose');
+    expect(overlay).toContain('showResults ?');
+    expect(overlay).toContain('showResults ? (');
+    expect(overlay).toContain('closeResults');
+  });
+
   it('does not collapse search when voice returns to idle', () => {
     expect(overlay).not.toContain('hadVoice');
     expect(overlay).not.toMatch(/voice\.phase === 'idle'[\s\S]{0,80}collapse\(\)/);

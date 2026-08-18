@@ -73,6 +73,7 @@ export function BottomNavSearch({
   const setFieldHeight = useDockSearch((state) => state.setFieldHeight);
   const held = useHeldOverlay(expanded, motion.chrome);
   const well = collapsedWidth ?? Math.max(layout.minTapTarget, s(44));
+  const inputBaseHeight = Math.max(layout.minTapTarget, s(44));
   const expandLayout = DOCK_SEARCH_LAYOUT === 'expand';
   const oneLineHeight = typography.body.lineHeight;
   const [lineCount, setLineCount] = useState(1);
@@ -80,13 +81,14 @@ export function BottomNavSearch({
   const progress = useSharedValue(expanded ? 1 : 0);
   const listenOnExpand = useDockSearch((state) => state.listenOnExpand);
   const [skipFocus, setSkipFocus] = useState(listenOnExpand);
+  const [focusReady, setFocusReady] = useState(false);
   const wellAgent = useAgentUiTarget(AgentUiIds.tabs.search, {
     label: 'Ask AI',
     onPress: () => expand(),
   });
   const visibleLines = Math.min(lineCount, DOCK_SEARCH_INPUT_MAX_LINES);
   const grownHeight = dockSearchFieldHeightForLineCount(
-    well,
+    inputBaseHeight,
     oneLineHeight,
     visibleLines,
   );
@@ -94,8 +96,11 @@ export function BottomNavSearch({
   const shellHeight = useSharedValue(fieldShellHeight);
 
   useEffect(() => {
-    shellHeight.value = fieldShellHeight;
-  }, [fieldShellHeight, shellHeight]);
+    shellHeight.value = withTiming(fieldShellHeight, {
+      duration: reduceMotion ? 0 : motion.chrome,
+      easing: easings.standard,
+    });
+  }, [fieldShellHeight, reduceMotion, shellHeight]);
 
   useEffect(() => {
     progress.value = withTiming(expanded ? 1 : 0, {
@@ -108,6 +113,7 @@ export function BottomNavSearch({
     if (!expanded) {
       Keyboard.dismiss();
       setSkipFocus(false);
+      setFocusReady(false);
       setLineCount(1);
       return;
     }
@@ -116,8 +122,13 @@ export function BottomNavSearch({
       setSkipFocus(true);
       onMic();
       useDockSearch.getState().clearListenOnExpand();
+      return;
     }
-  }, [expanded, onMic]);
+    const timer = setTimeout(() => {
+      setFocusReady(true);
+    }, reduceMotion ? 0 : motion.chrome);
+    return () => clearTimeout(timer);
+  }, [expanded, onMic, reduceMotion]);
 
   useEffect(() => {
     if (expandLayout && expanded) {
@@ -125,13 +136,13 @@ export function BottomNavSearch({
       return;
     }
     if (held) {
-      setFieldHeight(well);
+      setFieldHeight(inputBaseHeight);
     }
-  }, [expandLayout, expanded, fieldShellHeight, held, setFieldHeight, well]);
+  }, [expandLayout, expanded, fieldShellHeight, held, inputBaseHeight, setFieldHeight]);
 
   const shellStyle = useAnimatedStyle(() => ({
     width: interpolate(progress.value, [0, 1], [well, railWidth]),
-    height: shellHeight.value,
+    height: interpolate(progress.value, [0, 1], [well, shellHeight.value]),
   }));
   const wellFade = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 0.45], [1, 0]),
@@ -282,7 +293,7 @@ export function BottomNavSearch({
               returnKeyType="send"
               onSubmitEditing={send}
               blurOnSubmit
-              autoFocus={expanded && !skipFocus}
+              autoFocus={expanded && focusReady && !skipFocus}
               fieldBackground="transparent"
               fieldBorderColor="transparent"
               fieldBorderRadius={plateRadius}

@@ -24,6 +24,9 @@ function failureStepFor(platform, exitCode, output) {
   if (exitCode === 3 || /no free agent device slot/i.test(output)) {
     return 'infrastructure:no-device-slot';
   }
+  if (/timed out after/i.test(output)) {
+    return `infrastructure:${platform}-timeout`;
+  }
   if (platform === 'android' && /Android.*(?:bridge|packager\/app).*(?:quiet|not answering|not ready)|reconnect timed out/is.test(output)) {
     return 'infrastructure:android-bridge';
   }

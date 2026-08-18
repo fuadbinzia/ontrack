@@ -13,6 +13,7 @@ import {
   GlassPlate,
   IconButton,
   Input,
+  Symbol,
 } from '@/components/primitives';
 import { glassMaterials, easings, motion, radii } from '@/design-system';
 import { AuthBrandMark } from '@/features/auth/auth-brand-mark';
@@ -49,10 +50,12 @@ function DockSearchListenElapsed({ startedAt }: { startedAt: number | null }) {
 
 export function BottomNavSearch({
   railWidth,
+  collapsedWidth,
   signedIn,
   aiEnabled,
 }: {
   railWidth: number;
+  collapsedWidth?: number;
   signedIn: boolean;
   aiEnabled: boolean;
 }) {
@@ -69,7 +72,7 @@ export function BottomNavSearch({
   const setQuery = useDockSearch((state) => state.setQuery);
   const setFieldHeight = useDockSearch((state) => state.setFieldHeight);
   const held = useHeldOverlay(expanded, motion.chrome);
-  const well = Math.max(layout.minTapTarget, s(44));
+  const well = collapsedWidth ?? Math.max(layout.minTapTarget, s(44));
   const expandLayout = DOCK_SEARCH_LAYOUT === 'expand';
   const oneLineHeight = typography.body.lineHeight;
   const [lineCount, setLineCount] = useState(1);
@@ -78,7 +81,7 @@ export function BottomNavSearch({
   const listenOnExpand = useDockSearch((state) => state.listenOnExpand);
   const [skipFocus, setSkipFocus] = useState(listenOnExpand);
   const wellAgent = useAgentUiTarget(AgentUiIds.tabs.search, {
-    label: 'Search',
+    label: 'Ask AI',
     onPress: () => expand(),
   });
   const visibleLines = Math.min(lineCount, DOCK_SEARCH_INPUT_MAX_LINES);
@@ -165,6 +168,17 @@ export function BottomNavSearch({
   const controlSize = Math.max(36, s(40));
   const trailingPad =
     trailingWidth > 0 ? trailingWidth + spacing.xs : controlSize * 3 + spacing.xs;
+  const tabIconSize = s(20);
+  const tabCaptionStyle = useMemo(
+    () => ({
+      fontSize: s(9.5),
+      lineHeight: s(11),
+      width: '100%' as const,
+      minWidth: 0,
+      flexShrink: 1,
+    }),
+    [s],
+  );
   const fieldContainerStyle = useMemo(
     () => [styles.field, { height: fieldShellHeight }],
     [fieldShellHeight],
@@ -177,7 +191,7 @@ export function BottomNavSearch({
         ? Math.ceil(oneLineHeight) * DOCK_SEARCH_INPUT_MAX_LINES
         : well,
       paddingVertical: 0,
-      textAlignVertical: 'center',
+      textAlignVertical: 'center' as const,
       paddingRight: expandLayout ? trailingPad : undefined,
     }),
     [expandLayout, fieldShellHeight, oneLineHeight, trailingPad, well],
@@ -192,43 +206,72 @@ export function BottomNavSearch({
         shellStyle,
       ]}
     >
-      <GlassPlate
-        style={[
-          styles.plate,
-          {
-            borderRadius: plateRadius,
-            borderColor: theme.name === 'dark'
-              ? glassMaterials.border.darkStrong
-              : glassMaterials.border.light,
-          },
-        ]}
+      <Animated.View
+        pointerEvents={expanded ? 'none' : 'auto'}
+        style={[styles.wellContainer, wellFade]}
       >
-        <Animated.View
-          pointerEvents={expanded ? 'none' : 'auto'}
-          style={[StyleSheet.absoluteFill, wellFade]}
+        <Pressable
+          ref={wellAgent.ref}
+          testID={AgentUiIds.tabs.search}
+          onLayout={wellAgent.onLayout}
+          accessibilityRole="button"
+          accessibilityLabel="Ask AI"
+          delayLongPress={LONG_PRESS_MS}
+          onPress={() => expand()}
+          onLongPress={() => expand({ listen: true })}
+          style={({ pressed }) => [
+            styles.tab,
+            {
+              width: well,
+              minHeight: layout.minTapTarget,
+              paddingVertical: spacing.xxs,
+              paddingHorizontal: s(2),
+            },
+            pressed && styles.pressed,
+          ]}
         >
-          <Pressable
-            ref={wellAgent.ref}
-            testID={AgentUiIds.tabs.search}
-            onLayout={wellAgent.onLayout}
-            accessibilityRole="button"
-            accessibilityLabel="Search"
-            delayLongPress={LONG_PRESS_MS}
-            onPress={() => expand()}
-            onLongPress={() => expand({ listen: true })}
-            style={[styles.well, { width: well, height: well }]}
-          >
+          <View style={styles.iconSlot}>
             <AuthBrandMark
-              size={Math.max(26, s(30))}
-              orbitTilted={false}
-              markColor={theme.accentPrimary}
+              size={s(20)}
+              showContainer={false}
+              orbitTilted={true}
+              markColor={theme.textSecondary}
             />
-          </Pressable>
-        </Animated.View>
-        {held ? (
-          <Animated.View
-            pointerEvents={expanded ? 'auto' : 'none'}
-            style={[styles.fieldWrap, fieldFade]}
+          </View>
+          <Animated.Text
+            allowFontScaling
+            maxFontSizeMultiplier={1.1}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.68}
+            style={[
+              typography.caption,
+              tabCaptionStyle,
+              styles.caption,
+              { fontWeight: '400', color: theme.textSecondary },
+            ]}
+          >
+            Ask AI
+          </Animated.Text>
+          <View style={{ height: s(6) }} />
+        </Pressable>
+      </Animated.View>
+      {held ? (
+        <Animated.View
+          pointerEvents={expanded ? 'auto' : 'none'}
+          style={[styles.fieldWrap, fieldFade]}
+        >
+          <GlassPlate
+            style={[
+              styles.plate,
+              {
+                borderRadius: plateRadius,
+                borderColor:
+                  theme.name === 'dark'
+                    ? glassMaterials.border.darkStrong
+                    : glassMaterials.border.light,
+              },
+            ]}
           >
             <Input
               value={query}
@@ -292,9 +335,9 @@ export function BottomNavSearch({
                 </View>
               }
             />
-          </Animated.View>
-        ) : null}
-      </GlassPlate>
+          </GlassPlate>
+        </Animated.View>
+      ) : null}
     </Animated.View>
   );
 }
@@ -306,19 +349,39 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
   },
+  wellContainer: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'flex-end',
+  },
+  tab: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  pressed: {
+    opacity: 0.72,
+  },
+  iconSlot: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  caption: {
+    textAlign: 'center',
+  },
   plate: {
-    flex: 1,
+    width: '100%',
+    height: '100%',
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
   },
-  well: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   fieldWrap: {
     ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
   field: {
     width: '100%',

@@ -15,10 +15,12 @@ export function AuthBrandMark({
   size,
   markColor,
   orbitTilted = true,
+  showContainer = true,
 }: {
   size?: number;
   markColor?: string;
   orbitTilted?: boolean;
+  showContainer?: boolean;
 }) {
   const theme = useTheme();
   const { s } = useResponsive();
@@ -35,20 +37,8 @@ export function AuthBrandMark({
     ? [{ rotate: '-24deg' }, { scaleY: 0.82 }]
     : [];
 
-  return (
-    <GlassPlate
-      mist
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={[
-        styles.disc,
-        {
-          width: box,
-          height: box,
-          borderRadius: box / 2,
-          borderColor: colorWithAlpha(rim, 0.4),
-        },
-      ]}>
+  const content = (
+    <>
       <View
         style={[
           styles.ring,
@@ -74,11 +64,52 @@ export function AuthBrandMark({
           },
         ]}
       />
+    </>
+  );
+
+  if (!showContainer) {
+    return (
+      <View
+        style={[
+          styles.noContainer,
+          {
+            width: box,
+            height: box,
+          },
+        ]}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        {content}
+      </View>
+    );
+  }
+
+  return (
+    <GlassPlate
+      mist
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        styles.disc,
+        {
+          width: box,
+          height: box,
+          borderRadius: box / 2,
+          borderColor: colorWithAlpha(rim, 0.4),
+        },
+      ]}
+    >
+      {content}
     </GlassPlate>
   );
 }
 
 const styles = StyleSheet.create({
+  noContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   disc: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -245,7 +245,8 @@ export function BottomNavBar({
     flexShrink: 1,
   };
   const barWidth = Math.min(width - layout.screenPadding * 2, MAX_BAR_WIDTH);
-  const searchWell = Math.max(layout.minTapTarget, s(44));
+  const totalSlots = barSlots.length + 1;
+  const searchWell = Math.floor(barWidth / totalSlots);
   const searchProgress = useSharedValue(searchExpanded ? 1 : 0);
   // Invert: keep chrome mounted while collapsed and through the expand fade,
   // then unmount so BlurView cannot ghost a dock strip over the search body.
@@ -362,6 +363,7 @@ export function BottomNavBar({
           >
             <BottomNavSearch
               railWidth={barWidth}
+              collapsedWidth={searchWell}
               signedIn={!isGuest}
               aiEnabled={aiEnabled}
             />
@@ -375,7 +377,7 @@ export function BottomNavBar({
               style={[
                 styles.tabs,
                 {
-                  paddingLeft: searchWell + spacing.xs,
+                  paddingLeft: searchWell,
                 },
                 tabsFade,
               ]}

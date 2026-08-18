@@ -914,6 +914,7 @@ android_emu_ensure_ready() {
 android_emu_ensure_adb_reverse() {
   local metro_port="${METRO_PORT:-8081}"
   local daemon_port="${AGENT_UI_HTTP_PORT:-8191}"
+  local daemon_guest_port="8191"
   local list port host_port added=0
 
   ANDROID_EMU_REVERSE_ADDED=0
@@ -925,14 +926,14 @@ android_emu_ensure_adb_reverse() {
 
   # Guest 8191 → host 8191+slot (H17).
   local daemon_host_port="$daemon_port"
-  if [[ -n "${AGENT_UI_SLOT:-}" && "${AGENT_UI_SLOT}" =~ ^[1-9][0-9]*$ ]]; then
+  if [[ "$daemon_port" == "8191" && -n "${AGENT_UI_SLOT:-}" && "${AGENT_UI_SLOT}" =~ ^[1-9][0-9]*$ ]]; then
     daemon_host_port=$((daemon_port + AGENT_UI_SLOT))
   fi
 
   list="$(android_emu_adb reverse --list 2>/dev/null || true)"
-  for port in "$metro_port" "$daemon_port"; do
+  for port in "$metro_port" "$daemon_guest_port"; do
     host_port="$port"
-    [[ "$port" == "$daemon_port" ]] && host_port="$daemon_host_port"
+    [[ "$port" == "$daemon_guest_port" ]] && host_port="$daemon_host_port"
     if printf '%s\n' "$list" | grep -qE "tcp:${port}[[:space:]]+tcp:${host_port}\$"; then
       continue
     fi
@@ -963,8 +964,10 @@ android_emu_app_package() {
 # True when the app on *this* serial holds a socket to the agent-ui daemon.
 # A live PID is not enough (dead JS runtime). Unknown `ss` → treat as connected.
 android_emu_app_bridge_connected() {
-  local daemon_port="${AGENT_UI_HTTP_PORT:-8191}" out
-  out="$(android_emu_adb shell "ss -tn 2>/dev/null | grep -c ':${daemon_port}'" 2>/dev/null | tr -d '\r' | head -1)"
+  local out
+  # App always connects from guest to 8191; AGENT_UI_HTTP_PORT is host-side and
+  # may be shifted per pool slot (8191 + slot).
+  out="$(android_emu_adb shell "ss -tn 2>/dev/null | grep -c ':8191'" 2>/dev/null | tr -d '\r' | head -1)"
   if [[ -z "$out" || ! "$out" =~ ^[0-9]+$ ]]; then
     return 0
   fi

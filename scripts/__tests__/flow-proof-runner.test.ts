@@ -14,11 +14,12 @@ describe('dual-platform flow proof runner', () => {
     ]) {
       expect(source).toContain(field);
     }
-    expect(source).toContain("['ios', 'android'].map");
+    expect(source).toContain("includeIos = process.env.SKIP_IOS");
+    expect(source).toContain("includeAndroid = process.env.SKIP_ANDROID");
     expect(source).toContain("scripts/agent-ui-verify-both.sh");
     expect(source).toContain("['--proof-flow', flow.name]");
     expect(source).toContain('run.exitCode === 3');
-    expect(source).not.toMatch(/SKIP_IOS|SKIP_ANDROID|AGENT_UI_SKIP_LEASE|ONTRACK_PACKAGER_TARGET/);
+    expect(source).not.toMatch(/AGENT_UI_SKIP_LEASE|ONTRACK_PACKAGER_TARGET/);
   });
 
   it('discovers quoted and identifier-named flows so the atlas cannot silently omit app journeys', () => {
@@ -48,6 +49,13 @@ describe('dual-platform flow proof runner', () => {
     expect(source).toContain("if (args.includes('--all')) return select(all)");
   });
 
+  it('discovers only active flow source modules and excludes deprecated flow files', () => {
+    const source = read('scripts/agent-ui-flow-proof-batch.mjs');
+    expect(source).toContain("const flowSourceModules = (() => {");
+    expect(source).toContain("importRegex = /import\\s+[^\\n]*?from\\s+['\"]\\.\\/([^'\"]+)['\"]/g");
+    expect(source).not.toContain('flows-life.ts');
+  });
+
   it('accepts repeated flow selectors for focused warm-device reruns', () => {
     const source = read('scripts/agent-ui-flow-proof-batch.mjs');
     expect(source).toContain("arg === '--flow'");
@@ -70,6 +78,11 @@ describe('dual-platform flow proof runner', () => {
     expect(parseDualPlatformExit('no free agent device slot', 3)).toEqual({ ios: 3, android: 3 });
     expect(failureStepFor('android', 3, 'no free agent device slot')).toBe('infrastructure:no-device-slot');
     expect(failureStepFor('ios', 1, 'runner stopped unexpectedly')).toBe('flow:ios');
+  });
+
+  it('treats framework timeouts as infrastructure timeouts', () => {
+    expect(failureStepFor('ios', 1, 'timed out after 10.0s')).toBe('infrastructure:ios-timeout');
+    expect(failureStepFor('android', 1, 'timed out after 10.0s')).toBe('infrastructure:android-timeout');
   });
 
   it('uses a self-hosted macOS PR/nightly gate and preserves proof artifacts', () => {

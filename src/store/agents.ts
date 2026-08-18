@@ -19,6 +19,7 @@ interface AgentState {
   entitlements: AgentEntitlementState;
   updatedAt: string;
   installAgent: (id: AgentId) => void;
+  ensureAgentReady: (id: AgentId, capabilities: readonly AgentCapabilityId[]) => void;
   removeAgent: (id: AgentId) => void;
   setAgentEnabled: (id: AgentId, enabled: boolean) => void;
   setCapabilityGranted: (id: AgentId, capability: AgentCapabilityId, granted: boolean) => void;
@@ -59,6 +60,40 @@ export const useAgents = create<AgentState>()(
                 enabled: false,
                 grantedCapabilities: [],
                 installedAt: now,
+                updatedAt: now,
+              },
+            },
+            updatedAt: now,
+          };
+        }),
+      ensureAgentReady: (id, capabilities) =>
+        set((state) => {
+          const definition = getAgent(id);
+          if (!definition || !state.entitlements[id]?.active) return state;
+          const declared = new Set([
+            ...definition.requiredCapabilities,
+            ...(definition.optionalCapabilities ?? []),
+          ]);
+          const granted = [
+            ...new Set(
+              capabilities.filter((capability) => declared.has(capability)),
+            ),
+          ];
+          const missingRequired = definition.requiredCapabilities.some(
+            (capability) => !granted.includes(capability),
+          );
+          if (missingRequired) return state;
+          const now = timestamp();
+          const existing = state.installations[id];
+          return {
+            installations: {
+              ...state.installations,
+              [id]: {
+                agentId: id,
+                version: definition.version,
+                enabled: true,
+                grantedCapabilities: granted,
+                installedAt: existing?.installedAt ?? now,
                 updatedAt: now,
               },
             },

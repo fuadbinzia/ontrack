@@ -322,4 +322,18 @@ export const AGENT_UI_DAILY_FLOWS = {
     },
     { op: 'tap', id: 'ontrack.activityForm.backdrop' },
   ],
+  'app-search': [
+    { op: 'goto', to: '/' },
+    {
+      op: 'wait',
+      id: 'ontrack.tabs.search',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    { op: 'tap', id: 'ontrack.tabs.search' },
+    {
+      op: 'wait',
+      id: 'ontrack.tabs.search.field',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+  ],
 } as const satisfies Record<string, readonly import('./flows').AgentUiFlowStep[]>;

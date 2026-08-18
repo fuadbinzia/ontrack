@@ -36,6 +36,19 @@ export const agentUiIdsShell = {
     carouselNext: 'ontrack.tabs.carousel.next',
     /** Layout anchor for the page-matching bottom nav fill (not tappable). */
     dock: 'ontrack.tabs.dock',
+    search: 'ontrack.tabs.search',
+    searchField: 'ontrack.tabs.search.field',
+    searchMic: 'ontrack.tabs.search.mic',
+    searchStop: 'ontrack.tabs.search.stop',
+    searchSend: 'ontrack.tabs.search.send',
+    searchClear: 'ontrack.tabs.search.clear',
+    searchClose: 'ontrack.tabs.search.close',
+    /** Layout anchor for the expanded search results scroller (not tappable). */
+    searchResults: 'ontrack.tabs.search.results',
+    searchTranscript: 'ontrack.tabs.search.transcript',
+    searchClearConversation: 'ontrack.tabs.search.clearConversation',
+    searchResult: (id: string) =>
+      `ontrack.tabs.search.result.${id.replace(/[^a-zA-Z0-9]+/g, '_')}`,
   },
   overview: {
     screen: 'ontrack.overview.screen',

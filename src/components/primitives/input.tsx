@@ -21,7 +21,11 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAgentUiTarget } from '@/utils/agent-ui';
 import { formatNumericInput } from '@/utils/parse';
 import { AppText } from './app-text';
-import { FieldLeadingIcon, fieldLeadingIconRowStyle } from './field-leading-icon';
+import {
+    FieldLeadingIcon,
+    fieldLeadingIconRowStyle,
+    iconMultilineOpticalPad,
+} from './field-leading-icon';
 import { stackedFieldMinHeight } from './field-leading-icon-style';
 import { StackedFieldLabel } from './stacked-field-label';
 import {
@@ -33,6 +37,20 @@ function readStyleMinHeight(style: StyleProp<TextStyle>): number | undefined {
   const flat = StyleSheet.flatten(style);
   const value = flat?.minHeight;
   return typeof value === 'number' ? value : undefined;
+}
+
+function readStyleHeight(style: StyleProp<TextStyle>): number | undefined {
+  const flat = StyleSheet.flatten(style);
+  const value = flat?.height;
+  return typeof value === 'number' ? value : undefined;
+}
+
+/** Multiline contentSize must report text, not the chrome frame we grow. */
+function withoutFrameSize(style: StyleProp<TextStyle>): StyleProp<TextStyle> {
+  const flat = StyleSheet.flatten(style);
+  if (!flat) return style;
+  const { minHeight: _minHeight, height: _height, ...rest } = flat;
+  return rest;
 }
 
 interface InputProps extends TextInputProps {
@@ -119,6 +137,9 @@ export function Input({
   const theme = useTheme();
   const { typography, spacing, s, fontScale } = useResponsive();
   const minHeight = Math.max(44, s(48));
+  const styleMinHeight = readStyleMinHeight(style);
+  const styleHeight = readStyleHeight(style);
+  const rowMinHeight = styleMinHeight ?? minHeight;
   const stackedMinHeight = stackedFieldMinHeight({
     baseMinHeight: Math.max(56, s(60)),
     fontScale,
@@ -142,7 +163,13 @@ export function Input({
   });
   const hasValue = String(numericValue ?? '').length > 0;
   const showChromePlaceholder =
-    hasIcon && !stacked && !hasValue && !focused && Boolean(placeholder);
+    hasIcon &&
+    !stacked &&
+    !multiline &&
+    !hasValue &&
+    !focused &&
+    Boolean(placeholder);
+  const iconMultilinePad = iconMultilineOpticalPad(rowMinHeight, oneLineHeight);
   const fill = fieldBackground ?? glassFieldBackground(theme.name);
   const handleChangeText = numericChangeForKeyboard(keyboardType, onChangeText);
   const agent = useAgentUiTarget(testID, {
@@ -312,8 +339,9 @@ export function Input({
             style={[
               styles.iconField,
               fieldLeadingIconRowStyle({
-                minHeight,
-                height: multiline ? undefined : minHeight,
+                minHeight: rowMinHeight,
+                height: multiline ? styleHeight : rowMinHeight,
+                overflow: multiline && styleHeight ? 'hidden' : undefined,
                 borderRadius: radii.lg,
                 paddingHorizontal: spacing.md,
                 paddingVertical: 0,
@@ -336,6 +364,49 @@ export function Input({
                 style={styles.chromeLabel}>
                 {placeholder}
               </AppText>
+            ) : multiline ? (
+              <View
+                style={[
+                  styles.iconMultilineSlot,
+                  { paddingVertical: iconMultilinePad },
+                ]}>
+                <TextInput
+                  ref={inputRef}
+                  testID={testID}
+                  accessibilityLabel={accessibilityLabel}
+                  value={numericValue}
+                  placeholder={placeholder}
+                  placeholderTextColor={placeholderTextColor ?? theme.textTertiary}
+                  allowFontScaling
+                  maxFontSizeMultiplier={2}
+                  multiline
+                  keyboardType={keyboardType}
+                  onChangeText={handleChangeText}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  style={[
+                    styles.input,
+                    styles.iconInput,
+                    styles.stackedMultilineInput,
+                    {
+                      fontFamily: body.fontFamily,
+                      fontSize: body.fontSize,
+                      fontWeight: body.fontWeight,
+                      lineHeight: body.lineHeight,
+                      color: theme.textPrimary,
+                      includeFontPadding: false,
+                      textAlignVertical: 'top',
+                      alignSelf: 'stretch',
+                      flexGrow: 0,
+                      flexShrink: 0,
+                    },
+                    trailing ? { paddingRight: s(40) } : null,
+                    withoutFrameSize(style),
+                  ]}
+                  {...rest}
+                  underlineColorAndroid="transparent"
+                />
+              </View>
             ) : (
               <TextInput
                 ref={inputRef}
@@ -345,7 +416,6 @@ export function Input({
                 placeholder={undefined}
                 allowFontScaling
                 maxFontSizeMultiplier={2}
-                multiline={multiline}
                 keyboardType={keyboardType}
                 onChangeText={handleChangeText}
                 onFocus={handleFocus}
@@ -357,9 +427,8 @@ export function Input({
                     fontFamily: body.fontFamily,
                     fontSize: body.fontSize,
                     fontWeight: body.fontWeight,
-                    ...(multiline ? { lineHeight: body.lineHeight } : null),
                     color: theme.textPrimary,
-                    minHeight: multiline ? undefined : Math.max(0, minHeight - 4),
+                    minHeight: Math.max(0, rowMinHeight - 4),
                     includeFontPadding: false,
                     textAlignVertical: 'center',
                   },
@@ -489,6 +558,14 @@ const styles = StyleSheet.create({
     margin: 0,
     backgroundColor: 'transparent',
     letterSpacing: 0,
+  },
+  iconMultilineSlot: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    minWidth: 0,
+    alignSelf: 'stretch',
+    justifyContent: 'flex-start',
   },
   stackedMultilineInput: {
     // A growing native multiline input can paint over its preceding label.

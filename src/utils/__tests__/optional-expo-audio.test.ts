@@ -12,6 +12,7 @@ function usableApi(overrides: Partial<ExpoAudioApi> = {}): ExpoAudioApi {
   return {
     useAudioRecorder: jest.fn(),
     useAudioPlayer: jest.fn(),
+    getRecordingPermissionsAsync: jest.fn(),
     requestRecordingPermissionsAsync: jest.fn(),
     setAudioModeAsync: jest.fn(),
     RecordingPresets: {
@@ -53,6 +54,14 @@ describe('loadOptionalExpoAudio', () => {
     } as Partial<ExpoAudioApi>);
 
     expect(loadOptionalExpoAudio(() => ({}), () => api)).toBeUndefined();
+    expect(isUsableExpoAudio(api)).toBe(false);
+  });
+
+  it('returns undefined when getRecordingPermissionsAsync is missing', () => {
+    const api = usableApi({
+      getRecordingPermissionsAsync: undefined,
+    } as Partial<ExpoAudioApi>);
+
     expect(isUsableExpoAudio(api)).toBe(false);
   });
 

@@ -42,7 +42,16 @@ jest.mock('expo-file-system', () => ({
   },
 }));
 
+jest.mock('@/utils/prompt-open-settings', () => ({
+  promptOpenAppSettings: jest.fn(),
+}));
+
+import { promptOpenAppSettings } from '@/utils/prompt-open-settings';
 import { useJournalRecorder } from '../use-journal-recorder';
+
+const promptOpenAppSettingsMock = promptOpenAppSettings as jest.MockedFunction<
+  typeof promptOpenAppSettings
+>;
 
 describe('useJournalRecorder start', () => {
   beforeEach(() => {
@@ -58,6 +67,7 @@ describe('useJournalRecorder start', () => {
     mockPrepareToRecordAsync.mockResolvedValue(undefined);
     mockRecorder.isRecording = false;
     mockRecorder.uri = null;
+    promptOpenAppSettingsMock.mockClear();
   });
 
   it('starts without taking exclusive audio', async () => {
@@ -201,6 +211,26 @@ describe('useJournalRecorder start', () => {
     expect(mockSetAudioModeAsync).toHaveBeenLastCalledWith({
       allowsRecording: false,
     });
+  });
+
+  it('offers Open Settings when the OS will not ask for the microphone again', async () => {
+    mockGetRecordingPermissionsAsync.mockResolvedValueOnce({
+      granted: false,
+      canAskAgain: false,
+    });
+    const { result } = renderHook(() => useJournalRecorder());
+
+    await act(async () => {
+      await expect(result.current.start('voice')).resolves.toBe(false);
+    });
+
+    expect(mockRequestRecordingPermissionsAsync).not.toHaveBeenCalled();
+    expect(mockRecord).not.toHaveBeenCalled();
+    expect(promptOpenAppSettingsMock).toHaveBeenCalledWith(
+      'Microphone access needed',
+      'Allow microphone access in Settings to use voice. Typing still works.',
+    );
+    expect(result.current.statusMessage).toMatch(/permission is required for voice/i);
   });
 
   it('re-checks a denied microphone permission on the next attempt', async () => {

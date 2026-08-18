@@ -31,6 +31,7 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('today-prev-day');
     expect(listAgentUiFlowNames()).toContain('today-next-day');
     expect(listAgentUiFlowNames()).toContain('today-add');
+    expect(listAgentUiFlowNames()).toContain('app-search');
     expect(listAgentUiFlowNames()).toContain('trackers');
     expect(listAgentUiFlowNames()).toContain('trackers-manage');
     expect(listAgentUiFlowNames()).toContain('open-avatar-editor');
@@ -545,6 +546,13 @@ describe('agent-ui flows', () => {
     );
   });
 
+  it('treats social land as a bounded route wait', () => {
+    expect(resolveAgentUiFlow('social')).toEqual([
+      expect.objectContaining({ op: 'goto', to: 'social' }),
+      expect.objectContaining({ op: 'wait', to: 'social' }),
+    ]);
+  });
+
   it('keeps every declared flow executable without discovery dumps', () => {
     const supported = new Set([
       'dismiss', 'seed', 'goto', 'tap', 'wait', 'scroll', 'assert', 'open',
@@ -558,7 +566,9 @@ describe('agent-ui flows', () => {
       expect({
         name,
         bounded: steps?.every(
-          (step) => step.op !== 'wait' || Boolean(step.id || step.prefix || step.ms),
+          (step) =>
+            step.op !== 'wait' ||
+            Boolean(step.id || step.prefix || step.ms || step.to),
         ),
       }).toEqual({ name, bounded: true });
     }

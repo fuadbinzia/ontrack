@@ -2,6 +2,9 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 
 import type { RecordingOptions } from 'expo-audio';
 
+export const MICROPHONE_PERMISSION_REQUIRED =
+  'Microphone permission is required for voice. Typing still works.';
+
 export type ExpoAudioApi = typeof import('expo-audio');
 
 type NativeLookup = () => unknown;
@@ -53,7 +56,7 @@ export async function beginExpoRecording(
 export function voiceStartErrorMessage(error: unknown): string {
   const text = error instanceof Error ? error.message : String(error ?? '');
   if (/denied|permission|not authorized/i.test(text)) {
-    return 'Microphone permission is required for voice. Typing still works.';
+    return MICROPHONE_PERMISSION_REQUIRED;
   }
   if (/busy|in use|session|interrupt|cannot start|16877|561017449/i.test(text)) {
     return 'Microphone is busy. Try again in a moment.';
@@ -67,6 +70,7 @@ export function isUsableExpoAudio(
   return Boolean(
     api &&
       typeof api.useAudioRecorder === 'function' &&
+      typeof api.getRecordingPermissionsAsync === 'function' &&
       typeof api.requestRecordingPermissionsAsync === 'function' &&
       typeof api.setAudioModeAsync === 'function',
   );

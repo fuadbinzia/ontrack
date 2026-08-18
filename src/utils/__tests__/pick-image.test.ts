@@ -1,6 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 
+import { appPrompt } from '@/components/primitives';
 import { pickLibraryImages } from '@/utils/pick-image';
 
 jest.mock('expo-image-picker', () => ({
@@ -77,6 +78,25 @@ describe('pickLibraryImages', () => {
         selectionLimit: 8,
         legacy: false,
       }),
+    );
+  });
+
+  it('offers Open Settings when library permission is denied', async () => {
+    (ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      granted: false,
+    });
+    const pending = pickLibraryImages();
+    await jest.advanceTimersByTimeAsync(50);
+    await expect(pending).resolves.toBeUndefined();
+
+    expect(ImagePicker.launchImageLibraryAsync).not.toHaveBeenCalled();
+    expect(appPrompt.alert).toHaveBeenCalledWith(
+      'Photos access needed',
+      'Allow photo library access in Settings to choose an image.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: expect.any(Function) },
+      ],
     );
   });
 });

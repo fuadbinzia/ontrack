@@ -25,5 +25,7 @@ describe('travel translator native compatibility', () => {
     expect(source).toContain('loadOptionalExpoAudio');
     expect(source).toContain('recordingOptionsFor');
     expect(source).not.toMatch(/require\(['"]expo-audio['"]\)/);
+    expect(source).not.toContain('prompt-open-settings');
+    expect(source).not.toContain('@/components/primitives');
   });
 });

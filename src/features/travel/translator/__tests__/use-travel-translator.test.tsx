@@ -3,7 +3,8 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 const mockRequestLanguages = jest.fn();
 const mockRequestTurn = jest.fn();
-const mockPermission = jest.fn();
+const mockGetPermission = jest.fn();
+const mockRequestPermission = jest.fn();
 const mockSetAudioMode = jest.fn();
 const mockSpeechStop = jest.fn();
 const mockSpeechSpeak = jest.fn();
@@ -45,7 +46,9 @@ jest.mock('expo-modules-core', () => ({
 
 jest.mock('expo-audio', () => ({
   RecordingPresets: { HIGH_QUALITY: { extension: '.m4a' } },
-  requestRecordingPermissionsAsync: (...args: unknown[]) => mockPermission(...args),
+  getRecordingPermissionsAsync: (...args: unknown[]) => mockGetPermission(...args),
+  requestRecordingPermissionsAsync: (...args: unknown[]) =>
+    mockRequestPermission(...args),
   setAudioModeAsync: (...args: unknown[]) => mockSetAudioMode(...args),
   useAudioRecorder: () => {
     const { useEffect } = jest.requireActual<typeof import('react')>('react');
@@ -83,7 +86,12 @@ jest.mock('@/services/travel/translator-client', () => ({
   requestTravelTranslatorTurn: (...args: unknown[]) => mockRequestTurn(...args),
 }));
 
+jest.mock('@/utils/prompt-open-settings', () => ({
+  promptOpenAppSettings: jest.fn(),
+}));
+
 import type { TravelPlan } from '@/features/travel/types';
+import { promptOpenAppSettings } from '@/utils/prompt-open-settings';
 import { useTravelTranslator } from '../use-travel-translator';
 
 const english = { code: 'en', displayName: 'English', speechLocale: 'en-US' };
@@ -101,7 +109,8 @@ describe('useTravelTranslator', () => {
     mockRecorder.invalidNativeReads = 0;
     mockRecorder.recording = false;
     mockRecorder.recordingUri = null;
-    mockPermission.mockResolvedValue({ granted: true });
+    mockGetPermission.mockResolvedValue({ granted: true });
+    mockRequestPermission.mockResolvedValue({ granted: true });
     mockSetAudioMode.mockResolvedValue(undefined);
     mockSpeechStop.mockResolvedValue(undefined);
     mockGetVoices.mockResolvedValue([
@@ -158,7 +167,7 @@ describe('useTravelTranslator', () => {
   });
 
   it('keeps typed translation available when microphone permission is denied', async () => {
-    mockPermission.mockResolvedValue({ granted: false });
+    mockGetPermission.mockResolvedValue({ granted: false, canAskAgain: false });
     const { result, unmount } = renderHook(() =>
       useTravelTranslator({ plan, visible: true, aiEnabled: true, homeLocale: 'en-US' }),
     );
@@ -168,7 +177,8 @@ describe('useTravelTranslator', () => {
     await act(async () => result.current.startVoice('home-to-destination'));
 
     expect(mockRecorder.record).not.toHaveBeenCalled();
-    expect(mockPermission).toHaveBeenCalledTimes(1);
+    expect(mockRequestPermission).not.toHaveBeenCalled();
+    expect(promptOpenAppSettings).toHaveBeenCalled();
     expect(result.current.statusMessage).toContain('Microphone permission');
     unmount();
   });

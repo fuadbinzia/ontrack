@@ -10,17 +10,28 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { usePageSurfaceBackgroundColor } from '@/components/primitives';
 import type { AppIconName } from '@/design-system';
-import { glassMaterials, radii } from '@/design-system';
+import { easings, glassMaterials, radii, motion } from '@/design-system';
+import { useAuthSession } from '@/features/auth/auth-provider';
 import { useHomeWeather } from '@/features/daily-tracking/use-home-weather';
+import { dockSearchBarHeight } from '@/features/search/dock-search-layout';
+import { useDockSearch } from '@/features/search/dock-search-store';
+import { useHeldOverlay } from '@/hooks/use-held-overlay';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { useAddons } from '@/store/addons';
+import { usePreferences } from '@/store/preferences';
 import { useTabPins } from '@/store/tab-pins';
 import { useUI } from '@/store/ui';
 import {
@@ -34,6 +45,7 @@ import {
 import { deferAfterPageLoad } from '@/utils/defer-after-page-load';
 
 import { BOTTOM_NAV_Z_INDEX, bottomNavBottomPad } from './bottom-nav-inset';
+import { BottomNavSearch } from './bottom-nav-search';
 import { BottomNavTabItem } from './bottom-nav-tab-item';
 import {
   isTrackerRouteEnabled,
@@ -91,6 +103,11 @@ export function BottomNavBar({
   const modalSheetOpen = useUI((store) => store.modalSheetCount > 0);
   const onTabBarHeightChange = useContext(BottomTabBarHeightCallbackContext);
   const enabledAddons = useAddons((store) => store.enabled);
+  const { isGuest } = useAuthSession();
+  const aiEnabled = usePreferences((store) => store.aiEnabled);
+  const searchExpanded = useDockSearch((store) => store.expanded);
+  const searchFieldHeight = useDockSearch((store) => store.fieldHeight);
+  const collapseSearch = useDockSearch((store) => store.collapse);
   const trackerOrder = useTabPins((store) => store.trackerOrder);
   const pinnedCount = useTabPins((store) => store.pinnedCount);
 
@@ -212,7 +229,14 @@ export function BottomNavBar({
   // Android system/gesture nav: full inset. iOS home indicator: small pad.
   // Keep in sync with chat dock math (`bottomNavBottomPad`).
   const bottomLabelPad = bottomNavBottomPad(insets.bottom, spacing.sm);
-  const barHeight = layout.bottomNavBarBaseHeight + bottomLabelPad;
+  const collapsedBarHeight = layout.bottomNavBarBaseHeight + bottomLabelPad;
+  const barHeight = dockSearchBarHeight({
+    collapsedBarHeight,
+    fieldHeight: searchFieldHeight,
+    paddingTop: spacing.xxs,
+    paddingBottom: bottomLabelPad,
+    expanded: searchExpanded,
+  });
   const tabCaptionStyle = {
     fontSize: s(9.5),
     lineHeight: s(11),
@@ -221,6 +245,26 @@ export function BottomNavBar({
     flexShrink: 1,
   };
   const barWidth = Math.min(width - layout.screenPadding * 2, MAX_BAR_WIDTH);
+  const searchWell = Math.max(layout.minTapTarget, s(44));
+  const searchProgress = useSharedValue(searchExpanded ? 1 : 0);
+  // Invert: keep chrome mounted while collapsed and through the expand fade,
+  // then unmount so BlurView cannot ghost a dock strip over the search body.
+  const chromeHeld = useHeldOverlay(!searchExpanded, motion.chrome);
+  useEffect(() => {
+    if (modalSheetOpen) collapseSearch();
+  }, [collapseSearch, modalSheetOpen]);
+  useEffect(() => {
+    searchProgress.value = withTiming(searchExpanded ? 1 : 0, {
+      duration: reduceMotion ? 0 : motion.chrome,
+      easing: easings.standard,
+    });
+  }, [reduceMotion, searchExpanded, searchProgress]);
+  const tabsFade = useAnimatedStyle(() => ({
+    opacity: interpolate(searchProgress.value, [0, 1], [1, 0]),
+  }));
+  const chromeFade = useAnimatedStyle(() => ({
+    opacity: interpolate(searchProgress.value, [0, 1], [1, 0]),
+  }));
 
   const reportBarHeight = (height: number) => {
     if (height <= 0) return;
@@ -245,49 +289,67 @@ export function BottomNavBar({
               paddingHorizontal: layout.screenPadding,
               paddingTop: spacing.xxs,
               paddingBottom: bottomLabelPad,
-              backgroundColor: barBackground,
               overflow: 'hidden',
-              borderTopWidth: StyleSheet.hairlineWidth,
-              borderTopColor: darkBar
-                ? glassMaterials.border.darkStrong
-                : glassMaterials.border.light,
             },
           ]}
         >
-          {Platform.OS === 'android' ? (
-            // Android has no BlurView here — a thin barWash (0.42) lets scroll
-            // chrome (Profile "Features", timeline titles) read through the dock.
-            // Use the solid nav fill + a denser wash so glass still feels cool
-            // without ghosting section titles over tab labels.
-            <View
+          {chromeHeld ? (
+            <Animated.View
               pointerEvents="none"
-              style={[
-                StyleSheet.absoluteFill,
-                {
-                  backgroundColor: darkBar
-                    ? glassMaterials.nav.darkFillSolid
-                    : glassMaterials.nav.lightFillSolid,
-                  experimental_backgroundImage: darkBar
-                    ? 'linear-gradient(180deg, rgba(36,42,54,0.72) 0%, rgba(12,16,24,0.92) 100%)'
-                    : 'linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(247,244,238,0.94) 100%)',
-                },
-              ]}
-            />
-          ) : (
-            <>
-              <BlurView
-                intensity={allowsBlur ? 48 : 0}
-                tint={darkBar ? 'dark' : 'light'}
-                pointerEvents="none"
-                style={StyleSheet.absoluteFill}
-              />
+              style={[StyleSheet.absoluteFill, chromeFade]}
+            >
               <View
                 pointerEvents="none"
-                style={[StyleSheet.absoluteFill, { backgroundColor: barWash }]}
+                style={[StyleSheet.absoluteFill, { backgroundColor: barBackground }]}
               />
-            </>
-          )}
+              {Platform.OS === 'android' ? (
+                // Android has no BlurView here — a thin barWash (0.42) lets scroll
+                // chrome (Profile "Features", timeline titles) read through the dock.
+                // Use the solid nav fill + a denser wash so glass still feels cool
+                // without ghosting section titles over tab labels.
+                <View
+                  pointerEvents="none"
+                  style={[
+                    StyleSheet.absoluteFill,
+                    {
+                      backgroundColor: darkBar
+                        ? glassMaterials.nav.darkFillSolid
+                        : glassMaterials.nav.lightFillSolid,
+                      experimental_backgroundImage: darkBar
+                        ? 'linear-gradient(180deg, rgba(36,42,54,0.72) 0%, rgba(12,16,24,0.92) 100%)'
+                        : 'linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(247,244,238,0.94) 100%)',
+                    },
+                  ]}
+                />
+              ) : (
+                <>
+                  <BlurView
+                    intensity={allowsBlur ? 48 : 0}
+                    tint={darkBar ? 'dark' : 'light'}
+                    pointerEvents="none"
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, { backgroundColor: barWash }]}
+                  />
+                </>
+              )}
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.chromeBorder,
+                  {
+                    backgroundColor: darkBar
+                      ? glassMaterials.border.darkStrong
+                      : glassMaterials.border.light,
+                  },
+                ]}
+              />
+            </Animated.View>
+          ) : null}
           <View
+            pointerEvents="box-none"
             style={[
               styles.row,
               {
@@ -298,6 +360,26 @@ export function BottomNavBar({
               },
             ]}
           >
+            <BottomNavSearch
+              railWidth={barWidth}
+              signedIn={!isGuest}
+              aiEnabled={aiEnabled}
+            />
+            {chromeHeld ? (
+            <Animated.View
+              pointerEvents={searchExpanded ? 'none' : 'auto'}
+              accessibilityElementsHidden={searchExpanded}
+              importantForAccessibility={
+                searchExpanded ? 'no-hide-descendants' : 'auto'
+              }
+              style={[
+                styles.tabs,
+                {
+                  paddingLeft: searchWell + spacing.xs,
+                },
+                tabsFade,
+              ]}
+            >
             {barSlots.map((slot) => {
               const meta = TAB_META[slot.name];
               if (!meta) return null;
@@ -425,6 +507,8 @@ export function BottomNavBar({
                 </Pressable>
               );
             })}
+            </Animated.View>
+            ) : null}
           </View>
         </View>
       </AgentTestId>
@@ -453,11 +537,25 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'flex-end',
   },
+  chromeBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: StyleSheet.hairlineWidth,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     flex: 1,
+  },
+  tabs: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
   tab: {
     flex: 1,

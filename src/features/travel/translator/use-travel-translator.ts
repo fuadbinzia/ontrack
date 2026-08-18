@@ -24,6 +24,7 @@ import {
   TravelTranslatorError,
 } from '@/services/travel/translator-client';
 import { newId } from '@/utils/id';
+import { ensureRecordingPermission } from '@/utils/microphone-permission';
 import {
   beginExpoRecording,
   loadOptionalExpoAudio,
@@ -353,9 +354,8 @@ export function useTravelTranslator({
           );
           return;
         }
-        if (microphonePermissionRef.current === undefined) {
-          const permission = await audioApi.requestRecordingPermissionsAsync();
-          microphonePermissionRef.current = permission.granted;
+        if (microphonePermissionRef.current !== true) {
+          microphonePermissionRef.current = await ensureRecordingPermission(audioApi);
         }
         if (!microphonePermissionRef.current) {
           setStatusMessage(

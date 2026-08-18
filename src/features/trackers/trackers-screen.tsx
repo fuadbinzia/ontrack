@@ -19,8 +19,16 @@ import {
   TAB_META,
   trackerCatalogLabel,
 } from '@/components/navigation/bottom-nav-tab-meta';
-import { NAV_PIN_LIMIT, NAV_PIN_MIN } from '@/components/navigation/tab-pins';
 import {
+  clampPinnedCount,
+  NAV_DOCK_EXTRA_COUNTS,
+  NAV_PIN_LIMIT,
+  navDockExtraCount,
+  pinCountFromDockExtras,
+  type NavDockExtraCount,
+} from '@/components/navigation/tab-pins';
+import {
+  ActionChipRow,
   AppText,
   DragHandle,
   GlassIconWell,
@@ -122,7 +130,7 @@ export function TrackersScreen() {
   const trackerOrder = useTabPins((store) => store.trackerOrder);
   const pinnedCount = useTabPins((store) => store.pinnedCount);
   const setInNavOrder = useTabPins((store) => store.setInNavOrder);
-  const addToNav = useTabPins((store) => store.addToNav);
+  const setTrackerOrder = useTabPins((store) => store.setTrackerOrder);
   const promoteInMore = useTabPins((store) => store.promoteInMore);
   const [manageOpen, setManageOpen] = useState(false);
 
@@ -154,6 +162,17 @@ export function TrackersScreen() {
     return rows;
   }, [inNav, visibleOthers]);
 
+  const catalogSize = inNav.length + visibleOthers.length;
+  const dockExtras = navDockExtraCount(
+    clampPinnedCount(pinnedCount, catalogSize),
+  );
+  const canUseFiveIcons = catalogSize >= NAV_PIN_LIMIT;
+
+  const setDockExtras = (extras: NavDockExtraCount) => {
+    if (extras === 5 && !canUseFiveIcons) return;
+    setTrackerOrder(trackerOrder, pinCountFromDockExtras(extras));
+  };
+
   const openTracker = (routeName: string, section: TrackerRow['section']) => {
     const meta = TAB_META[routeName];
     if (!meta) return;
@@ -176,7 +195,11 @@ export function TrackersScreen() {
     const meta = TAB_META[item.id];
     if (!meta) return null;
     const inNavCount = inNav.length;
-    const canAdd = item.section === 'others' && inNavCount < NAV_PIN_LIMIT;
+    const catalogSize = inNavCount + visibleOthers.length;
+    const canAdd =
+      item.section === 'others' &&
+      inNavCount < NAV_PIN_LIMIT &&
+      catalogSize >= NAV_PIN_LIMIT;
 
     return (
       <ScaleDecorator activeScale={1.02}>
@@ -244,7 +267,16 @@ export function TrackersScreen() {
                   hitSlop={8}
                   onPress={() => {
                     haptics.select();
-                    addToNav(item.id);
+                    const remaining = visibleOthers.filter((id) => id !== item.id);
+                    const nextInNav = [...inNav, item.id, ...remaining].slice(
+                      0,
+                      NAV_PIN_LIMIT,
+                    );
+                    const pinned = new Set(nextInNav);
+                    setInNavOrder(
+                      nextInNav,
+                      remaining.filter((id) => !pinned.has(id)),
+                    );
                   }}
                   style={styles.sideAction}>
                   <AppText variant="caption" color="accent" fit>
@@ -314,16 +346,38 @@ export function TrackersScreen() {
                     </AgentTestId>
                   }
                 />
+                <View style={{ marginTop: spacing.md }}>
+                  <AgentTestId
+                    testID={AgentUiIds.trackers.pinCountSection}
+                    label="Dock Icons">
+                    <AppText
+                      variant="overline"
+                      color="secondary"
+                      style={{
+                        marginBottom: spacing.xs,
+                        marginLeft: spacing.xxs,
+                      }}>
+                      Dock Icons
+                    </AppText>
+                    <ActionChipRow
+                      items={NAV_DOCK_EXTRA_COUNTS.filter(
+                        (extras) => extras === 3 || canUseFiveIcons,
+                      ).map((extras) => ({
+                        id: String(extras),
+                        label: `${extras} Icons`,
+                        selected: dockExtras === extras,
+                        testID: AgentUiIds.trackers.pinCount(extras),
+                        onPress: () => setDockExtras(extras),
+                      }))}
+                    />
+                  </AgentTestId>
+                </View>
               </View>
             }
             onDragBegin={() => haptics.heavy()}
             onDragEnd={({ data }) => {
               haptics.select();
-              const pins = Math.min(
-                Math.max(NAV_PIN_MIN, inNav.length),
-                NAV_PIN_LIMIT,
-                data.length,
-              );
+              const pins = clampPinnedCount(inNav.length, data.length);
               setInNavOrder(
                 data.slice(0, pins).map((row) => row.id),
                 data.slice(pins).map((row) => row.id),

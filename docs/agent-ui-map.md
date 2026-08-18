@@ -131,13 +131,14 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.tabs.carousel.prev`                              | Previous tabs    | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.carousel.next`                              | Next tabs        | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.dock`                                       | Bottom nav       | Layout anchor — page-matching bottom nav fill (not tappable)                                          |
-| `ontrack.tabs.search`                                     | Search           | Collapsed dock well — tap expands, long-press starts a hands-free turn                              |
+| `ontrack.tabs.search`                                     | Search           | Center dock search circle — tap expands, long-press starts a hands-free turn                        |
 | `ontrack.tabs.search.field`                               | Search field     | Expanded search/composer field covering the tab row                                                 |
 | `ontrack.tabs.search.mic`                                 | Speak            | Starts a dictation take into the search field                                                       |
 | `ontrack.tabs.search.stop`                                | Stop             | Ends the dictation take and types the transcript into the search field                              |
 | `ontrack.tabs.search.send`                                | Send             | Runs the onTrack companion on the typed query                                                       |
 | `ontrack.tabs.search.clear`                               | Clear            | Clears the search field                                                                             |
 | `ontrack.tabs.search.close`                               | Close            | Collapses the search field                                                                          |
+| `ontrack.tabs.search.backdrop`                            | Close Search     | Frosted page veil — tap collapses the expanded search pill                                          |
 | `ontrack.tabs.search.results`                             | Search Results   | Layout anchor — expanded results scroller (not tappable)                                            |
 | `ontrack.tabs.search.result.<id>`                         | Search result    | Typeahead row — opens the screen or entity                                                          |
 | `ontrack.tabs.search.transcript`                          | Transcript       | Companion chat transcript                                                                           |
@@ -156,6 +157,9 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.trackers.add.<route>`                            | Trackers         | Add tracker to nav (when under pin limit)                                                           |
 | `ontrack.trackers.remove.<route>`                         | Trackers         | Retired — demote via drag into More                                                                 |
 | `ontrack.trackers.drag.<route>`                           | Trackers         | Long-press drag handle to reorder                                                                   |
+| `ontrack.trackers.section.pinCount`                       | Dock Icons       | How many extra dock icons sit beside Search (3 or 5)                                                |
+| `ontrack.trackers.pinCount.3`                             | 3 Icons          | Compact dock: 2 left of Search, 1 right + More                                                      |
+| `ontrack.trackers.pinCount.5`                             | 5 Icons          | Full dock: 3 left of Search, 2 right + More                                                         |
 | `ontrack.trackers.manage`                                 | Manage           | Opens add-on toggles from Sections                                                                  |
 | `ontrack.trackers.manage.sheet`                           | Manage sheet     | Backdrop for Manage Sections                                                                        |
 | `ontrack.trackers.manage.close`                           | Close            | Dismiss Manage Sections                                                                             |

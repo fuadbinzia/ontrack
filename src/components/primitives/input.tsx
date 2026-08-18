@@ -45,6 +45,17 @@ function readStyleHeight(style: StyleProp<TextStyle>): number | undefined {
   return typeof value === 'number' ? value : undefined;
 }
 
+function readStyleVerticalPadding(style: StyleProp<TextStyle>): number {
+  const flat = StyleSheet.flatten(style);
+  if (!flat) return 0;
+  const top = typeof flat.paddingTop === 'number' ? flat.paddingTop : undefined;
+  const bottom = typeof flat.paddingBottom === 'number' ? flat.paddingBottom : undefined;
+  if (top != null || bottom != null) return (top ?? 0) + (bottom ?? 0);
+  if (typeof flat.paddingVertical === 'number') return flat.paddingVertical * 2;
+  if (typeof flat.padding === 'number') return flat.padding * 2;
+  return 0;
+}
+
 /** Multiline contentSize must report text, not the chrome frame we grow. */
 function withoutFrameSize(style: StyleProp<TextStyle>): StyleProp<TextStyle> {
   const flat = StyleSheet.flatten(style);
@@ -169,7 +180,9 @@ export function Input({
     !hasValue &&
     !focused &&
     Boolean(placeholder);
-  const iconMultilinePad = iconMultilineOpticalPad(rowMinHeight, oneLineHeight);
+  const callerVerticalPad = readStyleVerticalPadding(style);
+  const iconMultilinePad =
+    callerVerticalPad > 0 ? 0 : iconMultilineOpticalPad(minHeight, oneLineHeight);
   const fill = fieldBackground ?? glassFieldBackground(theme.name);
   const handleChangeText = numericChangeForKeyboard(keyboardType, onChangeText);
   const agent = useAgentUiTarget(testID, {
@@ -188,7 +201,7 @@ export function Input({
     onBlur?.(event);
   };
 
-  if (hasIcon || stacked) {
+  if (hasIcon || stacked || trailing) {
     return (
       <View
         ref={agent.ref}

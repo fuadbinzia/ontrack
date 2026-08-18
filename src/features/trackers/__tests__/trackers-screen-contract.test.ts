@@ -8,6 +8,18 @@ function read(rel: string): string {
 }
 
 describe('trackers screen contract', () => {
+  it('pins 3 or 5 dock extras around Search when the catalog can fill five', () => {
+    const screen = read('src/features/trackers/trackers-screen.tsx');
+    expect(screen).toContain('NAV_DOCK_EXTRA_COUNTS');
+    expect(screen).toContain('pinCountFromDockExtras');
+    expect(screen).toContain('catalogSize >= NAV_PIN_LIMIT');
+    expect(screen).toContain('canUseFiveIcons');
+    expect(screen).toContain('`${extras} Icons`');
+    expect(screen).toContain('ActionChipRow');
+    expect(screen).toContain('GlassPlate');
+    expect(screen).not.toContain('surface="solid"');
+  });
+
   it('keeps Sections chrome on glass with agent-ui stamps', () => {
     const screen = read('src/features/trackers/trackers-screen.tsx');
     const route = read('src/app/(tabs)/trackers.tsx');

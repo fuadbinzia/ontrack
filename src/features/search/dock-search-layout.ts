@@ -89,6 +89,28 @@ export function dockSearchFieldHeightFromContentSize(
   );
 }
 
+/** iOS page frost while the search pill is open. Intensity 0 when blur is gated. */
+export const DOCK_SEARCH_BACKDROP_BLUR_INTENSITY = 80;
+
+/**
+ * Light black veil over the frosted page. Stronger toward the dock so the
+ * expanded pill sits on a grounded wash. Without blur (Android / gated),
+ * alphas step up so the current screen still recedes.
+ */
+export function dockSearchBackdropGradientColors(args: {
+  dark: boolean;
+  blurred: boolean;
+}): readonly [string, string, string] {
+  if (args.blurred) {
+    return args.dark
+      ? ['rgba(0, 0, 0, 0.22)', 'rgba(0, 0, 0, 0.34)', 'rgba(0, 0, 0, 0.48)']
+      : ['rgba(0, 0, 0, 0.16)', 'rgba(0, 0, 0, 0.26)', 'rgba(0, 0, 0, 0.38)'];
+  }
+  return args.dark
+    ? ['rgba(0, 0, 0, 0.42)', 'rgba(0, 0, 0, 0.54)', 'rgba(0, 0, 0, 0.66)']
+    : ['rgba(0, 0, 0, 0.24)', 'rgba(0, 0, 0, 0.36)', 'rgba(0, 0, 0, 0.50)'];
+}
+
 /** Inner inset of the results plate — matches the current visual bottom pad. */
 export function dockSearchResultsPadding(spacingLg: number): number {
   return spacingLg;
@@ -123,4 +145,59 @@ export function dockSearchBarHeight(args: {
     args.collapsedBarHeight,
     args.fieldHeight + args.paddingTop + args.paddingBottom,
   );
+}
+
+/** Dock More is always horizontal `…` (SF ellipsis / Material more_horiz). */
+export function dockSearchMoreIcon(_pinCount?: number): 'more' {
+  return 'more';
+}
+
+/**
+ * Split nav pins around the center search slot; More stays last in the bar.
+ * 3 pins → 2 left / 1 right; 5 pins → 3 left / 2 right.
+ * 0–2 (and other leftovers) keep a ceil-half fallback during migration.
+ */
+export function splitDockSearchPins<T>(pins: T[]): { left: T[]; right: T[] } {
+  const leftCount =
+    pins.length === 5 ? 3 : pins.length === 3 ? 2 : Math.ceil(pins.length / 2);
+  return { left: pins.slice(0, leftCount), right: pins.slice(leftCount) };
+}
+
+/**
+ * Collapsed search occupies one dock slot horizontally, but its height is
+ * the circular plate — not the slot width. 3-pin slots are wider than
+ * 5-pin slots; using width as height lifts the search glyph.
+ */
+export function dockSearchCollapsedShellSize(args: {
+  slotWidth: number;
+  wellButtonSize: number;
+}): { width: number; height: number } {
+  return {
+    width: Math.max(0, args.slotWidth),
+    height: args.wellButtonSize,
+  };
+}
+
+/** Fraction of the circular well that peeks above the dock chrome. */
+export const DOCK_SEARCH_COLLAPSED_WELL_HANG_RATIO = 0.15;
+
+export function dockSearchCollapsedWellHang(wellButtonSize: number): number {
+  return Math.max(0, Math.round(wellButtonSize * DOCK_SEARCH_COLLAPSED_WELL_HANG_RATIO));
+}
+
+/**
+ * Translate the collapsed well up so 15% of the circle clears the dock
+ * chrome. Uses the circular plate size only — slot width (3-pin vs 5-pin)
+ * must not change this lift.
+ */
+export function dockSearchCollapsedWellLift(args: {
+  barBaseHeight: number;
+  barPaddingTop: number;
+  wellButtonSize: number;
+}): number {
+  const hang = dockSearchCollapsedWellHang(args.wellButtonSize);
+  const rowHeight = Math.max(0, args.barBaseHeight - args.barPaddingTop);
+  const wellTopBelowChrome =
+    args.barPaddingTop + Math.max(0, rowHeight - args.wellButtonSize);
+  return wellTopBelowChrome + hang;
 }

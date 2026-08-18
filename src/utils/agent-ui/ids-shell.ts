@@ -43,6 +43,7 @@ export const agentUiIdsShell = {
     searchSend: 'ontrack.tabs.search.send',
     searchClear: 'ontrack.tabs.search.clear',
     searchClose: 'ontrack.tabs.search.close',
+    searchBackdrop: 'ontrack.tabs.search.backdrop',
     /** Layout anchor for the expanded search results scroller (not tappable). */
     searchResults: 'ontrack.tabs.search.results',
     searchTranscript: 'ontrack.tabs.search.transcript',
@@ -67,6 +68,8 @@ export const agentUiIdsShell = {
       `ontrack.trackers.remove.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
     drag: (routeName: string) =>
       `ontrack.trackers.drag.${routeName.replace(/[^a-zA-Z0-9]+/g, '_')}`,
+    pinCount: (extras: 3 | 5) => `ontrack.trackers.pinCount.${extras}`,
+    pinCountSection: 'ontrack.trackers.section.pinCount',
     manage: 'ontrack.trackers.manage',
     manageSheet: 'ontrack.trackers.manage.sheet',
     manageClose: 'ontrack.trackers.manage.close',

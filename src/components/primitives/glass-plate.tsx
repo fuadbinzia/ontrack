@@ -17,20 +17,33 @@ import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useTheme } from '@/hooks/use-theme';
 
 /** BlurView absoluteFill ignores parent radius unless the underlay is clipped too. */
-function glassClipRadius(style?: StyleProp<ViewStyle>): number | undefined {
+function glassClipRadius(style?: StyleProp<ViewStyle>): ViewStyle | undefined {
   const flat = StyleSheet.flatten(style);
   if (!flat) return undefined;
-  if (typeof flat.borderRadius === 'number') return flat.borderRadius;
-  const corners = [
-    flat.borderTopLeftRadius,
-    flat.borderTopRightRadius,
-    flat.borderBottomLeftRadius,
-    flat.borderBottomRightRadius,
-  ].filter((value): value is number => typeof value === 'number');
-  if (corners.length === 4 && corners.every((value) => value === corners[0])) {
-    return corners[0];
+  if (typeof flat.borderRadius === 'number') {
+    return { borderRadius: flat.borderRadius };
   }
-  return undefined;
+  const topLeft = flat.borderTopLeftRadius;
+  const topRight = flat.borderTopRightRadius;
+  const bottomLeft = flat.borderBottomLeftRadius;
+  const bottomRight = flat.borderBottomRightRadius;
+  if (
+    typeof topLeft !== 'number' ||
+    typeof topRight !== 'number' ||
+    typeof bottomLeft !== 'number' ||
+    typeof bottomRight !== 'number'
+  ) {
+    return undefined;
+  }
+  if (topLeft === topRight && topRight === bottomLeft && bottomLeft === bottomRight) {
+    return { borderRadius: topLeft };
+  }
+  return {
+    borderTopLeftRadius: topLeft,
+    borderTopRightRadius: topRight,
+    borderBottomLeftRadius: bottomLeft,
+    borderBottomRightRadius: bottomRight,
+  };
 }
 
 export type GlassPlateProps = ViewProps & {
@@ -190,11 +203,7 @@ export function GlassPlate({
   }
 
   if (Platform.OS === 'android') {
-    const androidClipRadius = glassClipRadius(style);
-    const androidUnderlayClip =
-      androidClipRadius != null
-        ? { borderRadius: androidClipRadius }
-        : undefined;
+    const androidUnderlayClip = glassClipRadius(style);
     if (dynamicTint) {
       return (
         <View
@@ -292,9 +301,7 @@ export function GlassPlate({
   const greenFill = allowsBlur ? greenFillBlur : greenFillSolid;
   const useDarkBlur =
     Boolean(dynamicTint?.darkMaterial) || greenGlass || darkPlate;
-  const clipRadius = glassClipRadius(style);
-  const underlayClip =
-    clipRadius != null ? { borderRadius: clipRadius } : undefined;
+  const underlayClip = glassClipRadius(style);
 
   return (
     <View

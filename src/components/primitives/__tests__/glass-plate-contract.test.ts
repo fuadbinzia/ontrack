@@ -32,6 +32,28 @@ describe('glass plate contract', () => {
     );
   });
 
+  it('copies mixed per-corner radii onto the frost underlay, not only uniform borderRadius', () => {
+    const plate = read('src/components/primitives/glass-plate.tsx');
+    // Direct: mixed corners must be copied onto BlurView / fill underlays.
+    expect(plate).toContain('borderTopLeftRadius: topLeft');
+    expect(plate).toContain('borderTopRightRadius: topRight');
+    expect(plate).toContain('borderBottomLeftRadius: bottomLeft');
+    expect(plate).toContain('borderBottomRightRadius: bottomRight');
+    expect(plate).toMatch(
+      /if \(topLeft === topRight && topRight === bottomLeft && bottomLeft === bottomRight\) \{[\s\S]*?return \{ borderRadius: topLeft \}/,
+    );
+    // Surrounding: uniform `borderRadius` shortcut still works.
+    expect(plate).toMatch(
+      /if \(typeof flat\.borderRadius === 'number'\) \{[\s\S]*?return \{ borderRadius: flat\.borderRadius \}/,
+    );
+    // Surrounding: BlurView still uses `underlayClip`.
+    expect(plate).toMatch(
+      /<BlurView[\s\S]*?style=\{\[StyleSheet\.absoluteFill, underlayClip\]\}/,
+    );
+    expect(plate).toContain('const underlayClip = glassClipRadius(style)');
+    expect(plate).toContain('const androidUnderlayClip = glassClipRadius(style)');
+  });
+
   it('defaults Card and SettingsGroup to glass surfaces', () => {
     const card = read('src/components/primitives/card.tsx');
     const settings = read('src/components/primitives/settings-group.tsx');
@@ -122,6 +144,10 @@ describe('glass plate contract', () => {
     expect(search).not.toContain('backgroundElevated');
     expect(overlay).toContain('GlassPlate');
     expect(overlay).toContain('variant="ghost"');
+    expect(overlay).toContain('<BlurView');
+    expect(overlay).toContain('LinearGradient');
+    expect(overlay).toContain("Platform.OS === 'ios'");
+    expect(overlay).not.toContain('theme.overlayScrim');
     expect(overlay).not.toContain('backgroundSunken');
     expect(overlay).not.toContain('backgroundElevated');
     expect(overlay).not.toContain('SheetScaffold');

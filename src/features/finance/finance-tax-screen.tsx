@@ -100,7 +100,7 @@ export function FinanceTaxScreen() {
       const picked = await pickAndPersistFinanceDocument();
       if (!picked.ok) {
         if (!picked.cancelled && picked.error) {
-          appPrompt.alert('Upload failed', picked.error);
+          appPrompt.alert('Couldn’t Add That File', picked.error);
         }
         return;
       }
@@ -144,8 +144,10 @@ export function FinanceTaxScreen() {
       });
     } catch (error) {
       appPrompt.alert(
-        'Export failed',
-        error instanceof Error ? error.message : 'Could not share package.',
+        'Couldn’t Share the Packet',
+        error instanceof Error
+          ? error.message
+          : 'We couldn’t finish that just now. Your documents are still here.',
       );
     }
   };

@@ -86,4 +86,32 @@ describe('travel map globe frame cost', () => {
         rest.graticulePath.length,
     );
   });
+
+  it('samples even coarser geometry during a fast flick than a slow pan', () => {
+    const rotation = rotationFacing('US');
+    const inMotion = createTravelGlobeSnapshot(rotation, CAMERA, 'motion');
+    const fast = createTravelGlobeSnapshot(rotation, CAMERA, 'fast');
+    const totalLength = (paths: string[]) =>
+      paths.reduce((sum, path) => sum + path.length, 0);
+    expect(
+      totalLength(fast.countries.map(({ path }) => path)) +
+        fast.graticulePath.length,
+    ).toBeLessThanOrEqual(
+      totalLength(inMotion.countries.map(({ path }) => path)) +
+        inMotion.graticulePath.length,
+    );
+  });
+
+  it('can skip marker-center projection while the map is in fast motion', () => {
+    const rotation = rotationFacing('FR');
+    const full = createTravelGlobeSnapshot(rotation, CAMERA, 'fast');
+    const noCenters = createTravelGlobeSnapshot(rotation, CAMERA, 'fast', false);
+
+    expect(
+      full.countries.some((entry) => entry.center !== undefined),
+    ).toBe(true);
+    expect(
+      noCenters.countries.every((entry) => entry.center === undefined),
+    ).toBe(true);
+  });
 });

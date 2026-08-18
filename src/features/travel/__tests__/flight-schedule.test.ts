@@ -48,6 +48,6 @@ describe('flight schedule', () => {
         },
         flight.flight,
       ),
-    ).toEqual({ ok: false, error: 'Arrival must be after departure.' });
+    ).toEqual({ ok: false, error: 'Arrival needs to be after departure.' });
   });
 });

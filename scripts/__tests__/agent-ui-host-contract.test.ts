@@ -153,7 +153,10 @@ describe('agent-ui host scripts contract', () => {
     expect(daemon).toContain('slot = self.slot_from_port() or slot');
 
     const android = read('scripts/lib/android-emulator.sh');
+    expect(android).toContain('if [[ "$daemon_port" == "8191" && -n "${AGENT_UI_SLOT:-}"');
     expect(android).toContain('daemon_host_port=$((daemon_port + AGENT_UI_SLOT))');
+    expect(android).toContain('daemon_guest_port="8191"');
+    expect(android).toContain("ss -tn 2>/dev/null | grep -c ':8191'");
     expect(android).toContain('reverse --remove');
     expect(android).toContain('android_emu_force_stop_if_wedged');
     expect(android).toContain('android_emu_prepare_metro_dev_client');
@@ -173,6 +176,7 @@ describe('agent-ui host scripts contract', () => {
     expect(ensure).toContain('agent-ui-dev-client.sh');
     expect(ensure).toContain('agent_ui_dev_client_metro_url');
     expect(ensure).toContain('android_emu_prepare_metro_dev_client');
+    expect(ensure).toContain('AGENT_UI_HTTP_PORT="$((8191 + AGENT_UI_SLOT))"');
     expect(ensure).not.toContain('declare -F agent_ui_write_slot_pin');
 
     const bridgePy = read('scripts/lib/agent_ui_bridge.py');

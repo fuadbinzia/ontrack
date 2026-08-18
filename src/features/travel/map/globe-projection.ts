@@ -1,9 +1,10 @@
 import {
-    geoDistance,
-    geoGraticule10,
-    geoOrthographic,
-    geoPath,
+  geoDistance,
+  geoGraticule10,
+  geoOrthographic,
+  geoPath,
 } from 'd3-geo';
+import { Platform } from 'react-native';
 
 import { ATLAS_COUNTRIES, type AtlasCountry } from './country-data';
 
@@ -31,9 +32,12 @@ export type TravelGlobeSnapshot = {
 };
 
 /** Coarser path sampling while the globe moves; full detail at rest. */
-export type TravelGlobeDetail = 'motion' | 'rest';
+export type TravelGlobeDetail = 'fast' | 'motion' | 'rest';
 
 const DETAIL_PRECISION: Record<TravelGlobeDetail, number> = {
+  // Fast flick spins trade coastline detail for frame rate — the geometry is
+  // a blur to the eye at those speeds anyway.
+  fast: 1.6,
   motion: 0.8,
   rest: 0.35,
 };
@@ -57,6 +61,107 @@ export function normalizeTravelGlobeRotation(
     Math.max(-65, Math.min(65, rotation[1] ?? 0)),
     0,
   ];
+}
+
+/** Flicks below this feel like a stop, not a spin — no coast. */
+export const TRAVEL_GLOBE_COAST_START_DEGREES_PER_SECOND = 34;
+/** Coast ends once the spin is imperceptibly slow. */
+export const TRAVEL_GLOBE_COAST_STOP_DEGREES_PER_SECOND = 5;
+/** A violent flick still stays trackable — about 1.6 turns per second max. */
+export const TRAVEL_GLOBE_COAST_MAX_DEGREES_PER_SECOND = 580;
+/** Exponential friction — a max-speed flick carries roughly a third turn. */
+export const TRAVEL_GLOBE_COAST_TIME_CONSTANT_MS = 550;
+
+export type TravelGlobeCoastVelocity = { x: number; y: number };
+
+/**
+ * Release velocity (already in deg/s) → clamped coast velocity, or undefined
+ * when the flick is too soft to keep spinning.
+ */
+export function travelGlobeCoastVelocity(
+  degreesPerSecondX: number,
+  degreesPerSecondY: number,
+): TravelGlobeCoastVelocity | undefined {
+  const speed = Math.hypot(degreesPerSecondX, degreesPerSecondY);
+  if (
+    !Number.isFinite(speed) ||
+    speed < TRAVEL_GLOBE_COAST_START_DEGREES_PER_SECOND
+  ) {
+    return undefined;
+  }
+  const scale = Math.min(1, TRAVEL_GLOBE_COAST_MAX_DEGREES_PER_SECOND / speed);
+  return { x: degreesPerSecondX * scale, y: degreesPerSecondY * scale };
+}
+
+/**
+ * One frame of momentum: advance the rotation, decay the velocity, and zero
+ * the pitch component once the ±65° clamp bites so the globe slides along the
+ * pole instead of grinding into it.
+ */
+export function travelGlobeCoastStep(
+  rotation: TravelGlobeRotation,
+  velocity: TravelGlobeCoastVelocity,
+  deltaMs: number,
+): {
+  rotation: TravelGlobeRotation;
+  velocity: TravelGlobeCoastVelocity;
+  done: boolean;
+} {
+  // Hitch guard: a dropped-frame burst must not teleport the globe.
+  const clampedMs = Math.min(Math.max(deltaMs, 0), 64);
+  const dt = clampedMs / 1000;
+  const rawPitch = rotation[1] + velocity.y * dt;
+  const next = normalizeTravelGlobeRotation([
+    rotation[0] + velocity.x * dt,
+    rawPitch,
+    0,
+  ]);
+  const decay = Math.exp(-clampedMs / TRAVEL_GLOBE_COAST_TIME_CONSTANT_MS);
+  const nextVelocity = {
+    x: velocity.x * decay,
+    y: rawPitch === next[1] ? velocity.y * decay : 0,
+  };
+  const done =
+    Math.hypot(nextVelocity.x, nextVelocity.y) <
+    TRAVEL_GLOBE_COAST_STOP_DEGREES_PER_SECOND;
+  return { rotation: next, velocity: nextVelocity, done };
+}
+
+/** Above this, drag/coast frames drop to the extra-coarse `fast` path. */
+export const TRAVEL_GLOBE_FAST_DEGREES_PER_SECOND = 110;
+
+export function travelGlobeDetailForMotion({
+  dragging,
+  coasting,
+  spinning,
+  warmedUp,
+  fast,
+}: {
+  dragging: boolean;
+  coasting: boolean;
+  spinning: boolean;
+  warmedUp: boolean;
+  fast: boolean;
+}): TravelGlobeDetail {
+  if ((dragging || coasting) && fast) return 'fast';
+  if (dragging || coasting || spinning || !warmedUp) return 'motion';
+  return 'rest';
+}
+
+/**
+ * Gesture px/s → globe deg/s. Pitch is inverted so an upward flick looks
+ * north, matching `rotationForDrag`.
+ */
+export function travelGlobeFlickVelocity(
+  pixelVelocityX: number,
+  pixelVelocityY: number,
+  degreesPerPixelX: number,
+  degreesPerPixelY: number,
+): TravelGlobeCoastVelocity | undefined {
+  return travelGlobeCoastVelocity(
+    pixelVelocityX * degreesPerPixelX,
+    -pixelVelocityY * degreesPerPixelY,
+  );
 }
 
 /** D3 rotation is the inverse of the geographic coordinate at screen center. */
@@ -176,16 +281,17 @@ export function travelGlobeCoordinateAtPoint(
 export function travelGlobeCameraForLayout(
   layout: { width: number; height: number },
 ): TravelGlobeCamera {
-  const width = Math.max(1, layout.width);
-  const height = Math.max(1, layout.height);
+  const width = Math.max(1, Math.round(layout.width));
+  const height = Math.max(1, Math.round(layout.height));
   const landscape = width > height;
+  const portraitCenterY = Platform.OS === 'android' ? 0.5 : 0.55;
   const radius = landscape
     ? Math.max(height * 0.68, width * 0.5)
     : Math.max(width * 0.78, height * 0.46);
   return {
     width,
     height,
-    center: [width / 2, height * (landscape ? 0.52 : 0.55)],
+    center: [width / 2, height * (landscape ? 0.52 : portraitCenterY)],
     radius,
   };
 }
@@ -194,6 +300,7 @@ export function createTravelGlobeSnapshot(
   rotation: TravelGlobeRotation,
   camera: TravelGlobeCamera = travelGlobeCameraForLayout({ width: 600, height: 600 }),
   detail: TravelGlobeDetail = 'rest',
+  includeCenters = true,
 ): TravelGlobeSnapshot {
   const projection = geoOrthographic()
     .translate(camera.center)
@@ -202,10 +309,11 @@ export function createTravelGlobeSnapshot(
     .precision(DETAIL_PRECISION[detail])
     .rotate(rotation);
   const path = geoPath(projection).digits(TRAVEL_GLOBE_PATH_DIGITS);
+  const showGraticule = detail !== 'fast';
 
   return {
     spherePath: path(SPHERE) ?? '',
-    graticulePath: path(GRATICULE) ?? '',
+    graticulePath: showGraticule ? path(GRATICULE) ?? '' : '',
     countries: ATLAS_COUNTRIES.map((country) => {
       if (!travelGlobeCountryMaybeVisible(country, rotation)) {
         return { country, path: '' };
@@ -217,7 +325,8 @@ export function createTravelGlobeSnapshot(
         rotation,
         0.08,
       );
-      const projected = visible ? projection(country.geographicCenter) : null;
+      const projected =
+        includeCenters && visible ? projection(country.geographicCenter) : null;
       return {
         country,
         path: countryPath,

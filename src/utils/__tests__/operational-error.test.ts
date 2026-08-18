@@ -35,8 +35,8 @@ describe('operational errors stay off the screen', () => {
     expect(userVisibleError('Sign in to discover and follow events.')).toBe(
       'Sign in to discover and follow events.',
     );
-    expect(userVisibleError('This list link is invalid or incomplete.')).toBe(
-      'This list link is invalid or incomplete.',
+    expect(userVisibleError('This list link looks incomplete. Ask the owner for a fresh invite.')).toBe(
+      'This list link looks incomplete. Ask the owner for a fresh invite.',
     );
   });
 

@@ -24,6 +24,8 @@
 #   AGENT_UI_KEEP_IOS=1 / KEEP_ANDROID=1 — park that platform warm (debug)
 #   AGENT_UI_KEEP_DEVICES=1 — park both platforms warm (debug)
 #   AGENT_UI_SKIP_NATIVE_FRESH=1 — skip installing the latest local debug client
+#   AGENT_UI_IOS_BRIDGE_RECONNECT_MAX / AGENT_UI_ANDROID_BRIDGE_RECONNECT_MAX — soft
+#   bridge reconnect attempts before hard ensure path (defaults: 1 / 2)
 #
 # Agents: do NOT pipe this script through `tail`/`head` — progress is on stderr/stdout
 # and pipes buffer until exit (looks hung for minutes). Prefer bare invoke or `tee`.
@@ -68,6 +70,32 @@ proof_flow_requires_account() {
   esac
 }
 
+proof_flow_has_account() {
+  proof_flow_requires_account || return 0
+  # shellcheck source=lib/agent-credentials.sh
+  source "${ROOT}/scripts/lib/agent-credentials.sh"
+  if agent_creds_load_account >/dev/null 2>&1; then
+    return 0
+  fi
+  agent_creds_account_hint >&2
+  return 1
+}
+
+now_ms() {
+  python3 -c 'import time; print(int(time.time() * 1000))'
+}
+
+emit_flow_metrics() {
+  local platform="$1"
+  local total_ms="${2:-0}"
+  local infra_ms="${3:-0}"
+  local flow_ms="${4:-0}"
+  local command_ms="${5:-0}"
+  local reconnect_count="${6:-0}"
+  printf 'verify-both: flow-metrics %s {"platform":"%s","totalMs":%s,"infraMs":%s,"flowMs":%s,"commandMs":%s,"bridgeReconnectCount":%s}\n' \
+    "${platform}" "${platform}" "${total_ms}" "${infra_ms}" "${flow_ms}" "${command_ms}" "${reconnect_count}" >&2
+}
+
 # Hold the simulator lease for the whole dual run so another thread cannot
 # interleave between iOS and Android (children inherit AGENT_UI_LOCK_HELD).
 # Pipe refuse runs at the end of host.sh (before auto-lease).
@@ -110,18 +138,31 @@ run_ios() {
   fi
   echo "verify-both: iOS (AGENT_UI_PLATFORM unset → ios)" >&2
 
+  local ios_started_ms ios_infra_ms ios_flow_start_ms ios_flow_ms ios_total_ms
+  local ios_command_exit=0
+  local ios_bridge_reconnect_count=0
+  local ios_bridge_retry_max=1
+  ios_started_ms="$(now_ms)"
+  if [[ -n "${AGENT_UI_IOS_BRIDGE_RECONNECT_MAX:-}" ]]; then
+    ios_bridge_retry_max="${AGENT_UI_IOS_BRIDGE_RECONNECT_MAX}"
+  fi
+
   # Warm reuse: app process often still alive — soft reconnect before verify.
-  (
-    export AGENT_UI_PLATFORM=ios
-    unset ONTRACK_PACKAGER_TARGET AGENT_UI_DEVICE || true
-    export AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}"
-    export AGENT_UI_LOCK_ACQUIRED=0
-    if ! agent_ui_bridge_answers && agent_ui_app_process_running; then
-      echo "verify-both: iOS app up but bridge quiet — soft reconnect…" >&2
-      agent_ui_soft_reconnect_dev_client || true
-      agent_ui_wait_for_bridge "${AGENT_UI_IOS_WARM_BRIDGE_WAIT_SECS:-10}" || true
+  export AGENT_UI_PLATFORM=ios
+  unset ONTRACK_PACKAGER_TARGET AGENT_UI_DEVICE || true
+  export AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}"
+  export AGENT_UI_LOCK_ACQUIRED=0
+  while (( ios_bridge_reconnect_count < ios_bridge_retry_max )) && ! agent_ui_bridge_answers; do
+    if ! agent_ui_app_process_running; then
+      break
     fi
-  )
+    (( ios_bridge_reconnect_count += 1 ))
+    echo "verify-both: iOS app up but bridge quiet — soft reconnect… (${ios_bridge_reconnect_count}/${ios_bridge_retry_max})" >&2
+    agent_ui_soft_reconnect_dev_client || true
+    if agent_ui_wait_for_bridge "${AGENT_UI_IOS_WARM_BRIDGE_WAIT_SECS:-10}"; then
+      break
+    fi
+  done
 
   # Clear sticky android pin so default host stamp is ios.
   # Keep lease env so the child does not wait on our lockdir.
@@ -131,15 +172,22 @@ run_ios() {
   fi
   if proof_flow_requires_account; then
     echo "verify-both: iOS flow ${PROOF_FLOW} requires agent account access" >&2
-    env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
-      AGENT_UI_PLATFORM=ios \
-      AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
-      AGENT_UI_LOCK_ACQUIRED=0 \
-      AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
-      AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
-      ONTRACK_IOS_SIMULATOR_UDID="${ONTRACK_IOS_SIMULATOR_UDID:-}" \
-      "${ROOT}/scripts/agent-ui-login.sh" || return 1
+    if proof_flow_has_account; then
+      env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
+        AGENT_UI_PLATFORM=ios \
+        AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
+        AGENT_UI_LOCK_ACQUIRED=0 \
+        AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
+        AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+        ONTRACK_IOS_SIMULATOR_UDID="${ONTRACK_IOS_SIMULATOR_UDID:-}" \
+        "${ROOT}/scripts/agent-ui-login.sh" || return 1
+    else
+      echo "verify-both: skipping iOS flow ${PROOF_FLOW} (agent account credentials not available)" >&2
+      return 0
+    fi
   fi
+
+  ios_flow_start_ms="$(now_ms)"
   env -u AGENT_UI_PLATFORM -u ONTRACK_PACKAGER_TARGET -u AGENT_UI_DEVICE \
     AGENT_UI_PLATFORM=ios \
     AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
@@ -152,6 +200,14 @@ run_ios() {
     ONTRACK_IOS_SIMULATOR_UDID="${ONTRACK_IOS_SIMULATOR_UDID:-}" \
     ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
     "${ROOT}/scripts/agent-ui.sh" "${command[@]}"
+  ios_command_exit=$?
+  local ios_flow_end_ms
+  ios_flow_end_ms="$(now_ms)"
+  ios_flow_ms="$(( ios_flow_end_ms - ios_flow_start_ms ))"
+  ios_infra_ms="$(( ios_flow_start_ms - ios_started_ms ))"
+  ios_total_ms="$(( ios_flow_end_ms - ios_started_ms ))"
+  emit_flow_metrics ios "${ios_total_ms}" "${ios_infra_ms}" "${ios_flow_ms}" "${ios_flow_ms}" "${ios_bridge_reconnect_count}"
+  return "${ios_command_exit}"
 }
 
 run_android() {
@@ -160,6 +216,15 @@ run_android() {
     return 0
   fi
   echo "verify-both: Android (AGENT_UI_PLATFORM=android)" >&2
+
+  local android_started_ms android_infra_ms android_flow_start_ms android_flow_ms android_total_ms
+  local android_command_exit=0
+  local android_bridge_reconnect_count=0
+  local android_bridge_retry_max=2
+  android_started_ms="$(now_ms)"
+  if [[ -n "${AGENT_UI_ANDROID_BRIDGE_RECONNECT_MAX:-}" ]]; then
+    android_bridge_retry_max="${AGENT_UI_ANDROID_BRIDGE_RECONNECT_MAX}"
+  fi
 
   # Boot + wait for sys.boot_completed before any route/verify work.
   # Mid-boot adb "device" previously raced into verify and failed with route=?.
@@ -210,22 +275,28 @@ run_android() {
   if [[ "${android_bridge_ok}" != "1" || -z "${android_route}" || "${android_route}" == "?" ]]; then
     # Warm reuse: app process often still alive — soft reconnect before full ensure.
     if agent_ui_app_process_running; then
-      echo "verify-both: Android app up but bridge quiet — soft reconnect…" >&2
-      agent_ui_soft_reconnect_dev_client || true
-      if agent_ui_wait_for_bridge "${AGENT_UI_ANDROID_WARM_BRIDGE_WAIT_SECS:-15}"; then
-        android_bridge_ok=1
-        android_route="$(
-          AGENT_UI_PLATFORM=android AGENT_UI_SKIP_APP_UP=1 AGENT_UI_SKIP_HEAL=1 WAIT_SECS=3 \
-            AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
-            AGENT_UI_LOCK_ACQUIRED=0 \
-            AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
-            AGENT_UI_LOCK_DIR="${AGENT_UI_LOCK_DIR:-}" \
-            AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
-            ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
-            ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
-            "${ROOT}/scripts/agent-ui-route.sh" 2>/dev/null || true
-        )"
-      fi
+      while (( android_bridge_reconnect_count < android_bridge_retry_max )) && ! agent_ui_bridge_answers; do
+        ((android_bridge_reconnect_count += 1))
+        echo "verify-both: Android app up but bridge quiet — soft reconnect… (${android_bridge_reconnect_count}/${android_bridge_retry_max})" >&2
+        agent_ui_soft_reconnect_dev_client || true
+        if agent_ui_wait_for_bridge "${AGENT_UI_ANDROID_WARM_BRIDGE_WAIT_SECS:-15}"; then
+          android_bridge_ok=1
+          android_route="$(
+            AGENT_UI_PLATFORM=android AGENT_UI_SKIP_APP_UP=1 AGENT_UI_SKIP_HEAL=1 WAIT_SECS=3 \
+              AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
+              AGENT_UI_LOCK_ACQUIRED=0 \
+              AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
+              AGENT_UI_LOCK_DIR="${AGENT_UI_LOCK_DIR:-}" \
+              AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+              ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
+              ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
+              "${ROOT}/scripts/agent-ui-route.sh" 2>/dev/null || true
+          )"
+          if [[ -n "${android_route}" && "${android_route}" != "?" ]]; then
+            break
+          fi
+        fi
+      done
     fi
   fi
   if [[ "${android_bridge_ok}" != "1" || -z "${android_route}" || "${android_route}" == "?" ]]; then
@@ -269,15 +340,21 @@ run_android() {
   fi
   if proof_flow_requires_account; then
     echo "verify-both: Android flow ${PROOF_FLOW} requires agent account access" >&2
-    AGENT_UI_PLATFORM=android \
-      AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
-      AGENT_UI_LOCK_ACQUIRED=0 \
-      AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
-      AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
-      ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
-      ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
-      "${ROOT}/scripts/agent-ui-login.sh" || return 1
+    if proof_flow_has_account; then
+      AGENT_UI_PLATFORM=android \
+        AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
+        AGENT_UI_LOCK_ACQUIRED=0 \
+        AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
+        AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+        ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
+        ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
+        "${ROOT}/scripts/agent-ui-login.sh" || return 1
+    else
+      echo "verify-both: skipping Android flow ${PROOF_FLOW} (agent account credentials not available)" >&2
+      return 0
+    fi
   fi
+  android_flow_start_ms="$(now_ms)"
   AGENT_UI_PLATFORM=android \
     AGENT_UI_ANDROID_FORCE_LAND="${android_force_land}" \
     AGENT_UI_LOCK_HELD="${AGENT_UI_LOCK_HELD:-1}" \
@@ -289,6 +366,14 @@ run_android() {
     ONTRACK_ANDROID_AVD="${ONTRACK_ANDROID_AVD:-}" \
     ONTRACK_ANDROID_SERIAL="${ONTRACK_ANDROID_SERIAL:-}" \
     "${ROOT}/scripts/agent-ui.sh" "${command[@]}"
+  android_command_exit=$?
+  local android_flow_end_ms
+  android_flow_end_ms="$(now_ms)"
+  android_flow_ms="$(( android_flow_end_ms - android_flow_start_ms ))"
+  android_infra_ms="$(( android_flow_start_ms - android_started_ms ))"
+  android_total_ms="$(( android_flow_end_ms - android_started_ms ))"
+  emit_flow_metrics android "${android_total_ms}" "${android_infra_ms}" "${android_flow_ms}" "${android_flow_ms}" "${android_bridge_reconnect_count}"
+  return "${android_command_exit}"
 }
 
 # Seeds/flows enter an agent Dev Mode sandbox — release it after close-out so

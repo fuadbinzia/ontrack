@@ -40,7 +40,12 @@ export function PlaybookEditorScreen() {
       });
       setSuggestions(result.suggestions);
     } catch (error) {
-      appPrompt.alert('Suggestions unavailable', error instanceof Error ? error.message : 'Try again later.');
+      appPrompt.alert(
+        'Ideas Aren’t Ready',
+        error instanceof Error
+          ? error.message
+          : 'We couldn’t fetch suggestions just now. You can still write the playbook yourself.',
+      );
     } finally { setSuggesting(false); }
   };
 

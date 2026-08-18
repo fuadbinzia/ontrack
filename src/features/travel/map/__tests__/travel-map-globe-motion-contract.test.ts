@@ -60,9 +60,7 @@ describe('travel map globe motion contract', () => {
     expect(globe).toContain('EMPTY_TRAVEL_GLOBE_SNAPSHOT');
     // First paint ships coarse motion geometry; the fine rest pass defers
     // until after the open transition (idle spin re-renders coarse anyway).
-    expect(globe).toContain(
-      "dragging || spinning || !warmedUp ? 'motion' : 'rest'",
-    );
+    expect(globe).toContain('travelGlobeDetailForMotion({');
     expect(globe).toContain(
       'deferAfterPageTransition(() => setWarmedUp(true))',
     );
@@ -91,8 +89,16 @@ describe('travel map globe motion contract', () => {
   it('renders coarser paths while moving or before the first-paint warm-up', () => {
     const globe = read('src/features/travel/map/travel-map-world-globe.tsx');
 
-    expect(globe).toContain(
-      "dragging || spinning || !warmedUp ? 'motion' : 'rest'",
-    );
+    expect(globe).toContain('travelGlobeDetailForMotion({');
+    expect(globe).toContain('fast: fastMotion || coasting');
+  });
+
+  it('coasts after a flick so a fast swipe keeps spinning the globe', () => {
+    const globe = read('src/features/travel/map/travel-map-world-globe.tsx');
+
+    expect(globe).toContain('travelGlobeFlickVelocity(');
+    expect(globe).toContain('travelGlobeCoastStep(');
+    expect(globe).toContain('event.velocityX');
+    expect(globe).toContain('stopCoast()');
   });
 });

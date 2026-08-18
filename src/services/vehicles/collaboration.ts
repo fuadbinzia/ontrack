@@ -186,12 +186,12 @@ export async function resolveVehicleShareLink(code: string): Promise<{
   });
   if (error || !data || typeof data !== 'object') {
     throw new VehicleCollaborationError(
-      messageFrom(error, 'This invite link is invalid or has expired.'),
+      messageFrom(error, 'This invite link expired. Ask the owner for a fresh one.'),
     );
   }
   const row = data as Record<string, unknown>;
   if (typeof row.vehicleId !== 'string' || typeof row.nickname !== 'string') {
-    throw new VehicleCollaborationError('This invite link is invalid or has expired.');
+    throw new VehicleCollaborationError('This invite link expired. Ask the owner for a fresh one.');
   }
   return {
     vehicleId: row.vehicleId,

@@ -69,7 +69,7 @@ describe('travel date range validation', () => {
 
   it('rejects a return before departure', () => {
     expect(validateTravelDateRange('2026-09-15', '2026-09-14').error).toBe(
-      'The return date must be on or after departure.',
+      'The return date needs to be on or after departure.',
     );
   });
 

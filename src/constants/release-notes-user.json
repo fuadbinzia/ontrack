@@ -1,8 +1,37 @@
 [
   {
+    "version": "1.0.130",
+    "date": "2026-08-17",
+    "notes": [
+      "Automated push."
+    ]
+  },
+  {
+    "version": "1.0.129",
+    "date": "2026-08-17",
+    "notes": [
+      "Update travel map screen state for latest UI tweaks."
+    ]
+  },
+  {
+    "version": "1.0.128",
+    "date": "2026-08-17",
+    "notes": [
+      "Finish finance statement and travel map update workflow."
+    ]
+  },
+  {
+    "version": "1.0.127",
+    "date": "2026-08-17",
+    "notes": [
+      "Automated ship push."
+    ]
+  },
+  {
     "version": "1.0.126",
     "date": "2026-08-17",
     "notes": [
+      "Ship release.",
       "Add a skill to merge remote main into the current branch."
     ]
   },

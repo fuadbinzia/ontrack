@@ -38,6 +38,7 @@ Keep this file short on purpose. Load detail only when the task needs it.
 - **Locality** → smallest entry file first; extract if touched file would stay >700 lines; prefer Shared patterns in `AGENTS.md`.
 - **Responsive chrome** → `useResponsive()` + `AppText fit` (see `responsive-layout.mdc`).
 - **Glass UI** → see `glass-ui.mdc` (product chrome is glass; no opaque paper fills).
+- **Friendly copy** → warm, helpful voice on every user-facing string (errors, prompts, modals, empties). See `friendly-copy.mdc`.
 - **Think cool** → **every new or rebuilt page** ships crafted UX in the same change (presence, one idea, restraint, glass, rest, eased open/close). Read `~/.cursor/skills/think-cool/SKILL.md` before coding the screen — do not ship a correct-but-flat first pass.
 - **Smooth transitions** → core UX principle: pages, sheets, add/remove, open/close ease — never snap-unmount visible chrome. **Page open at rest** — no FadeInDown replay on focus/remount (`page-open-rest.mdc`). Shared `Presence` / `useListEnterIds` / sheet `held` exit. Development `.cursor/rules/smooth-transitions.mdc`.
 - **Optimize** → cleanup/rename/reuse/token-slim/temp removal; read `~/.cursor/skills/optimize-code/SKILL.md`.

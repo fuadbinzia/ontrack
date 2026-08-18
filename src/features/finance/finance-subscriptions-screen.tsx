@@ -102,7 +102,7 @@ export function FinanceBillsAndSubscriptionsScreen() {
     }
     if (!personalId) {
       setRefreshFeedback({
-        message: 'A personal Finance profile is required.',
+        message: 'Add a personal Finance profile first, then we can refresh subscriptions.',
         error: true,
       });
       return;

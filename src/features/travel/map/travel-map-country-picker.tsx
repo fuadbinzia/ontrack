@@ -28,7 +28,7 @@ export function TravelMapCountryPicker({
     const needle = query.trim().toLowerCase();
     return ATLAS_COUNTRIES.filter(
       (country) => !needle || country.name.toLowerCase().includes(needle) || country.code.toLowerCase() === needle,
-    ).slice(0, 80);
+    );
   }, [query]);
   const contentStyle = useMemo(() => ({ gap: spacing.sm }), [spacing.sm]);
   const separatorStyle = useMemo(() => ({ height: spacing.xs }), [spacing.xs]);

@@ -87,7 +87,7 @@ export function FinanceAccountsScreen() {
 
   const saveManual = () => {
     if (!name.trim()) {
-      setError('Name is required.');
+      setError('Give this a name so you can find it later.');
       return;
     }
     const aprValue = parseFiniteNumber(apr);
@@ -116,8 +116,10 @@ export function FinanceAccountsScreen() {
     const exchanged = await completePlaidLink(linkToken);
     if (!exchanged.ok || !personalId) {
       appPrompt.alert(
-        'Link failed',
-        exchanged.ok ? 'No personal entity found.' : exchanged.error,
+        'Couldn’t Link Accounts',
+        exchanged.ok
+          ? 'Add a personal Finance profile first, then try linking again.'
+          : exchanged.error,
       );
       return;
     }
@@ -134,10 +136,12 @@ export function FinanceAccountsScreen() {
       const tokenResult = await createPlaidLinkToken(purpose);
       if (!tokenResult.ok) {
         appPrompt.alert(
-          purpose === 'investments' ? 'Investment linking unavailable' : 'Bank linking unavailable',
+          'Couldn’t Link Accounts',
           tokenResult.configured
             ? tokenResult.error
-            : 'Plaid is not configured for this build. Add accounts manually, or set PLAID_CLIENT_ID / PLAID_SECRET on the API host.',
+            : purpose === 'investments'
+              ? 'We couldn’t connect investments just now. You can still add accounts by hand.'
+              : 'We couldn’t connect the bank just now. You can still add accounts by hand.',
         );
         return;
       }
@@ -146,8 +150,8 @@ export function FinanceAccountsScreen() {
     } catch (linkError) {
       if (linkError instanceof FinanceServiceError && linkError.code === 'CANCELLED') return;
       appPrompt.alert(
-        'Link failed',
-        linkError instanceof Error ? linkError.message : 'Plaid Link did not finish.',
+        'Couldn’t Link Accounts',
+        linkError instanceof Error ? linkError.message : 'We couldn’t finish connecting just now.',
       );
     } finally {
       setLinking(false);
@@ -163,7 +167,7 @@ export function FinanceAccountsScreen() {
       if (provider === 'teller') {
         const synced = await syncTellerEnrollment(connectionId);
         if (!synced.ok) {
-          appPrompt.alert('Sync failed', synced.error);
+          appPrompt.alert('Couldn’t Sync', synced.error);
           return;
         }
         applyTellerSyncResult(synced, personalId, baseCurrency);
@@ -175,7 +179,7 @@ export function FinanceAccountsScreen() {
       }
       const synced = await syncPlaidItem(connectionId);
       if (!synced.ok) {
-        appPrompt.alert('Sync failed', synced.error);
+        appPrompt.alert('Couldn’t Sync', synced.error);
         return;
       }
       applyPlaidSyncResult(connectionId, synced, personalId, baseCurrency);
@@ -210,10 +214,10 @@ export function FinanceAccountsScreen() {
       }
     } catch (disconnectError) {
       appPrompt.alert(
-        'Disconnect failed',
+        'Still Connected',
         disconnectError instanceof Error
           ? disconnectError.message
-          : `${provider === 'teller' ? 'Teller' : 'Plaid'} access could not be revoked.`,
+          : 'We couldn’t remove that link just now. You can try again in a bit.',
       );
     }
   };

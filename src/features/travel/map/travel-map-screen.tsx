@@ -4,11 +4,17 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     StyleSheet,
+    Pressable,
     useWindowDimensions,
     View,
     type ModalProps,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -43,6 +49,7 @@ import {
     createTravelMapVisit,
     syncTravelMapVisitSummary,
     TRAVEL_MAP_SELF_COLOR,
+    travelMapCountryClusters,
 } from './model';
 import {
     optionalScreenOrientation,
@@ -59,6 +66,8 @@ import { TravelMapPinSheet } from './travel-map-pin-sheet';
 import {
     TravelMapIconButton,
     TravelMapLayerControls,
+    TravelMapCountryList,
+    type TravelMapCountryListCountry,
     TravelMapPeoplePicker,
     TravelMapSelectionPreview,
     TravelMapSuggestionCard,
@@ -99,7 +108,9 @@ export function TravelMapScreen() {
   const [highlightedCity, setHighlightedCity] = useState<TravelMapCity>();
   const [pinSheetOpen, setPinSheetOpen] = useState(false);
   const [peoplePickerOpen, setPeoplePickerOpen] = useState(false);
+  const [countryListExpanded, setCountryListExpanded] = useState(false);
   const [placingPin, setPlacingPin] = useState(false);
+  const [landscapeHintOpen, setLandscapeHintOpen] = useState(false);
   const [draftTripId, setDraftTripId] = useState<string>();
   const [draftCoordinate, setDraftCoordinate] = useState<{
     latitude: number;
@@ -175,6 +186,90 @@ export function TravelMapScreen() {
     friendLayers,
     self: selfPerson,
   });
+  const countryList = useMemo<TravelMapCountryListCountry[]>(() => {
+    return travelMapCountryClusters(renderedVisits)
+      .map((cluster) => ({
+        countryCode: cluster.countryCode,
+        countryName: cluster.countryName,
+        visitCount: cluster.visits.length,
+        pinCount: cluster.visits.reduce(
+          (count, rendered) => count + rendered.visit.places.length,
+          0,
+        ),
+        contributors: Object.values(
+          cluster.visits.reduce<
+            Record<
+              string,
+              {
+                userId: string;
+                displayName: string;
+                avatar?: TravelMapCountryListCountry['contributors'][number]['avatar'];
+                color: string;
+                isSelf: boolean;
+                pinCount: number;
+              }
+            >
+          >((acc, rendered) => {
+            const person = rendered.person;
+            const current = acc[person.userId];
+            if (current) {
+              current.pinCount += rendered.visit.places.length;
+              return acc;
+            }
+            acc[person.userId] = {
+              userId: person.userId,
+              displayName: person.displayName,
+              avatar: person.avatar,
+              color: person.color,
+              isSelf: Boolean(person.isSelf),
+              pinCount: rendered.visit.places.length,
+            };
+            return acc;
+          }, {}),
+        ).sort((a, b) => {
+          if (a.isSelf !== b.isSelf) return a.isSelf ? -1 : 1;
+          return a.displayName.localeCompare(b.displayName);
+        }),
+      }))
+      .sort((a, b) => a.countryName.localeCompare(b.countryName));
+  }, [renderedVisits]);
+
+  const orientationHintProgress = useSharedValue(0);
+  const orientationHintStyle = useAnimatedStyle(() => ({
+    width: 224 * orientationHintProgress.value,
+    opacity: 0.18 + orientationHintProgress.value * 0.82,
+    transform: [
+      {
+        scaleX: 0.94 + 0.06 * orientationHintProgress.value,
+      },
+      {
+        scaleY: 0.96 + 0.04 * orientationHintProgress.value,
+      },
+      {
+        translateX: (1 - orientationHintProgress.value) * 14,
+      },
+    ],
+  }));
+
+  const toggleLandscapeHint = useCallback(() => {
+    setLandscapeHintOpen((open) => !open);
+  }, []);
+
+  const orientationHintText = useMemo(() => {
+    return landscape
+      ? 'This map is optimized for landscape.'
+      : 'Rotate to landscape for a wider atlas view.';
+  }, [landscape]);
+
+  useEffect(() => {
+    orientationHintProgress.value = withTiming(
+      landscapeHintOpen ? 1 : 0,
+      {
+        duration: 190,
+        easing: Easing.out(Easing.quad),
+      },
+    );
+  }, [landscapeHintOpen, orientationHintProgress]);
 
   useSafeAreaChrome(
     selectedCountry
@@ -424,15 +519,90 @@ export function TravelMapScreen() {
               )}
             </View>
 
-            <TravelMapLayerControls
-              self={selfPerson}
-              friendLayers={friendLayers}
-              selectedFriendIds={settings.selectedFriendIds}
-              onChangeSelectedFriendIds={setSelectedFriendIds}
-              onOpenPeoplePicker={openPeoplePicker}
-            />
+            {countryCode ? (
+              <TravelMapLayerControls
+                self={selfPerson}
+                friendLayers={friendLayers}
+                selectedFriendIds={settings.selectedFriendIds}
+                onChangeSelectedFriendIds={setSelectedFriendIds}
+                onOpenPeoplePicker={openPeoplePicker}
+              />
+            ) : (
+              <View style={styles.topActionRow}>
+                <View style={styles.topActionLayerRow}>
+                  <TravelMapLayerControls
+                    self={selfPerson}
+                    friendLayers={friendLayers}
+                    selectedFriendIds={settings.selectedFriendIds}
+                    onChangeSelectedFriendIds={setSelectedFriendIds}
+                    onOpenPeoplePicker={openPeoplePicker}
+                  />
+                </View>
+                {countryList.length ? (
+                  <TravelMapIconButton
+                    testID={AgentUiIds.travel.map.countryListToggle}
+                    icon="list"
+                    label={
+                      countryListExpanded
+                        ? 'Hide visited countries list'
+                        : 'Show visited countries list'
+                    }
+                    onPress={() => setCountryListExpanded((open) => !open)}
+                  />
+                ) : null}
+              </View>
+            )}
+            {!countryCode && countryList.length ? (
+              <TravelMapCountryList
+                countries={countryList}
+                expanded={countryListExpanded}
+                selectedCountryCode={countryCode}
+                onSelectCountry={openCountry}
+              />
+            ) : null}
           </Animated.View>
         )}
+
+        {landscapeHintOpen ? (
+          <Pressable
+            style={styles.orientationHintDismissOverlay}
+            onPress={() => setLandscapeHintOpen(false)}
+          />
+        ) : null}
+        <Animated.View
+          entering={fadeEntering()}
+          style={[
+            styles.orientationHint,
+            {
+              right: 12,
+              bottom: Math.max(12, insets.bottom + 6),
+            },
+          ]}
+        >
+          <Animated.View
+            pointerEvents={landscapeHintOpen ? 'auto' : 'none'}
+            style={[styles.orientationHintTooltipHost, orientationHintStyle]}
+          >
+            <GlassPlate intensity={68} style={styles.orientationHintTooltip}>
+              <AppText
+                variant="caption"
+                style={styles.orientationHintTooltipText}
+                numberOfLines={2}
+              >
+                {orientationHintText}
+              </AppText>
+            </GlassPlate>
+          </Animated.View>
+          <TravelMapIconButton
+            compact
+            testID={AgentUiIds.travel.map.orientationHint}
+            label="Rotate map hint"
+            icon="tip"
+            dimWhenInactive
+            selected={landscapeHintOpen}
+            onPress={toggleLandscapeHint}
+          />
+        </Animated.View>
 
         {landscape ? (
           <Animated.View
@@ -712,6 +882,13 @@ const styles = StyleSheet.create({
   },
   countryNameLandscapeText: { textAlign: 'center', minWidth: 0 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  topActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  topActionLayerRow: { flex: 1 },
   titlePlate: {
     flex: 1,
     minHeight: 46,
@@ -721,6 +898,40 @@ const styles = StyleSheet.create({
   },
   titleText: { textAlign: 'center' },
   pinButton: { position: 'absolute', right: 16 },
+  orientationHint: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    alignSelf: 'flex-end',
+    zIndex: 8,
+    elevation: 8,
+  },
+  orientationHintDismissOverlay: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 7,
+    elevation: 7,
+  },
+  orientationHintTooltipHost: {
+    position: 'absolute',
+    right: 44,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  orientationHintTooltip: {
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    maxWidth: 224,
+  },
+  orientationHintTooltipText: {
+    maxWidth: 156,
+    opacity: 0.9,
+  },
   placingHintHost: {
     position: 'absolute',
     alignSelf: 'center',

@@ -43,7 +43,7 @@ export function ChecklistCollaboratorJoinScreen({ code }: { code: string }) {
       .then((result) => {
         if (!active) return;
         if (result) setResolved(result);
-        else setError('This collaborator link is invalid or has been revoked.');
+        else setError('This collaborator link is no longer open. Ask the owner for a fresh invite.');
       })
       .catch((caught: unknown) => {
         if (active) {
@@ -63,7 +63,7 @@ export function ChecklistCollaboratorJoinScreen({ code }: { code: string }) {
     return (
       <Screen contentStyle={styles.center}>
         <ErrorMessage
-          message="This collaborator link is invalid or incomplete."
+          message="This collaborator link looks incomplete. Ask the owner for a fresh invite."
           variant="heading"
           align="center"
         />

@@ -151,7 +151,10 @@ export default function ProfileSettingsScreen() {
         void (async () => {
           const result = await resetAccountData();
           if (result.status === 'failed') {
-            appPrompt.alert('Reset failed', result.message ?? 'Data reset failed.');
+            appPrompt.alert(
+              'Couldn’t Reset Data',
+              result.message ?? 'We couldn’t clear everything just now. Your data is still here.',
+            );
           }
         })();
       },
@@ -169,12 +172,17 @@ export default function ProfileSettingsScreen() {
           try {
             const result = await deleteAccount();
             if (result.status === 'failed') {
-              appPrompt.alert('Delete failed', result.message ?? 'Account deletion failed.');
+              appPrompt.alert(
+                'Couldn’t Delete Account',
+                result.message ?? 'We couldn’t finish that just now. Your account is still here.',
+              );
             }
           } catch (deleteError) {
             appPrompt.alert(
-              'Delete failed',
-              deleteError instanceof Error ? deleteError.message : 'Account deletion failed.',
+              'Couldn’t Delete Account',
+              deleteError instanceof Error
+                ? deleteError.message
+                : 'We couldn’t finish that just now. Your account is still here.',
             );
           }
         })();

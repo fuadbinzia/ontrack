@@ -438,6 +438,7 @@ Named flow: `social-friends-invite-tools` (signed-in session) opens Friends, the
 | `ontrack.peoplePicker.close`            | Close sheet          |
 | `ontrack.peoplePicker.dropdown`          | Open friend dropdown |
 | `ontrack.peoplePicker.search`           | Search field         |
+| `ontrack.peoplePicker.empty`            | Empty friend list    |
 | `ontrack.peoplePicker.friend.<friendId>`| Select friend row    |
 | `ontrack.peoplePicker.confirm`          | Confirm selection    |
 
@@ -914,6 +915,7 @@ portrait Travel screen.
 | `ontrack.travel.map.section.globe` | Interactive orthographic world globe anchor |
 | `ontrack.travel.map.section.flatWorld` | Landscape edge-to-edge flat world map anchor |
 | `ontrack.travel.map.layout.portrait` / `.landscape` | Orientation-specific layout anchors |
+| `ontrack.travel.map.orientationHint` | Opens tip explaining landscape mode for a wider atlas view |
 | `ontrack.travel.map.countryPicker.open` | Searchable country picker |
 | `ontrack.travel.map.country.<ISO>` | Country picker option |
 | `ontrack.travel.map.citySearch.open` | Open city search inside the selected country |
@@ -933,6 +935,7 @@ portrait Travel screen.
 | `ontrack.travel.map.preview.openTrip` / `.close` | Authorized full-trip action / close preview |
 | `ontrack.travel.map.preview.unpin` / `.unpin.confirm` | Owner-only unpin action / destructive confirmation |
 | `ontrack.travel.map.people.open` | Open friend overlay picker |
+| `ontrack.travel.map.overlay.empty` | Overlay sheet empty (no friends sharing / already overlaid) |
 | `ontrack.travel.map.person.<userId>` | Colored avatar-ring layer control |
 | `ontrack.travel.map.share.toggle` | Owner friend-sharing opt-in inside the friend-overlay sheet |
 | `ontrack.travel.map.suggestion.confirm` / `.skip` | Review or dismiss an inferred existing-trip pin |

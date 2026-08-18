@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Linking, View } from 'react-native';
+import { View } from 'react-native';
 
 import {
   appPrompt,
@@ -14,6 +14,7 @@ import { useResponsive } from '@/hooks/use-responsive';
 import { useFinance } from '@/store/finance';
 import { AgentTestId, AgentUiIds } from '@/utils/agent-ui';
 import { todayKey } from '@/utils/date';
+import { openHttpsUrl } from '@/utils/safe-url';
 
 import { FINANCE_CREDIT_PROVIDERS } from './credit-providers';
 import {
@@ -24,6 +25,19 @@ import {
   type FinanceCreditBureau,
   type FinanceCreditModel,
 } from './types';
+
+export async function openCreditProviderUrl(url: string): Promise<boolean> {
+  return openHttpsUrl(url);
+}
+
+export async function openCreditProviderUrlOrAlert(
+  url: string,
+  onInvalidUrl?: () => void,
+): Promise<boolean> {
+  const opened = await openCreditProviderUrl(url);
+  if (!opened) onInvalidUrl?.();
+  return opened;
+}
 
 export function FinanceCreditSheet({
   visible,
@@ -53,7 +67,7 @@ export function FinanceCreditSheet({
   const save = () => {
     const score = Number.parseInt(scoreText.replace(/\D/g, ''), 10);
     if (!Number.isFinite(score) || score < 300 || score > 850) {
-      appPrompt.alert('Invalid score', 'Enter a score between 300 and 850.');
+      appPrompt.alert('Check the Score', 'Credit scores usually sit between 300 and 850.');
       return;
     }
     setCreditScore({
@@ -67,11 +81,10 @@ export function FinanceCreditSheet({
   };
 
   const openProvider = async (url: string) => {
-    try {
-      await Linking.openURL(url);
-    } catch {
-      appPrompt.alert('Could not open link', 'Open the site in a browser instead.');
-    }
+    const opened = await openCreditProviderUrlOrAlert(url, () => {
+      appPrompt.alert('Couldn’t Open That Site', 'Try opening it in your browser instead.');
+    });
+    if (!opened) return;
   };
 
   return (

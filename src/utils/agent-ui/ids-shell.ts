@@ -249,6 +249,7 @@ export const agentUiIdsShell = {
     close: 'ontrack.peoplePicker.close',
     dropdown: 'ontrack.peoplePicker.dropdown',
     search: 'ontrack.peoplePicker.search',
+    empty: 'ontrack.peoplePicker.empty',
     friend: (friendId: string) => `ontrack.peoplePicker.friend.${friendId}`,
     confirm: 'ontrack.peoplePicker.confirm',
   },

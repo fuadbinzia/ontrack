@@ -134,6 +134,16 @@ if [[ "${AGENT_UI_PLATFORM:-}" == "android" || "$PACKAGER_TARGET" == "android" ]
   export ONTRACK_PACKAGER_TARGET=android
 fi
 
+# H17: Android pool-slot ports share one host if port unset; default to 8191+slot.
+if [[ "${AGENT_UI_PLATFORM:-}" == "android" && -z "${AGENT_UI_HTTP_PORT:-}" ]]; then
+  if [[ -n "${AGENT_UI_SLOT:-}" && "${AGENT_UI_SLOT}" =~ ^[1-9][0-9]*$ ]]; then
+    AGENT_UI_HTTP_PORT="$((8191 + AGENT_UI_SLOT))"
+  else
+    AGENT_UI_HTTP_PORT=8191
+  fi
+  export AGENT_UI_HTTP_PORT
+fi
+
 # Serialize device-touching ensure runs. Overlapping agents that each call
 # `simctl get_app_container` / terminate / launch wedge CoreSimulator and freeze
 # Simulator.app. Metro-only / check-only skip the lock (no device RPCs).
@@ -306,7 +316,12 @@ probe_connected() {
   # Skip heal recursion (dump → open → heal → ensure → probe).
   # Skip simulator lease — we already hold ensure-packager.lockdir; taking the
   # agent-ui lease here can deadlock against a verify thread waiting on us.
-  AGENT_UI_SKIP_HEAL=1 AGENT_UI_SKIP_LEASE=1 AGENT_UI_PLATFORM="${AGENT_UI_PLATFORM}" WAIT_SECS=3 \
+  local probe_wait_secs=3
+  if [[ "${PACKAGER_TARGET}" == "android" ]]; then
+    # Android JS startup is frequently slower than iOS after cold wakes.
+    probe_wait_secs=6
+  fi
+  AGENT_UI_SKIP_HEAL=1 AGENT_UI_SKIP_LEASE=1 AGENT_UI_PLATFORM="${AGENT_UI_PLATFORM}" WAIT_SECS="${probe_wait_secs}" \
     ./scripts/agent-ui-dump.sh >/dev/null 2>&1
 }
 

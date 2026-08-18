@@ -1,7 +1,7 @@
 {
   "name": "ontrack",
   "main": "expo-router/entry",
-  "version": "1.0.126",
+  "version": "1.0.130",
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -143,7 +143,8 @@
     "system-map:check": "node ~/.codex/skills/living-system-map/scripts/atlas.mjs check --repo .",
     "system-map:baseline": "node ~/.codex/skills/living-system-map/scripts/atlas.mjs baseline --repo .",
     "system-map:analytics": "node scripts/living-system-map-analytics.mjs",
-    "flow-proof": "node scripts/agent-ui-flow-proof-batch.mjs"
+    "flow-proof": "node scripts/agent-ui-flow-proof-batch.mjs",
+    "flow-proof:latency": "node scripts/agent-ui-flow-latency-report.mjs"
   },
   "jest": {
     "preset": "jest-expo",

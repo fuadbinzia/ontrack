@@ -149,7 +149,11 @@ export function FlightSearchScreen({
   if (!plan) {
     return (
       <Screen style={travelStyle} refresh={false}>
-        <EmptyState icon="flight" title="Trip Not Found" message="This trip may have been removed." />
+        <EmptyState
+          icon="flight"
+          title="This Trip Isn’t Here"
+          message="This trip may have been removed."
+        />
       </Screen>
     );
   }
@@ -190,12 +194,12 @@ export function FlightSearchScreen({
       setError(
         searchError instanceof FlightSearchError
           ? {
-              title: 'Live prices unavailable',
+              title: 'Live Prices Are Taking a Break',
               detail: searchError.message,
             }
           : {
-              title: 'Live prices unavailable',
-              detail: 'Flight search is temporarily unavailable. Try again in a moment.',
+              title: 'Live Prices Are Taking a Break',
+              detail: 'Saved trips are still here. Try the search again in a moment.',
             },
       );
     } finally {

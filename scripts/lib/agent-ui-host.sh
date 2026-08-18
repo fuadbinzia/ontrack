@@ -145,8 +145,23 @@ agent_ui_bridge_is_warm() {
     python3 "$(agent_ui_bridge_py)" warm >/dev/null 2>&1
 }
 
+agent_ui_bridge_http_port() {
+  local platform="${1:-$(agent_ui_platform)}"
+  local port="${AGENT_UI_HTTP_PORT:-8191}"
+  if [[ "$platform" != "android" ]]; then
+    printf '%s\n' "$port"
+    return 0
+  fi
+  if [[ "$port" == "8191" && -n "${AGENT_UI_SLOT:-}" && "${AGENT_UI_SLOT}" =~ ^[1-9][0-9]*$ ]]; then
+    printf '%s\n' "$((port + AGENT_UI_SLOT))"
+    return 0
+  fi
+  printf '%s\n' "$port"
+}
+
 agent_ui_ensure_daemon() {
   AGENT_UI_ROOT="$(agent_ui_repo_root)" \
+    AGENT_UI_HTTP_PORT="$(agent_ui_bridge_http_port)" \
     python3 "$(agent_ui_bridge_py)" ensure-daemon >/dev/null 2>&1
 }
 
@@ -970,6 +985,7 @@ agent_ui_send() {
   AGENT_UI_PLATFORM="$(agent_ui_platform)" \
   AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
   AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+  AGENT_UI_HTTP_PORT="$(agent_ui_bridge_http_port)" \
   BUNDLE_ID="${BUNDLE_ID}" \
   DUMP_NAME="${DUMP_NAME}" \
   STATUS_NAME="${STATUS_NAME}" \
@@ -1072,6 +1088,7 @@ agent_ui_send_op() {
   AGENT_UI_PLATFORM="$(agent_ui_platform)" \
   AGENT_UI_SLOT="${AGENT_UI_SLOT:-}" \
   AGENT_UI_POOL_MODE="${AGENT_UI_POOL_MODE:-}" \
+  AGENT_UI_HTTP_PORT="$(agent_ui_bridge_http_port)" \
   BUNDLE_ID="${BUNDLE_ID}" \
   DUMP_NAME="${DUMP_NAME}" \
   STATUS_NAME="${STATUS_NAME}" \

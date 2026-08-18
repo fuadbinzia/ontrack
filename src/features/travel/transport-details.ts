@@ -217,7 +217,7 @@ export function validateTransportDetails(input: {
     draft.arrivalMinutes,
   );
   if (!Number.isFinite(duration) || duration <= 0) {
-    return { ok: false, error: 'Arrival must be after departure.' };
+    return { ok: false, error: 'Arrival needs to be after departure.' };
   }
   if (draft.distance.trim()) {
     const distance = Number(draft.distance.replace(',', '.'));

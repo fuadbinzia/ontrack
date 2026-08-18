@@ -44,7 +44,7 @@ export function appleNameMetadata(fullName?: {
 }
 
 export function accessibleAuthError(error: unknown) {
-  const fallback = 'Sign-in could not be completed. Check your connection and try again.';
+  const fallback = 'We couldn’t finish sign-in. Check your connection, or continue as a guest.';
   const objectMessage =
     error &&
     typeof error === 'object' &&
@@ -57,10 +57,10 @@ export function accessibleAuthError(error: unknown) {
     return 'You appear to be offline. Reconnect and try again, or continue as a guest.';
   }
   if (/configured|configuration|provider is not enabled/i.test(message)) {
-    return 'Account sign-in is unavailable in this build. You can continue as a guest.';
+    return 'Sign-in isn’t available in this build. You can keep going as a guest.';
   }
   if (/malformed|valid code|match this device|not started from this device/i.test(message)) {
-    return 'That sign-in link is invalid or expired. Start again from this device.';
+    return 'That sign-in link expired. Start again from this device.';
   }
   if (/app_state_domain_check|addon_entitlements_addon_id_check/i.test(message)) {
     return 'Cloud sync needs a database update before this account can finish signing in. Apply the latest Supabase migrations, then try again.';
@@ -75,7 +75,7 @@ function requireClient() {
   const client = getSupabaseClient();
   if (!client) {
     throw new CloudAccountError(
-      'Account sign-in is not configured for this build. You can continue as a guest.',
+      'Sign-in isn’t available in this build. You can keep going as a guest.',
     );
   }
   return client;

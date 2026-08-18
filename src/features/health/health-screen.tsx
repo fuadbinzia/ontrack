@@ -143,7 +143,10 @@ export function HealthScreen() {
         await refreshHealth();
       }
     } catch {
-      appPrompt.alert('Apple Health unavailable', 'Install the latest native build, then try again.');
+      appPrompt.alert(
+        'Couldn’t Reach Apple Health',
+        'This needs the latest onTrack on an iPhone. Your mood journal still works here.',
+      );
     }
   };
 
@@ -265,7 +268,7 @@ export function HealthScreen() {
               </View>
               <AppText variant="callout" color="accent">{Math.round(workout.durationMinutes)} min</AppText>
             </Card>
-          )) : <EmptyState icon="gym" title="No authorized workouts" message="Workouts will appear after Apple Health has shared them with onTrack." />}
+          )) : <EmptyState icon="gym" title="No Workouts Yet" message="They’ll show up here after Apple Health shares them with onTrack." />}
         </>
       ) : (
         <>

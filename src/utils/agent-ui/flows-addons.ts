@@ -77,7 +77,6 @@ export const AGENT_UI_ADDON_FLOWS = {
       id: 'ontrack.profile.avatar.close',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
-    { op: 'wait', ms: 250 },
   ],
   'open-profile-identity': [
     { op: 'dismiss', prefix: 'ontrack.profile.identity.' },
@@ -93,16 +92,25 @@ export const AGENT_UI_ADDON_FLOWS = {
       id: 'ontrack.profile.identity.close',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
-    { op: 'wait', ms: 250 },
   ],
   'open-developer': [
-    { op: 'goto', to: 'developer' },
+    { op: 'goto', to: 'profile' },
+    {
+      op: 'wait',
+      id: 'ontrack.profile.section.account',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
+    {
+      op: 'assert',
+      id: 'ontrack.profile.section.developer',
+      to: 'profile',
+    },
+    { op: 'tap', id: 'ontrack.profile.developer' },
     {
       op: 'wait',
       id: 'ontrack.developer.devMode',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
-    { op: 'wait', ms: 250 },
   ],
   'profile-privacy-data': [
     { op: 'goto', to: 'profile' },
@@ -111,8 +119,11 @@ export const AGENT_UI_ADDON_FLOWS = {
       id: 'ontrack.profile.section.privacyData',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
-    { op: 'scroll', id: 'ontrack.profile.section.privacyData' },
-    { op: 'wait', ms: 250 },
+    {
+      op: 'wait',
+      id: 'ontrack.profile.downloadData',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
   ],
   'profile-download-data': [
     { op: 'goto', to: 'profile-download-data' },
@@ -121,7 +132,6 @@ export const AGENT_UI_ADDON_FLOWS = {
       id: 'ontrack.profile.downloadData',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
-    { op: 'wait', ms: 250 },
   ],
   'profile-usage-analytics': [
     { op: 'goto', to: 'profile' },
@@ -130,8 +140,11 @@ export const AGENT_UI_ADDON_FLOWS = {
       id: 'ontrack.profile.usageAnalytics',
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
-    { op: 'scroll', id: 'ontrack.profile.usageAnalytics' },
-    { op: 'wait', ms: 250 },
+    {
+      op: 'wait',
+      id: 'ontrack.profile.section.features',
+      timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
+    },
   ],
 
   finance: [
@@ -378,7 +391,7 @@ export const AGENT_UI_ADDON_FLOWS = {
   ],
   social: [
     { op: 'goto', to: 'social' },
-    { op: 'wait', prefix: 'ontrack.social.', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
+    { op: 'wait', to: 'social', timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS },
   ],
   'friend-invite-sign-in': [
     { op: 'goto', to: 'f/agent-ui-friend-invite' },
@@ -546,9 +559,10 @@ export const AGENT_UI_ADDON_FLOWS = {
   ],
   plants: [
     { op: 'goto', to: 'plants' },
+    { op: 'seed', to: 'plants-demo' },
     {
       op: 'wait',
-      prefix: 'ontrack.plants.',
+      id: `ontrack.plants.list.plant.${AGENT_UI_DEMO_PLANT_ID}`,
       timeoutMs: AGENT_UI_WAIT_TIMEOUT_MS,
     },
   ],

@@ -5,13 +5,15 @@ const root = process.cwd();
 const read = (relative: string) => readFileSync(join(root, relative), 'utf8');
 
 describe('dock search chrome', () => {
-  it('expands over mounted tabs and hosts results outside overflow-hidden barInner', () => {
+  it('expands over mounted tabs and hosts results outside overflow-hidden chrome', () => {
     const bar = read('src/components/navigation/bottom-nav-bar.tsx');
     const search = read('src/components/navigation/bottom-nav-search.tsx');
     const dock = read('src/components/navigation/bottom-nav-dock.tsx');
     expect(bar).toContain('BottomNavSearch');
     expect(bar).toContain("pointerEvents={searchExpanded ? 'none' : 'auto'}");
-    expect(bar).toContain('overflow: \'hidden\'');
+    expect(bar).toMatch(/barInner: \{[\s\S]*overflow: 'visible'/);
+    expect(bar).toMatch(/bar: \{[\s\S]*overflow: 'visible'/);
+    expect(bar).toMatch(/chromeClip: \{[\s\S]*overflow: 'hidden'/);
     expect(dock).toContain('DockSearchOverlay');
     expect(dock).toContain("androidMode: 'resize'");
     expect(dock).toContain("androidMode: 'modal'");
@@ -39,7 +41,7 @@ describe('dock search chrome', () => {
     expect(bar).toMatch(
       /opacity: interpolate\(searchProgress\.value, \[0, 1\], \[1, 0\]\)/,
     );
-    expect(bar).toMatch(/style=\{\[StyleSheet\.absoluteFill, chromeFade\]\}/);
+    expect(bar).toMatch(/style=\{\[StyleSheet\.absoluteFill,[\s\S]*chromeFade\]\}/);
     expect(bar).toContain('{chromeHeld ? (');
     expect(bar).toContain('accessibilityElementsHidden={searchExpanded}');
     expect(bar).toContain('<BlurView');
@@ -50,10 +52,43 @@ describe('dock search chrome', () => {
     expect(search).toContain('GlassPlate');
     expect(search).not.toContain('surface="solid"');
     expect(dock).toContain('DockSearchOverlay');
-    expect(overlay).toContain('theme.overlayScrim');
+    expect(overlay).toContain('<BlurView');
+    expect(overlay).toContain('LinearGradient');
+    expect(overlay).toContain('dockSearchBackdropGradientColors');
+    expect(overlay).toContain('backdropStyle');
+    expect(overlay).toMatch(/withTiming\(expanded \? 1 : 0/);
+    expect(overlay).not.toContain('scrimStyle');
+    expect(overlay).not.toContain('theme.overlayScrim');
     expect(overlay).toContain(
       'Boolean(query.trim()) && groups.some((group) => group.items.length > 0)',
     );
+  });
+
+  it('centers collapsed search between split pins with More last', () => {
+    const bar = read('src/components/navigation/bottom-nav-bar.tsx');
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    expect(bar).toContain('splitDockSearchPins');
+    expect(bar).toContain('leftPins.map(renderBarSlot)');
+    expect(bar).toContain('rightPins.map(renderBarSlot)');
+    expect(bar).toContain('width: searchWell');
+    expect(bar).not.toContain('paddingLeft: searchWell');
+    expect(bar).toContain('collapsedLeft={collapsedLeft}');
+    expect(bar).toContain('collapsedLeft = leftPins.length * searchWell');
+    expect(bar).toContain('dockSearchMoreIcon(inNav.length)');
+    expect(bar).toContain("kind: 'more'");
+    expect(bar).not.toContain('more-vertical');
+    const layout = read('src/features/search/dock-search-layout.ts');
+    expect(layout).toContain("return 'more'");
+    expect(layout).not.toContain('more-vertical');
+    expect(search).toContain('collapsedLeft');
+    expect(search).toMatch(
+      /left: interpolate\(progress\.value, \[0, 1\], \[collapsedLeft, 0\]\)/,
+    );
+    expect(search).toMatch(
+      /width: interpolate\(progress\.value, \[0, 1\], \[well, railWidth\]\)/,
+    );
+    expect(search).toContain('dockSearchCollapsedShellSize');
+    expect(search).toContain('collapsedShellHeight');
   });
 
   it('collapses when a modal sheet opens', () => {
@@ -74,9 +109,14 @@ describe('dock search chrome', () => {
     expect(search).toContain('dockSearchWrappedLineCount');
     expect(search).toContain('multiline={expandLayout}');
     expect(search).toContain("const expandLayout = DOCK_SEARCH_LAYOUT === 'expand'");
-    expect(search).toContain('scrollEnabled={expandLayout}');
+    expect(search).toContain('dockSearchInputShouldScroll');
+    expect(search).toContain(
+      'scrollEnabled={expandLayout && dockSearchInputShouldScroll(lineCount)}',
+    );
     expect(search).not.toContain('scrollEnabled={inputShouldScroll}');
     expect(search).toContain('onContentSizeChange={onContentSizeChange}');
+    expect(search).toContain('dockSearchWrappedLineCount');
+    expect(search).toContain('DOCK_SEARCH_INPUT_MAX_LINES');
     expect(search).toContain('setFieldHeight');
     expect(search).toContain('blurOnSubmit');
     expect(search).toContain('height: fieldShellHeight');
@@ -102,9 +142,11 @@ describe('dock search chrome', () => {
     );
     expect(search).toContain('multiline={expandLayout}');
     expect(search).toMatch(
-      /fieldShellHeight = expandLayout && expanded \? grownHeight : well/,
+      /fieldShellHeight =\s*expandLayout && expanded \? grownHeight : collapsedShellHeight/,
     );
-    expect(search).toContain('scrollEnabled={expandLayout}');
+    expect(search).toContain(
+      'scrollEnabled={expandLayout && dockSearchInputShouldScroll(lineCount)}',
+    );
     expect(search).toContain('setLineCount');
     expect(search).toContain('dockSearchWrappedLineCount');
     expect(bar).toContain('dockSearchBarHeight({');
@@ -113,7 +155,9 @@ describe('dock search chrome', () => {
   it('does not bind the TextInput frame to raw contentSize while typing', () => {
     const search = read('src/components/navigation/bottom-nav-search.tsx');
     expect(search).toContain('height: fieldShellHeight');
-    expect(search).toContain('scrollEnabled={expandLayout}');
+    expect(search).toContain(
+      'scrollEnabled={expandLayout && dockSearchInputShouldScroll(lineCount)}',
+    );
     expect(search).toContain('fieldInputStyle');
     expect(search).not.toContain('setContentHeight');
     expect(search).not.toMatch(/height:\s*expandLayout \? grownHeight/);
@@ -145,5 +189,132 @@ describe('dock search chrome', () => {
     expect(micIndex).toBeGreaterThan(stopIndex);
     expect(search).toMatch(/listening \? \([\s\S]*icon="stop"[\s\S]*icon="microphone"/);
     expect(search).not.toMatch(/listening[\s\S]{0,200}requestMic/);
+  });
+
+  it('renders a raised circular glass search well without an Ask AI caption', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    expect(search).not.toContain('Ask AI');
+    expect(search).not.toContain('AuthBrandMark');
+    expect(search).toContain('placeholder="Ask onTrack or Search"');
+    expect(search).not.toContain('placeholder="Ask onTrack or Search..."');
+    expect(search).toContain('<GlassPlate airy style={wellPlateStyle}>');
+    expect(search).toContain('borderRadius: wellButtonSize / 2');
+    expect(search).toContain('<Symbol name="search"');
+    expect(search).toContain("accessibilityLabel=\"Search\"");
+    expect(search).toContain("label: 'Search'");
+    expect(search).toContain('AgentUiIds.tabs.search');
+    expect(search).toContain('expand({ listen: true })');
+    expect(search).toContain('dockSearchCollapsedWellLift');
+    expect(search).toContain('translateY: -wellLift');
+    expect(search).not.toContain('translateY: -s(8)');
+    expect(search).not.toContain('surface="solid"');
+    expect(search).not.toContain('backgroundElevated');
+  });
+
+  it('does not pass a leading search icon on the expanded Input', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const inputOpen = search.indexOf('<Input');
+    const trailingStart = search.indexOf('trailing={', inputOpen);
+    expect(inputOpen).toBeGreaterThan(-1);
+    expect(trailingStart).toBeGreaterThan(inputOpen);
+    const inputHead = search.slice(inputOpen, trailingStart);
+    expect(inputHead).not.toMatch(/\bicon=/);
+    expect(search).not.toContain('icon="search"');
+    expect(search).not.toContain("icon='search'");
+    expect(search).not.toContain('icon={query.length > 0');
+    expect(search).toContain('placeholder="Ask onTrack or Search"');
+    expect(search).not.toContain('placeholder="Ask onTrack or Search..."');
+    expect(search).toContain('<Symbol name="search"');
+  });
+
+  it('does not add unused vertical pad onto the expanded 1-line field height', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    expect(search).toMatch(
+      /grownHeight = dockSearchFieldHeightForLineCount\(\s*inputBaseHeight,\s*oneLineHeight,\s*visibleLines,\s*\)/,
+    );
+    expect(search).not.toContain('fieldPadY * 2');
+    expect(search).not.toMatch(/grownHeight[\s\S]{0,220}\+\s*fieldPadY/);
+    expect(search).not.toContain('const fieldPadY');
+    expect(search).not.toContain('paddingTop: fieldPadY');
+    expect(search).not.toContain('paddingBottom: fieldPadY');
+    expect(search).toMatch(/fieldInputStyle[\s\S]*?paddingVertical:\s*0/);
+    expect(search).not.toMatch(
+      /Math\.ceil\(oneLineHeight\) \* DOCK_SEARCH_INPUT_MAX_LINES \+ fieldPadY/,
+    );
+  });
+
+  it('keeps horizontal inset and grows downward only after wrap', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    expect(search).toContain('paddingLeft: fieldPadX');
+    expect(search).not.toMatch(/paddingLeft:[\s\S]{0,80}query\.length/);
+    expect(search).not.toContain('leadingIconReserve');
+    expect(search).toContain('const fieldPadX = s(10)');
+    expect(search).toContain(
+      "textAlignVertical: (lineCount > 1 ? 'top' : 'center') as 'top' | 'center'",
+    );
+    expect(search).toContain('dockSearchFieldHeightForLineCount');
+    expect(search).toContain('DOCK_SEARCH_INPUT_MAX_LINES');
+    expect(search).toContain(
+      'scrollEnabled={expandLayout && dockSearchInputShouldScroll(lineCount)}',
+    );
+    expect(search).toContain('GlassPlate');
+    expect(search).not.toContain('surface="solid"');
+    expect(search).toContain('placeholder="Ask onTrack or Search"');
+    expect(search).not.toContain('placeholder="Ask onTrack or Search..."');
+  });
+
+  it('focuses the expanded field on tap without waiting for the chrome timer', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    expect(search).toContain('autoFocus={expanded && !skipFocus}');
+    expect(search).toContain('const skipFocus = listenOnExpand || skipFocusAfterListen');
+    expect(search).toContain('setSkipFocusAfterListen(true)');
+    expect(search).not.toContain('focusReady');
+    expect(search).not.toContain('setFocusReady');
+    expect(search).toContain('expand({ listen: true })');
+  });
+
+  it('centers the collapsed search glyph in the circular well', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    expect(search).toContain('wellIconSlotStyle');
+    expect(search).toMatch(
+      /wellIconSlotStyle = useMemo\(\s*\(\) => \(\{[\s\S]*?width: wellButtonSize,[\s\S]*?height: wellButtonSize,[\s\S]*?alignItems: 'center'[\s\S]*?justifyContent: 'center'/,
+    );
+    expect(search).toContain('<View style={wellIconSlotStyle} pointerEvents="none">');
+    expect(search).toContain('<Symbol name="search" size={20}');
+    expect(search).not.toMatch(/<Symbol name="search"[^>]*transform/);
+    expect(search).toContain('dockSearchCollapsedWellLift');
+    expect(search).toContain('translateY: -wellLift');
+    expect(search).not.toContain('translateY: -s(8)');
+    expect(search).toContain("accessibilityLabel=\"Search\"");
+    expect(search).toContain('AgentUiIds.tabs.search');
+  });
+
+  it('keeps collapsed search height on the circular plate instead of 3-pin slot width', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const layout = read('src/features/search/dock-search-layout.ts');
+    expect(search).toContain('dockSearchCollapsedShellSize');
+    expect(layout).toContain('export function dockSearchCollapsedShellSize');
+    expect(search).toContain('slotWidth: well');
+    expect(search).toContain('wellButtonSize');
+    expect(search).toMatch(
+      /height: interpolate\(\s*progress\.value,\s*\[0, 1\],\s*\[collapsedShellHeight, shellHeight\.value\],\s*\)/,
+    );
+    expect(search).not.toMatch(
+      /height: interpolate\(progress\.value, \[0, 1\], \[well, shellHeight\.value\]\)/,
+    );
+    expect(search).toContain('width: interpolate(progress.value, [0, 1], [well, railWidth])');
+    expect(search).toMatch(/width: well,/);
+    expect(search).not.toContain('collapsedShell.height');
+    expect(search).not.toContain('fieldInputStyle = useMemo');
+    expect(search).toContain('dockSearchCollapsedWellLift');
+    expect(search).toContain('layout.bottomNavBarBaseHeight');
+    expect(search).toContain('spacing.xxs');
+    expect(search).toContain('translateY: -wellLift');
+    expect(search).toMatch(
+      /dockSearchCollapsedWellLift\(\{\s*barBaseHeight: layout\.bottomNavBarBaseHeight,\s*barPaddingTop: spacing\.xxs,\s*wellButtonSize,\s*\}\)/,
+    );
+    expect(search).not.toContain('shellHeight: collapsedShellHeight');
+    expect(layout).toContain('DOCK_SEARCH_COLLAPSED_WELL_HANG_RATIO = 0.15');
+    expect(layout).not.toContain('shellHeight: number');
   });
 });

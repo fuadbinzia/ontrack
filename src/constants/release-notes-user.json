@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.134",
+    "date": "2026-08-18",
+    "notes": [
+      "Center dock search with 3 or 5 pins and a frosted Ask AI overlay."
+    ]
+  },
+  {
     "version": "1.0.133",
     "date": "2026-08-18",
     "notes": [

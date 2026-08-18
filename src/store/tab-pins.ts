@@ -53,7 +53,7 @@ export const useTabPins = create<TabPinsState>()(
       },
       addToNav: (routeName) => {
         const trackerOrder = sanitizeTrackerOrder(get().trackerOrder);
-        let pinnedCount = clampPinnedCount(
+        const pinnedCount = clampPinnedCount(
           get().pinnedCount,
           trackerOrder.length,
         );
@@ -62,9 +62,16 @@ export const useTabPins = create<TabPinsState>()(
         if (inNav.includes(routeName)) return;
         if (!others.includes(routeName)) return;
         if (pinnedCount >= NAV_PIN_LIMIT) return;
-        const nextOthers = others.filter((name) => name !== routeName);
+        const nextPins = [
+          ...inNav,
+          routeName,
+          ...others.filter((name) => name !== routeName),
+        ];
         set(
-          mergeTrackerSections([...inNav, routeName], nextOthers),
+          mergeTrackerSections(
+            nextPins.slice(0, NAV_PIN_LIMIT),
+            nextPins.slice(NAV_PIN_LIMIT),
+          ),
         );
       },
       removeFromNav: (routeName) => {
@@ -77,10 +84,11 @@ export const useTabPins = create<TabPinsState>()(
         const inNav = trackerOrder.slice(0, pinnedCount);
         const others = trackerOrder.slice(pinnedCount);
         if (!inNav.includes(routeName)) return;
+        const remaining = inNav.filter((name) => name !== routeName);
         set(
           mergeTrackerSections(
-            inNav.filter((name) => name !== routeName),
-            [routeName, ...others],
+            remaining.slice(0, NAV_PIN_MIN),
+            [routeName, ...remaining.slice(NAV_PIN_MIN), ...others],
           ),
         );
       },

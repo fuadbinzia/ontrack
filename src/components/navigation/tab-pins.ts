@@ -1,8 +1,16 @@
 /** Pure helpers for pinned bottom-nav trackers (fixed slots + Trackers page). */
 
-/** Slots in the bar before the always-present More / Trackers control. */
-export const NAV_PIN_LIMIT = 4;
-export const NAV_PIN_MIN = 1;
+/**
+ * Pins beside center search, before More.
+ * User-facing dock is only 3 or 5 pins (Search centered; More last).
+ */
+export const NAV_PIN_LIMIT = 5;
+export const NAV_PIN_MIN = 3;
+export const NAV_PIN_COUNTS = [NAV_PIN_MIN, NAV_PIN_LIMIT] as const;
+export const NAV_DOCK_EXTRA_COUNTS = [3, 5] as const;
+
+export type NavPinCount = (typeof NAV_PIN_COUNTS)[number];
+export type NavDockExtraCount = (typeof NAV_DOCK_EXTRA_COUNTS)[number];
 
 /**
  * Default left→right bar pins (then More).
@@ -14,9 +22,10 @@ export const DEFAULT_NAV_PIN_ORDER = [
   'calendar',
 ] as const;
 
-export const DEFAULT_PINNED_COUNT = DEFAULT_NAV_PIN_ORDER.length;
+/** Five pins around center search; More stays last. */
+export const DEFAULT_PINNED_COUNT = NAV_PIN_LIMIT;
 
-/** Full tracker catalog order (More / trackers excluded — always the 5th bar slot). */
+/** Full tracker catalog order (More / trackers excluded — always last in the bar). */
 export const DEFAULT_TRACKER_ORDER = [
   ...DEFAULT_NAV_PIN_ORDER,
   'overview',
@@ -77,13 +86,30 @@ export function sanitizeTrackerOrder(
   return next;
 }
 
+/**
+ * Snap to 3 or 5 pins (excluding Search and More).
+ * Stored 1–3 → 3. Stored 4+ → 5 when `orderLength >= 5`, else 3.
+ */
 export function clampPinnedCount(
   count: number,
   orderLength: number,
 ): number {
-  if (!Number.isFinite(count)) return NAV_PIN_LIMIT;
-  const max = Math.min(NAV_PIN_LIMIT, Math.max(NAV_PIN_MIN, orderLength));
-  return Math.min(max, Math.max(NAV_PIN_MIN, Math.round(count)));
+  const allowFive = orderLength >= NAV_PIN_LIMIT;
+  if (!Number.isFinite(count)) {
+    return allowFive ? NAV_PIN_LIMIT : NAV_PIN_MIN;
+  }
+  const rounded = Math.round(count);
+  if (rounded >= 4 && allowFive) return NAV_PIN_LIMIT;
+  return NAV_PIN_MIN;
+}
+
+/** Extra dock icons = pin count after clamp. Always 3 or 5. */
+export function navDockExtraCount(pinCount: number): NavDockExtraCount {
+  return pinCount >= NAV_PIN_LIMIT ? 5 : 3;
+}
+
+export function pinCountFromDockExtras(extras: NavDockExtraCount): NavPinCount {
+  return extras === 5 ? NAV_PIN_LIMIT : NAV_PIN_MIN;
 }
 
 /** Enabled trackers in persisted order, split by pinnedCount. */

@@ -133,6 +133,12 @@ export const appIcons = {
   },
   sort: { ios: 'arrow.up.arrow.down', android: 'sort', web: 'sort' },
   more: { ios: 'ellipsis', android: 'more_horiz', web: 'more_horiz' },
+  // SF Symbols 7 typings omit `ellipsis.vertical`; iOS still renders the glyph.
+  'more-vertical': {
+    ios: 'ellipsis.vertical' as unknown as NonNullable<PlatformIconNames['ios']>,
+    android: 'more_vert',
+    web: 'more_vert',
+  },
   gallery: { ios: 'rectangle.grid.2x2.fill', android: 'grid_view', web: 'grid_view' },
   undo: { ios: 'arrow.uturn.backward', android: 'undo', web: 'undo' },
   redo: { ios: 'arrow.uturn.forward', android: 'redo', web: 'redo' },
@@ -335,6 +341,7 @@ export const appIconSections = [
       'filter',
       'sort',
       'more',
+      'more-vertical',
       'gallery',
       'undo',
       'redo',

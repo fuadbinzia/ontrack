@@ -1,5 +1,6 @@
 import {
   clampDockSearchInputHeight,
+  dockSearchBackdropGradientColors,
   dockSearchBarHeight,
   dockSearchFieldHeightForLineCount,
   dockSearchFieldHeightFromContentSize,
@@ -9,6 +10,13 @@ import {
   dockSearchResultsGap,
   dockSearchResultsPadding,
   dockSearchWrappedLineCount,
+  dockSearchCollapsedShellSize,
+  dockSearchCollapsedWellHang,
+  dockSearchCollapsedWellLift,
+  DOCK_SEARCH_BACKDROP_BLUR_INTENSITY,
+  DOCK_SEARCH_COLLAPSED_WELL_HANG_RATIO,
+  dockSearchMoreIcon,
+  splitDockSearchPins,
   DOCK_SEARCH_COMPACT_MAX_HEIGHT,
   DOCK_SEARCH_INPUT_MAX_LINES,
   DOCK_SEARCH_LAYOUT,
@@ -141,6 +149,164 @@ describe('dock search layout helpers', () => {
     expect(DOCK_SEARCH_COMPACT_MAX_HEIGHT).toBe(320);
     expect(DOCK_SEARCH_LAYOUT === 'expand' || DOCK_SEARCH_LAYOUT === 'compact').toBe(
       true,
+    );
+  });
+
+  it('splits 3 pins as 2 left of Search and 1 right', () => {
+    expect(splitDockSearchPins(['today', 'checklists', 'calendar'])).toEqual({
+      left: ['today', 'checklists'],
+      right: ['calendar'],
+    });
+  });
+
+  it('splits 5 pins as 3 left of Search and 2 right', () => {
+    expect(
+      splitDockSearchPins([
+        'today',
+        'checklists',
+        'calendar',
+        'overview',
+        'profile',
+      ]),
+    ).toEqual({
+      left: ['today', 'checklists', 'calendar'],
+      right: ['overview', 'profile'],
+    });
+  });
+
+  it('keeps a safe split for leftover short arrays during migration', () => {
+    expect(splitDockSearchPins([])).toEqual({ left: [], right: [] });
+    expect(splitDockSearchPins(['today'])).toEqual({
+      left: ['today'],
+      right: [],
+    });
+    expect(splitDockSearchPins(['today', 'checklists'])).toEqual({
+      left: ['today'],
+      right: ['checklists'],
+    });
+    expect(
+      splitDockSearchPins(['today', 'checklists', 'calendar', 'travel']),
+    ).toEqual({
+      left: ['today', 'checklists'],
+      right: ['calendar', 'travel'],
+    });
+  });
+
+  it('uses horizontal More dots for every pin count', () => {
+    expect(dockSearchMoreIcon(1)).toBe('more');
+    expect(dockSearchMoreIcon(2)).toBe('more');
+    expect(dockSearchMoreIcon(3)).toBe('more');
+    expect(dockSearchMoreIcon(4)).toBe('more');
+    expect(dockSearchMoreIcon(5)).toBe('more');
+  });
+
+  it('hangs 15% of the search well above the dock for 3-pin and 5-pin slots', () => {
+    const wellButtonSize = 48;
+    const barBaseHeight = 58;
+    const barPaddingTop = 4;
+    const three = dockSearchCollapsedShellSize({
+      slotWidth: 72,
+      wellButtonSize,
+    });
+    const five = dockSearchCollapsedShellSize({
+      slotWidth: 51,
+      wellButtonSize,
+    });
+    const lift = dockSearchCollapsedWellLift({
+      barBaseHeight,
+      barPaddingTop,
+      wellButtonSize,
+    });
+    expect(DOCK_SEARCH_COLLAPSED_WELL_HANG_RATIO).toBe(0.15);
+    expect(three.height).toBe(five.height);
+    expect(three.height).toBe(wellButtonSize);
+    expect(dockSearchCollapsedWellHang(wellButtonSize)).toBe(7);
+    expect(lift).toBe(4 + (58 - 4 - 48) + 7);
+    expect(lift).toBe(17);
+  });
+
+  it('still hangs 15% of the well when the plate fills the dock row', () => {
+    expect(
+      dockSearchCollapsedWellLift({
+        barBaseHeight: 48,
+        barPaddingTop: 4,
+        wellButtonSize: 48,
+      }),
+    ).toBe(4 + 7);
+    expect(
+      dockSearchCollapsedWellLift({
+        barBaseHeight: 48,
+        barPaddingTop: 0,
+        wellButtonSize: 48,
+      }),
+    ).toBe(7);
+    expect(dockSearchCollapsedWellHang(0)).toBe(0);
+    expect(dockSearchCollapsedWellHang(44)).toBe(7);
+    expect(dockSearchCollapsedWellHang(48)).toBe(7);
+    expect(dockSearchCollapsedWellHang(54)).toBe(8);
+  });
+
+  it('uses a light black veil that is stronger toward the dock than the top', () => {
+    const lightBlur = dockSearchBackdropGradientColors({
+      dark: false,
+      blurred: true,
+    });
+    const darkBlur = dockSearchBackdropGradientColors({
+      dark: true,
+      blurred: true,
+    });
+    const lightSolid = dockSearchBackdropGradientColors({
+      dark: false,
+      blurred: false,
+    });
+    const darkSolid = dockSearchBackdropGradientColors({
+      dark: true,
+      blurred: false,
+    });
+
+    expect(DOCK_SEARCH_BACKDROP_BLUR_INTENSITY).toBe(80);
+    for (const colors of [lightBlur, darkBlur, lightSolid, darkSolid]) {
+      expect(colors).toHaveLength(3);
+      for (const color of colors) {
+        expect(color.startsWith('rgba(0, 0, 0, ')).toBe(true);
+      }
+      const alphas = colors.map((color) => Number(color.slice('rgba(0, 0, 0, '.length, -1)));
+      expect(alphas[0]).toBeLessThan(alphas[1]!);
+      expect(alphas[1]).toBeLessThan(alphas[2]!);
+      expect(alphas[2]).toBeLessThanOrEqual(0.66);
+    }
+
+    const lightBlurBottom = Number(lightBlur[2].slice('rgba(0, 0, 0, '.length, -1));
+    const lightSolidBottom = Number(lightSolid[2].slice('rgba(0, 0, 0, '.length, -1));
+    const darkBlurBottom = Number(darkBlur[2].slice('rgba(0, 0, 0, '.length, -1));
+    const darkSolidBottom = Number(darkSolid[2].slice('rgba(0, 0, 0, '.length, -1));
+    expect(lightBlurBottom).toBeLessThan(lightSolidBottom);
+    expect(darkBlurBottom).toBeLessThan(darkSolidBottom);
+    expect(lightBlurBottom).toBeLessThan(darkBlurBottom);
+  });
+
+  it('keeps the unblurred wash lighter than a full overlay scrim', () => {
+    const light = dockSearchBackdropGradientColors({ dark: false, blurred: false });
+    const dark = dockSearchBackdropGradientColors({ dark: true, blurred: false });
+    const lightTop = Number(light[0].slice('rgba(0, 0, 0, '.length, -1));
+    const darkTop = Number(dark[0].slice('rgba(0, 0, 0, '.length, -1));
+    expect(lightTop).toBeLessThan(0.45);
+    expect(darkTop).toBeLessThan(0.6);
+    expect(lightTop).toBeGreaterThan(0);
+    expect(darkTop).toBeGreaterThan(lightTop);
+  });
+
+  it('keeps collapsed search width on the dock slot for 3 and 5 pins', () => {
+    expect(
+      dockSearchCollapsedShellSize({ slotWidth: 0, wellButtonSize: 48 }),
+    ).toEqual({ width: 0, height: 48 });
+    expect(
+      dockSearchCollapsedShellSize({ slotWidth: 54, wellButtonSize: 44 }),
+    ).toEqual({ width: 54, height: 44 });
+    expect(
+      dockSearchCollapsedShellSize({ slotWidth: 80, wellButtonSize: 48 }).height,
+    ).toBe(
+      dockSearchCollapsedShellSize({ slotWidth: 48, wellButtonSize: 48 }).height,
     );
   });
 });

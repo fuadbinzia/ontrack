@@ -22,6 +22,14 @@ describe('appIconSections', () => {
     expect([...seen].sort()).toEqual(Object.keys(appIcons).sort());
   });
 
+  it('maps more-vertical to overflow-menu glyphs', () => {
+    expect(appIcons['more-vertical']).toEqual({
+      ios: 'ellipsis.vertical',
+      android: 'more_vert',
+      web: 'more_vert',
+    });
+  });
+
   it('uses a file-upload glyph that stays distinct from sharing', () => {
     expect(appIcons.upload).toEqual({
       ios: 'tray.and.arrow.up.fill',

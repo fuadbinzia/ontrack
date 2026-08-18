@@ -16,13 +16,15 @@ import {
   Symbol,
 } from '@/components/primitives';
 import { glassMaterials, easings, motion, radii } from '@/design-system';
-import { AuthBrandMark } from '@/features/auth/auth-brand-mark';
 import { formatVoiceDuration } from '@/features/journal/model';
 import { sendDockMessage } from '@/features/search/dock-search-actions';
 import {
   DOCK_SEARCH_INPUT_MAX_LINES,
   DOCK_SEARCH_LAYOUT,
+  dockSearchCollapsedShellSize,
+  dockSearchCollapsedWellLift,
   dockSearchFieldHeightForLineCount,
+  dockSearchInputShouldScroll,
   dockSearchWrappedLineCount,
 } from '@/features/search/dock-search-layout';
 import { useDockSearch } from '@/features/search/dock-search-store';
@@ -51,11 +53,13 @@ function DockSearchListenElapsed({ startedAt }: { startedAt: number | null }) {
 export function BottomNavSearch({
   railWidth,
   collapsedWidth,
+  collapsedLeft = 0,
   signedIn,
   aiEnabled,
 }: {
   railWidth: number;
   collapsedWidth?: number;
+  collapsedLeft?: number;
   signedIn: boolean;
   aiEnabled: boolean;
 }) {
@@ -72,18 +76,29 @@ export function BottomNavSearch({
   const setQuery = useDockSearch((state) => state.setQuery);
   const setFieldHeight = useDockSearch((state) => state.setFieldHeight);
   const held = useHeldOverlay(expanded, motion.chrome);
+  const wellButtonSize = Math.max(layout.minTapTarget, s(48));
   const well = collapsedWidth ?? Math.max(layout.minTapTarget, s(44));
+  const collapsedShellHeight = dockSearchCollapsedShellSize({
+    slotWidth: well,
+    wellButtonSize,
+  }).height;
+  const wellLift = dockSearchCollapsedWellLift({
+    barBaseHeight: layout.bottomNavBarBaseHeight,
+    barPaddingTop: spacing.xxs,
+    wellButtonSize,
+  });
   const inputBaseHeight = Math.max(layout.minTapTarget, s(44));
   const expandLayout = DOCK_SEARCH_LAYOUT === 'expand';
   const oneLineHeight = typography.body.lineHeight;
   const [lineCount, setLineCount] = useState(1);
   const [trailingWidth, setTrailingWidth] = useState(0);
+  const fieldPadX = s(10);
   const progress = useSharedValue(expanded ? 1 : 0);
   const listenOnExpand = useDockSearch((state) => state.listenOnExpand);
-  const [skipFocus, setSkipFocus] = useState(listenOnExpand);
-  const [focusReady, setFocusReady] = useState(false);
+  const [skipFocusAfterListen, setSkipFocusAfterListen] = useState(false);
+  const skipFocus = listenOnExpand || skipFocusAfterListen;
   const wellAgent = useAgentUiTarget(AgentUiIds.tabs.search, {
-    label: 'Ask AI',
+    label: 'Search',
     onPress: () => expand(),
   });
   const visibleLines = Math.min(lineCount, DOCK_SEARCH_INPUT_MAX_LINES);
@@ -92,7 +107,8 @@ export function BottomNavSearch({
     oneLineHeight,
     visibleLines,
   );
-  const fieldShellHeight = expandLayout && expanded ? grownHeight : well;
+  const fieldShellHeight =
+    expandLayout && expanded ? grownHeight : collapsedShellHeight;
   const shellHeight = useSharedValue(fieldShellHeight);
 
   useEffect(() => {
@@ -112,23 +128,17 @@ export function BottomNavSearch({
   useEffect(() => {
     if (!expanded) {
       Keyboard.dismiss();
-      setSkipFocus(false);
-      setFocusReady(false);
+      setSkipFocusAfterListen(false);
       setLineCount(1);
       return;
     }
     const listen = useDockSearch.getState().listenOnExpand;
     if (listen) {
-      setSkipFocus(true);
+      setSkipFocusAfterListen(true);
       onMic();
       useDockSearch.getState().clearListenOnExpand();
-      return;
     }
-    const timer = setTimeout(() => {
-      setFocusReady(true);
-    }, reduceMotion ? 0 : motion.chrome);
-    return () => clearTimeout(timer);
-  }, [expanded, onMic, reduceMotion]);
+  }, [expanded, onMic]);
 
   useEffect(() => {
     if (expandLayout && expanded) {
@@ -141,8 +151,13 @@ export function BottomNavSearch({
   }, [expandLayout, expanded, fieldShellHeight, held, inputBaseHeight, setFieldHeight]);
 
   const shellStyle = useAnimatedStyle(() => ({
+    left: interpolate(progress.value, [0, 1], [collapsedLeft, 0]),
     width: interpolate(progress.value, [0, 1], [well, railWidth]),
-    height: interpolate(progress.value, [0, 1], [well, shellHeight.value]),
+    height: interpolate(
+      progress.value,
+      [0, 1],
+      [collapsedShellHeight, shellHeight.value],
+    ),
   }));
   const wellFade = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 0.45], [1, 0]),
@@ -179,34 +194,40 @@ export function BottomNavSearch({
   const controlSize = Math.max(36, s(40));
   const trailingPad =
     trailingWidth > 0 ? trailingWidth + spacing.xs : controlSize * 3 + spacing.xs;
-  const tabIconSize = s(20);
-  const tabCaptionStyle = useMemo(
+  const wellPlateStyle = useMemo(
     () => ({
-      fontSize: s(9.5),
-      lineHeight: s(11),
-      width: '100%' as const,
-      minWidth: 0,
-      flexShrink: 1,
+      width: wellButtonSize,
+      height: wellButtonSize,
+      borderRadius: wellButtonSize / 2,
+      overflow: 'hidden' as const,
+      transform: [{ translateY: -wellLift }],
     }),
-    [s],
+    [wellButtonSize, wellLift],
+  );
+  const wellIconSlotStyle = useMemo(
+    () => ({
+      width: wellButtonSize,
+      height: wellButtonSize,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+    }),
+    [wellButtonSize],
   );
   const fieldContainerStyle = useMemo(
     () => [styles.field, { height: fieldShellHeight }],
     [fieldShellHeight],
   );
-  const fieldInputStyle = useMemo(
-    () => ({
-      minHeight: fieldShellHeight,
-      height: fieldShellHeight,
-      maxHeight: expandLayout
-        ? Math.ceil(oneLineHeight) * DOCK_SEARCH_INPUT_MAX_LINES
-        : well,
-      paddingVertical: 0,
-      textAlignVertical: 'center' as const,
-      paddingRight: expandLayout ? trailingPad : undefined,
-    }),
-    [expandLayout, fieldShellHeight, oneLineHeight, trailingPad, well],
-  );
+  const fieldInputStyle = {
+    minHeight: fieldShellHeight,
+    height: fieldShellHeight,
+    maxHeight: expandLayout
+      ? Math.ceil(oneLineHeight) * DOCK_SEARCH_INPUT_MAX_LINES
+      : collapsedShellHeight,
+    paddingVertical: 0,
+    paddingLeft: fieldPadX,
+    textAlignVertical: (lineCount > 1 ? 'top' : 'center') as 'top' | 'center',
+    paddingRight: expandLayout ? trailingPad : undefined,
+  };
 
   return (
     <Animated.View
@@ -226,7 +247,7 @@ export function BottomNavSearch({
           testID={AgentUiIds.tabs.search}
           onLayout={wellAgent.onLayout}
           accessibilityRole="button"
-          accessibilityLabel="Ask AI"
+          accessibilityLabel="Search"
           delayLongPress={LONG_PRESS_MS}
           onPress={() => expand()}
           onLongPress={() => expand({ listen: true })}
@@ -235,36 +256,15 @@ export function BottomNavSearch({
             {
               width: well,
               minHeight: layout.minTapTarget,
-              paddingVertical: spacing.xxs,
-              paddingHorizontal: s(2),
             },
             pressed && styles.pressed,
           ]}
         >
-          <View style={styles.iconSlot}>
-            <AuthBrandMark
-              size={s(20)}
-              showContainer={false}
-              orbitTilted={true}
-              markColor={theme.textSecondary}
-            />
-          </View>
-          <Animated.Text
-            allowFontScaling
-            maxFontSizeMultiplier={1.1}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.68}
-            style={[
-              typography.caption,
-              tabCaptionStyle,
-              styles.caption,
-              { fontWeight: '400', color: theme.textSecondary },
-            ]}
-          >
-            Ask AI
-          </Animated.Text>
-          <View style={{ height: s(6) }} />
+          <GlassPlate airy style={wellPlateStyle}>
+            <View style={wellIconSlotStyle} pointerEvents="none">
+              <Symbol name="search" size={20} color={theme.textSecondary} />
+            </View>
+          </GlassPlate>
         </Pressable>
       </Animated.View>
       {held ? (
@@ -287,21 +287,20 @@ export function BottomNavSearch({
             <Input
               value={query}
               onChangeText={onChangeQuery}
-              placeholder="Ask onTrack or Search..."
+              placeholder="Ask onTrack or Search"
               placeholderTextColor={theme.textSecondary}
               accessibilityLabel="Search"
               returnKeyType="send"
               onSubmitEditing={send}
               blurOnSubmit
-              autoFocus={expanded && focusReady && !skipFocus}
+              autoFocus={expanded && !skipFocus}
               fieldBackground="transparent"
               fieldBorderColor="transparent"
               fieldBorderRadius={plateRadius}
-              icon="search"
               testID={AgentUiIds.tabs.searchField}
               containerStyle={fieldContainerStyle}
               multiline={expandLayout}
-              scrollEnabled={expandLayout}
+              scrollEnabled={expandLayout && dockSearchInputShouldScroll(lineCount)}
               onContentSizeChange={onContentSizeChange}
               style={fieldInputStyle}
               trailing={
@@ -359,29 +358,22 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     justifyContent: 'center',
+    overflow: 'visible',
   },
   wellContainer: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    overflow: 'visible',
   },
   tab: {
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
   pressed: {
     opacity: 0.72,
-  },
-  iconSlot: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  caption: {
-    textAlign: 'center',
   },
   plate: {
     width: '100%',

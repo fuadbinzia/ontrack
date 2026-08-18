@@ -24,7 +24,11 @@ import type { AppIconName } from '@/design-system';
 import { easings, glassMaterials, radii, motion } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { useHomeWeather } from '@/features/daily-tracking/use-home-weather';
-import { dockSearchBarHeight } from '@/features/search/dock-search-layout';
+import {
+  dockSearchBarHeight,
+  dockSearchMoreIcon,
+  splitDockSearchPins,
+} from '@/features/search/dock-search-layout';
 import { useDockSearch } from '@/features/search/dock-search-store';
 import { useHeldOverlay } from '@/hooks/use-held-overlay';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
@@ -64,6 +68,8 @@ import { tabTapSide } from './tab-swipe';
 type BottomNavBarProps = Parameters<
   NonNullable<ComponentProps<typeof Tabs>['tabBar']>
 >[0];
+
+type BarSlot = { kind: 'pin' | 'more'; name: string };
 
 const MAX_BAR_WIDTH = 720;
 
@@ -144,13 +150,22 @@ export function BottomNavBar({
     [reduceMotion, slotOrder, width],
   );
 
-  const barSlots = useMemo(() => {
-    const pins = inNav.slice(0, NAV_PIN_LIMIT).map((name) => ({
-      kind: 'pin' as const,
-      name,
-    }));
-    return [...pins, { kind: 'more' as const, name: MORE_TAB_ROUTE }];
-  }, [inNav]);
+  const pinSlots = useMemo(
+    () =>
+      inNav.slice(0, NAV_PIN_LIMIT).map((name) => ({
+        kind: 'pin' as const,
+        name,
+      })),
+    [inNav],
+  );
+  const { left: leftPins, right: rightPins } = useMemo(
+    () => splitDockSearchPins(pinSlots),
+    [pinSlots],
+  );
+  const barSlots = useMemo(
+    () => [...pinSlots, { kind: 'more' as const, name: MORE_TAB_ROUTE }],
+    [pinSlots],
+  );
 
   const focusedRouteName = state.routes[state.index]?.name;
   const focusedInBar = barSlots.some((slot) => slot.name === focusedRouteName);
@@ -247,6 +262,7 @@ export function BottomNavBar({
   const barWidth = Math.min(width - layout.screenPadding * 2, MAX_BAR_WIDTH);
   const totalSlots = barSlots.length + 1;
   const searchWell = Math.floor(barWidth / totalSlots);
+  const collapsedLeft = leftPins.length * searchWell;
   const searchProgress = useSharedValue(searchExpanded ? 1 : 0);
   // Invert: keep chrome mounted while collapsed and through the expand fade,
   // then unmount so BlurView cannot ghost a dock strip over the search body.
@@ -273,6 +289,132 @@ export function BottomNavBar({
     onTabBarHeightChange?.(height);
   };
 
+  const renderBarSlot = (slot: BarSlot) => {
+    const meta = TAB_META[slot.name];
+    if (!meta) return null;
+    const route = state.routes.find((item) => item.name === slot.name);
+    const navFocused =
+      slot.kind === 'more'
+        ? focusedRouteName === MORE_TAB_ROUTE || !focusedInBar
+        : focusedRouteName === slot.name;
+    const focused = pendingRouteName
+      ? pendingRouteName === slot.name
+      : navFocused;
+    const tabIcon: AppIconName =
+      slot.name === '(today)' ? todayTabIcon : meta.icon;
+    const accessibilityLabel =
+      slot.name === '(today)'
+        ? `${meta.label}${todayAccessibilityExtra}`
+        : slot.kind === 'more'
+          ? 'More'
+          : trackerCatalogLabel(slot.name);
+
+    const selectTab = () => {
+      // Accent + dot update on the same frame as the tap; navigate
+      // immediately after so lazy mount work doesn't leave chrome stuck.
+      if (slot.kind === 'more') {
+        const dismissTo = resolveMoreRetapTarget(
+          focusedRouteName,
+          lastPinRouteRef.current,
+          fallbackPin,
+        );
+        if (dismissTo) {
+          const backMeta = TAB_META[dismissTo];
+          const backRoute = state.routes.find(
+            (item) => item.name === dismissTo,
+          );
+          setPendingRouteName(dismissTo);
+          animateTabTap(focusedRouteName, dismissTo);
+          if (backRoute) {
+            navigation.navigate(backRoute.name, backRoute.params);
+          } else if (backMeta) {
+            router.navigate(backMeta.href);
+          }
+          return;
+        }
+        setPendingRouteName(slot.name);
+        animateTabTap(focusedRouteName, slot.name);
+        router.navigate(TAB_META.trackers.href);
+        return;
+      }
+      setPendingRouteName(slot.name);
+      if (focusedRouteName !== slot.name) {
+        animateTabTap(focusedRouteName, slot.name);
+      }
+      if (!route) {
+        router.navigate(meta.href);
+        return;
+      }
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: route.key,
+        canPreventDefault: true,
+      });
+      if (event.defaultPrevented) {
+        setPendingRouteName(null);
+        return;
+      }
+      if (focusedRouteName === route.name) {
+        router.navigate(meta.href);
+      } else {
+        navigation.navigate(route.name, route.params);
+      }
+    };
+
+    return (
+      <Pressable
+        key={slot.name}
+        testID={tabTestIdForRoute(slot.name)}
+        accessibilityRole="tab"
+        accessibilityState={{ selected: focused }}
+        accessibilityLabel={
+          route
+            ? (descriptors[route.key]?.options.tabBarAccessibilityLabel ??
+              accessibilityLabel)
+            : accessibilityLabel
+        }
+        hitSlop={{ top: 4, bottom: 4 }}
+        onPress={selectTab}
+        style={({ pressed }) => [
+          styles.tab,
+          {
+            minHeight: layout.minTapTarget,
+            paddingVertical: spacing.xxs,
+            paddingHorizontal: s(2),
+          },
+          pressed && styles.pressed,
+        ]}
+      >
+        <BottomNavTabItem
+          selected={focused}
+          icon={slot.kind === 'more' ? dockSearchMoreIcon(inNav.length) : tabIcon}
+          label={meta.label}
+          activeColor={theme.accentPrimary}
+          inactiveColor={theme.textSecondary}
+          iconSize={s(20)}
+          captionStyle={tabCaptionStyle}
+        />
+        {focused ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.dot,
+              {
+                backgroundColor: theme.accentPrimary,
+                width: s(4),
+                height: s(4),
+                borderRadius: s(2),
+                marginTop: s(2),
+              },
+            ]}
+          />
+        ) : (
+          <View style={{ height: s(6) }} />
+        )}
+      </Pressable>
+    );
+  };
+
   return (
     <View
       pointerEvents={modalSheetOpen ? 'none' : 'box-none'}
@@ -290,14 +432,13 @@ export function BottomNavBar({
               paddingHorizontal: layout.screenPadding,
               paddingTop: spacing.xxs,
               paddingBottom: bottomLabelPad,
-              overflow: 'hidden',
             },
           ]}
         >
           {chromeHeld ? (
             <Animated.View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFill, chromeFade]}
+              style={[StyleSheet.absoluteFill, styles.chromeClip, chromeFade]}
             >
               <View
                 pointerEvents="none"
@@ -364,6 +505,7 @@ export function BottomNavBar({
             <BottomNavSearch
               railWidth={barWidth}
               collapsedWidth={searchWell}
+              collapsedLeft={collapsedLeft}
               signedIn={!isGuest}
               aiEnabled={aiEnabled}
             />
@@ -374,141 +516,12 @@ export function BottomNavBar({
               importantForAccessibility={
                 searchExpanded ? 'no-hide-descendants' : 'auto'
               }
-              style={[
-                styles.tabs,
-                {
-                  paddingLeft: searchWell,
-                },
-                tabsFade,
-              ]}
+              style={[styles.tabs, tabsFade]}
             >
-            {barSlots.map((slot) => {
-              const meta = TAB_META[slot.name];
-              if (!meta) return null;
-              const route = state.routes.find(
-                (item) => item.name === slot.name,
-              );
-              const navFocused =
-                slot.kind === 'more'
-                  ? focusedRouteName === MORE_TAB_ROUTE || !focusedInBar
-                  : focusedRouteName === slot.name;
-              const focused = pendingRouteName
-                ? pendingRouteName === slot.name
-                : navFocused;
-              const tabIcon: AppIconName =
-                slot.name === '(today)' ? todayTabIcon : meta.icon;
-              const accessibilityLabel =
-                slot.name === '(today)'
-                  ? `${meta.label}${todayAccessibilityExtra}`
-                  : slot.kind === 'more'
-                    ? 'More'
-                    : trackerCatalogLabel(slot.name);
-
-              const selectTab = () => {
-                // Accent + dot update on the same frame as the tap; navigate
-                // immediately after so lazy mount work doesn't leave chrome stuck.
-                if (slot.kind === 'more') {
-                  const dismissTo = resolveMoreRetapTarget(
-                    focusedRouteName,
-                    lastPinRouteRef.current,
-                    fallbackPin,
-                  );
-                  if (dismissTo) {
-                    const backMeta = TAB_META[dismissTo];
-                    const backRoute = state.routes.find(
-                      (item) => item.name === dismissTo,
-                    );
-                    setPendingRouteName(dismissTo);
-                    animateTabTap(focusedRouteName, dismissTo);
-                    if (backRoute) {
-                      navigation.navigate(backRoute.name, backRoute.params);
-                    } else if (backMeta) {
-                      router.navigate(backMeta.href);
-                    }
-                    return;
-                  }
-                  setPendingRouteName(slot.name);
-                  animateTabTap(focusedRouteName, slot.name);
-                  router.navigate(TAB_META.trackers.href);
-                  return;
-                }
-                setPendingRouteName(slot.name);
-                if (focusedRouteName !== slot.name) {
-                  animateTabTap(focusedRouteName, slot.name);
-                }
-                if (!route) {
-                  router.navigate(meta.href);
-                  return;
-                }
-                const event = navigation.emit({
-                  type: 'tabPress',
-                  target: route.key,
-                  canPreventDefault: true,
-                });
-                if (event.defaultPrevented) {
-                  setPendingRouteName(null);
-                  return;
-                }
-                if (focusedRouteName === route.name) {
-                  router.navigate(meta.href);
-                } else {
-                  navigation.navigate(route.name, route.params);
-                }
-              };
-
-              return (
-                <Pressable
-                  key={slot.name}
-                  testID={tabTestIdForRoute(slot.name)}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: focused }}
-                  accessibilityLabel={
-                    route
-                      ? (descriptors[route.key]?.options
-                          .tabBarAccessibilityLabel ?? accessibilityLabel)
-                      : accessibilityLabel
-                  }
-                  hitSlop={{ top: 4, bottom: 4 }}
-                  onPress={selectTab}
-                  style={({ pressed }) => [
-                    styles.tab,
-                    {
-                      minHeight: layout.minTapTarget,
-                      paddingVertical: spacing.xxs,
-                      paddingHorizontal: s(2),
-                    },
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <BottomNavTabItem
-                    selected={focused}
-                    icon={tabIcon}
-                    label={meta.label}
-                    activeColor={theme.accentPrimary}
-                    inactiveColor={theme.textSecondary}
-                    iconSize={s(20)}
-                    captionStyle={tabCaptionStyle}
-                  />
-                  {focused ? (
-                    <View
-                      pointerEvents="none"
-                      style={[
-                        styles.dot,
-                        {
-                          backgroundColor: theme.accentPrimary,
-                          width: s(4),
-                          height: s(4),
-                          borderRadius: s(2),
-                          marginTop: s(2),
-                        },
-                      ]}
-                    />
-                  ) : (
-                    <View style={{ height: s(6) }} />
-                  )}
-                </Pressable>
-              );
-            })}
+            {leftPins.map(renderBarSlot)}
+            <View pointerEvents="none" style={{ width: searchWell }} />
+            {rightPins.map(renderBarSlot)}
+            {renderBarSlot({ kind: 'more', name: MORE_TAB_ROUTE })}
             </Animated.View>
             ) : null}
           </View>
@@ -529,15 +542,21 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
     justifyContent: 'flex-end',
+    overflow: 'visible',
   },
   barFill: {
     flex: 1,
     width: '100%',
+    overflow: 'visible',
   },
   barInner: {
     alignSelf: 'center',
     width: '100%',
     justifyContent: 'flex-end',
+    overflow: 'visible',
+  },
+  chromeClip: {
+    overflow: 'hidden',
   },
   chromeBorder: {
     position: 'absolute',
@@ -551,6 +570,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     flex: 1,
+    overflow: 'visible',
   },
   tabs: {
     flex: 1,

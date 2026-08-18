@@ -20,6 +20,8 @@ describe('Input layout contract', () => {
     expect(source).toContain('multiline ? styles.stackedMultilineInput : null');
     expect(source).toContain('styles.iconMultilineSlot');
     expect(source).toContain('iconMultilineOpticalPad');
+    expect(source).toContain('iconMultilineOpticalPad(minHeight, oneLineHeight)');
+    expect(source).not.toContain('iconMultilineOpticalPad(rowMinHeight');
     expect(source).toContain("textAlignVertical: 'top'");
     expect(source).not.toContain("alignSelf: 'center', flexGrow: 0, flexShrink: 1");
     expect(source).toMatch(
@@ -45,6 +47,34 @@ describe('Input layout contract', () => {
     expect(source).not.toContain("alignSelf: 'center', flexGrow: 0, flexShrink: 1");
     expect(source).not.toContain("alignSelf: 'center', flexGrow: 0, flexShrink: 0");
     expect(source).toMatch(/showChromePlaceholder\s*=\s*\n\s*hasIcon &&\s*\n\s*!stacked &&\s*\n\s*!multiline &&/);
+  });
+
+  it('keeps trailing-only fields on the icon field path so the TextInput does not remount', () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), 'src/components/primitives/input.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain('if (hasIcon || stacked || trailing)');
+    expect(source).toContain('{icon ? (');
+    expect(source).toContain('withoutFrameSize(style)');
+    expect(source).toContain('iconMultilineOpticalPad(minHeight, oneLineHeight)');
+    expect(source).not.toContain('iconMultilineOpticalPad(rowMinHeight');
+  });
+
+  it('lets caller top and bottom padding replace the multiline optical slot pad', () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), 'src/components/primitives/input.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain('readStyleVerticalPadding');
+    expect(source).toContain('iconMultilineOpticalPad(minHeight, oneLineHeight)');
+    expect(source).toContain('paddingVertical: iconMultilinePad');
+    expect(source).toMatch(
+      /callerVerticalPad > 0 \? 0 : iconMultilineOpticalPad\(minHeight, oneLineHeight\)/,
+    );
+    expect(source).toContain('withoutFrameSize(style)');
   });
 
   it('does not fit-shrink field labels (tracking would outrun the glyphs)', () => {

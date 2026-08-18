@@ -145,13 +145,39 @@ describe('overview summary', () => {
     expect(
       nextTravelPlan(
         [
-          plan('later', '2026-09-01', '2026-09-05'),
+          plan('future', '2026-09-01', '2026-09-05'),
           plan('past', '2026-07-01', '2026-07-05'),
+          plan('mixedNow', '2026-08-14T00:00:00.000Z', '2026-08-15T00:00:00.000Z'),
           plan('current', '2026-08-10', '2026-08-15'),
         ],
         '2026-08-13',
       )?.id,
     ).toBe('current');
+  });
+
+  it('chooses nearest trip when startDate mixes date-only and timestamp strings', () => {
+    const plan = (id: string, startDate: string, endDate: string) => ({
+      id,
+      title: id,
+      destination: id,
+      startDate,
+      endDate,
+      itinerary: [],
+      participants: [],
+      baseCurrency: 'USD',
+      expenses: [],
+      createdAt: startDate,
+      updatedAt: startDate,
+    });
+    expect(
+      nextTravelPlan(
+        [
+          plan('tomorrow', '2026-08-14T00:00:00.000Z', '2026-08-14T00:00:00.000Z'),
+          plan('farther', '2026-08-20', '2026-08-25'),
+        ],
+        '2026-08-13',
+      )?.id,
+    ).toBe('tomorrow');
   });
 
   it('sorts only active, not-yet-past bills', () => {
@@ -180,6 +206,34 @@ describe('overview summary', () => {
         '2026-08-13',
       ).map((item) => item.id),
     ).toEqual(['next', 'later']);
+  });
+
+  it('sorts upcoming bills by date order with mixed timestamp and date-only nextDue keys', () => {
+    const bill = (id: string, nextDue: string, active = true) => ({
+      id,
+      name: id,
+      amount: 10,
+      currency: 'USD',
+      cadence: 'monthly' as const,
+      nextDue,
+      categoryId: 'home',
+      entityId: 'personal',
+      kind: 'bill' as const,
+      active,
+      createdAt: nextDue,
+      updatedAt: nextDue,
+    });
+    expect(
+      upcomingBills(
+        [
+          bill('nearFutureTimestamp', '2026-08-14T00:00:00.000Z'),
+          bill('past', '2026-08-01T00:00:00.000Z', true),
+          bill('alsoNearDate', '2026-08-14'),
+          bill('later', '2026-08-20'),
+        ],
+        '2026-08-13',
+      ).map((item) => item.id),
+    ).toEqual(['alsoNearDate', 'nearFutureTimestamp', 'later']);
   });
 
   it('counts due plant care and vehicle maintenance boundaries', () => {

@@ -10,6 +10,29 @@ export type OverviewAttentionItem = {
   label: string;
 };
 
+function dateComparableValue(dateKey: string): number {
+  const normalized = dateKey.trim().match(/^\d{4}-\d{1,2}-\d{1,2}/)?.[0];
+  if (!normalized) return Number.NaN;
+  const [year, month, day] = normalized.split('-').map(Number);
+  if ([year, month, day].some((value) => !Number.isFinite(value))) {
+    return Number.NaN;
+  }
+  return Date.UTC(year, month - 1, day);
+}
+
+function compareDateKeys(left: string, right: string): number {
+  const leftValue = dateComparableValue(left);
+  const rightValue = dateComparableValue(right);
+
+  if (Number.isFinite(leftValue) && Number.isFinite(rightValue)) {
+    return leftValue - rightValue || left.localeCompare(right);
+  }
+
+  if (Number.isFinite(leftValue)) return -1;
+  if (Number.isFinite(rightValue)) return 1;
+  return left.localeCompare(right);
+}
+
 export function activityAttentionKey(activity: Activity): string {
   return `activity:${activity.id}:${activity.updatedAt}`;
 }
@@ -79,18 +102,32 @@ export function nextTravelPlan(
   plans: readonly TravelPlan[],
   dateKey: string,
 ): TravelPlan | undefined {
+  const today = dateComparableValue(dateKey);
+  if (!Number.isFinite(today)) return undefined;
+
   return [...plans]
-    .filter((plan) => plan.endDate >= dateKey)
-    .sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+    .filter((plan) => {
+      const planEnd = dateComparableValue(plan.endDate);
+      return Number.isFinite(planEnd) ? planEnd >= today : false;
+    })
+    .sort((a, b) => compareDateKeys(a.startDate, b.startDate))[0];
 }
 
 export function upcomingBills(
   bills: readonly FinanceRecurringBill[],
   dateKey: string,
 ): FinanceRecurringBill[] {
+  const today = dateComparableValue(dateKey);
+  if (!Number.isFinite(today)) return [];
+
   return bills
-    .filter((bill) => bill.active && bill.nextDue >= dateKey)
-    .sort((a, b) => a.nextDue.localeCompare(b.nextDue));
+    .filter(
+      (bill) =>
+        bill.active && Number.isFinite(dateComparableValue(bill.nextDue))
+          ? dateComparableValue(bill.nextDue) >= today
+          : false,
+    )
+    .sort((a, b) => compareDateKeys(a.nextDue, b.nextDue));
 }
 
 export function plantsDue(plants: readonly Plant[], dateKey: string): Plant[] {

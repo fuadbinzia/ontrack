@@ -30,7 +30,10 @@ const SCREEN_PATTERN = /\b(movie|film|premiere|screening|showtime|comedy show|mu
 const CELEBRATION_PATTERN = /\b(birthday|party|wedding|anniversary|celebration)\b/i;
 
 function dateKeyDayNumber(dateKey: string): number {
-  const [year, month, day] = dateKey.split('-').map(Number);
+  const normalizedDate = dateKey.trim().match(/^\d{4}-\d{1,2}-\d{1,2}/)?.[0];
+  if (!normalizedDate) return NaN;
+  const [year, month, day] = normalizedDate.split('-').map(Number);
+  if ([year, month, day].some((value) => !Number.isFinite(value))) return NaN;
   return Math.floor(Date.UTC(year, month - 1, day) / 86_400_000);
 }
 
@@ -139,12 +142,15 @@ export function findCalendarEventExcitement({
   horizonDays?: number;
 }): CalendarEventExcitement | undefined {
   const todayDay = dateKeyDayNumber(today);
+  if (!Number.isFinite(todayDay)) return undefined;
   const categoriesById = new Map(categories.map((category) => [category.id, category]));
   const detailsByActivityId = new Map(eventDetails.map((details) => [details.activityId, details]));
 
   const candidates = activities.flatMap((activity) => {
     if (activity.status !== 'upcoming') return [];
-    const daysAway = dateKeyDayNumber(activity.date) - todayDay;
+    const activityDay = dateKeyDayNumber(activity.date);
+    if (!Number.isFinite(activityDay)) return [];
+    const daysAway = activityDay - todayDay;
     if (daysAway < 0 || daysAway > horizonDays) return [];
     if (
       daysAway === 0 &&

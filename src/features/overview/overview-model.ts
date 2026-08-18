@@ -88,6 +88,16 @@ export type OverviewSummary = {
   rows: OverviewRow[];
 };
 
+function dateComparableValue(dateKey: string): number {
+  const normalized = dateKey.trim().match(/^\d{4}-\d{1,2}-\d{1,2}/)?.[0];
+  if (!normalized) return Number.NaN;
+  const [year, month, day] = normalized.split('-').map(Number);
+  if ([year, month, day].some((value) => !Number.isFinite(value))) {
+    return Number.NaN;
+  }
+  return Date.UTC(year, month - 1, day);
+}
+
 export function buildOverviewSummary(input: OverviewSummaryInput): OverviewSummary {
   const remaining = remainingActivities(
     input.activities,
@@ -97,7 +107,13 @@ export function buildOverviewSummary(input: OverviewSummaryInput): OverviewSumma
   const nextTrip = nextTravelPlan(input.plans, input.today);
   const nextBills = upcomingBills(input.bills, input.today);
   const overdueBills = input.bills.filter(
-    (bill) => bill.active && bill.nextDue <= input.today,
+    (bill) => {
+      const due = dateComparableValue(bill.nextDue);
+      const today = dateComparableValue(input.today);
+      return bill.active && Number.isFinite(due) && Number.isFinite(today)
+        ? due <= today
+        : false;
+    },
   );
   const duePlants = plantsDue(input.plants, input.today);
   const dueMaintenance = maintenanceDueCount(input.vehicles, input.today);

@@ -111,7 +111,6 @@ export function TravelMapCountryList({
               renderItem={renderCountry}
               ItemSeparatorComponent={renderSeparator}
               showsVerticalScrollIndicator={false}
-              estimatedItemSize={56}
               contentContainerStyle={contentStyle}
               style={styles.countryList}
               keyboardShouldPersistTaps="handled"

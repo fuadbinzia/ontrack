@@ -56,6 +56,58 @@ describe('findCalendarEventExcitement', () => {
     expect(result).toMatchObject({ kind: 'sports', eyebrow: 'In 3 Days', headline: 'The Countdown Is On' });
   });
 
+  it('prefers the closest upcoming event when date keys include timestamps', () => {
+    const result = findCalendarEventExcitement({
+      activities: [
+        activity({
+          id: 'far',
+          date: '2026-08-27T20:00:00.000Z',
+          title: 'UFC 331: Nova vs. Vale',
+          startMinutes: 18 * 60,
+        }),
+        activity({
+          id: 'near',
+          date: '2026-08-18',
+          title: 'UFC 330: Rivera vs. Lee',
+          startMinutes: 19 * 60,
+        }),
+      ],
+      categories,
+      eventDetails: [],
+      today: '2026-08-15',
+      currentMinutes: 12 * 60,
+    });
+
+    expect(result?.activity.id).toBe('near');
+    expect(result?.daysAway).toBe(3);
+  });
+
+  it('chooses a closer event even when it stores its date as a timestamp', () => {
+    const result = findCalendarEventExcitement({
+      activities: [
+        activity({
+          id: 'far',
+          date: '2026-08-26',
+          title: 'Weekend Festival',
+          startMinutes: 18 * 60,
+        }),
+        activity({
+          id: 'nearTimestamp',
+          date: '2026-08-18T00:00:00.000Z',
+          title: 'UFC 332: Vega vs. Cruz',
+          startMinutes: 19 * 60,
+        }),
+      ],
+      categories,
+      eventDetails: [],
+      today: '2026-08-15',
+      currentMinutes: 12 * 60,
+    });
+
+    expect(result?.activity.id).toBe('nearTimestamp');
+    expect(result?.daysAway).toBe(3);
+  });
+
   it('does not hype routine calendar appointments', () => {
     expect(findCalendarEventExcitement({
       activities: [activity({ title: 'Dentist Appointment' })], categories, eventDetails: [],

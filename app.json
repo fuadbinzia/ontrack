@@ -41,7 +41,7 @@
         ],
         "LSSupportsOpeningDocumentsInPlace": false,
         "NSCameraUsageDescription": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos, plus avatars, travel confirmations, E-ZPass statements, and tax documents.",
-        "NSMicrophoneUsageDescription": "onTrack uses the microphone to record journal voice notes, dictate journal text, and translate short phrases you choose to record during a trip.",
+        "NSMicrophoneUsageDescription": "onTrack uses the microphone for dock search voice, journal voice notes, journal dictation, and short travel translations you choose to record.",
         "NSPhotoLibraryUsageDescription": "onTrack accesses your photo library so you can attach meal, activity, plant-care, and vision-board photos, plus avatars, travel confirmations, E-ZPass statements, and tax documents.",
         "NSMotionUsageDescription": "onTrack uses the motion sensors so Today activity cards can detect movement and so the travel sky can twinkle as you tilt the phone.",
         "NSFaceIDUsageDescription": "onTrack uses Face ID to unlock your signed-in session on this device.",
@@ -110,7 +110,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.ACCESS_COARSE_LOCATION"
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -131,7 +132,7 @@
         {
           "photosPermission": "onTrack accesses your photos so you can attach meal, activity, plant-care, and vision-board photos, plus avatars, travel confirmations, E-ZPass statements, and tax documents.",
           "cameraPermission": "onTrack uses the camera to capture meal, activity, plant-care, and vision-board photos, plus avatars, travel confirmations, E-ZPass statements, and tax documents.",
-          "microphonePermission": "onTrack uses the microphone to record journal voice notes, dictate journal text, and translate short phrases you choose to record during a trip."
+          "microphonePermission": "onTrack uses the microphone for dock search voice, journal voice notes, journal dictation, and short travel translations you choose to record."
         }
       ],
       [
@@ -224,7 +225,8 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "onTrack uses the microphone to record journal voice notes, dictate journal text, and translate short phrases you choose to record during a trip."
+          "microphonePermission": "onTrack uses the microphone for dock search voice, journal voice notes, journal dictation, and short travel translations you choose to record.",
+          "recordAudioAndroid": true
         }
       ]
     ],

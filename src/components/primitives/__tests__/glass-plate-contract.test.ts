@@ -114,6 +114,19 @@ describe('glass plate contract', () => {
     expect(segments).not.toContain('theme.backgroundSunken');
   });
 
+  it('keeps dock search chrome on GlassPlate', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const overlay = read('src/features/search/dock-search-overlay.tsx');
+    expect(search).toContain('GlassPlate');
+    expect(search).not.toContain('mist');
+    expect(search).not.toContain('backgroundElevated');
+    expect(overlay).toContain('GlassPlate');
+    expect(overlay).toContain('variant="ghost"');
+    expect(overlay).not.toContain('backgroundSunken');
+    expect(overlay).not.toContain('backgroundElevated');
+    expect(overlay).not.toContain('SheetScaffold');
+  });
+
   it('keeps checklist hub cards and composer on GlassPlate', () => {
     const card = read('src/features/todos/todo-list-card.tsx');
     const overview = read('src/features/todos/todo-lists-overview.tsx');

@@ -87,13 +87,52 @@ export const AGENT_CAPABILITIES = {
     description: 'Create or update plant care records.',
     sensitive: true,
   },
+  'todos.read': {
+    id: 'todos.read',
+    name: 'View Checklists',
+    description: 'Read lists and open tasks.',
+  },
+  'todos.write': {
+    id: 'todos.write',
+    name: 'Change Checklists',
+    description: 'Create, update, complete, or remove checklist items.',
+    sensitive: true,
+  },
+  'shell.act': {
+    id: 'shell.act',
+    name: 'Navigate And Speak',
+    description: 'Open screens, speak replies, and hand off to maps or the device assistant.',
+  },
 } as const satisfies Partial<Record<AgentCapabilityId, AgentCapabilityDefinition>>;
 
+export const ONTRACK_COMPANION_ID = 'ontrack-companion';
+
+export const ONTRACK_COMPANION: AgentDefinition = {
+  id: ONTRACK_COMPANION_ID,
+  version: 1,
+  name: 'onTrack',
+  description: 'Find anything in the app and get things done by voice or text.',
+  icon: 'search',
+  providerId: 'ontrack-companion',
+  access: 'included',
+  requiredCapabilities: ['todos.read', 'todos.write', 'shell.act'],
+  optionalCapabilities: [
+    'calendar.read',
+    'calendar.write',
+    'profile.read',
+    'travel.read',
+    'travel.write',
+    'food.read',
+    'plants.read',
+    'fitness.read',
+  ],
+};
+
 /**
- * Intentionally empty: this turn adds the platform, not any concrete agents.
- * A future agent becomes discoverable by adding one validated manifest here.
+ * First included companion. Prompts and tools live in `src/features/search/`,
+ * not in this catalog manifest.
  */
-export const AGENTS: readonly AgentDefinition[] = [];
+export const AGENTS: readonly AgentDefinition[] = [ONTRACK_COMPANION];
 
 export function createAgentRegistry(definitions: readonly AgentDefinition[]) {
   const byId = new Map<AgentId, AgentDefinition>();

@@ -1,9 +1,4 @@
-import {
-  apiRateLimitSubject,
-  authenticateApiRequest,
-  isApiRequestBlocked,
-} from '@/services/http/api-auth';
-import { checkApiRateLimit } from '@/services/http/api-rate-limit';
+import { gateGuestPaidApiRequest } from '@/services/http/api-gate';
 import { guardedFetch } from '@/services/http/dependency-guard';
 
 const OPENAI_TRANSCRIPTIONS_URL = 'https://api.openai.com/v1/audio/transcriptions';
@@ -92,19 +87,8 @@ export function parseJournalTranscribeInput(value: unknown): JournalTranscribeIn
 }
 
 export async function authorizeJournalTranscribe(request: Request) {
-  const auth = await authenticateApiRequest(request);
-  if (isApiRequestBlocked(auth)) {
-    return {
-      response: Response.json(
-        {
-          error: 'Sign in is required to transcribe journal audio.',
-          code: 'PERMISSION_DENIED',
-        },
-        { status: 401 },
-      ),
-    };
-  }
-  if (checkApiRateLimit('journal', apiRateLimitSubject(request, auth)) === 'limited') {
+  const gate = await gateGuestPaidApiRequest(request, 'journal');
+  if (gate === 'rate_limited') {
     return {
       response: Response.json(
         {
@@ -115,7 +99,7 @@ export async function authorizeJournalTranscribe(request: Request) {
       ),
     };
   }
-  return { auth };
+  return { ok: true as const };
 }
 
 async function transcribeWithGemini(parsed: ParsedJournalAudio): Promise<string> {

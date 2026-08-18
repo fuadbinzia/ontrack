@@ -1,8 +1,9 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import { Linking, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 import { appPrompt } from '@/components/primitives';
+import { promptOpenAppSettings } from '@/utils/prompt-open-settings';
 
 export type PickImageOptions = {
   quality?: number;
@@ -117,10 +118,7 @@ function handleDenied(
     options.onDenied();
     return;
   }
-  appPrompt.alert(title, message, [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Open Settings', onPress: () => Linking.openSettings() },
-  ]);
+  promptOpenAppSettings(title, message);
 }
 
 function handlePickFailure(error: unknown, action: 'camera' | 'library') {

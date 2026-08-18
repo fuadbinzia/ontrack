@@ -31,8 +31,9 @@ the corresponding shared adapter instead.
 
 ## Agent extensions
 
-The agent catalog is intentionally empty in this build. The infrastructure supports future
-companions without shipping a Gym Buddy, Travel Agent, Food Agent, or any other agent yet.
+The agent catalog ships one included companion (`ontrack-companion`). Additional
+companions still register as `AgentDefinition` manifests; prompts, providers, and
+tools stay outside the catalog so the app shell never imports feature internals.
 
 - `src/agents/types.ts` defines manifests, permissions, providers, tools, installations, and shared
   conversations.

@@ -4,7 +4,7 @@ import type { AppIconName } from '@/design-system';
 
 export type AgentId = string;
 export type AgentProviderId = string;
-export type AgentDomain = 'calendar' | 'profile' | AddonId;
+export type AgentDomain = 'calendar' | 'profile' | 'todos' | 'shell' | AddonId;
 export type AgentCapabilityAction = 'read' | 'write' | 'search' | 'act';
 export type AgentCapabilityId = `${AgentDomain}.${AgentCapabilityAction}`;
 
@@ -93,6 +93,8 @@ export interface AgentTool {
   id: string;
   capability: AgentCapabilityId;
   description: string;
+  /** JSON Schema object for LLM tool-calling. Kept off the catalog manifest. */
+  parameters?: Record<string, unknown>;
   execute: (input: unknown, context: AgentToolContext) => Promise<unknown>;
 }
 
@@ -100,7 +102,7 @@ export interface AgentProviderRequest {
   definition: AgentDefinition;
   message: string;
   conversationId?: string;
-  tools: readonly Pick<AgentTool, 'id' | 'capability' | 'description'>[];
+  tools: readonly Pick<AgentTool, 'id' | 'capability' | 'description' | 'parameters'>[];
   callTool: (toolId: string, input: unknown) => Promise<unknown>;
 }
 

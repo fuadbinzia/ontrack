@@ -261,15 +261,19 @@ Add `md` values for all four tabs. Reasonable mappings are:
 
 Choose carefully: the Google Play package name cannot be changed for an existing listing.
 
-### 9.4 Remove unnecessary microphone permission
+### 9.4 Keep Android `RECORD_AUDIO` for voice features
 
-The app selects images but does not record audio. Expo ImagePicker adds Android `RECORD_AUDIO` by default unless disabled, and the current `app.json` explicitly requests it. For a smaller permission surface:
+The app records audio. Dock search voice, journal dictate/voice notes, and the travel translator all need `android.permission.RECORD_AUDIO` in the **merged AndroidManifest**. Android Settings → Apps → onTrack → Permissions only shows a Microphone row when that permission is in the installed APK. JS/OTA cannot add it.
 
-1. Set `"microphonePermission": false` in the `expo-image-picker` plugin configuration.
-2. Remove `"android.permission.RECORD_AUDIO"` from `android.permissions`.
-3. Build a new native binary; config-plugin permission changes do not apply through JavaScript reloads.
+Keep all of these:
 
-Keep the camera permission only if camera capture is a planned feature. The current code launches the image library, not the camera.
+1. `"android.permission.RECORD_AUDIO"` in `expo.android.permissions` (alongside `ACCESS_COARSE_LOCATION`; do not add `ACCESS_FINE_LOCATION`).
+2. The `expo-audio` plugin with `recordAudioAndroid` left enabled (`true` is the default).
+3. `expo-image-picker` `microphonePermission` as a **usage-description string**, never `false`.
+
+Do **not** set image-picker `"microphonePermission": false`. That plugin calls `withBlockedPermissions(['android.permission.RECORD_AUDIO'])`, which strips `RECORD_AUDIO` for the **whole app**, including expo-audio. Do not add `blockedPermissions` that would drop the mic either.
+
+Permission changes require a **new native Android binary** and reinstall. An OTA / EAS Update will not make Microphone appear in system settings.
 
 ### 9.5 Handle Android ImagePicker activity recreation
 

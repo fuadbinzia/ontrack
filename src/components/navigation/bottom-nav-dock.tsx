@@ -3,6 +3,12 @@ import type { ComponentProps } from 'react';
 import { useLayoutEffect, useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { motion } from '@/design-system';
+import { DockSearchOverlay } from '@/features/search/dock-search-overlay';
+import { useDockSearch } from '@/features/search/dock-search-store';
+import { useDockedKeyboardInset } from '@/hooks/use-docked-keyboard-inset';
+import { useHeldOverlay } from '@/hooks/use-held-overlay';
+
 import { BottomNavBar } from './bottom-nav-bar';
 import { BOTTOM_NAV_Z_INDEX } from './bottom-nav-inset';
 
@@ -88,13 +94,22 @@ export function BottomNavDockHost() {
     peekBottomNavDock,
     peekBottomNavDock,
   );
+  const searchExpanded = useDockSearch((state) => state.expanded);
+  const searchHeld = useHeldOverlay(searchExpanded, motion.chrome);
+  // Absolute sibling overlay is not resized by Android IME. Lift by height
+  // while search is open; stay on resize when collapsed so in-tree screens
+  // that also resize do not double-lift the tab bar.
+  const { keyboardInset } = useDockedKeyboardInset(
+    searchHeld ? { androidMode: 'modal' } : { androidMode: 'resize' },
+  );
   if (!props) return null;
   return (
     <View
       pointerEvents="box-none"
       collapsable={false}
-      style={styles.host}
+      style={[styles.host, { bottom: keyboardInset }]}
     >
+      <DockSearchOverlay />
       <BottomNavBar {...props} />
     </View>
   );

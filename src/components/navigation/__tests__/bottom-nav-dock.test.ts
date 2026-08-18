@@ -100,4 +100,19 @@ describe('tab dock stays visible after tab scenes paint', () => {
     onBottomNavBarBridgeUnmount(props);
     expect(peekBottomNavDock()).toBe(props);
   });
+
+  it('lifts the absolute dock with modal IME inset while search is expanded', () => {
+    const dock = read('src/components/navigation/bottom-nav-dock.tsx');
+    const overlay = read('src/features/search/dock-search-overlay.tsx');
+    expect(dock).toContain('useDockedKeyboardInset');
+    expect(dock).toContain('useDockSearch');
+    expect(dock).toContain('useHeldOverlay');
+    expect(dock).toMatch(
+      /searchHeld \? \{ androidMode: 'modal' \} : \{ androidMode: 'resize' \}/,
+    );
+    expect(dock).toContain('bottom: keyboardInset');
+    expect(dock).not.toContain('<KeyboardAvoidingView');
+    expect(overlay).not.toContain('useDockedKeyboardInset');
+    expect(overlay).not.toContain("androidMode:");
+  });
 });

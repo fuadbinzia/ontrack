@@ -131,6 +131,17 @@ Dump/status/command files live in the app Documents directory:
 | `ontrack.tabs.carousel.prev`                              | Previous tabs    | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.carousel.next`                              | Next tabs        | Legacy carousel arrow (unused after fixed 5-slot nav)                                               |
 | `ontrack.tabs.dock`                                       | Bottom nav       | Layout anchor — page-matching bottom nav fill (not tappable)                                          |
+| `ontrack.tabs.search`                                     | Search           | Collapsed dock well — tap expands, long-press starts a hands-free turn                              |
+| `ontrack.tabs.search.field`                               | Search field     | Expanded search/composer field covering the tab row                                                 |
+| `ontrack.tabs.search.mic`                                 | Speak            | Starts a dictation take into the search field                                                       |
+| `ontrack.tabs.search.stop`                                | Stop             | Ends the dictation take and types the transcript into the search field                              |
+| `ontrack.tabs.search.send`                                | Send             | Runs the onTrack companion on the typed query                                                       |
+| `ontrack.tabs.search.clear`                               | Clear            | Clears the search field                                                                             |
+| `ontrack.tabs.search.close`                               | Close            | Collapses the search field                                                                          |
+| `ontrack.tabs.search.results`                             | Search Results   | Layout anchor — expanded results scroller (not tappable)                                            |
+| `ontrack.tabs.search.result.<id>`                         | Search result    | Typeahead row — opens the screen or entity                                                          |
+| `ontrack.tabs.search.transcript`                          | Transcript       | Companion chat transcript                                                                           |
+| `ontrack.tabs.search.clearConversation`                   | Clear Conversation | Clears the companion chat transcript without collapsing search; shown once a conversation has started |
 | `ontrack.overview.screen`                                 | Overview         | App-wide summary screen anchor                                                                        |
 | `ontrack.overview.hero`                                   | Overview pulse   | Today's highest-level status                                                                          |
 | `ontrack.overview.eventUpdates`                           | Event updates    | Previews the highlighted event's YouTube search in-app; users may choose YouTube's app handoff         |

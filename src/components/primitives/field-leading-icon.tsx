@@ -12,6 +12,7 @@ import { Symbol } from './symbol';
 export {
   fieldLeadingIconPlateSize,
   fieldLeadingIconRowStyle,
+  iconMultilineOpticalPad,
 } from './field-leading-icon-style';
 
 /** Shared leading-icon column so Input / DateField / TimeField placeholders share one x-origin. */

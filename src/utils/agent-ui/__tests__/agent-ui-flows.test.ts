@@ -31,6 +31,7 @@ describe('agent-ui flows', () => {
     expect(listAgentUiFlowNames()).toContain('today-prev-day');
     expect(listAgentUiFlowNames()).toContain('today-next-day');
     expect(listAgentUiFlowNames()).toContain('today-add');
+    expect(listAgentUiFlowNames()).toContain('app-search');
     expect(listAgentUiFlowNames()).toContain('trackers');
     expect(listAgentUiFlowNames()).toContain('trackers-manage');
     expect(listAgentUiFlowNames()).toContain('open-avatar-editor');

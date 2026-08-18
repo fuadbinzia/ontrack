@@ -79,11 +79,11 @@ export function createAgentRuntime(input: {
         definition,
         message: request.message,
         conversationId: request.conversationId,
-        tools: availableTools.map(({ id, capability, description }) => ({
-          id,
-          capability,
-          description,
-        })),
+        tools: availableTools.map(({ id, capability, description, parameters }) =>
+          parameters
+            ? { id, capability, description, parameters }
+            : { id, capability, description },
+        ),
         callTool: async (toolId, toolInput) => {
           const tool = tools.get(toolId);
           if (!tool) {

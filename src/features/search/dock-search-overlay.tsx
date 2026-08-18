@@ -3,14 +3,17 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, type Href } from 'expo-router';
+import { GestureDetector } from 'react-native-gesture-handler';
 
 import {
   AppText,
   Button,
   GlassPlate,
+  SheetGrabber,
   Symbol,
 } from '@/components/primitives';
-import { popoverEntering, popoverExiting, radii, type AppIconName } from '@/design-system';
+import { useSheetDismissPan } from '@/components/primitives/use-sheet-dismiss-pan';
+import { popoverEntering, radii, type AppIconName } from '@/design-system';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { sendDockMessage } from '@/features/search/dock-search-actions';
 import {
@@ -24,7 +27,6 @@ import { setCompanionNavigateHandler } from '@/features/search/ensure-companion'
 import { useAppSearch } from '@/features/search/use-app-search';
 import { useDockSearch } from '@/features/search/dock-search-store';
 import { useVoiceSession } from '@/features/search/use-voice-session';
-import { useHeldOverlay } from '@/hooks/use-held-overlay';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';
@@ -86,7 +88,6 @@ export function DockSearchOverlay() {
   const collapse = useDockSearch((state) => state.collapse);
   const clearTranscript = useDockSearch((state) => state.clearTranscript);
   const micGeneration = useDockSearch((state) => state.micGeneration);
-  const held = useHeldOverlay(expanded);
   const groups = useAppSearch(query);
   const tabBarHeight = useUI((state) => state.tabBarHeight);
   const modalSheetOpen = useUI((state) => state.modalSheetCount > 0);
@@ -108,6 +109,11 @@ export function DockSearchOverlay() {
     micSeen.current = micGeneration;
     if (micGeneration > 0) void startListening();
   }, [micGeneration, startListening]);
+
+  const closeResults = useCallback(() => {
+    void voice.cancel();
+    collapse();
+  }, [collapse, voice]);
 
   useEffect(() => {
     setCompanionNavigateHandler((href: Href) => {
@@ -131,6 +137,12 @@ export function DockSearchOverlay() {
     showResults ||
     voiceBusy ||
     Boolean(voice.lastError);
+
+  const { headerGesture, sheetStyle, scrimStyle, onSheetLayout, held } =
+    useSheetDismissPan({
+      visible: expanded,
+      onClose: closeResults,
+    });
 
   if (!held) return null;
 
@@ -233,19 +245,23 @@ export function DockSearchOverlay() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Close Search"
-        onPress={() => {
-          void voice.cancel();
-          collapse();
-        }}
-        style={[StyleSheet.absoluteFill, { backgroundColor: theme.overlayScrim }]}
+        onPress={closeResults}
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: theme.overlayScrim },
+          scrimStyle,
+        ]}
       />
       {showPlate ? (
         <Animated.View
+          onLayout={(event) => {
+            onSheetLayout(Math.round(event.nativeEvent.layout.height));
+          }}
           entering={popoverEntering()}
-          exiting={popoverExiting()}
           pointerEvents="box-none"
           style={[
             styles.column,
+            sheetStyle,
             {
               left: spacing.md,
               right: spacing.md,
@@ -261,13 +277,33 @@ export function DockSearchOverlay() {
               fillScreen ? styles.plateExpand : styles.plateCompact,
               {
                 borderRadius: radii.lg,
-                padding: fillScreen
+                paddingHorizontal: fillScreen
                   ? dockSearchResultsPadding(spacing.lg)
+                  : spacing.sm,
+                paddingBottom: fillScreen
+                  ? dockSearchResultsPadding(spacing.lg)
+                  : spacing.sm,
+                paddingTop: fillScreen
+                  ? showResults
+                    ? spacing.xs
+                    : dockSearchResultsPadding(spacing.lg)
                   : spacing.sm,
                 gap: spacing.sm,
               },
             ]}
           >
+            {showResults ? (
+              <GestureDetector gesture={headerGesture}>
+                <View style={styles.grabberWrap}>
+                  <SheetGrabber
+                    testID={AgentUiIds.tabs.searchClose}
+                    onPress={closeResults}
+                    accessibilityLabel="Close Search"
+                    interactive={false}
+                  />
+                </View>
+              </GestureDetector>
+            ) : null}
             {fillScreen ? (
               <AgentTestId testID={AgentUiIds.tabs.searchResults} style={styles.scroller}>
                 <ScrollView
@@ -303,6 +339,10 @@ const styles = StyleSheet.create({
   scroller: {
     flex: 1,
     minHeight: 0,
+  },
+  grabberWrap: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   chatHeader: {
     flexDirection: 'row',

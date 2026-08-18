@@ -135,6 +135,10 @@ describe('dock search chrome', () => {
     expect(search).toContain("fontVariant: ['tabular-nums']");
     expect(search).toContain('icon="microphone"');
     expect(search).toContain('AgentUiIds.tabs.searchMic');
+    expect(search).not.toContain('SheetGrabber');
+    expect(search).not.toContain('AgentUiIds.tabs.searchClose');
+    expect(search).not.toContain('icon="close"');
+    expect(search).not.toContain('icon="chevron-down"');
     const stopIndex = search.indexOf('icon="stop"');
     const micIndex = search.lastIndexOf('icon="microphone"');
     expect(stopIndex).toBeGreaterThan(-1);

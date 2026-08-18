@@ -8,8 +8,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { AppText, GlassPlate, IconButton, Input, Symbol } from '@/components/primitives';
+import {
+  AppText,
+  GlassPlate,
+  IconButton,
+  Input,
+} from '@/components/primitives';
 import { glassMaterials, easings, motion, radii } from '@/design-system';
+import { AuthBrandMark } from '@/features/auth/auth-brand-mark';
 import { formatVoiceDuration } from '@/features/journal/model';
 import { sendDockMessage } from '@/features/search/dock-search-actions';
 import {
@@ -60,7 +66,6 @@ export function BottomNavSearch({
   const expanded = useDockSearch((state) => state.expanded);
   const query = useDockSearch((state) => state.query);
   const expand = useDockSearch((state) => state.expand);
-  const collapse = useDockSearch((state) => state.collapse);
   const setQuery = useDockSearch((state) => state.setQuery);
   const setFieldHeight = useDockSearch((state) => state.setFieldHeight);
   const held = useHeldOverlay(expanded, motion.chrome);
@@ -166,12 +171,13 @@ export function BottomNavSearch({
   );
   const fieldInputStyle = useMemo(
     () => ({
-      minHeight: well,
+      minHeight: fieldShellHeight,
       height: fieldShellHeight,
       maxHeight: expandLayout
         ? Math.ceil(oneLineHeight) * DOCK_SEARCH_INPUT_MAX_LINES
         : well,
       paddingVertical: 0,
+      textAlignVertical: 'center',
       paddingRight: expandLayout ? trailingPad : undefined,
     }),
     [expandLayout, fieldShellHeight, oneLineHeight, trailingPad, well],
@@ -212,7 +218,11 @@ export function BottomNavSearch({
             onLongPress={() => expand({ listen: true })}
             style={[styles.well, { width: well, height: well }]}
           >
-            <Symbol name="search" size={s(18)} color={theme.textSecondary} />
+            <AuthBrandMark
+              size={Math.max(26, s(30))}
+              orbitTilted={false}
+              markColor={theme.accentPrimary}
+            />
           </Pressable>
         </Animated.View>
         {held ? (
@@ -223,7 +233,7 @@ export function BottomNavSearch({
             <Input
               value={query}
               onChangeText={onChangeQuery}
-              placeholder="Search"
+              placeholder="Ask onTrack or Search..."
               placeholderTextColor={theme.textSecondary}
               accessibilityLabel="Search"
               returnKeyType="send"
@@ -248,23 +258,6 @@ export function BottomNavSearch({
                     setTrailingWidth((current) => (current === width ? current : width));
                   }}
                 >
-                  {query ? (
-                    <IconButton
-                      icon="close"
-                      accessibilityLabel="Clear"
-                      testID={AgentUiIds.tabs.searchClear}
-                      size={controlSize}
-                      onPress={() => onChangeQuery('')}
-                    />
-                  ) : (
-                    <IconButton
-                      icon="close"
-                      accessibilityLabel="Close"
-                      testID={AgentUiIds.tabs.searchClose}
-                      size={controlSize}
-                      onPress={collapse}
-                    />
-                  )}
                   {listening ? (
                     <>
                       <DockSearchListenElapsed startedAt={listenStartedAt} />

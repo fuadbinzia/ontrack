@@ -11,14 +11,29 @@ import { authPalette } from './auth-palette';
  * onTrack lens mark — a mist disc holding a tilted orbit ring and the
  * ink bead that rides it. Dusty-blue shell mark (mock), not app-wide copper.
  */
-export function AuthBrandMark({ size }: { size?: number }) {
+export function AuthBrandMark({
+  size,
+  markColor,
+  orbitTilted = true,
+}: {
+  size?: number;
+  markColor?: string;
+  orbitTilted?: boolean;
+}) {
   const theme = useTheme();
   const { s } = useResponsive();
   const box = size ?? Math.max(40, s(44));
   const ring = box * 0.58;
   const bead = Math.max(5, box * 0.17);
-  const ink = theme.name === 'dark' ? authPalette.nightDust : authPalette.ink;
-  const rim = theme.name === 'dark' ? authPalette.nightFog : authPalette.dust;
+  const ink = markColor ?? (theme.name === 'dark' ? authPalette.nightDust : authPalette.ink);
+  const rim = markColor
+    ? markColor
+    : theme.name === 'dark'
+      ? authPalette.nightFog
+      : authPalette.dust;
+  const ringTransform = orbitTilted
+    ? [{ rotate: '-24deg' }, { scaleY: 0.82 }]
+    : [];
 
   return (
     <GlassPlate
@@ -37,6 +52,7 @@ export function AuthBrandMark({ size }: { size?: number }) {
       <View
         style={[
           styles.ring,
+          { transform: ringTransform },
           {
             width: ring,
             height: ring,
@@ -69,6 +85,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexShrink: 0,
   },
-  ring: { borderWidth: 1, transform: [{ rotate: '-24deg' }, { scaleY: 0.82 }] },
+  ring: { borderWidth: 1 },
   bead: { position: 'absolute' },
 });

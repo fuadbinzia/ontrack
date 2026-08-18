@@ -45,7 +45,7 @@ export function DayHeader({
   topInset,
 }: DayHeaderProps) {
   const theme = useTheme();
-  const { spacing: rs } = useResponsive();
+  const { spacing: rs, layout } = useResponsive();
   const hour = isToday(date) ? new Date().getHours() : 12;
   const gradient = timeOfDayGradient(theme, hour);
   useSafeAreaChrome(timeOfDaySafeAreaBackground(theme, hour));
@@ -99,6 +99,13 @@ export function DayHeader({
     showWeather && weather && weatherAccessibilityLabel,
   );
   const showDayVoice = completion > 0 || Boolean(nowLine || summaryLine);
+  const navSize = layout.minTapTarget;
+  const navSlotStyle = {
+    width: navSize,
+    height: navSize,
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
 
   return (
     <View style={[styles.container, { paddingTop: topInset + spacing.md }]}>
@@ -119,12 +126,15 @@ export function DayHeader({
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.topRow}>
-        <IconButton
-          icon="chevron-left"
-          accessibilityLabel="Previous day"
-          testID={AgentUiIds.today.prevDay}
-          onPress={() => onChangeDate(addDays(date, -1))}
-        />
+        <View style={navSlotStyle}>
+          <IconButton
+            icon="chevron-left"
+            accessibilityLabel="Previous day"
+            testID={AgentUiIds.today.prevDay}
+            size={navSize}
+            onPress={() => onChangeDate(addDays(date, -1))}
+          />
+        </View>
         <Pressable
           ref={openCalendarAgent.ref}
           testID={AgentUiIds.today.openCalendar}
@@ -144,12 +154,15 @@ export function DayHeader({
             {formatDateLong(date)}
           </AppText>
         </Pressable>
-        <IconButton
-          icon="chevron-right"
-          accessibilityLabel="Next day"
-          testID={AgentUiIds.today.nextDay}
-          onPress={() => onChangeDate(addDays(date, 1))}
-        />
+        <View style={navSlotStyle}>
+          <IconButton
+            icon="chevron-right"
+            accessibilityLabel="Next day"
+            testID={AgentUiIds.today.nextDay}
+            size={navSize}
+            onPress={() => onChangeDate(addDays(date, 1))}
+          />
+        </View>
       </View>
 
       {showWeatherBar || showDayVoice ? (
@@ -264,6 +277,8 @@ const styles = StyleSheet.create({
   titleBlock: {
     flex: 1,
     minWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xxs,
   },
   titleBlockPressed: {

@@ -9,22 +9,26 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 
 import { GlassPlate } from '@/components/primitives/glass-plate';
 import { colorWithAlpha } from '@/design-system/glass';
 import {
+  DOCK_SEARCH_HALO_LAYERS,
   DOCK_SEARCH_HALO_ORBIT_MS,
-  DOCK_SEARCH_HALO_PAD,
   DOCK_SEARCH_HALO_STROKE,
-  DOCK_SEARCH_HALO_TRAIL_RATIO,
+  dockSearchHaloAmbientAlpha,
   dockSearchHaloArcLength,
-  dockSearchHaloSize,
+  dockSearchHaloCanvasSize,
+  dockSearchHaloGlowStops,
+  dockSearchHaloInset,
+  dockSearchHaloRadius,
 } from '@/features/search/dock-search-layout';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useTheme } from '@/hooks/use-theme';
 
 const FAVICON = require('../../../assets/images/favicon.png');
+const HALO_GLOW_ID = 'dockSearchHaloGlow';
 
 export function DockSearchMark({
   size,
@@ -40,20 +44,19 @@ export function DockSearchMark({
   const { allowsLoopMotion } = usePerformanceTier();
   const orbit = useSharedValue(0);
   const live = circulating && allowsLoopMotion && !reduceMotion;
-  const haloSize = dockSearchHaloSize(size);
+  const canvas = dockSearchHaloCanvasSize(size);
+  const inset = dockSearchHaloInset();
+  const radius = dockSearchHaloRadius(size);
   const stroke = DOCK_SEARCH_HALO_STROKE;
-  const radius = (haloSize - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const arc = dockSearchHaloArcLength(circumference);
-  const trail = dockSearchHaloArcLength(circumference, DOCK_SEARCH_HALO_TRAIL_RATIO);
   const accent = theme.accentPrimary;
-  const bloom = colorWithAlpha(accent, theme.name === 'dark' ? 0.22 : 0.16);
-  const track = colorWithAlpha(accent, theme.name === 'dark' ? 0.42 : 0.32);
-  const trailInk = colorWithAlpha(accent, theme.name === 'dark' ? 0.55 : 0.42);
+  const dark = theme.name === 'dark';
+  const ambient = dockSearchHaloAmbientAlpha(dark);
+  const glowStops = dockSearchHaloGlowStops(size);
 
   useEffect(() => {
     if (!live) {
-      orbit.value = 0.12;
+      orbit.value = 0;
       return;
     }
     orbit.value = 0;
@@ -90,55 +93,59 @@ export function DockSearchMark({
         style={[
           styles.halo,
           {
-            width: haloSize,
-            height: haloSize,
-            left: -DOCK_SEARCH_HALO_PAD,
-            top: -DOCK_SEARCH_HALO_PAD,
+            width: canvas,
+            height: canvas,
+            left: -inset,
+            top: -inset,
           },
         ]}
       >
-        <Svg width={haloSize} height={haloSize}>
+        <Svg width={canvas} height={canvas}>
+          <Defs>
+            <RadialGradient id={HALO_GLOW_ID} cx="50%" cy="50%" r="50%">
+              <Stop offset="0%" stopColor={accent} stopOpacity={0} />
+              <Stop
+                offset={`${glowStops.innerPct}%`}
+                stopColor={accent}
+                stopOpacity={0}
+              />
+              <Stop
+                offset={`${glowStops.peakPct}%`}
+                stopColor={accent}
+                stopOpacity={ambient}
+              />
+              <Stop offset="100%" stopColor={accent} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
           <Circle
-            cx={haloSize / 2}
-            cy={haloSize / 2}
-            r={radius}
-            stroke={bloom}
-            strokeWidth={stroke * 2.6}
-            fill="none"
-          />
-          <Circle
-            cx={haloSize / 2}
-            cy={haloSize / 2}
-            r={radius}
-            stroke={track}
-            strokeWidth={stroke * 0.7}
-            fill="none"
+            cx={canvas / 2}
+            cy={canvas / 2}
+            r={canvas / 2}
+            fill={`url(#${HALO_GLOW_ID})`}
           />
         </Svg>
-        <Animated.View style={[StyleSheet.absoluteFill, spinStyle]}>
-          <Svg width={haloSize} height={haloSize}>
-            <Circle
-              cx={haloSize / 2}
-              cy={haloSize / 2}
-              r={radius}
-              stroke={trailInk}
-              strokeWidth={stroke * 1.45}
-              strokeLinecap="round"
-              fill="none"
-              strokeDasharray={`${trail} ${circumference}`}
-            />
-            <Circle
-              cx={haloSize / 2}
-              cy={haloSize / 2}
-              r={radius}
-              stroke={accent}
-              strokeWidth={stroke}
-              strokeLinecap="round"
-              fill="none"
-              strokeDasharray={`${arc} ${circumference}`}
-            />
-          </Svg>
-        </Animated.View>
+        {live ? (
+          <Animated.View style={[StyleSheet.absoluteFill, spinStyle]}>
+            <Svg width={canvas} height={canvas}>
+              {DOCK_SEARCH_HALO_LAYERS.map((layer) => (
+                <Circle
+                  key={layer.ratio}
+                  cx={canvas / 2}
+                  cy={canvas / 2}
+                  r={radius}
+                  stroke={colorWithAlpha(
+                    accent,
+                    dark ? layer.alphaDark : layer.alphaLight,
+                  )}
+                  strokeWidth={stroke * layer.strokeScale}
+                  strokeLinecap="round"
+                  fill="none"
+                  strokeDasharray={`${dockSearchHaloArcLength(circumference, layer.ratio)} ${circumference}`}
+                />
+              ))}
+            </Svg>
+          </Animated.View>
+        ) : null}
       </View>
       <GlassPlate
         airy

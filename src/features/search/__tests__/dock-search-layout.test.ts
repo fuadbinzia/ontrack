@@ -14,11 +14,22 @@ import {
   dockSearchCollapsedShellSize,
   dockSearchCollapsedWellHang,
   dockSearchCollapsedWellLift,
+  dockSearchHaloAmbientAlpha,
   dockSearchHaloArcLength,
+  dockSearchHaloCanvasSize,
+  dockSearchHaloGlowStops,
+  dockSearchHaloInset,
+  dockSearchHaloOuterExtent,
+  dockSearchHaloRadius,
   dockSearchHaloSize,
+  dockSearchHaloWidestStroke,
   DOCK_SEARCH_BACKDROP_BLUR_INTENSITY,
   DOCK_SEARCH_COLLAPSED_WELL_HANG_RATIO,
+  DOCK_SEARCH_HALO_AMBIENT_ALPHA_DARK,
+  DOCK_SEARCH_HALO_AMBIENT_ALPHA_LIGHT,
   DOCK_SEARCH_HALO_ARC_RATIO,
+  DOCK_SEARCH_HALO_GLOW_BLEED,
+  DOCK_SEARCH_HALO_LAYERS,
   DOCK_SEARCH_HALO_ORBIT_MS,
   DOCK_SEARCH_HALO_PAD,
   DOCK_SEARCH_HALO_STROKE,
@@ -351,17 +362,65 @@ describe('dock search layout helpers', () => {
 
   it('sizes the circulating halo just outside the search well', () => {
     expect(DOCK_SEARCH_HALO_PAD).toBe(5);
-    expect(DOCK_SEARCH_HALO_STROKE).toBe(2.25);
+    expect(DOCK_SEARCH_HALO_STROKE).toBe(1.75);
+    expect(DOCK_SEARCH_HALO_GLOW_BLEED).toBe(10);
     expect(DOCK_SEARCH_HALO_ORBIT_MS).toBe(3600);
-    expect(DOCK_SEARCH_HALO_ARC_RATIO).toBe(0.28);
-    expect(DOCK_SEARCH_HALO_TRAIL_RATIO).toBe(0.48);
+    expect(DOCK_SEARCH_HALO_ARC_RATIO).toBe(0.1);
+    expect(DOCK_SEARCH_HALO_TRAIL_RATIO).toBe(0.58);
     expect(DOCK_SEARCH_HALO_TRAIL_RATIO).toBeGreaterThan(DOCK_SEARCH_HALO_ARC_RATIO);
     expect(dockSearchHaloSize(48)).toBe(58);
     expect(dockSearchHaloSize(44, 0)).toBe(44);
     expect(dockSearchHaloSize(48, -3)).toBe(48);
-    expect(dockSearchHaloArcLength(100)).toBe(28);
-    expect(dockSearchHaloArcLength(100, DOCK_SEARCH_HALO_TRAIL_RATIO)).toBe(48);
+    expect(dockSearchHaloRadius(48)).toBe(29);
+    expect(dockSearchHaloInset()).toBe(15);
+    expect(dockSearchHaloCanvasSize(48)).toBe(78);
+    expect(dockSearchHaloCanvasSize(44, 0)).toBe(64);
+    expect(dockSearchHaloCanvasSize(48, 5, -3)).toBe(58);
+    expect(dockSearchHaloArcLength(100)).toBe(10);
+    expect(dockSearchHaloArcLength(100, DOCK_SEARCH_HALO_TRAIL_RATIO)).toBe(58);
     expect(dockSearchHaloArcLength(100, 2)).toBe(100);
     expect(dockSearchHaloArcLength(100, -1)).toBe(0);
+  });
+
+  it('feathers the circulating halo off the canvas so glow is not clipped to a hard edge', () => {
+    for (const well of [44, 48, 56]) {
+      const half = dockSearchHaloCanvasSize(well) / 2;
+      expect(dockSearchHaloOuterExtent(well)).toBeLessThanOrEqual(half);
+      expect(DOCK_SEARCH_HALO_GLOW_BLEED).toBeGreaterThan(dockSearchHaloWidestStroke() / 2);
+    }
+  });
+
+  it('keeps the halo comet translucent with a fading tail instead of a cut loader bar', () => {
+    expect(DOCK_SEARCH_HALO_LAYERS.length).toBeGreaterThanOrEqual(3);
+    for (const [index, layer] of DOCK_SEARCH_HALO_LAYERS.entries()) {
+      expect(layer.alphaLight).toBeGreaterThan(0);
+      expect(layer.alphaLight).toBeLessThan(1);
+      expect(layer.alphaDark).toBeGreaterThan(layer.alphaLight);
+      expect(layer.alphaDark).toBeLessThan(1);
+      expect(layer.ratio).toBeGreaterThan(0);
+      expect(layer.ratio).toBeLessThan(1);
+      if (index > 0) {
+        const previous = DOCK_SEARCH_HALO_LAYERS[index - 1];
+        expect(layer.ratio).toBeLessThan(previous.ratio);
+        expect(layer.strokeScale).toBeLessThan(previous.strokeScale);
+        expect(layer.alphaLight).toBeGreaterThan(previous.alphaLight);
+      }
+    }
+    expect(dockSearchHaloAmbientAlpha(false)).toBe(DOCK_SEARCH_HALO_AMBIENT_ALPHA_LIGHT);
+    expect(dockSearchHaloAmbientAlpha(true)).toBe(DOCK_SEARCH_HALO_AMBIENT_ALPHA_DARK);
+    expect(DOCK_SEARCH_HALO_AMBIENT_ALPHA_LIGHT).toBeLessThan(1);
+    expect(DOCK_SEARCH_HALO_AMBIENT_ALPHA_DARK).toBeLessThan(1);
+  });
+
+  it('keeps the ambient glow as a ring that fades inside the well and outside the orbit', () => {
+    const stops = dockSearchHaloGlowStops(48);
+    expect(stops.innerPct).toBeGreaterThan(50);
+    expect(stops.innerPct).toBeLessThan(stops.peakPct);
+    expect(stops.peakPct).toBeLessThan(100);
+    expect(stops.innerPct).toBe(Math.round((24 / 39) * 1000) / 10);
+    expect(stops.peakPct).toBe(Math.round((29 / 39) * 1000) / 10);
+    const tight = dockSearchHaloGlowStops(44);
+    expect(tight.innerPct).toBeLessThan(tight.peakPct);
+    expect(dockSearchHaloGlowStops(0).innerPct).toBe(0);
   });
 });

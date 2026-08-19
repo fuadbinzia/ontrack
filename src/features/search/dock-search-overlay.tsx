@@ -29,6 +29,7 @@ import {
   DOCK_SEARCH_LAYOUT,
   dockSearchBackdropGradientColors,
   dockSearchOverlayBottom,
+  dockSearchOverlayFrosted,
   dockSearchResultsGap,
   dockSearchResultsPadding,
 } from '@/features/search/dock-search-layout';
@@ -119,7 +120,7 @@ function DockSearchTranscriptTurn({ turn }: { turn: DockTranscriptTurn }) {
       )}
       <GlassPlate
         airy
-        intensity={48}
+        blur={false}
         tintColor={isUser ? theme.accentPrimary : undefined}
         style={[
           styles.bubble,
@@ -222,7 +223,13 @@ export function DockSearchOverlay() {
     label: 'Close Search',
     onPress: closeResults,
   });
-  const frosted = Platform.OS === 'ios' && allowsBlur;
+  const expandLayout = DOCK_SEARCH_LAYOUT === 'expand';
+  const fillScreen = expandLayout && (showResults || transcript.length > 0);
+  const frosted = dockSearchOverlayFrosted({
+    ios: Platform.OS === 'ios',
+    allowsBlur,
+    fillScreen,
+  });
   const [backdropTop, backdropMid, backdropBottom] =
     dockSearchBackdropGradientColors({
       dark: theme.name === 'dark',
@@ -249,8 +256,6 @@ export function DockSearchOverlay() {
 
   if (!held) return null;
 
-  const expandLayout = DOCK_SEARCH_LAYOUT === 'expand';
-  const fillScreen = expandLayout && (showResults || transcript.length > 0);
   const bottom = dockSearchOverlayBottom(
     tabBarHeight,
     layout.bottomNavBarBaseHeight,
@@ -346,7 +351,7 @@ export function DockSearchOverlay() {
       >
         {Platform.OS === 'ios' ? (
           <BlurView
-            intensity={allowsBlur ? DOCK_SEARCH_BACKDROP_BLUR_INTENSITY : 0}
+            intensity={frosted ? DOCK_SEARCH_BACKDROP_BLUR_INTENSITY : 0}
             tint="dark"
             pointerEvents="none"
             style={StyleSheet.absoluteFill}
@@ -391,6 +396,7 @@ export function DockSearchOverlay() {
           ]}
         >
           <GlassPlate
+            blur={false}
             style={[
               fillScreen ? styles.plateExpand : styles.plateCompact,
               {
@@ -454,7 +460,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   plateCompact: {
-    overflow: 'visible',
+    overflow: 'hidden',
   },
   scroller: {
     flex: 1,

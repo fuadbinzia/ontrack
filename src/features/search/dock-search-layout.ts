@@ -93,6 +93,20 @@ export function dockSearchFieldHeightFromContentSize(
 export const DOCK_SEARCH_BACKDROP_BLUR_INTENSITY = 80;
 
 /**
+ * iOS may frost the page behind an empty search pill. Type-ahead and
+ * conversation plates sit on that veil — nested BlurView samples the
+ * atmosphere orbs and paints a chroma gradient that Android never shows
+ * (Android is fill-only). Keep BlurView mounted; drop intensity instead.
+ */
+export function dockSearchOverlayFrosted(args: {
+  ios: boolean;
+  allowsBlur: boolean;
+  fillScreen: boolean;
+}): boolean {
+  return args.ios && args.allowsBlur && !args.fillScreen;
+}
+
+/**
  * Light black veil over the frosted page. Stronger toward the dock so the
  * expanded pill sits on a grounded wash. Without blur (Android / gated),
  * alphas step up so the current screen still recedes.
@@ -200,4 +214,29 @@ export function dockSearchCollapsedWellLift(args: {
   const wellTopBelowChrome =
     args.barPaddingTop + Math.max(0, rowHeight - args.wellButtonSize);
   return wellTopBelowChrome + hang;
+}
+
+/** Gap between the circular well and the circulating halo ring. */
+export const DOCK_SEARCH_HALO_PAD = 5;
+/** Halo stroke — thin enough to read as light, not a loader. */
+export const DOCK_SEARCH_HALO_STROKE = 2.25;
+/** One slow lap around the mark — living, not a spinner. */
+export const DOCK_SEARCH_HALO_ORBIT_MS = 3600;
+/** Bright arc as a fraction of the ring. */
+export const DOCK_SEARCH_HALO_ARC_RATIO = 0.28;
+/** Softer trailing wash behind the bright arc. */
+export const DOCK_SEARCH_HALO_TRAIL_RATIO = 0.48;
+
+export function dockSearchHaloSize(
+  wellButtonSize: number,
+  pad: number = DOCK_SEARCH_HALO_PAD,
+): number {
+  return wellButtonSize + Math.max(0, pad) * 2;
+}
+
+export function dockSearchHaloArcLength(
+  circumference: number,
+  ratio: number = DOCK_SEARCH_HALO_ARC_RATIO,
+): number {
+  return Math.round(circumference * Math.min(1, Math.max(0, ratio)) * 1000) / 1000;
 }

@@ -19,7 +19,7 @@ describe('glass plate contract', () => {
     expect(button).toContain('appearance = \'glass\'');
     expect(plate).toContain('allowsBlur');
     // Android has no BlurView frost for tinted plates — never use blur alphas there.
-    expect(plate).toContain("Platform.OS === 'ios' && allowsBlur");
+    expect(plate).toContain("Platform.OS === 'ios' && allowsBlur && blur");
     expect(plate).toContain('frostedFill');
     expect(plate).toContain('intensity={');
     expect(plate).toContain(': 0');
@@ -40,11 +40,11 @@ describe('glass plate contract', () => {
     expect(plate).toContain('borderBottomLeftRadius: bottomLeft');
     expect(plate).toContain('borderBottomRightRadius: bottomRight');
     expect(plate).toMatch(
-      /if \(topLeft === topRight && topRight === bottomLeft && bottomLeft === bottomRight\) \{[\s\S]*?return \{ borderRadius: topLeft \}/,
+      /if \(topLeft === topRight && topRight === bottomLeft && bottomLeft === bottomRight\) \{[\s\S]*?return \{ borderRadius: topLeft, overflow: 'hidden' \}/,
     );
     // Surrounding: uniform `borderRadius` shortcut still works.
     expect(plate).toMatch(
-      /if \(typeof flat\.borderRadius === 'number'\) \{[\s\S]*?return \{ borderRadius: flat\.borderRadius \}/,
+      /if \(typeof flat\.borderRadius === 'number'\) \{[\s\S]*?return \{ borderRadius: flat\.borderRadius, overflow: 'hidden' \}/,
     );
     // Surrounding: BlurView still uses `underlayClip`.
     expect(plate).toMatch(
@@ -52,6 +52,54 @@ describe('glass plate contract', () => {
     );
     expect(plate).toContain('const underlayClip = glassClipRadius(style)');
     expect(plate).toContain('const androidUnderlayClip = glassClipRadius(style)');
+  });
+
+  it('clips frost underlays even when a caller overrides parent overflow', () => {
+    const plate = read('src/components/primitives/glass-plate.tsx');
+    expect(plate).toMatch(
+      /if \(typeof flat\.borderRadius === 'number'\) \{[\s\S]*?return \{ borderRadius: flat\.borderRadius, overflow: 'hidden' \}/,
+    );
+    expect(plate).toMatch(
+      /if \(topLeft === topRight && topRight === bottomLeft && bottomLeft === bottomRight\) \{[\s\S]*?return \{ borderRadius: topLeft, overflow: 'hidden' \}/,
+    );
+    expect(plate).toMatch(
+      /return \{\s*borderTopLeftRadius: topLeft,\s*borderTopRightRadius: topRight,\s*borderBottomLeftRadius: bottomLeft,\s*borderBottomRightRadius: bottomRight,\s*overflow: 'hidden',\s*\}/,
+    );
+    expect(plate).toContain('const underlayClip = glassClipRadius(style)');
+    expect(plate).toContain('const androidUnderlayClip = glassClipRadius(style)');
+    expect(plate).toMatch(
+      /<BlurView[\s\S]*?style=\{\[StyleSheet\.absoluteFill, underlayClip\]\}/,
+    );
+    expect(plate).toContain('if (!blur)');
+    expect(plate).toContain('backgroundColor: fill');
+  });
+
+  it('uses a flat solid fill when blur is false so nested iOS overlay frost does not paint a chroma gradient', () => {
+    const plate = read('src/components/primitives/glass-plate.tsx');
+    expect(plate).toContain('blur = true');
+    expect(plate).toContain('if (!blur)');
+    expect(plate).toContain('g.fill.lightSolid');
+    expect(plate).toContain('g.fill.lightAirySolid');
+    expect(plate).toContain('g.fill.darkSolid');
+    const fillOnlyStart = plate.indexOf('if (!blur)');
+    const fillOnlyEnd = plate.indexOf('const darkFill');
+    expect(fillOnlyStart).toBeGreaterThan(-1);
+    expect(fillOnlyEnd).toBeGreaterThan(fillOnlyStart);
+    const fillOnly = plate.slice(fillOnlyStart, fillOnlyEnd);
+    expect(fillOnly).not.toContain('<BlurView');
+    expect(fillOnly).not.toContain('experimental_backgroundImage');
+    expect(fillOnly).toContain('backgroundColor: fill');
+    expect(fillOnly).toContain('g.fill.invertedSolid');
+  });
+
+  it('keeps the Android fill path ahead of iOS blur={false} so Android chrome is unchanged', () => {
+    const plate = read('src/components/primitives/glass-plate.tsx');
+    const android = plate.indexOf("if (Platform.OS === 'android')");
+    const fillOnly = plate.indexOf('if (!blur)');
+    const blurView = plate.lastIndexOf('<BlurView');
+    expect(android).toBeGreaterThan(-1);
+    expect(fillOnly).toBeGreaterThan(android);
+    expect(blurView).toBeGreaterThan(fillOnly);
   });
 
   it('defaults Card and SettingsGroup to glass surfaces', () => {
@@ -138,11 +186,20 @@ describe('glass plate contract', () => {
 
   it('keeps dock search chrome on GlassPlate', () => {
     const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const mark = read('src/components/navigation/dock-search-mark.tsx');
     const overlay = read('src/features/search/dock-search-overlay.tsx');
     expect(search).toContain('GlassPlate');
     expect(search).not.toContain('mist');
     expect(search).not.toContain('backgroundElevated');
+    expect(search).toContain('blur={false}');
+    expect(mark).toContain('GlassPlate');
+    expect(mark).toContain('airy');
+    expect(mark).not.toContain('mist');
+    expect(mark).not.toContain('backgroundElevated');
+    expect(mark).not.toContain('surface="solid"');
     expect(overlay).toContain('GlassPlate');
+    expect(overlay).toContain('blur={false}');
+    expect(overlay).toContain('dockSearchOverlayFrosted');
     expect(overlay).toContain('variant="ghost"');
     expect(overlay).toContain('<BlurView');
     expect(overlay).toContain('LinearGradient');

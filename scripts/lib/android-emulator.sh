@@ -228,47 +228,47 @@ if changed:
 PY
 }
 
-# Create onTrack_Agent_N AVDs (Galaxy_S26-class) when missing.
-android_emu_ensure_agent_avd() {
-  local name template="${ONTRACK_ANDROID_AVD_TEMPLATE:-Galaxy_S26}"
-  name="$(android_emu_preferred_name)"
-  if android_emu_avd_exists; then
-    android_emu_ensure_avd_runtime_config
+# Prefer Galaxy_S26; otherwise any installed non-agent AVD we can clone config from.
+android_emu_agent_clone_template() {
+  local home="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
+  local preferred="${ONTRACK_ANDROID_AVD_TEMPLATE:-Galaxy_S26}"
+  if [[ -f "${home}/${preferred}.ini" && -d "${home}/${preferred}.avd" ]]; then
+    printf '%s\n' "$preferred"
     return 0
   fi
-  if ! android_emu_is_agent_avd_name "$name"; then
-    echo "error: no AVD named '${name}' (create it or set ONTRACK_ANDROID_AVD)" >&2
+  local ini name
+  for ini in "${home}"/*.ini; do
+    [[ -f "$ini" ]] || continue
+    name="$(basename "$ini" .ini)"
+    android_emu_is_agent_avd_name "$name" && continue
+    if [[ -d "${home}/${name}.avd" ]]; then
+      printf '%s\n' "$name"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Copy AVD config only (not userdata) so a missing agent slot can boot.
+android_emu_clone_agent_avd() {
+  local name="$1" template="$2"
+  local home="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
+  local src_ini="${home}/${template}.ini"
+  local src_avd="${home}/${template}.avd"
+  if [[ ! -f "$src_ini" || ! -d "$src_avd" ]]; then
+    echo "error: cannot clone '${name}' — missing template AVD '${template}'" >&2
     return 1
   fi
-
-  local sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
-  local avdmanager=""
-  if [[ -x "${sdk_root}/cmdline-tools/latest/bin/avdmanager" ]]; then
-    avdmanager="${sdk_root}/cmdline-tools/latest/bin/avdmanager"
+  echo "Creating agent AVD ${name} (clone config from ${template})…"
+  mkdir -p "${home}/${name}.avd"
+  if [[ -f "${src_avd}/config.ini" ]]; then
+    cp "${src_avd}/config.ini" "${home}/${name}.avd/config.ini"
   else
-    avdmanager="$(command -v avdmanager 2>/dev/null || true)"
+    echo "error: template ${template} has no config.ini" >&2
+    return 1
   fi
-  if [[ -z "$avdmanager" ]]; then
-    # Fallback: clone template AVD config (fresh userdata).
-    local home="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
-    local src_ini="${home}/${template}.ini"
-    local src_avd="${home}/${template}.avd"
-    if [[ ! -f "$src_ini" || ! -d "$src_avd" ]]; then
-      echo "error: cannot create '${name}' — missing template AVD '${template}' and avdmanager" >&2
-      return 1
-    fi
-    echo "Creating agent AVD ${name} (clone config from ${template})…"
-    mkdir -p "${home}/${name}.avd"
-    # Copy config only — not userdata (large / stale).
-    if [[ -f "${src_avd}/config.ini" ]]; then
-      cp "${src_avd}/config.ini" "${home}/${name}.avd/config.ini"
-    else
-      echo "error: template ${template} has no config.ini" >&2
-      return 1
-    fi
-    # Optional hardware skin bits.
-    [[ -f "${src_avd}/hardware-qemu.ini" ]] && cp "${src_avd}/hardware-qemu.ini" "${home}/${name}.avd/" || true
-    python3 - "$home" "$name" "$template" <<'PY'
+  [[ -f "${src_avd}/hardware-qemu.ini" ]] && cp "${src_avd}/hardware-qemu.ini" "${home}/${name}.avd/" || true
+  python3 - "$home" "$name" "$template" <<'PY'
 import pathlib, sys
 home, name, template = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 ini = home / f"{name}.ini"
@@ -291,24 +291,53 @@ for old, new in (
 conf.write_text(text, encoding="utf-8")
 print(f"Cloned AVD config {template} → {name}", file=sys.stderr)
 PY
+  android_emu_ensure_avd_runtime_config
+}
+
+# Create onTrack_Agent_N AVDs (Galaxy_S26-class) when missing.
+android_emu_ensure_agent_avd() {
+  local name template create_log pkg
+  name="$(android_emu_preferred_name)"
+  if android_emu_avd_exists; then
     android_emu_ensure_avd_runtime_config
     return 0
   fi
-
-  local pkg="system-images;android-36;google_apis;arm64-v8a"
-  echo "Creating agent AVD ${name} (pixel_9_pro_xl / ${pkg})…"
-  # non-interactive: no custom hardware profile prompt
-  printf 'no\n' | "$avdmanager" create avd -n "$name" -k "$pkg" -d pixel_9_pro_xl --force >/dev/null 2>&1 || {
-    echo "error: avdmanager failed to create '${name}'" >&2
+  if ! android_emu_is_agent_avd_name "$name"; then
+    echo "error: no AVD named '${name}' (create it or set ONTRACK_ANDROID_AVD)" >&2
     return 1
-  }
-  # Match Galaxy_S26 display + GPU when template config is available.
-  local home="${ANDROID_AVD_HOME:-$HOME/.android/avd}"
-  local conf="${home}/${name}.avd/config.ini"
-  local tmpl="${home}/${template}.avd/config.ini"
-  android_emu_sync_avd_config_from_template "$conf" "$tmpl"
-  android_emu_ensure_avd_runtime_config
-  return 0
+  fi
+
+  local sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
+  local avdmanager=""
+  if [[ -x "${sdk_root}/cmdline-tools/latest/bin/avdmanager" ]]; then
+    avdmanager="${sdk_root}/cmdline-tools/latest/bin/avdmanager"
+  else
+    avdmanager="$(command -v avdmanager 2>/dev/null || true)"
+  fi
+  if [[ -n "$avdmanager" ]]; then
+    pkg="system-images;android-36;google_apis;arm64-v8a"
+    echo "Creating agent AVD ${name} (pixel_9_pro_xl / ${pkg})…"
+    create_log="$(mktemp "${TMPDIR:-/tmp}/ontrack-avdmanager.XXXXXX")"
+    # non-interactive: no custom hardware profile prompt
+    if printf 'no\n' | "$avdmanager" create avd -n "$name" -k "$pkg" -d pixel_9_pro_xl --force >"$create_log" 2>&1; then
+      rm -f "$create_log"
+      template="${ONTRACK_ANDROID_AVD_TEMPLATE:-Galaxy_S26}"
+      android_emu_sync_avd_config_from_template \
+        "${ANDROID_AVD_HOME:-$HOME/.android/avd}/${name}.avd/config.ini" \
+        "${ANDROID_AVD_HOME:-$HOME/.android/avd}/${template}.avd/config.ini"
+      android_emu_ensure_avd_runtime_config
+      return 0
+    fi
+    echo "error: avdmanager failed to create '${name}'" >&2
+    cat "$create_log" >&2 || true
+    rm -f "$create_log"
+  fi
+
+  if ! template="$(android_emu_agent_clone_template)"; then
+    echo "error: cannot create '${name}' — avdmanager failed and no clone template AVD is installed" >&2
+    return 1
+  fi
+  android_emu_clone_agent_avd "$name" "$template"
 }
 
 # True when the named AVD (default: preferred) is running headed (GUI window).

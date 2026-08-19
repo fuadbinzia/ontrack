@@ -236,6 +236,13 @@ describe('agent-ui host scripts contract', () => {
     expect(pool).toContain('agent_ui_assert_agent_device_bound');
     expect(pool).toContain('agent_ui_pool_reap_orphans');
     expect(pool).toMatch(/trap 'agent_ui_release_lease' EXIT INT TERM HUP/);
+    // iOS-only claims must not die creating the sibling Android AVD.
+    expect(pool).toContain('iOS-only — Android AVD');
+    expect(pool).toContain('continuing without it');
+    expect(pool).toContain('agent_ui_assert_agent_device_bound "$platform"');
+    expect(pool).not.toMatch(
+      /agent_ui_pool_bind_ios "\$slot" \|\| return 1\n  agent_ui_pool_bind_android "\$slot" \|\| return 1\n  agent_ui_assert_agent_device_bound both/,
+    );
     expect(host).toContain('agent_ui_assert_agent_device_bound');
     expect(host).toContain('AGENT_UI_POOL_MAX:=2');
     expect(host).toContain('AGENT_UI_LOCK_WAIT_SECS:=0}');

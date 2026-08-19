@@ -187,6 +187,10 @@ describe('metro launch command contract', () => {
     expect(watcherLib).toContain('metro_entry_resolves');
     expect(watcherLib).toContain('metro_subscription_live');
     expect(watcherLib).toContain('ensure_metro_hmr_beacon_probe_file');
+    expect(watcherLib).toContain('ensure_watchman_state_home');
+    expect(watcherLib).toContain('XDG_STATE_HOME');
+    expect(watcherLib).toContain('ONTRACK_WATCHMAN_STATE_HOME');
+    expect(watcherLib).toContain('not writable — Watchman state');
 
     const beaconEnsure = read('scripts/ensure-metro-hmr-beacon.sh');
     expect(beaconEnsure).toContain('metro-hmr-beacon.ts');

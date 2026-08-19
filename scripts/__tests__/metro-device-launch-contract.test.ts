@@ -208,6 +208,14 @@ describe('metro device launch contract', () => {
     expect(emu).toContain('android_emu_pool_mode');
     expect(emu).toContain('android_emu_ensure_agent_avd');
     expect(emu).toContain('onTrack_Agent_');
+    expect(emu).toContain('android_emu_agent_clone_template');
+    expect(emu).toContain('android_emu_clone_agent_avd');
+    expect(emu).toContain('error: avdmanager failed to create');
+    expect(emu).toContain('cat "$create_log"');
+    expect(emu).toContain('no clone template AVD is installed');
+    expect(emu).not.toMatch(
+      /avdmanager" create avd[\s\S]{0,80}>\/dev\/null 2>&1/,
+    );
     expect(emu).toContain('Booting preferred emulator (${mode}');
     expect(emu).toContain('-no-window');
     expect(emu).toContain('no-boot-anim');

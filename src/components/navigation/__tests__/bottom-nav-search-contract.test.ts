@@ -191,24 +191,76 @@ describe('dock search chrome', () => {
     expect(search).not.toMatch(/listening[\s\S]{0,200}requestMic/);
   });
 
+  it('paints the dock microphone as a ghost glyph on iOS and a glass disc on Android', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const micStart = search.indexOf('icon="microphone"');
+    const micEnd = search.indexOf('/>', micStart);
+    expect(micStart).toBeGreaterThan(-1);
+    expect(micEnd).toBeGreaterThan(micStart);
+    const mic = search.slice(micStart, micEnd);
+    expect(mic).toContain("appearance={Platform.OS === 'ios' ? 'ghost' : 'glass'}");
+    expect(mic).toContain('AgentUiIds.tabs.searchMic');
+    expect(mic).not.toContain('backgroundElevated');
+    expect(mic).not.toContain('surface="solid"');
+
+    const stopStart = search.indexOf('icon="stop"');
+    const stopEnd = search.indexOf('/>', stopStart);
+    expect(stopStart).toBeGreaterThan(-1);
+    const stop = search.slice(stopStart, stopEnd);
+    expect(stop).not.toContain('appearance');
+    expect(stop).toContain('AgentUiIds.tabs.searchStop');
+
+    const sendStart = search.indexOf('icon="send"');
+    const sendEnd = search.indexOf('/>', sendStart);
+    expect(sendStart).toBeGreaterThan(-1);
+    const send = search.slice(sendStart, sendEnd);
+    expect(send).toContain("appearance={query.trim() ? 'solid' : 'glass'}");
+    expect(send).toContain('AgentUiIds.tabs.searchSend');
+    expect(send).not.toContain("'ghost'");
+
+    expect(search).toContain('Platform');
+    expect(search).toContain('icon="microphone"');
+    expect(search).not.toContain('backgroundElevated');
+    expect(search).not.toContain('surface="solid"');
+  });
+
   it('renders a raised circular glass search well without an Ask AI caption', () => {
     const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const mark = read('src/components/navigation/dock-search-mark.tsx');
     expect(search).not.toContain('Ask AI');
     expect(search).not.toContain('AuthBrandMark');
     expect(search).toContain('placeholder="Ask onTrack or Search"');
     expect(search).not.toContain('placeholder="Ask onTrack or Search..."');
-    expect(search).toContain('<GlassPlate airy style={wellPlateStyle}>');
-    expect(search).toContain('borderRadius: wellButtonSize / 2');
-    expect(search).toContain('<Symbol name="search"');
+    expect(search).toContain('<DockSearchMark');
+    expect(search).not.toContain('wellPlateStyle');
+    expect(search).not.toContain('<Symbol name="search"');
+    expect(mark).toContain('<GlassPlate');
+    expect(mark).toContain('airy');
+    expect(mark).toContain('borderRadius: size / 2');
     expect(search).toContain("accessibilityLabel=\"Search\"");
     expect(search).toContain("label: 'Search'");
     expect(search).toContain('AgentUiIds.tabs.search');
     expect(search).toContain('expand({ listen: true })');
     expect(search).toContain('dockSearchCollapsedWellLift');
-    expect(search).toContain('translateY: -wellLift');
+    expect(search).toContain('lift={wellLift}');
+    expect(mark).toContain('translateY: -lift');
     expect(search).not.toContain('translateY: -s(8)');
     expect(search).not.toContain('surface="solid"');
     expect(search).not.toContain('backgroundElevated');
+  });
+
+  it('uses fill-only glass on the expanded search field so iOS does not paint a chroma gradient', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const mark = read('src/components/navigation/dock-search-mark.tsx');
+    expect(mark).toContain('<GlassPlate');
+    expect(mark).toContain('airy');
+    expect(mark).not.toMatch(/<GlassPlate airy[\s\S]{0,80}blur=\{false\}/);
+    expect(search).toMatch(
+      /<GlassPlate\s+blur=\{false\}\s+style=\{\[\s*styles\.plate/,
+    );
+    expect(search).not.toContain('experimental_backgroundImage');
+    expect(search).not.toContain('surface="solid"');
+    expect(search).not.toContain('mist');
   });
 
   it('does not pass a leading search icon on the expanded Input', () => {
@@ -224,7 +276,8 @@ describe('dock search chrome', () => {
     expect(search).not.toContain('icon={query.length > 0');
     expect(search).toContain('placeholder="Ask onTrack or Search"');
     expect(search).not.toContain('placeholder="Ask onTrack or Search..."');
-    expect(search).toContain('<Symbol name="search"');
+    expect(search).not.toContain('<Symbol name="search"');
+    expect(search).toContain('<DockSearchMark');
   });
 
   it('does not add unused vertical pad onto the expanded 1-line field height', () => {
@@ -273,20 +326,63 @@ describe('dock search chrome', () => {
     expect(search).toContain('expand({ listen: true })');
   });
 
-  it('centers the collapsed search glyph in the circular well', () => {
+  it('centers the collapsed search mark in the circular well', () => {
     const search = read('src/components/navigation/bottom-nav-search.tsx');
-    expect(search).toContain('wellIconSlotStyle');
-    expect(search).toMatch(
-      /wellIconSlotStyle = useMemo\(\s*\(\) => \(\{[\s\S]*?width: wellButtonSize,[\s\S]*?height: wellButtonSize,[\s\S]*?alignItems: 'center'[\s\S]*?justifyContent: 'center'/,
-    );
-    expect(search).toContain('<View style={wellIconSlotStyle} pointerEvents="none">');
-    expect(search).toContain('<Symbol name="search" size={20}');
-    expect(search).not.toMatch(/<Symbol name="search"[^>]*transform/);
+    const mark = read('src/components/navigation/dock-search-mark.tsx');
+    expect(search).toContain('<DockSearchMark');
+    expect(search).toContain('size={wellButtonSize}');
+    expect(search).toContain('lift={wellLift}');
+    expect(search).toContain('circulating={!expanded}');
+    expect(search).not.toContain('wellIconSlotStyle');
+    expect(search).not.toContain('<Symbol name="search"');
+    expect(mark).toContain("alignItems: 'center'");
+    expect(mark).toContain("justifyContent: 'center'");
+    expect(mark).toContain("overflow: 'hidden'");
+    expect(mark).toContain("overflow: 'visible'");
+    expect(mark).toContain('translateY: -lift');
     expect(search).toContain('dockSearchCollapsedWellLift');
-    expect(search).toContain('translateY: -wellLift');
     expect(search).not.toContain('translateY: -s(8)');
     expect(search).toContain("accessibilityLabel=\"Search\"");
     expect(search).toContain('AgentUiIds.tabs.search');
+  });
+
+  it('replaces the collapsed search glyph with the app favicon', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const mark = read('src/components/navigation/dock-search-mark.tsx');
+    expect(search).toContain('<DockSearchMark');
+    expect(search).not.toContain('<Symbol name="search"');
+    expect(search).not.toContain("name=\"search\"");
+    expect(mark).toContain("require('../../../assets/images/favicon.png')");
+    expect(mark).toContain('favicon.png');
+    expect(mark).toContain('<Image');
+    expect(mark).toContain('resizeMode="cover"');
+    expect(mark).toContain('<GlassPlate');
+    expect(mark).toContain('airy');
+    expect(mark).not.toContain('surface="solid"');
+    expect(mark).not.toContain('mist');
+  });
+
+  it('circulates a halo around the collapsed favicon and pauses it while search is open', () => {
+    const search = read('src/components/navigation/bottom-nav-search.tsx');
+    const mark = read('src/components/navigation/dock-search-mark.tsx');
+    const layout = read('src/features/search/dock-search-layout.ts');
+    expect(search).toContain('circulating={!expanded}');
+    expect(search).toContain("overflow: 'visible'");
+    expect(mark).toContain('allowsLoopMotion');
+    expect(mark).toContain('withRepeat');
+    expect(mark).toContain('DOCK_SEARCH_HALO_ORBIT_MS');
+    expect(mark).toContain('dockSearchHaloSize');
+    expect(mark).toContain('DOCK_SEARCH_HALO_PAD');
+    expect(mark).toContain('strokeDasharray');
+    expect(mark).toContain('orbit.value * 360');
+    expect(mark).toContain("from 'react-native-svg'");
+    expect(mark).toContain("overflow: 'visible'");
+    expect(mark).toContain('pointerEvents="none"');
+    expect(mark).toContain('ReduceMotion.System');
+    expect(layout).toContain('export function dockSearchHaloSize');
+    expect(layout).toContain('DOCK_SEARCH_HALO_ORBIT_MS = 3600');
+    expect(mark).not.toContain('backgroundElevated');
+    expect(mark).not.toContain('surface="solid"');
   });
 
   it('keeps collapsed search height on the circular plate instead of 3-pin slot width', () => {
@@ -309,7 +405,7 @@ describe('dock search chrome', () => {
     expect(search).toContain('dockSearchCollapsedWellLift');
     expect(search).toContain('layout.bottomNavBarBaseHeight');
     expect(search).toContain('spacing.xxs');
-    expect(search).toContain('translateY: -wellLift');
+    expect(search).toContain('lift={wellLift}');
     expect(search).toMatch(
       /dockSearchCollapsedWellLift\(\{\s*barBaseHeight: layout\.bottomNavBarBaseHeight,\s*barPaddingTop: spacing\.xxs,\s*wellButtonSize,\s*\}\)/,
     );

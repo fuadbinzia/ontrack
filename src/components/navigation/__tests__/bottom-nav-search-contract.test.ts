@@ -374,7 +374,7 @@ describe('dock search chrome', () => {
     expect(mark).toContain('dockSearchHaloCanvasSize');
     expect(mark).toContain('dockSearchHaloInset');
     expect(mark).toContain('strokeDasharray');
-    expect(mark).toContain('orbit.value * 360');
+    expect(mark).toContain('dockSearchHaloDashOffset');
     expect(mark).toContain("from 'react-native-svg'");
     expect(mark).toContain("overflow: 'visible'");
     expect(mark).toContain('pointerEvents="none"');
@@ -394,13 +394,31 @@ describe('dock search chrome', () => {
     expect(mark).toContain('strokeLinecap="round"');
     expect(mark).toContain('DOCK_SEARCH_HALO_LAYERS');
     expect(mark).toContain('colorWithAlpha');
-    expect(mark).toContain('{live ? (');
+    expect(mark).toMatch(/\{live\s*\?/);
     expect(mark).not.toContain('stroke={track}');
     expect(mark).not.toContain('stroke={accent}');
     expect(mark).not.toContain('stroke={bloom}');
     expect(mark).not.toContain('stroke={trailInk}');
     expect(layout).toContain('DOCK_SEARCH_HALO_GLOW_BLEED');
     expect(layout).toContain('dockSearchHaloOuterExtent');
+  });
+
+  it('orbits the halo Circle dash on Android instead of rotating a parent View around Svg', () => {
+    const mark = read('src/components/navigation/dock-search-mark.tsx');
+    expect(mark).toContain('useAnimatedProps');
+    expect(mark).toContain('Animated.createAnimatedComponent(Circle)');
+    expect(mark).toContain('strokeDashoffset');
+    expect(mark).toContain('animatedProps={cometProps}');
+    expect(mark).toContain('collapsable={false}');
+    expect(mark).not.toContain('useAnimatedStyle');
+    expect(mark).not.toContain('Animated.View');
+    expect(mark).not.toContain('allowsAnimatedSvgProps');
+    expect(mark).not.toMatch(/transform: \[\{ rotate/);
+    expect(mark).not.toContain('orbit.value * 360');
+    const layout = read('src/features/search/dock-search-layout.ts');
+    expect(layout).toMatch(
+      /export function dockSearchHaloDashOffset\([\s\S]*?\{[\s\S]*?'worklet';/,
+    );
   });
 
   it('keeps collapsed search height on the circular plate instead of 3-pin slot width', () => {

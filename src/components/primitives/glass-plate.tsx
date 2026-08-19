@@ -21,7 +21,7 @@ function glassClipRadius(style?: StyleProp<ViewStyle>): ViewStyle | undefined {
   const flat = StyleSheet.flatten(style);
   if (!flat) return undefined;
   if (typeof flat.borderRadius === 'number') {
-    return { borderRadius: flat.borderRadius };
+    return { borderRadius: flat.borderRadius, overflow: 'hidden' };
   }
   const topLeft = flat.borderTopLeftRadius;
   const topRight = flat.borderTopRightRadius;
@@ -36,13 +36,14 @@ function glassClipRadius(style?: StyleProp<ViewStyle>): ViewStyle | undefined {
     return undefined;
   }
   if (topLeft === topRight && topRight === bottomLeft && bottomLeft === bottomRight) {
-    return { borderRadius: topLeft };
+    return { borderRadius: topLeft, overflow: 'hidden' };
   }
   return {
     borderTopLeftRadius: topLeft,
     borderTopRightRadius: topRight,
     borderBottomLeftRadius: bottomLeft,
     borderBottomRightRadius: bottomRight,
+    overflow: 'hidden',
   };
 }
 
@@ -87,6 +88,13 @@ export type GlassPlateProps = ViewProps & {
    * Ignored when `clear` is set.
    */
   tintColor?: string;
+  /**
+   * iOS BlurView frost. Turn off when this plate already sits over a
+   * blurred overlay — nested UIVisualEffect samples page atmosphere and
+   * paints a chroma gradient. Fill-only (flat solid, no wash image).
+   * Android is already fill-only; this is a no-op there.
+   */
+  blur?: boolean;
 };
 
 /**
@@ -99,10 +107,12 @@ export type GlassPlateProps = ViewProps & {
  * - `airy`: lighter frost for circular controls over sky / photos.
  * - `mist`: translucent nested frost (fill-only — safe under clipped parents).
  * - `tintColor`: artwork-matched translucent wash (travel itinerary shells).
+ * - `blur={false}`: iOS fill-only (no nested BlurView / no wash image).
  *
  * Blur is a sibling underlay (no React children inside BlurView). Always mount
  * BlurView when frosted (intensity 0 when blur gated) to avoid Fabric SIGABRTs.
  * Exception: `mist` never mounts BlurView (clipped ancestors → white milk on iOS).
+ * Exception: `blur={false}` never mounts BlurView (nested overlay frost → chroma).
  */
 export function GlassPlate({
   children,
@@ -115,6 +125,7 @@ export function GlassPlate({
   mist = false,
   accent = 'default',
   tintColor,
+  blur = true,
   ...rest
 }: GlassPlateProps) {
   const theme = useTheme();
@@ -126,7 +137,7 @@ export function GlassPlate({
   const invertedDark = inverted;
   // Android (and blur-gated tiers) paint fill-only glass — never pass blur
   // alphas when there is no BlurView frost, or artwork reads sharp through plates.
-  const frostedFill = Platform.OS === 'ios' && allowsBlur;
+  const frostedFill = Platform.OS === 'ios' && allowsBlur && blur;
   const dynamicTint =
     !clear && tintColor
       ? glassDynamicTintMaterials(tintColor, {
@@ -269,6 +280,58 @@ export function GlassPlate({
             androidUnderlayClip,
             { zIndex: 0 },
             androidTint,
+          ]}
+        />
+        {children}
+      </View>
+    );
+  }
+
+  // iOS fill-only: nested BlurView over an overlay frost samples atmosphere
+  // orbs into a chroma gradient. Flat solid — never experimental wash images.
+  if (!blur) {
+    const underlayClip = glassClipRadius(style);
+    const fill = dynamicTint
+      ? dynamicTint.fill
+      : greenGlass
+        ? greenFillSolid
+        : invertedDark
+          ? airy
+            ? g.fill.invertedAirySolid
+            : g.fill.invertedSolid
+          : darkPlate
+            ? airy
+              ? g.fill.darkAirySolid
+              : g.fill.darkSolid
+            : airy
+              ? g.fill.lightAirySolid
+              : g.fill.lightSolid;
+    return (
+      <View
+        {...rest}
+        collapsable={false}
+        style={[
+          styles.glass,
+          {
+            borderColor: dynamicTint
+              ? dynamicTint.border
+              : greenGlass
+                ? greenBorder
+                : darkPlate
+                  ? g.border.dark
+                  : airy
+                    ? g.border.lightAiry
+                    : g.border.light,
+            backgroundColor: 'transparent',
+          },
+          style,
+        ]}>
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            underlayClip,
+            { zIndex: 0, backgroundColor: fill },
           ]}
         />
         {children}

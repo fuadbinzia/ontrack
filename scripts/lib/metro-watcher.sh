@@ -30,6 +30,24 @@ watchman_bin() {
   command -v watchman 2>/dev/null || true
 }
 
+# Watchman stores state under $XDG_STATE_HOME/watchman (default ~/.local/state).
+# That parent is sometimes root-owned, so mkdir fails and Metro heals forever.
+ensure_watchman_state_home() {
+  local default_dir="${HOME}/.local/state/watchman"
+  if mkdir -p "$default_dir" 2>/dev/null; then
+    return 0
+  fi
+  local fallback="${ONTRACK_WATCHMAN_STATE_HOME:-${HOME}/.cursor/watchman-state}"
+  if ! mkdir -p "$fallback"; then
+    echo "error: cannot create Watchman state dir (${default_dir} unwritable, ${fallback} failed)" >&2
+    return 1
+  fi
+  export XDG_STATE_HOME="$fallback"
+  echo "note: ${default_dir} is not writable — Watchman state → ${fallback}" >&2
+}
+
+ensure_watchman_state_home || true
+
 ensure_watchman_project() {
   local bin
   bin="$(watchman_bin)"

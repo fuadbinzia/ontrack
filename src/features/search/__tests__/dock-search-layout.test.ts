@@ -7,14 +7,22 @@ import {
   dockSearchInputMaxHeight,
   dockSearchInputShouldScroll,
   dockSearchOverlayBottom,
+  dockSearchOverlayFrosted,
   dockSearchResultsGap,
   dockSearchResultsPadding,
   dockSearchWrappedLineCount,
   dockSearchCollapsedShellSize,
   dockSearchCollapsedWellHang,
   dockSearchCollapsedWellLift,
+  dockSearchHaloArcLength,
+  dockSearchHaloSize,
   DOCK_SEARCH_BACKDROP_BLUR_INTENSITY,
   DOCK_SEARCH_COLLAPSED_WELL_HANG_RATIO,
+  DOCK_SEARCH_HALO_ARC_RATIO,
+  DOCK_SEARCH_HALO_ORBIT_MS,
+  DOCK_SEARCH_HALO_PAD,
+  DOCK_SEARCH_HALO_STROKE,
+  DOCK_SEARCH_HALO_TRAIL_RATIO,
   dockSearchMoreIcon,
   splitDockSearchPins,
   DOCK_SEARCH_COMPACT_MAX_HEIGHT,
@@ -246,6 +254,37 @@ describe('dock search layout helpers', () => {
     expect(dockSearchCollapsedWellHang(54)).toBe(8);
   });
 
+  it('does not frost iOS type-ahead or conversation plates over nested overlay blur', () => {
+    expect(dockSearchOverlayFrosted({
+      ios: true,
+      allowsBlur: true,
+      fillScreen: false,
+    })).toBe(true);
+    expect(dockSearchOverlayFrosted({
+      ios: true,
+      allowsBlur: true,
+      fillScreen: true,
+    })).toBe(false);
+  });
+
+  it('never frosts the overlay on Android or when blur is gated', () => {
+    expect(dockSearchOverlayFrosted({
+      ios: false,
+      allowsBlur: true,
+      fillScreen: false,
+    })).toBe(false);
+    expect(dockSearchOverlayFrosted({
+      ios: true,
+      allowsBlur: false,
+      fillScreen: false,
+    })).toBe(false);
+    expect(dockSearchOverlayFrosted({
+      ios: false,
+      allowsBlur: false,
+      fillScreen: true,
+    })).toBe(false);
+  });
+
   it('uses a light black veil that is stronger toward the dock than the top', () => {
     const lightBlur = dockSearchBackdropGradientColors({
       dark: false,
@@ -308,5 +347,21 @@ describe('dock search layout helpers', () => {
     ).toBe(
       dockSearchCollapsedShellSize({ slotWidth: 48, wellButtonSize: 48 }).height,
     );
+  });
+
+  it('sizes the circulating halo just outside the search well', () => {
+    expect(DOCK_SEARCH_HALO_PAD).toBe(5);
+    expect(DOCK_SEARCH_HALO_STROKE).toBe(2.25);
+    expect(DOCK_SEARCH_HALO_ORBIT_MS).toBe(3600);
+    expect(DOCK_SEARCH_HALO_ARC_RATIO).toBe(0.28);
+    expect(DOCK_SEARCH_HALO_TRAIL_RATIO).toBe(0.48);
+    expect(DOCK_SEARCH_HALO_TRAIL_RATIO).toBeGreaterThan(DOCK_SEARCH_HALO_ARC_RATIO);
+    expect(dockSearchHaloSize(48)).toBe(58);
+    expect(dockSearchHaloSize(44, 0)).toBe(44);
+    expect(dockSearchHaloSize(48, -3)).toBe(48);
+    expect(dockSearchHaloArcLength(100)).toBe(28);
+    expect(dockSearchHaloArcLength(100, DOCK_SEARCH_HALO_TRAIL_RATIO)).toBe(48);
+    expect(dockSearchHaloArcLength(100, 2)).toBe(100);
+    expect(dockSearchHaloArcLength(100, -1)).toBe(0);
   });
 });

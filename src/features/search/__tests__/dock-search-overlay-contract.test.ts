@@ -49,6 +49,32 @@ describe('dock search overlay chrome', () => {
     expect(plateIndex).toBeGreaterThan(gradientIndex);
   });
 
+  it('drops overlay frost intensity on type-ahead and conversation plates so iOS does not paint a chroma gradient', () => {
+    expect(overlay).toContain('dockSearchOverlayFrosted');
+    expect(overlay).toContain("ios: Platform.OS === 'ios'");
+    expect(overlay).toContain('fillScreen');
+    expect(overlay).toContain(
+      'intensity={frosted ? DOCK_SEARCH_BACKDROP_BLUR_INTENSITY : 0}',
+    );
+    expect(overlay).toContain('blurred: frosted');
+    expect(overlay).toContain("Platform.OS === 'ios' ? (");
+    expect(overlay).toContain('<BlurView');
+  });
+
+  it('uses fill-only GlassPlate on type-ahead results and conversation bubbles', () => {
+    expect(overlay).toContain('blur={false}');
+    expect(overlay).toMatch(
+      /<GlassPlate\s+airy\s+blur=\{false\}\s+tintColor=\{isUser \? theme\.accentPrimary : undefined\}/,
+    );
+    expect(overlay).toMatch(
+      /\{showPlate \? \([\s\S]*<GlassPlate\s+blur=\{false\}/,
+    );
+    expect(overlay).not.toContain('experimental_backgroundImage');
+    expect(overlay).not.toContain('backgroundElevated');
+    expect(overlay).not.toContain("surface=\"solid\"");
+    expect(overlay).not.toContain("variant=\"mist\"");
+  });
+
   it('reveals the frosted veil as soon as search expands, not when typing starts', () => {
     expect(overlay).toContain('backdropStyle');
     expect(overlay).toContain('backdropProgress');
@@ -183,6 +209,25 @@ describe('dock search overlay expand layout', () => {
     );
     expect(overlay).toContain('maxHeight: s(180)');
   });
+
+  it('clips the compact Transcribing plate so iOS fill corners do not flare past the radius', () => {
+    expect(overlay).toMatch(/plateCompact:\s*\{[\s\S]*?overflow: 'hidden'/);
+    expect(overlay).not.toMatch(/plateCompact:\s*\{[\s\S]*?overflow: 'visible'/);
+    expect(overlay).toContain('Transcribing…');
+    expect(overlay).toContain("voice.phase === 'thinking'");
+    expect(overlay).toMatch(/\{voice\.phase === 'thinking' \? \([\s\S]*Transcribing…/);
+    expect(overlay).toMatch(/plateExpand:[\s\S]*overflow: 'hidden'/);
+    expect(overlay).toMatch(
+      /\{showPlate \? \([\s\S]*<GlassPlate\s+blur=\{false\}/,
+    );
+    expect(overlay).toContain("voice.phase === 'thinking' || voice.phase === 'speaking'");
+    expect(overlay).toMatch(
+      /showPlate\s*=\s*\n\s*transcript\.length > 0 \|\|[\s\S]*showResults \|\|[\s\S]*voiceBusy \|\|[\s\S]*Boolean\(voice\.lastError\)/,
+    );
+    expect(overlay).toContain(
+      'const fillScreen = expandLayout && (showResults || transcript.length > 0)',
+    );
+  });
 });
 
 describe('dock search overlay conversation bubbles', () => {
@@ -230,6 +275,7 @@ describe('dock search overlay conversation bubbles', () => {
   it('renders GlassPlate airy bubbles with a tighter outgoing bottom-right corner', () => {
     expect(overlay).toContain('<GlassPlate');
     expect(overlay).toContain('airy');
+    expect(overlay).toContain('blur={false}');
     expect(overlay).toContain('tintColor={isUser ? theme.accentPrimary : undefined}');
     expect(overlay).toContain("maxWidth: '84%'");
     expect(overlay).toContain('styles.userBubble');

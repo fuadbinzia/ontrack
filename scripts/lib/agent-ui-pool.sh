@@ -259,8 +259,21 @@ agent_ui_pool_apply_devices() {
       ;;
   esac
   agent_ui_pool_bind_ios "$slot" || return 1
-  agent_ui_pool_bind_android "$slot" || return 1
-  agent_ui_assert_agent_device_bound both || return 1
+  local platform="${AGENT_UI_PLATFORM:-ios}"
+  case "$platform" in
+    android|ANDROID) platform=android ;;
+    *) platform=ios ;;
+  esac
+  # iOS-only verify must not die creating the sibling Android AVD (missing
+  # system image / old JDK). Android-pinned claims still require the AVD.
+  if [[ "$platform" == "android" ]]; then
+    agent_ui_pool_bind_android "$slot" || return 1
+  elif ! agent_ui_pool_bind_android "$slot"; then
+    echo "agent-ui: iOS-only — Android AVD '$(agent_ui_pool_android_name "$slot")' not ready; continuing without it" >&2
+    export ONTRACK_ANDROID_AVD="$(agent_ui_pool_android_name "$slot")"
+    export AGENT_UI_POOL_MODE=1
+  fi
+  agent_ui_assert_agent_device_bound "$platform" || return 1
   # Keep agent windows off-screen if the user has Simulator.app open / reopens it.
   # shellcheck disable=SC1091
   source "$(agent_ui_pool_repo_root)/scripts/lib/ios-simulator.sh"

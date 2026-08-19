@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
+import { Keyboard, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -12,7 +12,6 @@ import { AppText } from '@/components/primitives/app-text';
 import { IconButton } from '@/components/primitives/button';
 import { GlassPlate } from '@/components/primitives/glass-plate';
 import { Input } from '@/components/primitives/input';
-import { Symbol } from '@/components/primitives/symbol';
 import { glassMaterials } from '@/design-system/glass';
 import { easings, motion } from '@/design-system/motion';
 import { radii } from '@/design-system/radii';
@@ -33,6 +32,8 @@ import { useHeldOverlay } from '@/hooks/use-held-overlay';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { useAgentUiTarget, AgentUiIds } from '@/utils/agent-ui';
+
+import { DockSearchMark } from './dock-search-mark';
 
 const LONG_PRESS_MS = 400;
 
@@ -194,25 +195,6 @@ export function BottomNavSearch({
   const controlSize = Math.max(36, s(40));
   const trailingPad =
     trailingWidth > 0 ? trailingWidth + spacing.xs : controlSize * 3 + spacing.xs;
-  const wellPlateStyle = useMemo(
-    () => ({
-      width: wellButtonSize,
-      height: wellButtonSize,
-      borderRadius: wellButtonSize / 2,
-      overflow: 'hidden' as const,
-      transform: [{ translateY: -wellLift }],
-    }),
-    [wellButtonSize, wellLift],
-  );
-  const wellIconSlotStyle = useMemo(
-    () => ({
-      width: wellButtonSize,
-      height: wellButtonSize,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-    }),
-    [wellButtonSize],
-  );
   const fieldContainerStyle = useMemo(
     () => [styles.field, { height: fieldShellHeight }],
     [fieldShellHeight],
@@ -260,11 +242,11 @@ export function BottomNavSearch({
             pressed && styles.pressed,
           ]}
         >
-          <GlassPlate airy style={wellPlateStyle}>
-            <View style={wellIconSlotStyle} pointerEvents="none">
-              <Symbol name="search" size={20} color={theme.textSecondary} />
-            </View>
-          </GlassPlate>
+          <DockSearchMark
+            size={wellButtonSize}
+            lift={wellLift}
+            circulating={!expanded}
+          />
         </Pressable>
       </Animated.View>
       {held ? (
@@ -273,6 +255,7 @@ export function BottomNavSearch({
           style={[styles.fieldWrap, fieldFade]}
         >
           <GlassPlate
+            blur={false}
             style={[
               styles.plate,
               {
@@ -328,6 +311,7 @@ export function BottomNavSearch({
                       accessibilityLabel="Speak"
                       testID={AgentUiIds.tabs.searchMic}
                       size={controlSize}
+                      appearance={Platform.OS === 'ios' ? 'ghost' : 'glass'}
                       onPress={onMic}
                     />
                   )}
@@ -371,6 +355,7 @@ const styles = StyleSheet.create({
   tab: {
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible',
   },
   pressed: {
     opacity: 0.72,

@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.135",
+    "date": "2026-08-18",
+    "notes": [
+      "Give dock search a circulating halo and keep nested iOS frost from painting chroma."
+    ]
+  },
+  {
     "version": "1.0.134",
     "date": "2026-08-18",
     "notes": [

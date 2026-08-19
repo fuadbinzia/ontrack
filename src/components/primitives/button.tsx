@@ -238,8 +238,9 @@ interface IconButtonProps {
   /**
    * `glass` = frosted translucent disc (app default).
    * Pass `solid` for opaque sunken plates.
+   * Pass `ghost` for a naked glyph (no frost disc, fill, or border).
    */
-  appearance?: 'solid' | 'glass';
+  appearance?: 'solid' | 'glass' | 'ghost';
   accessibilityLabel: string;
   /** Replaces the leading icon with a spinner while work is in flight. */
   loading?: boolean;
@@ -269,8 +270,9 @@ export function IconButton({
   const resolvedHitSlop = Math.max(6, (layout.minTapTarget - resolvedSize) / 2);
   const isDisabled = disabled || loading;
   const glass = appearance === 'glass';
+  const ghost = appearance === 'ghost';
   const dark = theme.name === 'dark';
-  const tint = color ?? (glass ? theme.textSecondary : theme.textPrimary);
+  const tint = color ?? (glass || ghost ? theme.textSecondary : theme.textPrimary);
   const spinnerColor = color ?? theme.accentPrimary;
   const radius = shape === 'rounded' ? radii.md : resolvedSize / 2;
   const handlePress = () => {
@@ -303,15 +305,21 @@ export function IconButton({
           height: resolvedSize,
           borderRadius: radius,
           overflow: glass ? 'hidden' : undefined,
-          backgroundColor: glass
+          backgroundColor: glass || ghost
             ? 'transparent'
             : (background ?? theme.backgroundSunken),
-          borderColor: glass
-            ? dark
-              ? glassMaterials.border.darkStrong
-              : glassMaterials.border.light
-            : borderColor,
-          borderWidth: glass || borderColor ? StyleSheet.hairlineWidth : 0,
+          borderColor: ghost
+            ? undefined
+            : glass
+              ? dark
+                ? glassMaterials.border.darkStrong
+                : glassMaterials.border.light
+              : borderColor,
+          borderWidth: ghost
+            ? 0
+            : glass || borderColor
+              ? StyleSheet.hairlineWidth
+              : 0,
           opacity: isDisabled && !loading ? 0.5 : pressed ? 0.7 : 1,
         },
       ]}>

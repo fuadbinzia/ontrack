@@ -1,4 +1,5 @@
 import { DEFAULT_CATEGORIES } from '@/constants/categories';
+import { domains } from '@/services/cloud/sync-domains';
 import { useSchedule } from '@/store/schedule';
 import type { Activity } from '@/types/models';
 
@@ -139,4 +140,26 @@ it('removes only Google-origin imports during cleanup', () => {
   useSchedule.getState().removeGoogleCalendarImports();
 
   expect(useSchedule.getState().activities.map((item) => item.id)).toEqual(['local-1', 'export-1']);
+});
+
+it('round-trips Google Calendar deletion tombstones through the schedule cloud domain', () => {
+  const deletion = {
+    activityId: 'google-import',
+    calendarId: 'primary',
+    eventId: 'event-1',
+    origin: 'google' as const,
+  };
+  useSchedule.setState({ googleCalendarDeletions: [deletion] });
+  const schedule = domains.find((domain) => domain.name === 'schedule');
+  if (!schedule) throw new Error('missing schedule domain');
+  const payload = schedule.read();
+  expect(payload.googleCalendarDeletions).toEqual([deletion]);
+
+  useSchedule.setState({ googleCalendarDeletions: [] });
+  schedule.write(payload);
+  expect(useSchedule.getState().googleCalendarDeletions).toEqual([deletion]);
+
+  useSchedule.getState().resetAll();
+  schedule.write(payload);
+  expect(useSchedule.getState().googleCalendarDeletions).toEqual([deletion]);
 });

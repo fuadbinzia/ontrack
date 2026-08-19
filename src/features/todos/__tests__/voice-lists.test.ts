@@ -222,6 +222,33 @@ describe('voice lists', () => {
     expect(useChecklists.getState().tasks[0].title).toBe('Pack charger');
   });
 
+  it('does not mint a private Groceries list when the shared one is not editable', () => {
+    const groceries = useChecklists.getState().createList('Groceries', 'grocery')!;
+    useChecklists.setState((state) => ({
+      lists: state.lists.map((list) =>
+        list.id === groceries.id
+          ? { ...list, mode: 'shared' as const, role: 'member' as const }
+          : list,
+      ),
+    }));
+
+    expect(
+      applyVoicePendingToStore([
+        {
+          id: 'op-shared',
+          title: 'Milk',
+          listName: 'Groceries',
+          kindHint: 'grocery',
+          createdAt: updatedAt,
+        },
+      ]),
+    ).toBe(0);
+    expect(useChecklists.getState().lists.filter((list) => list.name === 'Groceries')).toHaveLength(
+      1,
+    );
+    expect(useChecklists.getState().tasks).toEqual([]);
+  });
+
   it('creates a grocery list when the voice add is a grocery item', () => {
     expect(
       applyVoicePendingToStore([

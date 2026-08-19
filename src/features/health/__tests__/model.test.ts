@@ -20,4 +20,55 @@ describe('health model', () => {
     const runs: MoodPlaybookRun[] = [{ id: 'r', playbookId: 'p', initialEntryId: 'before', followUpEntryId: 'after', startedAt: 'x', completedAt: 'x', status: 'completed' }];
     expect(playbookOutcomeSummary({ playbook, entries, runs, emotions: DEFAULT_EMOTIONS })).toBe('This action was followed by lower sad in 1 of 1 check-ins.');
   });
+
+  it('counts a target emotion gain when the source emotion stays the same', () => {
+    const playbook: MoodPlaybook = {
+      id: 'p',
+      name: 'Reset',
+      sourceEmotionIds: ['anxious'],
+      targetEmotionIds: ['calm'],
+      steps: ['Walk'],
+      enabled: true,
+      createdAt: 'x',
+      updatedAt: 'x',
+    };
+    const entries: MoodEntry[] = [
+      {
+        id: 'before',
+        occurredAt: '2026-08-01T10:00:00Z',
+        emotions: [
+          { emotionId: 'anxious', intensity: 5 },
+          { emotionId: 'calm', intensity: 1 },
+        ],
+        factorIds: [],
+        source: 'ontrack',
+        createdAt: 'x',
+        updatedAt: 'x',
+      },
+      {
+        id: 'after',
+        occurredAt: '2026-08-01T10:20:00Z',
+        emotions: [
+          { emotionId: 'anxious', intensity: 5 },
+          { emotionId: 'calm', intensity: 4 },
+        ],
+        factorIds: [],
+        source: 'ontrack',
+        createdAt: 'x',
+        updatedAt: 'x',
+      },
+    ];
+    const runs: MoodPlaybookRun[] = [{
+      id: 'r',
+      playbookId: 'p',
+      initialEntryId: 'before',
+      followUpEntryId: 'after',
+      startedAt: 'x',
+      completedAt: 'x',
+      status: 'completed',
+    }];
+    expect(playbookOutcomeSummary({ playbook, entries, runs, emotions: DEFAULT_EMOTIONS })).toBe(
+      'This action was followed by higher calm in 1 of 1 check-ins.',
+    );
+  });
 });

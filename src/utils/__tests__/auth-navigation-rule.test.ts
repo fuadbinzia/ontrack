@@ -135,6 +135,7 @@ describe('authentication navigation invariants', () => {
     expect(authEffects).toContain("!guestEnabled || phase === 'authenticated' || phase === 'welcome'");
     expect(authEffects).toContain('subscribeGuestDirtyStores()');
     expect(guestDirty).toContain('useVehicles.subscribe(mark)');
+    expect(guestDirty).toContain('useFinance.subscribe(mark)');
     expect(guestDirty).toContain('useRecipes.subscribe(mark)');
     expect(guestDirty).toContain('useFoodProfile.subscribe(mark)');
   });

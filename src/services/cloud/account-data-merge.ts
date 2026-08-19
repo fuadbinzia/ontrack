@@ -108,6 +108,11 @@ export function mergeDomainPayload(
             ...(Array.isArray(device.suppressedExternalEvents) ? device.suppressedExternalEvents : []),
           ]),
         ],
+        googleCalendarDeletions: mergeEntityArraysByKey(
+          cloud.googleCalendarDeletions,
+          device.googleCalendarDeletions,
+          'activityId',
+        ),
         categories: mergeEntityArrays(cloud.categories, device.categories),
       };
     case 'plants':
@@ -139,7 +144,9 @@ export function mergeDomainPayload(
         ...cloud,
         vehicles: mergeEntityArrays(cloud.vehicles, device.vehicles),
       };
-    case 'finance':
+    case 'finance': {
+      const cloudScore = isRecord(cloud.creditScore) ? cloud.creditScore : undefined;
+      const deviceScore = isRecord(device.creditScore) ? device.creditScore : undefined;
       return {
         ...cloud,
         entities: mergeEntityArrays(cloud.entities, device.entities),
@@ -147,10 +154,24 @@ export function mergeDomainPayload(
         holdings: mergeEntityArrays(cloud.holdings, device.holdings),
         transactions: mergeEntityArrays(cloud.transactions, device.transactions),
         bills: mergeEntityArrays(cloud.bills, device.bills),
+        subscriptionCandidates: mergeEntityArrays(
+          cloud.subscriptionCandidates,
+          device.subscriptionCandidates,
+        ),
+        dismissedSubscriptions: mergeEntityArraysByKey(
+          cloud.dismissedSubscriptions,
+          device.dismissedSubscriptions,
+          'candidateId',
+        ),
         buckets: mergeEntityArrays(cloud.buckets, device.buckets),
         taxYears: mergeEntityArrays(cloud.taxYears, device.taxYears),
         documents: mergeEntityArrays(cloud.documents, device.documents),
+        rewardProfiles: mergeEntityArrays(cloud.rewardProfiles, device.rewardProfiles),
+        creditScore: cloudScore?.current ? cloudScore : (deviceScore ?? cloudScore),
+        customHandoffUrl: cloud.customHandoffUrl ?? device.customHandoffUrl,
+        referenceSavingsApr: cloud.referenceSavingsApr ?? device.referenceSavingsApr,
       };
+    }
     default:
       return cloud;
   }

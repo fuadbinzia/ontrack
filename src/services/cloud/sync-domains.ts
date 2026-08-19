@@ -23,7 +23,7 @@ import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { DEFAULT_CHECKLIST_NAME, privateChecklistPayload, useChecklists } from '@/store/todos';
 import { useTravel } from '@/store/travel';
-import { privateVehiclePayload, useVehicles } from '@/store/vehicles';
+import { mergePrivateVehiclesFromCloud, privateVehiclePayload, useVehicles } from '@/store/vehicles';
 import { useVisionBoard } from '@/store/vision-board';
 import type { Plant } from '@/types/models';
 
@@ -263,11 +263,9 @@ export const domains: SyncDomain[] = [
     }),
     write: (payload) => {
       if (!Array.isArray(payload.vehicles)) return;
-      const shared = useVehicles.getState().vehicles.filter((item) => item.mode === 'shared');
-      useVehicles.getState().replaceVehicles([
-        ...shared,
-        ...payload.vehicles,
-      ]);
+      useVehicles.getState().replaceVehicles(
+        mergePrivateVehiclesFromCloud(useVehicles.getState().vehicles, payload.vehicles),
+      );
     },
     reset: () => useVehicles.getState().reset(),
     subscribe: (onChange) => useVehicles.subscribe(onChange),

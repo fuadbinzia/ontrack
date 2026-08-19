@@ -12,7 +12,7 @@ import { StackedIconField } from '@/components/primitives/stacked-icon-field';
 import { Symbol } from '@/components/primitives/symbol';
 import {
     clampMinutesFromMidnight,
-    dateToMinutes,
+    minutesFromPickerDate,
     minutesToDate,
     type TimeFieldProps,
 } from '@/components/primitives/time-field.types';
@@ -169,7 +169,12 @@ export function MaterialTimeField({
           negativeButton={{ label: 'Cancel' }}
           onDismiss={() => setShowPicker(false)}
           onValueChange={(_event, selected) => {
-            onChange(dateToMinutes(selected));
+            const minutes = minutesFromPickerDate(selected);
+            if (minutes === undefined) {
+              setShowPicker(false);
+              return;
+            }
+            onChange(minutes);
             setShowPicker(false);
           }}
           testID={testID ? `${testID}-picker` : undefined}

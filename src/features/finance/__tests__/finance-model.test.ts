@@ -122,6 +122,25 @@ describe('finance model', () => {
       'b1',
     ]);
     expect(advanceBillDue('monthly', '2026-08-20')).toBe('2026-09-20');
+    expect(advanceBillDue('monthly', '2026-01-31')).toBe('2026-02-28');
+    expect(advanceBillDue('monthly', '2026-03-31')).toBe('2026-04-30');
+    expect(advanceBillDue('quarterly', '2026-01-31')).toBe('2026-04-30');
+    expect(advanceBillDue('yearly', '2024-02-29')).toBe('2025-02-28');
+    expect(advanceBillDue('weekly', '2026-01-31')).toBe('2026-02-07');
+  });
+
+  it('subtracts imported refunds stored as absolute amounts', () => {
+    const rows = [
+      txn({ id: 'expense', amount: 24.5, date: '2026-01-02', activity: 'expense' }),
+      txn({ id: 'refund', amount: 5, date: '2026-01-03', activity: 'refund' }),
+    ];
+    expect(sumAmounts(rows)).toBe(19.5);
+    expect(categoryBreakdown(rows)).toEqual([
+      expect.objectContaining({ categoryId: 'groceries', amount: 19.5 }),
+    ]);
+    expect(groupTransactionsByTaxBucket(rows)).toEqual([
+      expect.objectContaining({ amount: 19.5, count: 2 }),
+    ]);
   });
 
   it('tracks bucket progress and tax readiness', () => {

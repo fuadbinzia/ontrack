@@ -18,7 +18,7 @@ import { StackedIconField } from './stacked-icon-field';
 import { Symbol } from './symbol';
 import {
     clampMinutesFromMidnight,
-    dateToMinutes,
+    minutesFromPickerDate,
     minutesToDate,
     type TimeFieldProps,
 } from './time-field.types';
@@ -219,9 +219,11 @@ export function TimeField({
               themeVariant={theme.name}
               style={styles.timePicker}
               testID={testID ? `${testID}-picker` : undefined}
-              onValueChange={(_event, selected) =>
-                setDraftMinutes(dateToMinutes(selected))
-              }
+              onValueChange={(_event, selected) => {
+                const minutes = minutesFromPickerDate(selected);
+                if (minutes === undefined) return;
+                setDraftMinutes(minutes);
+              }}
             />
             <Pressable
               ref={doneAgent.ref}

@@ -12,6 +12,16 @@ export function toDateKey(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+/** Native date pickers pass `undefined` when the user cancels. */
+export function isValidCalendarDate(value: Date | undefined | null): value is Date {
+  return value instanceof Date && !Number.isNaN(value.valueOf());
+}
+
+/** Commit a picker date only when the user chose a real calendar day. */
+export function dateKeyFromPicker(value: Date | undefined | null): string | undefined {
+  return isValidCalendarDate(value) ? toDateKey(value) : undefined;
+}
+
 export function fromDateKey(key: string): Date {
   const [y, m, d] = key.split('-').map(Number);
   return new Date(y, m - 1, d, 12);
@@ -198,6 +208,19 @@ export function addDays(key: string, days: number): string {
   const d = fromDateKey(key);
   d.setDate(d.getDate() + days);
   return toDateKey(d);
+}
+
+/**
+ * Shift a YYYY-MM-DD by whole months, clamping to the last valid day.
+ * `Date#setMonth` overflows (Jan 31 + 1 month → Mar 3); bills and
+ * maintenance due dates must stay on the intended calendar day.
+ */
+export function addCalendarMonths(key: string, months: number): string {
+  const [year, month, day] = key.split('-').map(Number);
+  const cursor = new Date(year, month - 1 + months, 1);
+  const lastDay = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+  cursor.setDate(Math.min(day, lastDay));
+  return toDateKey(cursor);
 }
 
 export function isToday(key: string): boolean {

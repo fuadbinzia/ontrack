@@ -108,3 +108,8 @@ export function useChecklistCollaboration(enabled: boolean) {
     // sharedKey intentionally re-subscribes only when membership changes.
   }, [enabled, sharedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 }
+
+export function ChecklistCollaborationHost({ enabled }: { enabled: boolean }) {
+  useChecklistCollaboration(enabled);
+  return null;
+}

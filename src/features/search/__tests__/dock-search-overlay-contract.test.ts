@@ -190,7 +190,9 @@ describe('dock search overlay conversation bubbles', () => {
     expect(overlay).toContain("<Image");
     expect(overlay).toContain("require('../../../assets/images/favicon.png')");
     expect(overlay).toContain('favicon.png');
-    expect(overlay).toContain('resizeMode="cover"');
+    expect(overlay).toContain('contentFit="cover"');
+    expect(overlay).toContain("from 'expo-image'");
+    expect(overlay).not.toContain('resizeMode="cover"');
     expect(overlay).not.toContain('AuthBrandMark');
     expect(overlay).not.toContain("@/features/auth/auth-brand-mark");
     expect(overlay).not.toContain('showContainer={true}');

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-import { Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -12,15 +13,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, type Href } from 'expo-router';
 import { GestureDetector } from 'react-native-gesture-handler';
 
-import {
-  AppText,
-  Button,
-  GlassPlate,
-  SheetGrabber,
-  Symbol,
-} from '@/components/primitives';
+import { AppText } from '@/components/primitives/app-text';
+import { Button } from '@/components/primitives/button';
+import { GlassPlate } from '@/components/primitives/glass-plate';
+import { SheetGrabber } from '@/components/primitives/sheet-grabber';
+import { Symbol } from '@/components/primitives/symbol';
 import { useSheetDismissPan } from '@/components/primitives/use-sheet-dismiss-pan';
-import { easings, motion, popoverEntering, radii, type AppIconName } from '@/design-system';
+import type { AppIconName } from '@/design-system/icons';
+import { easings, motion } from '@/design-system/motion';
+import { popoverEntering } from '@/design-system/presence';
+import { radii } from '@/design-system/radii';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { sendDockMessage } from '@/features/search/dock-search-actions';
 import {
@@ -105,7 +107,9 @@ function DockSearchTranscriptTurn({ turn }: { turn: DockTranscriptTurn }) {
         <View style={[styles.markSlot, { marginTop: -s(6) }]}>
           <Image
             source={require('../../../assets/images/favicon.png')}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="memory"
+            transition={0}
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
             style={{

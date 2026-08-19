@@ -40,8 +40,6 @@ import { useHydrated } from '@/hooks/use-hydrated';
 import { useMealPhotoMigration } from '@/hooks/use-meal-photo-migration';
 import { useRootStartupEffects } from '@/hooks/use-root-startup-effects';
 import { useTheme } from '@/hooks/use-theme';
-import { useChecklistCollaboration } from '@/hooks/use-todo-collaboration';
-import { useVehicleCollaboration } from '@/hooks/use-vehicle-collaboration';
 import { useAuthAccess } from '@/store/auth-access';
 import { useAccountFlags } from '@/store/account-flags';
 import { usePreferences } from '@/store/preferences';
@@ -89,6 +87,34 @@ const LazyUsageAnalyticsTracker = lazy(() =>
     default: module.UsageAnalyticsTracker,
   })),
 );
+const LazyChecklistCollaborationHost = lazy(() =>
+  import('@/hooks/use-todo-collaboration').then((module) => ({
+    default: module.ChecklistCollaborationHost,
+  })),
+);
+const LazyVehicleCollaborationHost = lazy(() =>
+  import('@/hooks/use-vehicle-collaboration').then((module) => ({
+    default: module.VehicleCollaborationHost,
+  })),
+);
+
+function ChecklistCollaborationMount({ enabled }: { enabled: boolean }) {
+  if (!enabled) return null;
+  return (
+    <Suspense fallback={null}>
+      <LazyChecklistCollaborationHost enabled />
+    </Suspense>
+  );
+}
+
+function VehicleCollaborationMount({ enabled }: { enabled: boolean }) {
+  if (!enabled) return null;
+  return (
+    <Suspense fallback={null}>
+      <LazyVehicleCollaborationHost enabled />
+    </Suspense>
+  );
+}
 
 function PerformanceMonitorMount() {
   const enabled = useAccountFlags((state) => state.developerTools);
@@ -213,18 +239,16 @@ function RootNavigator({
     ((phase === 'guest' || phase === 'authenticated') && showWelcome);
   const collaborationReady =
     hydrated && phase === 'authenticated' && appIsActive;
-  useChecklistCollaboration(
+  const checklistCollaborationEnabled =
     collaborationReady &&
-      pathIsWithin(pathname, [
-        '/to-do',
-        '/todos',
-        '/todo-collaborators',
-        '/todo-invites',
-      ]),
-  );
-  useVehicleCollaboration(
-    collaborationReady && pathIsWithin(pathname, ['/vehicles', '/v']),
-  );
+    pathIsWithin(pathname, [
+      '/to-do',
+      '/todos',
+      '/todo-collaborators',
+      '/todo-invites',
+    ]);
+  const vehicleCollaborationEnabled =
+    collaborationReady && pathIsWithin(pathname, ['/vehicles', '/v']);
   useRootStartupEffects({
     hydrated,
     appAccess,
@@ -261,6 +285,8 @@ function RootNavigator({
 
   return (
     <View style={{ flex: 1 }}>
+      <ChecklistCollaborationMount enabled={checklistCollaborationEnabled} />
+      <VehicleCollaborationMount enabled={vehicleCollaborationEnabled} />
       <AgentUiRouteSync />
       <NavigationSessionSync />
       <Suspense fallback={null}>

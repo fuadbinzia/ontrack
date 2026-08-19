@@ -1,3 +1,5 @@
+import { getDisplayNamesFormatter } from '@/utils/intl-cache';
+
 import type {
   TravelTranslatorDirection,
   TravelTranslatorLanguage,
@@ -34,7 +36,7 @@ function displayNameForLanguage(code: string): string {
   const language = primaryLanguageCode(code);
   if (typeof Intl.DisplayNames !== 'function') return language;
   try {
-    return new Intl.DisplayNames(['en'], { type: 'language' }).of(language) ?? code;
+    return getDisplayNamesFormatter(['en'], { type: 'language' }).of(language) ?? code;
   } catch {
     return language;
   }

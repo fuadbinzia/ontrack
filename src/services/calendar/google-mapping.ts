@@ -1,6 +1,7 @@
 import type { Activity } from '@/types/models';
 import { isAllDayActivity } from '@/utils/activity-time';
 import { addDays, isDateKey } from '@/utils/date';
+import { getDateTimeFormatter } from '@/utils/intl-cache';
 
 import type { GoogleCalendarEvent, GoogleCalendarLinkRow } from './google-types';
 import {
@@ -26,7 +27,7 @@ export function googleCalendarMetadata(
 
 export function zonedDateParts(date: Date, timeZone: string) {
   const values: Record<string, string> = {};
-  for (const part of new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)) values[part.type] = part.value;
+  for (const part of getDateTimeFormatter('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date)) values[part.type] = part.value;
   return { date: `${values.year}-${values.month}-${values.day}`, minutes: Number(values.hour) * 60 + Number(values.minute) };
 }
 

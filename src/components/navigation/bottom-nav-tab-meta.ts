@@ -1,7 +1,7 @@
 import type { Href } from 'expo-router';
 
 import { ADDONS } from '@/addons/registry';
-import type { AppIconName } from '@/design-system';
+import type { AppIconName } from '@/design-system/icons';
 
 import { MORE_TAB_ROUTE } from './tab-pins';
 

@@ -1,4 +1,5 @@
 import { addDays, fromDateKey, toDateKey } from '@/utils/date';
+import { getIntlLocale } from '@/utils/intl-cache';
 
 export type HolidayRegion = 'US' | 'CA' | 'GB' | 'AU' | 'IE' | 'common';
 
@@ -175,7 +176,7 @@ function regionFromLocale(locale: string): string | undefined {
   const normalized = locale.replace('_', '-');
   try {
     if (typeof Intl.Locale === 'function') {
-      return new Intl.Locale(normalized).maximize().region?.toUpperCase();
+      return getIntlLocale(normalized).maximize().region?.toUpperCase();
     }
   } catch {
     // Fall through to the BCP-47 region segment.

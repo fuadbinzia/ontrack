@@ -87,3 +87,8 @@ export function useVehicleCollaboration(enabled: boolean) {
     };
   }, [enabled, sharedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 }
+
+export function VehicleCollaborationHost({ enabled }: { enabled: boolean }) {
+  useVehicleCollaboration(enabled);
+  return null;
+}

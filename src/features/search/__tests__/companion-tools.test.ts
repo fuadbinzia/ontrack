@@ -317,6 +317,43 @@ describe('onTrack companion', () => {
     ).toBe(ALL_ACCOUNTS_TEST_TRIP.title);
   });
 
+  it('adds a non-grocery task to To Do when no list is named', async () => {
+    const added = (await tool('add_task').execute(
+      { title: 'Call dentist' },
+      { agentId: ONTRACK_COMPANION_ID },
+    )) as { ok: boolean; list: string };
+    expect(added.ok).toBe(true);
+    expect(added.list).toBe('To Do');
+    const list = useChecklists.getState().lists.find((item) => item.name === 'To Do');
+    expect(
+      useChecklists.getState().tasks.some(
+        (task) => task.title === 'Call dentist' && task.listId === list?.id,
+      ),
+    ).toBe(true);
+    expect(useChecklists.getState().lists.some((item) => item.name === 'Groceries')).toBe(false);
+  });
+
+  it('does not claim a shared-list member completed a task that stayed open', async () => {
+    const list = useChecklists.getState().createList('Shared Groceries', 'grocery')!;
+    const task = useChecklists.getState().addTask(list.id, 'Milk')!;
+    useChecklists.setState((state) => ({
+      lists: state.lists.map((item) =>
+        item.id === list.id ? { ...item, mode: 'shared' as const, role: 'member' as const } : item,
+      ),
+    }));
+
+    const completed = (await tool('complete_task').execute(
+      { title: 'Milk' },
+      { agentId: ONTRACK_COMPANION_ID },
+    )) as { ok: boolean; spoken?: string; error?: string };
+    expect(completed.ok).toBe(false);
+    expect(completed.spoken).toBeUndefined();
+    expect(completed.error?.toLowerCase()).toContain('permission');
+    expect(useChecklists.getState().tasks.find((item) => item.id === task.id)?.completed).toBe(
+      false,
+    );
+  });
+
   it('requires get_next_trip for live trip answers and forbids answering from memory', () => {
     expect(AGENT_RUN_SYSTEM_PROMPT).toContain('get_next_trip');
     expect(AGENT_RUN_SYSTEM_PROMPT).toMatch(/Always call tools for live device data/i);

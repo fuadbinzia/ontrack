@@ -52,6 +52,28 @@ export type GoogleCalendarDeletion = {
   origin: 'google' | 'ontrack';
 };
 
+export function normalizeGoogleCalendarDeletions(value: unknown): GoogleCalendarDeletion[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const row = item as Record<string, unknown>;
+    if (
+      typeof row.activityId !== 'string' ||
+      typeof row.calendarId !== 'string' ||
+      typeof row.eventId !== 'string'
+    ) {
+      return [];
+    }
+    if (row.origin !== 'google' && row.origin !== 'ontrack') return [];
+    return [{
+      activityId: row.activityId,
+      calendarId: row.calendarId,
+      eventId: row.eventId,
+      origin: row.origin,
+    }];
+  });
+}
+
 export type GoogleCalendarConnectionRow = {
   user_id: string;
   google_email: string | null;

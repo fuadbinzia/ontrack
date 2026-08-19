@@ -10,6 +10,7 @@ import {
     hasCustomizedVisionBoardItems,
 } from '@/features/vision-board/selectors';
 import type { VisionBoardCategory, VisionBoardItem } from '@/features/vision-board/types';
+import { normalizeGoogleCalendarDeletions } from '@/services/calendar/google-types';
 import { useAddons } from '@/store/addons';
 import { useAgents } from '@/store/agents';
 import {
@@ -151,6 +152,7 @@ export const domains: SyncDomain[] = [
         eventFollows: state.eventFollows,
         eventSuggestions: state.eventSuggestions,
         suppressedExternalEvents: state.suppressedExternalEvents,
+        googleCalendarDeletions: state.googleCalendarDeletions,
         categories: mergeDefaultCategories(state.categories),
       };
     },
@@ -168,6 +170,9 @@ export const domains: SyncDomain[] = [
         suppressedExternalEvents: Array.isArray(payload.suppressedExternalEvents)
           ? payload.suppressedExternalEvents
           : [],
+        googleCalendarDeletions: Array.isArray(payload.googleCalendarDeletions)
+          ? normalizeGoogleCalendarDeletions(payload.googleCalendarDeletions)
+          : useSchedule.getState().googleCalendarDeletions,
         categories: mergeDefaultCategories(
           Array.isArray(payload.categories)
             ? payload.categories

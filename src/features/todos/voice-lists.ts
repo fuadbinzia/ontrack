@@ -103,6 +103,12 @@ function ensureVoiceList(op: VoicePendingOp): Checklist | undefined {
   const name =
     voiceListNameQuery(op.listName) ??
     (kind === 'grocery' ? DEFAULT_GROCERY_LIST_NAME : DEFAULT_CHECKLIST_NAME);
+  const existingSameName = state.lists.find(
+    (list) => list.name.trim().toLowerCase() === name.trim().toLowerCase(),
+  );
+  if (existingSameName) {
+    return canEditChecklistContent(existingSameName) ? existingSameName : undefined;
+  }
   return useChecklists.getState().createList(name, kind);
 }
 

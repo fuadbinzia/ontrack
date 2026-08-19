@@ -39,9 +39,9 @@ Read [reference.md](reference.md) for the full module map.
 - **HTTPS recipe URLs:** recipe/meal source URLs must be `https:` when normalized for sync (`cleanHttpsUrl` in `checklists-normalize.ts`).
 - **Images:** never persist picker cache URIs; use recipe image helpers / `recipe-media.ts` (`todo-recipe-images` bucket).
 - **Shared vs private cloud:** `privateChecklistPayload` excludes shared lists/tasks/recipes and pending mutations from the private sync blob.
-- **Roles:** `owner` | `editor` | `member`. Editors edit items (`canEditChecklistContent`); members may only complete unassigned or self-assigned tasks (`canCompleteChecklistTask`). Owner-only: membership, recipes, rename/kind/delete.
+- **Roles:** `owner` | `editor` | `member`. Editors edit items (`canEditChecklistContent`); members may only complete unassigned or self-assigned tasks (`canCompleteChecklistTask`). Owner-only: membership, recipes, rename/delete.
 - **Optimistic shared edits:** do not apply remote snapshots while that list still has pending mutations (`use-todo-collaboration.ts`).
-- **Grocery kind lock:** cannot convert grocery → checklist while recipes still exist.
+- **Grocery kind lock:** store still refuses grocery → checklist while recipes exist; list settings no longer offer a kind picker.
 - **IDs / prompts / dates:** `@/utils/id`, `appPrompt`, `DateField` + local `YYYY-MM-DD`.
 - **Agent UI:** `ontrack.checklists.*` + `ontrack.grocery.*` + `ontrack.recipeImport.*` + `ontrack.listSettings.*`. Prefer `./scripts/agent-ui.sh once --flow checklist-demo` / `grocery-demo` / `grocery-demo-recipe-import` / `grocery-demo-settings` (stable ids in `fixtures.ts`) over hand-building lists.
 

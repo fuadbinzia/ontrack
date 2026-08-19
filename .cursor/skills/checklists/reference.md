@@ -45,7 +45,7 @@ Paths under `src/features/todos/` unless noted.
 
 ## Collaboration UI
 
-- `todo-list-settings-screen.tsx` — kind, share, members, ownership transfer, leave/delete
+- `todo-list-settings-screen.tsx` — rename, share, members, ownership transfer, leave/delete
 - `todo-collaborators-screen.tsx` — collaborators surface
 - `todo-invites-screen.tsx` — pending invites
 - `todo-join-screen.tsx` — `/l/{code}` join

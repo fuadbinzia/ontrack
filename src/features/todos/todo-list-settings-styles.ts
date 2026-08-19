@@ -13,18 +13,6 @@ export const checklistSettingsStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  kindChoiceWrap: {
-    flex: 1,
-    borderRadius: radii.md,
-  },
-  kindChoice: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.md,
-    zIndex: 1,
-  },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',

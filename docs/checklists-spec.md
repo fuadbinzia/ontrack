@@ -62,7 +62,10 @@ behavior → edit the bullet; add the regression test that enforces it to
 
 - Roles: `owner` / `editor` / `member`. Editors change items; members only
   complete unassigned or self-assigned tasks. Owner-only: membership, recipes,
-  rename, kind change, delete.
+  rename, delete.
+- List settings (owner) keep List Name and Sharing. They do not show a List
+  Type picker or Checklist / Grocery conversion controls — kind stays whatever
+  the list already is.
 - Owner delete removes the list for every collaborator; editors/members leave
   instead. Share/join via `/l/<code>` (single list) and `/c/<code>`
   (collaborator multi-list).
@@ -76,8 +79,8 @@ behavior → edit the bullet; add the regression test that enforces it to
 ## Grocery lists
 
 - Kind `grocery` gets the grocery detail (meal/combined views, recipes,
-  ingredient rows); a grocery list cannot convert back to `checklist` while
-  recipes exist.
+  ingredient rows); the store still refuses grocery → checklist while recipes
+  exist, but settings no longer offers that conversion.
 - Recipe/meal source URLs are `https:` only; recipe images are re-encoded and
   persisted (never picker cache URIs).
 
@@ -97,3 +100,4 @@ behavior → edit the bullet; add the regression test that enforces it to
 | Roles / completion permissions | `src/services/todos/__tests__/collaboration-core.test.ts` |
 | No duplicate list id from a stale private row; omitted snapshot recipes preserved; rejoin appends | `src/store/__tests__/todos-open-and-sync.test.ts` |
 | Leave/delete during an in-flight catalog reload does not resurrect the list | `src/services/todos/__tests__/collaboration-reload.test.ts` |
+| Private list settings keep List Name and Sharing and never show List Type / Checklist / Grocery | `src/features/todos/__tests__/todo-list-settings-screen.test.tsx` |

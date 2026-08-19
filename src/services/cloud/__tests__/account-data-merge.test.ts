@@ -74,6 +74,57 @@ describe('mergeDomainPayload', () => {
     });
   });
 
+  it('unions Google Calendar deletion tombstones by activity id', () => {
+    expect(
+      mergeDomainPayload(
+        'schedule',
+        {
+          googleCalendarDeletions: [
+            { activityId: 'cloud', calendarId: 'primary', eventId: 'c1', origin: 'google' },
+          ],
+        },
+        {
+          googleCalendarDeletions: [
+            { activityId: 'cloud', calendarId: 'primary', eventId: 'clash', origin: 'ontrack' },
+            { activityId: 'device', calendarId: 'primary', eventId: 'd1', origin: 'ontrack' },
+          ],
+        },
+      ),
+    ).toMatchObject({
+      googleCalendarDeletions: [
+        { activityId: 'cloud', eventId: 'c1' },
+        { activityId: 'device', eventId: 'd1' },
+      ],
+    });
+  });
+
+  it('keeps device-only finance reward profiles and dismissed subscriptions on merge', () => {
+    expect(
+      mergeDomainPayload(
+        'finance',
+        {
+          transactions: [{ id: 'cloud-txn', amount: 10 }],
+          rewardProfiles: [],
+          dismissedSubscriptions: [],
+          creditScore: {},
+        },
+        {
+          transactions: [{ id: 'guest-txn', amount: 18 }],
+          rewardProfiles: [{ id: 'guest-card', name: 'Guest Card' }],
+          dismissedSubscriptions: [{ candidateId: 'sub-1', materialFingerprint: 'abc' }],
+          creditScore: { current: { score: 720, asOf: '2026-08-01' }, history: [] },
+          customHandoffUrl: 'https://example.com/tax',
+        },
+      ),
+    ).toMatchObject({
+      transactions: [{ id: 'cloud-txn', amount: 10 }, { id: 'guest-txn', amount: 18 }],
+      rewardProfiles: [{ id: 'guest-card', name: 'Guest Card' }],
+      dismissedSubscriptions: [{ candidateId: 'sub-1' }],
+      creditScore: { current: { score: 720, asOf: '2026-08-01' } },
+      customHandoffUrl: 'https://example.com/tax',
+    });
+  });
+
   it('keeps device-only checklist categories when merging todo data', () => {
     expect(
       mergeDomainPayload(

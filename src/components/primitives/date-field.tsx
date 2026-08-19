@@ -19,6 +19,7 @@ import {
     formatDatePickerTitle,
     fromDateKey,
     isDateKey,
+    isValidCalendarDate,
     toDateKey,
 } from '@/utils/date';
 
@@ -226,6 +227,10 @@ export function DateField({
           negativeButton={{ label: 'Cancel' }}
           onDismiss={() => setShowPicker(false)}
           onValueChange={(_event, selectedDate) => {
+            if (!isValidCalendarDate(selectedDate)) {
+              setShowPicker(false);
+              return;
+            }
             setDraftDate(selectedDate);
             onChange(toDateKey(selectedDate));
             setShowPicker(false);

@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { layout, spacing } from '@/design-system';
+import { layout, spacing } from '@/design-system/spacing';
 
 /**
  * Above tab pager scenes. Those views always apply `translateX` (even at rest),

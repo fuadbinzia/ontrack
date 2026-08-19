@@ -1,7 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
 import { useRouter, type Href } from 'expo-router';
 import { useBottomTabBarHeight } from 'expo-router/js-tabs';
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ComponentRef } from 'react';
 import {
     Platform,
     StyleSheet,
@@ -60,6 +60,37 @@ import { goBackOrReplace } from '@/utils/navigation';
 
 function TravelChatItemSeparator() {
   return <View style={styles.itemSeparator} />;
+}
+
+type TravelChatMessageRowProps = ComponentProps<typeof TravelChatMessageRow>;
+
+function TravelChatListRow({
+  item,
+  userId,
+  deviceId,
+  palette,
+  onLongPress,
+  onToggleReaction,
+}: {
+  item: TravelChatListItem;
+  userId?: string;
+  deviceId?: string | null;
+  palette: TravelChatMessageRowProps['palette'];
+  onLongPress: TravelChatMessageRowProps['onLongPress'];
+  onToggleReaction: TravelChatMessageRowProps['onToggleReaction'];
+}) {
+  if (item.type === 'date') {
+    return <TravelChatDateSeparator label={item.label} />;
+  }
+  return (
+    <TravelChatMessageRow
+      message={item.message as OptimisticTravelChatMessage}
+      identity={{ userId, deviceId }}
+      palette={palette}
+      onLongPress={onLongPress}
+      onToggleReaction={onToggleReaction}
+    />
+  );
 }
 
 export function TravelChatScreen({ planId }: { planId: string }) {
@@ -146,6 +177,26 @@ export function TravelChatScreen({ planId }: { planId: string }) {
       listRef.current?.scrollToEnd({ animated });
     });
   }, [listItems.length]);
+
+  const renderChatItem = useCallback(
+    ({ item }: { item: TravelChatListItem }) => (
+      <TravelChatListRow
+        item={item}
+        userId={user?.id}
+        deviceId={session.deviceId}
+        palette={palette}
+        onLongPress={actions.openMessageActions}
+        onToggleReaction={actions.toggleReaction}
+      />
+    ),
+    [
+      actions.openMessageActions,
+      actions.toggleReaction,
+      palette,
+      session.deviceId,
+      user?.id,
+    ],
+  );
 
   useEffect(() => {
     if (session.loading || listItems.length === 0) return;
@@ -284,20 +335,7 @@ export function TravelChatScreen({ planId }: { planId: string }) {
               message="Share ideas, arrival plans, reservations, and anything the group should know."
             />
           }
-          renderItem={({ item }) => {
-            if (item.type === 'date') {
-              return <TravelChatDateSeparator label={item.label} />;
-            }
-            return (
-              <TravelChatMessageRow
-                message={item.message as OptimisticTravelChatMessage}
-                identity={{ userId: user?.id, deviceId: session.deviceId }}
-                palette={palette}
-                onLongPress={actions.openMessageActions}
-                onToggleReaction={actions.toggleReaction}
-              />
-            );
-          }}
+          renderItem={renderChatItem}
         />
       )}
 

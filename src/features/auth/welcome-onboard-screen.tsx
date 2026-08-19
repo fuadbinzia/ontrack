@@ -9,20 +9,18 @@ import {
     View,
 } from 'react-native';
 
-import {
-    AppText,
-    GlassPlate,
-    Input,
-    Screen,
-    Symbol,
-} from '@/components/primitives';
+import { AppText } from '@/components/primitives/app-text';
+import { GlassPlate } from '@/components/primitives/glass-plate';
+import { Input } from '@/components/primitives/input';
+import { Screen } from '@/components/primitives/screen';
+import { Symbol } from '@/components/primitives/symbol';
 import {
     colorWithAlpha,
     glassFieldBackground,
     glassFieldBorder,
-    radii,
-    spacing,
-} from '@/design-system';
+} from '@/design-system/glass';
+import { radii } from '@/design-system/radii';
+import { spacing } from '@/design-system/spacing';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/store/preferences';

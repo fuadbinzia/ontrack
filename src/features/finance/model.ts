@@ -1,4 +1,4 @@
-import { toDateKey } from '@/utils/date';
+import { addCalendarMonths, addDays, toDateKey } from '@/utils/date';
 
 import { financeCategoryById, taxBucketLabel, type FinanceTaxBucket } from './categories';
 import type {
@@ -58,12 +58,22 @@ export function isSpendingTransaction(transaction: FinanceTransaction): boolean 
   );
 }
 
+/**
+ * Net spend for ledger totals. Refunds always subtract, whether the stored
+ * amount is signed (`-5`) or absolute (`5` + `activity: 'refund'`).
+ */
+export function signedSpendAmount(transaction: FinanceTransaction): number | undefined {
+  if (!isSpendingTransaction(transaction) || !Number.isFinite(transaction.amount)) {
+    return undefined;
+  }
+  return transaction.activity === 'refund' ? -Math.abs(transaction.amount) : transaction.amount;
+}
+
 export function sumAmounts(transactions: FinanceTransaction[]): number {
-  return transactions.reduce(
-    (sum, transaction) =>
-      isSpendingTransaction(transaction) ? sum + transaction.amount : sum,
-    0,
-  );
+  return transactions.reduce((sum, transaction) => {
+    const amount = signedSpendAmount(transaction);
+    return amount === undefined ? sum : sum + amount;
+  }, 0);
 }
 
 export function categoryBreakdown(
@@ -71,8 +81,9 @@ export function categoryBreakdown(
 ): { categoryId: string; label: string; amount: number }[] {
   const map = new Map<string, number>();
   for (const t of transactions) {
-    if (!isSpendingTransaction(t)) continue;
-    map.set(t.categoryId, (map.get(t.categoryId) ?? 0) + t.amount);
+    const amount = signedSpendAmount(t);
+    if (amount === undefined) continue;
+    map.set(t.categoryId, (map.get(t.categoryId) ?? 0) + amount);
   }
   return [...map.entries()]
     .map(([categoryId, amount]) => ({
@@ -117,28 +128,20 @@ export function upcomingBills(
 }
 
 export function advanceBillDue(cadence: FinanceRecurringBill['cadence'], from: string): string {
-  const [y, m, d] = from.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
   switch (cadence) {
     case 'weekly':
-      date.setDate(date.getDate() + 7);
-      break;
+      return addDays(from, 7);
     case 'biweekly':
-      date.setDate(date.getDate() + 14);
-      break;
+      return addDays(from, 14);
     case 'monthly':
-      date.setMonth(date.getMonth() + 1);
-      break;
+      return addCalendarMonths(from, 1);
     case 'quarterly':
-      date.setMonth(date.getMonth() + 3);
-      break;
+      return addCalendarMonths(from, 3);
     case 'yearly':
-      date.setFullYear(date.getFullYear() + 1);
-      break;
+      return addCalendarMonths(from, 12);
     case 'once':
-      break;
+      return from;
   }
-  return toDateKey(date);
 }
 
 export function taxYearReadiness(taxYear: FinanceTaxYear): number {
@@ -166,10 +169,11 @@ export function groupTransactionsByTaxBucket(
 ): { bucket: FinanceTaxBucket; label: string; amount: number; count: number }[] {
   const map = new Map<FinanceTaxBucket, { amount: number; count: number }>();
   for (const t of transactions) {
-    if (!isSpendingTransaction(t)) continue;
+    const amount = signedSpendAmount(t);
+    if (amount === undefined) continue;
     const bucket = financeCategoryById(t.categoryId).taxBucket;
     const prev = map.get(bucket) ?? { amount: 0, count: 0 };
-    map.set(bucket, { amount: prev.amount + t.amount, count: prev.count + 1 });
+    map.set(bucket, { amount: prev.amount + amount, count: prev.count + 1 });
   }
   return [...map.entries()]
     .map(([bucket, { amount, count }]) => ({

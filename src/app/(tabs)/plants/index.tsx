@@ -24,6 +24,14 @@ import { formatDueLabel, toDateKey, todayKey } from '@/utils/date';
 import { deferAfterPageTransition } from '@/utils/defer-after-page-transition';
 import { useWarmHrefs } from '@/utils/warm-navigation';
 
+function renderPlantItem({ item }: { item: Plant }) {
+  return (
+    <View style={styles.row}>
+      <PlantCard plant={item} />
+    </View>
+  );
+}
+
 function PlantCard({ plant }: { plant: Plant }) {
   const router = useRouter();
   const dueKey = toDateKey(new Date(plant.nextWateringAt));
@@ -156,11 +164,7 @@ function PlantsScreenContent() {
             </GlassPlate>
           ) : null
         }
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <PlantCard plant={item} />
-          </View>
-        )}
+        renderItem={renderPlantItem}
       />
     </Screen>
   );

@@ -1,6 +1,7 @@
 import { useAddons } from '@/store/addons';
 import { useAgents } from '@/store/agents';
 import { useAuthAccess } from '@/store/auth-access';
+import { useFinance } from '@/store/finance';
 import { useMealPlan } from '@/store/food-meal-plan';
 import { usePantry } from '@/store/food-pantry';
 import { useFoodProfile } from '@/store/food-profile';
@@ -34,6 +35,7 @@ export function subscribeGuestDirtyStores(): () => void {
     useAgents.subscribe(mark),
     useTravel.subscribe(mark),
     useChecklists.subscribe(mark),
+    useFinance.subscribe(mark),
     useVehicles.subscribe(mark),
     useVisionBoard.subscribe(mark),
     useFoodProfile.subscribe(mark),

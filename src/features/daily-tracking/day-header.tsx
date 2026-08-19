@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import {
   AppText,
@@ -100,7 +100,7 @@ export function DayHeader({
   );
   const showDayVoice = completion > 0 || Boolean(nowLine || summaryLine);
   const navSize = layout.minTapTarget;
-  const navSlotStyle = {
+  const navSlotStyle: ViewStyle = {
     width: navSize,
     height: navSize,
     alignItems: 'center',

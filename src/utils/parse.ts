@@ -27,11 +27,27 @@ export function asOneOf<T extends string>(
     : undefined;
 }
 
-/** Parse a typed/pasted decimal; accepts `,` as the decimal separator. */
+/**
+ * Parse a typed/pasted decimal.
+ * Accepts `,` as a decimal separator (`12,5`) and US thousands (`1,065.32`).
+ */
 export function parseFiniteNumber(value: string): number | undefined {
-  const trimmed = value.trim();
+  const trimmed = value.trim().replace(/\s/g, '');
   if (!trimmed) return undefined;
-  const parsed = Number.parseFloat(trimmed.replace(',', '.'));
+  let normalized = trimmed;
+  if (normalized.includes('.') && normalized.includes(',')) {
+    normalized =
+      normalized.lastIndexOf(',') > normalized.lastIndexOf('.')
+        ? normalized.replace(/\./g, '').replace(',', '.')
+        : normalized.replace(/,/g, '');
+  } else if ((normalized.match(/,/g) ?? []).length > 1) {
+    normalized = normalized.replace(/,/g, '');
+  } else if (/,\d{3}$/.test(normalized)) {
+    normalized = normalized.replace(',', '');
+  } else if (normalized.includes(',')) {
+    normalized = normalized.replace(',', '.');
+  }
+  const parsed = Number.parseFloat(normalized);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 

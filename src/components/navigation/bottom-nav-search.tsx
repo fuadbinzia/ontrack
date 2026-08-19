@@ -8,13 +8,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import {
-  AppText,
-  GlassPlate,
-  IconButton,
-  Input,
-} from '@/components/primitives';
-import { glassMaterials, easings, motion, radii } from '@/design-system';
+import { AppText } from '@/components/primitives/app-text';
+import { IconButton } from '@/components/primitives/button';
+import { GlassPlate } from '@/components/primitives/glass-plate';
+import { Input } from '@/components/primitives/input';
+import { glassMaterials } from '@/design-system/glass';
+import { easings, motion } from '@/design-system/motion';
+import { radii } from '@/design-system/radii';
 import { formatVoiceDuration } from '@/features/journal/model';
 import { sendDockMessage } from '@/features/search/dock-search-actions';
 import {

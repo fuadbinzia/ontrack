@@ -9,11 +9,14 @@ import {
   travelChatMessagePreview,
 } from '@/features/travel/chat';
 import type { TravelPlan } from '@/features/travel/types';
+import { inferVoiceKindHint } from '@/features/todos/voice-lists';
+import { getSupabaseClient } from '@/services/cloud/supabase';
 import { useAddons } from '@/store/addons';
 import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { useChecklists } from '@/store/todos';
 import {
+  DEFAULT_CHECKLIST_NAME,
   DEFAULT_GROCERY_LIST_NAME,
   isGroceryListName,
 } from '@/store/todos-normalize';
@@ -77,6 +80,21 @@ function ensureList(name: string) {
   if (existing) return existing;
   const kind = isGroceryListName(name) ? 'grocery' : 'checklist';
   return useChecklists.getState().createList(name || DEFAULT_GROCERY_LIST_NAME, kind);
+}
+
+function defaultAddTaskListName(title: string, listName?: string) {
+  if (listName) return listName;
+  return inferVoiceKindHint(title) === 'grocery' || isGroceryListName(title)
+    ? DEFAULT_GROCERY_LIST_NAME
+    : DEFAULT_CHECKLIST_NAME;
+}
+
+async function companionActorUserId(): Promise<string | undefined> {
+  const client = getSupabaseClient();
+  if (!client) return undefined;
+  const { data } = await client.auth.getSession();
+  const id = data.session?.user.id?.trim();
+  return id || undefined;
 }
 
 function findTask(title: string) {
@@ -307,7 +325,7 @@ export const companionTools: readonly AgentTool[] = [
       const record = asRecord(input);
       const title = asString(record.title);
       if (!title) return { ok: false, error: 'Need a task title.' };
-      const list = ensureList(asString(record.list) || DEFAULT_GROCERY_LIST_NAME);
+      const list = ensureList(defaultAddTaskListName(title, asString(record.list) || undefined));
       if (!list) return { ok: false, error: 'Could not open a list.' };
       const task = useChecklists.getState().addTask(list.id, title);
       if (!task) return { ok: false, error: 'Could not add that item.' };
@@ -329,9 +347,17 @@ export const companionTools: readonly AgentTool[] = [
       const task = findTask(asString(record.title));
       const newTitle = asString(record.newTitle);
       if (!task || !newTitle) return { ok: false, error: 'Name the task to change.' };
-      pushUndo({ type: 'restore-task-title', id: task.id, title: task.title });
+      const previousTitle = task.title;
       useChecklists.getState().updateTask(task.id, newTitle);
-      return { ok: true, spoken: `Updated ${newTitle}`, taskId: task.id };
+      const updated = useChecklists.getState().tasks.find((item) => item.id === task.id);
+      if (!updated || updated.title === previousTitle) {
+        return {
+          ok: false,
+          error: "I couldn't rename that item. You might not have permission to change it.",
+        };
+      }
+      pushUndo({ type: 'restore-task-title', id: task.id, title: previousTitle });
+      return { ok: true, spoken: `Updated ${updated.title}`, taskId: task.id };
     },
   },
   {
@@ -351,8 +377,25 @@ export const companionTools: readonly AgentTool[] = [
       const task = findTask(asString(record.title));
       if (!task) return { ok: false, error: 'Name the task to complete.' };
       const completed = asBoolean(record.completed, true);
+      if (task.completed === completed) {
+        return {
+          ok: true,
+          spoken: completed ? `Completed ${task.title}` : `Reopened ${task.title}`,
+          taskId: task.id,
+        };
+      }
+      const actorUserId = await companionActorUserId();
+      useChecklists.getState().setTaskCompletion(task.id, completed, actorUserId);
+      const updated = useChecklists.getState().tasks.find((item) => item.id === task.id);
+      if (!updated || updated.completed !== completed) {
+        return {
+          ok: false,
+          error: completed
+            ? "I couldn't mark that done. You might not have permission to complete it."
+            : "I couldn't reopen that item. You might not have permission to change it.",
+        };
+      }
       pushUndo({ type: 'set-task-completion', id: task.id, completed: task.completed });
-      useChecklists.getState().setTaskCompletion(task.id, completed);
       return {
         ok: true,
         spoken: completed ? `Completed ${task.title}` : `Reopened ${task.title}`,
@@ -372,7 +415,9 @@ export const companionTools: readonly AgentTool[] = [
       const schedule = useSchedule.getState();
       if (op.type === 'delete-task') checklists.deleteTask(op.id);
       if (op.type === 'restore-task-title') checklists.updateTask(op.id, op.title);
-      if (op.type === 'set-task-completion') checklists.setTaskCompletion(op.id, op.completed);
+      if (op.type === 'set-task-completion') {
+        checklists.setTaskCompletion(op.id, op.completed, await companionActorUserId());
+      }
       if (op.type === 'delete-activity') schedule.deleteActivity(op.id);
       if (op.type === 'restore-activity') {
         schedule.updateActivity(op.id, { title: op.title, notes: op.notes, date: op.date });

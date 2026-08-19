@@ -10,6 +10,7 @@ import {
     hasCustomizedVisionBoardItems,
 } from '@/features/vision-board/selectors';
 import type { VisionBoardCategory, VisionBoardItem } from '@/features/vision-board/types';
+import { normalizeGoogleCalendarDeletions } from '@/services/calendar/google-types';
 import { useAddons } from '@/store/addons';
 import { useAgents } from '@/store/agents';
 import {
@@ -23,7 +24,7 @@ import { usePreferences } from '@/store/preferences';
 import { useSchedule } from '@/store/schedule';
 import { DEFAULT_CHECKLIST_NAME, privateChecklistPayload, useChecklists } from '@/store/todos';
 import { useTravel } from '@/store/travel';
-import { privateVehiclePayload, useVehicles } from '@/store/vehicles';
+import { mergePrivateVehiclesFromCloud, privateVehiclePayload, useVehicles } from '@/store/vehicles';
 import { useVisionBoard } from '@/store/vision-board';
 import type { Plant } from '@/types/models';
 
@@ -151,6 +152,7 @@ export const domains: SyncDomain[] = [
         eventFollows: state.eventFollows,
         eventSuggestions: state.eventSuggestions,
         suppressedExternalEvents: state.suppressedExternalEvents,
+        googleCalendarDeletions: state.googleCalendarDeletions,
         categories: mergeDefaultCategories(state.categories),
       };
     },
@@ -168,6 +170,9 @@ export const domains: SyncDomain[] = [
         suppressedExternalEvents: Array.isArray(payload.suppressedExternalEvents)
           ? payload.suppressedExternalEvents
           : [],
+        googleCalendarDeletions: Array.isArray(payload.googleCalendarDeletions)
+          ? normalizeGoogleCalendarDeletions(payload.googleCalendarDeletions)
+          : useSchedule.getState().googleCalendarDeletions,
         categories: mergeDefaultCategories(
           Array.isArray(payload.categories)
             ? payload.categories
@@ -263,11 +268,9 @@ export const domains: SyncDomain[] = [
     }),
     write: (payload) => {
       if (!Array.isArray(payload.vehicles)) return;
-      const shared = useVehicles.getState().vehicles.filter((item) => item.mode === 'shared');
-      useVehicles.getState().replaceVehicles([
-        ...shared,
-        ...payload.vehicles,
-      ]);
+      useVehicles.getState().replaceVehicles(
+        mergePrivateVehiclesFromCloud(useVehicles.getState().vehicles, payload.vehicles),
+      );
     },
     reset: () => useVehicles.getState().reset(),
     subscribe: (onChange) => useVehicles.subscribe(onChange),

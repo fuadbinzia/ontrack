@@ -11,8 +11,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
-import { GlassPlate } from '@/components/primitives';
-import { colorWithAlpha } from '@/design-system';
+import { GlassPlate } from '@/components/primitives/glass-plate';
+import { colorWithAlpha } from '@/design-system/glass';
 import {
   DOCK_SEARCH_HALO_ORBIT_MS,
   DOCK_SEARCH_HALO_PAD,

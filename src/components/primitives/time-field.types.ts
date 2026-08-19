@@ -36,3 +36,9 @@ export function minutesToDate(minutesFromMidnight: number): Date {
 export function dateToMinutes(date: Date): number {
   return clampMinutesFromMidnight(date.getHours() * 60 + date.getMinutes());
 }
+
+/** Native time pickers pass `undefined` when the user cancels. */
+export function minutesFromPickerDate(date: Date | undefined | null): number | undefined {
+  if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return undefined;
+  return dateToMinutes(date);
+}

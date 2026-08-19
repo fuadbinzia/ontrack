@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import {
+  mergePrivateVehiclesFromCloud,
   normalizeVehicle,
   normalizeVehicles,
   privateVehiclePayload,
@@ -21,7 +22,7 @@ import { createPersistStorage, STORAGE_KEYS } from '@/services/storage';
 import { newUuid } from '@/utils/id';
 
 export type { Vehicle };
-export { privateVehiclePayload };
+export { mergePrivateVehiclesFromCloud, privateVehiclePayload };
 
 const MAX_LOCAL_ACTIVITY = 100;
 

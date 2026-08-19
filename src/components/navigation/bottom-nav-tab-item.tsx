@@ -8,9 +8,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Symbol } from '@/components/primitives';
-import type { AppIconName } from '@/design-system';
-import { durations, easings } from '@/design-system';
+import { Symbol } from '@/components/primitives/symbol';
+import type { AppIconName } from '@/design-system/icons';
+import { durations, easings } from '@/design-system/motion';
 import { useResponsive } from '@/hooks/use-responsive';
 
 /** Chrome settle — short enough to feel snappy, long enough to read as a blend. */

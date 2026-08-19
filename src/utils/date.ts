@@ -1,4 +1,4 @@
-import { getDateTimeFormatter } from '@/utils/intl-cache';
+import { getDateTimeFormatter, getIntlLocale } from '@/utils/intl-cache';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 /** Locale identifier used to render a stored date key for the current device. */
@@ -10,6 +10,16 @@ export function toDateKey(date: Date): string {
   const m = `${date.getMonth() + 1}`.padStart(2, '0');
   const d = `${date.getDate()}`.padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+/** Native date pickers pass `undefined` when the user cancels. */
+export function isValidCalendarDate(value: Date | undefined | null): value is Date {
+  return value instanceof Date && !Number.isNaN(value.valueOf());
+}
+
+/** Commit a picker date only when the user chose a real calendar day. */
+export function dateKeyFromPicker(value: Date | undefined | null): string | undefined {
+  return isValidCalendarDate(value) ? toDateKey(value) : undefined;
 }
 
 export function fromDateKey(key: string): Date {
@@ -48,7 +58,7 @@ export function dateDisplayFormatForLocale(locale?: string): DateDisplayFormat {
 function localeRegion(locale: string): string | undefined {
   try {
     if (typeof Intl.Locale === 'function') {
-      return new Intl.Locale(locale.replace('_', '-')).maximize().region?.toUpperCase();
+      return getIntlLocale(locale.replace('_', '-')).maximize().region?.toUpperCase();
     }
   } catch {
     // Fall through to the BCP-47 region segment.
@@ -198,6 +208,19 @@ export function addDays(key: string, days: number): string {
   const d = fromDateKey(key);
   d.setDate(d.getDate() + days);
   return toDateKey(d);
+}
+
+/**
+ * Shift a YYYY-MM-DD by whole months, clamping to the last valid day.
+ * `Date#setMonth` overflows (Jan 31 + 1 month → Mar 3); bills and
+ * maintenance due dates must stay on the intended calendar day.
+ */
+export function addCalendarMonths(key: string, months: number): string {
+  const [year, month, day] = key.split('-').map(Number);
+  const cursor = new Date(year, month - 1 + months, 1);
+  const lastDay = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+  cursor.setDate(Math.min(day, lastDay));
+  return toDateKey(cursor);
 }
 
 export function isToday(key: string): boolean {

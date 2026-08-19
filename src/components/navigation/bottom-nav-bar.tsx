@@ -19,9 +19,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { usePageSurfaceBackgroundColor } from '@/components/primitives';
-import type { AppIconName } from '@/design-system';
-import { easings, glassMaterials, radii, motion } from '@/design-system';
+import { usePageSurfaceBackgroundColor } from '@/components/primitives/safe-area-chrome';
+import type { AppIconName } from '@/design-system/icons';
+import { glassMaterials } from '@/design-system/glass';
+import { easings, motion } from '@/design-system/motion';
+import { radii } from '@/design-system/radii';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { useHomeWeather } from '@/features/daily-tracking/use-home-weather';
 import {

@@ -1,5 +1,5 @@
 import { AppStack } from '@/components/navigation/app-stack';
-import { useSafeAreaChrome } from '@/components/primitives';
+import { useSafeAreaChrome } from '@/components/primitives/safe-area-chrome';
 import { travelSafeAreaBackground } from '@/features/travel/travel-surface';
 import { FeatureThemeProvider, useTheme } from '@/hooks/use-theme';
 

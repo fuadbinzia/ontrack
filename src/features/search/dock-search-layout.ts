@@ -218,20 +218,102 @@ export function dockSearchCollapsedWellLift(args: {
 
 /** Gap between the circular well and the circulating halo ring. */
 export const DOCK_SEARCH_HALO_PAD = 5;
-/** Halo stroke — thin enough to read as light, not a loader. */
-export const DOCK_SEARCH_HALO_STROKE = 2.25;
+/** Soft core stroke — light, not a loader bar. */
+export const DOCK_SEARCH_HALO_STROKE = 1.75;
+/**
+ * Extra canvas around the ring so glow can feather out instead of
+ * clipping to a hard SVG edge.
+ */
+export const DOCK_SEARCH_HALO_GLOW_BLEED = 10;
 /** One slow lap around the mark — living, not a spinner. */
 export const DOCK_SEARCH_HALO_ORBIT_MS = 3600;
-/** Bright arc as a fraction of the ring. */
-export const DOCK_SEARCH_HALO_ARC_RATIO = 0.28;
-/** Softer trailing wash behind the bright arc. */
-export const DOCK_SEARCH_HALO_TRAIL_RATIO = 0.48;
+
+export type DockSearchHaloLayer = {
+  ratio: number;
+  strokeScale: number;
+  alphaLight: number;
+  alphaDark: number;
+};
+
+/**
+ * Soft comet: long faint wash → short brighter head.
+ * Every alpha stays translucent so the ends never read as cut strokes.
+ */
+export const DOCK_SEARCH_HALO_LAYERS: readonly DockSearchHaloLayer[] = [
+  { ratio: 0.58, strokeScale: 4.4, alphaLight: 0.08, alphaDark: 0.12 },
+  { ratio: 0.38, strokeScale: 2.6, alphaLight: 0.14, alphaDark: 0.2 },
+  { ratio: 0.22, strokeScale: 1.4, alphaLight: 0.22, alphaDark: 0.3 },
+  { ratio: 0.1, strokeScale: 0.85, alphaLight: 0.36, alphaDark: 0.46 },
+];
+
+/** Brightest comet head as a fraction of the ring. */
+export const DOCK_SEARCH_HALO_ARC_RATIO =
+  DOCK_SEARCH_HALO_LAYERS[DOCK_SEARCH_HALO_LAYERS.length - 1].ratio;
+/** Longest trailing wash behind the head. */
+export const DOCK_SEARCH_HALO_TRAIL_RATIO = DOCK_SEARCH_HALO_LAYERS[0].ratio;
+
+export const DOCK_SEARCH_HALO_AMBIENT_ALPHA_LIGHT = 0.14;
+export const DOCK_SEARCH_HALO_AMBIENT_ALPHA_DARK = 0.2;
 
 export function dockSearchHaloSize(
   wellButtonSize: number,
   pad: number = DOCK_SEARCH_HALO_PAD,
 ): number {
   return wellButtonSize + Math.max(0, pad) * 2;
+}
+
+export function dockSearchHaloRadius(
+  wellButtonSize: number,
+  pad: number = DOCK_SEARCH_HALO_PAD,
+): number {
+  return wellButtonSize / 2 + Math.max(0, pad);
+}
+
+export function dockSearchHaloInset(
+  pad: number = DOCK_SEARCH_HALO_PAD,
+  bleed: number = DOCK_SEARCH_HALO_GLOW_BLEED,
+): number {
+  return Math.max(0, pad) + Math.max(0, bleed);
+}
+
+export function dockSearchHaloCanvasSize(
+  wellButtonSize: number,
+  pad: number = DOCK_SEARCH_HALO_PAD,
+  bleed: number = DOCK_SEARCH_HALO_GLOW_BLEED,
+): number {
+  return dockSearchHaloSize(wellButtonSize, pad) + Math.max(0, bleed) * 2;
+}
+
+export function dockSearchHaloWidestStroke(): number {
+  const scale = Math.max(
+    ...DOCK_SEARCH_HALO_LAYERS.map((layer) => layer.strokeScale),
+  );
+  return DOCK_SEARCH_HALO_STROKE * scale;
+}
+
+/** Outer edge of the widest comet stroke — must stay inside the canvas. */
+export function dockSearchHaloOuterExtent(wellButtonSize: number): number {
+  return dockSearchHaloRadius(wellButtonSize) + dockSearchHaloWidestStroke() / 2;
+}
+
+export function dockSearchHaloAmbientAlpha(dark: boolean): number {
+  return dark
+    ? DOCK_SEARCH_HALO_AMBIENT_ALPHA_DARK
+    : DOCK_SEARCH_HALO_AMBIENT_ALPHA_LIGHT;
+}
+
+/** Radial-gradient ring: transparent well, peak on the orbit, fade to none. */
+export function dockSearchHaloGlowStops(wellButtonSize: number): {
+  innerPct: number;
+  peakPct: number;
+} {
+  const half = dockSearchHaloCanvasSize(wellButtonSize) / 2;
+  const pct = (radius: number) =>
+    Math.round((Math.max(0, radius) / Math.max(1, half)) * 1000) / 10;
+  return {
+    innerPct: pct(wellButtonSize / 2),
+    peakPct: pct(dockSearchHaloRadius(wellButtonSize)),
+  };
 }
 
 export function dockSearchHaloArcLength(

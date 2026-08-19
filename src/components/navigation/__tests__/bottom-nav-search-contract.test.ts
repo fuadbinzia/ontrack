@@ -371,8 +371,8 @@ describe('dock search chrome', () => {
     expect(mark).toContain('allowsLoopMotion');
     expect(mark).toContain('withRepeat');
     expect(mark).toContain('DOCK_SEARCH_HALO_ORBIT_MS');
-    expect(mark).toContain('dockSearchHaloSize');
-    expect(mark).toContain('DOCK_SEARCH_HALO_PAD');
+    expect(mark).toContain('dockSearchHaloCanvasSize');
+    expect(mark).toContain('dockSearchHaloInset');
     expect(mark).toContain('strokeDasharray');
     expect(mark).toContain('orbit.value * 360');
     expect(mark).toContain("from 'react-native-svg'");
@@ -383,6 +383,24 @@ describe('dock search chrome', () => {
     expect(layout).toContain('DOCK_SEARCH_HALO_ORBIT_MS = 3600');
     expect(mark).not.toContain('backgroundElevated');
     expect(mark).not.toContain('surface="solid"');
+  });
+
+  it('softens the circulating halo into a feathered glow without hard track or cut ends', () => {
+    const mark = read('src/components/navigation/dock-search-mark.tsx');
+    const layout = read('src/features/search/dock-search-layout.ts');
+    expect(mark).toContain('RadialGradient');
+    expect(mark).toContain('stopOpacity={0}');
+    expect(mark).toContain('stopOpacity={ambient}');
+    expect(mark).toContain('strokeLinecap="round"');
+    expect(mark).toContain('DOCK_SEARCH_HALO_LAYERS');
+    expect(mark).toContain('colorWithAlpha');
+    expect(mark).toContain('{live ? (');
+    expect(mark).not.toContain('stroke={track}');
+    expect(mark).not.toContain('stroke={accent}');
+    expect(mark).not.toContain('stroke={bloom}');
+    expect(mark).not.toContain('stroke={trailInk}');
+    expect(layout).toContain('DOCK_SEARCH_HALO_GLOW_BLEED');
+    expect(layout).toContain('dockSearchHaloOuterExtent');
   });
 
   it('keeps collapsed search height on the circular plate instead of 3-pin slot width', () => {

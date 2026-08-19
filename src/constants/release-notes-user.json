@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.136",
+    "date": "2026-08-18",
+    "notes": [
+      "Soften the dock search halo into a feathered glow without hard edges."
+    ]
+  },
+  {
     "version": "1.0.135",
     "date": "2026-08-18",
     "notes": [

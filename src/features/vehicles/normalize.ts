@@ -339,3 +339,20 @@ export function normalizeVehicles(value: unknown): Vehicle[] {
 export function privateVehiclePayload(vehicles: Vehicle[]): Vehicle[] {
   return vehicles.filter((vehicle) => vehicle.mode === 'private');
 }
+
+/**
+ * Restore private vehicles from the account cloud blob without duplicating a
+ * vehicle that is already shared on this device. The shared copy is
+ * authoritative — the same pattern checklists use for stale private rows.
+ */
+export function mergePrivateVehiclesFromCloud(
+  current: Vehicle[],
+  incoming: unknown,
+): Vehicle[] {
+  const shared = current.filter((vehicle) => vehicle.mode === 'shared');
+  const sharedIds = new Set(shared.map((vehicle) => vehicle.id));
+  const privateIncoming = normalizeVehicles(incoming).filter(
+    (vehicle) => vehicle.mode !== 'shared' && !sharedIds.has(vehicle.id),
+  );
+  return [...shared, ...privateIncoming];
+}

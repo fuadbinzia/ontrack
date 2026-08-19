@@ -48,6 +48,13 @@ describe('parseFiniteNumber', () => {
     expect(parsePositiveNumber('4.2')).toBe(4.2);
   });
 
+  it('keeps US thousands grouping instead of treating the first comma as a decimal', () => {
+    expect(parseFiniteNumber('1,065.32')).toBe(1065.32);
+    expect(parseFiniteNumber('12,323.75')).toBe(12323.75);
+    expect(parseFiniteNumber('1,065')).toBe(1065);
+    expect(parseFiniteNumber('1.065,32')).toBe(1065.32);
+  });
+
   it('picks allowed enum values', () => {
     expect(asOneOf('bank', ['bank', 'card'] as const)).toBe('bank');
     expect(asOneOf('nope', ['bank', 'card'] as const)).toBeUndefined();

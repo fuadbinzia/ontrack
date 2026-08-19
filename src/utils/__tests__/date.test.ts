@@ -1,5 +1,7 @@
 import {
+    addCalendarMonths,
     dateDisplayFormatForLocale,
+    dateKeyFromPicker,
     datePlaceholderForLocale,
     formatDateKey,
     formatDateKeyMedium,
@@ -19,6 +21,20 @@ import {
 describe('date keys', () => {
   it('round trips valid local calendar dates', () => {
     expect(toDateKey(fromDateKey('2028-02-29'))).toBe('2028-02-29');
+  });
+
+  it('clamps month-end dates instead of overflowing into the next month', () => {
+    expect(addCalendarMonths('2026-01-31', 1)).toBe('2026-02-28');
+    expect(addCalendarMonths('2026-03-31', 1)).toBe('2026-04-30');
+    expect(addCalendarMonths('2026-01-31', 3)).toBe('2026-04-30');
+    expect(addCalendarMonths('2024-02-29', 12)).toBe('2025-02-28');
+    expect(addCalendarMonths('2026-08-20', 1)).toBe('2026-09-20');
+  });
+
+  it('ignores a cancelled native date picker value', () => {
+    expect(dateKeyFromPicker(undefined)).toBeUndefined();
+    expect(dateKeyFromPicker(new Date(Number.NaN))).toBeUndefined();
+    expect(dateKeyFromPicker(fromDateKey('2026-08-18'))).toBe('2026-08-18');
   });
 
   it('rejects impossible and malformed dates', () => {

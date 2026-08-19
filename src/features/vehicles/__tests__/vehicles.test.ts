@@ -1,8 +1,9 @@
 import {
+  mergePrivateVehiclesFromCloud,
   normalizeVehicle,
   privateVehiclePayload,
 } from '@/features/vehicles/normalize';
-import { isMaintenanceDue, nextDueMiles } from '@/features/vehicles/maintenance-due';
+import { isMaintenanceDue, nextDueDate, nextDueMiles } from '@/features/vehicles/maintenance-due';
 import { buildPartsSearchResults, normalizeNhtsaDecode } from '@/services/vehicles/server';
 import { safeHttpsUrl } from '@/utils/safe-url';
 
@@ -59,6 +60,66 @@ describe('maintenance due', () => {
       ),
     ).toBe(true);
     expect(nextDueMiles({ intervalMiles: 5000, lastDoneMiles: 10000 })).toBe(15000);
+  });
+
+  it('clamps month-end service dates instead of skipping a month', () => {
+    expect(
+      nextDueDate({
+        intervalMonths: 1,
+        lastDoneAt: '2026-01-31',
+      }),
+    ).toBe('2026-02-28');
+    expect(
+      nextDueDate({
+        intervalMonths: 3,
+        lastDoneAt: '2026-01-31',
+      }),
+    ).toBe('2026-04-30');
+  });
+});
+
+describe('vehicle cloud restore', () => {
+  it('does not reinsert a stale private copy of a vehicle that is already shared', () => {
+    const now = '2026-07-31T12:00:00.000Z';
+    const shared = normalizeVehicle({
+      id: '00000000-0000-4000-8000-000000000001',
+      nickname: 'Shared Civic',
+      year: 2018,
+      make: 'Honda',
+      model: 'Civic',
+      baseCurrency: 'USD',
+      mode: 'shared',
+      role: 'owner',
+      createdAt: now,
+      updatedAt: now,
+    });
+    const other = normalizeVehicle({
+      id: '00000000-0000-4000-8000-000000000002',
+      nickname: 'Private Fit',
+      year: 2012,
+      make: 'Honda',
+      model: 'Fit',
+      baseCurrency: 'USD',
+      mode: 'private',
+      role: 'owner',
+      createdAt: now,
+      updatedAt: now,
+    });
+    const stalePrivate = {
+      ...shared,
+      nickname: 'Stale Civic',
+      mode: 'private',
+    };
+
+    const merged = mergePrivateVehiclesFromCloud(
+      [shared!, other!],
+      [stalePrivate, other],
+    );
+
+    expect(merged.filter((vehicle) => vehicle.id === shared!.id)).toHaveLength(1);
+    expect(merged.find((vehicle) => vehicle.id === shared!.id)?.mode).toBe('shared');
+    expect(merged.find((vehicle) => vehicle.id === shared!.id)?.nickname).toBe('Shared Civic');
+    expect(merged.find((vehicle) => vehicle.id === other!.id)?.nickname).toBe('Private Fit');
   });
 });
 

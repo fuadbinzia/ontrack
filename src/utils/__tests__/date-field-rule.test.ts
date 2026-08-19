@@ -25,6 +25,15 @@ describe('native date-field invariant', () => {
     }
   });
 
+  it('ignores Android date-picker cancel instead of writing an invalid date', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/components/primitives/date-field.tsx'),
+      'utf8',
+    );
+    expect(source).toContain('isValidCalendarDate(selectedDate)');
+    expect(source).toContain('setShowPicker(false)');
+  });
+
   it('exports the shared design-system date field', () => {
     const primitives = readFileSync(
       join(process.cwd(), 'src/components/primitives/index.ts'),

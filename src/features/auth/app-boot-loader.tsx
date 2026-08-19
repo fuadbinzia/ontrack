@@ -10,8 +10,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { AppText, GlassPlate } from '@/components/primitives';
-import { colorWithAlpha } from '@/design-system';
+import { AppText } from '@/components/primitives/app-text';
+import { GlassPlate } from '@/components/primitives/glass-plate';
+import { colorWithAlpha } from '@/design-system/glass';
 import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useResponsive } from '@/hooks/use-responsive';
 import { useTheme } from '@/hooks/use-theme';

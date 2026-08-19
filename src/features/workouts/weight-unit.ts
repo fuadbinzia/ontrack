@@ -1,4 +1,5 @@
 import { deviceLocale } from '@/utils/date';
+import { getIntlLocale } from '@/utils/intl-cache';
 import { formatCompactNumber } from '@/utils/parse';
 
 export type WorkoutWeightUnit = 'kg' | 'lb';
@@ -11,7 +12,7 @@ const POUND_REGIONS = new Set(['GB', 'LR', 'MM', 'US']);
 function regionForLocale(locale: string): string | undefined {
   try {
     if (typeof Intl.Locale === 'function') {
-      return new Intl.Locale(locale.replace('_', '-')).maximize().region?.toUpperCase();
+      return getIntlLocale(locale.replace('_', '-')).maximize().region?.toUpperCase();
     }
   } catch {
     // Fall through to a conservative BCP-47 region lookup.

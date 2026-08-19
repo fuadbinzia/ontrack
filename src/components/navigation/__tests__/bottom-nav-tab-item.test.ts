@@ -22,7 +22,7 @@ describe('bottom nav tab selection motion', () => {
     expect(itemSource).toContain('withTiming');
     expect(itemSource).toContain('interpolateColor');
     expect(itemSource).toContain('useReducedMotion');
-    expect(itemSource).toContain("from '@/components/primitives'");
+    expect(itemSource).toContain("from '@/components/primitives/symbol'");
     expect(itemSource).not.toContain('createAnimatedComponent');
     expect(itemSource).not.toContain('useAnimatedProps');
   });

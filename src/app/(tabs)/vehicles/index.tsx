@@ -27,6 +27,19 @@ import { AgentUiIds } from '@/utils/agent-ui';
 import { todayKey } from '@/utils/date';
 import { useWarmHrefs } from '@/utils/warm-navigation';
 
+function VehicleRow({ vehicle }: { vehicle: Vehicle }) {
+  const { spacing: gap } = useResponsive();
+  return (
+    <View style={{ marginBottom: gap.md }}>
+      <VehicleCard vehicle={vehicle} />
+    </View>
+  );
+}
+
+function renderVehicleItem({ item }: { item: Vehicle }) {
+  return <VehicleRow vehicle={item} />;
+}
+
 function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const router = useRouter();
   const theme = useTheme();
@@ -134,11 +147,7 @@ function VehiclesScreenContent() {
             onAction={() => router.push('/vehicles/new')}
           />
         }
-        renderItem={({ item }) => (
-          <View style={{ marginBottom: gap.md }}>
-            <VehicleCard vehicle={item} />
-          </View>
-        )}
+        renderItem={renderVehicleItem}
       />
     </Screen>
   );

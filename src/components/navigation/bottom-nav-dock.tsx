@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 import { useLayoutEffect, useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { motion } from '@/design-system';
+import { motion } from '@/design-system/motion';
 import { DockSearchOverlay } from '@/features/search/dock-search-overlay';
 import { useDockSearch } from '@/features/search/dock-search-store';
 import { useDockedKeyboardInset } from '@/hooks/use-docked-keyboard-inset';

@@ -1,10 +1,6 @@
 import { useEffect, useRef } from 'react';
 
 import { withoutGuestDirtyTracking } from '@/features/auth/guest-dirty-tracking';
-import {
-    CURRENT_MEAL_PHOTO_PROCESSING_VERSION,
-    enhanceMealPhoto,
-} from '@/services/nutrition';
 import { useSchedule } from '@/store/schedule';
 import { deferUntilIdle } from '@/utils/defer-until-idle';
 
@@ -18,6 +14,11 @@ export function useMealPhotoMigration(enabled: boolean) {
     let cancelled = false;
 
     const migrate = async () => {
+      const {
+        CURRENT_MEAL_PHOTO_PROCESSING_VERSION,
+        enhanceMealPhoto,
+      } = await import('@/services/nutrition/client');
+      if (cancelled) return;
       const state = useSchedule.getState();
       const pending = state.meals.filter((meal) =>
         typeof meal.photo === 'string' &&

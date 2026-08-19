@@ -1,4 +1,4 @@
-import { getDateTimeFormatter } from '@/utils/intl-cache';
+import { getDateTimeFormatter, getIntlLocale } from '@/utils/intl-cache';
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 /** Locale identifier used to render a stored date key for the current device. */
@@ -58,7 +58,7 @@ export function dateDisplayFormatForLocale(locale?: string): DateDisplayFormat {
 function localeRegion(locale: string): string | undefined {
   try {
     if (typeof Intl.Locale === 'function') {
-      return new Intl.Locale(locale.replace('_', '-')).maximize().region?.toUpperCase();
+      return getIntlLocale(locale.replace('_', '-')).maximize().region?.toUpperCase();
     }
   } catch {
     // Fall through to the BCP-47 region segment.

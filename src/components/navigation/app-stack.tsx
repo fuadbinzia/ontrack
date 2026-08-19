@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Platform } from 'react-native';
 
-import { motion } from '@/design-system';
+import { motion } from '@/design-system/motion';
 
 import { HIDDEN_SCROLL_EDGE_EFFECTS } from './scroll-edge-effects';
 import { SwipeBackScene } from './swipe-back-scene';

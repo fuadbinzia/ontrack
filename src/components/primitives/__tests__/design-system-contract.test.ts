@@ -372,6 +372,7 @@ describe('canonical design-system contract', () => {
     expect(dayHeader).toContain(
       'useSafeAreaChrome(timeOfDaySafeAreaBackground(theme, hour))',
     );
+    expect(dayHeader).toContain('const navSlotStyle: ViewStyle = {');
   });
 
   it('extends Screen page fill into the status-bar shell and tab dock', () => {

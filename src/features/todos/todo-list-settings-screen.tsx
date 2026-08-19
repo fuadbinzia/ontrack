@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
+import { Keyboard, Pressable, View } from 'react-native';
 
 import { checklistSettingsStyles as styles } from './todo-list-settings-styles';
 
@@ -10,14 +10,11 @@ import {
   Button,
   Card,
   ErrorMessage,
-  GlassPlate,
   IconButton,
   Input,
   SectionHeader,
   SheetScaffold,
-  Symbol,
 } from '@/components/primitives';
-import { glassMaterials } from '@/design-system';
 import { ProfileAvatar } from '@/features/account/profile-avatar';
 import { useAuthSession } from '@/features/auth/auth-provider';
 import { shareChecklistInvite } from '@/features/todos/share';
@@ -52,10 +49,6 @@ export function ChecklistSettingsSheet({
 }) {
   const router = useRouter();
   const theme = useTheme();
-  const dark = theme.name === 'dark';
-  const plateBorder = dark
-    ? glassMaterials.border.dark
-    : glassMaterials.border.light;
   const { spacing, s } = useResponsive();
   const { user } = useAuthSession();
   const list = useChecklists((state) => state.lists.find((item) => item.id === listId));
@@ -82,11 +75,6 @@ export function ChecklistSettingsSheet({
   );
   const friends = useFriends((state) => state.friends);
   const renameList = useChecklists((state) => state.renameList);
-  const setListKind = useChecklists((state) => state.setListKind);
-  const recipeCount = useChecklists(
-    (state) =>
-      state.recipes.filter((recipe) => recipe.listId === listId).length,
-  );
   const [name, setName] = useState(list?.name ?? '');
   const [working, setWorking] = useState<string>();
   const [error, setError] = useState<string>();
@@ -280,85 +268,6 @@ export function ChecklistSettingsSheet({
                 />
               }
             />
-            <AppText variant="overline" color="tertiary">
-              List type
-            </AppText>
-            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-              <Pressable
-                accessibilityRole="radio"
-                accessibilityState={{ checked: list.kind === 'checklist' }}
-                disabled={list.kind === 'grocery' && recipeCount > 0}
-                onPress={() => setListKind(list.id, 'checklist')}
-                style={({ pressed }) => [
-                  styles.kindChoiceWrap,
-                  {
-                    opacity:
-                      list.kind === 'grocery' && recipeCount > 0
-                        ? 0.45
-                        : pressed
-                          ? 0.72
-                          : 1,
-                  },
-                ]}>
-                <GlassPlate
-                  airy={list.kind !== 'checklist'}
-                  style={[
-                    styles.kindChoice,
-                    {
-                      minHeight: Math.max(44, s(48)),
-                      gap: spacing.sm,
-                      borderColor:
-                        list.kind === 'checklist'
-                          ? theme.accentPrimary
-                          : plateBorder,
-                      borderWidth:
-                        list.kind === 'checklist'
-                          ? 1
-                          : StyleSheet.hairlineWidth,
-                    },
-                  ]}>
-                  <Symbol name="tasks" size={18} color={theme.textSecondary} />
-                  <AppText variant="caption" fit>
-                    Checklist
-                  </AppText>
-                </GlassPlate>
-              </Pressable>
-              <Pressable
-                accessibilityRole="radio"
-                accessibilityState={{ checked: list.kind === 'grocery' }}
-                onPress={() => setListKind(list.id, 'grocery')}
-                style={({ pressed }) => [
-                  styles.kindChoiceWrap,
-                  { opacity: pressed ? 0.72 : 1 },
-                ]}>
-                <GlassPlate
-                  airy={list.kind !== 'grocery'}
-                  style={[
-                    styles.kindChoice,
-                    {
-                      minHeight: Math.max(44, s(48)),
-                      gap: spacing.sm,
-                      borderColor:
-                        list.kind === 'grocery'
-                          ? theme.accentPrimary
-                          : plateBorder,
-                      borderWidth:
-                        list.kind === 'grocery' ? 1 : StyleSheet.hairlineWidth,
-                    },
-                  ]}>
-                  <Symbol name="groceries" size={18} color={theme.textSecondary} />
-                  <AppText variant="caption" fit>
-                    Grocery
-                  </AppText>
-                </GlassPlate>
-              </Pressable>
-            </View>
-            {list.kind === 'grocery' && recipeCount > 0 ? (
-              <AppText variant="caption" color="secondary">
-                Delete the {recipeCount === 1 ? 'recipe' : `${recipeCount} recipes`}{' '}
-                before converting this list back to a checklist.
-              </AppText>
-            ) : null}
           </Card>
         ) : (
           <Card variant="sunken" style={{ gap: spacing.md }}>

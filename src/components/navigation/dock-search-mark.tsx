@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   ReduceMotion,
-  useAnimatedStyle,
+  useAnimatedProps,
   useReducedMotion,
   useSharedValue,
   withRepeat,
@@ -20,6 +20,7 @@ import {
   dockSearchHaloAmbientAlpha,
   dockSearchHaloArcLength,
   dockSearchHaloCanvasSize,
+  dockSearchHaloDashOffset,
   dockSearchHaloGlowStops,
   dockSearchHaloInset,
   dockSearchHaloRadius,
@@ -29,6 +30,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 const FAVICON = require('../../../assets/images/favicon.png');
 const HALO_GLOW_ID = 'dockSearchHaloGlow';
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export function DockSearchMark({
   size,
@@ -73,13 +75,14 @@ export function DockSearchMark({
     );
   }, [live, orbit]);
 
-  const spinStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${orbit.value * 360}deg` }],
+  const cometProps = useAnimatedProps(() => ({
+    strokeDashoffset: dockSearchHaloDashOffset(orbit.value, circumference),
   }));
 
   return (
     <View
       pointerEvents="none"
+      collapsable={false}
       style={[
         styles.wrap,
         {
@@ -90,6 +93,7 @@ export function DockSearchMark({
       ]}
     >
       <View
+        collapsable={false}
         style={[
           styles.halo,
           {
@@ -123,12 +127,9 @@ export function DockSearchMark({
             r={canvas / 2}
             fill={`url(#${HALO_GLOW_ID})`}
           />
-        </Svg>
-        {live ? (
-          <Animated.View style={[StyleSheet.absoluteFill, spinStyle]}>
-            <Svg width={canvas} height={canvas}>
-              {DOCK_SEARCH_HALO_LAYERS.map((layer) => (
-                <Circle
+          {live
+            ? DOCK_SEARCH_HALO_LAYERS.map((layer) => (
+                <AnimatedCircle
                   key={layer.ratio}
                   cx={canvas / 2}
                   cy={canvas / 2}
@@ -140,12 +141,16 @@ export function DockSearchMark({
                   strokeWidth={stroke * layer.strokeScale}
                   strokeLinecap="round"
                   fill="none"
-                  strokeDasharray={`${dockSearchHaloArcLength(circumference, layer.ratio)} ${circumference}`}
+                  strokeDasharray={[
+                    dockSearchHaloArcLength(circumference, layer.ratio),
+                    circumference,
+                  ]}
+                  strokeDashoffset={0}
+                  animatedProps={cometProps}
                 />
-              ))}
-            </Svg>
-          </Animated.View>
-        ) : null}
+              ))
+            : null}
+        </Svg>
       </View>
       <GlassPlate
         airy

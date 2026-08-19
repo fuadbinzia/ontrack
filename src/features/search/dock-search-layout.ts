@@ -322,3 +322,18 @@ export function dockSearchHaloArcLength(
 ): number {
   return Math.round(circumference * Math.min(1, Math.max(0, ratio)) * 1000) / 1000;
 }
+
+/**
+ * Walk the dashed comet around the ring.
+ *
+ * Android Svg ignores a parent View rotate — ProgressRing already animates
+ * `strokeDashoffset` on the Circle itself, which both platforms honor.
+ */
+export function dockSearchHaloDashOffset(
+  orbit: number,
+  circumference: number,
+): number {
+  'worklet';
+  const lap = ((orbit % 1) + 1) % 1;
+  return 0 - lap * circumference;
+}

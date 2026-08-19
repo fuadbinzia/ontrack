@@ -17,6 +17,7 @@ import {
   dockSearchHaloAmbientAlpha,
   dockSearchHaloArcLength,
   dockSearchHaloCanvasSize,
+  dockSearchHaloDashOffset,
   dockSearchHaloGlowStops,
   dockSearchHaloInset,
   dockSearchHaloOuterExtent,
@@ -422,5 +423,15 @@ describe('dock search layout helpers', () => {
     const tight = dockSearchHaloGlowStops(44);
     expect(tight.innerPct).toBeLessThan(tight.peakPct);
     expect(dockSearchHaloGlowStops(0).innerPct).toBe(0);
+  });
+
+  it('walks the halo comet with dash offset so Android Svg can orbit without a parent rotate', () => {
+    expect(dockSearchHaloDashOffset(0, 100)).toBe(0);
+    expect(dockSearchHaloDashOffset(0.25, 100)).toBe(-25);
+    expect(dockSearchHaloDashOffset(0.5, 100)).toBe(-50);
+    expect(dockSearchHaloDashOffset(1, 100)).toBe(0);
+    expect(dockSearchHaloDashOffset(1.25, 200)).toBe(-50);
+    expect(dockSearchHaloDashOffset(-0.25, 100)).toBe(-75);
+    expect(dockSearchHaloDashOffset(0.5, 0)).toBe(0);
   });
 });

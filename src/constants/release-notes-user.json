@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.0.137",
+    "date": "2026-08-18",
+    "notes": [
+      "Orbit the dock search halo on Android with dash offset instead of a parent rotate."
+    ]
+  },
+  {
     "version": "1.0.136",
     "date": "2026-08-18",
     "notes": [

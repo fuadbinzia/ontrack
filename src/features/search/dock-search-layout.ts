@@ -324,16 +324,16 @@ export function dockSearchHaloArcLength(
 }
 
 /**
- * Walk the dashed comet around the ring.
- *
- * Android Svg ignores a parent View rotate — ProgressRing already animates
- * `strokeDashoffset` on the Circle itself, which both platforms honor.
+ * View-ring box so the border sits on the orbit (RN borders grow inward).
  */
-export function dockSearchHaloDashOffset(
-  orbit: number,
-  circumference: number,
+export function dockSearchHaloViewRingSize(
+  wellButtonSize: number,
+  strokeWidth: number,
 ): number {
-  'worklet';
-  const lap = ((orbit % 1) + 1) % 1;
-  return 0 - lap * circumference;
+  return dockSearchHaloRadius(wellButtonSize) * 2 + Math.max(0, strokeWidth);
+}
+
+/** Fan each comet wash backward so stacked View caps read as a trail. */
+export function dockSearchHaloViewTrailDeg(index: number): number {
+  return 0 - Math.max(0, index) * 22;
 }

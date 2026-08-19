@@ -368,17 +368,15 @@ describe('dock search chrome', () => {
     const layout = read('src/features/search/dock-search-layout.ts');
     expect(search).toContain('circulating={!expanded}');
     expect(search).toContain("overflow: 'visible'");
-    expect(mark).toContain('allowsLoopMotion');
     expect(mark).toContain('withRepeat');
     expect(mark).toContain('DOCK_SEARCH_HALO_ORBIT_MS');
     expect(mark).toContain('dockSearchHaloCanvasSize');
     expect(mark).toContain('dockSearchHaloInset');
-    expect(mark).toContain('strokeDasharray');
-    expect(mark).toContain('dockSearchHaloDashOffset');
+    expect(mark).toContain('orbit.value * 360');
     expect(mark).toContain("from 'react-native-svg'");
     expect(mark).toContain("overflow: 'visible'");
     expect(mark).toContain('pointerEvents="none"');
-    expect(mark).toContain('ReduceMotion.System');
+    expect(mark).toContain('ReduceMotion.Never');
     expect(layout).toContain('export function dockSearchHaloSize');
     expect(layout).toContain('DOCK_SEARCH_HALO_ORBIT_MS = 3600');
     expect(mark).not.toContain('backgroundElevated');
@@ -391,10 +389,9 @@ describe('dock search chrome', () => {
     expect(mark).toContain('RadialGradient');
     expect(mark).toContain('stopOpacity={0}');
     expect(mark).toContain('stopOpacity={ambient}');
-    expect(mark).toContain('strokeLinecap="round"');
     expect(mark).toContain('DOCK_SEARCH_HALO_LAYERS');
     expect(mark).toContain('colorWithAlpha');
-    expect(mark).toMatch(/\{live\s*\?/);
+    expect(mark).toMatch(/\{live \? \(/);
     expect(mark).not.toContain('stroke={track}');
     expect(mark).not.toContain('stroke={accent}');
     expect(mark).not.toContain('stroke={bloom}');
@@ -403,22 +400,23 @@ describe('dock search chrome', () => {
     expect(layout).toContain('dockSearchHaloOuterExtent');
   });
 
-  it('orbits the halo Circle dash on Android instead of rotating a parent View around Svg', () => {
+  it('spins a View comet so Android is not stuck on Svg parent transforms or dashoffset', () => {
     const mark = read('src/components/navigation/dock-search-mark.tsx');
-    expect(mark).toContain('useAnimatedProps');
-    expect(mark).toContain('Animated.createAnimatedComponent(Circle)');
-    expect(mark).toContain('strokeDashoffset');
-    expect(mark).toContain('animatedProps={cometProps}');
-    expect(mark).toContain('collapsable={false}');
-    expect(mark).not.toContain('useAnimatedStyle');
-    expect(mark).not.toContain('Animated.View');
-    expect(mark).not.toContain('allowsAnimatedSvgProps');
-    expect(mark).not.toMatch(/transform: \[\{ rotate/);
-    expect(mark).not.toContain('orbit.value * 360');
     const layout = read('src/features/search/dock-search-layout.ts');
-    expect(layout).toMatch(
-      /export function dockSearchHaloDashOffset\([\s\S]*?\{[\s\S]*?'worklet';/,
-    );
+    expect(mark).toContain('useAnimatedStyle');
+    expect(mark).toContain('<Animated.View');
+    expect(mark).toContain('renderToHardwareTextureAndroid');
+    expect(mark).toContain('collapsable={false}');
+    expect(mark).toContain('dockSearchHaloViewRingSize');
+    expect(mark).toContain('borderTopColor');
+    expect(mark).toContain('live = circulating && !reduceMotion');
+    expect(mark).not.toContain('useAnimatedProps');
+    expect(mark).not.toContain('createAnimatedComponent');
+    expect(mark).not.toContain('strokeDashoffset');
+    expect(mark).not.toContain('allowsLoopMotion');
+    expect(mark).not.toContain('allowsAnimatedSvgProps');
+    expect(mark).not.toContain('ReduceMotion.System');
+    expect(layout).not.toContain('dockSearchHaloDashOffset');
   });
 
   it('keeps collapsed search height on the circular plate instead of 3-pin slot width', () => {

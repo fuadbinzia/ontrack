@@ -17,12 +17,13 @@ import {
   dockSearchHaloAmbientAlpha,
   dockSearchHaloArcLength,
   dockSearchHaloCanvasSize,
-  dockSearchHaloDashOffset,
   dockSearchHaloGlowStops,
   dockSearchHaloInset,
   dockSearchHaloOuterExtent,
   dockSearchHaloRadius,
   dockSearchHaloSize,
+  dockSearchHaloViewRingSize,
+  dockSearchHaloViewTrailDeg,
   dockSearchHaloWidestStroke,
   DOCK_SEARCH_BACKDROP_BLUR_INTENSITY,
   DOCK_SEARCH_COLLAPSED_WELL_HANG_RATIO,
@@ -425,13 +426,14 @@ describe('dock search layout helpers', () => {
     expect(dockSearchHaloGlowStops(0).innerPct).toBe(0);
   });
 
-  it('walks the halo comet with dash offset so Android Svg can orbit without a parent rotate', () => {
-    expect(dockSearchHaloDashOffset(0, 100)).toBe(0);
-    expect(dockSearchHaloDashOffset(0.25, 100)).toBe(-25);
-    expect(dockSearchHaloDashOffset(0.5, 100)).toBe(-50);
-    expect(dockSearchHaloDashOffset(1, 100)).toBe(0);
-    expect(dockSearchHaloDashOffset(1.25, 200)).toBe(-50);
-    expect(dockSearchHaloDashOffset(-0.25, 100)).toBe(-75);
-    expect(dockSearchHaloDashOffset(0.5, 0)).toBe(0);
+  it('sizes View halo rings so the stroke sits on the orbit', () => {
+    expect(dockSearchHaloViewRingSize(48, 1.75)).toBe(59.75);
+    expect(dockSearchHaloViewRingSize(48, 0)).toBe(58);
+    expect(dockSearchHaloViewRingSize(44, 7.7)).toBe(61.7);
+    expect(dockSearchHaloViewRingSize(48, -2)).toBe(58);
+    expect(dockSearchHaloViewTrailDeg(0)).toBe(0);
+    expect(dockSearchHaloViewTrailDeg(1)).toBe(-22);
+    expect(dockSearchHaloViewTrailDeg(3)).toBe(-66);
+    expect(dockSearchHaloViewTrailDeg(-1)).toBe(0);
   });
 });

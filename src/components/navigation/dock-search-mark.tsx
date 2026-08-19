@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   ReduceMotion,
-  useAnimatedProps,
+  useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withRepeat,
@@ -18,19 +18,16 @@ import {
   DOCK_SEARCH_HALO_ORBIT_MS,
   DOCK_SEARCH_HALO_STROKE,
   dockSearchHaloAmbientAlpha,
-  dockSearchHaloArcLength,
   dockSearchHaloCanvasSize,
-  dockSearchHaloDashOffset,
   dockSearchHaloGlowStops,
   dockSearchHaloInset,
-  dockSearchHaloRadius,
+  dockSearchHaloViewRingSize,
+  dockSearchHaloViewTrailDeg,
 } from '@/features/search/dock-search-layout';
-import { usePerformanceTier } from '@/hooks/use-performance-tier';
 import { useTheme } from '@/hooks/use-theme';
 
 const FAVICON = require('../../../assets/images/favicon.png');
 const HALO_GLOW_ID = 'dockSearchHaloGlow';
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 export function DockSearchMark({
   size,
@@ -43,14 +40,13 @@ export function DockSearchMark({
 }) {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
-  const { allowsLoopMotion } = usePerformanceTier();
   const orbit = useSharedValue(0);
-  const live = circulating && allowsLoopMotion && !reduceMotion;
+  // One cheap View rotate — skip heavy loop gates and animated SVG.
+  // Android Svg ignores parent transforms and Fabric often skips dashoffset.
+  const live = circulating && !reduceMotion;
   const canvas = dockSearchHaloCanvasSize(size);
   const inset = dockSearchHaloInset();
-  const radius = dockSearchHaloRadius(size);
   const stroke = DOCK_SEARCH_HALO_STROKE;
-  const circumference = 2 * Math.PI * radius;
   const accent = theme.accentPrimary;
   const dark = theme.name === 'dark';
   const ambient = dockSearchHaloAmbientAlpha(dark);
@@ -66,17 +62,17 @@ export function DockSearchMark({
       withTiming(1, {
         duration: DOCK_SEARCH_HALO_ORBIT_MS,
         easing: Easing.linear,
-        reduceMotion: ReduceMotion.System,
+        reduceMotion: ReduceMotion.Never,
       }),
       -1,
       false,
       undefined,
-      ReduceMotion.System,
+      ReduceMotion.Never,
     );
   }, [live, orbit]);
 
-  const cometProps = useAnimatedProps(() => ({
-    strokeDashoffset: dockSearchHaloDashOffset(orbit.value, circumference),
+  const spinStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${orbit.value * 360}deg` }],
   }));
 
   return (
@@ -127,30 +123,45 @@ export function DockSearchMark({
             r={canvas / 2}
             fill={`url(#${HALO_GLOW_ID})`}
           />
-          {live
-            ? DOCK_SEARCH_HALO_LAYERS.map((layer) => (
-                <AnimatedCircle
-                  key={layer.ratio}
-                  cx={canvas / 2}
-                  cy={canvas / 2}
-                  r={radius}
-                  stroke={colorWithAlpha(
-                    accent,
-                    dark ? layer.alphaDark : layer.alphaLight,
-                  )}
-                  strokeWidth={stroke * layer.strokeScale}
-                  strokeLinecap="round"
-                  fill="none"
-                  strokeDasharray={[
-                    dockSearchHaloArcLength(circumference, layer.ratio),
-                    circumference,
-                  ]}
-                  strokeDashoffset={0}
-                  animatedProps={cometProps}
-                />
-              ))
-            : null}
         </Svg>
+        {live ? (
+          <Animated.View
+            pointerEvents="none"
+            collapsable={false}
+            renderToHardwareTextureAndroid
+            style={[StyleSheet.absoluteFill, spinStyle]}
+          >
+            {DOCK_SEARCH_HALO_LAYERS.map((layer, index) => {
+              const width = stroke * layer.strokeScale;
+              const ring = dockSearchHaloViewRingSize(size, width);
+              const ink = colorWithAlpha(
+                accent,
+                dark ? layer.alphaDark : layer.alphaLight,
+              );
+              return (
+                <View
+                  key={layer.ratio}
+                  pointerEvents="none"
+                  style={{
+                    position: 'absolute',
+                    width: ring,
+                    height: ring,
+                    left: (canvas - ring) / 2,
+                    top: (canvas - ring) / 2,
+                    borderRadius: ring / 2,
+                    borderWidth: width,
+                    borderColor: 'transparent',
+                    borderTopColor: ink,
+                    ...(index === 0 ? { borderRightColor: ink } : null),
+                    transform: [
+                      { rotate: `${dockSearchHaloViewTrailDeg(index)}deg` },
+                    ],
+                  }}
+                />
+              );
+            })}
+          </Animated.View>
+        ) : null}
       </View>
       <GlassPlate
         airy

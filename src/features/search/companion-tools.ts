@@ -415,7 +415,9 @@ export const companionTools: readonly AgentTool[] = [
       const schedule = useSchedule.getState();
       if (op.type === 'delete-task') checklists.deleteTask(op.id);
       if (op.type === 'restore-task-title') checklists.updateTask(op.id, op.title);
-      if (op.type === 'set-task-completion') checklists.setTaskCompletion(op.id, op.completed);
+      if (op.type === 'set-task-completion') {
+        checklists.setTaskCompletion(op.id, op.completed, await companionActorUserId());
+      }
       if (op.type === 'delete-activity') schedule.deleteActivity(op.id);
       if (op.type === 'restore-activity') {
         schedule.updateActivity(op.id, { title: op.title, notes: op.notes, date: op.date });
